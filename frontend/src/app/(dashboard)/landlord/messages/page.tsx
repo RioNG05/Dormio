@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Smile, Camera, MoreVertical, Phone, Circle, Search, Info } from "lucide-react";
+import { Send, Paperclip, Smile, ImageIcon, Phone, Circle, Search, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LandlordMessagesPage() {
@@ -29,7 +29,9 @@ export default function LandlordMessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
   };
 
   useEffect(() => {
@@ -222,7 +224,7 @@ export default function LandlordMessagesPage() {
               <Paperclip className="w-5 h-5" />
             </Button>
             <Button type="button" variant="ghost" size="icon" className="text-zinc-400 hover:text-zinc-600 shrink-0 rounded-full">
-              <Camera className="w-5 h-5" />
+              <ImageIcon className="w-5 h-5" />
             </Button>
             
             <div className="flex-1 relative">
