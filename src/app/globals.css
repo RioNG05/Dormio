@@ -8,9 +8,9 @@
   --foreground: #18181b;
 
   /* Brand */
-  --primary: #89c8b9;
+  --primary: #2AC1BC;
   --primary-hover: #72b3a3;
-  --accent: #ee6927;
+  --accent: #FF6B35;
   --accent-hover: #d55e23;
 
   /* Semantic — dùng thống nhất toàn trang */
@@ -32,14 +32,21 @@
   --deposit-border: #e9d5ff;
   /* purple-200 */
 
-  --success: var(--primary);     /* dùng màu primary cho trạng thái tốt */
-  --success-bg: #f0fcfa;          /* primary/10 tương đương */
-  --success-border: #b3e0d8;      /* primary/30 tương đương */
+  --success: var(--primary);
+  /* dùng màu primary cho trạng thái tốt */
+  --success-bg: #f0fcfa;
+  /* primary/10 tương đương */
+  --success-border: #b3e0d8;
+  /* primary/30 tương đương */
 
-  --vacant: #0ea5e9;             /* sky-500: phòng trống */
-  --vacant-hover: #0284c7;       /* sky-600 */
-  --vacant-bg: #f0f9ff;          /* sky-50 */
-  --vacant-border: #bae6fd;      /* sky-200 */
+  --vacant: #0ea5e9;
+  /* sky-500: phòng trống */
+  --vacant-hover: #0284c7;
+  /* sky-600 */
+  --vacant-bg: #f0f9ff;
+  /* sky-50 */
+  --vacant-border: #bae6fd;
+  /* sky-200 */
 
   --warning: #d97706;
   /* amber-600: sắp hết hạn / cảnh báo */
