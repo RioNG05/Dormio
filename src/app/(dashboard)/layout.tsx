@@ -10,7 +10,7 @@ import {
   UserCircle, Calendar, Clock,
   Settings, HelpCircle,
   LogOut, Menu, X, ChevronDown, ChevronRight,
-  AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen
+  AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle
 } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -40,6 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: "Khách thuê", href: "/landlord/customers", icon: Users },
         { name: "Hợp đồng", href: "/landlord/contracts", icon: FileText },
         { name: "Nhắc nhở", href: "/landlord/reminders", icon: Bell },
+        { name: "Tin nhắn", href: "/landlord/messages", icon: MessageCircle },
       ]
     },
     {
@@ -92,10 +93,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   const tenantMenus = [
-    { name: "Tổng quan", href: "/tenant", icon: LayoutDashboard },
-    { name: "Hóa đơn của tôi", href: "/tenant/invoices", icon: Receipt },
-    { name: "Yêu cầu hỗ trợ", href: "/tenant/support", icon: HelpCircle },
-    { name: "Cài đặt tài khoản", href: "/tenant/settings", icon: Settings },
+    { name: "Thông tin trọ", href: "/tenant", icon: Building },
+    { name: "Thống kê & Hóa đơn", href: "/tenant/invoices", icon: Receipt },
+    { name: "Tin nhắn", href: "/tenant/messages", icon: MessageCircle },
+    { name: "Yêu cầu hỗ trợ", href: "/tenant/complaints", icon: MessageSquare },
   ];
 
   const NavContent = () => {
@@ -108,11 +109,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={idx}
                 href={item.href}
-                className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                }`}
+                className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
               >
                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />}
                 <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-zinc-400"}`} strokeWidth={isActive ? 2 : 1.75} />
@@ -134,11 +134,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={idx}
                 href={block.href!}
-                className={`relative flex items-center gap-3 px-3 py-2 mb-3 text-sm font-semibold rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
-                }`}
+                className={`relative flex items-center gap-3 px-3 py-2 mb-3 text-sm font-semibold rounded-lg transition-colors ${isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
               >
                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />}
                 <block.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-zinc-500"}`} strokeWidth={isActive ? 2 : 1.75} />
@@ -169,11 +168,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <Link
                         key={i}
                         href={item.href}
-                        className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          isActive
-                            ? "bg-primary/10 text-primary"
-                            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                        }`}
+                        className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                          }`}
                       >
                         {isActive && (
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
