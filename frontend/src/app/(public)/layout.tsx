@@ -26,6 +26,9 @@ export default function PublicLayout({
             <Link href="/" className="text-sm font-semibold text-zinc-900 hover:text-accent transition-colors">
               Trang chủ
             </Link>
+            <Link href="/rooms" className="text-sm font-semibold text-zinc-600 hover:text-accent transition-colors">
+              Phòng trọ
+            </Link>
             <Link href="/features" className="text-sm font-semibold text-zinc-600 hover:text-accent transition-colors">
               Tính năng
             </Link>
@@ -89,6 +92,7 @@ export default function PublicLayout({
                 Sản phẩm
               </h3>
               <ul className="space-y-3">
+                <li><Link href="/rooms" className="text-sm text-zinc-500 hover:text-accent transition-colors">Phòng trọ</Link></li>
                 <li><Link href="/features" className="text-sm text-zinc-500 hover:text-accent transition-colors">Tính năng</Link></li>
                 <li><Link href="/pricing" className="text-sm text-zinc-500 hover:text-accent transition-colors">Bảng giá</Link></li>
                 <li><Link href="/register" className="text-sm text-zinc-500 hover:text-accent transition-colors">Dùng thử miễn phí</Link></li>
