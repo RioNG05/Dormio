@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AIChatBot from "@/components/AIChatBot";
 import {
   LayoutDashboard, Home, Users, FileText, Bell,
   Wallet, CreditCard,
@@ -39,7 +40,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: "Phòng", href: "/landlord/rooms", icon: DoorOpen },
         { name: "Khách thuê", href: "/landlord/customers", icon: Users },
         { name: "Hợp đồng", href: "/landlord/contracts", icon: FileText },
-        { name: "Nhắc nhở", href: "/landlord/reminders", icon: Bell },
+        { name: "Tài sản", href: "/landlord/assets", icon: Package },
+        { name: "Dịch vụ", href: "/landlord/services", icon: Wrench },
+        { name: "Thông báo & Nhắc nhở", href: "/landlord/reminders", icon: Bell },
         { name: "Tin nhắn", href: "/landlord/messages", icon: MessageCircle },
       ]
     },
@@ -49,20 +52,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       items: [
         { name: "Hoá đơn", href: "/landlord/invoices", icon: Receipt },
         { name: "Công nợ", href: "/landlord/debts", icon: AlertTriangle },
-        { name: "Thanh toán", href: "/landlord/payments", icon: CreditCard },
         { name: "Đặt cọc", href: "/landlord/deposits", icon: Shield },
         { name: "Chi phí", href: "/landlord/expenses", icon: Wallet },
-      ]
-    },
-    {
-      group: "Cơ sở vật chất",
-      key: "co-so-vat-chat",
-      items: [
-        { name: "Tài sản", href: "/landlord/assets", icon: Package },
-        { name: "Bảo trì", href: "/landlord/maintenance", icon: Hammer },
-        { name: "Dịch vụ", href: "/landlord/services", icon: Wrench },
-        { name: "Ghi chỉ số", href: "/landlord/meters", icon: Gauge },
-        { name: "Lịch sử ghi chỉ số", href: "/landlord/meter-history", icon: History },
       ]
     },
     {
@@ -276,6 +267,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
       </div>
+      {!isTenant && <AIChatBot />}
     </div>
   );
 }
