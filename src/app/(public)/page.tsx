@@ -42,7 +42,7 @@ export default function HomePage() {
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-            
+
             {/* Left Column - Content */}
             <div className="flex flex-col items-start text-left gap-6">
               {/* Badge */}
@@ -50,13 +50,13 @@ export default function HomePage() {
                 <ShieldCheck className="mr-2 h-4 w-4" />
                 GIẢI PHÁP QUẢN LÝ NHÀ TRỌ TOÀN DIỆN
               </div>
-              
+
               {/* Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 leading-[1.15]">
                 Quản lý nhà trọ <br /> chuyên nghiệp, <br />
-                <span className="text-primary">Tăng lợi nhuận dễ dàng</span>
+                <span className="text-primary">dễ dàng, tiện lợi</span>
               </h1>
-              
+
               {/* Sub-headline */}
               <p className="text-lg text-zinc-500 max-w-lg leading-relaxed">
                 Tiết kiệm thời gian, giảm thiểu rủi ro và tối ưu doanh thu với phần mềm quản lý nhà trọ thông minh Dormio.
@@ -175,7 +175,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Floating Widget Mockup */}
                 <div className="absolute -bottom-6 -left-6 bg-white border border-zinc-100 rounded-2xl p-4 shadow-xl w-40 z-20 flex flex-col gap-3">
                   <div>
@@ -203,7 +203,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold tracking-tight text-zinc-900">Tại sao chọn Dormio?</h2>
             <p className="mt-4 text-zinc-500">Trải nghiệm tìm phòng và quản lý khác biệt hoàn toàn.</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {[
               { icon: ShieldCheck, title: "Xác thực 100%", desc: "Mọi tin đăng và chủ nhà đều được kiểm duyệt kỹ lưỡng, đảm bảo an toàn tuyệt đối." },
@@ -270,7 +270,7 @@ export default function HomePage() {
                   <MapPin className="h-4 w-4 shrink-0" />
                   <span className="line-clamp-1">{room.address}</span>
                 </div>
-                
+
                 <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
                   <div>
                     <span className="text-xl font-bold text-[#ee6927]">
@@ -292,14 +292,14 @@ export default function HomePage() {
       {/* Services CTA Section based on Image 2 */}
       <section className="relative my-20 mx-4 sm:mx-6 lg:mx-auto max-w-7xl rounded-[2.5rem] overflow-hidden bg-primary shadow-2xl">
         <div className="relative px-8 py-16 md:px-16 md:py-20 flex flex-col lg:flex-row items-center justify-between gap-12 text-white">
-          
+
           {/* Graphic / Icon */}
           <div className="hidden lg:flex items-center justify-center shrink-0 w-32 h-32">
             <div className="relative w-24 h-24 flex items-center justify-center">
               <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                <path d="M50 20L20 45V85H80V45L50 20Z" fill="white" stroke="currentColor" strokeWidth="4" strokeLinejoin="round"/>
-                <path d="M40 85V55H60V85" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round"/>
-                <path d="M50 10V20" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
+                <path d="M50 20L20 45V85H80V45L50 20Z" fill="white" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+                <path d="M40 85V55H60V85" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+                <path d="M50 10V20" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
                 <rect x="25" y="55" width="10" height="10" fill="currentColor" />
                 <rect x="65" y="55" width="10" height="10" fill="currentColor" />
               </svg>
