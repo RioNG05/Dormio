@@ -12,9 +12,12 @@ export class InvoicesController {
   }
 
   @Get()
-  async findAll(@Query('houseId') houseId?: string) {
+  async findAll(@Query('houseId') houseId?: string, @Query('tenantId') tenantId?: string) {
     if (houseId) {
       return this.invoicesService.findAllByHouse(houseId);
+    }
+    if (tenantId) {
+      return this.invoicesService.findAllByTenant(tenantId);
     }
     return [];
   }

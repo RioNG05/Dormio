@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Patch } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 
@@ -22,5 +22,10 @@ export class ContractsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.contractsService.findOne(id);
+  }
+
+  @Patch(':id/terminate')
+  async terminate(@Param('id') id: string) {
+    return this.contractsService.terminate(id);
   }
 }

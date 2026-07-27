@@ -12,9 +12,12 @@ export class ComplaintsController {
   }
 
   @Get()
-  async findAll(@Query('houseId') houseId?: string) {
+  async findAll(@Query('houseId') houseId?: string, @Query('tenantId') tenantId?: string) {
     if (houseId) {
       return this.complaintsService.findAllByHouse(houseId);
+    }
+    if (tenantId) {
+      return this.complaintsService.findAllByTenant(tenantId);
     }
     return [];
   }

@@ -87,6 +87,25 @@ export class InvoicesService {
     });
   }
 
+  async findAllByTenant(tenantId: string) {
+    return this.prisma.invoice.findMany({
+      where: {
+        contract: {
+          tenantId,
+        },
+      },
+      include: {
+        contract: {
+          include: { landlord: true },
+        },
+        house: true,
+        room: true,
+        payments: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findOne(id: string) {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },

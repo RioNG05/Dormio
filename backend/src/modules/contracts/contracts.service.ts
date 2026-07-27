@@ -65,4 +65,25 @@ export class ContractsService {
 
     return contract;
   }
+
+  async terminate(id: string) {
+    const contract = await this.prisma.contract.findUnique({ where: { id } });
+    if (!contract) {
+      throw new NotFoundException('Không tìm thấy hợp đồng');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedContract = await tx.contract.update({
+        where: { id },
+        data: { status: 'TERMINATED' },
+      });
+
+      await tx.room.update({
+        where: { id: contract.roomId },
+        data: { status: 'AVAILABLE' },
+      });
+
+      return updatedContract;
+    });
+  }
 }

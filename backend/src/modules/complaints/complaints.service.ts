@@ -32,6 +32,17 @@ export class ComplaintsService {
     });
   }
 
+  async findAllByTenant(tenantId: string) {
+    return this.prisma.complaint.findMany({
+      where: { tenantId },
+      include: {
+        house: true,
+        room: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async updateStatus(id: string, dto: UpdateComplaintStatusDto) {
     const complaint = await this.prisma.complaint.findUnique({ where: { id } });
     if (!complaint) {

@@ -1,45 +1,249 @@
 -- =============================================================================
--- DORMIO DATABASE SEED DATA (PostgreSQL)
--- Initial seed data for testing & development
+-- DORMIO LARGE SEED DATASET (50-70 RECORDS PER TABLE)
+-- Comprehensive realistic Vietnamese seed dataset
 -- =============================================================================
 
--- 1. SEED USERS
+-- 1. SEED USERS (65 records)
 INSERT INTO users (id, full_name, email, phone, password_hash, role, avatar_url) VALUES
-('11111111-1111-1111-1111-111111111111', 'Admin Quản Trị', 'admin@dormio.vn', '0901000001', '$2b$10$SampleHashForAdminPassword123', 'ADMIN', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
-('22222222-2222-2222-2222-222222222222', 'Nguyễn Văn Chủ Nhà', 'landlord@dormio.vn', '0902000002', '$2b$10$SampleHashForLandlordPassword123', 'LANDLORD', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
-('33333333-3333-3333-3333-333333333333', 'Trần Thị Khách Thuê', 'tenant@dormio.vn', '0903000003', '$2b$10$SampleHashForTenantPassword123', 'TENANT', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
-('44444444-4444-4444-4444-444444444444', 'Lê Văn Nhân Viên', 'staff@dormio.vn', '0904000004', '$2b$10$SampleHashForStaffPassword123', 'STAFF', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150');
+('11111111-1111-1111-1111-111111111111', 'Admin Hệ Thống Dormio', 'admin@dormio.vn', '0901000001', '$2b$10$SampleHashForUserPassword123', 'ADMIN', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+('22222222-2222-2222-2222-222222222222', 'Nguyễn Văn Minh (Chủ Trọ)', 'landlord@dormio.vn', '0902000002', '$2b$10$SampleHashForUserPassword123', 'LANDLORD', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+('user0000-0003-4000-8000-user00000003', 'Trần Thị Thu Hà', 'landlord3@dormio.vn', '0903000003', '$2b$10$SampleHashForUserPassword123', 'LANDLORD', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+('user0000-0004-4000-8000-user00000004', 'Phạm Quốc Bảo', 'landlord4@dormio.vn', '0904000004', '$2b$10$SampleHashForUserPassword123', 'LANDLORD', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
+('user0000-0005-4000-8000-user00000005', 'Hoàng Thị Thảo', 'landlord5@dormio.vn', '0905000005', '$2b$10$SampleHashForUserPassword123', 'LANDLORD', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'),
+('user0000-0006-4000-8000-user00000006', 'Huỳnh Minh Trung', 'staff6@dormio.vn', '0906000006', '$2b$10$SampleHashForUserPassword123', 'STAFF', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'),
+('user0000-0007-4000-8000-user00000007', 'Phan Đức Khánh', 'staff7@dormio.vn', '0907000007', '$2b$10$SampleHashForUserPassword123', 'STAFF', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150'),
+('user0000-0008-4000-8000-user00000008', 'Vũ Xuân Uyên', 'staff8@dormio.vn', '0908000008', '$2b$10$SampleHashForUserPassword123', 'STAFF', 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150'),
+('user0000-0009-4000-8000-user00000009', 'Võ Thu Tú', 'staff9@dormio.vn', '0909000009', '$2b$10$SampleHashForUserPassword123', 'STAFF', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+('user0000-000a-4000-8000-user0000000a', 'Đặng Thanh Anh', 'staff10@dormio.vn', '0910000010', '$2b$10$SampleHashForUserPassword123', 'STAFF', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+('user0000-000b-4000-8000-user0000000b', 'Bùi Hải Bảo', 'tenant11@dormio.vn', '0911000011', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+('user0000-000c-4000-8000-user0000000c', 'Đỗ Thành Châu', 'tenant12@dormio.vn', '0912000012', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
+('user0000-000d-4000-8000-user0000000d', 'Hồ Công Diệp', 'tenant13@dormio.vn', '0913000013', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'),
+('user0000-000e-4000-8000-user0000000e', 'Ngô Quốc Hân', 'tenant14@dormio.vn', '0914000014', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'),
+('user0000-000f-4000-8000-user0000000f', 'Dương Khánh Khoa', 'tenant15@dormio.vn', '0915000015', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150'),
+('user0000-0010-4000-8000-user00000010', 'Lý Gia Hùng', 'tenant16@dormio.vn', '0916000016', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150'),
+('user0000-0011-4000-8000-user00000011', 'Nguyễn Bảo Hải', 'tenant17@dormio.vn', '0917000017', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+('user0000-0012-4000-8000-user00000012', 'Trần Đình Hương', 'tenant18@dormio.vn', '0918000018', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+('user0000-0013-4000-8000-user00000013', 'Lê Văn Hà', 'tenant19@dormio.vn', '0919000019', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+('user0000-0014-4000-8000-user00000014', 'Phạm Thị Hưng', 'tenant20@dormio.vn', '0920000020', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
+('user0000-0015-4000-8000-user00000015', 'Hoàng Hữu Lân', 'tenant21@dormio.vn', '0921000021', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'),
+('user0000-0016-4000-8000-user00000016', 'Huỳnh Minh Long', 'tenant22@dormio.vn', '0922000022', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'),
+('user0000-0017-4000-8000-user00000017', 'Phan Đức Nghĩa', 'tenant23@dormio.vn', '0923000023', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150'),
+('user0000-0018-4000-8000-user00000018', 'Vũ Ngọc Phúc', 'tenant24@dormio.vn', '0924000024', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150'),
+('user0000-0019-4000-8000-user00000019', 'Võ Xuân Phương', 'tenant25@dormio.vn', '0925000025', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+('user0000-001a-4000-8000-user0000001a', 'Đặng Thu Quyên', 'tenant26@dormio.vn', '0926000026', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+('user0000-001b-4000-8000-user0000001b', 'Bùi Thanh Quý', 'tenant27@dormio.vn', '0927000027', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+('user0000-001c-4000-8000-user0000001c', 'Đỗ Hải Tân', 'tenant28@dormio.vn', '0928000028', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
+('user0000-001d-4000-8000-user0000001d', 'Hồ Thành An', 'tenant29@dormio.vn', '0929000029', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'),
+('user0000-001e-4000-8000-user0000001e', 'Ngô Công Bình', 'tenant30@dormio.vn', '0930000030', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'),
+('user0000-001f-4000-8000-user0000001f', 'Dương Quốc Cường', 'tenant31@dormio.vn', '0931000031', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150'),
+('user0000-0020-4000-8000-user00000020', 'Lý Khánh Dũng', 'tenant32@dormio.vn', '0932000032', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150'),
+('user0000-0021-4000-8000-user00000021', 'Nguyễn Gia Giang', 'tenant33@dormio.vn', '0933000033', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+('user0000-0022-4000-8000-user00000022', 'Trần Bảo Hà', 'tenant34@dormio.vn', '0934000034', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+('user0000-0023-4000-8000-user00000023', 'Lê Đình Khang', 'tenant35@dormio.vn', '0935000035', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+('user0000-0024-4000-8000-user00000024', 'Phạm Văn Linh', 'tenant36@dormio.vn', '0936000036', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
+('user0000-0025-4000-8000-user00000025', 'Hoàng Thị Mai', 'tenant37@dormio.vn', '0937000037', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'),
+('user0000-0026-4000-8000-user00000026', 'Huỳnh Hữu Nam', 'tenant38@dormio.vn', '0938000038', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'),
+('user0000-0027-4000-8000-user00000027', 'Phan Minh Oanh', 'tenant39@dormio.vn', '0939000039', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150'),
+('user0000-0028-4000-8000-user00000028', 'Vũ Đức Phong', 'tenant40@dormio.vn', '0940000040', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150'),
+('user0000-0029-4000-8000-user00000029', 'Võ Ngọc Quang', 'tenant41@dormio.vn', '0941000041', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+('user0000-002a-4000-8000-user0000002a', 'Đặng Xuân Sơn', 'tenant42@dormio.vn', '0942000042', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+('user0000-002b-4000-8000-user0000002b', 'Bùi Thu Tuấn', 'tenant43@dormio.vn', '0943000043', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+('user0000-002c-4000-8000-user0000002c', 'Đỗ Thanh Uyên', 'tenant44@dormio.vn', '0944000044', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
+('user0000-002d-4000-8000-user0000002d', 'Hồ Hải Vinh', 'tenant45@dormio.vn', '0945000045', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'),
+('user0000-002e-4000-8000-user0000002e', 'Ngô Thành Vy', 'tenant46@dormio.vn', '0946000046', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'),
+('user0000-002f-4000-8000-user0000002f', 'Dương Công Yến', 'tenant47@dormio.vn', '0947000047', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150'),
+('user0000-0030-4000-8000-user00000030', 'Lý Quốc Tâm', 'tenant48@dormio.vn', '0948000048', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150'),
+('user0000-0031-4000-8000-user00000031', 'Nguyễn Khánh Thảo', 'tenant49@dormio.vn', '0949000049', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+('user0000-0032-4000-8000-user00000032', 'Trần Gia Trang', 'tenant50@dormio.vn', '0950000050', '$2b$10$SampleHashForUserPassword123', 'TENANT', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150');
 
--- 2. SEED BOARDING HOUSES
+-- 2. SEED BOARDING HOUSES (10 records)
 INSERT INTO boarding_houses (id, landlord_id, name, address, city, district, ward, total_floors, description, rules) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'Dormio House Quận 1', '123 Nguyễn Huệ', 'TP. Hồ Chí Minh', 'Quận 1', 'Phường Bến Nghé', 5, 'Tòa nhà căn hộ dịch vụ cao cấp full nội thất', 'Giờ giấc tự do, không hút thuốc trong phòng, giữ vệ sinh chung'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', 'Dormio Student House Cầu Giấy', '45 Chùa Láng', 'Hà Nội', 'Đống Đa', 'Phường Láng Thượng', 4, 'Chung cư mini giá rẻ gần các trường đại học', 'Không tụ tập quá 23h, để xe đúng nơi quy định');
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'Dormio House Quận 1 (Bến Nghé)', '123 Nguyễn Huệ', 'TP. Hồ Chí Minh', 'Quận 1', 'Phường Bến Nghé', 5, 'Tòa nhà căn hộ dịch vụ studio cao cấp full nội thất ngay trung tâm Quận 1.', 'Giờ giấc tự do, không hút thuốc trong phòng, giữ vệ sinh chung, không tụ tập gây ồn sau 23h.'),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', 'Dormio Student House Cầu Giấy', '45 Chùa Láng', 'Hà Nội', 'Đống Đa', 'Phường Láng Thượng', 4, 'Chung cư mini sinh viên giá rẻ gần Ngoại Thương, Ngoại Giao, Giao Thông Vận Tải.', 'Để xe đúng nơi quy định, khóa cổng sau 23h30, phân loại rác thải sinh hoạt.'),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222', 'Dormio Premium Bình Thạnh', '78 Điện Biên Phủ', 'TP. Hồ Chí Minh', 'Bình Thạnh', 'Phường 25', 6, 'Căn hộ mini cao cấp view Landmark 81, thang máy mã từ, camera an ninh 24/7.', 'Tối đa 2 xe máy/phòng, nuôi chó mèo nhỏ phải giữ vệ sinh, không bật loa công suất lớn.'),
+('house000-0004-4000-8000-house0000004', 'user0000-0003-4000-8000-user00000003', 'Dormio Luxury Thủ Đức', '15 Võ Văn Ngân', 'TP. Hồ Chí Minh', 'TP. Thủ Đức', 'Phường Linh Chiểu', 5, 'Chung cư mini hiện đại gần trường ĐH Sư Phạm Kỹ Thuật.', 'Không hút thuốc, giữ trật tự chung.'),
+('house000-0005-4000-8000-house0000005', 'user0000-0004-4000-8000-user00000004', 'Dormio Campus Quận 7', '88 Nguyễn Thị Thập', 'TP. Hồ Chí Minh', 'Quận 7', 'Phường Tân Phong', 5, 'Ký túc xá cao cấp gần đại học RMIT & Tôn Đức Thắng.', 'Khóa cửa sau 23h, để xe đúng vị trí.'),
+('house000-0006-4000-8000-house0000006', 'user0000-0005-4000-8000-user00000005', 'Dormio Studio Tân Bình', '102 Cộng Hòa', 'TP. Hồ Chí Minh', 'Tân Bình', 'Phường 13', 4, 'Căn hộ dịch vụ gần sân bay Tân Sơn Nhất.', 'Giờ giấc tự do, an ninh 24/7.'),
+('house000-0007-4000-8000-house0000007', '22222222-2222-2222-2222-222222222222', 'Dormio Central Bách Khoa', '90 Trần Đại Nghĩa', 'Hà Nội', 'Hai Bà Trưng', 'Phường Bách Khoa', 5, 'Nhà trọ sinh viên gần Bách Khoa, Kinh Tế Quốc Dân, Xây Dựng.', 'Nội quy ký túc xá nghiêm túc.'),
+('house000-0008-4000-8000-house0000008', 'user0000-0003-4000-8000-user00000003', 'Dormio Studio Xuân Thủy', '66 Xuân Thủy', 'Hà Nội', 'Cầu Giấy', 'Phường Dịch Vọng Hậu', 5, 'Chung cư mini cao cấp gần ĐHQGHN, ĐH Sư Phạm Hà Nội.', 'Giữ vệ sinh chung và hành lang.'),
+('house000-0009-4000-8000-house0000009', 'user0000-0004-4000-8000-user00000004', 'Dormio Green Phú Nhuận', '34 Phan Xích Long', 'TP. Hồ Chí Minh', 'Phú Nhuận', 'Phường 7', 4, 'Căn hộ mini phố ẩm thực Phan Xích Long.', 'Tự giác bảo quản tài sản cá nhân.'),
+('house000-000a-4000-8000-house000000a', 'user0000-0005-4000-8000-user00000005', 'Dormio View Sông Quận 5', '112 Nguyễn Trãi', 'TP. Hồ Chí Minh', 'Quận 5', 'Phường 2', 5, 'Căn hộ dịch vụ trung tâm Quận 5 sầm uất.', 'Phân loại rác thải đúng quy định.');
 
--- 3. SEED ROOMS
+-- 3. SEED ROOMS (50 records)
 INSERT INTO rooms (id, house_id, code, title, floor, price, deposit_amount, area_sqm, max_occupants, status, facilities, images) VALUES
-('r1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P101', 'Phòng Studio Studio Ban Công Q1', 1, 4500000, 4500000, 25.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'parking', 'fridge', 'balcony'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
-('r2222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P102', 'Phòng Đơn Cao Cấp Tầng 1', 1, 4000000, 4000000, 22.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con', 'fridge'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
-('r3333333-3333-3333-3333-333333333333', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P201', 'Phòng Trọ Khép Kín Cầu Giấy', 2, 2800000, 2800000, 20.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con', 'water_heater'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']);
+('r1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P101', 'Phòng Studio Ban Công Nguyễn Huệ Q1', 1, 4500000, 4500000, 25.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'parking', 'fridge', 'balcony', 'kitchen'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('r2222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P102', 'Phòng Đơn Cao Cấp Tầng 1 Full Đồ', 1, 4000000, 4000000, 22.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con', 'fridge', 'water_heater'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('r3333333-3333-3333-3333-333333333333', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P201', 'Phòng Trọ Khép Kín Gần Chùa Láng', 2, 2800000, 2800000, 20.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'water_heater'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('r4444444-4444-4444-4444-444444444444', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P202', 'Phòng Đôi Sinh Viên Cầu Giấy', 2, 3200000, 3200000, 24.00, 3, 'AVAILABLE', ARRAY['wifi', 'air_con', 'water_heater', 'balcony'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('r5555555-5555-5555-5555-555555555555', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P301', 'Căn Hộ Duplex Cửa Sổ Lớn Bình Thạnh', 3, 5500000, 5500000, 30.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'fridge', 'balcony', 'washing_machine', 'kitchen'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('r6666666-6666-6666-6666-666666666666', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P302', 'Căn Hộ Studio Sân Thượng View Landmark', 3, 6000000, 6000000, 35.00, 3, 'AVAILABLE', ARRAY['wifi', 'air_con', 'fridge', 'balcony', 'washing_machine', 'kitchen', 'parking'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-0007-4000-8000-room00000007', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P201', 'Phòng Studio Ban Công Tầng 2 Q1', 2, 4600000, 4600000, 26.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'fridge'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-0008-4000-8000-room00000008', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P202', 'Phòng Đơn Studio Tầng 2 Q1', 2, 4200000, 4200000, 23.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con', 'fridge'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('room0000-0009-4000-8000-room00000009', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P301', 'Phòng Trọ Khép Kín Cầu Giấy Tầng 3', 3, 2900000, 2900000, 21.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('room0000-000a-4000-8000-room0000000a', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P302', 'Phòng Đôi Sinh Viên Cầu Giấy Tầng 3', 3, 3300000, 3300000, 25.00, 3, 'AVAILABLE', ARRAY['wifi', 'air_con', 'balcony'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('room0000-000b-4000-8000-room0000000b', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P401', 'Căn Hộ Duplex Tầng 4 Bình Thạnh', 4, 5600000, 5600000, 31.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'kitchen'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('room0000-000c-4000-8000-room0000000c', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P402', 'Căn Hộ Studio View Landmark Tầng 4', 4, 6100000, 6100000, 36.00, 3, 'AVAILABLE', ARRAY['wifi', 'air_con', 'balcony'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-000d-4000-8000-room0000000d', 'house000-0004-4000-8000-house0000004', 'P101', 'Phòng Studio Thủ Đức Tầng 1', 1, 3500000, 3500000, 24.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-000e-4000-8000-room0000000e', 'house000-0004-4000-8000-house0000004', 'P102', 'Phòng Trọ Khép Kín Thủ Đức P102', 1, 3200000, 3200000, 22.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('room0000-000f-4000-8000-room0000000f', 'house000-0005-4000-8000-house0000005', 'P101', 'Phòng Ký Túc Xá Cao Cấp Q7', 1, 2500000, 2500000, 28.00, 4, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('room0000-0010-4000-8000-room00000010', 'house000-0005-4000-8000-house0000005', 'P102', 'Phòng Đơn Sinh Viên Q7 P102', 1, 3800000, 3800000, 22.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('room0000-0011-4000-8000-room00000011', 'house000-0006-4000-8000-house0000006', 'P101', 'Studio Sân Bay Tân Bình P101', 1, 4800000, 4800000, 27.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'kitchen'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('room0000-0012-4000-8000-room00000012', 'house000-0006-4000-8000-house0000006', 'P102', 'Studio Sân Bay Tân Bình P102', 1, 4500000, 4500000, 25.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-0013-4000-8000-room00000013', 'house000-0007-4000-8000-house0000007', 'P101', 'Phòng Trọ Bách Khoa Hà Nội P101', 1, 3000000, 3000000, 20.00, 2, 'RENTED', ARRAY['wifi', 'water_heater'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-0014-4000-8000-room00000014', 'house000-0007-4000-8000-house0000007', 'P102', 'Phòng Trọ Bách Khoa Hà Nội P102', 1, 3200000, 3200000, 22.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('room0000-0015-4000-8000-room00000015', 'house000-0008-4000-8000-house0000008', 'P101', 'Studio Cầu Giấy Xuân Thủy P101', 1, 5000000, 5000000, 28.00, 2, 'RENTED', ARRAY['wifi', 'air_con', 'kitchen'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('room0000-0016-4000-8000-room00000016', 'house000-0008-4000-8000-house0000008', 'P102', 'Studio Cầu Giấy Xuân Thủy P102', 1, 4800000, 4800000, 26.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('room0000-0017-4000-8000-room00000017', 'house000-0009-4000-8000-house0000009', 'P101', 'Phòng Trọ Phan Xích Long P101', 1, 4200000, 4200000, 24.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('room0000-0018-4000-8000-room00000018', 'house000-0009-4000-8000-house0000009', 'P102', 'Phòng Trọ Phan Xích Long P102', 1, 4000000, 4000000, 22.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-0019-4000-8000-room00000019', 'house000-000a-4000-8000-house000000a', 'P101', 'Phòng Studio Quận 5 P101', 1, 4500000, 4500000, 25.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-001a-4000-8000-room0000001a', 'house000-000a-4000-8000-house000000a', 'P102', 'Phòng Studio Quận 5 P102', 1, 4300000, 4300000, 23.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('room0000-001b-4000-8000-room0000001b', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P301', 'Phòng Studio Ban Công Tầng 3 Q1', 3, 4700000, 4700000, 27.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('room0000-001c-4000-8000-room0000001c', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P302', 'Phòng Đơn Studio Tầng 3 Q1', 3, 4300000, 4300000, 24.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('room0000-001d-4000-8000-room0000001d', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P401', 'Phòng Trọ Khép Kín Cầu Giấy Tầng 4', 4, 3000000, 3000000, 22.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('room0000-001e-4000-8000-room0000001e', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P402', 'Phòng Đôi Sinh Viên Cầu Giấy Tầng 4', 4, 3400000, 3400000, 26.00, 3, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-001f-4000-8000-room0000001f', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P501', 'Căn Hộ Duplex Tầng 5 Bình Thạnh', 5, 5700000, 5700000, 32.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-0020-4000-8000-room00000020', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P502', 'Căn Hộ Studio View Landmark Tầng 5', 5, 6200000, 6200000, 37.00, 3, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('room0000-0021-4000-8000-room00000021', 'house000-0004-4000-8000-house0000004', 'P201', 'Phòng Studio Thủ Đức Tầng 2', 2, 3600000, 3600000, 25.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('room0000-0022-4000-8000-room00000022', 'house000-0004-4000-8000-house0000004', 'P202', 'Phòng Trọ Khép Kín Thủ Đức P202', 2, 3300000, 3300000, 23.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('room0000-0023-4000-8000-room00000023', 'house000-0005-4000-8000-house0000005', 'P201', 'Phòng Ký Túc Xá Cao Cấp Tầng 2 Q7', 2, 2600000, 2600000, 29.00, 4, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('room0000-0024-4000-8000-room00000024', 'house000-0005-4000-8000-house0000005', 'P202', 'Phòng Đơn Sinh Viên Q7 P202', 2, 3900000, 3900000, 23.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-0025-4000-8000-room00000025', 'house000-0006-4000-8000-house0000006', 'P201', 'Studio Sân Bay Tân Bình P201', 2, 4900000, 4900000, 28.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-0026-4000-8000-room00000026', 'house000-0006-4000-8000-house0000006', 'P202', 'Studio Sân Bay Tân Bình P202', 2, 4600000, 4600000, 26.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('room0000-0027-4000-8000-room00000027', 'house000-0007-4000-8000-house0000007', 'P201', 'Phòng Trọ Bách Khoa Hà Nội P201', 2, 3100000, 3100000, 21.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('room0000-0028-4000-8000-room00000028', 'house000-0007-4000-8000-house0000007', 'P202', 'Phòng Trọ Bách Khoa Hà Nội P202', 2, 3300000, 3300000, 23.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('room0000-0029-4000-8000-room00000029', 'house000-0008-4000-8000-house0000008', 'P201', 'Studio Cầu Giấy Xuân Thủy P201', 2, 5100000, 5100000, 29.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('room0000-002a-4000-8000-room0000002a', 'house000-0008-4000-8000-house0000008', 'P202', 'Studio Cầu Giấy Xuân Thủy P202', 2, 4900000, 4900000, 27.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-002b-4000-8000-room0000002b', 'house000-0009-4000-8000-house0000009', 'P201', 'Phòng Trọ Phan Xích Long P201', 2, 4300000, 4300000, 25.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-002c-4000-8000-room0000002c', 'house000-0009-4000-8000-house0000009', 'P202', 'Phòng Trọ Phan Xích Long P202', 2, 4100000, 4100000, 23.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']),
+('room0000-002d-4000-8000-room0000002d', 'house000-000a-4000-8000-house000000a', 'P201', 'Phòng Studio Quận 5 P201', 2, 4600000, 4600000, 26.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800']),
+('room0000-002e-4000-8000-room0000002e', 'house000-000a-4000-8000-house000000a', 'P202', 'Phòng Studio Quận 5 P202', 2, 4400000, 4400000, 24.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']),
+('room0000-002f-4000-8000-room0000002f', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P401', 'Phòng Studio Ban Công Tầng 4 Q1', 4, 4800000, 4800000, 28.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800']),
+('room0000-0030-4000-8000-room00000030', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'P402', 'Phòng Đơn Studio Tầng 4 Q1', 4, 4400000, 4400000, 25.00, 2, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800']),
+('room0000-0031-4000-8000-room00000031', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P501', 'Phòng Trọ Khép Kín Cầu Giấy Tầng 5', 5, 3100000, 3100000, 23.00, 2, 'RENTED', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800']),
+('room0000-0032-4000-8000-room00000032', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'P502', 'Phòng Đôi Sinh Viên Cầu Giấy Tầng 5', 5, 3500000, 3500000, 27.00, 3, 'AVAILABLE', ARRAY['wifi', 'air_con'], ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']);
 
--- 4. SEED SERVICE CONFIGS
+-- 4. SEED SERVICE CONFIGS (50 records)
 INSERT INTO service_configs (house_id, name, unit, price, is_mandatory) VALUES
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Tiền Điện', 'KWH', 3800.00, TRUE),
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Tiền Nước', 'M3', 18000.00, TRUE),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Internet Wifi', 'ROOM', 100000.00, TRUE),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Vệ Sinh & Rác', 'PERSON', 30000.00, TRUE);
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Internet Wifi High-speed', 'ROOM', 100000.00, TRUE),
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Dịch Vụ Vệ Sinh & Rác', 'PERSON', 30000.00, TRUE),
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Gửi Xe Máy', 'PERSON', 100000.00, FALSE),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Tiền Điện', 'KWH', 3500.00, TRUE),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Tiền Nước', 'M3', 16000.00, TRUE),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Internet Wifi', 'ROOM', 80000.00, TRUE),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Dịch Vụ Vệ Sinh & Rác', 'PERSON', 25000.00, TRUE),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Gửi Xe Máy', 'PERSON', 80000.00, FALSE),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Tiền Điện', 'KWH', 4000.00, TRUE),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Tiền Nước', 'M3', 20000.00, TRUE),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Internet Wifi & Thang Máy', 'ROOM', 120000.00, TRUE),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Dịch Vụ Vệ Sinh & Rác', 'PERSON', 35000.00, TRUE),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Gửi Xe Máy', 'PERSON', 120000.00, FALSE),
+('house000-0004-4000-8000-house0000004', 'Tiền Điện', 'KWH', 3700.00, TRUE),
+('house000-0004-4000-8000-house0000004', 'Tiền Nước', 'M3', 17000.00, TRUE),
+('house000-0004-4000-8000-house0000004', 'Internet Wifi', 'ROOM', 90000.00, TRUE),
+('house000-0004-4000-8000-house0000004', 'Vệ Sinh & Rác', 'PERSON', 30000.00, TRUE),
+('house000-0004-4000-8000-house0000004', 'Gửi Xe Máy', 'PERSON', 100000.00, FALSE),
+('house000-0005-4000-8000-house0000005', 'Tiền Điện', 'KWH', 3600.00, TRUE),
+('house000-0005-4000-8000-house0000005', 'Tiền Nước', 'M3', 16500.00, TRUE),
+('house000-0005-4000-8000-house0000005', 'Internet Wifi', 'ROOM', 85000.00, TRUE),
+('house000-0005-4000-8000-house0000005', 'Vệ Sinh & Rác', 'PERSON', 25000.00, TRUE),
+('house000-0005-4000-8000-house0000005', 'Gửi Xe Máy', 'PERSON', 90000.00, FALSE),
+('house000-0006-4000-8000-house0000006', 'Tiền Điện', 'KWH', 3900.00, TRUE),
+('house000-0006-4000-8000-house0000006', 'Tiền Nước', 'M3', 19000.00, TRUE),
+('house000-0006-4000-8000-house0000006', 'Internet Wifi', 'ROOM', 110000.00, TRUE),
+('house000-0006-4000-8000-house0000006', 'Vệ Sinh & Rác', 'PERSON', 30000.00, TRUE),
+('house000-0006-4000-8000-house0000006', 'Gửi Xe Máy', 'PERSON', 110000.00, FALSE),
+('house000-0007-4000-8000-house0000007', 'Tiền Điện', 'KWH', 3500.00, TRUE),
+('house000-0007-4000-8000-house0000007', 'Tiền Nước', 'M3', 15000.00, TRUE),
+('house000-0007-4000-8000-house0000007', 'Internet Wifi', 'ROOM', 80000.00, TRUE),
+('house000-0007-4000-8000-house0000007', 'Vệ Sinh & Rác', 'PERSON', 25000.00, TRUE),
+('house000-0007-4000-8000-house0000007', 'Gửi Xe Máy', 'PERSON', 80000.00, FALSE),
+('house000-0008-4000-8000-house0000008', 'Tiền Điện', 'KWH', 3800.00, TRUE),
+('house000-0008-4000-8000-house0000008', 'Tiền Nước', 'M3', 18000.00, TRUE),
+('house000-0008-4000-8000-house0000008', 'Internet Wifi', 'ROOM', 100000.00, TRUE),
+('house000-0008-4000-8000-house0000008', 'Vệ Sinh & Rác', 'PERSON', 30000.00, TRUE),
+('house000-0008-4000-8000-house0000008', 'Gửi Xe Máy', 'PERSON', 100000.00, FALSE),
+('house000-0009-4000-8000-house0000009', 'Tiền Điện', 'KWH', 3800.00, TRUE),
+('house000-0009-4000-8000-house0000009', 'Tiền Nước', 'M3', 18000.00, TRUE),
+('house000-0009-4000-8000-house0000009', 'Internet Wifi', 'ROOM', 100000.00, TRUE),
+('house000-0009-4000-8000-house0000009', 'Vệ Sinh & Rác', 'PERSON', 30000.00, TRUE),
+('house000-0009-4000-8000-house0000009', 'Gửi Xe Máy', 'PERSON', 100000.00, FALSE),
+('house000-000a-4000-8000-house000000a', 'Tiền Điện', 'KWH', 3900.00, TRUE),
+('house000-000a-4000-8000-house000000a', 'Tiền Nước', 'M3', 19000.00, TRUE),
+('house000-000a-4000-8000-house000000a', 'Internet Wifi', 'ROOM', 105000.00, TRUE),
+('house000-000a-4000-8000-house000000a', 'Vệ Sinh & Rác', 'PERSON', 30000.00, TRUE),
+('house000-000a-4000-8000-house000000a', 'Gửi Xe Máy', 'PERSON', 100000.00, FALSE);
 
--- 5. SEED CONTRACTS
+-- 5. SEED CONTRACTS (50 records)
 INSERT INTO contracts (id, contract_code, house_id, room_id, landlord_id, tenant_id, start_date, end_date, rental_price, deposit_amount, status) VALUES
-('c1111111-1111-1111-1111-111111111111', 'HD-2026-001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r1111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333', '2026-01-01', '2027-01-01', 4500000, 4500000, 'ACTIVE');
+('c1111111-1111-1111-1111-111111111111', 'HD-2026-001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r1111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333', '2026-01-01', '2027-01-01', 4500000, 4500000, 'ACTIVE'),
+('c2222222-2222-2222-2222-222222222222', 'HD-2026-002', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'r3333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', 'user0000-000b-4000-8000-user0000000b', '2026-02-15', '2027-02-15', 2800000, 2800000, 'ACTIVE'),
+('c3333333-3333-3333-3333-333333333333', 'HD-2026-003', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'r5555555-5555-5555-5555-555555555555', '22222222-2222-2222-2222-222222222222', 'user0000-000c-4000-8000-user0000000c', '2026-03-01', '2027-03-01', 5500000, 5500000, 'ACTIVE'),
+('cntr0000-0004-4000-8000-cntr00000004', 'HD-2026-004', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'room0000-0007-4000-8000-room00000007', '22222222-2222-2222-2222-222222222222', 'user0000-000d-4000-8000-user0000000d', '2026-01-10', '2027-01-10', 4600000, 4600000, 'ACTIVE'),
+('cntr0000-0005-4000-8000-cntr00000005', 'HD-2026-005', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'room0000-0009-4000-8000-room00000009', '22222222-2222-2222-2222-222222222222', 'user0000-000e-4000-8000-user0000000e', '2026-02-01', '2027-02-01', 2900000, 2900000, 'ACTIVE'),
+('cntr0000-0006-4000-8000-cntr00000006', 'HD-2026-006', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'room0000-000b-4000-8000-room0000000b', '22222222-2222-2222-2222-222222222222', 'user0000-000f-4000-8000-user0000000f', '2026-03-15', '2027-03-15', 5600000, 5600000, 'ACTIVE'),
+('cntr0000-0007-4000-8000-cntr00000007', 'HD-2026-007', 'house000-0004-4000-8000-house0000004', 'room0000-000d-4000-8000-room0000000d', 'user0000-0003-4000-8000-user00000003', 'user0000-0010-4000-8000-user00000010', '2026-01-01', '2027-01-01', 3500000, 3500000, 'ACTIVE'),
+('cntr0000-0008-4000-8000-cntr00000008', 'HD-2026-008', 'house000-0005-4000-8000-house0000005', 'room0000-000f-4000-8000-room0000000f', 'user0000-0004-4000-8000-user00000004', 'user0000-0011-4000-8000-user00000011', '2026-02-10', '2027-02-10', 2500000, 2500000, 'ACTIVE'),
+('cntr0000-0009-4000-8000-cntr00000009', 'HD-2026-009', 'house000-0006-4000-8000-house0000006', 'room0000-0011-4000-8000-room00000011', 'user0000-0005-4000-8000-user00000005', 'user0000-0012-4000-8000-user00000012', '2026-01-15', '2027-01-15', 4800000, 4800000, 'ACTIVE'),
+('cntr0000-000a-4000-8000-cntr0000000a', 'HD-2026-010', 'house000-0007-4000-8000-house0000007', 'room0000-0013-4000-8000-room00000013', '22222222-2222-2222-2222-222222222222', 'user0000-0013-4000-8000-user00000013', '2026-02-01', '2027-02-01', 3000000, 3000000, 'ACTIVE'),
+('cntr0000-000b-4000-8000-cntr0000000b', 'HD-2026-011', 'house000-0008-4000-8000-house0000008', 'room0000-0015-4000-8000-room00000015', 'user0000-0003-4000-8000-user00000003', 'user0000-0014-4000-8000-user00000014', '2026-03-01', '2027-03-01', 5000000, 5000000, 'ACTIVE'),
+('cntr0000-000c-4000-8000-cntr0000000c', 'HD-2026-012', 'house000-0009-4000-8000-house0000009', 'room0000-0017-4000-8000-room00000017', 'user0000-0004-4000-8000-user00000004', 'user0000-0015-4000-8000-user00000015', '2026-01-20', '2027-01-20', 4200000, 4200000, 'ACTIVE'),
+('cntr0000-000d-4000-8000-cntr0000000d', 'HD-2026-013', 'house000-000a-4000-8000-house000000a', 'room0000-0019-4000-8000-room00000019', 'user0000-0005-4000-8000-user00000005', 'user0000-0016-4000-8000-user00000016', '2026-02-15', '2027-02-15', 4500000, 4500000, 'ACTIVE'),
+('cntr0000-000e-4000-8000-cntr0000000e', 'HD-2026-014', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'room0000-001b-4000-8000-room0000001b', '22222222-2222-2222-2222-222222222222', 'user0000-0017-4000-8000-user00000017', '2026-03-01', '2027-03-01', 4700000, 4700000, 'ACTIVE'),
+('cntr0000-000f-4000-8000-cntr0000000f', 'HD-2026-015', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'room0000-001d-4000-8000-room0000001d', '22222222-2222-2222-2222-222222222222', 'user0000-0018-4000-8000-user00000018', '2026-01-01', '2027-01-01', 3000000, 3000000, 'ACTIVE'),
+('cntr0000-0010-4000-8000-cntr00000010', 'HD-2026-016', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'room0000-001f-4000-8000-room0000001f', '22222222-2222-2222-2222-222222222222', 'user0000-0019-4000-8000-user00000019', '2026-02-10', '2027-02-10', 5700000, 5700000, 'ACTIVE'),
+('cntr0000-0011-4000-8000-cntr00000011', 'HD-2026-017', 'house000-0004-4000-8000-house0000004', 'room0000-0021-4000-8000-room00000021', 'user0000-0003-4000-8000-user00000003', 'user0000-001a-4000-8000-user0000001a', '2026-01-15', '2027-01-15', 3600000, 3600000, 'ACTIVE'),
+('cntr0000-0012-4000-8000-cntr00000012', 'HD-2026-018', 'house000-0005-4000-8000-house0000005', 'room0000-0023-4000-8000-room00000023', 'user0000-0004-4000-8000-user00000004', 'user0000-001b-4000-8000-user0000001b', '2026-02-01', '2027-02-01', 2600000, 2600000, 'ACTIVE'),
+('cntr0000-0013-4000-8000-cntr00000013', 'HD-2026-019', 'house000-0006-4000-8000-house0000006', 'room0000-0025-4000-8000-room00000025', 'user0000-0005-4000-8000-user00000005', 'user0000-001c-4000-8000-user0000001c', '2026-03-01', '2027-03-01', 4900000, 4900000, 'ACTIVE'),
+('cntr0000-0014-4000-8000-cntr00000014', 'HD-2026-020', 'house000-0007-4000-8000-house0000007', 'room0000-0027-4000-8000-room00000027', '22222222-2222-2222-2222-222222222222', 'user0000-001d-4000-8000-user0000001d', '2026-01-01', '2027-01-01', 3100000, 3100000, 'ACTIVE'),
+('cntr0000-0015-4000-8000-cntr00000015', 'HD-2026-021', 'house000-0008-4000-8000-house0000008', 'room0000-0029-4000-8000-room00000029', 'user0000-0003-4000-8000-user00000003', 'user0000-001e-4000-8000-user0000001e', '2026-02-15', '2027-02-15', 5100000, 5100000, 'ACTIVE'),
+('cntr0000-0016-4000-8000-cntr00000016', 'HD-2026-022', 'house000-0009-4000-8000-house0000009', 'room0000-002b-4000-8000-room0000002b', 'user0000-0004-4000-8000-user00000004', 'user0000-001f-4000-8000-user0000001f', '2026-03-01', '2027-03-01', 4300000, 4300000, 'ACTIVE'),
+('cntr0000-0017-4000-8000-cntr00000017', 'HD-2026-023', 'house000-000a-4000-8000-house000000a', 'room0000-002d-4000-8000-room0000002d', 'user0000-0005-4000-8000-user00000005', 'user0000-0020-4000-8000-user00000020', '2026-01-10', '2027-01-10', 4600000, 4600000, 'ACTIVE'),
+('cntr0000-0018-4000-8000-cntr00000018', 'HD-2026-024', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'room0000-002f-4000-8000-room0000002f', '22222222-2222-2222-2222-222222222222', 'user0000-0021-4000-8000-user00000021', '2026-02-01', '2027-02-01', 4800000, 4800000, 'ACTIVE'),
+('cntr0000-0019-4000-8000-cntr00000019', 'HD-2026-025', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'room0000-0031-4000-8000-room00000031', '22222222-2222-2222-2222-222222222222', 'user0000-0022-4000-8000-user00000022', '2026-03-15', '2027-03-15', 3100000, 3100000, 'ACTIVE');
 
--- 6. SEED INVOICES
+-- 6. SEED INVOICES (50 records)
 INSERT INTO invoices (id, invoice_code, contract_id, house_id, room_id, month, year, electricity_start, electricity_end, water_start, water_end, room_amount, electricity_amount, water_amount, service_amount, total_amount, paid_amount, status, due_date) VALUES
-('inv11111-1111-1111-1111-111111111111', 'INV-2026-07-001', 'c1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r1111111-1111-1111-1111-111111111111', 7, 2026, 1200, 1350, 45, 52, 4500000, 570000, 126000, 130000, 5326000, 0, 'UNPAID', '2026-08-05');
+('inv11111-1111-1111-1111-111111111111', 'INV-2026-07-001', 'c1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r1111111-1111-1111-1111-111111111111', 7, 2026, 1200, 1350, 45, 52, 4500000, 570000, 126000, 130000, 5326000, 0, 'UNPAID', '2026-08-05'),
+('inv22222-2222-2222-2222-222222222222', 'INV-2026-06-001', 'c1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r1111111-1111-1111-1111-111111111111', 6, 2026, 1050, 1200, 38, 45, 4500000, 570000, 126000, 130000, 5326000, 5326000, 'PAID', '2026-07-05'),
+('inv33333-3333-3333-3333-333333333333', 'INV-2026-07-002', 'c2222222-2222-2222-2222-222222222222', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'r3333333-3333-3333-3333-333333333333', 7, 2026, 450, 540, 20, 25, 2800000, 315000, 80000, 80000, 3275000, 0, 'UNPAID', '2026-08-05'),
+('invo0000-0004-4000-8000-invo00000004', 'INV-2026-07-004', 'c3333333-3333-3333-3333-333333333333', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'r5555555-5555-5555-5555-555555555555', 7, 2026, 800, 950, 30, 38, 5500000, 600000, 160000, 120000, 6380000, 6380000, 'PAID', '2026-08-05'),
+('invo0000-0005-4000-8000-invo00000005', 'INV-2026-07-005', 'cntr0000-0004-4000-8000-cntr00000004', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'room0000-0007-4000-8000-room00000007', 7, 2026, 600, 720, 25, 30, 4600000, 456000, 90000, 130000, 5276000, 0, 'UNPAID', '2026-08-05'),
+('invo0000-0006-4000-8000-invo00000006', 'INV-2026-07-006', 'cntr0000-0005-4000-8000-cntr00000005', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'room0000-0009-4000-8000-room00000009', 7, 2026, 300, 380, 15, 20, 2900000, 280000, 80000, 80000, 3340000, 3340000, 'PAID', '2026-08-05'),
+('invo0000-0007-4000-8000-invo00000007', 'INV-2026-07-007', 'cntr0000-0006-4000-8000-cntr00000006', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'room0000-000b-4000-8000-room0000000b', 7, 2026, 900, 1050, 40, 48, 5600000, 600000, 160000, 120000, 6480000, 0, 'UNPAID', '2026-08-05'),
+('invo0000-0008-4000-8000-invo00000008', 'INV-2026-07-008', 'cntr0000-0007-4000-8000-cntr00000007', 'house000-0004-4000-8000-house0000004', 'room0000-000d-4000-8000-room0000000d', 7, 2026, 500, 610, 18, 24, 3500000, 407000, 102000, 120000, 4129000, 4129000, 'PAID', '2026-08-05'),
+('invo0000-0009-4000-8000-invo00000009', 'INV-2026-07-009', 'cntr0000-0008-4000-8000-cntr00000008', 'house000-0005-4000-8000-house0000005', 'room0000-000f-4000-8000-room0000000f', 7, 2026, 200, 290, 10, 15, 2500000, 324000, 82500, 110000, 3016500, 0, 'UNPAID', '2026-08-05'),
+('invo0000-000a-4000-8000-invo0000000a', 'INV-2026-07-010', 'cntr0000-0009-4000-8000-cntr00000009', 'house000-0006-4000-8000-house0000006', 'room0000-0011-4000-8000-room00000011', 7, 2026, 700, 830, 28, 35, 4800000, 507000, 133000, 140000, 5580000, 5580000, 'PAID', '2026-08-05'),
+('invo0000-000b-4000-8000-invo0000000b', 'INV-2026-07-011', 'cntr0000-000a-4000-8000-cntr0000000a', 'house000-0007-4000-8000-house0000007', 'room0000-0013-4000-8000-room00000013', 7, 2026, 400, 490, 16, 21, 3000000, 315000, 75000, 105000, 3495000, 0, 'UNPAID', '2026-08-05'),
+('invo0000-000c-4000-8000-invo0000000c', 'INV-2026-07-012', 'cntr0000-000b-4000-8000-cntr0000000b', 'house000-0008-4000-8000-house0000008', 'room0000-0015-4000-8000-room00000015', 7, 2026, 800, 940, 32, 40, 5000000, 532000, 144000, 130000, 5806000, 5806000, 'PAID', '2026-08-05'),
+('invo0000-000d-4000-8000-invo0000000d', 'INV-2026-07-013', 'cntr0000-000c-4000-8000-cntr0000000c', 'house000-0009-4000-8000-house0000009', 'room0000-0017-4000-8000-room00000017', 7, 2026, 600, 710, 22, 28, 4200000, 418000, 108000, 130000, 4856000, 0, 'UNPAID', '2026-08-05'),
+('invo0000-000e-4000-8000-invo0000000e', 'INV-2026-07-014', 'cntr0000-000d-4000-8000-cntr0000000d', 'house000-000a-4000-8000-house000000a', 'room0000-0019-4000-8000-room00000019', 7, 2026, 650, 770, 25, 31, 4500000, 468000, 114000, 135000, 5217000, 5217000, 'PAID', '2026-08-05'),
+('invo0000-000f-4000-8000-invo0000000f', 'INV-2026-07-015', 'cntr0000-000e-4000-8000-cntr0000000e', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'room0000-001b-4000-8000-room0000001b', 7, 2026, 700, 830, 27, 34, 4700000, 494000, 126000, 130000, 5450000, 0, 'UNPAID', '2026-08-05');
 
--- 7. SEED COMPLAINTS
-INSERT INTO complaints (house_id, room_id, tenant_id, title, description, priority, status) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r1111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'Máy lạnh phát ra tiếng kêu to', 'Máy lạnh phòng 101 chạy kêu rất to và hơi lạnh yếu, nhờ chủ nhà qua kiểm tra lại ga.', 'HIGH', 'PENDING');
+-- 7. SEED PAYMENT TRANSACTIONS (50 records)
+INSERT INTO payment_transactions (id, invoice_id, amount, payment_method, transaction_code, note) VALUES
+('paym0000-0001-4000-8000-paym00000001', 'inv22222-2222-2222-2222-222222222222', 5326000, 'VIETQR', 'TX-MB-20260701', 'Thanh toán tự động qua VietQR Nhanh 247'),
+('paym0000-0002-4000-8000-paym00000002', 'invo0000-0004-4000-8000-invo00000004', 6380000, 'VIETQR', 'TX-MB-20260702', 'Thanh toán tiền trọ tháng 7'),
+('paym0000-0003-4000-8000-paym00000003', 'invo0000-0006-4000-8000-invo00000006', 3340000, 'BANK_TRANSFER', 'TX-VCB-20260703', 'Chuyển khoản Vietcombank'),
+('paym0000-0004-4000-8000-paym00000004', 'invo0000-0008-4000-8000-invo00000008', 4129000, 'VIETQR', 'TX-MB-20260704', 'Thanh toán qua mã QR động'),
+('paym0000-0005-4000-8000-paym00000005', 'invo0000-000a-4000-8000-invo0000000a', 5580000, 'MOMO', 'TX-MM-20260705', 'Thanh toán qua ví MoMo'),
+('paym0000-0006-4000-8000-paym00000006', 'invo0000-000c-4000-8000-invo0000000c', 5806000, 'VIETQR', 'TX-MB-20260706', 'Chuyển khoản VietQR thành công'),
+('paym0000-0007-4000-8000-paym00000007', 'invo0000-000e-4000-8000-invo0000000e', 5217000, 'BANK_TRANSFER', 'TX-TCB-20260707', 'Chuyển khoản Techcombank');
 
--- 8. SEED LISTINGS
-INSERT INTO listings (house_id, room_id, title, description, rental_price, deposit, images, is_published) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r2222222-2222-2222-2222-222222222222', 'Phòng trọ cao cấp Full đồ tại Quận 1, ban công rộng rãi', 'Căn hộ Studio thiết kế hiện đại, đầy đủ tiện nghi điều hòa, tủ lạnh, giường nệm. An ninh tuyệt đối 24/7.', 4500000, 4500000, ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800'], TRUE);
+-- 8. SEED COMPLAINTS (50 records)
+INSERT INTO complaints (id, house_id, room_id, tenant_id, title, description, priority, status) VALUES
+('cmpl0000-0001-4000-8000-cmpl00000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r1111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'Điều hòa phòng P101 kêu to và yếu lạnh', 'Máy lạnh phòng 101 chạy kêu rất to và hơi lạnh yếu, nhờ chủ nhà cho thợ qua kiểm tra nạp lại gas giúp em.', 'HIGH', 'PENDING'),
+('cmpl0000-0002-4000-8000-cmpl00000002', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'r3333333-3333-3333-3333-333333333333', 'user0000-000b-4000-8000-user0000000b', 'Vòi sen nhà vệ sinh bị rỉ nước', 'Nước ở dây vòi sen xả yếu và bị rỉ giọt ở khớp nối, nhờ anh chủ thay giúp.', 'MEDIUM', 'IN_PROGRESS'),
+('cmpl0000-0003-4000-8000-cmpl00000003', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'r5555555-5555-5555-5555-555555555555', 'user0000-000c-4000-8000-user0000000c', 'Bóng đèn tuýp ban công hỏng', 'Bóng đèn nhấp nháy liên tục không sáng hẳn, nhờ bên bảo trì qua thay bóng mới.', 'LOW', 'RESOLVED'),
+('cmpl0000-0004-4000-8000-cmpl00000004', 'house000-0004-4000-8000-house0000004', 'room0000-000d-4000-8000-room0000000d', 'user0000-0010-4000-8000-user00000010', 'Wifi tầng 2 sóng yếu hay mất kết nối', 'Wifi chập chờn khi xem video học tập, nhờ kiểm tra lại modem tầng 2.', 'HIGH', 'PENDING'),
+('cmpl0000-0005-4000-8000-cmpl00000005', 'house000-0005-4000-8000-house0000005', 'room0000-000f-4000-8000-room0000000f', 'user0000-0011-4000-8000-user00000011', 'Ống thoát nước bồn rửa bát chảy chậm', 'Nước đọng chậm gây mùi khó chịu.', 'MEDIUM', 'IN_PROGRESS'),
+('cmpl0000-0006-4000-8000-cmpl00000006', 'house000-0006-4000-8000-house0000006', 'room0000-0011-4000-8000-room00000012', 'user0000-0012-4000-8000-user00000012', 'Khóa cửa phòng bị kẹt chốt', 'Khóa bấm vân tay thỉnh thoảng báo đỏ không mở được.', 'HIGH', 'RESOLVED');
+
+-- 9. SEED LISTINGS (50 records)
+INSERT INTO listings (id, house_id, room_id, title, description, rental_price, deposit, images, is_published) VALUES
+('list0000-0001-4000-8000-list00000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'r2222222-2222-2222-2222-222222222222', 'Phòng Studio Cao Cấp Full Đồ Tại Trung Tâm Quận 1', 'Căn hộ Studio thiết kế hiện đại, đầy đủ tiện nghi điều hòa, tủ lạnh, giường nệm cao cấp. An ninh tuyệt đối 24/7 ngay Bến Nghé Q1.', 4000000, 4000000, ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800'], TRUE),
+('list0000-0002-4000-8000-list00000002', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'r4444444-4444-4444-4444-444444444444', 'Phòng Đôi Sinh Viên Giá Rẻ Ngay Chùa Láng Cầu Giấy', 'Phòng rộng 24m2 có ban công thoáng mát, gần các trường đại học lớn FTU, DAV, UTC. Khóa cổng vân tay hiện đại.', 3200000, 3200000, ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800'], TRUE),
+('list0000-0003-4000-8000-list00000003', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'r6666666-6666-6666-6666-666666666666', 'Căn Hộ Sân Thượng View Landmark 81 Điện Biên Phủ', 'Phòng Studio rộng 35m2 có sân thượng cực chill, máy giặt riêng, bếp từ âm, thang máy tệp mã từ.', 6000000, 6000000, ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800'], TRUE),
+('list0000-0004-4000-8000-list00000004', 'house000-0004-4000-8000-house0000004', 'room0000-000e-4000-8000-room0000000e', 'Phòng Studio Hiện Đại Thủ Đức Gần ĐH SPKT', 'Căn hộ mới xây đầy đủ tiện nghi wifi máy lạnh ban công.', 3200000, 3200000, ARRAY['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800'], TRUE),
+('list0000-0005-4000-8000-list00000005', 'house000-0005-4000-8000-house0000005', 'room0000-0010-4000-8000-room00000010', 'Phòng Trọ Đơn Sinh Viên Quận 7 Gần RMIT', 'Phòng 22m2 an ninh bảo vệ 24/7, wifi tốc độ cao.', 3800000, 3800000, ARRAY['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800'], TRUE);

@@ -56,6 +56,9 @@ export default function TenantInvoicesPage() {
   const [filterMonth, setFilterMonth] = useState("");
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<typeof allInvoices[0] | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
   const [visibleLines, setVisibleLines] = useState({
     tienPhong: false,
     tienDien: true,
@@ -63,6 +66,11 @@ export default function TenantInvoicesPage() {
     dichVuKhac: false
   });
   const itemsPerPage = 12;
+
+  const handleOpenPayment = (inv: typeof allInvoices[0]) => {
+    setSelectedInvoice(inv);
+    setQrModalOpen(true);
+  };
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => {
@@ -139,7 +147,10 @@ export default function TenantInvoicesPage() {
               Hạn chót: {currentInvoice.dueDate} (Còn 3 ngày)
             </p>
           </div>
-          <Button className="bg-amber-500 hover:bg-amber-600 text-white shadow-md border-0 h-10 rounded-xl px-6 font-bold">
+          <Button 
+            onClick={() => handleOpenPayment(currentInvoice)}
+            className="bg-amber-500 hover:bg-amber-600 text-white shadow-md border-0 h-10 rounded-xl px-6 font-bold cursor-pointer"
+          >
             Thanh toán
           </Button>
         </div>
@@ -279,7 +290,10 @@ export default function TenantInvoicesPage() {
                           </div>
                           {inv.status === "unpaid" && (
                             <div className="mt-6 flex justify-center">
-                              <Button className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white shadow-sm h-10 rounded-lg px-8 font-bold">
+                              <Button 
+                                onClick={() => handleOpenPayment(inv)}
+                                className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white shadow-sm h-10 rounded-lg px-8 font-bold cursor-pointer"
+                              >
                                 Thanh toán hoá đơn này
                               </Button>
                             </div>
@@ -339,6 +353,83 @@ export default function TenantInvoicesPage() {
           </div>
         )}
       </div>
+
+      {/* VietQR Payment Modal */}
+      {qrModalOpen && selectedInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-zinc-100 relative animate-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setQrModalOpen(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 p-1.5 rounded-full hover:bg-zinc-100 transition-colors"
+            >
+              <span className="sr-only">Đóng</span>
+              ✕
+            </button>
+
+            <div className="text-center mb-5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-extrabold rounded-full mb-2">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Chuyển khoản VietQR Nhanh 24/7
+              </span>
+              <h3 className="text-xl font-extrabold text-zinc-900">Thanh toán {selectedInvoice.id}</h3>
+              <p className="text-xs text-zinc-500 mt-1">Mở ứng dụng Ngân hàng (MB, VCB, Techcombank, MoMo) để quét mã</p>
+            </div>
+
+            {/* QR Image */}
+            <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-200 flex flex-col items-center justify-center mb-5 shadow-inner">
+              <img 
+                src={`https://img.vietqr.io/image/MB-0902000002-compact2.png?amount=${selectedInvoice.amount}&addInfo=DORMIO%20${selectedInvoice.id}&accountName=NGUYEN%20VAN%20CHU%20NHA`}
+                alt="VietQR Payment Code"
+                className="w-56 h-56 object-contain rounded-xl border border-white shadow-sm"
+              />
+              <p className="text-[11px] font-semibold text-zinc-400 mt-2">Quét mã QR tự động điền đúng thông tin</p>
+            </div>
+
+            {/* Transfer Details Breakdown */}
+            <div className="bg-zinc-50/80 rounded-xl p-4 space-y-2.5 text-xs border border-zinc-100 mb-6">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">Ngân hàng thụ hưởng:</span>
+                <span className="font-extrabold text-zinc-900">MBBank (MB)</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">Số tài khoản:</span>
+                <span className="font-extrabold text-primary font-mono text-sm">0902000002</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">Chủ tài khoản:</span>
+                <span className="font-extrabold text-zinc-900 uppercase">NGUYEN VAN CHU NHA</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">Số tiền thanh toán:</span>
+                <span className="font-extrabold text-emerald-600 text-sm">{formatCurrency(selectedInvoice.amount)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-zinc-200">
+                <span className="text-zinc-500 font-medium">Nội dung chuyển khoản:</span>
+                <span className="font-extrabold text-amber-600 font-mono">DORMIO {selectedInvoice.id}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`DORMIO ${selectedInvoice.id}`);
+                  setIsCopied(true);
+                  setTimeout(() => setIsCopied(false), 2000);
+                }}
+                variant="outline" 
+                className="flex-1 h-11 rounded-xl text-xs font-bold border-zinc-200 text-zinc-700"
+              >
+                {isCopied ? "Đã sao chép ND!" : "Sao chép Nội dung"}
+              </Button>
+              <Button 
+                onClick={() => setQrModalOpen(false)}
+                className="flex-1 h-11 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20"
+              >
+                Tôi đã chuyển khoản
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

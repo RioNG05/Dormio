@@ -12,15 +12,37 @@ export default function AssetsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [buildingFilter, setBuildingFilter] = useState("");
   
-  // Mock Data
-  const assets = [
-    { id: "AST-001", name: "Máy lạnh Daikin 1.5HP", category: "Điện lạnh", building: "Dormio Building", room: "101", status: "Đang sử dụng", dateAdded: "10/01/2026", value: "8.500.000 ₫" },
-    { id: "AST-002", name: "Tủ lạnh Aqua 90L", category: "Điện lạnh", building: "Dormio Building", room: "102", status: "Đang sử dụng", dateAdded: "12/01/2026", value: "2.800.000 ₫" },
-    { id: "AST-003", name: "Máy giặt Toshiba 8kg", category: "Điện lạnh", building: "VinaHouse", room: "Khu sinh hoạt chung", status: "Bảo trì", dateAdded: "15/02/2026", value: "4.500.000 ₫" },
-    { id: "AST-004", name: "Giường gỗ công nghiệp 1m6", category: "Nội thất", building: "Dormio Building", room: "Kho", status: "Sẵn sàng", dateAdded: "20/03/2026", value: "1.800.000 ₫" },
-    { id: "AST-005", name: "Bếp từ đôi Sunhouse", category: "Gia dụng", building: "VinaHouse", room: "201", status: "Hỏng hóc", dateAdded: "05/04/2026", value: "1.200.000 ₫" },
-    { id: "AST-006", name: "Tủ quần áo gỗ MDF 2 cánh", category: "Nội thất", building: "Dormio Building", room: "205", status: "Đang sử dụng", dateAdded: "15/04/2026", value: "2.200.000 ₫" },
-  ];
+  // Mock Data (50+ assets)
+  const assets = Array.from({ length: 50 }).map((_, i) => {
+    const categories = ["Điện lạnh", "Nội thất", "Gia dụng", "Thiết bị an ninh"];
+    const buildings = ["Dormio House Quận 1", "Dormio Student House Cầu Giấy", "Dormio Premium Bình Thạnh"];
+    const itemTypes = [
+      { name: "Máy lạnh Daikin 1.5HP Inverter", cat: "Điện lạnh", val: 8500000 },
+      { name: "Tủ lạnh Aqua 90L", cat: "Điện lạnh", val: 2800000 },
+      { name: "Máy giặt Toshiba 8kg", cat: "Điện lạnh", val: 4500000 },
+      { name: "Giường gỗ công nghiệp 1m6", cat: "Nội thất", val: 2200000 },
+      { name: "Bếp từ đôi Sunhouse", cat: "Gia dụng", val: 1500000 },
+      { name: "Tủ quần áo gỗ MDF 2 cánh", cat: "Nội thất", val: 2500000 },
+      { name: "Bình nóng lạnh Ariston 20L", cat: "Điện lạnh", val: 2900000 },
+      { name: "Khóa cửa thông minh vân tay Kaadas", cat: "Thiết bị an ninh", val: 3800000 },
+    ];
+
+    const type = itemTypes[i % itemTypes.length];
+    const b = buildings[i % buildings.length];
+    const room = `P${(1 + (i % 4))}0${(1 + (i % 3))}`;
+    const status = i % 7 === 0 ? "Bảo trì" : i % 11 === 0 ? "Hỏng hóc" : "Đang sử dụng";
+
+    return {
+      id: `AST-${(i + 1).toString().padStart(3, "0")}`,
+      name: `${type.name} #${i + 1}`,
+      category: type.cat,
+      building: b,
+      room,
+      status,
+      dateAdded: `${(1 + (i % 25)).toString().padStart(2, "0")}/0${(1 + (i % 6))}/2026`,
+      value: new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(type.val),
+    };
+  });
 
   const filteredAssets = assets.filter(asset => {
     return (
