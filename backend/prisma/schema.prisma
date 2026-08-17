@@ -1,0 +1,418 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  landlord
+  tenant
+  employee
+  admin
+}
+
+enum UserStatus {
+  active
+  inactive
+  banned
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum BoardingHouseStatus {
+  active
+  inactive
+  banned
+}
+
+enum RoomStatus {
+  available
+  deposited
+  occupied
+  maintainace
+}
+
+enum ContractStatus {
+  draft
+  active
+  expired
+  canceled
+}
+
+enum SubscriptionPackage {
+  free
+  plus
+  pro
+}
+
+enum SubscriptionStatus {
+  pending
+  active
+  expired
+  canceled
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+}
+
+enum ExpenseStatus {
+  pending
+  paid
+  canceled
+}
+
+enum ServiceStatus {
+  active
+  inactive
+}
+
+enum ServiceType {
+  general
+  house
+}
+
+enum DepositType {
+  hold_room
+  contract
+}
+
+enum DepositStatus {
+  pending
+  paid
+  refund
+  forfeited
+}
+
+enum PostStatus {
+  draft
+  posted
+  hidden
+}
+
+enum SourceType {
+  free_quote
+  purchased
+}
+
+enum PostPurchaseStatus {
+  pending
+  paid
+  canceled
+  failed
+}
+
+model User {
+  id             String     @id @default(uuid())
+  phoneNumber    String     @unique @map("phone_number") @db.VarChar(20)
+  email          String?    @unique @db.VarChar(255)
+  hashedPassword String     @map("hashed_password") @db.VarChar(255)
+  bio            String     @db.Text
+  avatarUrl      String     @map("avatar_url") @db.Text
+  role           UserRole   @default(tenant)
+  status         UserStatus @default(active)
+  roomId         String?    @default(uuid()) @map("room_id") @db.Uuid
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  boardingHouses     BoardingHouse[]
+  tenantContracts    TenantContract[]
+  userIdentification UserIdentification?
+  userSubscriptions  UserSubscription[]
+  deposits           Deposit[]
+  posts              Post[]
+
+  @@map("users")
+}
+
+model UserIdentification {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique @map("user_id") @db.Uuid
+  user                   User     @relation(fields: [userId], references: [id])
+  identityNumber         String   @unique @db.VarChar(255)
+  fullName               String   @map("full_name") @db.VarChar(255)
+  dateOfBirth            DateTime @map("date_of_birth")
+  gender                 Gender
+  nationnality           String   @db.VarChar(255)
+  placeOfOrigin          Json     @map("place_of_origin")
+  placeOfResidence       Json     @map("place_of_residence")
+  issueDate              DateTime @map("issue_date")
+  expiryDate             DateTime @map("expiry_date")
+  personalIdentification String   @map("personal_identification") @db.Text
+  note                   String   @db.Text
+  cardFrontUrl           String   @map("card_front_url") @db.Text
+  cardBackUrl            String   @map("card_back_url") @db.Text
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("user_identifications")
+}
+
+model BoardingHouse {
+  id          String              @id @default(uuid())
+  owner       User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String              @map("owner_id") @db.Uuid
+  name        String              @db.VarChar(255)
+  description String?             @db.Text
+  country     String              @db.VarChar(255)
+  province    String              @db.VarChar(255)
+  city        String              @db.VarChar(255)
+  ward        String              @db.VarChar(255)
+  district    String              @db.VarChar(255)
+  street      String              @db.VarChar(255)
+  houseNumber String              @map("house_number") @db.VarChar(255)
+  status      BoardingHouseStatus @default(active)
+  thumbnail   String?             @db.Text
+  totalFloor  Int?                @map("total_floor")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  deletedAt   DateTime            @map("deleted_at")
+
+  roomTypes RoomType[]
+  rooms     Room[]
+  expenses  Expense[]
+  services  Service[]
+  deposits  Deposit[]
+
+  @@map("boarding_houses")
+}
+
+model Expense {
+  id              String        @id @default(uuid())
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+  roomId          String        @map("room_id") @db.Uuid
+  room            Room          @relation(fields: [roomId], references: [id])
+  name            String        @db.VarChar(255)
+  description     String?       @db.Text
+  category        String
+  status          ExpenseStatus @default(pending)
+  amount          Decimal
+  createdAt       DateTime      @default(now()) @map("created_at")
+  paidAt          DateTime
+
+  @@map("expenses")
+}
+
+model Service {
+  id              String         @id @default(uuid())
+  boardingHouseId String         @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse  @relation(fields: [boardingHouseId], references: [id])
+  name            String         @db.VarChar(255)
+  price           Decimal
+  unit            String         @db.VarChar(255)
+  autoApplied     Boolean        @default(true) @map("auto_applied")
+  isMetered       Boolean        @default(false) @map("is_metered")
+  status          ServiceStatus  @default(active)
+  type            ServiceType    @default(house)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  meterReadings   MeterReading[]
+  roomServices    RoomService[]
+
+  @@map("services")
+}
+
+model MeterReading {
+  id           String   @id @default(uuid())
+  serviceId    String   @map("service_id") @db.Uuid
+  service      Service  @relation(fields: [serviceId], references: [id])
+  roomId       String   @map("room_id") @db.Uuid
+  room         Room     @relation(fields: [roomId], references: [id])
+  readingValue Decimal  @map("reading_value")
+  imageUrl     String?  @map("image_url") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("meter_readings")
+}
+
+model RoomService {
+  id        String   @id @default(uuid())
+  roomId    String   @map("room_id") @db.Uuid
+  room      Room     @relation(fields: [roomId], references: [id])
+  serviceId String   @map("service_id") @db.Uuid
+  service   Service  @relation(fields: [serviceId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("room_services")
+}
+
+model RoomType {
+  id              String        @id @default(uuid())
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
+  name            String        @db.VarChar(255)
+  description     String?       @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("room_types")
+}
+
+model Room {
+  id              String        @id @default(uuid())
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
+  roomNumber      String        @map("room_number") @db.VarChar(255)
+  area            Decimal?      @db.Decimal()
+  floor           Int
+  maxOccupants    Int?          @map("max_occupants")
+  status          RoomStatus    @default(available)
+  image_url       String?       @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  contracts     Contract[]
+  expenses      Expense[]
+  meterReadings MeterReading[]
+  roomServices  RoomService[]
+  deposits      Deposit[]
+  posts         Post[]
+
+  @@map("rooms")
+}
+
+model Contract {
+  id                 String         @id @default(uuid())
+  roomId             String         @db.Uuid
+  room               Room           @relation(fields: [roomId], references: [id])
+  rentPrice          Decimal        @map("rent_price")
+  monthlyPaymentDate Int            @map("monthly_payment_date")
+  status             ContractStatus @default(active)
+  startDate          DateTime       @map("start_date")
+  endDate            DateTime       @map("end_date")
+  note               String         @db.Text
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  tenantContracts   TenantContract[]
+  contractDocuments ContractDocument[]
+  deposit           Deposit?
+  post              Post?
+
+  @@map("contracts")
+}
+
+model ContractDocument {
+  id         String   @id @default(uuid())
+  contractId String   @map("contract_id") @db.Uuid
+  contract   Contract @relation(fields: [contractId], references: [id])
+  url        String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("contract_documents")
+}
+
+model TenantContract {
+  id         String   @id @default(uuid())
+  tenantId   String   @map("tenant_id") @db.Uuid
+  tenant     User     @relation(fields: [tenantId], references: [id])
+  contractId String   @map("contract_id") @db.Uuid
+  contract   Contract @relation(fields: [contractId], references: [id])
+  isPrimary  Boolean  @default(true) @map("is_primary")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("tenant_contracts")
+}
+
+model SubscriptionPlan {
+  planName       SubscriptionPackage @unique @map("plan_name")
+  dailyPostQuote Int                 @map("daily_post_quote")
+  priceMonthly   Decimal             @map("price_monthly")
+  priceYearly    Decimal             @map("price_yearly")
+  description    String?             @db.Text
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  userSubscriptions UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+model UserSubscription {
+  id               String              @id @default(uuid())
+  userId           String              @map("user_id") @db.Uuid
+  user             User                @relation(fields: [userId], references: [id])
+  planName         SubscriptionPackage @map("plan_name")
+  subscriptionPlan SubscriptionPlan    @relation(fields: [planName], references: [planName])
+  startDate        DateTime            @map("start_date")
+  endDate          DateTime            @map("end_date")
+  billingCycle     BillingCycle        @map("billing_cycle")
+  price            Decimal
+  status           SubscriptionStatus
+  createdAt        DateTime            @default(now()) @map("created_at")
+
+  @@map("user_subscriptions")
+}
+
+model PostPurchase {
+  id               String             @id @default(uuid())
+  buyerId          String             @map("buyer_id") @db.Uuid
+  quantityPurchase Int                @map("quantity_purchase")
+  unitPrice        Decimal            @map("unit_price")
+  totalAmount      Decimal            @map("total_amount")
+  status           PostPurchaseStatus
+  createdAt        DateTime           @default(now()) @map("created_at")
+  activatedAt      DateTime
+  posts            Post[]
+
+  @@map("post_purchases")
+}
+
+model Post {
+  id                 String        @id @default(uuid())
+  postedBy           String        @map("posted_by") @db.Uuid
+  postedByUser       User          @relation(fields: [postedBy], references: [id])
+  roomId             String?       @map("room_id") @db.Uuid
+  room               Room?         @relation(fields: [roomId], references: [id])
+  title              String        @db.Text
+  content            String        @db.Text
+  depositAmount      Decimal       @map("deposti_amount")
+  status             PostStatus
+  sourceType         SourceType    @map("source_type")
+  postPurchaseId     String?       @map("post_purchase_id")
+  postPurchase       PostPurchase? @relation(fields: [postPurchaseId], references: [id])
+  resultedContractId String?       @unique @map("resulted_contract_id")
+  contract           Contract?     @relation(fields: [resultedContractId], references: [id])
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  deletedAt          DateTime      @map("deleted_at")
+
+  deposits Deposit?
+
+  @@map("posts")
+}
+
+model Deposit {
+  id               String        @id @default(uuid())
+  roomId           String        @map("room_id") @db.Uuid
+  room             Room          @relation(fields: [roomId], references: [id])
+  boardingHouseId  String        @map("boarding_house_id")
+  boardingHouse    BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+  contractId       String?       @unique @map("contract_id")
+  contract         Contract?     @relation(fields: [contractId], references: [id])
+  postId           String?       @unique @map("post_id")
+  post             Post?         @relation(fields: [postId], references: [id])
+  type             DepositType
+  amount           Decimal
+  status           DepositStatus
+  recordedManually Boolean       @map("recored_manually")
+  recordedBy       String        @map("recored_by")
+  recordedByUser   User          @relation(fields: [recordedBy], references: [id])
+  note             String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  @@map("deposits")
+}
