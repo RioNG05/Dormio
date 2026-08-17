@@ -114,6 +114,58 @@ enum PostPurchaseStatus {
   failed
 }
 
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+}
+
+enum PaymentType {
+  CHARGE
+  REFUND
+}
+
+enum PaymentMethod {
+  CASH
+  BANKING
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum MessageAttachmentType {
+  IMAGE
+  FILE
+}
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+}
+
+enum AuditLogAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  PAYMENT
+}
+
+enum ComplaintPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ComplaintStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+}
+
 model User {
   id             String     @id @default(uuid())
   phoneNumber    String     @unique @map("phone_number") @db.VarChar(20)
@@ -127,12 +179,21 @@ model User {
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  boardingHouses     BoardingHouse[]
-  tenantContracts    TenantContract[]
-  userIdentification UserIdentification?
-  userSubscriptions  UserSubscription[]
-  deposits           Deposit[]
-  posts              Post[]
+  boardingHouses        BoardingHouse[]
+  tenantContracts       TenantContract[]
+  userIdentification    UserIdentification?
+  userSubscriptions     UserSubscription[]
+  deposits              Deposit[]
+  posts                 Post[]
+  payments              Payment[]
+  postPurchases         PostPurchase[]
+  savedPosts            SavedPost[]
+  postReaches           PostReach[]
+  aiConversations       AiConversation[]
+  auditLogs             AuditLog[]
+  complaints            Complaint[]
+  sentNotifications     Notification[] @relation("Sender")
+  receivedNotifications Notification[] @relation("Receiver")
 
   @@map("users")
 }
@@ -180,11 +241,15 @@ model BoardingHouse {
   updatedAt   DateTime            @updatedAt @map("updated_at")
   deletedAt   DateTime            @map("deleted_at")
 
-  roomTypes RoomType[]
-  rooms     Room[]
-  expenses  Expense[]
-  services  Service[]
-  deposits  Deposit[]
+  roomTypes       RoomType[]
+  rooms           Room[]
+  expenses        Expense[]
+  services        Service[]
+  deposits        Deposit[]
+  aiConversations AiConversation[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  complaints      Complaint[]
 
   @@map("boarding_houses")
 }
@@ -207,20 +272,22 @@ model Expense {
 }
 
 model Service {
-  id              String         @id @default(uuid())
-  boardingHouseId String         @map("boarding_house_id") @db.Uuid
-  boardingHouse   BoardingHouse  @relation(fields: [boardingHouseId], references: [id])
-  name            String         @db.VarChar(255)
+  id              String        @id @default(uuid())
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+  name            String        @db.VarChar(255)
   price           Decimal
-  unit            String         @db.VarChar(255)
-  autoApplied     Boolean        @default(true) @map("auto_applied")
-  isMetered       Boolean        @default(false) @map("is_metered")
-  status          ServiceStatus  @default(active)
-  type            ServiceType    @default(house)
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
-  meterReadings   MeterReading[]
-  roomServices    RoomService[]
+  unit            String        @db.VarChar(255)
+  autoApplied     Boolean       @default(true) @map("auto_applied")
+  isMetered       Boolean       @default(false) @map("is_metered")
+  status          ServiceStatus @default(active)
+  type            ServiceType   @default(house)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  meterReadings MeterReading[]
+  roomServices  RoomService[]
+  invoiceItems  InvoiceItem[]
 
   @@map("services")
 }
@@ -280,6 +347,8 @@ model Room {
   roomServices  RoomService[]
   deposits      Deposit[]
   posts         Post[]
+  invoices      Invoice[]
+  complaints    Complaint[]
 
   @@map("rooms")
 }
@@ -301,6 +370,7 @@ model Contract {
   contractDocuments ContractDocument[]
   deposit           Deposit?
   post              Post?
+  invoices          Invoice[]
 
   @@map("contracts")
 }
@@ -353,6 +423,7 @@ model UserSubscription {
   price            Decimal
   status           SubscriptionStatus
   createdAt        DateTime            @default(now()) @map("created_at")
+  payment          Payment?
 
   @@map("user_subscriptions")
 }
@@ -360,13 +431,16 @@ model UserSubscription {
 model PostPurchase {
   id               String             @id @default(uuid())
   buyerId          String             @map("buyer_id") @db.Uuid
+  buyer            User               @relation(fields: [buyerId], references: [id])
   quantityPurchase Int                @map("quantity_purchase")
   unitPrice        Decimal            @map("unit_price")
   totalAmount      Decimal            @map("total_amount")
   status           PostPurchaseStatus
   createdAt        DateTime           @default(now()) @map("created_at")
   activatedAt      DateTime
-  posts            Post[]
+
+  posts   Post[]
+  payment Payment?
 
   @@map("post_purchases")
 }
@@ -390,9 +464,37 @@ model Post {
   updatedAt          DateTime      @updatedAt @map("updated_at")
   deletedAt          DateTime      @map("deleted_at")
 
-  deposits Deposit?
+  deposit     Deposit?
+  postImages  PostImage[]
+  savedPosts  SavedPost[]
+  postReaches PostReach[]
 
   @@map("posts")
+}
+
+model PostImage {
+  id     String @id @default(uuid())
+  postId String @map("post_id") @db.Uuid
+  post   Post   @relation(fields: [postId], references: [id])
+  url    String @db.Text
+}
+
+model SavedPost {
+  id          String   @id @default(uuid())
+  postId      String   @map("post_id") @db.Uuid
+  post        Post     @relation(fields: [postId], references: [id])
+  savedBy     String   @db.Uuid
+  savedByUser User     @relation(fields: [savedBy], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+}
+
+model PostReach {
+  id           String   @id @default(uuid())
+  postId       String   @map("post_id") @db.Uuid
+  post         Post     @relation(fields: [postId], references: [id])
+  viewedBy     String   @map("viewed_by")
+  viewedByUser User     @relation(fields: [viewedBy], references: [id])
+  viewedAt     DateTime @map("viewed_at")
 }
 
 model Deposit {
@@ -414,5 +516,197 @@ model Deposit {
   note             String?
   createdAt        DateTime      @default(now()) @map("created_at")
 
+  payment Payment?
+
   @@map("deposits")
+}
+
+model Invoice {
+  id          String        @id @default(uuid()) @db.Uuid
+  roomId      String        @map("room_id") @db.Uuid
+  room        Room          @relation(fields: [roomId], references: [id])
+  contractId  String?       @map("contract_id") @db.Uuid
+  contract    Contract?     @relation(fields: [contractId], references: [id])
+  totalAmount Decimal       @map("total_amount")
+  status      InvoiceStatus
+  dueDate     DateTime      @map("due_date")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  payment      Payment?
+  invoiceItems InvoiceItem[]
+
+  @@map("invoice")
+}
+
+model InvoiceItem {
+  id        String   @id @default(uuid())
+  invoiceId String   @map("invoice_id") @db.Uuid
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  serviceId String?  @map("service_id") @db.Uuid
+  service   Service? @relation(fields: [serviceId], references: [id])
+  quantity  Int
+  unitPrice Decimal  @map("unit_price")
+  amount    Int
+
+  @@map("invoice_item")
+}
+
+model Payment {
+  id              String            @id @default(uuid())
+  refundPaymentId String?           @unique @map("payment_refund_id") @db.Uuid
+  refundPayment   Payment?          @relation("RefundPayment", fields: [refundPaymentId], references: [id])
+  originalPayment Payment[]         @relation("RefundPayment")
+  depositId       String?           @unique @map("deposit_id") @db.Uuid
+  deposit         Deposit?          @relation(fields: [depositId], references: [id])
+  postPurchaseId  String?           @unique @map("post_purchase_id") @db.Uuid
+  postPurchase    PostPurchase?     @relation(fields: [postPurchaseId], references: [id])
+  subscriptionId  String?           @unique @map("subscription_id") @db.Uuid
+  subscription    UserSubscription? @relation(fields: [subscriptionId], references: [id])
+  payerId         String?           @unique @map("payer_id") @db.Uuid
+  payer           User?             @relation(fields: [payerId], references: [id])
+  invoiceId       String?           @unique @map("invoice_id") @db.Uuid
+  invoice         Invoice?          @relation(fields: [invoiceId], references: [id])
+  type            PaymentType
+  amount          Decimal           @db.Decimal
+  qrCodeUrl       String?           @map("qr_code_url") @db.Text
+  method          PaymentMethod
+  status          PaymentStatus
+  transactionRef  String?           @map("transaction_ref") @db.Text
+  receiptNumber   String?           @map("receipt_number") @db.VarChar(255)
+  paidAt          DateTime          @map("paid_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+model Conversation {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @db.VarChar(255)
+  user1Id   String    @map("user1_id") @db.Uuid
+  user2Id   String    @map("user2_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  senderId       String    @map("sender_id") @db.Uuid
+  content        String    @db.Text
+  sentAt         DateTime  @map("sent_at")
+  readAt         DateTime? @map("read_at")
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id])
+  attachments  MessageAttachment[]
+
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id        String                @id @default(uuid()) @db.Uuid
+  messageId String                @map("message_id") @db.Uuid
+  type      MessageAttachmentType
+  url       String                @db.Text
+  sizeBytes Int                   @map("size_bytes")
+  sortOrder Int                   @map("sort_order")
+
+  message Message @relation(fields: [messageId], references: [id])
+
+  @@map("message_attachments")
+}
+
+model AiMessage {
+  id               String         @id @default(uuid()) @db.Uuid
+  aiConversationId String         @map("ai_conversation_id") @db.Uuid
+  aiConversation   AiConversation @relation(fields: [aiConversationId], references: [id])
+  role             AiMessageRole
+  content          String         @db.Text
+  model            String         @db.Text
+  tokenUsage       Int?           @map("token_usage")
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@map("ai_messages")
+}
+
+model AiConversation {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  user            User          @relation(fields: [userId], references: [id])
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  messages AiMessage[]
+
+  @@map("ai_conversations")
+}
+
+model AuditLog {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String?        @map("user_id") @db.Uuid
+  user            User?          @relation(fields: [userId], references: [id])
+  boardingHouseId String?        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse? @relation(fields: [boardingHouseId], references: [id])
+  action          AuditLogAction
+  entityType      String         @map("entity_type")
+  entityId        String         @map("entity_id") @db.Uuid
+  oldValue        Json?          @map("old_value")
+  newValue        Json?          @map("new_value")
+  ipAddress       String         @map("ip_address")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+model Notification {
+  id              String         @id @default(uuid()) @db.Uuid
+  boardingHouseId String?        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse? @relation(fields: [boardingHouseId], references: [id])
+  senderId        String         @map("sender_id") @db.Uuid
+  sender          User           @relation("Sender", fields: [senderId], references: [id])
+  receiverId      String?        @map("receiver_id") @db.Uuid
+  receiver        User?          @relation("Receiver", fields: [receiverId], references: [id])
+  content         String         @db.Text
+  type            String
+  isRead          Boolean        @map("is_read")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
+
+model ComplaintImage {
+  id          String    @id @default(uuid()) @db.Uuid
+  complaintId String    @map("complaint_id") @db.Uuid
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
+  url         String    @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("complaint_images")
+}
+
+model Complaint {
+  id              String            @id @default(uuid()) @db.Uuid
+  tenantId        String            @map("tenant_id") @db.Uuid
+  tenant          User              @relation(fields: [tenantId], references: [id])
+  boardingHouseId String            @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse     @relation(fields: [boardingHouseId], references: [id])
+  roomId          String            @map("room_id") @db.Uuid
+  room            Room              @relation(fields: [roomId], references: [id])
+  title           String            @db.Text
+  description     String            @db.Text
+  priority        ComplaintPriority
+  status          ComplaintStatus
+  resolvedAt      DateTime?         @map("resolved_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  images ComplaintImage[]
+
+  @@map("complaints")
 }
