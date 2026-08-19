@@ -190,7 +190,7 @@ model User {
   status         UserStatus @default(active)
   roomId         String?    @default(uuid()) @map("room_id") @db.Uuid
   createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
+  updatedAt      DateTime?  @updatedAt @map("updated_at")
 
   boardingHouses        BoardingHouse[]
   tenantContracts       TenantContract[]
@@ -209,29 +209,30 @@ model User {
   receivedNotifications Notification[]      @relation("Receiver")
   employee              EmployeeProfile?
   attendances           Attendance[]
+  recurrencePatterns    RecurrencePattern[]
 
   @@map("users")
 }
 
 model UserIdentification {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique @map("user_id") @db.Uuid
-  user                   User     @relation(fields: [userId], references: [id])
-  identityNumber         String   @unique @db.VarChar(255)
-  fullName               String   @map("full_name") @db.VarChar(255)
-  dateOfBirth            DateTime @map("date_of_birth")
+  id                     String    @id @default(uuid())
+  userId                 String    @unique @map("user_id") @db.Uuid
+  user                   User      @relation(fields: [userId], references: [id])
+  identityNumber         String    @unique @db.VarChar(255)
+  fullName               String    @map("full_name") @db.VarChar(255)
+  dateOfBirth            DateTime  @map("date_of_birth")
   gender                 Gender
-  nationnality           String   @db.VarChar(255)
-  placeOfOrigin          Json     @map("place_of_origin")
-  placeOfResidence       Json     @map("place_of_residence")
-  issueDate              DateTime @map("issue_date")
-  expiryDate             DateTime @map("expiry_date")
-  personalIdentification String   @map("personal_identification")
+  nationnality           String    @db.VarChar(255)
+  placeOfOrigin          Json      @map("place_of_origin")
+  placeOfResidence       Json      @map("place_of_residence")
+  issueDate              DateTime  @map("issue_date")
+  expiryDate             DateTime  @map("expiry_date")
+  personalIdentification String    @map("personal_identification")
   note                   String
-  cardFrontUrl           String   @map("card_front_url")
-  cardBackUrl            String   @map("card_back_url")
-  createdAt              DateTime @default(now()) @map("created_at")
-  updatedAt              DateTime @updatedAt @map("updated_at")
+  cardFrontUrl           String    @map("card_front_url")
+  cardBackUrl            String    @map("card_back_url")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime? @updatedAt @map("updated_at")
 
   @@map("user_identifications")
 }
@@ -254,7 +255,7 @@ model BoardingHouse {
   totalFloor  Int?                @map("total_floor")
   builtAt     DateTime            @map("built_at")
   createdAt   DateTime            @default(now()) @map("created_at")
-  updatedAt   DateTime            @updatedAt @map("updated_at")
+  updatedAt   DateTime?           @updatedAt @map("updated_at")
   deletedAt   DateTime            @map("deleted_at")
 
   roomTypes           RoomType[]
@@ -270,6 +271,7 @@ model BoardingHouse {
   employeeAssignments EmployeeAssignment[]
   shifts              Shift[]
   workSchedules       WorkSchedule[]
+  recurrencePatterns  RecurrencePattern[]
 
   @@map("boarding_houses")
 }
@@ -302,7 +304,7 @@ model Service {
   isMetered       Boolean       @default(false) @map("is_metered")
   status          ServiceStatus @default(active)
   createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
 
   meterReadings MeterReading[]
   roomServices  RoomService[]
@@ -342,7 +344,7 @@ model RoomType {
   name            String        @db.VarChar(255)
   description     String?
   createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
 
   @@map("room_types")
 }
@@ -358,7 +360,7 @@ model Room {
   status          RoomStatus    @default(available)
   image_url       String?
   createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
 
   contracts     Contract[]
   expenses      Expense[]
@@ -383,7 +385,7 @@ model Contract {
   endDate            DateTime       @map("end_date")
   note               String
   createdAt          DateTime       @default(now()) @map("created_at")
-  updatedAt          DateTime       @updatedAt @map("updated_at")
+  updatedAt          DateTime?      @updatedAt @map("updated_at")
 
   tenantContracts   TenantContract[]
   contractDocuments ContractDocument[]
@@ -423,7 +425,7 @@ model SubscriptionPlan {
   priceYearly    Decimal             @map("price_yearly")
   description    String?
   createdAt      DateTime            @default(now()) @map("created_at")
-  updatedAt      DateTime            @updatedAt @map("updated_at")
+  updatedAt      DateTime?           @updatedAt @map("updated_at")
 
   userSubscriptions UserSubscription[]
 
@@ -480,7 +482,7 @@ model Post {
   resultedContractId String?       @unique @map("resulted_contract_id")
   contract           Contract?     @relation(fields: [resultedContractId], references: [id])
   createdAt          DateTime      @default(now()) @map("created_at")
-  updatedAt          DateTime      @updatedAt @map("updated_at")
+  updatedAt          DateTime?     @updatedAt @map("updated_at")
   deletedAt          DateTime      @map("deleted_at")
 
   deposit     Deposit?
@@ -594,7 +596,7 @@ model Payment {
   receiptNumber   String?           @map("receipt_number") @db.VarChar(255)
   paidAt          DateTime          @map("paid_at")
   createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  updatedAt       DateTime?         @updatedAt @map("updated_at")
 
   @@map("payments")
 }
@@ -605,7 +607,7 @@ model Conversation {
   user1Id   String    @map("user1_id") @db.Uuid
   user2Id   String    @map("user2_id") @db.Uuid
   createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
   messages Message[]
@@ -724,7 +726,7 @@ model Complaint {
   status          ComplaintStatus
   resolvedAt      DateTime?         @map("resolved_at")
   createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  updatedAt       DateTime?         @updatedAt @map("updated_at")
 
   images ComplaintImage[]
 
@@ -732,24 +734,28 @@ model Complaint {
 }
 
 model EmployeeProfile {
-  id                  String               @id @default(uuid())
-  userId              String               @unique @map("user_id") @db.Uuid
-  user                User                 @relation(fields: [userId], references: [id])
-  createdAt           DateTime             @default(now()) @map("created_at")
+  id        String    @id @default(uuid())
+  userId    String    @unique @map("user_id") @db.Uuid
+  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   employeeAssignments EmployeeAssignment[]
   workSchedules       WorkSchedule[]
+  recurrencePatterns  RecurrencePattern[]
 
   @@map("employee_profiles")
 }
 
 model JobPosition {
-  id                  String               @id @default(uuid())
-  boardingHouseId     String               @map("boarding_house_id") @db.Uuid
-  boardingHouse       BoardingHouse        @relation(fields: [boardingHouseId], references: [id])
-  name                String               @db.VarChar(255)
-  description         String?
-  createdAt           DateTime             @default(now()) @map("created_at")
-  updatedAt           DateTime             @updatedAt @map("updated_at")
+  id              String        @id @default(uuid())
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+  name            String        @db.VarChar(255)
+  description     String?
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
+
   employeeAssignments EmployeeAssignment[]
 
   @@map("job_positions")
@@ -765,38 +771,64 @@ model EmployeeAssignment {
   boardingHouse   BoardingHouse    @relation(fields: [boardingHouseId], references: [id])
   status          AssignmentStatus @default(active)
   joinedAt        DateTime         @map("joined_at")
+  leftAt          DateTime         @map("left_at")
   createdAt       DateTime         @default(now()) @map("created_at")
 
   @@map("employee_assignments")
 }
 
 model Shift {
-  id              String         @id @default(uuid())
-  boardingHouseId String         @map("boarding_house_id") @db.Uuid
-  boardingHouse   BoardingHouse  @relation(fields: [boardingHouseId], references: [id])
+  id              String        @id @default(uuid())
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
   name            String
-  startTime       DateTime       @map("start_time")
-  endTime         DateTime       @map("end_time")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
-  workSchedules   WorkSchedule[]
+  startTime       DateTime      @map("start_time")
+  endTime         DateTime      @map("end_time")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
+
+  workSchedules      WorkSchedule[]
+  recurrencePatterns RecurrencePattern[]
 
   @@map("shifts")
 }
 
+model RecurrencePattern {
+  id              String          @id @default(uuid())
+  employeeId      String          @map("employee_id") @db.Uuid
+  employee        EmployeeProfile @relation(fields: [employeeId], references: [id])
+  boardingHouseId String          @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse   @relation(fields: [boardingHouseId], references: [id])
+  shiftId         String          @db.Uuid
+  shift           Shift           @relation(fields: [shiftId], references: [id])
+  daysOfWeek      String          @map("days_of_week") //e.g: '2,3,4'
+  startTime       DateTime        @map("start_time")
+  endTime         DateTime        @map("end_time")
+  createdBy       String          @db.Uuid
+  createdByUser   User            @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime?       @updatedAt @map("updated_at")
+
+  workSchedules WorkSchedule[]
+
+  @@map("recurrence_patterns")
+}
+
 model WorkSchedule {
-  id                String          @id @default(uuid())
-  employeeId        String          @map("employee_id") @db.Uuid
-  employee          EmployeeProfile @relation(fields: [employeeId], references: [id])
-  boardingHouseId   String          @map("boarding_house_id") @db.Uuid
-  boardingHouse     BoardingHouse   @relation(fields: [boardingHouseId], references: [id])
-  shiftId           String          @db.Uuid
-  shift             Shift           @relation(fields: [shiftId], references: [id])
-  workDate          DateTime        @map("work_date")
-  recurrenceGroupId String?         @db.Uuid
-  status            ScheduleStatus  @default(scheduled)
-  createdAt         DateTime        @default(now()) @map("created_at")
-  attendances       Attendance[]
+  id              String             @id @default(uuid())
+  employeeId      String             @map("employee_id") @db.Uuid
+  employee        EmployeeProfile    @relation(fields: [employeeId], references: [id])
+  boardingHouseId String             @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse      @relation(fields: [boardingHouseId], references: [id])
+  shiftId         String             @db.Uuid
+  shift           Shift              @relation(fields: [shiftId], references: [id])
+  workDate        DateTime           @map("work_date")
+  recurrenceId    String?            @db.Uuid
+  recurrence      RecurrencePattern? @relation(fields: [recurrenceId], references: [id])
+  status          ScheduleStatus     @default(scheduled)
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime?          @updatedAt @map("updated_at")
+  attendances     Attendance[]
 
   @@map("work_schedules")
 }
@@ -811,7 +843,7 @@ model Attendance {
   editedBy       String?          @map("edited_by") @db.Uuid
   editedByUser   User?            @relation(fields: [editedBy], references: [id])
   createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
+  updatedAt      DateTime?        @updatedAt @map("updated_at")
 
   @@map("attendances")
 }
