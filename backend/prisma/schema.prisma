@@ -149,13 +149,13 @@ enum AuditLogAction {
   PAYMENT
 }
 
-enum ComplaintPriority {
+enum GrievencePriority {
   LOW
   MEDIUM
   HIGH
 }
 
-enum ComplaintStatus {
+enum GrievenceStatus {
   PENDING
   IN_PROGRESS
   RESOLVED
@@ -178,19 +178,41 @@ enum AttendanceStatus {
   absent
 }
 
+enum NotifyChannel {
+  zalo
+  sms
+  email
+}
+
+enum NofifyTarget {
+  all_users
+  all_landlords
+  all_staff
+  all_admins
+  specific_user
+}
+
+enum NotifyStatus {
+  pending
+  sent
+  failed
+  canceled
+}
+
 model User {
-  id             String     @id @default(uuid())
-  username       String?    @db.VarChar(255)
-  phoneNumber    String     @unique @map("phone_number") @db.VarChar(20)
-  email          String?    @unique @db.VarChar(255)
-  hashedPassword String     @map("hashed_password") @db.VarChar(255)
-  bio            String?
-  avatarUrl      String?    @map("avatar_url")
-  role           UserRole   @default(tenant)
-  status         UserStatus @default(active)
-  roomId         String?    @default(uuid()) @map("room_id") @db.Uuid
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime?  @updatedAt @map("updated_at")
+  id                 String     @id @default(uuid())
+  username           String?    @db.VarChar(255)
+  phoneNumber        String     @unique @map("phone_number") @db.VarChar(20)
+  email              String?    @unique @db.VarChar(255)
+  hashedPassword     String     @map("hashed_password") @db.VarChar(255)
+  bio                String?
+  avatarUrl          String?    @map("avatar_url")
+  role               UserRole   @default(tenant)
+  status             UserStatus @default(active)
+  roomId             String?    @default(uuid()) @map("room_id") @db.Uuid
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime?  @updatedAt @map("updated_at")
+  mustChangePassword Boolean    @default(true) @map("must_change_password")
 
   boardingHouses        BoardingHouse[]
   tenantContracts       TenantContract[]
@@ -204,12 +226,14 @@ model User {
   postReaches           PostReach[]
   aiConversations       AiConversation[]
   auditLogs             AuditLog[]
-  complaints            Complaint[]
-  sentNotifications     Notification[]      @relation("Sender")
-  receivedNotifications Notification[]      @relation("Receiver")
+  grievences            Grievance[]
+  sentNotifications     Notification[]        @relation("Sender")
+  receivedNotifications Notification[]        @relation("Receiver")
   employee              EmployeeProfile?
   attendances           Attendance[]
   recurrencePatterns    RecurrencePattern[]
+  createdNotifications  MassNotificationJob[] @relation("CreateNotify")
+  targetedNotifications MassNotificationJob[] @relation("TargetNotify")
 
   @@map("users")
 }
@@ -266,7 +290,7 @@ model BoardingHouse {
   aiConversations     AiConversation[]
   auditLogs           AuditLog[]
   notifications       Notification[]
-  complaints          Complaint[]
+  grievences          Grievance[]
   jobPositions        JobPosition[]
   employeeAssignments EmployeeAssignment[]
   shifts              Shift[]
@@ -369,7 +393,7 @@ model Room {
   deposits      Deposit[]
   posts         Post[]
   invoices      Invoice[]
-  complaints    Complaint[]
+  grievences    Grievance[]
 
   @@map("rooms")
 }
@@ -423,6 +447,7 @@ model SubscriptionPlan {
   dailyPostQuote Int                 @map("daily_post_quote")
   priceMonthly   Decimal             @map("price_monthly")
   priceYearly    Decimal             @map("price_yearly")
+  maxRoom        Int                 @map("max_room")
   description    String?
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime?           @updatedAt @map("updated_at")
@@ -702,17 +727,17 @@ model Notification {
   @@map("notifications")
 }
 
-model ComplaintImage {
+model GrievanceImage {
   id          String    @id @default(uuid())
-  complaintId String    @map("complaint_id") @db.Uuid
-  complaint   Complaint @relation(fields: [complaintId], references: [id])
+  grievanceId String    @map("grievance_id") @db.Uuid
+  grievance   Grievance @relation(fields: [grievanceId], references: [id])
   url         String
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  @@map("complaint_images")
+  @@map("grievance_images")
 }
 
-model Complaint {
+model Grievance {
   id              String            @id @default(uuid())
   tenantId        String            @map("tenant_id") @db.Uuid
   tenant          User              @relation(fields: [tenantId], references: [id])
@@ -722,15 +747,15 @@ model Complaint {
   room            Room              @relation(fields: [roomId], references: [id])
   title           String
   description     String
-  priority        ComplaintPriority @default(MEDIUM)
-  status          ComplaintStatus
+  priority        GrievencePriority @default(MEDIUM)
+  status          GrievenceStatus
   resolvedAt      DateTime?         @map("resolved_at")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime?         @updatedAt @map("updated_at")
 
-  images ComplaintImage[]
+  images GrievanceImage[]
 
-  @@map("complaints")
+  @@map("grievances")
 }
 
 model EmployeeProfile {
@@ -846,4 +871,22 @@ model Attendance {
   updatedAt      DateTime?        @updatedAt @map("updated_at")
 
   @@map("attendances")
+}
+
+model MassNotificationJob {
+  id            String        @id @default(uuid())
+  createdBy     String        @map("created_by") @db.Uuid
+  channel       NotifyChannel
+  createdByUser User          @relation("CreateNotify", fields: [createdBy], references: [id])
+  targetType    NofifyTarget
+  targetId      String?       @db.Uuid
+  targetUser    User?         @relation("TargetNotify", fields: [targetId], references: [id])
+  title         String
+  content       String
+  status        NotifyStatus  @default(pending)
+  sentCount     Int           @default(0)
+  failedCount   Int           @default(0)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@map("mass_notification_jobs")
 }
