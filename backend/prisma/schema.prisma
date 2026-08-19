@@ -79,11 +79,6 @@ enum ServiceStatus {
   inactive
 }
 
-enum ServiceType {
-  general
-  house
-}
-
 enum DepositType {
   hold_room
   contract
@@ -166,13 +161,31 @@ enum ComplaintStatus {
   RESOLVED
 }
 
+enum AssignmentStatus {
+  active
+  inactive
+}
+
+enum ScheduleStatus {
+  scheduled
+  canceled
+}
+
+enum AttendanceStatus {
+  not_yet
+  on_time
+  late
+  absent
+}
+
 model User {
   id             String     @id @default(uuid())
+  username       String?    @db.VarChar(255)
   phoneNumber    String     @unique @map("phone_number") @db.VarChar(20)
   email          String?    @unique @db.VarChar(255)
   hashedPassword String     @map("hashed_password") @db.VarChar(255)
-  bio            String     @db.Text
-  avatarUrl      String     @map("avatar_url") @db.Text
+  bio            String?
+  avatarUrl      String?    @map("avatar_url")
   role           UserRole   @default(tenant)
   status         UserStatus @default(active)
   roomId         String?    @default(uuid()) @map("room_id") @db.Uuid
@@ -192,8 +205,10 @@ model User {
   aiConversations       AiConversation[]
   auditLogs             AuditLog[]
   complaints            Complaint[]
-  sentNotifications     Notification[] @relation("Sender")
-  receivedNotifications Notification[] @relation("Receiver")
+  sentNotifications     Notification[]      @relation("Sender")
+  receivedNotifications Notification[]      @relation("Receiver")
+  employee              EmployeeProfile?
+  attendances           Attendance[]
 
   @@map("users")
 }
@@ -211,10 +226,10 @@ model UserIdentification {
   placeOfResidence       Json     @map("place_of_residence")
   issueDate              DateTime @map("issue_date")
   expiryDate             DateTime @map("expiry_date")
-  personalIdentification String   @map("personal_identification") @db.Text
-  note                   String   @db.Text
-  cardFrontUrl           String   @map("card_front_url") @db.Text
-  cardBackUrl            String   @map("card_back_url") @db.Text
+  personalIdentification String   @map("personal_identification")
+  note                   String
+  cardFrontUrl           String   @map("card_front_url")
+  cardBackUrl            String   @map("card_back_url")
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 
@@ -226,7 +241,7 @@ model BoardingHouse {
   owner       User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String              @map("owner_id") @db.Uuid
   name        String              @db.VarChar(255)
-  description String?             @db.Text
+  description String?
   country     String              @db.VarChar(255)
   province    String              @db.VarChar(255)
   city        String              @db.VarChar(255)
@@ -235,21 +250,26 @@ model BoardingHouse {
   street      String              @db.VarChar(255)
   houseNumber String              @map("house_number") @db.VarChar(255)
   status      BoardingHouseStatus @default(active)
-  thumbnail   String?             @db.Text
+  thumbnail   String?
   totalFloor  Int?                @map("total_floor")
+  builtAt     DateTime            @map("built_at")
   createdAt   DateTime            @default(now()) @map("created_at")
   updatedAt   DateTime            @updatedAt @map("updated_at")
   deletedAt   DateTime            @map("deleted_at")
 
-  roomTypes       RoomType[]
-  rooms           Room[]
-  expenses        Expense[]
-  services        Service[]
-  deposits        Deposit[]
-  aiConversations AiConversation[]
-  auditLogs       AuditLog[]
-  notifications   Notification[]
-  complaints      Complaint[]
+  roomTypes           RoomType[]
+  rooms               Room[]
+  expenses            Expense[]
+  services            Service[]
+  deposits            Deposit[]
+  aiConversations     AiConversation[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  complaints          Complaint[]
+  jobPositions        JobPosition[]
+  employeeAssignments EmployeeAssignment[]
+  shifts              Shift[]
+  workSchedules       WorkSchedule[]
 
   @@map("boarding_houses")
 }
@@ -261,7 +281,7 @@ model Expense {
   roomId          String        @map("room_id") @db.Uuid
   room            Room          @relation(fields: [roomId], references: [id])
   name            String        @db.VarChar(255)
-  description     String?       @db.Text
+  description     String?
   category        String
   status          ExpenseStatus @default(pending)
   amount          Decimal
@@ -281,7 +301,6 @@ model Service {
   autoApplied     Boolean       @default(true) @map("auto_applied")
   isMetered       Boolean       @default(false) @map("is_metered")
   status          ServiceStatus @default(active)
-  type            ServiceType   @default(house)
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
@@ -299,7 +318,7 @@ model MeterReading {
   roomId       String   @map("room_id") @db.Uuid
   room         Room     @relation(fields: [roomId], references: [id])
   readingValue Decimal  @map("reading_value")
-  imageUrl     String?  @map("image_url") @db.Text
+  imageUrl     String?  @map("image_url")
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("meter_readings")
@@ -321,7 +340,7 @@ model RoomType {
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
   name            String        @db.VarChar(255)
-  description     String?       @db.Text
+  description     String?
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
@@ -337,7 +356,7 @@ model Room {
   floor           Int
   maxOccupants    Int?          @map("max_occupants")
   status          RoomStatus    @default(available)
-  image_url       String?       @db.Text
+  image_url       String?
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
@@ -362,7 +381,7 @@ model Contract {
   status             ContractStatus @default(active)
   startDate          DateTime       @map("start_date")
   endDate            DateTime       @map("end_date")
-  note               String         @db.Text
+  note               String
   createdAt          DateTime       @default(now()) @map("created_at")
   updatedAt          DateTime       @updatedAt @map("updated_at")
 
@@ -379,7 +398,7 @@ model ContractDocument {
   id         String   @id @default(uuid())
   contractId String   @map("contract_id") @db.Uuid
   contract   Contract @relation(fields: [contractId], references: [id])
-  url        String   @db.Text
+  url        String
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("contract_documents")
@@ -402,7 +421,7 @@ model SubscriptionPlan {
   dailyPostQuote Int                 @map("daily_post_quote")
   priceMonthly   Decimal             @map("price_monthly")
   priceYearly    Decimal             @map("price_yearly")
-  description    String?             @db.Text
+  description    String?
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime            @updatedAt @map("updated_at")
 
@@ -451,8 +470,8 @@ model Post {
   postedByUser       User          @relation(fields: [postedBy], references: [id])
   roomId             String?       @map("room_id") @db.Uuid
   room               Room?         @relation(fields: [roomId], references: [id])
-  title              String        @db.Text
-  content            String        @db.Text
+  title              String
+  content            String
   depositAmount      Decimal       @map("deposti_amount")
   status             PostStatus
   sourceType         SourceType    @map("source_type")
@@ -476,7 +495,7 @@ model PostImage {
   id     String @id @default(uuid())
   postId String @map("post_id") @db.Uuid
   post   Post   @relation(fields: [postId], references: [id])
-  url    String @db.Text
+  url    String
 }
 
 model SavedPost {
@@ -522,7 +541,7 @@ model Deposit {
 }
 
 model Invoice {
-  id          String        @id @default(uuid()) @db.Uuid
+  id          String        @id @default(uuid())
   roomId      String        @map("room_id") @db.Uuid
   room        Room          @relation(fields: [roomId], references: [id])
   contractId  String?       @map("contract_id") @db.Uuid
@@ -568,10 +587,10 @@ model Payment {
   invoice         Invoice?          @relation(fields: [invoiceId], references: [id])
   type            PaymentType
   amount          Decimal           @db.Decimal
-  qrCodeUrl       String?           @map("qr_code_url") @db.Text
+  qrCodeUrl       String?           @map("qr_code_url")
   method          PaymentMethod
   status          PaymentStatus
-  transactionRef  String?           @map("transaction_ref") @db.Text
+  transactionRef  String?           @map("transaction_ref")
   receiptNumber   String?           @map("receipt_number") @db.VarChar(255)
   paidAt          DateTime          @map("paid_at")
   createdAt       DateTime          @default(now()) @map("created_at")
@@ -581,7 +600,7 @@ model Payment {
 }
 
 model Conversation {
-  id        String    @id @default(uuid()) @db.Uuid
+  id        String    @id @default(uuid())
   name      String    @db.VarChar(255)
   user1Id   String    @map("user1_id") @db.Uuid
   user2Id   String    @map("user2_id") @db.Uuid
@@ -595,10 +614,11 @@ model Conversation {
 }
 
 model Message {
-  id             String    @id @default(uuid()) @db.Uuid
+  id             String    @id @default(uuid())
   conversationId String    @map("conversation_id") @db.Uuid
   senderId       String    @map("sender_id") @db.Uuid
-  content        String    @db.Text
+  content        String
+  isReacted      Boolean   @default(false)
   sentAt         DateTime  @map("sent_at")
   readAt         DateTime? @map("read_at")
 
@@ -609,10 +629,10 @@ model Message {
 }
 
 model MessageAttachment {
-  id        String                @id @default(uuid()) @db.Uuid
+  id        String                @id @default(uuid())
   messageId String                @map("message_id") @db.Uuid
   type      MessageAttachmentType
-  url       String                @db.Text
+  url       String
   sizeBytes Int                   @map("size_bytes")
   sortOrder Int                   @map("sort_order")
 
@@ -622,12 +642,12 @@ model MessageAttachment {
 }
 
 model AiMessage {
-  id               String         @id @default(uuid()) @db.Uuid
+  id               String         @id @default(uuid())
   aiConversationId String         @map("ai_conversation_id") @db.Uuid
   aiConversation   AiConversation @relation(fields: [aiConversationId], references: [id])
   role             AiMessageRole
-  content          String         @db.Text
-  model            String         @db.Text
+  content          String
+  model            String
   tokenUsage       Int?           @map("token_usage")
   createdAt        DateTime       @default(now()) @map("created_at")
 
@@ -635,7 +655,7 @@ model AiMessage {
 }
 
 model AiConversation {
-  id              String        @id @default(uuid()) @db.Uuid
+  id              String        @id @default(uuid())
   userId          String        @map("user_id") @db.Uuid
   user            User          @relation(fields: [userId], references: [id])
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
@@ -648,7 +668,7 @@ model AiConversation {
 }
 
 model AuditLog {
-  id              String         @id @default(uuid()) @db.Uuid
+  id              String         @id @default(uuid())
   userId          String?        @map("user_id") @db.Uuid
   user            User?          @relation(fields: [userId], references: [id])
   boardingHouseId String?        @map("boarding_house_id") @db.Uuid
@@ -665,14 +685,14 @@ model AuditLog {
 }
 
 model Notification {
-  id              String         @id @default(uuid()) @db.Uuid
+  id              String         @id @default(uuid())
   boardingHouseId String?        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse? @relation(fields: [boardingHouseId], references: [id])
   senderId        String         @map("sender_id") @db.Uuid
   sender          User           @relation("Sender", fields: [senderId], references: [id])
   receiverId      String?        @map("receiver_id") @db.Uuid
   receiver        User?          @relation("Receiver", fields: [receiverId], references: [id])
-  content         String         @db.Text
+  content         String
   type            String
   isRead          Boolean        @map("is_read")
   createdAt       DateTime       @default(now()) @map("created_at")
@@ -681,26 +701,26 @@ model Notification {
 }
 
 model ComplaintImage {
-  id          String    @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid())
   complaintId String    @map("complaint_id") @db.Uuid
   complaint   Complaint @relation(fields: [complaintId], references: [id])
-  url         String    @db.Text
+  url         String
   createdAt   DateTime  @default(now()) @map("created_at")
 
   @@map("complaint_images")
 }
 
 model Complaint {
-  id              String            @id @default(uuid()) @db.Uuid
+  id              String            @id @default(uuid())
   tenantId        String            @map("tenant_id") @db.Uuid
   tenant          User              @relation(fields: [tenantId], references: [id])
   boardingHouseId String            @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse     @relation(fields: [boardingHouseId], references: [id])
   roomId          String            @map("room_id") @db.Uuid
   room            Room              @relation(fields: [roomId], references: [id])
-  title           String            @db.Text
-  description     String            @db.Text
-  priority        ComplaintPriority
+  title           String
+  description     String
+  priority        ComplaintPriority @default(MEDIUM)
   status          ComplaintStatus
   resolvedAt      DateTime?         @map("resolved_at")
   createdAt       DateTime          @default(now()) @map("created_at")
@@ -709,4 +729,89 @@ model Complaint {
   images ComplaintImage[]
 
   @@map("complaints")
+}
+
+model EmployeeProfile {
+  id                  String               @id @default(uuid())
+  userId              String               @unique @map("user_id") @db.Uuid
+  user                User                 @relation(fields: [userId], references: [id])
+  createdAt           DateTime             @default(now()) @map("created_at")
+  employeeAssignments EmployeeAssignment[]
+  workSchedules       WorkSchedule[]
+
+  @@map("employee_profiles")
+}
+
+model JobPosition {
+  id                  String               @id @default(uuid())
+  boardingHouseId     String               @map("boarding_house_id") @db.Uuid
+  boardingHouse       BoardingHouse        @relation(fields: [boardingHouseId], references: [id])
+  name                String               @db.VarChar(255)
+  description         String?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  employeeAssignments EmployeeAssignment[]
+
+  @@map("job_positions")
+}
+
+model EmployeeAssignment {
+  id              String           @id @default(uuid())
+  employeeId      String           @map("employee_id") @db.Uuid
+  employee        EmployeeProfile  @relation(fields: [employeeId], references: [id])
+  positionId      String           @map("position_id") @db.Uuid
+  position        JobPosition      @relation(fields: [positionId], references: [id])
+  boardingHouseId String           @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse    @relation(fields: [boardingHouseId], references: [id])
+  status          AssignmentStatus @default(active)
+  joinedAt        DateTime         @map("joined_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  @@map("employee_assignments")
+}
+
+model Shift {
+  id              String         @id @default(uuid())
+  boardingHouseId String         @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse  @relation(fields: [boardingHouseId], references: [id])
+  name            String
+  startTime       DateTime       @map("start_time")
+  endTime         DateTime       @map("end_time")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  workSchedules   WorkSchedule[]
+
+  @@map("shifts")
+}
+
+model WorkSchedule {
+  id                String          @id @default(uuid())
+  employeeId        String          @map("employee_id") @db.Uuid
+  employee          EmployeeProfile @relation(fields: [employeeId], references: [id])
+  boardingHouseId   String          @map("boarding_house_id") @db.Uuid
+  boardingHouse     BoardingHouse   @relation(fields: [boardingHouseId], references: [id])
+  shiftId           String          @db.Uuid
+  shift             Shift           @relation(fields: [shiftId], references: [id])
+  workDate          DateTime        @map("work_date")
+  recurrenceGroupId String?         @db.Uuid
+  status            ScheduleStatus  @default(scheduled)
+  createdAt         DateTime        @default(now()) @map("created_at")
+  attendances       Attendance[]
+
+  @@map("work_schedules")
+}
+
+model Attendance {
+  id             String           @id @default(uuid())
+  workScheduleId String           @map("work_schedule_id") @db.Uuid
+  workSchedule   WorkSchedule     @relation(fields: [workScheduleId], references: [id])
+  checkIn        DateTime?        @map("check_in")
+  checkOut       DateTime?        @map("check_out")
+  status         AttendanceStatus @default(not_yet)
+  editedBy       String?          @map("edited_by") @db.Uuid
+  editedByUser   User?            @relation(fields: [editedBy], references: [id])
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@map("attendances")
 }

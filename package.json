@@ -1,0 +1,10 @@
+{
+	"scripts": {
+		"install:all": "",
+		"install:be": "",
+		"install:fe": "",
+		"start": "",
+		"dev": "",
+		"seed": ""
+	}
+}
