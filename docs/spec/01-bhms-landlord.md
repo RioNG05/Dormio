@@ -1,297 +1,264 @@
-# MODULE 1 — BHMS: Landlord Use Cases
+# Module 1 — BHMS · Actor: Landlord (Chủ trọ)
 
-**Module**: Boarding House Management System (BHMS)
-**Actor**: Landlord (Chủ trọ)
-**Global rules**: See `docs/spec/00-global-conventions.md`
+> See `00-overview-and-conventions.md` for global rules and the schema changelog referenced throughout this file.
 
 ---
 
-## UC-L-01 — Initialize Property Profile
-**Tier:** Free
+### UC-L-01 — Initialize Property Profile
+**Tier:** Free · **Models:** `BoardingHouse`, `Service`, `RoomType`
 
-**Tables:** `BOARDING_HOUSE`, `SERVICE` (boarding_house_id set), `ROOM_TYPE`
+1. Landlord submits `name`, structured address fields (`country`, `province`, `city`, `district`, `ward`, `street`, `houseNumber`), `description`, `totalFloor`, `builtAt`, plus arrays of `{ name, unit, price, isMetered }` for services and `{ name, description }` for room types.
+2. Create `BoardingHouse(ownerId = current_user.id, status = 'active')`.
+3. Bulk-insert `Service` rows with `boardingHouseId` set to this property. System-default services (if any convention for "global" services is added later) are a separate concern — do not clone rows, `RoomService` is what attaches a service to a specific room (UC-L-02/03).
+4. Bulk-insert `RoomType` rows scoped to this `boardingHouseId`.
 
-**Flow:**
-1. Landlord submits `name`, `address`, `description`, an array of `{ service_name, unit, default_price, is_metered }`, and an array of `{ room_type_name, description }`.
-2. Backend creates `BOARDING_HOUSE` row with `owner_id = current_user.id`.
-3. Backend bulk-inserts `SERVICE` rows scoped to this `boarding_house_id`. Also copy in system-default services (`SERVICE` rows where `boarding_house_id IS NULL`) as **references only** — do not clone rows; the room-level `ROOM_SERVICE` join table is what actually attaches a service (default or custom) to a room.
-4. Backend bulk-inserts `ROOM_TYPE` rows scoped to this `boarding_house_id`.
-
-**Validation:** `name` and `address` required. At least one room type recommended but not blocking (UC-L-02/03 can create ad-hoc).
+**Validation:** `name` and full address block required.
 
 ---
 
-## UC-L-02 — Bulk Generate Rooms
-**Tier:** Free
-**Constraint:** max room count enforced by `SUBSCRIPTION_PLAN` (currently plan table only defines `daily_post_quota`; if room-count limiting is required, add `max_rooms` column to `SUBSCRIPTION_PLAN` before implementing this constraint).
+### UC-L-02 — Bulk Generate Rooms
+**Tier:** Free · **Constraint:** `SUBSCRIPTION_PLAN.maxRoom` · **Models:** `Room`, `RoomType`, `RoomService`
 
-**Tables:** `ROOM`, `ROOM_TYPE`, `ROOM_SERVICE`
+1. Input: `floorCount`, `roomsPerFloor`, `nameFormat` (template, e.g. `P{floor}0{index}`), `area`, `roomTypeId`, `serviceIds[]`, default rent price.
+2. Before generating, check the landlord's current active `SubscriptionPlan.maxRoom` against `COUNT(Room WHERE boardingHouseId = :id)` + the number about to be created. Reject with a clear over-limit error if it would exceed the plan's cap. No active `UserSubscription` → treat as `free` plan (see `00-overview` for the "no subscription row = Free" convention, still true here).
+3. Loop `floor = 1..floorCount`, `index = 1..roomsPerFloor`, render `nameFormat` → insert one `Room` row per combination with `status = 'available'`, `roomTypeId` set (per changelog item #4 in the overview file — this FK must exist).
+4. For each created room, insert `RoomService` rows for every `serviceId` passed.
+5. Response returns the generated rooms for an editable grid; individual edits reuse the `PATCH /rooms/:id` endpoint from UC-L-03.
 
-**Flow:**
-1. Input: `floor_count`, `rooms_per_floor`, `name_format` (template string, e.g. `P{floor}0{index}`), `area`, `room_type_id`, `service_ids[]`, `default_price`.
-2. Backend loops `floor = 1..floor_count`, `index = 1..rooms_per_floor`, renders `name_format` → creates one `ROOM` row per combination with `status='available'`.
-3. For each created room, insert `ROOM_SERVICE` rows for every `service_id` passed, using the service's own `default_price` unless landlord overrode it in the request.
-4. Response returns the generated rooms so the UI can render an editable grid; individual `PUT /rooms/:id` calls handle post-generation edits (UC-L-03 endpoint reused).
-
-**Edge case:** name collisions (duplicate room names within the same `boarding_house_id`) must be rejected — enforce with `@@unique([boardingHouseId, name])` on `Room` in Prisma.
+**Edge case:** enforce `@@unique([boardingHouseId, roomNumber])` on `Room` to reject name collisions within a property.
 
 ---
 
-## UC-L-03 — Create Single Room
-**Tier:** Free
+### UC-L-03 — Create/Edit Single Room
+**Tier:** Free · **Models:** `Room`, `RoomService`
 
-**Tables:** `ROOM`, `ROOM_SERVICE`
-
-**Flow:** Direct insert into `ROOM` with the given `room_type_id`, `floor`, `area`, `default_price`. On creation, auto-attach all `SERVICE` rows where `boarding_house_id` matches OR `boarding_house_id IS NULL` (system defaults) as `ROOM_SERVICE(is_active=true)`. Landlord can immediately toggle `is_active=false` per service without deleting the `ROOM_SERVICE` row (soft toggle, preserves historical pricing for past invoices).
+Direct insert/update on `Room` (`roomNumber`, `floor`, `area`, `maxOccupants`, `roomTypeId`, rent price if stored per-room, `image_url`). On creation, auto-attach relevant `Service` rows as `RoomService`. Landlord can detach a service by deleting its `RoomService` row — note `RoomService` has no `isActive`/soft-toggle field in the current schema, so removing a service from a room is a hard delete of that join row; if past invoices need to preserve historical pricing for a since-removed service, that data must already live on the `InvoiceItem` row (`unitPrice`, `quantity` snapshotted at generation time), not be re-derived from `RoomService` later.
 
 ---
 
-## UC-L-04 — Generate Rental Contract (External Source)
-**Tier:** Free
+### UC-L-04 — Generate Rental Contract (External Source Flow)
+**Tier:** Free · **Models:** `Contract`, `TenantContract`, `Deposit`, `UserIdentification`, `ContractDocument`, `User`
 
-**Tables:** `CONTRACT`, `CONTRACT_TENANT`, `DEPOSIT`, `USER`
+This is the flow where the landlord creates the contract directly — the tenant did not come through a platform deposit.
 
-This is the **"external source" flow** (`CONTRACT.source = 'external'`) — the landlord creates the contract directly, without a prior platform-side deposit.
+1. **Find or create the tenant:**
+   - Search `User WHERE phoneNumber = :phone`.
+   - **Found** → prefill read-only tenant info; this user's `id` becomes `TenantContract.tenantId`.
+   - **Not found** → landlord enters phone + name → create `User(role='tenant', phoneNumber, username, hashedPassword=hash('00000000'), mustChangePassword=true)`. Reuse a single `UserService.findOrCreateByPhone()` helper — UC-L-19 (staff onboarding) uses the exact same pattern and must call the same helper, not a duplicate implementation.
+2. **Identity verification (new step vs earlier design):** check `UserIdentification WHERE userId = tenant.id`.
+   - **Missing** → collect full ID card details (`identityNumber`, `fullName`, `dateOfBirth`, `gender`, `nationality`, `placeOfOrigin`, `placeOfResidence`, `issueDate`, `expiryDate`, front/back photo upload) and create the `UserIdentification` row. This only ever needs to happen once per user across their entire lifetime on the platform.
+   - **Present** → skip straight to contract creation; display the existing verified identity for the landlord to confirm this is the right person.
+3. Landlord submits `roomId`, `startDate`, `endDate`, `rentPrice`, `monthlyPaymentDate` (day-of-month billing anchor), `depositAmount`, `note`.
+4. Create `Contract(roomId, startDate, endDate, rentPrice, monthlyPaymentDate, status='active', note)`.
+5. Create `TenantContract(tenantId, contractId, isPrimary=true)` — supports adding co-tenants later via additional `TenantContract` rows for the same `contractId`.
+6. **Deposit recording:** create `Deposit(roomId, boardingHouseId, contractId=<new contract>, postId=NULL, type='contract', amount=depositAmount, status='paid', recordedManually=true, recordedBy=<landlord user id>)`. **Do not create a `Payment` row** — no money moved through the system.
+7. Set `Room.status = 'occupied'`.
+8. Generate the printable contract file, store its URL as a `ContractDocument(contractId, url)` row — `ContractDocument` supports multiple generated exports per contract (e.g. re-exported after an amendment), so always insert a new row rather than overwriting.
+9. Trigger UC-T-01 (onboarding notification).
 
-**Flow:**
-1. Landlord searches by phone number: `SELECT * FROM "user" WHERE phone = :phone`.
-   - **Found** → prefill read-only tenant info; this user becomes `CONTRACT_TENANT.tenant_id`.
-   - **Not found** → landlord manually enters full name + phone → backend creates a new `USER(role='Tenant', phone, full_name, password_hash=hash('00000000'))` via shared `UserService.findOrCreateByPhone()` helper.
-2. Landlord submits: `room_id`, `start_date`, `end_date`, `rent_price`, `deposit_amount`, `service_ids[]`, front/back ID card images.
-3. Backend creates `CONTRACT(room_id, start_date, end_date, rent_price, source='external', status='active')`.
-4. Backend creates `CONTRACT_TENANT(contract_id, tenant_id, is_primary=true)` (supports co-tenants later).
-5. Upload ID card images → `CONTRACT.id_card_front_url` / `id_card_back_url` (private bucket, signed URLs only).
-6. **Deposit recording:** create `DEPOSIT(boarding_house_id, room_id, contract_id=<new>, post_id=NULL, type='contract', amount=deposit_amount, status='paid', recorded_manually=true, recorded_by=<landlord>)`. **Do NOT create a `PAYMENT` row** — money did not move through the system.
-7. Set `ROOM.status = 'occupied'`.
-8. Trigger UC-T-01 (dispatch onboarding notification to tenant — async, outside transaction).
-9. Generate printable contract (reuse UC-L-15 export logic).
-
-**Guard:** If this room has an active `POST` with a `DEPOSIT(type='platform', contract_id=NULL)`, route landlord to UC-L-04b instead. Do not let the landlord double-create a contract-type deposit.
-
----
-
-## UC-L-04b — Convert Platform Deposit into Contract
-**Tier:** Free
-_(Implied by spec; variant action on UC-L-04)_
-
-**Tables:** `CONTRACT`, `CONTRACT_TENANT`, `DEPOSIT`, `POST`
-
-**Precondition:** existing `DEPOSIT(type='platform', post_id IS NOT NULL, contract_id IS NULL, status='paid')`.
-
-**Flow:**
-1. Landlord sees pending platform deposit, clicks "Create contract from this deposit".
-2. Same input form as UC-L-04, **except**: deposit amount pre-filled and read-only from existing `DEPOSIT.amount`.
-3. Backend creates `CONTRACT(source='platform', ...)` and `CONTRACT_TENANT`.
-4. Backend **updates the existing `DEPOSIT` row**: `SET contract_id = <new contract id>` — do **NOT** insert a new deposit row.
-5. Backend sets `POST.resulted_contract_id = <new>` and `POST.status = 'closed'`.
-6. Set `ROOM.status = 'occupied'`, trigger UC-T-01.
-7. Guard: reject if `DEPOSIT.status != 'paid'` (may have been auto-refunded).
-
-**No new `PAYMENT` row** — the original charge from UC-PU-04 already recorded the money.
+**Routing check before step 3:** if `Room` currently has an active `Post` with an unconverted platform deposit (`Deposit WHERE type='platform' AND postId = post.id AND contractId IS NULL AND status='paid'`), the UI should route the landlord to UC-L-04b instead, to avoid creating a duplicate `contract`-type deposit for the same tenant/room.
 
 ---
 
-## UC-L-05 — View Room Dashboard
+### UC-L-04b — Convert Platform Deposit into Contract
+*(Implied by the platform-deposit flow, not separately numbered in the source use-case doc — implement as a variant action reachable from UC-L-04's UI.)*
+
+**Models:** `Contract`, `TenantContract`, `Deposit`, `Post`
+
+**Precondition:** `Deposit(type='platform', postId IS NOT NULL, contractId IS NULL, status='paid')` exists.
+
+1. Landlord opens the room, sees the pending platform deposit, selects "Create contract from this deposit".
+2. Same form as UC-L-04, except the deposit amount is pre-filled read-only from `Deposit.amount` and no new payment step runs.
+3. Guard: reject if `Deposit.status != 'paid'` (it may already be refunded by the auto-refund job — see UC-PU-04).
+4. Create `Contract` + `TenantContract` as in UC-L-04.
+5. **Update** the existing `Deposit` row: `SET contractId = <new contract id>` — do not insert a new deposit.
+6. Set `Post.resultedContractId = <new contract id>` (unique FK, enforces 1:1) — this auto-closes the listing; the `Post.status` transition (`posted → hidden`, or however "closed" maps in the actual `PostStatus` enum) should be applied in the same transaction.
+7. Set `Room.status = 'occupied'`.
+8. Trigger UC-T-01.
+
+No new `Payment` row here — the original `Payment(depositId=..., type=CHARGE, status=SUCCESS)` from UC-PU-04 already recorded the money.
+
+---
+
+### UC-L-05 — View Room Dashboard
 **Tier:** Free
 
-**Query composition** (single aggregated endpoint, avoid N+1):
+Single aggregated query, not 4 separate round-trips:
 ```
 Room
- ├─ ROOM_SERVICE (join SERVICE) WHERE is_active=true
- ├─ CONTRACT WHERE status='active' (join CONTRACT_TENANT → USER for tenant list)
- └─ CONTRACT (all, ordered by start_date desc) — rental history
+ ├─ RoomService → Service
+ ├─ Contract WHERE status='active' → TenantContract → User (current tenants)
+ └─ Contract (all, order by startDate desc) — rental history
 ```
-Return as a single DTO. Do not make the frontend fire 4 separate requests.
 
 ---
 
-## UC-L-06 — Automated QR Payment Collection
-**Tier:** Free · **Tech:** Bank API / VietQR
+### UC-L-06 — Automated QR Payment Collection
+**Tier:** Free · **Tech:** VietQR / bank webhook · **Models:** `Invoice`, `InvoiceItem`, `Payment`
 
-**Tables:** `INVOICE`, `INVOICE_DETAIL`, `PAYMENT`
-
-**Flow:**
-1. Monthly cron job (per `boarding_house_id`, configurable billing day) generates `INVOICE(room_id, contract_id, period, status='unpaid', due_date)` for every occupied room with an active contract.
-2. `INVOICE_DETAIL` rows: one row with `service_id=NULL` for rent (`description='Tiền phòng'`), plus one per active `ROOM_SERVICE`. Metered (`is_metered=true`): amount = latest confirmed `METER_READING` × unit price. Flat: amount = service fixed price.
-3. `INVOICE.total_amount = SUM(INVOICE_DETAIL.amount)`.
-4. VietQR string generated using landlord's linked bank account + `INVOICE.total_amount` as a **fixed, non-editable amount**.
-5. Bank webhook → match by VietQR reference/memo → create `PAYMENT(invoice_id, type='charge', status='success', amount, method='bank_transfer', transaction_ref=<bank ref>)` + set `INVOICE.status='paid'`.
-6. **Webhook idempotency is critical:** dedupe on `PAYMENT.transaction_ref` UNIQUE constraint before insert — banks may retry delivery.
+1. Cron job runs per `Contract` (not a single platform-wide day) — for each `Contract WHERE status='active' AND monthlyPaymentDate` matches today, generate `Invoice(roomId, contractId, status='UNPAID', dueDate, totalAmount)`.
+2. `InvoiceItem` rows: one for rent (`serviceId=NULL`), one per active `RoomService` — metered services (`Service.isMetered=true`) compute `amount` from the latest confirmed `MeterReading` for the period × unit price; flat services use `Service.price` directly. **`amount` must be `Decimal`** (see overview changelog #9 — flag if the live schema still has `Int` here).
+3. `Invoice.totalAmount = SUM(InvoiceItem.amount)`.
+4. Generate a VietQR string with `Invoice.totalAmount` as a locked, non-editable amount (VietQR natively supports amount-locking).
+5. On bank webhook confirming transfer: create `Payment(invoiceId=..., type='CHARGE', status='SUCCESS', amount=Invoice.totalAmount, method='BANKING', transactionRef=<bank ref>)`, set `Invoice.status='PAID'`.
+6. **Idempotency**: dedupe webhook retries on `transactionRef` (unique index or upsert) before inserting `Payment` — banks may redeliver the same webhook.
 
 ---
 
-## UC-L-07 — View Payment History
+### UC-L-07 — View Payment History
 **Tier:** Free
 
-Query: `INVOICE` joined `INVOICE_DETAIL` and `PAYMENT`, filtered by `room_id`, ordered by `period desc`. Attach `METER_READING.image_url` for the same period/room for evidence images.
+Query `Invoice` joined `InvoiceItem` and `Payment`, filtered by `roomId`, ordered by period/`createdAt desc`. Join `MeterReading.imageUrl` for the same room/period as supporting evidence.
 
 ---
 
-## UC-L-08 — View Property Analytics (Dashboard)
+### UC-L-08 — View Property Analytics (Dashboard)
+**Tier:** Free · Single-property scope
+
+- **Revenue**: `SUM(Payment.amount) WHERE type='CHARGE' AND status='SUCCESS'`, joined via `Invoice.roomId → Room.boardingHouseId`.
+- **Occupancy**: `COUNT(Room WHERE status='occupied') / COUNT(Room)`.
+- **Expiring contracts**: `Contract WHERE status='active' AND endDate BETWEEN NOW() AND NOW() + interval '30 days'`.
+- **Collection status**: `Invoice` grouped by `status` for the current period.
+- **Expenses**: `Expense WHERE boardingHouseId = ...`.
+
+Cache/refresh periodically rather than recomputing all metrics synchronously on every load for properties with many rooms.
+
+---
+
+### UC-L-09 — Manual Utility Logging
 **Tier:** Free
 
-Single-property scope (`boarding_house_id` fixed). Metrics:
-- **Revenue over time**: `SUM(PAYMENT.amount) WHERE type='charge' AND status='success'`, grouped by period, joined through `INVOICE.room_id → ROOM.boarding_house_id`.
-- **Occupancy rate**: `COUNT(ROOM WHERE status='occupied') / COUNT(ROOM)`.
-- **Expiring contracts**: `CONTRACT WHERE status='active' AND end_date BETWEEN NOW() AND NOW() + interval '30 days'`.
-- **Monthly collection status**: `INVOICE` grouped by `status` for current period.
-- **Expense history**: `EXPENSE WHERE boarding_house_id=...`.
-
-Recommend a single materialized/cached response refreshed periodically rather than computing all 5 metrics synchronously on every load.
+Insert `MeterReading(roomId, serviceId, readingValue, imageUrl=NULL, createdAt)` directly — landlord entries skip the tenant-side OCR/confirm loop (UC-T-03) and count as final immediately (no separate `status` field on `MeterReading` in the current schema — its mere existence for the billing period is what UC-L-06 reads).
 
 ---
 
-## UC-L-09 — Manual Utility Logging
+### UC-L-10 — Manual Deposit Entry
 **Tier:** Free
 
-Insert `METER_READING(room_id, service_id, period, reading_value, image_url=NULL, status='confirmed')` directly — landlord input skips the OCR/confirm step, immediately `confirmed`.
+Insert `Deposit(type='contract', roomId, contractId=NULL, postId=NULL, amount, status='paid', recordedManually=true, recordedBy=<landlord>)`. This is the "landlord is holding the room for someone, no contract yet" case — see overview changelog #5 for why this no longer uses a distinct `hold_room` type.
 
 ---
 
-## UC-L-10 — Manual Deposit Entry
-**Tier:** Free
+### UC-L-11 — Real-time Direct Messaging
+**Tier:** Free · **Tech:** WebSockets · **Models:** `Conversation`, `Message`, `MessageAttachment`
 
-Insert `DEPOSIT(type='hold', room_id, contract_id=NULL, post_id=NULL, amount, status='paid', recorded_manually=true, recorded_by=<landlord>)`. The "chủ trọ tự giữ chỗ" case — distinct from `contract` and `platform` types.
+See "Cross-Module Shared Infrastructure" in the overview file — this exact implementation is reused verbatim by UC-PU-05.
 
----
-
-## UC-L-11 — Real-time Direct Messaging
-**Tier:** Free · **Tech:** WebSockets
-
-**Tables:** `CONVERSATION`, `MESSAGE`, `MESSAGE_ATTACHMENT`
-
-**Flow:**
-1. `GET or CREATE conversation` between `user1_id`/`user2_id` — normalize so `user1_id < user2_id` for unique-constraint-friendly lookup: `@@unique([user1Id, user2Id])`.
-2. Message send: insert `MESSAGE(conversation_id, sender_id, content, sent_at, is_read=false)`; if attachments, insert `MESSAGE_ATTACHMENT` rows.
-3. Broadcast via WebSocket room keyed by `conversation_id` to both participants.
-4. **This same infrastructure is reused for UC-PU-05** — do not build a separate chat system.
-5. Enforce: `sender.role != 'Admin' AND receiver.role != 'Admin'` — grievances use UC-T-07/UC-A-04.
+1. `getOrCreateConversation(user1, user2)` — normalize the pair (e.g. sort by id) before querying/inserting so lookups are consistent.
+2. Send: insert `Message(conversationId, senderId, content, sentAt, isReacted=false)`; if attachments present, insert `MessageAttachment(messageId, type, url, sizeBytes, sortOrder)` rows.
+3. Broadcast via a WebSocket room keyed by `conversationId`.
+4. Gate at the gateway level: neither participant may have `role='admin'` — admin communication goes through UC-A-04/UC-T-07 instead.
 
 ---
 
-## UC-L-12 — AI Rental Post Suggestions
+### UC-L-12 — AI Rental Post Suggestions
+**Tier:** Plus · **Models:** `AiConversation`, `AiMessage`, `Room`, `Post`
+
+1. Trigger: `Room WHERE status='available'` with no active `Post` for X days, or an explicit landlord request.
+2. Create `AiConversation(userId, boardingHouseId)`.
+3. Call the AI model with room details as context → append `AiMessage(role='USER', content=<prompt>)` then `AiMessage(role='ASSISTANT', content=<draft>, model, tokenUsage)`.
+4. Return the draft to prefill UC-P-01's post creation form — **this is a draft only**, no `Post` row is created until the landlord explicitly publishes (and the normal quota check in UC-P-01 still applies to AI-assisted drafts, no bypass).
+
+---
+
+### UC-L-13 — Broadcast Announcements
 **Tier:** Plus
 
-**Tables:** `AI_CONVERSATION`, `AI_MESSAGE`, `ROOM`, `POST`
-
-**Flow:**
-1. Detect `ROOM WHERE status='available'` with no active `POST` for X days, or landlord explicitly requests.
-2. Create `AI_CONVERSATION(user_id, boarding_house_id, purpose='post_suggestion')`.
-3. Call AI model with room details → append `AI_MESSAGE(role='user')` then `AI_MESSAGE(role='assistant', content=<draft>, model, token_usage)`.
-4. Return draft content + suggested images to prefill the UC-P-01 form. **`POST` is NOT created until landlord explicitly publishes.**
+Insert `Notification(boardingHouseId=<target>, senderId=<landlord>, receiverId=NULL, content, type='announcement', isRead=false)`. `receiverId IS NULL` is the broadcast convention — see overview file.
 
 ---
 
-## UC-L-13 — Broadcast Announcements
+### UC-L-14 — Deposit Management
 **Tier:** Plus
 
-Insert `NOTIFICATION(boarding_house_id=<target>, sender_id=<landlord>, receiver_id=NULL, title, content, type='announcement')`. `receiver_id IS NULL` = broadcast convention — fan-out to tenants happens at delivery time (async job), not by creating one row per tenant.
+Query `Deposit WHERE boardingHouseId = ... ORDER BY createdAt desc`, joined `Room` and (depending on `type`) `Contract`/`Post`. Filter UI by `status` and `type` (`platform | contract`, per the corrected enum).
 
 ---
 
-## UC-L-14 — Deposit Management
+### UC-L-15 — Export Contracts
 **Tier:** Plus
 
-Query: `DEPOSIT WHERE boarding_house_id=... ORDER BY created_at desc`, joined to `ROOM` and optionally `CONTRACT`/`POST` depending on `type`. Filter by `status` and `type` in the UI.
+Read `Contract` + `TenantContract` (joined `User`) + `Room` + `Deposit` (via `contractId`) → render via a server-side template (headless Chromium → PDF, or a `.docx` templater). Store the output as a new `ContractDocument(contractId, url)` row — support both the direct-print trigger and the downloadable-file trigger from the same rendered HTML template so the two code paths never drift apart.
 
 ---
 
-## UC-L-15 — Export Contracts
+### UC-L-16 — Debt Tracking
 **Tier:** Plus
 
-Read `CONTRACT` + `CONTRACT_TENANT` (joined `USER`) + `ROOM` + `DEPOSIT` (via `contract_id`) → render to PDF/Word template server-side. Same HTML template serves `/print` (browser print dialog) and the PDF pipe endpoint.
+Query `Invoice WHERE room.boardingHouseId = ... AND status IN ('UNPAID', 'OVERDUE')`, aging computed as `NOW() - dueDate`. Group by room for the ledger view. A separate job should flip `Invoice.status` from `UNPAID` to `OVERDUE` once `dueDate` passes without a matching `Payment`.
 
 ---
 
-## UC-L-16 — Debt Tracking
+### UC-L-17 — Expense Management
 **Tier:** Plus
 
-Query: `INVOICE WHERE room.boarding_house_id=... AND status IN ('unpaid','overdue')`, computing aging as `NOW() - due_date`. Group by room for the ledger view.
+CRUD on `Expense(boardingHouseId, roomId, name, description, category, amount, status, paidAt)`. Note `roomId` is required in the current schema (not nullable) — a purely property-wide expense (not tied to one room) needs product clarification on how it should be recorded; flag this to the schema owner rather than picking an arbitrary room.
 
 ---
 
-## UC-L-17 — Expense Management
+### UC-L-18 — Custom Service Management
 **Tier:** Plus
 
-CRUD on `EXPENSE(boarding_house_id, room_id nullable, description, amount, expense_date, created_by)`.
+Insert `Service(boardingHouseId=<this property>, name, price, unit, isMetered, autoApplied)`. Once created it's selectable in UC-L-02/03's service pickers (already filtered by `boardingHouseId`).
 
 ---
 
-## UC-L-18 — Custom Service Management
-**Tier:** Plus
+### UC-L-19 — Onboard Staff
+**Tier:** Pro · **Models:** `User`, `EmployeeProfile`, `EmployeeAssignment`, `JobPosition`
 
-Insert `SERVICE(boarding_house_id=<this property>, name, unit, default_price, is_metered)`. Once created, selectable in UC-L-02/03/09's service pickers (query filters `boarding_house_id = X OR boarding_house_id IS NULL`).
+1. Search `User WHERE phoneNumber = :q OR username ILIKE :q`.
+   - **Found** → display read-only profile card, not editable.
+   - **Not found** → `UserService.findOrCreateByPhone()` (same helper as UC-L-04) creates `User(phoneNumber, username, hashedPassword=hash('00000000'), mustChangePassword=true)`. A person can simultaneously be a tenant elsewhere and staff here — `EmployeeProfile` existence is the real "is staff" signal, not `User.role` alone (a `User.role` field still exists but should be treated as the person's *primary* identity, not an exclusivity switch).
+2. If `EmployeeProfile WHERE userId = :id` doesn't exist yet, create it.
+3. Create `EmployeeAssignment(employeeId, boardingHouseId=<current property>, positionId, status='active', joinedAt=NOW())`. `positionId` must reference an existing `JobPosition` for this property (or create one inline — UC-L-20).
+4. **Security**: `mustChangePassword=true` forces a password reset on first login for default-password accounts — never let `00000000` remain permanent. Dispatch credentials via the same async SMS/Zalo channel as UC-T-01.
 
 ---
 
-## UC-L-19 — Onboard Staff
+### UC-L-20 — Manage Staff
+**Tier:** Pro · **Models:** `EmployeeAssignment`, `JobPosition`
+
+1. List: `EmployeeAssignment WHERE boardingHouseId=...` joined `EmployeeProfile → User` and `JobPosition`.
+2. "Update employment status" = `PATCH EmployeeAssignment.status` — only `active ↔ inactive` (confirmed, no other states).
+3. "Assign role" = create/select `JobPosition(boardingHouseId, name, description)` and set `EmployeeAssignment.positionId`. `description` is the free-text duty list (e.g. "lau sàn, dọn phòng trọ, dọn máy giặt") shown to the staff member in UC-S-01 — a static role description, not a per-shift task.
+4. Setting `status='inactive'` should cascade-cancel future `WorkSchedule` rows (`workDate >= today`) for that employee at that property — application-layer side effect (so it's logged via `AuditLog`), not a DB trigger.
+
+---
+
+### UC-L-21 — Shift Scheduling
+**Tier:** Pro · **Models:** `Shift`, `RecurrencePattern`, `WorkSchedule`
+
+**Recurring schedule:**
+1. Define `Shift(boardingHouseId, name, startTime, endTime)` once per property if it doesn't already exist.
+2. Landlord picks employee(s), shift, `daysOfWeek` (e.g. `"2,4,6"`), date range → create one `RecurrencePattern(employeeId, boardingHouseId, shiftId, daysOfWeek, startTime, endTime, createdBy)` row, then **materialize** every matching date as individual `WorkSchedule(employeeId, shiftId, boardingHouseId, workDate, recurrenceId=<pattern id>, status='scheduled')` rows — pre-generated per week, not computed on the fly.
+
+**Ad-hoc task:** single `WorkSchedule` insert with `recurrenceId=NULL`.
+
+**Edit a single occurrence:** `UPDATE WorkSchedule WHERE id = :id` — `recurrenceId` stays for traceability but the row is now independently editable.
+
+**Edit the whole pattern:** `UPDATE WorkSchedule SET ... WHERE recurrenceId = :id AND workDate >= CURRENT_DATE`. **Confirmed behavior: this overwrites everything going forward, including individually-edited rows — no protection flag exists.** Show a client-side confirmation dialog before firing this ("This will overwrite N scheduled shifts, including any you've customized") since the backend performs no such check itself.
+
+**Calendar view**: `WorkSchedule WHERE boardingHouseId=... AND workDate BETWEEN :start AND :end`, grouped by date then employee. Mark rows where `recurrenceId IS NOT NULL` with a "recurring" indicator.
+
+---
+
+### UC-L-22 — Attendance Management
+**Tier:** Pro · **Models:** `Attendance`, `WorkSchedule`
+
+Query `WorkSchedule` left-joined `Attendance` for the requested date range, joined `EmployeeProfile → User` and `Shift`.
+
+**Manual override**: `PATCH Attendance.status` (`not_yet | on_time | late | absent`), set `editedBy=<landlord user id>`, `updatedAt=NOW()`. If no `Attendance` row exists yet for a `WorkSchedule` (staff never checked in), the override creates one.
+
+---
+
+### UC-L-23 — Multi-Property Context Switching
+**Tier:** Pro · **Critical architectural requirement**
+
+Every BHMS route (except account-level endpoints like `/me`, `/subscriptions`) must require a `boardingHouseId` context, validated server-side against `BoardingHouse.ownerId = current_user.id` **on every single request** — never trust a client-supplied `boardingHouseId` without this check. Implement as a NestJS Guard (`PropertyOwnershipGuard`) applied globally to the BHMS module, not duplicated ad-hoc per controller. This is the single most important guard in the system; a missing check here is a cross-tenant data leak.
+
+---
+
+### UC-L-24 — Advanced Multi-Property Reports
 **Tier:** Pro
 
-**Tables:** `USER`, `EMPLOYEE`, `EMPLOYEE_ASSIGNMENT`, `JOB_POSITION`
-
-**Flow:**
-1. Landlord searches by phone or name: `SELECT * FROM "user" WHERE phone = :q OR full_name ILIKE :q`.
-   - **Found** → display read-only profile card — **not editable**.
-   - **Not found** → `UserService.findOrCreateByPhone()` creates `USER(role='Tenant', phone, full_name, password_hash=hash('00000000'), mustChangePassword=true)`.
-   - Note: a person can be both Tenant and Employee under the same `USER` row. Employee status = `EMPLOYEE` table existence, not `USER.role` alone.
-2. If no `EMPLOYEE` row for this `user_id`, create one: `EMPLOYEE(user_id)`.
-3. Create `EMPLOYEE_ASSIGNMENT(employee_id, boarding_house_id=<current>, position_id, status='active', joined_at=NOW())`.
-4. **Security:** `mustChangePassword=true` on first login; send credentials via SMS/Zalo async job.
-
----
-
-## UC-L-20 — Manage Staff
-**Tier:** Pro
-
-**Tables:** `EMPLOYEE_ASSIGNMENT`, `JOB_POSITION`
-
-**Flow:**
-1. List: `EMPLOYEE_ASSIGNMENT WHERE boarding_house_id=...` joined `EMPLOYEE → USER` and `JOB_POSITION`.
-2. Update status: `PATCH EMPLOYEE_ASSIGNMENT.status` (`active` ↔ `inactive` only).
-3. Assign role: create/select `JOB_POSITION(boarding_house_id, name, description)` and set `EMPLOYEE_ASSIGNMENT.position_id`. `description` = free-text duty list, not a shift/task.
-4. Setting `status='inactive'` must cascade-cancel future `WORK_SCHEDULE` rows for that employee at that property (`work_date >= today`) — application-layer side effect, logged to `AUDIT_LOG`.
-
----
-
-## UC-L-21 — Shift Scheduling
-**Tier:** Pro
-
-**Tables:** `SHIFT`, `RECURRENCE_PATTERN`, `WORK_SCHEDULE`
-
-**Flow — recurring:**
-1. Define `SHIFT(boarding_house_id, name, start_time, end_time)` if not already existing.
-2. Pick employee(s), shift, `days_of_week`, `start_date`, `end_date` → create `RECURRENCE_PATTERN` row, then **materialize** every matching date as individual `WORK_SCHEDULE(employee_id, shift_id, boarding_house_id, work_date, recurrence_pattern_id, status='scheduled')` rows.
-
-**Flow — ad-hoc:** single `WORK_SCHEDULE` insert with `recurrence_pattern_id=NULL`.
-
-**Flow — edit single occurrence:** `UPDATE WORK_SCHEDULE SET ... WHERE id = :id`.
-
-**Flow — edit whole pattern:** `UPDATE WORK_SCHEDULE SET ... WHERE recurrence_pattern_id = :id AND work_date >= CURRENT_DATE`. **Overwrites everything going forward, including individually-edited rows.** Show confirmation dialog client-side (no server-side protection flag).
-
-**Calendar query:** `WORK_SCHEDULE WHERE boarding_house_id=... AND work_date BETWEEN :start AND :end`, group by `work_date` then `employee_id`. Mark recurring rows with indicator.
-
----
-
-## UC-L-22 — Attendance Management
-**Tier:** Pro
-
-**Tables:** `ATTENDANCE`, `WORK_SCHEDULE`
-
-Query: `WORK_SCHEDULE` left-joined `ATTENDANCE` (0-or-1) for date range, joined `EMPLOYEE → USER` and `SHIFT`.
-
-**Manual override:** `PATCH ATTENDANCE.status` to `on_time | late | absent`, set `edited_by=<landlord>`, `updated_at=NOW()`. If no `ATTENDANCE` row exists (staff never checked in), landlord's override creates one.
-
----
-
-## UC-L-23 — Multi-Property Context Switching
-**Tier:** Pro
-_(See `00-global-conventions.md` for the full guard requirement)_
-
-Frontend: persist the "active workspace" selection (cookie or local state keyed by user), but re-validate server-side on every request regardless.
-
----
-
-## UC-L-24 — Advanced Multi-Property Reports
-**Tier:** Pro
-
-Same metrics as UC-L-08 but aggregated across **all** `BOARDING_HOUSE WHERE owner_id = current_user.id` (no single `boarding_house_id` filter). AI-generated marketing strategies reuse `AI_CONVERSATION`/`AI_MESSAGE` with `purpose='report_analysis'`, `boarding_house_id=NULL`, and aggregated metrics as prompt context.
+Same metrics as UC-L-08, aggregated across **all** `BoardingHouse WHERE ownerId = current_user.id` (no single-property filter). "AI-generated marketing strategy" reuses UC-L-12's `AiConversation`/`AiMessage` pattern with `boardingHouseId = NULL` (cross-property context) and the aggregated metrics fed in as prompt context.

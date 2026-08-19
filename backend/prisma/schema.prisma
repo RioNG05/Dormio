@@ -80,8 +80,8 @@ enum ServiceStatus {
 }
 
 enum DepositType {
-  hold_room
   contract
+  platform
 }
 
 enum DepositStatus {
@@ -370,6 +370,8 @@ model RoomType {
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime?     @updatedAt @map("updated_at")
 
+  rooms Room[]
+
   @@map("room_types")
 }
 
@@ -378,6 +380,8 @@ model Room {
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
   roomNumber      String        @map("room_number") @db.VarChar(255)
+  roomTypeId      String        @map("room_type_id")
+  roomType        RoomType      @relation(fields: [roomTypeId], references: [id])
   area            Decimal?      @db.Decimal()
   floor           Int
   maxOccupants    Int?          @map("max_occupants")
@@ -557,8 +561,8 @@ model Deposit {
   amount           Decimal
   status           DepositStatus
   recordedManually Boolean       @map("recored_manually")
-  recordedBy       String        @map("recored_by")
-  recordedByUser   User          @relation(fields: [recordedBy], references: [id])
+  recordedBy       String?       @map("recored_by")
+  recordedByUser   User?         @relation(fields: [recordedBy], references: [id])
   note             String?
   createdAt        DateTime      @default(now()) @map("created_at")
 
@@ -608,7 +612,7 @@ model Payment {
   postPurchase    PostPurchase?     @relation(fields: [postPurchaseId], references: [id])
   subscriptionId  String?           @unique @map("subscription_id") @db.Uuid
   subscription    UserSubscription? @relation(fields: [subscriptionId], references: [id])
-  payerId         String?           @unique @map("payer_id") @db.Uuid
+  payerId         String?           @map("payer_id") @db.Uuid
   payer           User?             @relation(fields: [payerId], references: [id])
   invoiceId       String?           @unique @map("invoice_id") @db.Uuid
   invoice         Invoice?          @relation(fields: [invoiceId], references: [id])

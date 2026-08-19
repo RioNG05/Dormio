@@ -1,41 +1,29 @@
-# MODULE 1 — BHMS: Staff Use Cases
+# Module 1 — BHMS · Actor: Staff (Nhân viên)
 
-**Module**: Boarding House Management System (BHMS)
-**Actor**: Staff / Employee (Nhân viên)
-**Global rules**: See `docs/spec/00-global-conventions.md`
+> See `00-overview-and-conventions.md` for global rules.
 
 ---
 
-## UC-S-01 — View Schedule
-**Tier:** Free
+### UC-S-01 — View Schedule
+**Tier:** Free · **Models:** `WorkSchedule`, `EmployeeProfile`, `JobPosition`
 
-**Query:**
-```sql
-WORK_SCHEDULE
-  WHERE employee_id = <current user's EMPLOYEE.id>
-    AND boarding_house_id IN (<their active EMPLOYEE_ASSIGNMENT boarding houses>)
-```
+Query `WorkSchedule WHERE employeeId = <current user's EmployeeProfile.id> AND boardingHouseId IN (<their boarding houses with an active EmployeeAssignment>)`.
 
-To show co-workers on the same shift:
-```sql
-WORK_SCHEDULE
-  WHERE shift_id = :shift_id AND work_date = :work_date AND boarding_house_id = :bh_id
-  JOIN USER ON employee → user
-```
+To show co-workers on the same shift: `WorkSchedule WHERE shiftId=... AND workDate=... AND boardingHouseId=...` for other employees, joined `User` for display names.
 
-Include `JOB_POSITION.description` alongside the schedule so the staff member sees their duty list (per UC-L-20 design).
+Include `EmployeeAssignment.position → JobPosition.description` alongside the schedule so staff see their duty list (per UC-L-20's design) next to their shifts.
 
 ---
 
-## UC-S-02 — Timekeeping (Check-in / Check-out)
-**Tier:** Free
+### UC-S-02 — Timekeeping (Check-in/Check-out)
+**Tier:** Free · **Models:** `Attendance`, `WorkSchedule`, `Shift`
 
-**Business rule (hard constraint — enforce server-side, not just UI-side):**
-- Check-in allowed only within `[SHIFT.start_time - 10 minutes, SHIFT.start_time]` on `WORK_SCHEDULE.work_date`.
-- Check-out allowed only within `[SHIFT.end_time, SHIFT.end_time + 12 hours]`.
-- Requests outside these windows return `403`. Do not silently accept — use UC-L-22 manual override for legitimate exceptions.
+**Hard server-side constraints (not just UI-side validation):**
+- Check-in allowed only within `[Shift.startTime - 10 minutes, Shift.startTime]` on `WorkSchedule.workDate`.
+- Check-out allowed only within `[Shift.endTime, Shift.endTime + 12 hours]`.
+- Requests outside these windows return `403`. Legitimate exceptions go through UC-L-22's manual override, not a silent accept-and-fix-later path.
 
 **Flow:**
-1. `POST /attendance/check-in { work_schedule_id }` → validate window → upsert `ATTENDANCE(work_schedule_id, check_in=NOW(), status='on_time' or 'late' depending on whether check_in > shift.start_time)`.
-2. `POST /attendance/check-out { work_schedule_id }` → validate window → `UPDATE ATTENDANCE SET check_out=NOW()`.
-3. If no check-in occurs and the window fully lapses, a scheduled job marks the `ATTENDANCE` as `status='absent'` (creates row if missing) — so UC-L-22 dashboard reflects it without landlord manual entry.
+1. `POST /attendance/check-in { workScheduleId }` → validate window → upsert `Attendance(workScheduleId, checkIn=NOW(), status = checkIn > shift.startTime ? 'late' : 'on_time')`.
+2. `POST /attendance/check-out { workScheduleId }` → validate window → `UPDATE Attendance SET checkOut=NOW()`.
+3. A scheduled job marks `Attendance.status='absent'` (creating the row if it doesn't exist) once a shift's check-in window fully lapses with no check-in — so UC-L-22's dashboard reflects no-shows without landlord manual entry.

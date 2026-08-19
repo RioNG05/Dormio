@@ -23,7 +23,16 @@
 		"db:push": "pnpm --dir backend prisma db push",
 		"db:studio": "pnpm --dir backend prisma studio",
 		"db:reset": "pnpm --dir backend prisma migrate reset",
-		"seed": "pnpm --dir backend prisma db seed"
+		"seed": "pnpm --dir backend prisma db seed",
+
+		"docker:up": "docker compose up -d",
+		"docker:down": "docker compose down",
+		"docker:restart": "docker compose restart",
+		"docker:logs": "docker compose logs -f",
+		"docker:logs:db": "docker compose logs -f postgres",
+		"docker:logs:redis": "docker compose logs -f redis",
+		"docker:ps": "docker compose ps",
+		"docker:clean": "docker compose down -v"
 	},
 	"devDependencies": {
 		"concurrently": "^9.0.0"
