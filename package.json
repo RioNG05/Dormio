@@ -1,10 +1,31 @@
 {
 	"scripts": {
-		"install:all": "",
-		"install:be": "",
-		"install:fe": "",
-		"start": "",
-		"dev": "",
-		"seed": ""
+		"install:all": "pnpm install && pnpm install --dir backend && pnpm install --dir frontend",
+		"install:be": "pnpm install --dir backend",
+		"install:fe": "pnpm install --dir frontend",
+		"dev": "concurrently \"pnpm dev:be\" \"pnpm dev:fe\"",
+		"dev:be": "pnpm --dir backend start:dev",
+		"dev:fe": "pnpm --dir frontend dev",
+		"build": "pnpm build:be && pnpm build:fe",
+		"build:be": "pnpm --dir backend build",
+		"build:fe": "pnpm --dir frontend build",
+		"start": "pnpm --dir backend start:prod",
+		"test": "pnpm test:be",
+		"test:be": "pnpm --dir backend test",
+		"test:be:cov": "pnpm --dir backend test:cov",
+		"test:be:e2e": "pnpm --dir backend test:e2e",
+		"lint": "pnpm lint:be && pnpm lint:fe",
+		"lint:be": "pnpm --dir backend lint",
+		"lint:fe": "pnpm --dir frontend lint",
+		"db:generate": "pnpm --dir backend prisma generate",
+		"db:migrate": "pnpm --dir backend prisma migrate dev",
+		"db:migrate:prod": "pnpm --dir backend prisma migrate deploy",
+		"db:push": "pnpm --dir backend prisma db push",
+		"db:studio": "pnpm --dir backend prisma studio",
+		"db:reset": "pnpm --dir backend prisma migrate reset",
+		"seed": "pnpm --dir backend prisma db seed"
+	},
+	"devDependencies": {
+		"concurrently": "^9.0.0"
 	}
 }
