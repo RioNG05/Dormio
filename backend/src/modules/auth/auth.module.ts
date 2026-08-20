@@ -1,0 +1,33 @@
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './jwt.strategy';
+
+@Module({
+  imports: [
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('jwt.secret');
+        const expiresIn = configService.get<string>('jwt.expiresIn', '7d');
+        return {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          secret: secret!,
+          signOptions: {
+            // Cast: @nestjs/jwt StringValue accepts e.g. "7d"
+            expiresIn: expiresIn as `${number}${'s' | 'm' | 'h' | 'd' | 'w' | 'y'}`,
+          },
+        };
+      },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy],
+  exports: [AuthService, JwtModule],
+})
+export class AuthModule {}
