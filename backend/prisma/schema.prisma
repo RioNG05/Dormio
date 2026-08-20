@@ -229,7 +229,7 @@ model User {
   grievences            Grievance[]
   sentNotifications     Notification[]        @relation("Sender")
   receivedNotifications Notification[]        @relation("Receiver")
-  employee              EmployeeProfile?
+  employee              Employee?
   attendances           Attendance[]
   recurrencePatterns    RecurrencePattern[]
   createdNotifications  MassNotificationJob[] @relation("CreateNotify")
@@ -762,7 +762,7 @@ model Grievance {
   @@map("grievances")
 }
 
-model EmployeeProfile {
+model Employee {
   id        String    @id @default(uuid())
   userId    String    @unique @map("user_id") @db.Uuid
   user      User      @relation(fields: [userId], references: [id])
@@ -772,8 +772,9 @@ model EmployeeProfile {
   employeeAssignments EmployeeAssignment[]
   workSchedules       WorkSchedule[]
   recurrencePatterns  RecurrencePattern[]
+  attendances         Attendance[]
 
-  @@map("employee_profiles")
+  @@map("employees")
 }
 
 model JobPosition {
@@ -793,7 +794,7 @@ model JobPosition {
 model EmployeeAssignment {
   id              String           @id @default(uuid())
   employeeId      String           @map("employee_id") @db.Uuid
-  employee        EmployeeProfile  @relation(fields: [employeeId], references: [id])
+  employee        Employee         @relation(fields: [employeeId], references: [id])
   positionId      String           @map("position_id") @db.Uuid
   position        JobPosition      @relation(fields: [positionId], references: [id])
   boardingHouseId String           @map("boarding_house_id") @db.Uuid
@@ -823,20 +824,20 @@ model Shift {
 }
 
 model RecurrencePattern {
-  id              String          @id @default(uuid())
-  employeeId      String          @map("employee_id") @db.Uuid
-  employee        EmployeeProfile @relation(fields: [employeeId], references: [id])
-  boardingHouseId String          @map("boarding_house_id") @db.Uuid
-  boardingHouse   BoardingHouse   @relation(fields: [boardingHouseId], references: [id])
-  shiftId         String          @db.Uuid
-  shift           Shift           @relation(fields: [shiftId], references: [id])
-  daysOfWeek      String          @map("days_of_week") //e.g: '2,3,4'
-  startTime       DateTime        @map("start_time")
-  endTime         DateTime        @map("end_time")
-  createdBy       String          @db.Uuid
-  createdByUser   User            @relation(fields: [createdBy], references: [id])
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime?       @updatedAt @map("updated_at")
+  id              String        @id @default(uuid())
+  employeeId      String        @map("employee_id") @db.Uuid
+  employee        Employee      @relation(fields: [employeeId], references: [id])
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+  shiftId         String        @db.Uuid
+  shift           Shift         @relation(fields: [shiftId], references: [id])
+  daysOfWeek      String        @map("days_of_week") //e.g: '2,3,4'
+  startTime       DateTime      @map("start_time")
+  endTime         DateTime      @map("end_time")
+  createdBy       String        @db.Uuid
+  createdByUser   User          @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
 
   workSchedules WorkSchedule[]
 
@@ -846,7 +847,7 @@ model RecurrencePattern {
 model WorkSchedule {
   id              String             @id @default(uuid())
   employeeId      String             @map("employee_id") @db.Uuid
-  employee        EmployeeProfile    @relation(fields: [employeeId], references: [id])
+  employee        Employee           @relation(fields: [employeeId], references: [id])
   boardingHouseId String             @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse      @relation(fields: [boardingHouseId], references: [id])
   shiftId         String             @db.Uuid
@@ -866,6 +867,8 @@ model Attendance {
   id             String           @id @default(uuid())
   workScheduleId String           @map("work_schedule_id") @db.Uuid
   workSchedule   WorkSchedule     @relation(fields: [workScheduleId], references: [id])
+  employeeId     String           @map("employee_id") @db.Uuid
+  employee       Employee         @relation(fields: [employeeId], references: [id])
   checkIn        DateTime?        @map("check_in")
   checkOut       DateTime?        @map("check_out")
   status         AttendanceStatus @default(not_yet)
