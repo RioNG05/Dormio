@@ -2,139 +2,243 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Mail, Phone, Home } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { 
+  User, Phone, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { login } = useAuth();
+
   const [method, setMethod] = useState<"phone" | "email">("phone");
-  const [role, setRole] = useState<"landlord" | "tenant">("landlord");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Form states
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // REQUIRE USER ACTION: "bỏ tick sẵn tôi đồng ý (user thao tác)"
+  const [agreed, setAgreed] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!agreed) return;
+
+    // Register user as platform tenant account by default
+    login({
+      name: fullName || "Người dùng Dormio",
+      email: method === "email" ? email : `${phone}@dormio.vn`,
+      phone: method === "phone" ? phone : undefined,
+      role: "tenant", // Mọi người đăng ký đều là tài khoản khách thuê
+    });
+
+    router.push("/");
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Đăng ký tài khoản
+    <div className="space-y-6 animate-in fade-in duration-300">
+      
+      {/* Top Header & Badge */}
+      <div className="space-y-2">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#FF6B35] text-[11px] font-black rounded-full border border-rose-200 uppercase tracking-wider">
+          <Sparkles className="w-3.5 h-3.5 fill-[#FF6B35]" /> DÙNG THỬ MIỄN PHÍ 7 NGÀY
+        </span>
+
+        <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+          Tạo tài khoản Dormio
         </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Tham gia cộng đồng quản lý nhà trọ chuyên nghiệp
+        <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+          Tham gia cộng đồng quản lý nhà trọ hiện đại & kết nối phòng trọ hàng đầu.
         </p>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Bạn tham gia với tư cách là?</label>
-        <div className="grid grid-cols-2 gap-4">
-          <label className={`flex flex-col items-center justify-center border-2 p-4 rounded-xl cursor-pointer transition-all ${role === 'landlord' ? 'border-primary bg-primary/5 text-primary' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-600 dark:text-zinc-400'}`}>
-            <Home className="w-6 h-6 mb-2" />
-            <span className="text-sm font-bold">Chủ nhà trọ</span>
-            <input type="radio" name="role" value="landlord" checked={role === 'landlord'} onChange={() => setRole('landlord')} className="hidden" />
-          </label>
-          <label className={`flex flex-col items-center justify-center border-2 p-4 rounded-xl cursor-pointer transition-all ${role === 'tenant' ? 'border-primary bg-primary/5 text-primary' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-600 dark:text-zinc-400'}`}>
-            <svg className="w-6 h-6 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            <span className="text-sm font-bold">Người thuê phòng</span>
-            <input type="radio" name="role" value="tenant" checked={role === 'tenant'} onChange={() => setRole('tenant')} className="hidden" />
-          </label>
-        </div>
+      {/* Tenant Default Notice */}
+      <div className="p-3.5 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center gap-3 text-xs text-zinc-700 font-semibold">
+        <ShieldCheck className="w-5 h-5 text-[#2AC1BC] shrink-0" />
+        <span>
+          Tài khoản đăng ký mặc định là <strong>Khách thuê / Người dùng nền tảng</strong>. Bạn có thể chọn <strong className="text-[#FF6B35]">"Đăng ký trở thành chủ trọ"</strong> bất kỳ lúc nào sau khi đăng nhập!
+        </span>
       </div>
 
-      {/* Tabs */}
-      <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl mt-2">
+      {/* Input Method Selector Tabs (Phone vs Email) */}
+      <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60">
         <button
+          type="button"
           onClick={() => setMethod("phone")}
-          type="button"
-          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
-            method === "phone" ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Phone className="w-4 h-4" /> Số điện thoại
+          <Phone className="w-3.5 h-3.5" /> Số điện thoại
         </button>
         <button
-          onClick={() => setMethod("email")}
           type="button"
-          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
-            method === "email" ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          onClick={() => setMethod("email")}
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Mail className="w-4 h-4" /> Email
+          <Mail className="w-3.5 h-3.5" /> Địa chỉ Email
         </button>
       </div>
 
-      <form className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Họ và tên</label>
-          <input
-            type="text"
-            placeholder="Nguyễn Văn A"
-            className="w-full rounded-xl border border-zinc-200 p-3 text-sm focus:outline-primary transition-colors dark:border-zinc-800 dark:bg-zinc-900"
-            required
-          />
+      {/* Main Registration Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        
+        {/* Full Name */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">HỌ VÀ TÊN *</label>
+          <div className="relative">
+            <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              required
+              placeholder="Nguyễn Văn A"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-            {method === "phone" ? "Số điện thoại" : "Địa chỉ Email"}
-          </label>
-          <input
-            type={method === "phone" ? "tel" : "email"}
-            placeholder={method === "phone" ? "0987654321" : "name@example.com"}
-            className="w-full rounded-xl border border-zinc-200 p-3 text-sm focus:outline-primary transition-colors dark:border-zinc-800 dark:bg-zinc-900"
-            required
-          />
-        </div>
-
-        {role === "landlord" && (
-          <>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Tên nhà trọ</label>
+        {/* Phone or Email based on selected method */}
+        {method === "phone" ? (
+          <div className="space-y-1">
+            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">SỐ ĐIỆN THOẠI *</label>
+            <div className="relative">
+              <Phone className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
-                type="text"
-                placeholder="Ví dụ: Trọ cao cấp An Bình"
-                className="w-full rounded-xl border border-zinc-200 p-3 text-sm focus:outline-primary transition-colors dark:border-zinc-800 dark:bg-zinc-900"
+                type="tel"
                 required
+                placeholder="0987 654 321"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Địa chỉ nhà trọ</label>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">ĐỊA CHỈ EMAIL *</label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
-                type="text"
-                placeholder="Nhập địa chỉ chi tiết"
-                className="w-full rounded-xl border border-zinc-200 p-3 text-sm focus:outline-primary transition-colors dark:border-zinc-800 dark:bg-zinc-900"
+                type="email"
                 required
+                placeholder="nguyenvana@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
               />
             </div>
-          </>
+          </div>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Mật khẩu</label>
-          <input
-            type="password"
-            placeholder="Tối thiểu 6 ký tự"
-            className="w-full rounded-xl border border-zinc-200 p-3 text-sm focus:outline-primary transition-colors dark:border-zinc-800 dark:bg-zinc-900"
-            required
-          />
-        </div>
-        
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Xác nhận mật khẩu</label>
-          <input
-            type="password"
-            placeholder="Nhập lại mật khẩu"
-            className="w-full rounded-xl border border-zinc-200 p-3 text-sm focus:outline-primary transition-colors dark:border-zinc-800 dark:bg-zinc-900"
-            required
-          />
+        {/* Password Field */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">MẬT KHẨU *</label>
+          <div className="relative">
+            <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              placeholder="Tối thiểu 6 ký tự"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pl-10 pr-10 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 cursor-pointer"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
-        <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary-hover text-white text-base font-semibold shadow-md mt-2">
-          Đăng ký
-        </Button>
+        {/* Confirm Password Field */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">XÁC NHẬN MẬT KHẨU *</label>
+          <div className="relative">
+            <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              required
+              placeholder="Nhập lại mật khẩu"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full pl-10 pr-10 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 cursor-pointer"
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Terms Checkbox (UNCHECKED BY DEFAULT FOR USER ACTION) */}
+        <div className="flex items-center gap-2 pt-1">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="w-4 h-4 accent-[#2AC1BC] rounded cursor-pointer shrink-0"
+          />
+          <label htmlFor="terms" className="text-xs text-zinc-600 font-medium cursor-pointer">
+            Tôi đồng ý với <Link href="/terms" className="font-extrabold text-[#2AC1BC] hover:underline">Điều khoản dịch vụ</Link> và <Link href="/privacy" className="font-extrabold text-[#2AC1BC] hover:underline">Chính sách bảo mật</Link> của Dormio.
+          </label>
+        </div>
+
+        {/* Submit CTA Button */}
+        <button
+          type="submit"
+          disabled={!agreed}
+          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+        >
+          <span>Tạo tài khoản ngay</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+
       </form>
 
-      <div className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-        Đã có tài khoản?{" "}
-        <Link href="/login" className="font-semibold text-primary hover:text-primary-hover">
+      {/* Social Register Options (REMOVED ZALO - ONLY GOOGLE REMAINS) */}
+      <div className="space-y-3 pt-2">
+        <div className="relative flex items-center justify-center">
+          <div className="border-t border-zinc-100 w-full" />
+          <span className="bg-white px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider absolute">HOẶC ĐĂNG KÝ VỚI</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            login({ name: "Google User", email: "user@google.com", role: "tenant" });
+            router.push("/");
+          }}
+          className="w-full py-3 px-4 border border-zinc-200 rounded-2xl text-xs font-bold text-zinc-700 hover:bg-zinc-50 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+        >
+          <span className="font-black text-rose-500 text-sm">G</span> Đăng ký nhanh bằng tài khoản Google
+        </button>
+      </div>
+
+      {/* Bottom Auth Navigation Link */}
+      <div className="text-center text-xs text-zinc-500 font-medium pt-2">
+        Bạn đã có tài khoản?{" "}
+        <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
           Đăng nhập ngay
         </Link>
       </div>
+
     </div>
   );
 }
