@@ -201,16 +201,16 @@ export default function RoomsPage() {
               <h1 className="text-2xl font-bold text-zinc-900">Quản lý phòng</h1>
               <p className="text-sm text-zinc-500">Danh sách phòng theo tòa nhà, loại phòng và trạng thái</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+              <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
                 <Upload className="w-4 h-4" /> Import
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+              <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
                 <Download className="w-4 h-4" /> Export
               </button>
               <button
                 onClick={() => {
-                  setFormBuilding("dormio");
+                  setFormBuilding("b1");
                   setFormRoomNumber("");
                   setFormRoomType("studio");
                   setFormFloor("1");
@@ -220,7 +220,7 @@ export default function RoomsPage() {
                   setSelectedAmenities(['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
                   setIsModalOpen(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-accent rounded-lg hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-accent rounded-lg hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
               >
                 <Plus className="w-4 h-4" /> Thêm phòng
               </button>
@@ -228,30 +228,34 @@ export default function RoomsPage() {
           </div>
 
           {/* Building Overview Banner */}
-          <div className="bg-zinc-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+          <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
               <Building2 className="w-64 h-64" />
             </div>
 
-            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-              <div className="space-y-3 max-w-xl">
-                <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-                  {activeBuilding.name}
-                  <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider">
+            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+              <div className="space-y-3 max-w-xl w-full">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
+                    {activeBuilding.name}
+                  </h2>
+                  <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
                     Đang vận hành
                   </span>
-                </h2>
+                </div>
 
                 {/* Separated Address Line with Integrated Map Link */}
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all">
-                  <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                  <span className="text-xs font-bold text-zinc-200">{activeBuilding.address}</span>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                    <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
+                  </div>
                   <a
                     href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                    className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
                   >
                     <span>Xem Bản Đồ</span> &rarr;
                   </a>
@@ -934,14 +938,14 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-full transition-colors cursor-pointer">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <button onClick={onBack} className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-full transition-colors cursor-pointer shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">Phòng {room.id}</h1>
-            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full border ${isOccupied ? 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30' :
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">Phòng {room.id}</h1>
+            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 ${isOccupied ? 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30' :
               isMaintenance ? 'text-[#FF6B35] bg-[#FF6B35]/10 border-[#FF6B35]/30' :
                 isReserved ? 'text-purple-600 bg-purple-500/10 border-purple-500/30' :
                   isVacant ? 'text-blue-600 bg-blue-500/10 border-blue-500/30' :
@@ -949,35 +953,35 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
               }`}>
               {room.status}
             </span>
-            <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2.5 py-1 rounded-full border border-zinc-200/80">
+            <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-zinc-200/80 truncate max-w-[170px] sm:max-w-none">
               🏢 {room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : room.building === 'b3' ? 'Dormio Luxury Bình Thạnh' : 'Dormio Premier Quận 1'}
             </span>
           </div>
         </div>
 
-        {/* Action Toolbar with Clear Visual Hierarchy */}
-        <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
+        {/* Action Toolbar with Sleek Compact Buttons */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-zinc-100">
           {isOccupied && (
             <button
               onClick={() => setIsMeterModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
+              className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
             >
-              <Gauge className="w-4 h-4" /> Ghi Chỉ Số Điện Nước
+              <Gauge className="w-3.5 h-3.5" /> Chốt Điện Nước
             </button>
           )}
 
           <button
             onClick={() => setIsContractModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
           >
-            {isOccupied ? <><Eye className="w-4 h-4 text-purple-600" /> Xem Hợp Đồng</> : <><FileSignature className="w-4 h-4 text-[#2AC1BC]" /> Tạo Hợp Đồng</>}
+            {isOccupied ? <><Eye className="w-3.5 h-3.5 text-purple-600" /> Hợp Đồng</> : <><FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" /> Tạo Hợp Đồng</>}
           </button>
 
           <button
             onClick={onEdit}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Edit className="w-4 h-4 text-zinc-500" /> Chỉnh Sửa
+            <Edit className="w-3.5 h-3.5 text-zinc-500" /> Sửa
           </button>
 
           <button
@@ -992,9 +996,9 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                 }
               });
             }}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Trash2 className="w-4 h-4 text-rose-600" /> Xóa
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" /> Xóa
           </button>
         </div>
       </div>
@@ -1005,38 +1009,38 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
 
           {/* SPOTLIGHT TENANT PROFILE CARD */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-100 bg-zinc-50/50">
-              <span className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
+            <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-zinc-100 bg-zinc-50/50">
+              <span className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
                 <User className="w-4 h-4 text-[#2AC1BC]" /> Khách Thuê Hiện Tại
               </span>
               {room.tenant && (
-                <button className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer">
+                <button className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer shrink-0">
                   <Edit className="w-3.5 h-3.5" /> Sửa thông tin
                 </button>
               )}
             </div>
 
-            <div className="p-5">
+            <div className="p-3.5 sm:p-5">
               {room.tenant ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-[#2AC1BC]/5 rounded-2xl border border-[#2AC1BC]/20">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#2AC1BC] text-white font-black text-lg flex items-center justify-center shadow-md">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 sm:p-4 bg-[#2AC1BC]/5 rounded-2xl border border-[#2AC1BC]/20">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#2AC1BC] text-white font-black text-base sm:text-lg flex items-center justify-center shadow-md shrink-0">
                       {room.tenant.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="text-base font-black text-zinc-900">{room.tenant}</h3>
-                      <p className="text-xs font-bold text-zinc-500 flex items-center gap-2 mt-0.5">
+                      <h3 className="text-sm sm:text-base font-black text-zinc-900">{room.tenant}</h3>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-bold text-zinc-500 mt-0.5">
                         <span>📱 0901.234.567</span>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>Dọn vào: 01/01/2026</span>
-                      </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="grid grid-cols-2 gap-2 w-full sm:w-auto shrink-0">
                     <a
                       href="tel:0901234567"
-                      className="px-3 py-1.5 bg-white text-zinc-800 border border-zinc-200 rounded-xl text-xs font-bold hover:bg-zinc-50 transition-colors shadow-2xs"
+                      className="px-3 py-1.5 bg-white text-zinc-800 border border-zinc-200 rounded-xl text-xs font-bold hover:bg-zinc-50 transition-colors shadow-2xs text-center flex items-center justify-center gap-1"
                     >
                       📞 Gọi điện
                     </a>
@@ -1044,7 +1048,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                       href="https://zalo.me"
                       target="_blank"
                       rel="noreferrer"
-                      className="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-2xs"
+                      className="px-3 py-1.5 bg-[#0068FF] text-white rounded-xl text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs text-center flex items-center justify-center gap-1"
                     >
                       💬 Zalo
                     </a>
@@ -1065,79 +1069,75 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
           </div>
 
           {/* Hóa đơn & công nợ với Data Test Có Hóa Đơn Chưa Thu / Quá Hạn */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
+          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+              <h2 className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
                 <Receipt className="w-4 h-4 text-[#2AC1BC]" /> Hóa Đơn & Công Nợ Gần Nhất
               </h2>
-              <span className="px-2.5 py-0.5 bg-rose-50 text-rose-600 border border-rose-200 rounded-full text-[10px] font-black animate-pulse">
+              <span className="self-start sm:self-auto px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200 rounded-full text-[10px] font-black animate-pulse">
                 🔴 Còn 1 Hóa Đơn Chưa Thu (3.520.000 ₫)
               </span>
             </div>
 
             <div className="space-y-3">
               {/* Overdue Unpaid Invoice Example */}
-              <div className="p-4 bg-rose-500/5 rounded-2xl border border-rose-500/30 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-rose-500 text-white rounded-xl font-black text-xs shadow-xs">
-                      09/26
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-zinc-900">INV-202609-401</span>
-                        <span className="text-[10px] font-bold text-rose-600">(Tháng 09/2026)</span>
-                      </div>
-                      <p className="text-[10px] text-zinc-500 font-semibold mt-0.5">Hạn thanh toán: <strong className="text-rose-600">10/09/2026 (Quá hạn 5 ngày)</strong></p>
-                    </div>
+              <div className="p-3.5 sm:p-4 bg-rose-500/5 rounded-2xl border border-rose-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 sm:p-2.5 bg-rose-500 text-white rounded-xl font-black text-xs shadow-xs shrink-0">
+                    09/26
                   </div>
-
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1">
-                    <span className="text-base font-black text-rose-600">3.520.000 ₫</span>
-                    <span className="px-2.5 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded-full">
-                      🔴 Chưa thanh toán
-                    </span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <span className="text-xs font-black text-zinc-900">INV-202609-401</span>
+                      <span className="text-[10px] font-bold text-rose-600">(Tháng 09/2026)</span>
+                      <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded-full">
+                        🔴 Chưa thanh toán
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 font-semibold mt-0.5">Hạn thanh toán: <strong className="text-rose-600">10/09/2026 (Quá hạn 5 ngày)</strong></p>
                   </div>
                 </div>
 
-                {/* Quick Remind Actions for Overdue Invoice */}
-                <div className="flex items-center gap-2 pt-2 border-t border-rose-200/50">
-                  <button className="flex-1 py-1.5 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5">
-                    ⚡ Gửi Mã VietQR Nhắc Nợ Tự Động
-                  </button>
-                  <a
-                    href="https://zalo.me"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    💬 Zalo Nhắc Nợ
-                  </a>
+                <div className="flex items-center justify-between lg:justify-end gap-2.5 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-rose-200/50">
+                  <span className="text-sm sm:text-base font-black text-rose-600">3.520.000 ₫</span>
+                  <div className="flex items-center gap-1.5">
+                    <button className="px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[11px] font-bold rounded-lg transition-all cursor-pointer shadow-2xs flex items-center gap-1 shrink-0">
+                      ⚡ VietQR
+                    </button>
+                    <a
+                      href="https://zalo.me"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 bg-[#0068FF] hover:bg-[#0052cc] text-white text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs shrink-0"
+                    >
+                      💬 Zalo
+                    </a>
+                  </div>
                 </div>
               </div>
 
               {/* Paid Invoices */}
               {[
-                { id: "INV-202608-401", period: "Tháng 08/2026", amount: "3.460.000 ₫", deadline: "10/08/2026", method: "VietQR Auto-Gạch Nợ", status: "Đã thu" },
-                { id: "INV-202607-401", period: "Tháng 07/2026", amount: "3.478.000 ₫", deadline: "10/07/2026", method: "VietQR Auto-Gạch Nợ", status: "Đã thu" },
+                { id: "INV-202608-401", period: "Tháng 08/2026", amount: "3.460.000 ₫", deadline: "10/08/2026", method: "VietQR Auto", status: "Đã thu" },
+                { id: "INV-202607-401", period: "Tháng 07/2026", amount: "3.478.000 ₫", deadline: "10/07/2026", method: "VietQR Auto", status: "Đã thu" },
               ].map((inv, idx) => (
                 <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-zinc-50 hover:bg-zinc-100/80 transition-colors rounded-xl border border-zinc-100 gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-lg font-black text-xs">
+                    <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-lg font-black text-xs shrink-0">
                       {inv.period.split(" ")[1]}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-xs font-black text-zinc-900">{inv.id}</span>
-                        <span className="text-[9px] font-bold text-zinc-400">({inv.period})</span>
+                        <span className="text-[10px] font-bold text-zinc-400">({inv.period})</span>
                       </div>
                       <p className="text-[10px] text-zinc-500 font-semibold mt-0.5">Phương thức: <strong className="text-zinc-700">{inv.method}</strong></p>
                     </div>
                   </div>
 
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1">
-                    <span className="text-sm font-black text-[#2AC1BC]">{inv.amount}</span>
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-extrabold rounded-full">
+                  <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-zinc-200/50">
+                    <span className="text-xs sm:text-sm font-black text-[#2AC1BC]">{inv.amount}</span>
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-extrabold rounded-full shrink-0">
                       ✓ {inv.status}
                     </span>
                   </div>
@@ -1147,18 +1147,18 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
           </div>
 
           {/* Lịch sử ghi chỉ số & Nút Tạo Hóa Đơn AI OCR */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-zinc-100 pb-3">
               <div>
-                <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
+                <h2 className="font-black text-zinc-900 text-xs sm:text-sm flex items-center gap-2">
                   <History className="w-4 h-4 text-[#2AC1BC]" /> Lịch Sử Chốt Điện Nước & AI OCR
                 </h2>
-                <p className="text-[11px] text-zinc-500 font-medium mt-0.5">Chủ trọ tự điền số hoặc tải ảnh công tơ để AI tự quét số điện/nước.</p>
+                <p className="text-[10px] sm:text-[11px] text-zinc-500 font-medium mt-0.5">Chủ trọ tự điền số hoặc tải ảnh công tơ để AI tự quét số điện/nước.</p>
               </div>
 
               <button
                 onClick={() => setIsMeterModalOpen(true)}
-                className="px-3.5 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-md shadow-[#2AC1BC]/20 flex items-center justify-center gap-1.5 whitespace-nowrap"
+                className="px-3.5 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-md shadow-[#2AC1BC]/20 flex items-center justify-center gap-1.5 shrink-0"
               >
                 <Gauge className="w-4 h-4" /> 📸 Chốt Số / Quét AI OCR
               </button>
@@ -1196,10 +1196,10 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                 },
               ].map((item, idx) => (
                 <details key={idx} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
-                  <summary className="flex justify-between items-center p-3.5 bg-zinc-50/80 hover:bg-zinc-100/80 cursor-pointer select-none outline-none transition-colors">
-                    <div className="flex items-center gap-2.5">
+                  <summary className="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 sm:p-3.5 bg-zinc-50/80 hover:bg-zinc-100/80 cursor-pointer select-none outline-none transition-colors gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
-                        CHỈ SỐ {item.period}
+                        Chỉ Số {item.period}
                       </span>
                       <span className="text-[10px] font-bold text-zinc-400">({item.date})</span>
                     </div>
@@ -1209,38 +1209,29 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                     </div>
                   </summary>
 
-                  <div className="p-4 bg-white border-t border-zinc-100 space-y-3">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse min-w-[500px]">
-                        <thead>
-                          <tr className="border-b border-zinc-100">
-                            <th className="py-2 px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Danh mục</th>
-                            <th className="py-2 px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider text-right">Đơn giá</th>
-                            <th className="py-2 px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider text-right">Tiêu thụ</th>
-                            <th className="py-2 px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider text-right">Thành tiền</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-50">
-                          <tr>
-                            <td className="py-2.5 px-3">
-                              <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ ĐIỆN</div>
-                              <div className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldElec} kWh ➔ Mới: {item.newElec} kWh</div>
-                            </td>
-                            <td className="py-2.5 px-3 text-right text-xs font-semibold text-zinc-600">3.500 ₫/kWh</td>
-                            <td className="py-2.5 px-3 text-right text-xs font-black text-zinc-900">{item.elecUse} kWh</td>
-                            <td className="py-2.5 px-3 text-right text-xs font-black text-[#2AC1BC]">{item.elecCost}</td>
-                          </tr>
-                          <tr>
-                            <td className="py-2.5 px-3">
-                              <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 NƯỚC</div>
-                              <div className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldWater} m³ ➔ Mới: {item.newWater} m³</div>
-                            </td>
-                            <td className="py-2.5 px-3 text-right text-xs font-semibold text-zinc-600">25.000 ₫/m³</td>
-                            <td className="py-2.5 px-3 text-right text-xs font-black text-zinc-900">{item.waterUse} m³</td>
-                            <td className="py-2.5 px-3 text-right text-xs font-black text-[#2AC1BC]">{item.waterCost}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                  <div className="p-3 sm:p-4 bg-white border-t border-zinc-100 space-y-2.5">
+                    {/* Electricity Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                      <div className="flex items-center justify-between sm:justify-start gap-2">
+                        <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ ĐIỆN (3.500 ₫/kWh)</div>
+                        <span className="text-xs font-black text-zinc-900 sm:hidden">{item.elecCost}</span>
+                      </div>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
+                        <span className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldElec} ➔ Mới: {item.newElec} (Tiêu thụ: <strong className="text-zinc-900 font-bold">{item.elecUse} kWh</strong>)</span>
+                        <span className="hidden sm:inline font-black text-[#2AC1BC]">{item.elecCost}</span>
+                      </div>
+                    </div>
+
+                    {/* Water Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+                      <div className="flex items-center justify-between sm:justify-start gap-2">
+                        <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 NƯỚC (25.000 ₫/m³)</div>
+                        <span className="text-xs font-black text-zinc-900 sm:hidden">{item.waterCost}</span>
+                      </div>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
+                        <span className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldWater} ➔ Mới: {item.newWater} (Tiêu thụ: <strong className="text-zinc-900 font-bold">{item.waterUse} m³</strong>)</span>
+                        <span className="hidden sm:inline font-black text-[#2AC1BC]">{item.waterCost}</span>
+                      </div>
                     </div>
                   </div>
                 </details>
@@ -1270,12 +1261,12 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-zinc-900">Hỏng máy lạnh (Chảy nước)</span>
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-extrabold rounded-full">
-                      🟡 Đang xử lý
+                      Đang xử lý
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-zinc-500 font-bold">
                     <span>Báo ngày: 25/08/2026</span>
-                    <span className="text-rose-600">🔴 Mức độ cao</span>
+                    <span className="text-rose-600">Mức độ cao</span>
                   </div>
                 </div>
 
@@ -1288,7 +1279,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-zinc-400 font-medium">
                     <span>Hoàn thành ngày: 12/07/2026</span>
-                    <span>🟢 Mức độ nhẹ</span>
+                    <span>Mức độ nhẹ</span>
                   </div>
                 </div>
               </div>
@@ -1301,7 +1292,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                   <Wallet className="w-4 h-4 text-purple-600" /> Quản Lý Tiền Đặt Cọc
                 </h2>
                 <span className="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-[9px] font-black">
-                  🔒 Dormio Escrow
+                  Dormio Escrow
                 </span>
               </div>
 
@@ -1317,10 +1308,10 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button className="py-1.5 px-2 bg-purple-600 text-white text-[11px] font-black rounded-xl hover:bg-purple-700 transition-all shadow-2xs cursor-pointer">
-                    💸 Hoàn Cọc Khách
+                    Hoàn Cọc
                   </button>
                   <button className="py-1.5 px-2 bg-white text-rose-600 border border-rose-200 text-[11px] font-black rounded-xl hover:bg-rose-50 transition-all cursor-pointer">
-                    ⚖️ Trừ Tiền Cọc
+                    Trừ Cọc
                   </button>
                 </div>
               </div>
@@ -1628,9 +1619,9 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1">Mức độ ưu tiên</label>
                 <select className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20">
-                  <option value="high">🔴 Mức độ cao (Cần gấp)</option>
-                  <option value="medium">🟡 Mức độ trung bình</option>
-                  <option value="low">🟢 Mức độ nhẹ</option>
+                  <option value="high">Mức độ cao (Cần gấp)</option>
+                  <option value="medium">Mức độ trung bình</option>
+                  <option value="low">Mức độ nhẹ</option>
                 </select>
               </div>
 
