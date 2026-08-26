@@ -1,125 +1,432 @@
-import React from "react";
-import { Check, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+"use client";
+
+import React, { useState } from "react";
+import { Check, X, ShieldCheck, Sparkles, Building2, QrCode, Crown, Zap, HelpCircle, ChevronDown, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function PricingPage() {
-  const plans = [
+  const [pricingSection, setPricingSection] = useState<"bhms" | "bhrp">("bhms");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const discountRate = billingCycle === "yearly" ? 0.8 : 1.0;
+
+  const bhmsPlans = [
     {
-      name: "Miễn phí",
-      price: "0đ",
-      duration: "mãi mãi",
-      description: "Dành cho cá nhân có ít phòng trọ, nhu cầu quản lý cơ bản.",
+      name: "Miễn Phí",
+      priceMonthly: 0,
+      description: "Dành cho cá nhân kinh doanh trọ nhỏ lẻ, quản lý các tác vụ cơ bản.",
       features: [
         "Quản lý tối đa 1 nhà trọ",
-        "Tối đa 5 phòng",
-        "Đăng 1 tin cho thuê/tháng",
-        "Hỗ trợ qua email",
+        "Tối đa 5 phòng trọ",
+        "Lập hóa đơn thủ công",
+        "Hỗ trợ qua Email",
       ],
-      notIncluded: ["Quản lý hóa đơn tự động", "Báo cáo doanh thu", "Quản lý nhân viên"],
-      cta: "Bắt Đầu Ngay",
+      notIncluded: ["Quản lý hóa đơn VietQR tự động", "Báo cáo doanh thu chuyên sâu", "Quản lý nhân viên"],
+      cta: "Bắt Đầu Miễn Phí",
       popular: false,
     },
     {
       name: "Chuyên Nghiệp",
-      price: "199.000đ",
-      duration: "/tháng",
-      description: "Giải pháp hoàn hảo cho chủ trọ quy mô vừa và nhỏ.",
+      priceMonthly: 199000,
+      description: "Giải pháp hoàn hảo cho chủ nhà trọ quy mô vừa, cần tự động hóa thu tiền.",
       features: [
         "Quản lý tối đa 5 nhà trọ",
-        "Tối đa 50 phòng",
-        "Đăng tin không giới hạn",
-        "Quản lý hóa đơn tự động",
-        "Hỗ trợ ưu tiên qua Zalo/Email",
+        "Tối đa 50 phòng trọ",
+        "Tạo hóa đơn & thu tiền VietQR tự động",
+        "Quét số điện nước AI OCR từ ảnh chụp",
+        "Báo cáo công nợ & Zalo nhắc nợ tự động",
+        "Hỗ trợ ưu tiên qua Zalo 24/7",
       ],
-      notIncluded: ["Báo cáo doanh thu chuyên sâu", "Quản lý nhân viên"],
-      cta: "Chọn Gói Này",
+      notIncluded: ["Phân quyền ca làm nhân viên"],
+      cta: "Đăng Ký Gói Chuyên Nghiệp",
       popular: true,
     },
     {
       name: "Doanh Nghiệp",
-      price: "499.000đ",
-      duration: "/tháng",
-      description: "Quản lý chuỗi trọ số lượng lớn với các tính năng cao cấp.",
+      priceMonthly: 499000,
+      description: "Quản lý chuỗi trọ số lượng lớn với đầy đủ tính năng tự động hóa cao cấp.",
       features: [
-        "Không giới hạn nhà trọ",
+        "Không giới hạn số nhà trọ",
         "Không giới hạn số phòng",
         "Tính năng tự động hóa 100%",
-        "Báo cáo doanh thu chuyên sâu",
-        "Quản lý nhân viên, phân quyền",
-        "Hỗ trợ 24/7 chuyên biệt",
+        "Phân quyền nhân viên & lịch phân ca",
+        "Báo cáo tài chính doanh thu chuyên sâu",
+        "Hỗ trợ chuyên gia 1-1 riêng biệt",
       ],
       notIncluded: [],
-      cta: "Liên Hệ Đăng Ký",
+      cta: "Liên Hệ Gói Doanh Nghiệp",
       popular: false,
     },
   ];
 
+  const bhrpPlans = [
+    {
+      name: "Tin Thường",
+      priceMonthly: 0,
+      description: "Dành cho chủ nhà trọ muốn đăng tin niêm yết cơ bản trên sàn cho thuê.",
+      features: [
+        "Hiển thị danh sách tìm kiếm chuẩn",
+        "Tải lên tối đa 5 hình ảnh sắc nét",
+        "Liên hệ trực tiếp qua SĐT / Google Maps",
+        "Duyệt tin chuẩn trong 24h",
+      ],
+      notIncluded: ["Nhãn Nổi Bật VIP", "Đẩy bài tự động", "Ghim Top 1 đầu trang"],
+      cta: "Đăng Tin Miễn Phí",
+      popular: false,
+    },
+    {
+      name: "Tin VIP Vàng",
+      priceMonthly: 199000,
+      description: "Tăng 3x lượt tiếp cận khách thuê, gắn nhãn VIP Nổi Bật thu hút.",
+      features: [
+        "Nhãn nổi bật VIP Vàng ấn tượng",
+        "Tải lên tối đa 15 hình ảnh HD",
+        "Tự động đẩy bài 1 lần / ngày",
+        "Ưu tiên vị trí top đầu tìm kiếm",
+        "Được phép bật tính năng Cọc Escrow",
+      ],
+      notIncluded: ["Ghim Top 1 vị trí cố định"],
+      cta: "Mua Gói VIP Vàng",
+      popular: true,
+    },
+    {
+      name: "Tin VIP Kim Cương",
+      priceMonthly: 499000,
+      description: "Được ghim vị trí Top 1 đầu trang chủ, tiếp cận 10x khách thuê tức thì.",
+      features: [
+        "Ghim đứng đầu vị trí Top 1 danh mục",
+        "Nhãn Kim Cương phát sáng nổi bật",
+        "Tự động đẩy bài 3 lần / ngày",
+        "Hỗ trợ tối ưu hình ảnh & chuẩn SEO",
+        "Duyệt tin thần tốc trong 5 phút",
+      ],
+      notIncluded: [],
+      cta: "Mua Gói VIP Kim Cương",
+      popular: false,
+    },
+  ];
+
+  const faqs = [
+    {
+      q: "Dormio có tính phí thanh toán qua VietQR không?",
+      a: "Hoàn toàn KHÔNG. Dormio tích hợp cổng VietQR chuyển khoản trực tiếp từ ngân hàng khách thuê về tài khoản ngân hàng của chủ trọ mà không qua trung gian, chi phí là 0 đồng."
+    },
+    {
+      q: "Tôi có thể nâng cấp hoặc hủy gói bất kỳ lúc nào không?",
+      a: "Có. Bạn có thể nâng cấp gói dịch vụ bất kỳ lúc nào để mở rộng thêm số lượng phòng hoặc số lượng tin đăng. Tiền thừa của gói cũ sẽ được tính khấu trừ tự động."
+    },
+    {
+      q: "Làm sao để biết tính năng Escrow cọc phòng hoạt động ra sao?",
+      a: "Tiền cọc của khách thuê được Dormio tạm giữ an toàn 100%. Khi 2 bên chủ trọ và người thuê chấp nhận hợp đồng, tiền cọc sẽ giải ngân thẳng vào tài khoản của chủ trọ."
+    }
+  ];
+
   return (
-    <div className="py-20 bg-zinc-50 dark:bg-zinc-950 min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl dark:text-zinc-50 mb-4">
-            Bảng Giá Dịch Vụ
+    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+      
+      {/* 100% Full-Width Screen Hero Banner Header */}
+      <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
+        <div className="relative z-10 max-w-4xl mx-auto space-y-4">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2AC1BC]/20 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/30 shadow-lg">
+            <Sparkles className="w-4 h-4" /> BẢNG GIÁ DỊCH VỤ MINH BẠCH
+          </span>
+
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
+            <span className="inline-block whitespace-nowrap">Bảng Giá Linh Hoạt,</span> <br />
+            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
+              Tối Ưu Cho Mọi Quy Mô
+            </span>
           </h1>
-          <p className="text-lg text-zinc-500 dark:text-zinc-400">
-            Lựa chọn gói dịch vụ phù hợp nhất với quy mô quản lý của bạn. Nâng cấp bất cứ lúc nào khi kinh doanh mở rộng.
+
+          <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto text-balance">
+            Lựa chọn gói giải pháp phù hợp để vận hành chuỗi trọ hiệu quả và tiếp cận hàng ngàn khách thuê.
           </p>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
-          {plans.map((plan, idx) => (
-            <div 
-              key={idx} 
-              className={`relative flex flex-col p-8 rounded-3xl bg-white dark:bg-zinc-900 border transition-all duration-300
-                ${plan.popular 
-                  ? 'border-primary shadow-2xl shadow-primary/20 scale-105 z-10' 
-                  : 'border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl'
-                }`}
+      {/* Main Content Area */}
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 w-full space-y-12">
+        
+        {/* Exactly 2 Main Section Tabs Switcher (Fully Responsive Mobile Stack) */}
+        <div className="flex flex-col items-center gap-6 w-full">
+          <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-zinc-100 rounded-3xl border border-zinc-200/80 max-w-xl w-full gap-2 sm:gap-0">
+            <button
+              onClick={() => setPricingSection("bhms")}
+              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                pricingSection === "bhms"
+                  ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
             >
-              {plan.popular && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <span className="bg-primary text-white text-xs font-bold uppercase tracking-wider py-1 px-4 rounded-full">
-                    Phổ Biến Nhất
-                  </span>
-                </div>
-              )}
-              
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{plan.name}</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 min-h-[40px]">{plan.description}</p>
-              </div>
-              
-              <div className="mb-8 flex items-end gap-1">
-                <span className="text-4xl font-extrabold text-zinc-900 dark:text-zinc-50">{plan.price}</span>
-                <span className="text-zinc-500 dark:text-zinc-400 font-medium mb-1">{plan.duration}</span>
-              </div>
-              
-              <ul className="flex-1 space-y-4 mb-8">
-                {plan.features.map((feat, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span className="text-zinc-600 dark:text-zinc-300">{feat}</span>
-                  </li>
-                ))}
-                {plan.notIncluded.map((feat, i) => (
-                  <li key={i} className="flex items-start gap-3 opacity-50">
-                    <X className="h-5 w-5 text-zinc-400 shrink-0 mt-0.5" />
-                    <span className="text-zinc-500 dark:text-zinc-400 line-through">{feat}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <Button 
-                variant={plan.popular ? "primary" : "outline"} 
-                className={`w-full h-12 rounded-xl text-base font-semibold ${
-                  plan.popular ? 'bg-primary hover:bg-primary-hover text-white' : ''
-                }`}
-              >
-                {plan.cta}
-              </Button>
-            </div>
-          ))}
+              <Building2 className="w-4 h-4" /> 1. Bảng Giá Quản Lý (BHMS)
+            </button>
+
+            <button
+              onClick={() => setPricingSection("bhrp")}
+              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                pricingSection === "bhrp"
+                  ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              <QrCode className="w-4 h-4" /> 2. Bảng Giá Đăng Tin (BHRP)
+            </button>
+          </div>
+
+          {/* Billing Cycle Toggle (Monthly vs Yearly Discount 20% - Responsive Mobile Stack) */}
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 p-2 sm:p-1.5 bg-zinc-50 rounded-2xl border border-zinc-200 text-xs font-bold w-full sm:w-auto">
+            <button
+              onClick={() => setBillingCycle("monthly")}
+              className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer ${
+                billingCycle === "monthly" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              Thanh toán Hàng Tháng
+            </button>
+            <button
+              onClick={() => setBillingCycle("yearly")}
+              className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                billingCycle === "yearly" ? "bg-zinc-900 text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              <span>Thanh toán Hàng Năm</span>
+              <span className="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full uppercase">
+                Tiết kiệm 20%
+              </span>
+            </button>
+          </div>
         </div>
+
+        {/* SECTION 1: BHMS PRICING — Color Theme: Teal #2AC1BC */}
+        {pricingSection === "bhms" && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="px-3.5 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/20 uppercase inline-block whitespace-nowrap">
+                GÓI QUẢN LÝ NHÀ TRỌ (BHMS) — CHO CHỦ TRỌ
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
+                <span className="inline-block whitespace-nowrap">Tự Động Hóa Vận Hành</span>{" "}
+                <span className="inline-block whitespace-nowrap">Tiết Kiệm 80% Thời Gian</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+              {bhmsPlans.map((plan, idx) => {
+                const finalPrice = Math.round(plan.priceMonthly * discountRate);
+
+                return (
+                  <div
+                    key={idx}
+                    className={`bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${
+                      plan.popular
+                        ? "border-[#2AC1BC] shadow-xl shadow-[#2AC1BC]/15 ring-2 ring-[#2AC1BC]/20 -translate-y-2"
+                        : "border-zinc-200/80 shadow-xs hover:border-[#2AC1BC]/50 hover:shadow-md"
+                    }`}
+                  >
+                    {plan.popular && (
+                      <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#2AC1BC] text-white text-[10px] font-black rounded-full uppercase tracking-wider shadow-md whitespace-nowrap">
+                        ĐƯỢC CHỌN NHIỀU NHẤT
+                      </span>
+                    )}
+
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-xl font-black text-zinc-900">{plan.name}</h3>
+                        <p className="text-xs text-zinc-500 font-medium mt-1 leading-relaxed">{plan.description}</p>
+                      </div>
+
+                      <div className="py-2 border-y border-zinc-100">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-black text-[#2AC1BC]">
+                            {finalPrice === 0 ? "0 ₫" : `${finalPrice.toLocaleString("vi-VN")} ₫`}
+                          </span>
+                          <span className="text-xs text-zinc-400 font-bold">/ tháng</span>
+                        </div>
+                        {billingCycle === "yearly" && finalPrice > 0 && (
+                          <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
+                            Thanh toán theo năm: {(finalPrice * 12).toLocaleString("vi-VN")} ₫ / năm
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 pt-2">
+                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">Tính năng bao gồm:</span>
+                        {plan.features.map((feat, fIdx) => (
+                          <div key={fIdx} className="flex items-start gap-2 text-xs font-semibold text-zinc-700">
+                            <Check className="w-4 h-4 text-[#2AC1BC] shrink-0 mt-0.5" />
+                            <span>{feat}</span>
+                          </div>
+                        ))}
+
+                        {plan.notIncluded.map((feat, nIdx) => (
+                          <div key={nIdx} className="flex items-start gap-2 text-xs font-medium text-zinc-400 opacity-60">
+                            <X className="w-4 h-4 text-zinc-300 shrink-0 mt-0.5" />
+                            <span className="line-through">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Link href="/register" className="pt-4">
+                      <button
+                        className={`w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer shadow-md ${
+                          plan.popular
+                            ? "bg-[#2AC1BC] hover:bg-[#72b3a3] text-white shadow-[#2AC1BC]/30"
+                            : "bg-zinc-900 hover:bg-zinc-800 text-white"
+                        }`}
+                      >
+                        {plan.cta} &rarr;
+                      </button>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 2: BHRP PRICING — Color Theme: Orange #FF6B35 */}
+        {pricingSection === "bhrp" && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="px-3.5 py-1 bg-[#FF6B35]/10 text-[#FF6B35] text-xs font-black rounded-full border border-[#FF6B35]/20 uppercase inline-block whitespace-nowrap">
+                GÓI ĐĂNG TIN SÀN CHO THUÊ (BHRP)
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
+                <span className="inline-block whitespace-nowrap">Tăng 3X Lượt Xem,</span>{" "}
+                <span className="inline-block whitespace-nowrap">Cho Thuê Phòng Thần Tốc</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+              {bhrpPlans.map((plan, idx) => {
+                const finalPrice = Math.round(plan.priceMonthly * discountRate);
+
+                return (
+                  <div
+                    key={idx}
+                    className={`bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${
+                      plan.popular
+                        ? "border-[#FF6B35] shadow-xl shadow-[#FF6B35]/15 ring-2 ring-[#FF6B35]/20 -translate-y-2"
+                        : "border-zinc-200/80 shadow-xs hover:border-[#FF6B35]/50 hover:shadow-md"
+                    }`}
+                  >
+                    {plan.popular && (
+                      <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#FF6B35] text-white text-[10px] font-black rounded-full uppercase tracking-wider shadow-md whitespace-nowrap">
+                        TĂNG 3X LƯỢT XEM
+                      </span>
+                    )}
+
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-xl font-black text-zinc-900">{plan.name}</h3>
+                        <p className="text-xs text-zinc-500 font-medium mt-1 leading-relaxed">{plan.description}</p>
+                      </div>
+
+                      <div className="py-2 border-y border-zinc-100">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-black text-[#FF6B35]">
+                            {finalPrice === 0 ? "0 ₫" : `${finalPrice.toLocaleString("vi-VN")} ₫`}
+                          </span>
+                          <span className="text-xs text-zinc-400 font-bold">/ tháng</span>
+                        </div>
+                        {billingCycle === "yearly" && finalPrice > 0 && (
+                          <span className="text-[10px] text-amber-600 font-bold block mt-0.5">
+                            Thanh toán theo năm: {(finalPrice * 12).toLocaleString("vi-VN")} ₫ / năm
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 pt-2">
+                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">Tính năng quyền lợi:</span>
+                        {plan.features.map((feat, fIdx) => (
+                          <div key={fIdx} className="flex items-start gap-2 text-xs font-semibold text-zinc-700">
+                            <Check className="w-4 h-4 text-[#FF6B35] shrink-0 mt-0.5" />
+                            <span>{feat}</span>
+                          </div>
+                        ))}
+
+                        {plan.notIncluded.map((feat, nIdx) => (
+                          <div key={nIdx} className="flex items-start gap-2 text-xs font-medium text-zinc-400 opacity-60">
+                            <X className="w-4 h-4 text-zinc-300 shrink-0 mt-0.5" />
+                            <span className="line-through">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Link href="/register" className="pt-4">
+                      <button
+                        className={`w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer shadow-md ${
+                          plan.popular
+                            ? "bg-[#FF6B35] hover:bg-[#ff5518] text-white shadow-[#FF6B35]/30"
+                            : "bg-zinc-900 hover:bg-zinc-800 text-white"
+                        }`}
+                      >
+                        {plan.cta} &rarr;
+                      </button>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* FAQ Collapsible Accordion Section */}
+        <div className="bg-zinc-50 rounded-3xl p-8 sm:p-12 border border-zinc-200/80 space-y-6">
+          <div className="text-center space-y-2 max-w-xl mx-auto">
+            <h3 className="text-xl font-black text-zinc-900 flex items-center justify-center gap-2">
+              <HelpCircle className="w-5 h-5 text-[#2AC1BC]" /> Câu Hỏi Thường Gặp
+            </h3>
+            <p className="text-xs text-zinc-500 font-medium">Giải đáp thắc mắc về các gói bảng giá và chi phí tích hợp dịch vụ.</p>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-3">
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  className="bg-white rounded-2xl p-4 sm:p-5 border border-zinc-200/80 shadow-xs cursor-pointer space-y-2 transition-all"
+                >
+                  <div className="flex items-center justify-between font-bold text-xs sm:text-sm text-zinc-900">
+                    <span>{faq.q}</span>
+                    <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? "rotate-180 text-[#2AC1BC]" : ""}`} />
+                  </div>
+                  {isOpen && (
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed pt-2 border-t border-zinc-100 animate-in fade-in duration-200">
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bottom CTA Registration Banner */}
+        <div className="bg-zinc-900 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-2xl border border-zinc-800">
+          <h2 className="text-2xl sm:text-4xl font-black text-white leading-snug">
+            <span className="inline-block whitespace-nowrap">Bắt đầu quản lý trọ thông minh</span>{" "}
+            <span className="inline-block whitespace-nowrap">ngay hôm nay</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto font-medium">
+            Tạo tài khoản sử dụng miễn phí hoặc đăng ký dùng thử 7 ngày không cam kết.
+          </p>
+          <div className="flex justify-center">
+            <Link href="/register">
+              <button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105">
+                Đăng ký tài khoản ngay &rarr;
+              </button>
+            </Link>
+          </div>
+        </div>
+
       </div>
     </div>
   );

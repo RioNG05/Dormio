@@ -1,162 +1,512 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Minimize2, Tag, ShieldCheck, User } from "lucide-react";
+import {
+  ArrowLeft, MapPin, Minimize2, ShieldCheck, User,
+  Phone, QrCode, CheckCircle2, X, Sparkles, Lock, Calculator,
+  Zap, Droplets, Wifi, Trash2, Check, MessageSquare, Heart, Share2, Copy, ShieldAlert, ExternalLink
+} from "lucide-react";
 import { formatVND } from "@/utils";
 
-interface RoomDetailPageProps {
-  params: Promise<{ id: string }>;
-}
+export default function RoomDetailPage() {
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [depositStep, setDepositStep] = useState<"form" | "qr" | "success">("form");
+  const [tenantName, setTenantName] = useState("");
+  const [tenantPhone, setTenantPhone] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-// Mock function để lấy dữ liệu phòng theo ID
-async function getRoomData(id: string) {
-  // Giả lập cuộc gọi API
-  const rooms = [
-    {
-      id: "1",
-      title: "Phòng trọ cao cấp Full đồ tại Quận 1, ban công rộng rãi",
-      price: 4500000,
-      area: 25,
-      address: "123 Nguyễn Huệ, Bến Nghé, Quận 1, TP. HCM",
-      images: [
-        "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-      ],
-      description: `Phòng trọ đầy đủ tiện nghi thiết kế hiện đại tại trung tâm Quận 1.
-      - Nội thất: Giường nệm cao cấp, tủ quần áo lớn, điều hòa Inverter tiết kiệm điện, tủ lạnh, bàn làm việc.
-      - Khu bếp riêng biệt, trang bị đầy đủ dụng cụ nấu nướng.
-      - Phòng tắm khép kín, vòi sen nóng lạnh, thiết bị vệ sinh cao cấp.
-      - Tiện ích chung: Thang máy tốc độ cao, khóa vân tay an ninh, camera giám sát 24/7, máy giặt và sân phơi rộng rãi trên tầng thượng.
-      - Vị trí: Ngay trục đường Nguyễn Huệ, thuận tiện di chuyển qua các quận lân cận, gần siêu thị, cửa hàng tiện lợi, hàng quán đông đúc.`,
-      facilities: ["Wifi tốc độ cao", "Điều hòa", "Tủ lạnh", "Máy giặt", "Thang máy", "Khóa vân tay", "Ban công"],
-      landlord: {
-        name: "Nguyễn Văn Rio",
-        phone: "0901.234.567",
-        email: "landlord.rio@gmail.com",
-      },
+  // Utility Calculator States - Default peopleCount: 1, electricityKwh: 0, waterM3: 0
+  const [peopleCount, setPeopleCount] = useState(1);
+  const [electricityKwh, setElectricityKwh] = useState(0);
+  const [waterM3, setWaterM3] = useState(0);
+  const [isCalcOpen, setIsCalcOpen] = useState(false);
+
+  const room = {
+    id: "1",
+    code: "#ROOM-Q1-101",
+    title: "Phòng Studio Ban Công Nguyễn Huệ Quận 1 - View Đẹp",
+    price: 4500000,
+    depositAmount: 1000000, // Cài đặt bởi chủ nhà
+    area: 25,
+    address: "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. HCM",
+    electricityRate: 3800, // đ/kWh
+    waterRate: 25000, // đ/m³
+    serviceFee: 150000, // đ/người
+    images: [
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80"
+    ],
+    description: `Căn hộ Studio cao cấp đầy đủ tiện nghi thiết kế hiện đại tại trung tâm Quận 1.
+    - Nội thất: Giường nệm cao cấp, tủ quần áo lớn, điều hòa Inverter tiết kiệm điện, tủ lạnh Aqua, bàn làm việc.
+    - Khu bếp riêng biệt, trang bị đầy đủ bếp từ, máy hút mùi.
+    - Phòng tắm khép kín, vòi sen nóng lạnh, kính cường lực.
+    - An ninh: Khóa cửa vân tay, camera giám sát 24/7, giờ giấc tự do không chung chủ.`,
+    facilities: [
+      "Wifi tốc độ cao 150Mbps",
+      "Điều hòa Inverter tiết kiệm điện",
+      "Tủ lạnh Aqua 180L",
+      "Thang máy tốc độ cao",
+      "Khóa vân tay an ninh",
+      "Ban công phơi đồ thoáng mát",
+      "Chỗ để xe máy tầng trệt"
+    ],
+    landlord: {
+      name: "Nguyễn Văn Rio",
+      phone: "0901.234.567",
+      email: "landlord.rio@gmail.com",
     },
-  ];
+  };
 
-  return rooms.find((r) => r.id === id) || rooms[0];
-}
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(typeof window !== "undefined" ? window.location.href : "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
-  const { id } = await params;
-  const room = await getRoomData(id);
+  // Utility Cost Calculator Math
+  const totalElectricityCost = electricityKwh * room.electricityRate;
+  const totalWaterCost = waterM3 * room.waterRate;
+  const totalServiceCost = peopleCount * room.serviceFee;
+  const totalEstimatedMonthly = room.price + totalElectricityCost + totalWaterCost + totalServiceCost;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Back button */}
-      <Link
-        href="/rooms"
-        className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Quay lại danh sách phòng
-      </Link>
+    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Details */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Images Gallery */}
-          <div className="overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div className="relative aspect-video overflow-hidden bg-zinc-100 dark:bg-zinc-900 md:col-span-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 w-full space-y-6">
+
+        {/* Top Header Trail & Action Bar */}
+        <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+          <Link
+            href="/rooms"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Quay lại danh sách phòng trọ
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsSaved(!isSaved)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${isSaved ? "bg-rose-500 text-white" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                }`}
+            >
+              <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
+              {isSaved ? "Đã lưu" : "Lưu bài"}
+            </button>
+
+            <button
+              onClick={() => setIsShareOpen(true)}
+              className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+            >
+              <Share2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> Chia sẻ
+            </button>
+          </div>
+        </div>
+
+        {/* Room Title Header Block (Cleaned - Removed Price from Top, Address Links to Google Maps) */}
+        <div className="space-y-3 bg-zinc-50/80 p-6 sm:p-8 rounded-3xl border border-zinc-200/80 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-extrabold rounded-full">
+              Phòng Studio Ban Công
+            </span>
+            <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
+              Chính chủ xác thực
+            </span>
+            <span className="px-3 py-1 bg-zinc-200/80 text-zinc-700 text-xs font-extrabold rounded-full">
+              Mã phòng: {room.code}
+            </span>
+          </div>
+
+          <h1 className="text-2xl sm:text-4xl font-black text-zinc-900 leading-snug">
+            {room.title}
+          </h1>
+
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-zinc-200/60 text-xs font-semibold text-zinc-500">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(room.address)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-zinc-800 font-bold hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors group"
+              title="Mở Google Maps xem vị trí chính xác"
+            >
+              <MapPin className="h-4 w-4 text-[#2AC1BC]" />
+              <span>{room.address}</span>
+              <ExternalLink className="w-3 h-3 text-zinc-400 group-hover:text-[#2AC1BC]" />
+            </a>
+
+            <div className="flex items-center gap-1 text-zinc-700">
+              <Minimize2 className="h-4 w-4 text-zinc-400" />
+              <span>Diện tích: <strong>{room.area} m²</strong></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-2">
+
+          {/* Left Main Content */}
+          <div className="lg:col-span-8 space-y-8">
+
+            {/* Gallery Images Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 rounded-3xl overflow-hidden shadow-lg border border-zinc-200">
+              <div className="md:col-span-2 aspect-video overflow-hidden bg-zinc-100 relative group">
                 <img
                   src={room.images[0]}
                   alt={room.title}
-                  className="h-full w-full object-cover object-center"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
+                <span className="absolute top-4 left-4 px-3 py-1 bg-[#2AC1BC] text-white text-xs font-black rounded-full shadow-md">
+                  Ảnh Thực Tế 100%
+                </span>
               </div>
-            </div>
-          </div>
-
-          {/* Title & Stats */}
-          <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 sm:text-3xl">
-              {room.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4 text-zinc-400" />
-                <span>{room.address}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Minimize2 className="h-4 w-4 text-zinc-400" />
-                <span>Diện tích: {room.area} m²</span>
-              </div>
-            </div>
-          </div>
-
-          <hr className="border-zinc-200 dark:border-zinc-800" />
-
-          {/* Description */}
-          <div className="flex flex-col gap-3">
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Thông tin chi tiết</h2>
-            <div className="text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line text-sm">
-              {room.description}
-            </div>
-          </div>
-
-          <hr className="border-zinc-200 dark:border-zinc-800" />
-
-          {/* Facilities */}
-          <div className="flex flex-col gap-4">
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Tiện ích đi kèm</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {room.facilities.map((fac, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800"
-                >
-                  <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />
-                  <span>{fac}</span>
+              <div className="hidden md:flex flex-col gap-3">
+                <div className="aspect-[4/3] overflow-hidden bg-zinc-100 rounded-2xl border border-zinc-200">
+                  <img src={room.images[1]} alt="Detail 1" className="w-full h-full object-cover" />
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Contact/Rental Box */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24 rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-zinc-400 uppercase">Giá thuê phòng</span>
-              <div className="flex items-baseline gap-1 text-red-500">
-                <span className="text-3xl font-extrabold">{formatVND(room.price)}</span>
-                <span className="text-sm font-normal text-zinc-400">/tháng</span>
+                <div className="aspect-[4/3] overflow-hidden bg-zinc-100 rounded-2xl border border-zinc-200">
+                  <img src={room.images[2]} alt="Detail 2" className="w-full h-full object-cover" />
+                </div>
               </div>
             </div>
 
-            <hr className="border-zinc-200 dark:border-zinc-800" />
+            {/* 1. Description Section (Moved UP above Escrow) */}
+            <div className="space-y-3">
+              <h2 className="text-xl font-extrabold text-zinc-900">Mô tả phòng trọ</h2>
+              <div className="text-zinc-600 leading-relaxed whitespace-pre-line text-xs font-medium bg-zinc-50 p-6 rounded-3xl border border-zinc-200/80">
+                {room.description}
+              </div>
+            </div>
 
-            {/* Landlord Info */}
-            <div className="flex flex-col gap-4">
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Thông tin liên hệ</h3>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                  <User className="h-5 w-5" />
+            {/* 2. Facilities Section (Moved UP above Escrow) */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-extrabold text-zinc-900">Trang thiết bị & Tiện ích sẵn có</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {room.facilities.map((fac, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5 p-3.5 bg-white border border-zinc-200/80 rounded-2xl text-xs font-bold text-zinc-800 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
+                    <span>{fac}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Escrow Deposit Process Guarantee Box */}
+            <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 p-6 rounded-3xl text-white space-y-4 shadow-xl border border-zinc-800">
+              <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider block">QUY TRÌNH ĐẶT CỌC GIỮ PHÒNG DORMIO ESCROW</span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
+                  <span className="w-6 h-6 rounded-full bg-[#2AC1BC] text-white font-black text-xs inline-flex items-center justify-center">1</span>
+                  <h4 className="font-extrabold text-xs text-white">Khách Đặt Cọc VietQR</h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">Chuyển cọc trực tiếp qua hệ thống tự động.</p>
                 </div>
+
+                <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
+                  <span className="w-6 h-6 rounded-full bg-amber-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">2</span>
+                  <h4 className="font-extrabold text-xs text-white">Dormio Tạm Giữ</h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">Tiền được nền tảng bảo lưu an toàn 100%.</p>
+                </div>
+
+                <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
+                  <span className="w-6 h-6 rounded-full bg-emerald-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">3</span>
+                  <h4 className="font-extrabold text-xs text-white">Giải Ngân Cho Chủ Nhà</h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">Khi 2 bên chấp nhận thỏa thuận ký hợp đồng.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Interactive Rent & Utility Calculator Card Widget (Defaults: People = 1, Electricity = 0, Water = 0) */}
+            <div className="bg-white p-6 sm:p-8 rounded-3xl text-zinc-900 shadow-md border border-zinc-200/80 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
                 <div>
-                  <div className="font-semibold text-zinc-900 dark:text-zinc-100">{room.landlord.name}</div>
-                  <div className="text-xs text-zinc-400">Chủ nhà trọ xác thực</div>
+                  <h3 className="text-lg font-black text-zinc-900 flex items-center gap-2">
+                    <Calculator className="w-5 h-5 text-[#2AC1BC]" /> Công cụ ước tính tổng chi phí sinh hoạt hàng tháng
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-medium mt-0.5">
+                    Tùy chỉnh số lượng người ở & điện nước tiêu thụ để tính số tiền thực tế cần chi trả.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsCalcOpen(!isCalcOpen)}
+                  className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer hover:bg-[#72b3a3] transition-colors shrink-0"
+                >
+                  {isCalcOpen ? "Thu gọn bảng tính" : "Mở bảng tính toán"}
+                </button>
+              </div>
+
+              {isCalcOpen && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
+                  {/* Slider 1: Số người ở (Default: 1) */}
+                  <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-zinc-500">Số người sinh hoạt:</span>
+                      <span className="text-[#2AC1BC] font-black">{peopleCount} Người</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="4"
+                      value={peopleCount}
+                      onChange={(e) => setPeopleCount(Number(e.target.value))}
+                      className="w-full accent-[#2AC1BC] cursor-pointer"
+                    />
+                    <span className="text-[10px] text-zinc-400 block">Phí rác & Wifi: {formatVND(totalServiceCost)}</span>
+                  </div>
+
+                  {/* Slider 2: Điện tiêu thụ (Default: 0) */}
+                  <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-zinc-500">Điện dự kiến (kWh):</span>
+                      <span className="text-amber-600 font-black">{electricityKwh} kWh</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="300"
+                      step="10"
+                      value={electricityKwh}
+                      onChange={(e) => setElectricityKwh(Number(e.target.value))}
+                      className="w-full accent-amber-500 cursor-pointer"
+                    />
+                    <span className="text-[10px] text-zinc-400 block">Giá điện: 3.800 đ/kWh ({formatVND(totalElectricityCost)})</span>
+                  </div>
+
+                  {/* Slider 3: Nước tiêu thụ (Default: 0) */}
+                  <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-zinc-500">Nước dự kiến (m³):</span>
+                      <span className="text-cyan-600 font-black">{waterM3} m³</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      value={waterM3}
+                      onChange={(e) => setWaterM3(Number(e.target.value))}
+                      className="w-full accent-cyan-500 cursor-pointer"
+                    />
+                    <span className="text-[10px] text-zinc-400 block">Giá nước: 25.000 đ/m³ ({formatVND(totalWaterCost)})</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Total Summary Breakdown Box */}
+              <div className="p-5 bg-zinc-900 rounded-2xl text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs text-zinc-400 font-semibold block">Tổng chi phí ước tính hàng tháng:</span>
+                  <span className="text-3xl font-black text-rose-500">{formatVND(totalEstimatedMonthly)}</span>
+                </div>
+                <div className="text-xs text-zinc-400 font-medium space-y-0.5">
+                  <div>• Tiền phòng: <strong className="text-white">{formatVND(room.price)}</strong></div>
+                  <div>• Điện + Nước + Dịch vụ: <strong className="text-[#2AC1BC]">{formatVND(totalElectricityCost + totalWaterCost + totalServiceCost)}</strong></div>
                 </div>
               </div>
-              <div className="flex flex-col gap-2 mt-2">
-                <a href={`tel:${room.landlord.phone}`} className="w-full">
-                  <Button className="w-full h-11 bg-blue-600 hover:bg-blue-700">
-                    Gọi: {room.landlord.phone}
-                  </Button>
+            </div>
+
+          </div>
+
+          {/* Right Sidebar Card: Booking & Landlord Info */}
+          <div className="lg:col-span-4 space-y-6 sticky top-24">
+
+            {/* Price & Deposit Action Box */}
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-zinc-200/80 shadow-xl space-y-6">
+              <div className="space-y-1">
+                <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider block">Giá thuê niêm yết chính chủ</span>
+                <div className="text-3xl font-black text-rose-500">{formatVND(room.price)} <span className="text-xs text-zinc-400 font-normal">/tháng</span></div>
+                <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 text-xs text-rose-700 font-bold mt-2">
+                  Tiền cọc: {formatVND(room.depositAmount)}
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={() => { setIsDepositModalOpen(true); setDepositStep("form"); }}
+                  className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#FF6B35]/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" /> Đặt Cọc Giữ Phòng VietQR
+                </button>
+
+                <a href={`tel:${room.landlord.phone}`} className="block">
+                  <button className="w-full py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <Phone className="w-4 h-4 text-[#2AC1BC]" /> Gọi Điện Hẹn Xem Phòng
+                  </button>
                 </a>
-                <Button variant="outline" className="w-full h-11">
-                  Gửi tin nhắn trực tiếp
-                </Button>
+              </div>
+
+              {/* Landlord Contact Profile Card */}
+              <div className="pt-6 border-t border-zinc-100 space-y-3">
+                <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">THÔNG TIN CHỦ NHÀ TRỌ</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-lg">
+                    R
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-sm text-zinc-900">{room.landlord.name}</h4>
+                    <span className="text-xs font-semibold text-zinc-500">SĐT: {room.landlord.phone}</span>
+                  </div>
+                </div>
               </div>
             </div>
+
           </div>
+
         </div>
       </div>
+
+      {/* Share Modal */}
+      {isShareOpen && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsShareOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
+        >
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-zinc-100 relative cursor-default">
+            <button
+              onClick={() => setIsShareOpen(false)}
+              className="absolute top-4 right-4 p-1 hover:bg-zinc-100 rounded-full text-zinc-400 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> Chia sẻ bài đăng phòng trọ
+            </h3>
+            <p className="text-xs text-zinc-500 font-medium line-clamp-1">{room.title}</p>
+
+            <div className="flex items-center gap-2 p-2 bg-zinc-50 rounded-2xl border border-zinc-200">
+              <input
+                type="text"
+                readOnly
+                value={typeof window !== "undefined" ? window.location.href : ""}
+                className="w-full text-xs font-semibold text-zinc-600 bg-transparent px-2 focus:outline-none truncate"
+              />
+              <button
+                onClick={handleCopyLink}
+                className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Đã chép" : "Sao chép"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Online VietQR Deposit Modal */}
+      {isDepositModalOpen && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsDepositModalOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
+        >
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-zinc-100 max-h-[90vh] overflow-y-auto cursor-default">
+            <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
+              <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
+                <Lock className="w-4 h-4 text-[#2AC1BC]" /> Đặt Cọc Xem/Giữ Phòng VietQR
+              </h3>
+              <button
+                onClick={() => setIsDepositModalOpen(false)}
+                className="p-1 hover:bg-zinc-100 rounded-xl text-zinc-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Escrow Explanation */}
+            <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-4 rounded-2xl text-white space-y-2 border border-zinc-800">
+              <span className="text-[10px] font-black text-[#2AC1BC] uppercase block">DORMIO ESCROW BẢO VỆ TIỀN CỌC</span>
+              <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
+                Tiền cọc do Dormio giữ an toàn. Khi khách và chủ trọ chấp nhận thỏa thuận đồng ý thuê, hệ thống sẽ tự động chuyển thanh toán cho tài khoản chủ trọ.
+              </p>
+            </div>
+
+            {depositStep === "form" && (
+              <div className="space-y-4">
+                <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">Phòng trọ chọn cọc:</span>
+                  <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">{room.title}</h4>
+                  <div className="text-xs font-bold text-rose-500">Cọc cài đặt bởi chủ nhà: {formatVND(room.depositAmount)}</div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">Họ và tên người thuê *</label>
+                    <input
+                      type="text"
+                      placeholder="Nhập họ và tên..."
+                      value={tenantName}
+                      onChange={(e) => setTenantName(e.target.value)}
+                      className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">Số điện thoại *</label>
+                    <input
+                      type="text"
+                      placeholder="Nhập số điện thoại..."
+                      value={tenantPhone}
+                      onChange={(e) => setTenantPhone(e.target.value)}
+                      className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setDepositStep("qr")}
+                  disabled={!tenantName || !tenantPhone}
+                  className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
+                >
+                  Xác nhận & Chuyển sang quét mã VietQR →
+                </button>
+              </div>
+            )}
+
+            {depositStep === "qr" && (
+              <div className="text-center space-y-4">
+                <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl inline-block">
+                  <QrCode className="w-44 h-44 mx-auto text-zinc-900" />
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs text-zinc-500 font-semibold block">Số tiền chuyển khoản cọc:</span>
+                  <span className="text-2xl font-black text-rose-600">{formatVND(room.depositAmount)}</span>
+                  <p className="text-[11px] text-zinc-400 font-medium">Nội dung CK: <span className="font-extrabold text-zinc-800">COC {tenantPhone} P101</span></p>
+                </div>
+
+                <button
+                  onClick={() => setDepositStep("success")}
+                  className="w-full py-3 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer"
+                >
+                  Tôi đã hoàn tất chuyển khoản VietQR
+                </button>
+              </div>
+            )}
+
+            {depositStep === "success" && (
+              <div className="text-center space-y-4 py-4">
+                <div className="w-14 h-14 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-zinc-900">Đặt cọc giữ chỗ thành công!</h4>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Hệ thống Dormio đã ghi nhận cọc và thông báo chủ nhà <span className="font-bold text-zinc-800">{room.landlord.name}</span>. Tiền được giữ an toàn và chỉ thanh toán cho chủ nhà khi 2 bên chấp nhận hợp đồng.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsDepositModalOpen(false)}
+                  className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Đóng cửa sổ
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
