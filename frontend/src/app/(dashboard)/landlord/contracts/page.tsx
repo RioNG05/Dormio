@@ -4,7 +4,10 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History } from "lucide-react";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function ContractsPage() {
+  const { activeBuilding } = useAuth();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
@@ -20,9 +23,7 @@ export default function ContractsPage() {
   const [buildingFilter, setBuildingFilter] = useState("dormio");
 
   const getBuildingTitle = (id: string) => {
-    if (id === "vinahouse") return "Dormio Campus Cầu Giấy";
-    if (id === "dormio") return "Dormio Premier Quận 1";
-    return "Dormio Premier Quận 1";
+    return activeBuilding.name;
   };
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
@@ -854,19 +855,6 @@ export default function ContractsPage() {
               onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
               className="w-full pl-9 pr-4 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all bg-zinc-50/50"
             />
-          </div>
-
-          {/* Tòa nhà */}
-          <div className="relative flex-shrink-0 w-full sm:w-56">
-            <select 
-              value={buildingFilter}
-              onChange={(e) => { setBuildingFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-3.5 pr-10 py-2 text-xs font-semibold text-zinc-900 bg-zinc-50/50 border border-zinc-200 rounded-xl appearance-none hover:bg-white focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 cursor-pointer transition-all"
-            >
-              <option value="dormio">Dormio Premier Quận 1</option>
-              <option value="vinahouse">Dormio Campus Cầu Giấy</option>
-            </select>
-            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
           </div>
 
           {/* Trạng thái */}
