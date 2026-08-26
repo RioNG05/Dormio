@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  Sparkles, User, Building2, Shield, ChevronUp, ChevronDown, 
+import {
+  Sparkles, User, Building2, Shield, ChevronUp, ChevronDown,
   Home, X, Check, ArrowRight, EyeOff
 } from "lucide-react";
 import { useAuth, DemoPreset } from "@/context/AuthContext";
@@ -59,11 +59,11 @@ export default function DemoControlBar() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-auto">
-      
+
       {/* Floating Expanded Control Panel Panel */}
       {isOpen && (
         <div className="mb-3 max-w-sm sm:max-w-md w-full bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800 p-5 rounded-3xl shadow-2xl text-white space-y-4 animate-in slide-in-from-bottom-4 duration-200">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
             <div className="flex items-center gap-2">
@@ -100,15 +100,14 @@ export default function DemoControlBar() {
             </span>
 
             <div className="grid grid-cols-1 gap-2">
-              
+
               {/* Guest */}
               <button
                 onClick={() => handleSelectPreset("guest", "/")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                  activePreset === "guest"
-                    ? "border-white bg-white text-zinc-950 shadow-md"
-                    : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                }`}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "guest"
+                  ? "border-white bg-white text-zinc-950 shadow-md"
+                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
+                  }`}
               >
                 <span>🌐 1. Khách Vãng Lai (Chưa đăng nhập)</span>
                 {activePreset === "guest" && <Check className="w-4 h-4 text-zinc-950 stroke-[3]" />}
@@ -117,24 +116,22 @@ export default function DemoControlBar() {
               {/* Tenant */}
               <button
                 onClick={() => handleSelectPreset("tenant", "/")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                  activePreset === "tenant"
-                    ? "border-[#FF6B35] bg-[#FF6B35] text-white shadow-md"
-                    : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                }`}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "tenant"
+                  ? "border-[#FF6B35] bg-[#FF6B35] text-white shadow-md"
+                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
+                  }`}
               >
-                <span>👤 2. Khách Thuê (Thử nút Đăng ký Chủ Trọ)</span>
+                <span>👤 2. Khách Thuê </span>
                 {activePreset === "tenant" && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
               {/* Landlord Empty */}
               <button
                 onClick={() => handleSelectPreset("landlord_empty", "/landlord")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                  activePreset === "landlord_empty"
-                    ? "border-rose-500 bg-rose-500 text-white shadow-md"
-                    : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                }`}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "landlord_empty"
+                  ? "border-rose-500 bg-rose-500 text-white shadow-md"
+                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
+                  }`}
               >
                 <span>🏠 3. Chủ Trọ Mới (Dashboard Trống Trơn)</span>
                 {activePreset === "landlord_empty" && <Check className="w-4 h-4 text-white stroke-[3]" />}
@@ -143,11 +140,10 @@ export default function DemoControlBar() {
               {/* Landlord Active */}
               <button
                 onClick={() => handleSelectPreset("landlord_active", "/landlord")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                  activePreset === "landlord_active"
-                    ? "border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md"
-                    : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                }`}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "landlord_active"
+                  ? "border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md"
+                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
+                  }`}
               >
                 <span>📊 4. Chủ Trọ Đang Vận Hành (Đầy Đủ Data)</span>
                 {activePreset === "landlord_active" && <Check className="w-4 h-4 text-white stroke-[3]" />}
@@ -156,45 +152,15 @@ export default function DemoControlBar() {
               {/* Admin */}
               <button
                 onClick={() => handleSelectPreset("admin", "/admin")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                  activePreset === "admin"
-                    ? "border-purple-600 bg-purple-600 text-white shadow-md"
-                    : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                }`}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "admin"
+                  ? "border-purple-600 bg-purple-600 text-white shadow-md"
+                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
+                  }`}
               >
                 <span>👑 5. Admin Nền Tảng (System)</span>
                 {activePreset === "admin" && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
-            </div>
-          </div>
-
-          {/* Quick Page Jump Shortcuts */}
-          <div className="pt-2 border-t border-zinc-800 space-y-1.5">
-            <span className="text-[10px] font-extrabold text-zinc-500 uppercase tracking-wider block">
-              CHUYỂN NHANH DỰ ÁN:
-            </span>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <Link href="/" className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-zinc-300 flex items-center justify-between font-bold">
-                <span>Trang Chủ</span>
-                <Home className="w-3.5 h-3.5 text-[#2AC1BC]" />
-              </Link>
-
-              <Link href="/register" className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-zinc-300 flex items-center justify-between font-bold">
-                <span>Trang Đăng Ký</span>
-                <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
-              </Link>
-
-              <Link href="/landlord" className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-zinc-300 flex items-center justify-between font-bold">
-                <span>Dashboard Chủ Trọ</span>
-                <Building2 className="w-3.5 h-3.5 text-[#FF6B35]" />
-              </Link>
-
-              <Link href="/tenant" className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-zinc-300 flex items-center justify-between font-bold">
-                <span>Dashboard Tenant</span>
-                <User className="w-3.5 h-3.5 text-amber-400" />
-              </Link>
             </div>
           </div>
 
