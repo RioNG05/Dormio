@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Plus, Search, Download, Upload, MoreHorizontal, X, Home, Building2, 
+import {
+  Plus, Search, Download, Upload, MoreHorizontal, X, Home, Building2,
   Target, FileSignature, Receipt, ChevronDown, ArrowLeft, Eye,
   User, Banknote, Gauge, Trash2, Edit, AlertTriangle, Zap, Droplets, Trash, ShieldCheck, Sparkles, Wifi, History, Box, Wrench, Wallet
 } from "lucide-react";
@@ -15,7 +15,7 @@ export default function RoomsPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { } });
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function RoomsPage() {
 
   const handleAddService = () => {
     setRoomServices([
-      ...roomServices, 
+      ...roomServices,
       { id: `custom_${Date.now()}`, name: '', defaultPrice: '0', customPrice: '0', unit: 'VNĐ', isCustom: true, isRemovable: true }
     ]);
   };
@@ -94,17 +94,17 @@ export default function RoomsPage() {
           const seed = f * 100 + r;
           const isTrang = seed % 5 === 0;
           const isBaoTri = seed % 17 === 0;
-          
+
           let status = "Đang thuê";
           if (isTrang) status = "Trống";
           else if (isBaoTri) status = "Bảo trì";
           else if (seed % 11 === 0) status = "Đặt cọc";
-          
+
           const buildingHash = buildingId === 'dormio' ? 1 : 2;
           const hash = parseInt(roomStr) * buildingHash * 137 + 19;
-          
+
           const isRented = status === 'Đang thuê' || status === 'Đặt cọc';
-          
+
           data.push({
             id: roomStr,
             floor: f.toString(),
@@ -137,7 +137,7 @@ export default function RoomsPage() {
     const matchStatus = statusFilter === "" || room.status === statusFilter;
     const matchContract = contractFilter === "" || room.contract === contractFilter;
     const matchInvoice = invoiceFilter === "" || room.invoice === invoiceFilter;
-    
+
     return matchSearch && matchBuilding && matchStatus && matchContract && matchInvoice;
   });
 
@@ -163,11 +163,11 @@ export default function RoomsPage() {
   return (
     <>
       {selectedRoom ? (
-        <RoomDetailView 
-          room={selectedRoom} 
-          onBack={() => setSelectedRoomId(null)} 
-          onEdit={() => setIsModalOpen(true)} 
-          roomServices={roomServices} 
+        <RoomDetailView
+          room={selectedRoom}
+          onBack={() => setSelectedRoomId(null)}
+          onEdit={() => setIsModalOpen(true)}
+          roomServices={roomServices}
           onUpdateStatus={(newStatus) => {
             setRooms(prev => prev.map(r => r.id === selectedRoom.id ? { ...r, status: newStatus } : r));
           }}
@@ -175,270 +175,267 @@ export default function RoomsPage() {
       ) : (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Quản lý phòng</h1>
-          <p className="text-sm text-zinc-500">Danh sách phòng theo tòa nhà, loại phòng và trạng thái</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
-            <Upload className="w-4 h-4" /> Import
-          </button>
-          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
-            <Download className="w-4 h-4" /> Export
-          </button>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-accent rounded-lg hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
-          >
-            <Plus className="w-4 h-4" /> Thêm phòng
-          </button>
-        </div>
-      </div>
-
-      {/* Building Overview Banner */}
-      <div className="bg-zinc-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-        {/* Background Decoration */}
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Building2 className="w-64 h-64" />
-        </div>
-        
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="space-y-2 max-w-xl">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dormio Building</h2>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Quản lý tổng thể cấu trúc tòa nhà, theo dõi tình trạng lưu trú và tài sản theo thời gian thực trên tất cả các tầng.
-            </p>
-          </div>
-          
-          <div className="flex flex-col items-end gap-3 w-full lg:w-auto mt-4 lg:mt-0">
-            {/* Building Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
-                <Building2 className="w-5 h-5 text-zinc-400 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng số tầng</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">4</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
-                <Home className="w-5 h-5 text-zinc-400 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng số phòng</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{totalRooms}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 rounded-xl border border-primary/20 backdrop-blur-md w-full lg:w-[145px]">
-                <Target className="w-5 h-5 text-primary flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-primary/80 tracking-wider">Tỷ lệ lấp đầy</span>
-                  <span className="font-black text-primary text-lg leading-none mt-1">{occupancyRate}%</span>
-                </div>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-zinc-900">Quản lý phòng</h1>
+              <p className="text-sm text-zinc-500">Danh sách phòng theo tòa nhà, loại phòng và trạng thái</p>
             </div>
-            
-            {/* Room Statuses */}
-            <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-primary/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(137,200,185,0.8)] flex-shrink-0"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-primary/80 tracking-wider">Đang thuê</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{occupiedCount}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-vacant/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-vacant shadow-[0_0_8px_rgba(14,165,233,0.7)] flex-shrink-0"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-vacant/80 tracking-wider">Trống</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{vacantCount}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-orange-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)] flex-shrink-0"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-orange-400/80 tracking-wider">Bảo trì</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{maintenanceCount}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-deposit/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-deposit shadow-[0_0_8px_rgba(147,51,234,0.6)] flex-shrink-0"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-deposit/80 tracking-wider">Đặt cọc</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{reservedCount}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Filters & Table */}
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-zinc-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input 
-              type="text" 
-              placeholder="Tìm phòng..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            />
-          </div>
-          <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
-            {/* Tòa nhà */}
-            <div className="relative flex-shrink-0">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-              <select 
-                value={buildingFilter}
-                onChange={(e) => setBuildingFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+                <Upload className="w-4 h-4" /> Import
+              </button>
+              <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+                <Download className="w-4 h-4" /> Export
+              </button>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-accent rounded-lg hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
               >
-                <option value="">Tòa nhà</option>
-                <option value="dormio">Dormio Building</option>
-                <option value="vinahouse">VinaHouse</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
-            </div>
-
-            {/* Trạng thái */}
-            <div className="relative flex-shrink-0">
-              <Target className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
-              >
-                <option value="">Trạng thái</option>
-                <option value="Trống">Trống</option>
-                <option value="Đang thuê">Đang thuê</option>
-                <option value="Bảo trì">Bảo trì</option>
-                <option value="Đặt cọc">Đặt cọc</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
-            </div>
-
-            {/* Hợp đồng */}
-            <div className="relative flex-shrink-0">
-              <FileSignature className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-              <select 
-                value={contractFilter}
-                onChange={(e) => setContractFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
-              >
-                <option value="">Hợp đồng</option>
-                <option value="active">Đang hiệu lực</option>
-                <option value="expired">Quá hạn</option>
-                <option value="expiring_soon">Sắp hết hạn (≤30 ngày)</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
-            </div>
-
-            {/* Hóa đơn */}
-            <div className="relative flex-shrink-0">
-              <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-              <select 
-                value={invoiceFilter}
-                onChange={(e) => setInvoiceFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
-              >
-                <option value="">Hóa đơn</option>
-                <option value="paid">Đã thu</option>
-                <option value="overdue">Quá hạn</option>
-                <option value="debt">Còn nợ</option>
-                <option value="none">Chưa có</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
-            </div>
-          </div>
-        </div>
-
-        <div className="p-5 bg-zinc-50/50 flex flex-col gap-4">
-          {floors.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-xl border border-zinc-200 border-dashed">
-              <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-zinc-400" />
-              </div>
-              <h3 className="text-lg font-bold text-zinc-800 mb-1">Không tìm thấy phòng</h3>
-              <p className="text-zinc-500 text-center max-w-sm">
-                Không có phòng nào phù hợp với bộ lọc tìm kiếm của bạn. Vui lòng thử lại với các tiêu chí khác.
-              </p>
-              <button 
-                onClick={() => {
-                  setSearchQuery("");
-                  setBuildingFilter("");
-                  setStatusFilter("");
-                  setContractFilter("");
-                  setInvoiceFilter("");
-                }}
-                className="mt-6 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded-lg transition-colors"
-              >
-                Xóa bộ lọc
+                <Plus className="w-4 h-4" /> Thêm phòng
               </button>
             </div>
-          ) : floors.map(floor => (
-            <div key={floor} className="flex flex-col md:flex-row gap-4 bg-white p-3 rounded-xl border border-zinc-200 shadow-sm">
-              {/* Floor Label */}
-              <div className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex flex-col items-center justify-center py-4 text-white">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Tầng</span>
-                <span className="text-3xl font-black">{floor}</span>
+          </div>
+
+          {/* Building Overview Banner */}
+          <div className="bg-zinc-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
+              <Building2 className="w-64 h-64" />
+            </div>
+
+            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <div className="space-y-2 max-w-xl">
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dormio Building</h2>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  Quản lý tổng thể cấu trúc tòa nhà, theo dõi tình trạng lưu trú và tài sản theo thời gian thực trên tất cả các tầng.
+                </p>
               </div>
-              
-              {/* Room Grid / Shelf */}
-              <div className="flex-1 flex flex-nowrap gap-3 items-center overflow-x-auto pb-2 scroll-smooth [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-zinc-50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-300">
-                {(groupedRooms[floor] || []).map((room: any) => {
-                  const isOccupied = room.status === 'Đang thuê';
-                  const isMaintenance = room.status === 'Bảo trì';
-                  const isReserved = room.status === 'Đặt cọc';
-                  const isVacant = room.status === 'Trống';
-                  
-                  return (
-                    <div 
-                      key={`${room.building}-${room.id}`} 
-                      onClick={() => setSelectedRoomId(`${room.building}-${room.id}`)}
-                      className={`flex-shrink-0 relative flex flex-col items-center justify-center p-3 rounded-xl border w-[90px] h-[90px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${
-                        isOccupied ? 'bg-primary/5 border-primary/20 hover:border-primary/50' :
-                        isMaintenance ? 'bg-orange-50 border-orange-200 hover:border-orange-300' :
-                        isReserved ? 'bg-deposit-bg border-deposit-border hover:border-deposit-hover' :
-                        isVacant ? 'bg-vacant-bg border-vacant-border hover:border-vacant-hover' :
-                        'bg-white border-zinc-200 hover:border-zinc-300'
-                      }`}
-                    >
-                      {/* Status Dot */}
-                      {isOccupied && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_rgba(137,200,185,0.8)]"></div>}
-                      {isMaintenance && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)]"></div>}
-                      {isReserved && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-deposit shadow-[0_0_6px_rgba(147,51,234,0.6)]"></div>}
-                      
-                      <span className={`text-xl font-bold mt-1 ${
-                        isOccupied ? 'text-primary' : 
-                        isMaintenance ? 'text-orange-600' :
-                        isReserved ? 'text-deposit' :
-                        isVacant ? 'text-vacant' :
-                        'text-zinc-700'
-                      }`}>{room.id}</span>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider mt-1.5 px-2 py-0.5 rounded-full ${
-                        isOccupied ? 'text-primary bg-primary/10' :
-                        isMaintenance ? 'text-orange-600 bg-orange-100' :
-                        isReserved ? 'text-deposit bg-deposit-bg' :
-                        isVacant ? 'text-vacant bg-vacant-bg' :
-                        'text-zinc-500 bg-zinc-100'
-                      }`}>
-                        {room.status}
-                      </span>
+
+              <div className="flex flex-col items-end gap-3 w-full lg:w-auto mt-4 lg:mt-0">
+                {/* Building Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
+                    <Building2 className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng số tầng</span>
+                      <span className="font-black text-white text-lg leading-none mt-1">4</span>
                     </div>
-                  )
-                })}
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
+                    <Home className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng số phòng</span>
+                      <span className="font-black text-white text-lg leading-none mt-1">{totalRooms}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 rounded-xl border border-primary/20 backdrop-blur-md w-full lg:w-[145px]">
+                    <Target className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-primary/80 tracking-wider">Tỷ lệ lấp đầy</span>
+                      <span className="font-black text-primary text-lg leading-none mt-1">{occupancyRate}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Room Statuses */}
+                <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-primary/30 backdrop-blur-md w-full lg:w-[145px]">
+                    <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(137,200,185,0.8)] flex-shrink-0"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-primary/80 tracking-wider">Đang thuê</span>
+                      <span className="font-black text-white text-lg leading-none mt-1">{occupiedCount}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-vacant/30 backdrop-blur-md w-full lg:w-[145px]">
+                    <div className="w-2 h-2 rounded-full bg-vacant shadow-[0_0_8px_rgba(14,165,233,0.7)] flex-shrink-0"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-vacant/80 tracking-wider">Trống</span>
+                      <span className="font-black text-white text-lg leading-none mt-1">{vacantCount}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-orange-500/30 backdrop-blur-md w-full lg:w-[145px]">
+                    <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)] flex-shrink-0"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-orange-400/80 tracking-wider">Bảo trì</span>
+                      <span className="font-black text-white text-lg leading-none mt-1">{maintenanceCount}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-deposit/30 backdrop-blur-md w-full lg:w-[145px]">
+                    <div className="w-2 h-2 rounded-full bg-deposit shadow-[0_0_8px_rgba(147,51,234,0.6)] flex-shrink-0"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-deposit/80 tracking-wider">Đặt cọc</span>
+                      <span className="font-black text-white text-lg leading-none mt-1">{reservedCount}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
+          </div>
+
+
+          {/* Filters & Table */}
+          <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-zinc-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="relative w-full md:max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder="Tìm phòng..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              </div>
+              <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+                {/* Tòa nhà */}
+                <div className="relative flex-shrink-0">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <select
+                    value={buildingFilter}
+                    onChange={(e) => setBuildingFilter(e.target.value)}
+                    className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
+                  >
+                    <option value="">Tòa nhà</option>
+                    <option value="dormio">Dormio Building</option>
+                    <option value="vinahouse">VinaHouse</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+                </div>
+
+                {/* Trạng thái */}
+                <div className="relative flex-shrink-0">
+                  <Target className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
+                  >
+                    <option value="">Trạng thái</option>
+                    <option value="Trống">Trống</option>
+                    <option value="Đang thuê">Đang thuê</option>
+                    <option value="Bảo trì">Bảo trì</option>
+                    <option value="Đặt cọc">Đặt cọc</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+                </div>
+
+                {/* Hợp đồng */}
+                <div className="relative flex-shrink-0">
+                  <FileSignature className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <select
+                    value={contractFilter}
+                    onChange={(e) => setContractFilter(e.target.value)}
+                    className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
+                  >
+                    <option value="">Hợp đồng</option>
+                    <option value="active">Đang hiệu lực</option>
+                    <option value="expired">Quá hạn</option>
+                    <option value="expiring_soon">Sắp hết hạn (≤30 ngày)</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+                </div>
+
+                {/* Hóa đơn */}
+                <div className="relative flex-shrink-0">
+                  <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <select
+                    value={invoiceFilter}
+                    onChange={(e) => setInvoiceFilter(e.target.value)}
+                    className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
+                  >
+                    <option value="">Hóa đơn</option>
+                    <option value="paid">Đã thu</option>
+                    <option value="overdue">Quá hạn</option>
+                    <option value="debt">Còn nợ</option>
+                    <option value="none">Chưa có</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 bg-zinc-50/50 flex flex-col gap-4">
+              {floors.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-xl border border-zinc-200 border-dashed">
+                  <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
+                    <Search className="w-8 h-8 text-zinc-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-zinc-800 mb-1">Không tìm thấy phòng</h3>
+                  <p className="text-zinc-500 text-center max-w-sm">
+                    Không có phòng nào phù hợp với bộ lọc tìm kiếm của bạn. Vui lòng thử lại với các tiêu chí khác.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setBuildingFilter("");
+                      setStatusFilter("");
+                      setContractFilter("");
+                      setInvoiceFilter("");
+                    }}
+                    className="mt-6 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Xóa bộ lọc
+                  </button>
+                </div>
+              ) : floors.map(floor => (
+                <div key={floor} className="flex flex-col md:flex-row gap-4 bg-white p-3 rounded-xl border border-zinc-200 shadow-sm">
+                  {/* Floor Label */}
+                  <div className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex flex-col items-center justify-center py-4 text-white">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Tầng</span>
+                    <span className="text-3xl font-black">{floor}</span>
+                  </div>
+
+                  {/* Room Grid / Shelf */}
+                  <div className="flex-1 flex flex-nowrap gap-3 items-center overflow-x-auto pb-2 scroll-smooth [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-zinc-50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-300">
+                    {(groupedRooms[floor] || []).map((room: any) => {
+                      const isOccupied = room.status === 'Đang thuê';
+                      const isMaintenance = room.status === 'Bảo trì';
+                      const isReserved = room.status === 'Đặt cọc';
+                      const isVacant = room.status === 'Trống';
+
+                      return (
+                        <div
+                          key={`${room.building}-${room.id}`}
+                          onClick={() => setSelectedRoomId(`${room.building}-${room.id}`)}
+                          className={`flex-shrink-0 relative flex flex-col items-center justify-center p-3 rounded-xl border w-[90px] h-[90px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${isOccupied ? 'bg-primary/5 border-primary/20 hover:border-primary/50' :
+                              isMaintenance ? 'bg-orange-50 border-orange-200 hover:border-orange-300' :
+                                isReserved ? 'bg-deposit-bg border-deposit-border hover:border-deposit-hover' :
+                                  isVacant ? 'bg-vacant-bg border-vacant-border hover:border-vacant-hover' :
+                                    'bg-white border-zinc-200 hover:border-zinc-300'
+                            }`}
+                        >
+                          {/* Status Dot */}
+                          {isOccupied && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_rgba(137,200,185,0.8)]"></div>}
+                          {isMaintenance && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)]"></div>}
+                          {isReserved && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-deposit shadow-[0_0_6px_rgba(147,51,234,0.6)]"></div>}
+
+                          <span className={`text-xl font-bold mt-1 ${isOccupied ? 'text-primary' :
+                              isMaintenance ? 'text-orange-600' :
+                                isReserved ? 'text-deposit' :
+                                  isVacant ? 'text-vacant' :
+                                    'text-zinc-700'
+                            }`}>{room.id}</span>
+                          <span className={`text-[9px] font-bold uppercase tracking-wider mt-1.5 px-2 py-0.5 rounded-full ${isOccupied ? 'text-primary bg-primary/10' :
+                              isMaintenance ? 'text-orange-600 bg-orange-100' :
+                                isReserved ? 'text-deposit bg-deposit-bg' :
+                                  isVacant ? 'text-vacant bg-vacant-bg' :
+                                    'text-zinc-500 bg-zinc-100'
+                            }`}>
+                            {room.status}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-      </div>
       )}
 
       {/* Add Room Modal */}
       {isModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) handleCloseModal();
@@ -456,18 +453,18 @@ export default function RoomsPage() {
                   <p className="text-sm text-zinc-500 mt-0.5">{selectedRoomId ? 'Cập nhật thông tin chi tiết của phòng và dịch vụ' : 'Điền thông tin chi tiết để tạo phòng trên hệ thống'}</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={handleCloseModal}
                 className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             {/* Body */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-zinc-50/50">
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                
+
                 {/* Cột trái: Thông tin chính */}
                 <div className="lg:col-span-3 space-y-6">
                   {/* Card 1: Thông tin cơ bản */}
@@ -528,11 +525,11 @@ export default function RoomsPage() {
                             {!service.isRemovable ? (
                               <span className="font-bold text-sm text-zinc-900">{service.name}</span>
                             ) : (
-                              <input 
-                                type="text" 
-                                value={service.name} 
+                              <input
+                                type="text"
+                                value={service.name}
                                 onChange={(e) => handleUpdateService(service.id, 'name', e.target.value)}
-                                className="w-24 text-sm font-bold text-zinc-900 bg-transparent border-b border-zinc-200 focus:border-primary focus:outline-none transition-colors" 
+                                className="w-24 text-sm font-bold text-zinc-900 bg-transparent border-b border-zinc-200 focus:border-primary focus:outline-none transition-colors"
                                 placeholder="Tên DV"
                               />
                             )}
@@ -542,40 +539,40 @@ export default function RoomsPage() {
                               </span>
                             )}
                           </div>
-                          
+
                           <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-medium text-zinc-500">Tùy chỉnh</span>
-                              <button 
+                              <button
                                 onClick={() => handleUpdateService(service.id, 'isCustom', !service.isCustom)}
                                 className={`w-10 h-6 rounded-full relative transition-colors flex items-center ${service.isCustom ? 'bg-blue-500' : 'bg-zinc-200'}`}
                               >
                                 <div className={`w-4 h-4 bg-white rounded-full absolute transition-transform ${service.isCustom ? 'translate-x-5' : 'translate-x-1'}`}></div>
                               </button>
                             </div>
-                            
+
                             <div className="relative w-32 flex items-center">
-                              <input 
-                                type="text" 
-                                value={service.isCustom ? service.customPrice : service.defaultPrice} 
+                              <input
+                                type="text"
+                                value={service.isCustom ? service.customPrice : service.defaultPrice}
                                 onChange={(e) => handleUpdateService(service.id, 'customPrice', e.target.value)}
                                 disabled={!service.isCustom}
-                                className={`w-full pl-3 pr-12 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary font-medium ${!service.isCustom ? 'bg-zinc-50 text-zinc-500 cursor-not-allowed' : 'text-zinc-900'}`} 
+                                className={`w-full pl-3 pr-12 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary font-medium ${!service.isCustom ? 'bg-zinc-50 text-zinc-500 cursor-not-allowed' : 'text-zinc-900'}`}
                               />
                               {service.isRemovable ? (
-                                <input 
-                                  type="text" 
-                                  value={service.unit} 
+                                <input
+                                  type="text"
+                                  value={service.unit}
                                   onChange={(e) => handleUpdateService(service.id, 'unit', e.target.value)}
-                                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 text-xs text-zinc-500 font-medium bg-transparent border-none p-0 focus:ring-0 text-right" 
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 text-xs text-zinc-500 font-medium bg-transparent border-none p-0 focus:ring-0 text-right"
                                 />
                               ) : (
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-medium">VNĐ</span>
                               )}
                             </div>
-                            
+
                             {service.isRemovable && (
-                              <button 
+                              <button
                                 onClick={() => handleRemoveService(service.id)}
                                 className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
                                 title="Xóa dịch vụ"
@@ -587,7 +584,7 @@ export default function RoomsPage() {
                         </div>
                       ))}
                     </div>
-                    <button 
+                    <button
                       onClick={handleAddService}
                       className="w-full mt-4 py-2 border-2 border-dashed border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
                     >
@@ -611,34 +608,34 @@ export default function RoomsPage() {
 
                   {/* Card 4: Thông tin hợp đồng (Nếu đang thuê) */}
                   {selectedRoomId && rooms.find(r => `${r.building}-${r.id}` === selectedRoomId)?.status === 'Đang thuê' && (
-                  <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-                    <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-                      <FileSignature className="w-4 h-4 text-accent" /> Thông tin hợp đồng hiện tại
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-50 p-4 rounded-lg border border-zinc-100">
-                      <div>
-                        <div className="text-xs text-zinc-500 mb-1">Khách thuê</div>
-                        <div className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                           <User className={`w-3.5 h-3.5 ${rooms.find(r => `${r.building}-${r.id}` === selectedRoomId)?.tenant ? 'text-primary' : 'text-zinc-400'}`} /> {rooms.find(r => `${r.building}-${r.id}` === selectedRoomId)?.tenant || "Chưa có"}
+                    <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
+                      <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
+                        <FileSignature className="w-4 h-4 text-accent" /> Thông tin hợp đồng hiện tại
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-50 p-4 rounded-lg border border-zinc-100">
+                        <div>
+                          <div className="text-xs text-zinc-500 mb-1">Khách thuê</div>
+                          <div className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                            <User className={`w-3.5 h-3.5 ${rooms.find(r => `${r.building}-${r.id}` === selectedRoomId)?.tenant ? 'text-primary' : 'text-zinc-400'}`} /> {rooms.find(r => `${r.building}-${r.id}` === selectedRoomId)?.tenant || "Chưa có"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-zinc-500 mb-1">Số điện thoại</div>
+                          <div className="text-sm font-semibold text-zinc-900">0901234567</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-zinc-500 mb-1">Thời hạn</div>
+                          <div className="text-sm font-semibold text-zinc-900">01/01/2026 - 31/12/2026</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-zinc-500 mb-1">Tiền cọc</div>
+                          <div className="text-sm font-semibold text-zinc-900 text-green-600">3.000.000 đ</div>
                         </div>
                       </div>
-                      <div>
-                        <div className="text-xs text-zinc-500 mb-1">Số điện thoại</div>
-                        <div className="text-sm font-semibold text-zinc-900">0901234567</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-zinc-500 mb-1">Thời hạn</div>
-                        <div className="text-sm font-semibold text-zinc-900">01/01/2026 - 31/12/2026</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-zinc-500 mb-1">Tiền cọc</div>
-                        <div className="text-sm font-semibold text-zinc-900 text-green-600">3.000.000 đ</div>
-                      </div>
+                      <button type="button" className="mt-4 w-full py-2.5 text-sm font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20 flex items-center justify-center gap-2">
+                        <Eye className="w-4 h-4" /> Xem chi tiết hợp đồng
+                      </button>
                     </div>
-                    <button type="button" className="mt-4 w-full py-2.5 text-sm font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20 flex items-center justify-center gap-2">
-                      <Eye className="w-4 h-4" /> Xem chi tiết hợp đồng
-                    </button>
-                  </div>
                   )}
                 </div>
 
@@ -654,18 +651,17 @@ export default function RoomsPage() {
                     </div>
                     <div className="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1 pb-1">
                       {['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Bàn học', 'Kệ bếp', 'Ban công', 'WC riêng', 'Máy giặt', 'Tivi', 'Tủ lạnh', 'Gửi xe', 'Thang máy', 'Camera', 'Bảo vệ'].map(item => (
-                        <button 
-                          key={item} 
-                          type="button" 
+                        <button
+                          key={item}
+                          type="button"
                           onClick={() => {
                             setSelectedAmenities(prev => prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item]);
                             setIsDirty(true);
                           }}
-                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
-                            selectedAmenities.includes(item) 
-                              ? 'bg-primary/10 text-primary border-primary/30 shadow-sm' 
+                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${selectedAmenities.includes(item)
+                              ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
                               : 'text-zinc-600 bg-white border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
-                          }`}
+                            }`}
                         >
                           {item}
                         </button>
@@ -678,9 +674,9 @@ export default function RoomsPage() {
                     <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
                       <FileSignature className="w-4 h-4 text-accent" /> Ghi chú
                     </h3>
-                    <textarea 
-                      rows={4} 
-                      placeholder="Ghi chú thêm về tình trạng phòng, đồ đạc..." 
+                    <textarea
+                      rows={4}
+                      placeholder="Ghi chú thêm về tình trạng phòng, đồ đạc..."
                       className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors resize-none"
                     ></textarea>
                   </div>
@@ -691,13 +687,13 @@ export default function RoomsPage() {
 
             {/* Footer */}
             <div className="p-6 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
-              <button 
+              <button
                 onClick={handleCloseModal}
                 className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
               >
                 Hủy bỏ
               </button>
-              <button 
+              <button
                 onClick={() => { setIsModalOpen(false); setIsDirty(false); }}
                 className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-accent rounded-xl hover:bg-accent-hover shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
               >
@@ -709,12 +705,12 @@ export default function RoomsPage() {
       )}
 
       {/* Confirm Modal */}
-      <ConfirmModal 
-        isOpen={confirmModal.isOpen} 
-        title={confirmModal.title} 
-        message={confirmModal.message} 
-        onConfirm={confirmModal.onConfirm} 
-        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
     </>
   );
@@ -724,14 +720,14 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
   const router = useRouter();
   const [isMeterModalOpen, setIsMeterModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { } });
 
   const [selectedMonth, setSelectedMonth] = useState('Tháng 8');
   const [selectedYear, setSelectedYear] = useState('2026');
 
   // Format: { 'Tháng 7-2026': { month, year, date, oldElec, newElec, ... } }
   const [meterRecordsMap, setMeterRecordsMap] = useState<Record<string, any>>({});
-  
+
   const currentRecordKey = `${selectedMonth}-${selectedYear}`;
   const currentRecord = meterRecordsMap[currentRecordKey];
 
@@ -778,7 +774,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
       setIsMeterModalOpen(false);
       return;
     }
-    
+
     const record = {
       month: selectedMonth,
       year: selectedYear,
@@ -791,7 +787,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
       waterConsumption,
       total: grandTotal
     };
-    
+
     setMeterRecordsMap({ ...meterRecordsMap, [currentRecordKey]: record });
     setIsMeterModalOpen(false);
   };
@@ -810,38 +806,37 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl md:text-2xl font-bold text-zinc-900">Phòng {room.id}</h1>
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-            isOccupied ? 'text-primary bg-primary/10' :
-            isMaintenance ? 'text-orange-600 bg-orange-100' :
-            isReserved ? 'text-deposit bg-deposit-bg' :
-            isVacant ? 'text-vacant bg-vacant-bg' :
-            'text-zinc-500 bg-zinc-100'
-          }`}>
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${isOccupied ? 'text-primary bg-primary/10' :
+              isMaintenance ? 'text-orange-600 bg-orange-100' :
+                isReserved ? 'text-deposit bg-deposit-bg' :
+                  isVacant ? 'text-vacant bg-vacant-bg' :
+                    'text-zinc-500 bg-zinc-100'
+            }`}>
             {room.status}
           </span>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
-          <button 
+          <button
             onClick={() => setIsContractModalOpen(true)}
             className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white bg-accent rounded-lg hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all whitespace-nowrap"
           >
             {isOccupied ? <><Eye className="w-4 h-4" /> Xem hợp đồng</> : <><FileSignature className="w-4 h-4" /> Tạo hợp đồng</>}
           </button>
           {isOccupied && (
-            <button 
+            <button
               onClick={() => setIsMeterModalOpen(true)}
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors whitespace-nowrap"
             >
               <Gauge className="w-4 h-4" /> Ghi chỉ số
             </button>
           )}
-          <button 
+          <button
             onClick={onEdit}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors whitespace-nowrap"
           >
             <Edit className="w-4 h-4" /> Chỉnh sửa
           </button>
-          <button 
+          <button
             onClick={() => {
               setConfirmModal({
                 isOpen: true,
@@ -863,7 +858,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="xl:col-span-2 space-y-6">
-          
+
           {/* Thông tin phòng */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-zinc-100">
@@ -871,7 +866,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
               <button className="text-zinc-400 hover:text-primary transition-colors"><Edit className="w-4 h-4" /></button>
             </div>
             <div className="p-4 space-y-4">
-              <div 
+              <div
                 onClick={() => room.tenantId ? router.push(`/landlord/customers?id=${room.tenantId}`) : null}
                 className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${room.tenant ? 'bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 hover:border-primary/40' : 'bg-zinc-50 border-zinc-100'}`}
               >
@@ -1000,7 +995,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
               </div>
               <div className="text-sm text-zinc-500">Chưa có yêu cầu bảo trì</div>
             </div>
-            
+
             <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden p-4">
               <h2 className="font-bold text-zinc-800 text-sm flex items-center gap-2 mb-4">
                 <Wallet className="w-4 h-4 text-zinc-500" /> Đặt cọc
@@ -1013,7 +1008,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
 
         {/* Right Column */}
         <div className="space-y-6">
-          
+
           {/* Cần chú ý */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden p-4">
             <h2 className="font-bold text-orange-500 text-sm flex items-center gap-2 mb-4">
@@ -1060,7 +1055,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
           {/* Quản lý phòng */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden p-4">
             <h2 className="font-bold text-zinc-800 text-sm mb-4">Quản lý phòng</h2>
-            
+
             <div className="mb-4">
               <div className="text-xs text-zinc-500 mb-2">Cập nhật trạng thái</div>
               <div className="grid grid-cols-2 gap-2">
@@ -1091,7 +1086,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-5 overflow-y-auto max-h-[70vh]">
               {/* Month/Year Selection */}
               <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1124,7 +1119,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                     <Zap className="w-4 h-4 text-yellow-500" fill="currentColor" /> Điện
                   </div>
                   <div className="text-xs text-zinc-500 flex items-center gap-1">
-                    3.500 đ/kWh • 
+                    3.500 đ/kWh •
                     {formElec ? <span className="text-green-600 font-medium">đã ghi</span> : <span className="text-orange-500 font-medium">chưa ghi</span>}
                   </div>
                 </div>
@@ -1151,7 +1146,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                     <Droplets className="w-4 h-4 text-blue-500" fill="currentColor" /> Nước
                   </div>
                   <div className="text-xs text-zinc-500 flex items-center gap-1">
-                    25.000 đ/m³ • 
+                    25.000 đ/m³ •
                     {formWater ? <span className="text-green-600 font-medium">đã ghi</span> : <span className="text-orange-500 font-medium">chưa ghi</span>}
                   </div>
                 </div>
@@ -1199,7 +1194,7 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto space-y-8">
               {/* Tenant Info */}
               <div>
@@ -1265,12 +1260,12 @@ function RoomDetailView({ room, onBack, onEdit, roomServices, onUpdateStatus }: 
           </div>
         </div>
       )}
-      <ConfirmModal 
-        isOpen={confirmModal.isOpen} 
-        title={confirmModal.title} 
-        message={confirmModal.message} 
-        onConfirm={confirmModal.onConfirm} 
-        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
     </div>
   );
