@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { 
   AlertTriangle, Search, Filter, Download, BellRing, 
-  User, CheckCircle2, MoreHorizontal, ArrowUpDown, Clock, ChevronDown, Building2
+  User, CheckCircle2, MoreHorizontal, ArrowUpDown, Clock, ChevronDown, Building2, FileSpreadsheet
 } from "lucide-react";
 
 export default function DebtsPage() {
@@ -35,7 +35,7 @@ export default function DebtsPage() {
       {/* Top Actions */}
       <div className="flex justify-end items-center gap-2 mb-2">
         <button className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors shadow-xs cursor-pointer">
-          <Download className="w-4 h-4 text-emerald-600" /> Export Excel
+          <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export Excel
         </button>
       </div>
 
