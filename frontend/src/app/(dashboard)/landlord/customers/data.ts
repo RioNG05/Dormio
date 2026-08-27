@@ -14,9 +14,76 @@ export interface Customer {
   job?: string;
   workplace?: string;
   note?: string;
+  hasAccount?: boolean;
+  accountEmail?: string;
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface SystemTenantUser {
+  userId: string;
+  name: string;
+  phone: string;
+  email: string;
+  cccd: string;
+  dob: string;
+  gender: string;
+  address: string;
+  job: string;
+  workplace: string;
+  avatarUrl?: string;
+}
+
+export const mockSystemTenantUsers: SystemTenantUser[] = [
+  {
+    userId: "USER-8842",
+    name: "Lê Hoàng Nam",
+    phone: "0912345678",
+    email: "nam.le.tenant@gmail.com",
+    cccd: "038202011984",
+    dob: "2001-05-15",
+    gender: "nam",
+    address: "123 Võ Văn Ngân, Phường Bình Thọ, TP. Thủ Đức, TP.HCM",
+    job: "Lập trình viên Mobile",
+    workplace: "FPT Software"
+  },
+  {
+    userId: "USER-9921",
+    name: "Trần Thị Bích",
+    phone: "0987654321",
+    email: "bich.tran@gmail.com",
+    cccd: "001201099882",
+    dob: "2002-09-20",
+    gender: "nu",
+    address: "45 Lê Văn Việt, Phường Hiệp Phú, TP. Thủ Đức, TP.HCM",
+    job: "Kế toán viên",
+    workplace: "Công ty THHH VinaExport"
+  },
+  {
+    userId: "USER-7730",
+    name: "Phạm Đức Anh",
+    phone: "0934567890",
+    email: "ducanh.pham@gmail.com",
+    cccd: "024200015521",
+    dob: "1999-12-10",
+    gender: "nam",
+    address: "88 Xa Lộ Hà Nội, Phường Thảo Điền, Quận 2, TP.HCM",
+    job: "Kỹ sư cơ khí",
+    workplace: "Tập đoàn Viettel"
+  },
+  {
+    userId: "USER-6615",
+    name: "Nguyễn Vũ Hoàng Yến",
+    phone: "0978112233",
+    email: "hoangyen.nguyen@gmail.com",
+    cccd: "079201004412",
+    dob: "2003-03-08",
+    gender: "nu",
+    address: "12 Nguyễn Văn Bảo, Phường 4, Quận Gò Vấp, TP.HCM",
+    job: "Sinh viên năm 3",
+    workplace: "Đại học Công Nghiệp TP.HCM"
+  }
+];
 
 export const generateMockCustomers = (): Customer[] => {
   const data: Customer[] = [];
