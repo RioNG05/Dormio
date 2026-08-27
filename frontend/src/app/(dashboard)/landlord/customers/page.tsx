@@ -1,190 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle } from "lucide-react";
-
-const CustomerDetailView = ({ customer, onBack, onEdit, onDelete }: { customer: any, onBack: () => void, onEdit: () => void, onDelete: () => void }) => {
-  return (
-    <div className="space-y-6">
-      {/* Top bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-zinc-100 rounded-lg transition-colors bg-zinc-50"
-          >
-            <ArrowLeft className="w-5 h-5 text-zinc-600" />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg uppercase shadow-sm">
-              {customer.name.charAt(0)}
-            </div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-zinc-900">{customer.name}</h2>
-              <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${customer.status === 'Đang ở'
-                  ? 'bg-blue-100 text-blue-700'
-                  : customer.status === 'Sắp hết hợp đồng'
-                    ? 'bg-orange-100 text-orange-700'
-                    : 'bg-zinc-100 text-zinc-600'
-                }`}>
-                {customer.status}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button onClick={onEdit} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors">
-            <Edit2 className="w-4 h-4" /> Chỉnh sửa
-          </button>
-          <button onClick={onDelete} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-danger rounded-lg hover:bg-danger-hover transition-colors shadow-sm shadow-orange-600/20">
-            <Trash2 className="w-4 h-4" /> Xóa
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Thông tin cá nhân */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h3 className="font-bold text-zinc-900 text-sm mb-6 flex items-center gap-2">
-              <User className="w-4 h-4 text-primary" /> Thông tin cá nhân
-            </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Họ tên</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.name}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Số CCCD/CMND</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.cccd}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Ngày sinh</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.dob || "—"}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Giới tính</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.gender === "nam" ? "Nam" : (customer.gender === "nu" ? "Nữ" : (customer.gender ? "Khác" : "—"))}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-sm font-medium text-zinc-500">Địa chỉ thường trú</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.address || "—"}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Thông tin liên hệ */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h3 className="font-bold text-zinc-900 text-sm mb-6 flex items-center gap-2">
-              <Phone className="w-4 h-4 text-primary" /> Thông tin liên hệ
-            </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Số điện thoại</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.phone}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-sm font-medium text-zinc-500">Email</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.email || "—"}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Thông tin bổ sung */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h3 className="font-bold text-zinc-900 text-sm mb-6 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-primary" /> Thông tin bổ sung
-            </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Nghề nghiệp</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.job || "—"}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Nơi làm việc</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.workplace || "—"}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Ghi chú</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.note || "—"}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-b border-zinc-50 pb-4">
-                <div className="text-sm font-medium text-zinc-500">Ngày tạo</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.createdAt || "—"}</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-sm font-medium text-zinc-500">Cập nhật lần cuối</div>
-                <div className="col-span-2 text-sm font-semibold text-zinc-900">{customer.updatedAt || "—"}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Ảnh CCCD/CMND */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h3 className="font-bold text-zinc-900 text-sm mb-6 flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-primary" /> Ảnh CCCD/CMND
-            </h3>
-            <div className="space-y-6">
-              <div>
-                <div className="text-xs font-semibold text-zinc-500 mb-2">Mặt trước</div>
-                <div className="border-2 border-dashed border-zinc-200 rounded-xl h-32 flex flex-col items-center justify-center bg-zinc-50/50">
-                  <ImageIcon className="w-8 h-8 text-zinc-300 mb-2" />
-                  <span className="text-xs text-zinc-400 font-medium">Chưa có ảnh</span>
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-zinc-500 mb-2">Mặt sau</div>
-                <div className="border-2 border-dashed border-zinc-200 rounded-xl h-32 flex flex-col items-center justify-center bg-zinc-50/50">
-                  <ImageIcon className="w-8 h-8 text-zinc-300 mb-2" />
-                  <span className="text-xs text-zinc-400 font-medium">Chưa có ảnh</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Phòng hiện tại */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-              <Home className="w-4 h-4 text-primary" /> Phòng hiện tại
-            </h3>
-            <div className="text-sm text-zinc-500 bg-zinc-50 p-4 rounded-lg border border-zinc-100">
-              {customer.status === 'Đã rời' ? 'Chưa thuê phòng' : `Phòng ${customer.room}`}
-            </div>
-          </div>
-
-          {/* Lịch sử thuê phòng */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" /> Lịch sử thuê phòng
-            </h3>
-            <div className="text-sm text-zinc-500 bg-zinc-50 p-4 rounded-lg border border-zinc-100">
-              {customer.status === 'Đã rời' ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-zinc-400"></div>
-                  <div>
-                    <div className="font-semibold text-zinc-800">Đã thuê phòng {customer.room}</div>
-                    <div className="text-xs text-zinc-500 mt-0.5">Trạng thái: Đã rời</div>
-                  </div>
-                </div>
-              ) : (
-                'Chưa có lịch sử thuê phòng'
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin } from "lucide-react";
+import { generateMockCustomers } from "./data";
 
 import { useAuth } from "@/context/AuthContext";
 
 export default function CustomersPage() {
   const { activeBuilding } = useAuth();
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -203,6 +29,8 @@ export default function CustomersPage() {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { } });
 
 
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, buildingFilter, statusFilter, sortFilter, itemsPerPage]);
@@ -218,57 +46,6 @@ export default function CustomersPage() {
     }
   };
 
-  const generateMockCustomers = () => {
-    const data: any[] = [];
-    const ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương"];
-    const dem = ["Văn", "Thị", "Hữu", "Minh", "Đức", "Ngọc", "Xuân", "Thu", "Thanh", "Hải", "Thành", "Công", "Quốc", "Khánh", "Gia"];
-    const ten = ["An", "Bình", "Cường", "Dũng", "Giang", "Hà", "Khang", "Linh", "Mai", "Nam", "Oanh", "Phong", "Quang", "Sơn", "Tuấn", "Uyên", "Vinh", "Vy", "Yến", "Tâm", "Thảo", "Trang", "Trung", "Tú", "Anh", "Bảo", "Châu", "Diệp", "Hân", "Khoa"];
-
-    const generateForBuilding = (buildingId: string, floors: number, roomsPerFloor: number) => {
-      for (let f = 1; f <= floors; f++) {
-        for (let r = 1; r <= roomsPerFloor; r++) {
-          const seed = f * 100 + r;
-          if (seed % 5 === 0) continue; // Match the skip logic in contracts
-
-          const roomStr = `${f}${r.toString().padStart(2, '0')}`;
-          const buildingHash = buildingId === 'dormio' ? 1 : 2;
-          const hash = parseInt(roomStr.replace(/\D/g, '') || "0") * buildingHash * 137 + 19;
-          const name = `${ho[hash % ho.length]} ${dem[(hash * 3) % dem.length]} ${ten[(hash * 7) % ten.length]}`;
-
-          data.push({
-            id: `KH${roomStr}-${buildingHash}`,
-            name,
-            phone: `09${(10000000 + hash * 1234).toString()}`,
-            room: roomStr,
-            building: buildingId,
-            cccd: `00109${(1000000 + hash * 5678).toString()}`,
-            joinDate: `01/0${(hash % 9) + 1}/2024`,
-            status: "Đang ở",
-            dob: "2000-01-01",
-            gender: hash % 2 === 0 ? "nam" : "nu",
-            address: "Khu công nghệ cao, TP.HCM",
-            email: `kh${roomStr}@gmail.com`,
-            job: "Sinh viên",
-            workplace: "Đại học SPKT",
-            note: "",
-            createdAt: "10/07/2026",
-            updatedAt: "10/07/2026"
-          });
-        }
-      }
-    };
-
-    generateForBuilding('dormio', 4, 15);
-    generateForBuilding('vinahouse', 3, 10);
-
-    // Thêm một số khách đã rời
-    data.push({
-      id: "KH999", name: "Khách Đã Rời", phone: "0900000000", room: "201", building: "dormio", cccd: "0000000", joinDate: "01/01/2023", status: "Đã rời", dob: "1990-01-01", gender: "nam", address: "Hà Nội", email: "old@gmail.com", job: "Nhân viên", workplace: "Công ty", note: "", createdAt: "10/07/2026", updatedAt: "10/07/2026"
-    });
-
-    return data;
-  };
-
   const [customers, setCustomers] = useState(generateMockCustomers());
 
   useEffect(() => {
@@ -276,52 +53,10 @@ export default function CustomersPage() {
       const params = new URLSearchParams(window.location.search);
       const rawId = params.get('id');
       if (rawId) {
-        // Handle legacy IDs by appending -1 (dormio default)
-        const id = rawId.includes('-') ? rawId : (rawId.startsWith('KH') ? `${rawId}-1` : rawId);
-        setTimeout(() => {
-          setCustomers(prev => {
-            let cust = prev.find(c => c.id === id);
-            if (!cust && id.startsWith('KH')) {
-              const ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương"];
-              const dem = ["Văn", "Thị", "Hữu", "Minh", "Đức", "Ngọc", "Xuân", "Thu", "Thanh", "Hải", "Thành", "Công", "Quốc", "Khánh", "Gia"];
-              const ten = ["An", "Bình", "Cường", "Dũng", "Giang", "Hà", "Khang", "Linh", "Mai", "Nam", "Oanh", "Phong", "Quang", "Sơn", "Tuấn", "Uyên", "Vinh", "Vy", "Yến", "Tâm", "Thảo", "Trang", "Trung", "Tú", "Anh", "Bảo", "Châu", "Diệp", "Hân", "Khoa"];
-
-              const buildingHash = id.endsWith('-1') ? 1 : 2;
-              const roomStr = id.replace('KH', '').split('-')[0];
-              const hash = parseInt(roomStr.replace(/\D/g, '') || "0") * buildingHash * 137 + 19;
-              const tenantName = `${ho[hash % ho.length]} ${dem[(hash * 3) % dem.length]} ${ten[(hash * 7) % ten.length]}`;
-              cust = {
-                id: id,
-                name: tenantName || "Khách thuê " + roomStr,
-                phone: "0901234567",
-                room: roomStr,
-                building: buildingHash === 1 ? "dormio" : "vinahouse",
-                cccd: "001090123456",
-                joinDate: "01/01/2024",
-                status: "Đang ở",
-                dob: "2000-01-01",
-                gender: hash % 2 === 0 ? "nam" : "nu",
-                address: "Khu công nghệ cao, TP.HCM",
-                email: `kh${roomStr}@gmail.com`,
-                job: "Sinh viên",
-                workplace: "Đại học SPKT",
-                note: "",
-                createdAt: "10/07/2026",
-                updatedAt: "10/07/2026"
-              };
-            }
-            if (cust) {
-              setSelectedCustomer(cust);
-              if (!prev.find(c => c.id === id)) {
-                return [cust, ...prev];
-              }
-            }
-            return prev;
-          });
-        }, 100);
+        router.push(`/landlord/customers/${encodeURIComponent(rawId)}`);
       }
     }
-  }, []);
+  }, [router]);
 
 
   if (!isMounted) {
@@ -354,64 +89,79 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      {selectedCustomer ? (
-        <CustomerDetailView
-          customer={selectedCustomer}
-          onBack={() => setSelectedCustomer(null)}
-          onEdit={() => setIsModalOpen(true)}
-          onDelete={() => {
-            setConfirmModal({
-              isOpen: true,
-              title: 'Xóa khách thuê',
-              message: `Bạn có chắc chắn muốn xóa khách thuê ${selectedCustomer.name} không? Dữ liệu không thể khôi phục.`,
-              onConfirm: () => {
-                setCustomers(prev => prev.filter(c => c.id !== selectedCustomer.id));
-                setSelectedCustomer(null);
-                setConfirmModal(prev => ({ ...prev, isOpen: false }));
-              }
-            });
-          }}
-        />
-      ) : (
-        <>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Top Bar / Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900">Quản Lý Khách Thuê — {activeBuilding.name}</h1>
-              <p className="text-sm text-zinc-500">Danh sách khách thuê tòa nhà {activeBuilding.name} ({activeBuilding.address})</p>
+              <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+                Quản lý khách thuê
+              </h1>
+              <p className="text-sm text-zinc-500 mt-1 font-medium">
+                Danh sách khách thuê theo tòa nhà, phòng và trạng thái
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
-                <Upload className="w-4 h-4" /> Import
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => alert("Tính năng Import danh sách khách thuê bằng Excel đang được phát triển.")}
+                className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Upload className="w-3.5 h-3.5" /> Import
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
-                <Download className="w-4 h-4" /> Export
+              <button
+                onClick={() => alert("Xuất file Excel danh sách khách thuê thành công.")}
+                className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" /> Export
               </button>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-accent rounded-lg hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
+                className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Thêm khách thuê
               </button>
             </div>
           </div>
 
-          {/* Overview Banner */}
-          <div className="bg-zinc-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+          {/* Building Overview Banner */}
+          <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
               <Users className="w-64 h-64" />
             </div>
 
-            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-              <div className="space-y-2 max-w-xl">
-                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dormio Building</h2>
-                <p className="text-zinc-400 text-sm leading-relaxed">
-                  Quản lý tổng thể danh sách khách hàng lưu trú, thông tin liên lạc và tình trạng lưu trú hiện tại.
+            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+              <div className="space-y-3 max-w-xl w-full">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
+                    {activeBuilding.name}
+                  </h2>
+                  <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
+                    Đang vận hành
+                  </span>
+                </div>
+
+                {/* Separated Address Line with Integrated Map Link */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                    <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
+                  </div>
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                  >
+                    <span>Xem Bản Đồ</span> &rarr;
+                  </a>
+                </div>
+
+                <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                  Quản lý tổng thể danh sách khách hàng lưu trú, thông tin liên lạc và tình trạng hợp đồng.
                 </p>
               </div>
 
               <div className="flex flex-col items-end gap-3 w-full lg:w-auto mt-4 lg:mt-0">
-                {/* Stats */}
+                {/* Stats Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
                   <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
                     <Building2 className="w-5 h-5 text-zinc-400 flex-shrink-0" />
@@ -420,40 +170,68 @@ export default function CustomersPage() {
                       <span className="font-black text-white text-lg leading-none mt-1">1</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 rounded-xl border border-primary/20 backdrop-blur-md w-full lg:w-[145px]">
-                    <Users className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[145px]">
+                    <Users className="w-5 h-5 text-rose-500 flex-shrink-0" />
                     <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-primary/80 tracking-wider">Tổng khách thuê</span>
-                      <span className="font-black text-primary text-lg leading-none mt-1">{totalCustomers}</span>
+                      <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng khách thuê</span>
+                      <span className="font-black text-rose-500 text-lg leading-none mt-1">{totalCustomers}</span>
                     </div>
                   </div>
                 </div>
 
+                {/* Stats Row 2 */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] flex-shrink-0"></div>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[145px]">
+                    <div className="w-2 h-2 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] flex-shrink-0"></div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-blue-400/80 tracking-wider">Đang ở</span>
+                      <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang ở</span>
                       <span className="font-black text-white text-lg leading-none mt-1">{stayingCount}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-orange-500/30 backdrop-blur-md w-full lg:w-[145px]">
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-500/10 hover:bg-orange-500/20 transition-colors rounded-xl border border-orange-500/30 backdrop-blur-md w-full lg:w-[145px]">
                     <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)] flex-shrink-0"></div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-orange-400/80 tracking-wider">Sắp hết HĐ</span>
+                      <span className="text-[9px] uppercase font-bold text-orange-400 tracking-wider">Sắp hết HĐ</span>
                       <span className="font-black text-white text-lg leading-none mt-1">{expiringCount}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-zinc-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                    <div className="w-2 h-2 rounded-full bg-zinc-500 shadow-[0_0_8px_rgba(113,113,122,0.8)] flex-shrink-0"></div>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[145px]">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] flex-shrink-0"></div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-zinc-400/80 tracking-wider">Đã rời</span>
+                      <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã rời</span>
                       <span className="font-black text-white text-lg leading-none mt-1">{leftCount}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* 1-Click Quick Filter Tabs */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 pb-2">
+            {[
+              { id: "", label: "Tất cả", count: totalCustomers, color: "text-zinc-700 bg-zinc-100 border-zinc-200" },
+              { id: "Đang ở", label: "Đang ở", count: stayingCount, color: "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30" },
+              { id: "Sắp hết hợp đồng", label: "Sắp hết HĐ", count: expiringCount, color: "text-orange-700 bg-orange-50 border-orange-200" },
+              { id: "Đã rời", label: "Đã rời", count: leftCount, color: "text-blue-700 bg-blue-50 border-blue-200" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer whitespace-nowrap ${
+                  statusFilter === tab.id
+                    ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-xs"
+                    : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50"
+                }`}
+              >
+                <span className="whitespace-nowrap">{tab.label}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black whitespace-nowrap ${
+                  statusFilter === tab.id ? "bg-white/20 text-white" : tab.color
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -465,24 +243,8 @@ export default function CustomersPage() {
                   placeholder="Tìm tên, SĐT, CCCD..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC]"
                 />
-              </div>
-
-              {/* Trạng thái */}
-              <div className="relative flex-shrink-0">
-                <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
-                >
-                  <option value="">Trạng thái</option>
-                  <option value="Đang ở">Đang ở</option>
-                  <option value="Sắp hết hợp đồng">Sắp hết hợp đồng</option>
-                  <option value="Đã rời">Đã rời</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
               </div>
 
               {/* Sắp xếp */}
@@ -491,7 +253,7 @@ export default function CustomersPage() {
                 <select
                   value={sortFilter}
                   onChange={(e) => setSortFilter(e.target.value)}
-                  className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
+                  className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] cursor-pointer transition-colors font-medium whitespace-nowrap"
                 >
                   <option value="">Sắp xếp</option>
                   <option value="name_asc">Theo tên (A-Z)</option>
@@ -501,74 +263,196 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            <div className="flex gap-1 bg-zinc-50 p-1 rounded-lg border border-zinc-200 shrink-0">
-              <button className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-white rounded shadow-sm transition-all"><LayoutGrid className="w-4 h-4" /></button>
-              <button className="p-1.5 text-primary bg-white rounded shadow-sm transition-all"><List className="w-4 h-4" /></button>
+            {/* View Mode Switcher */}
+            <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                  viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-xs font-bold" : "text-zinc-500 hover:text-zinc-900"
+                }`}
+                title="Xem dạng thẻ (Grid)"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                  viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-xs font-bold" : "text-zinc-500 hover:text-zinc-900"
+                }`}
+                title="Xem dạng danh sách (List)"
+              >
+                <List className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-            <div className="overflow-auto max-h-[500px]">
-              <table className="w-full text-sm text-left relative">
-                <thead className="text-[11px] font-bold text-zinc-500 uppercase bg-zinc-50/50 border-b border-zinc-100 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-6 py-4">Tên khách thuê</th>
-                    <th className="px-6 py-4">SĐT</th>
-                    <th className="px-6 py-4">CCCD/CMND</th>
-                    <th className="px-6 py-4">Tòa nhà</th>
-                    <th className="px-6 py-4">Phòng hiện tại</th>
-                    <th className="px-6 py-4">Trạng thái</th>
-                    <th className="px-6 py-4"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {sortedCustomers.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
-                        Không tìm thấy khách thuê phù hợp
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedCustomers.map((customer) => (
-                      <tr
-                        key={customer.id}
-                        className="hover:bg-zinc-50 transition-colors group cursor-pointer"
-                        onClick={() => setSelectedCustomer(customer)}
+          {/* Customer View: Grid or List */}
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sortedCustomers.length === 0 ? (
+                <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500">
+                  Không tìm thấy khách thuê phù hợp
+                </div>
+              ) : (
+                paginatedCustomers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="bg-white rounded-2xl border border-zinc-200/80 p-4 shadow-xs hover:shadow-md transition-all space-y-3 relative group"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-sm uppercase shrink-0">
+                          {customer.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <Link href={`/landlord/customers/${customer.id}`} className="font-bold text-zinc-900 text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block">
+                            {customer.name}
+                          </Link>
+                          <p className="text-xs text-zinc-500 font-medium truncate">CCCD: {customer.cccd}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${
+                        customer.status === 'Đang ở'
+                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
+                          : customer.status === 'Sắp hết hợp đồng'
+                            ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
+                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                      }`}>
+                        {customer.status}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 bg-zinc-50 rounded-xl space-y-1.5 text-xs text-zinc-600">
+                      <div className="flex justify-between items-center">
+                        <span className="text-zinc-400 font-medium whitespace-nowrap">Tòa & Phòng:</span>
+                        <span className="font-bold text-zinc-900 whitespace-nowrap">{customer.building === 'dormio' ? 'Dormio' : 'VinaHouse'} — Phòng {customer.status === 'Đã rời' ? "—" : customer.room}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-zinc-400 font-medium whitespace-nowrap">Ngày ở:</span>
+                        <span className="font-semibold text-zinc-800 whitespace-nowrap">{customer.joinDate}</span>
+                      </div>
+                      {customer.status === 'Sắp hết hợp đồng' && (
+                        <div className="flex justify-between items-center pt-1 border-t border-orange-200/60 text-orange-800 font-bold">
+                          <span className="whitespace-nowrap">⏳ Hạn hợp đồng:</span>
+                          <span className="text-orange-600 animate-pulse whitespace-nowrap">Còn 5 ngày</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quick Inline Action Buttons */}
+                    <div className="grid grid-cols-3 gap-1.5 pt-1">
+                      <a
+                        href={`tel:${customer.phone}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="py-1.5 bg-white text-zinc-800 border border-zinc-200 rounded-lg text-[11px] font-bold hover:bg-zinc-50 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                       >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase">
-                              {customer.name.charAt(0)}
-                            </div>
-                            <span className="font-semibold text-zinc-900">{customer.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 font-medium text-zinc-700">{customer.phone}</td>
-                        <td className="px-6 py-4 font-medium text-zinc-700">{customer.cccd}</td>
-                        <td className="px-6 py-4 font-medium text-zinc-700 capitalize">{customer.building === 'dormio' ? 'Dormio' : 'VinaHouse'}</td>
-                        <td className="px-6 py-4 font-medium text-zinc-700">{customer.status === 'Đã rời' ? "—" : customer.room}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${customer.status === 'Đang ở'
-                              ? 'bg-blue-100 text-blue-700'
-                              : customer.status === 'Sắp hết hợp đồng'
-                                ? 'bg-orange-100 text-orange-700'
-                                : 'bg-zinc-100 text-zinc-600'
-                            }`}>
-                            {customer.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
+                        📞 Gọi
+                      </a>
+                      <a
+                        href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="py-1.5 bg-[#0068FF] text-white rounded-lg text-[11px] font-bold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
+                      >
+                        💬 Zalo
+                      </a>
+                      <Link
+                        href={`/landlord/customers/${customer.id}`}
+                        className="py-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-lg text-[11px] font-bold hover:bg-[#2AC1BC]/20 transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                      >
+                        📄 Xem
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            <div className="bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden flex flex-col">
+              <div className="overflow-auto max-h-[500px]">
+                <table className="w-full text-sm text-left relative">
+                  <thead className="text-[11px] font-bold text-zinc-500 uppercase bg-zinc-50/80 border-b border-zinc-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-6 py-4 whitespace-nowrap">Tên khách thuê</th>
+                      <th className="px-6 py-4 whitespace-nowrap">SĐT</th>
+                      <th className="px-6 py-4 whitespace-nowrap">CCCD/CMND</th>
+                      <th className="px-6 py-4 whitespace-nowrap">Tòa nhà</th>
+                      <th className="px-6 py-4 whitespace-nowrap">Phòng hiện tại</th>
+                      <th className="px-6 py-4 whitespace-nowrap">Trạng thái</th>
+                      <th className="px-6 py-4 text-right whitespace-nowrap">Thao tác nhanh</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {sortedCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
+                          Không tìm thấy khách thuê phù hợp
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      paginatedCustomers.map((customer) => (
+                        <tr
+                          key={customer.id}
+                          className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
+                          onClick={() => router.push(`/landlord/customers/${customer.id}`)}
+                        >
+                          <td className="px-6 py-3.5 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-xs uppercase shrink-0">
+                                {customer.name.charAt(0)}
+                              </div>
+                              <span className="font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">{customer.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.phone}</td>
+                          <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.cccd}</td>
+                          <td className="px-6 py-3.5 font-medium text-zinc-700 capitalize whitespace-nowrap">{customer.building === 'dormio' ? 'Dormio' : 'VinaHouse'}</td>
+                          <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.status === 'Đã rời' ? "—" : customer.room}</td>
+                          <td className="px-6 py-3.5 whitespace-nowrap">
+                            <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
+                                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                                : customer.status === 'Sắp hết hợp đồng'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-200 animate-pulse'
+                                  : 'bg-blue-50 text-blue-700 border-blue-200'
+                              }`}>
+                              {customer.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3.5 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <a
+                                href={`tel:${customer.phone}`}
+                                title="Gọi điện"
+                                className="px-2 py-1 bg-white text-zinc-800 border border-zinc-200 rounded-lg text-xs font-bold hover:bg-zinc-50 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
+                              >
+                                📞 Gọi
+                              </a>
+                              <a
+                                href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Chat Zalo"
+                                className="px-2 py-1 bg-[#0068FF] text-white rounded-lg text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs flex items-center gap-1"
+                              >
+                                💬 Zalo
+                              </a>
+                              <Link
+                                href={`/landlord/customers/${customer.id}`}
+                                className="px-2 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-lg text-xs font-bold hover:bg-[#2AC1BC]/20 transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                📄 Xem
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
             <div className="flex items-center gap-2 text-sm text-zinc-600 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-200/50 shadow-sm">
@@ -608,8 +492,6 @@ export default function CustomersPage() {
               </div>
             </div>
           </div>
-        </>
-      )}
 
       {/* Add Tenant Modal */}
       {isModalOpen && (
