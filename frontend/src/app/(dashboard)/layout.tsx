@@ -225,7 +225,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="w-full bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-xs appearance-none pr-7"
         >
           {buildings.map(b => (
-            <option key={b.id} value={b.id}>🏢 {b.name}</option>
+            <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </select>
         <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -294,6 +294,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Global Landlord Building Selector on Mobile Drawer */}
+            {!isTenant && <BuildingSelector />}
+
             <NavContent />
             <UserFooter />
           </aside>
@@ -303,17 +307,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <div className="flex flex-col flex-1 lg:pl-64 min-w-0">
         {/* Mobile topbar */}
-        <header className="flex lg:hidden items-center justify-between h-14 px-4 border-b border-zinc-200 bg-white sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 bg-white sticky top-0 z-30 gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 -ml-1.5 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+              className="p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
             <Logo />
           </div>
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+
+          {/* Building Selector Dropdown on Mobile Topbar for Landlord */}
+          {!isTenant && (
+            <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
+              <select
+                value={activeBuildingId}
+                onChange={(e) => selectBuilding(e.target.value)}
+                className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none pr-6 truncate"
+              >
+                {buildings.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          )}
+
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
             R
           </div>
         </header>
