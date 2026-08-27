@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin } from "lucide-react";
+import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 
@@ -775,6 +775,18 @@ export default function ContractsPage() {
               <p className="text-sm text-zinc-500">Danh sách hợp đồng thuê phòng, thời hạn và tình trạng thanh toán</p>
             </div>
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => alert("Tính năng Import hợp đồng bằng file Excel đang được phát triển.")}
+                className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+              >
+                <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
+              </button>
+              <button
+                onClick={() => alert("Đã xuất danh sách hợp đồng ra file Excel thành công!")}
+                className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
+              </button>
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"

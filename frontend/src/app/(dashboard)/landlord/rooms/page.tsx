@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
   Plus, Search, Download, Upload, MoreHorizontal, X, Home, Building2,
   Target, FileSignature, Receipt, ChevronDown, ArrowLeft, Eye,
-  User, Banknote, Gauge, Trash2, Edit, AlertTriangle, Zap, Droplets, Trash, ShieldCheck, Sparkles, Wifi, History, Box, Wrench, Wallet, MapPin
+  User, Banknote, Gauge, Trash2, Edit, AlertTriangle, Zap, Droplets, Trash, ShieldCheck, Sparkles, Wifi, History, Box, Wrench, Wallet, MapPin, UploadCloud, FileSpreadsheet
 } from "lucide-react";
 
 import { useRouter } from "next/navigation";
@@ -182,10 +182,10 @@ export default function RoomsPage() {
         </div>
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
           <button className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
-            <Upload className="w-4 h-4" /> Import
+            <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
           </button>
           <button className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
-            <Download className="w-4 h-4" /> Export
+            <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
           </button>
           <button
             onClick={() => {

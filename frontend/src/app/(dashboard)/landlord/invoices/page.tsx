@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, Filter, FileText, Download, MoreHorizontal, Receipt, Building2, ChevronDown, Sparkles, MapPin } from "lucide-react";
+import { Plus, Search, Filter, FileText, Download, MoreHorizontal, Receipt, Building2, ChevronDown, Sparkles, MapPin, FileSpreadsheet } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 
@@ -32,7 +32,7 @@ export default function InvoicesPage() {
           <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500" /> AI Quét Điện Nước OCR
         </button>
         <button className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors shadow-xs cursor-pointer">
-          <Download className="w-4 h-4 text-emerald-600" /> Xuất Excel
+          <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Xuất Excel
         </button>
         <button className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2ac1bc] hover:bg-[#72b3a3] rounded-xl shadow-md shadow-[#2ac1bc]/20 transition-all cursor-pointer">
           <Plus className="w-4 h-4" /> Tạo hóa đơn mới
