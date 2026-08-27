@@ -296,17 +296,15 @@ export default function LandlordDashboardPage() {
                 <div className="flex items-center bg-zinc-100 p-0.5 rounded-lg border border-zinc-200/80 ml-1">
                   <button
                     onClick={() => setRangeMode("6m")}
-                    className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${
-                      rangeMode === "6m" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                    }`}
+                    className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${rangeMode === "6m" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+                      }`}
                   >
                     6 Tháng
                   </button>
                   <button
                     onClick={() => setRangeMode("12m")}
-                    className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${
-                      rangeMode === "12m" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                    }`}
+                    className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${rangeMode === "12m" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+                      }`}
                   >
                     12 Tháng
                   </button>
@@ -329,7 +327,7 @@ export default function LandlordDashboardPage() {
           {/* Compact Chart Area */}
           <div className="pt-1">
             <div className="flex gap-2.5">
-              
+
               {/* Y-Axis Labels */}
               <div className="flex flex-col justify-between text-[9px] font-bold text-zinc-400 py-0.5 pr-1 border-r border-zinc-100 shrink-0">
                 <span>50M</span>
@@ -513,7 +511,7 @@ export default function LandlordDashboardPage() {
                   </div>
                   <span className={`text-[10px] font-extrabold block ${item.priority === 'high' ? 'text-rose-500' : item.priority === 'medium' ? 'text-amber-600' : 'text-emerald-600'
                     }`}>
-                    {item.priority === 'high' ? '🔴 Mức độ cao' : item.priority === 'medium' ? '🟡 Mức độ trung bình' : '🟢 Mức độ nhẹ'}
+                    {item.priority === 'high' ? 'Mức độ cao' : item.priority === 'medium' ? 'Mức độ trung bình' : 'Mức độ nhẹ'}
                   </span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-[#FF6B35] group-hover:translate-x-1 transition-transform shrink-0" />
@@ -602,9 +600,8 @@ export default function LandlordDashboardPage() {
         {/* Main Floating Trigger Button */}
         <button
           onClick={() => setSpeedDialOpen(!speedDialOpen)}
-          className={`p-3.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center border ${
-            speedDialOpen ? 'bg-zinc-900 text-white border-zinc-800 rotate-45' : 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:scale-105'
-          }`}
+          className={`p-3.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center border ${speedDialOpen ? 'bg-zinc-900 text-white border-zinc-800 rotate-45' : 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:scale-105'
+            }`}
           title="Thao tác nhanh"
         >
           <Plus className="w-6 h-6" />
