@@ -307,7 +307,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#2AC1BC]" /> Điều Khoản Hợp Đồng & Giá Thuê
+                <FileText className="w-4 h-4 text-[#2AC1BC]" /> Chi Tiết Hợp Đồng
               </h3>
               <button
                 onClick={() => setIsEditModalOpen(true)}
@@ -344,17 +344,17 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="p-3.5 bg-purple-500/5 rounded-xl border border-purple-500/20 space-y-1">
-                <span className="text-[10px] font-bold text-purple-600 uppercase">Tiền cọc giữ (Escrow)</span>
+                <span className="text-[10px] font-bold text-purple-600 uppercase">Tiền cọc</span>
                 <p className="font-black text-purple-600 text-base">{contract.deposit}</p>
               </div>
 
               <div className="sm:col-span-2 p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase block">Ngày thu tiền định kỳ hàng tháng</span>
-                  <p className="font-bold text-zinc-800 text-xs">Ngày {contract.paymentDate || '5'} hàng tháng (Chốt số điện nước trước 2 ngày)</p>
+                  <p className="font-bold text-zinc-800 text-xs">Ngày {contract.paymentDate || '5'} hàng tháng</p>
                 </div>
                 <span className="px-2.5 py-1 bg-zinc-200 text-zinc-700 text-[10px] font-extrabold rounded-lg">
-                  Tự động chốt VietQR
+                  Tự động VietQR
                 </span>
               </div>
             </div>
@@ -523,23 +523,21 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
           {/* LINK SANG PHÒNG HIỆN TẠI */}
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Home className="w-4 h-4 text-[#2AC1BC]" /> PHÒNG THUÊ LIÊN QUAN
-            </h3>
-
-            <div className="p-4 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-zinc-700">Phòng đăng ký:</span>
-                <span className="text-base font-black text-[#2AC1BC]">Phòng {contract.room}</span>
-              </div>
-
-              <Link
-                href={`/landlord/rooms/${fullRoomId}`}
-                className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
-              >
-                Đến Trang Chi Tiết Phòng {contract.room} &rarr;
-              </Link>
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2">
+                <Home className="w-4 h-4 text-[#2AC1BC]" /> PHÒNG ĐANG THUÊ
+              </h3>
+              <span className="text-sm font-black text-[#2AC1BC] bg-[#2AC1BC]/10 border border-[#2AC1BC]/20 px-2.5 py-0.5 rounded-lg">
+                Phòng {contract.room}
+              </span>
             </div>
+
+            <Link
+              href={`/landlord/rooms/${fullRoomId}`}
+              className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
+            >
+              Xem chi tiết phòng &rarr;
+            </Link>
           </div>
 
         </div>
