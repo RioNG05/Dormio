@@ -5,9 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Edit, Trash2, Home, User, FileSignature, Receipt,
-  Gauge, Banknote, Sparkles, Wrench, X, Zap, Droplets, ChevronDown,
-  AlertTriangle, ShieldCheck, Phone, CreditCard, Building2, MapPin, Eye,
-  History, Wallet, AlertCircle, CheckCircle2, Plus, Upload, Target, Filter, RefreshCw
+  Gauge, Banknote, Sparkles, Wrench, X, ChevronDown,
+  AlertTriangle, Eye, History, Wallet, Plus, Upload, RefreshCw, Filter, Building2, AlertCircle
 } from "lucide-react";
 import { getRoomById, defaultRoomServices, Room } from "../data";
 
@@ -94,6 +93,81 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     { id: "INV-202605", period: "Tháng 05/2026", monthSeq: "05/26", deadline: "10/05/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
     { id: "INV-202604", period: "Tháng 04/2026", monthSeq: "04/26", deadline: "10/04/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false }
   ]);
+
+  // Maintenance History List & Pagination
+  interface MaintenanceRecord {
+    id: string;
+    title: string;
+    description?: string;
+    reportDate: string;
+    status: "Đang xử lý" | "Đã xong";
+    priority: "Mức độ cao" | "Mức độ trung bình" | "Mức độ nhẹ";
+    completedDate?: string;
+  }
+
+  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([
+    { id: "M1", title: "Hỏng máy lạnh (Chảy nước)", description: "Máy lạnh tầng 4 chảy tràn nước ra sàn phòng ngủ", reportDate: "25/08/2026", status: "Đang xử lý", priority: "Mức độ cao" },
+    { id: "M2", title: "Thay bóng đèn nhà vệ sinh", description: "Bóng đèn led 12W bị cháy cần thay mới", reportDate: "10/07/2026", completedDate: "12/07/2026", status: "Đã xong", priority: "Mức độ nhẹ" },
+    { id: "M3", title: "Sửa vòi nước bồn rửa chén rỉ nước", reportDate: "05/05/2026", completedDate: "06/05/2026", status: "Đã xong", priority: "Mức độ trung bình" },
+    { id: "M4", title: "Bảo dưỡng máy giặt định kỳ", reportDate: "15/03/2026", completedDate: "15/03/2026", status: "Đã xong", priority: "Mức độ nhẹ" },
+    { id: "M5", title: "Sửa khoá cửa vân tay phòng", reportDate: "10/01/2026", completedDate: "11/01/2026", status: "Đã xong", priority: "Mức độ cao" }
+  ]);
+  const [maintPage, setMaintPage] = useState(1);
+  const MAINT_PER_PAGE = 2;
+
+  const [incidentTitleInput, setIncidentTitleInput] = useState("");
+  const [incidentDescInput, setIncidentDescInput] = useState("");
+  const [incidentPriorityInput, setIncidentPriorityInput] = useState<"Mức độ cao" | "Mức độ trung bình" | "Mức độ nhẹ">("Mức độ trung bình");
+
+  const handleCreateIncidentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!incidentTitleInput.trim()) {
+      showToast("Vui lòng nhập tên sự cố!", "error");
+      return;
+    }
+    const todayStr = new Date().toLocaleDateString("vi-VN");
+
+    const newRecord: MaintenanceRecord = {
+      id: `M_${Date.now()}`,
+      title: incidentTitleInput.trim(),
+      description: incidentDescInput.trim() || undefined,
+      reportDate: todayStr,
+      status: "Đang xử lý",
+      priority: incidentPriorityInput
+    };
+    setMaintenanceHistory(prev => [newRecord, ...prev]);
+    setIncidentTitleInput("");
+    setIncidentDescInput("");
+    setIncidentPriorityInput("Mức độ trung bình");
+    setIsIncidentModalOpen(false);
+    showToast("Đã tạo báo cáo sự cố bảo trì mới thành công!", "success");
+  };
+
+  // Helper for restricted Meter month & year selection (current & next month only)
+  const getAvailableMeterPeriods = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1 to 12
+    const currentYear = now.getFullYear();
+
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+    const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+
+    const monthOptions = [
+      { label: `Tháng ${currentMonth}`, value: `Tháng ${currentMonth}` },
+      { label: `Tháng ${nextMonth}`, value: `Tháng ${nextMonth}` }
+    ];
+
+    const yearOptions = Array.from(new Set([currentYear.toString(), nextMonthYear.toString()]));
+
+    return { monthOptions, yearOptions };
+  };
+
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Pagination states
   const ITEMS_PER_PAGE = 2;
@@ -256,7 +330,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
   // Save new meter reading from main modal
   const handleSaveNewMeterReading = () => {
-    const periodStr = `${selectedMonth}/${selectedYear}`.replace("Tháng ", "Tháng ");
     const periodFull = `Tháng ${selectedMonth.replace('Tháng ', '').padStart(2, '0')}/${selectedYear}`;
     const nowStr = new Date().toLocaleString('vi-VN');
 
@@ -331,12 +404,21 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </button>
           )}
 
-          <button
-            onClick={() => setIsContractModalOpen(true)}
-            className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
-          >
-            {isOccupied ? <><Eye className="w-3.5 h-3.5 text-purple-600" /> Hợp Đồng</> : <><FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" /> Tạo Hợp Đồng</>}
-          </button>
+          {isOccupied ? (
+            <Link
+              href={`/landlord/contracts/HD-01012026-${room.building === 'b2' ? 2 : 1}-${room.roomNumber}`}
+              className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <Eye className="w-3.5 h-3.5 text-purple-600" /> Hợp Đồng
+            </Link>
+          ) : (
+            <button
+              onClick={() => setIsContractModalOpen(true)}
+              className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" /> Tạo Hợp Đồng
+            </button>
+          )}
 
           <button
             onClick={() => setIsEditModalOpen(true)}
@@ -637,6 +719,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               ) : paginatedMeterHistory.map((item) => {
                 const fin = computeRecordFinancials(item);
+                const matchingInvoice = invoicesHistory.find(inv => inv.period === item.period);
+                const isPaid = matchingInvoice?.status === "Đã thu";
 
                 return (
                   <details key={item.period} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
@@ -651,19 +735,33 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             ✏️ Đã chỉnh sửa
                           </span>
                         )}
+                        {isPaid && (
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-extrabold rounded-full">
+                            ✓ Đã thanh toán
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleOpenCorrectionModal(item);
-                          }}
-                          className="px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
-                        >
-                          <Edit className="w-3 h-3 text-amber-600" /> Sửa số điện nước
-                        </button>
+                        {isPaid ? (
+                          <span
+                            className="px-2.5 py-1 bg-zinc-100 text-zinc-400 border border-zinc-200 text-[10px] font-bold rounded-lg flex items-center gap-1 cursor-not-allowed select-none"
+                            title="Hóa đơn tháng này đã thanh toán. Không thể chỉnh sửa số điện nước."
+                          >
+                            Đã khóa (Đã thu)
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleOpenCorrectionModal(item);
+                            }}
+                            className="px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
+                          >
+                            <Edit className="w-3 h-3 text-amber-600" /> Sửa số điện nước
+                          </button>
+                        )}
                         <span className="text-xs font-black text-zinc-900">Tổng: {fin.meterTotal.toLocaleString('vi-VN')} ₫</span>
                         <ChevronDown className="w-4 h-4 text-zinc-400 group-open:rotate-180 transition-transform" />
                       </div>
@@ -750,77 +848,142 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {/* 1. Quản Lý Bảo Trì */}
-            <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
-              <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
-                <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
-                  <Wrench className="w-4 h-4 text-[#FF6B35]" /> Bảo Trì (2)
-                </h2>
-                <button
-                  onClick={() => setIsIncidentModalOpen(true)}
-                  className="px-3 py-1.5 text-xs font-black text-[#FF6B35] bg-[#FF6B35]/10 rounded-xl hover:bg-[#FF6B35]/20 transition-all cursor-pointer shadow-2xs"
-                >
-                  + Báo Sự Cố
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-zinc-900">Hỏng máy lạnh (Chảy nước)</span>
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-extrabold rounded-full">
-                      Đang xử lý
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-zinc-500 font-bold">
-                    <span>Báo ngày: 25/08/2026</span>
-                    <span className="text-rose-600">Mức độ cao</span>
-                  </div>
+            <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
+                  <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
+                    <Wrench className="w-4 h-4 text-[#FF6B35]" /> Bảo Trì ({maintenanceHistory.length})
+                  </h2>
+                  <button
+                    onClick={() => setIsIncidentModalOpen(true)}
+                    className="px-3 py-1.5 text-xs font-black text-[#FF6B35] bg-[#FF6B35]/10 rounded-xl hover:bg-[#FF6B35]/20 transition-all cursor-pointer shadow-2xs"
+                  >
+                    + Báo Sự Cố
+                  </button>
                 </div>
 
-                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-700">Thay bóng đèn nhà vệ sinh</span>
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-extrabold rounded-full">
-                      ✓ Đã xong
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-zinc-400 font-medium">
-                    <span>Hoàn thành ngày: 12/07/2026</span>
-                    <span>Mức độ nhẹ</span>
-                  </div>
+                <div className="space-y-3 min-h-[195px] pt-1">
+                  {maintenanceHistory.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
+                      Chưa có lịch sử bảo trì nào cho phòng này.
+                    </div>
+                  ) : (
+                    maintenanceHistory
+                      .slice((maintPage - 1) * MAINT_PER_PAGE, maintPage * MAINT_PER_PAGE)
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className={`p-3 rounded-xl border min-h-[86px] flex flex-col justify-between ${item.status === 'Đang xử lý'
+                            ? 'bg-amber-500/5 border-amber-500/20'
+                            : 'bg-zinc-50 border-zinc-100'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-black text-zinc-900 line-clamp-1">{item.title}</span>
+                            <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full shrink-0 ${item.status === 'Đang xử lý'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-700'
+                              }`}>
+                              {item.status === 'Đang xử lý' ? 'Đang xử lý' : '✓ Đã xong'}
+                            </span>
+                          </div>
+
+                          {item.description ? (
+                            <p className="text-[11px] text-zinc-600 font-medium leading-tight line-clamp-1 my-1">
+                              {item.description}
+                            </p>
+                          ) : (
+                            <div className="my-1"></div>
+                          )}
+
+                          <div className="flex items-center justify-between text-[10px] text-zinc-500 font-bold pt-0.5 border-t border-zinc-100/60">
+                            <span>{item.completedDate ? `Hoàn thành: ${item.completedDate}` : `Báo ngày: ${item.reportDate}`}</span>
+                            <span className={item.priority === 'Mức độ cao' ? 'text-rose-600 font-black' : 'text-zinc-500'}>
+                              {item.priority}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                  )}
                 </div>
               </div>
+
+              {/* Maintenance Pagination */}
+              {Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE) > 1 && (
+                <div className="flex items-center justify-between pt-3 border-t border-zinc-100 text-xs mt-auto">
+                  <span className="text-[10px] text-zinc-400 font-bold">
+                    Trang {maintPage} / {Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE)}
+                  </span>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setMaintPage(prev => Math.max(1, prev - 1))}
+                      disabled={maintPage === 1}
+                      className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg text-[10px] font-bold disabled:opacity-30 transition-colors cursor-pointer"
+                    >
+                      &larr; Trước
+                    </button>
+                    <button
+                      onClick={() => setMaintPage(prev => Math.min(Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE), prev + 1))}
+                      disabled={maintPage === Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE)}
+                      className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg text-[10px] font-bold disabled:opacity-30 transition-colors cursor-pointer"
+                    >
+                      Sau &rarr;
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 2. Quản Lý Tiền Đặt Cọc */}
-            <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
-              <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
-                <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-purple-600" /> Quản Lý Tiền Đặt Cọc
-                </h2>
-                <span className="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-[9px] font-black">
-                  Dormio Escrow
-                </span>
+            <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
+                  <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-purple-600" /> Quản Lý Tiền Đặt Cọc
+                  </h2>
+                  <span className="px-2.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200/80 rounded-full text-[10px] font-black">
+                    Escrow
+                  </span>
+                </div>
+
+                {/* Hero Deposit Amount Banner */}
+                <div className="mt-3 p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-indigo-500/10 rounded-2xl border border-purple-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold text-purple-800 uppercase tracking-wider">
+                      CỌC GIỮ AN TOÀN
+                    </span>
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full border border-emerald-200">
+                      Đã khóa cọc
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline justify-between">
+                    <div className="text-2xl font-black text-purple-700 tracking-tight">
+                      3.000.000 <span className="text-xs">₫</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 border-t border-purple-200/50 pt-2.5 text-[10px]">
+                    <div className="space-y-0.5">
+                      <span className="text-zinc-400 font-medium block">Ngày nhận cọc:</span>
+                      <span className="font-extrabold text-zinc-800">01/01/2026</span>
+                    </div>
+                    <div className="space-y-0.5 text-right">
+                      <span className="text-zinc-400 font-medium block">Thời hạn HĐ:</span>
+                      <span className="font-extrabold text-zinc-800">01/01/2027</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="p-4 bg-purple-500/5 rounded-xl border border-purple-500/20 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-zinc-600">Tiền cọc giữ:</span>
-                  <span className="text-base font-black text-purple-600">3.000.000 ₫</span>
-                </div>
-                <div className="flex justify-between items-center text-[10px] text-zinc-500 font-semibold border-t border-purple-200/40 pt-2">
-                  <span>Ngày cọc: 01/01/2026</span>
-                  <span>Hợp đồng: Hạn 01/01/2027</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button className="py-1.5 px-2 bg-purple-600 text-white text-[11px] font-black rounded-xl hover:bg-purple-700 transition-all shadow-2xs cursor-pointer">
-                    Hoàn Cọc
-                  </button>
-                  <button className="py-1.5 px-2 bg-white text-rose-600 border border-rose-200 text-[11px] font-black rounded-xl hover:bg-rose-50 transition-all cursor-pointer">
-                    Trừ Cọc
-                  </button>
-                </div>
+              {/* Action Button & Security Note */}
+              <div className="space-y-2 pt-1">
+                <button
+                  onClick={() => showToast("Đã ghi nhận yêu cầu hoàn 3.000.000 ₫ cọc qua VietQR/Ví Escrow!", "success")}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Wallet className="w-4 h-4" /> Hoàn Cọc Cho Khách Thuê
+                </button>
               </div>
             </div>
 
@@ -871,7 +1034,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <Banknote className="w-4 h-4 text-[#2AC1BC]" /> Giá Dịch Vụ
             </h2>
             <div className="space-y-2.5">
-              {defaultRoomServices.map((service) => (
+              {(editServices && editServices.length > 0 ? editServices : defaultRoomServices).map((service) => (
                 <div key={service.id} className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-xl border border-zinc-100">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-extrabold text-zinc-800">{service.name}</span>
@@ -1059,18 +1222,19 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">Tháng chốt</label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1">Tháng </label>
                   <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white">
-                    {['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'].map(m => (
-                      <option key={m} value={m}>{m}</option>
+                    {getAvailableMeterPeriods().monthOptions.map(m => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">Năm chốt</label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1">Năm</label>
                   <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white">
-                    <option value="2026">2026</option>
-                    <option value="2025">2025</option>
+                    {getAvailableMeterPeriods().yearOptions.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1325,6 +1489,78 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
+      {/* MODAL BÁO SỰ CỐ BẢO TRÌ */}
+      {isIncidentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsIncidentModalOpen(false); }}>
+          <form onSubmit={handleCreateIncidentSubmit} className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-[#FF6B35]/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#FF6B35] text-white rounded-xl">
+                  <Wrench className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-zinc-900">Báo Sự Cố Bảo Trì</h2>
+                  <p className="text-xs text-zinc-500 font-medium">Tạo phiếu ghi nhận sự cố hỏng hóc cho phòng {room.roomNumber}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setIsIncidentModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">Tên sự cố *</label>
+                <input
+                  type="text"
+                  required
+                  value={incidentTitleInput}
+                  onChange={(e) => setIncidentTitleInput(e.target.value)}
+                  placeholder="VD: Hỏng vòi nước nhà vệ sinh, chảy nước điều hòa..."
+                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">Mô tả chi tiết sự cố (Tùy chọn)</label>
+                <textarea
+                  rows={3}
+                  value={incidentDescInput}
+                  onChange={(e) => setIncidentDescInput(e.target.value)}
+                  placeholder="VD: Vòi rửa chảy rỉ nước liên tục từ sáng nay, cần thợ thay gioăng cao su..."
+                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">Mức độ ưu tiên *</label>
+                <select
+                  value={incidentPriorityInput}
+                  onChange={(e) => setIncidentPriorityInput(e.target.value as any)}
+                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                >
+                  <option value="Mức độ nhẹ">Mức độ nhẹ</option>
+                  <option value="Mức độ trung bình">Mức độ trung bình</option>
+                  <option value="Mức độ cao">Mức độ cao (Cần gấp)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
+              <button type="button" onClick={() => setIsIncidentModalOpen(false)} className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
+                Hủy
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 text-xs font-black text-white bg-[#FF6B35] hover:bg-[#e05a2b] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
+              >
+                Gửi Báo Sự Cố
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* CONFIRM MODAL */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmModal(prev => ({ ...prev, isOpen: false })); }}>
@@ -1345,6 +1581,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2 text-xs font-black animate-in fade-in slide-in-from-bottom-5 ${toast.type === "success" ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/20" : "bg-rose-600 text-white border-rose-500 shadow-rose-600/20"
+          }`}>
+          <span>{toast.type === "success" ? "✓" : "⚠️"}</span>
+          <span>{toast.message}</span>
         </div>
       )}
     </div>
