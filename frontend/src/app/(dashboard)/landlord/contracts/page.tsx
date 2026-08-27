@@ -325,8 +325,8 @@ export default function ContractsPage() {
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl font-bold text-zinc-900">Phòng {selectedContract.room}</h1>
                   <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${selectedContract.status === 'Đang hiệu lực' ? 'bg-green-50 text-green-600 border-green-100' :
-                      selectedContract.status === 'Quá hạn' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                        'bg-zinc-100 text-zinc-600 border-zinc-200'
+                    selectedContract.status === 'Quá hạn' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                      'bg-zinc-100 text-zinc-600 border-zinc-200'
                     }`}>
                     {selectedContract.status}
                   </span>
@@ -989,7 +989,7 @@ export default function ContractsPage() {
                           </td>
                           <td className="px-5 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-zinc-700 text-xs">{c.startDate} <span className="text-zinc-300 font-normal">➔</span> {c.endDate}</span>
+                              <span className="font-bold text-zinc-700 text-xs">{c.startDate} <span className="text-zinc-300 font-normal">-</span> {c.endDate}</span>
                               {c.isOverdue && (
                                 <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
                                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>

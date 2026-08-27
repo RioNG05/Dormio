@@ -96,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return (
         <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-0.5">
           {tenantMenus.map((item, idx) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href !== '/tenant' && pathname?.startsWith(item.href + '/'));
             return (
               <Link
                 key={idx}
@@ -121,7 +121,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {landlordMenus.map((block, idx) => {
           // Top-level single item
           if (!('group' in block)) {
-            const isActive = pathname === block.href;
+            const isActive = pathname === block.href || (block.href !== '/landlord' && pathname?.startsWith(block.href + '/'));
             return (
               <Link
                 key={idx}
@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {isOpen && (
                 <div className="mt-0.5 mb-3 space-y-0.5">
                   {block.items!.map((item, i) => {
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || (item.href !== '/landlord' && pathname?.startsWith(item.href + '/'));
                     return (
                       <Link
                         key={i}

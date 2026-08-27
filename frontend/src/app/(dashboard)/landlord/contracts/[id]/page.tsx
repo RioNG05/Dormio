@@ -392,7 +392,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                 <a
                   href={`tel:${contract.tenantPhone}`}
-                  className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-700 transition-colors shadow-2xs cursor-pointer"
+                  className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs cursor-pointer"
                 >
                   Gọi điện
                 </a>
@@ -536,7 +536,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               href={`/landlord/rooms/${fullRoomId}`}
               className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
             >
-              Xem chi tiết phòng &rarr;
+              <Home className="w-4 h-4" /> Xem Chi Tiết Phòng &rarr;
             </Link>
           </div>
 

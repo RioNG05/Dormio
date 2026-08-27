@@ -314,7 +314,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               {room.status}
             </span>
             <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-zinc-200/80 truncate max-w-[170px] sm:max-w-none">
-              🏢 {room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1'}
+              {room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1'}
             </span>
             <span className="text-[11px] font-bold text-zinc-400">Mã ID: {room.id}</span>
           </div>
@@ -394,9 +394,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div>
                       <h3 className="text-sm sm:text-base font-black text-zinc-900">{room.tenant}</h3>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-bold text-zinc-500 mt-0.5">
-                        <span>📞 {room.tenantPhone || '0977815704'}</span>
+                        <span>SDT: {room.tenantPhone || '0977815704'}</span>
                         <span className="hidden sm:inline">•</span>
-                        <span>🆔 CCCD: {room.tenantCccd || '00109313040168'}</span>
+                        <span>CCCD: {room.tenantCccd || '00109313040168'}</span>
                       </div>
                     </div>
                   </div>
@@ -404,15 +404,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                     <a
                       href={`tel:${room.tenantPhone || '0977815704'}`}
-                      className="px-3 py-1.5 bg-white text-zinc-800 border border-zinc-200 rounded-xl text-xs font-bold hover:bg-zinc-50 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      📞 Gọi ngay
+                      Gọi ngay
                     </a>
                     <Link
                       href={`/landlord/customers/${room.tenantCccd || '00109313040168'}`}
                       className="px-3.5 py-1.5 bg-[#2AC1BC] text-white rounded-xl text-xs font-bold hover:bg-[#25ad87] transition-all shadow-xs text-center flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      📄 Hồ sơ
+                      Hồ sơ
                     </Link>
                   </div>
                 </div>
@@ -442,7 +442,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 onChange={(e) => setSelectedFilterPeriod(e.target.value)}
                 className="w-full pl-3 pr-8 py-2 text-xs font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none"
               >
-                <option value="all">🗓️ Tất cả các tháng</option>
+                <option value="all">Tất cả các tháng</option>
                 <option value="Tháng 09/2026">Tháng 09/2026 (Hiện tại)</option>
                 <option value="Tháng 08/2026">Tháng 08/2026</option>
                 <option value="Tháng 07/2026">Tháng 07/2026</option>
@@ -511,7 +511,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         {isUnpaid ? (
                           <div className="flex items-center gap-2 shrink-0">
                             <button className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs flex items-center gap-1 shrink-0 whitespace-nowrap">
-                              ⚡ VietQR
+                              VietQR
                             </button>
                             <a
                               href="https://zalo.me"
@@ -519,7 +519,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               rel="noreferrer"
                               className="px-3 py-1.5 bg-[#0068FF] hover:bg-[#0052cc] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
                             >
-                              💬 Zalo
+                              Zalo
                             </a>
                           </div>
                         ) : (
@@ -538,11 +538,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-zinc-600 font-semibold pt-1">
                         <div className="p-1.5 bg-zinc-50 rounded-lg">
-                          <span className="text-zinc-400 block text-[9px]">🏠 Tiền phòng:</span>
+                          <span className="text-zinc-400 block text-[9px]">Tiền phòng:</span>
                           <strong className="text-zinc-900 whitespace-nowrap">{roomRentNum.toLocaleString('vi-VN')} ₫</strong>
                         </div>
                         <div className="p-1.5 bg-zinc-50 rounded-lg">
-                          <span className="text-zinc-400 block text-[9px]">📦 Dịch vụ cố định:</span>
+                          <span className="text-zinc-400 block text-[9px]">Dịch vụ cố định:</span>
                           <strong className="text-zinc-900 whitespace-nowrap">{fixedServicesTotal.toLocaleString('vi-VN')} ₫</strong>
                         </div>
                         <div className="p-1.5 bg-amber-50 rounded-lg">
@@ -626,7 +626,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 onClick={() => setIsMeterModalOpen(true)}
                 className="px-3.5 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-md shadow-[#2AC1BC]/20 flex items-center justify-center gap-1.5 shrink-0"
               >
-                <Gauge className="w-4 h-4" /> 📸 Chốt Số / Quét AI OCR
+                <Gauge className="w-4 h-4" /> Chốt Số / Quét AI OCR
               </button>
             </div>
 
@@ -833,8 +833,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* COMPACT SIDEBAR 4 ROOM METRIC CARDS */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-4 space-y-3">
-            <h2 className="font-black text-zinc-900 text-xs uppercase tracking-wider border-b border-zinc-100 pb-2">
-              📊 THÔNG SỐ PHÒNG {room.roomNumber}
+            <h2 className="flex items-center gap-2 font-black text-zinc-900 text-xs uppercase tracking-wider border-b border-zinc-100 pb-2">
+              <Home className="w-4 h-4 text-[#2AC1BC]" /> <span>THÔNG SỐ PHÒNG {room.roomNumber}</span>
             </h2>
             <div className="grid grid-cols-2 gap-2.5">
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
@@ -846,7 +846,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
                 <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">TIỀN CỌC</span>
                 <div className="text-sm font-black text-purple-600">3.000.000 ₫</div>
-                <span className="text-[9px] text-emerald-600 font-bold">✓ Khóa cọc</span>
+                <span className="text-[9px] text-emerald-600 font-bold">Khóa cọc</span>
               </div>
 
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
@@ -903,7 +903,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         key={idx}
                         className="px-2.5 py-1 bg-zinc-100 text-zinc-700 border border-zinc-200/80 rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs"
                       >
-                        ✓ {item}
+                        {item}
                       </span>
                     ))}
                   </div>
