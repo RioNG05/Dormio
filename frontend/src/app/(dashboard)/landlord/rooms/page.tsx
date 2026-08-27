@@ -181,10 +181,10 @@ export default function RoomsPage() {
           <p className="text-sm text-zinc-500">Danh sách phòng theo tòa nhà, loại phòng và trạng thái</p>
         </div>
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
-          <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+          <button className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
             <Upload className="w-4 h-4" /> Import
           </button>
-          <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+          <button className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
             <Download className="w-4 h-4" /> Export
           </button>
           <button
@@ -199,7 +199,7 @@ export default function RoomsPage() {
               setSelectedAmenities(['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
               setIsModalOpen(true);
             }}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-accent rounded-lg hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Thêm phòng
           </button>
