@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin } from "lucide-react";
-import { generateMockCustomers } from "./data";
-
+import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin, AlertCircle, CheckCircle2, Info, UserCheck, FileSpreadsheet, UserCircle2, PhoneCall, MessageCircle, Eye, Edit3, Link2, Mail, LogOut, Sparkles, ShieldCheck } from "lucide-react";
+import { generateMockCustomers, mockSystemTenantUsers, SystemTenantUser } from "./data";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CustomersPage() {
@@ -26,7 +25,59 @@ export default function CustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: "danger" | "warning" | "info";
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+
+  // Professional Alert Popup Modal State
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "warning" | "error" | "success" | "info";
+  }>({
+    isOpen: false,
+    title: "Thông báo",
+    message: "",
+    type: "info",
+  });
+
+  const showAlert = (message: string, type: "warning" | "error" | "success" | "info" = "warning", title: string = "Thông báo") => {
+    setAlertModal({ isOpen: true, title, message, type });
+  };
+
+  // 2-Way Add Tenant State
+  const [addMode, setAddMode] = useState<"manual" | "existing_user">("manual");
+  const [selectedSystemUser, setSelectedSystemUser] = useState<SystemTenantUser | null>(null);
+  const [systemSearchTerm, setSystemSearchTerm] = useState("");
+
+  // Form Controlled States
+  const [nameInput, setNameInput] = useState("");
+  const [cccdInput, setCccdInput] = useState("");
+  const [dobInput, setDobInput] = useState("");
+  const [genderInput, setGenderInput] = useState("nam");
+  const [addressInput, setAddressInput] = useState("");
+  const [phoneInput, setPhoneInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [jobInput, setJobInput] = useState("");
+  const [workplaceInput, setWorkplaceInput] = useState("");
+  const [roomInput, setRoomInput] = useState("101");
+  const [buildingInput, setBuildingInput] = useState("dormio");
+  const [noteInput, setNoteInput] = useState("");
+  const [hasAccountState, setHasAccountState] = useState(false);
+
+  // Link Account Modal State
+  const [linkAccountModal, setLinkAccountModal] = useState<{ isOpen: boolean; customer: any | null }>({
+    isOpen: false,
+    customer: null
+  });
+  const [linkSearchQuery, setLinkSearchQuery] = useState("");
 
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -37,16 +88,184 @@ export default function CustomersPage() {
 
   const handleCloseModal = () => {
     if (isDirty) {
-      if (window.confirm("Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn đóng?")) {
-        setIsModalOpen(false);
-        setTimeout(() => setIsDirty(false), 200);
-      }
+      setConfirmModal({
+        isOpen: true,
+        title: "Xác nhận đóng form",
+        message: "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
+        confirmText: "Hủy thay đổi & Đóng",
+        cancelText: "Tiếp tục chỉnh sửa",
+        type: "warning",
+        onConfirm: () => {
+          setIsModalOpen(false);
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          setTimeout(() => setIsDirty(false), 200);
+        }
+      });
     } else {
       setIsModalOpen(false);
     }
   };
 
   const [customers, setCustomers] = useState(generateMockCustomers());
+
+  const handleOpenAddModal = () => {
+    setSelectedCustomer(null);
+    setAddMode("manual");
+    setSelectedSystemUser(null);
+    setSystemSearchTerm("");
+    setNameInput("");
+    setCccdInput("");
+    setDobInput("");
+    setGenderInput("nam");
+    setAddressInput("");
+    setPhoneInput("");
+    setEmailInput("");
+    setJobInput("");
+    setWorkplaceInput("");
+    setRoomInput("101");
+    setBuildingInput(activeBuilding?.id || "dormio");
+    setNoteInput("");
+    setHasAccountState(false);
+    setIsDirty(false);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (cust: any) => {
+    setSelectedCustomer(cust);
+    setAddMode(cust.hasAccount ? "existing_user" : "manual");
+    setSelectedSystemUser(null);
+    setNameInput(cust.name || "");
+    setCccdInput(cust.cccd || "");
+    setDobInput(cust.dob || "");
+    setGenderInput(cust.gender || "nam");
+    setAddressInput(cust.address || "");
+    setPhoneInput(cust.phone || "");
+    setEmailInput(cust.email || "");
+    setJobInput(cust.job || "");
+    setWorkplaceInput(cust.workplace || "");
+    setRoomInput(cust.room || "");
+    setBuildingInput(cust.building || "dormio");
+    setNoteInput(cust.note || "");
+    setHasAccountState(!!cust.hasAccount);
+    setIsDirty(false);
+    setIsModalOpen(true);
+  };
+
+  const handleSelectSystemUser = (user: SystemTenantUser) => {
+    setSelectedSystemUser(user);
+    setNameInput(user.name);
+    setCccdInput(user.cccd);
+    setDobInput(user.dob);
+    setGenderInput(user.gender);
+    setAddressInput(user.address);
+    setPhoneInput(user.phone);
+    setEmailInput(user.email);
+    setJobInput(user.job);
+    setWorkplaceInput(user.workplace);
+    setHasAccountState(true);
+    setIsDirty(true);
+  };
+
+  const handleSaveCustomer = () => {
+    if (!nameInput.trim()) {
+      showAlert("Vui lòng nhập Họ và tên khách thuê!", "warning", "Thiếu thông tin");
+      return;
+    }
+    if (!phoneInput.trim()) {
+      showAlert("Vui lòng nhập Số điện thoại liên hệ!", "warning", "Thiếu thông tin");
+      return;
+    }
+
+    if (selectedCustomer) {
+      setCustomers(prev => prev.map(c => c.id === selectedCustomer.id ? {
+        ...c,
+        name: nameInput.trim(),
+        phone: phoneInput.trim(),
+        cccd: cccdInput.trim() || c.cccd,
+        dob: dobInput,
+        gender: genderInput,
+        address: addressInput,
+        email: emailInput,
+        job: jobInput,
+        workplace: workplaceInput,
+        room: roomInput,
+        building: buildingInput,
+        note: noteInput,
+        hasAccount: hasAccountState,
+        accountEmail: hasAccountState ? emailInput : undefined,
+        updatedAt: new Date().toLocaleDateString("vi-VN")
+      } : c));
+      showAlert("Đã cập nhật thông tin khách thuê thành công!", "success", "Cập nhật thành công");
+    } else {
+      const targetCCCD = cccdInput.trim();
+      if (targetCCCD && customers.some(c => c.cccd === targetCCCD)) {
+        showAlert(`Khách thuê với số CCCD [${targetCCCD}] đã tồn tại trong danh sách của bạn! Vui lòng kiểm tra lại.`, "error", "Trùng lặp CCCD");
+        return;
+      }
+
+      const newId = targetCCCD || `00109${Math.floor(1000000 + Math.random() * 9000000)}`;
+      const newCust = {
+        id: newId,
+        name: nameInput.trim(),
+        phone: phoneInput.trim(),
+        cccd: newId,
+        room: roomInput || "101",
+        building: buildingInput || "dormio",
+        joinDate: new Date().toLocaleDateString("vi-VN"),
+        status: "Đang ở",
+        dob: dobInput || "2000-01-01",
+        gender: genderInput,
+        address: addressInput || "TP. Thủ Đức, TP.HCM",
+        email: emailInput,
+        job: jobInput || "Tự do",
+        workplace: workplaceInput || "TP.HCM",
+        note: noteInput,
+        hasAccount: hasAccountState,
+        accountEmail: hasAccountState ? emailInput : undefined,
+        createdAt: new Date().toLocaleDateString("vi-VN"),
+        updatedAt: new Date().toLocaleDateString("vi-VN")
+      };
+      setCustomers(prev => [newCust, ...prev]);
+      showAlert("Đã thêm khách thuê mới vào danh sách thành công!", "success", "Thêm thành công");
+    }
+
+    setIsModalOpen(false);
+    setIsDirty(false);
+  };
+
+  const handleLinkAccountSubmit = (user: SystemTenantUser) => {
+    if (!linkAccountModal.customer) return;
+
+    setCustomers(prev => prev.map(c => c.id === linkAccountModal.customer.id ? {
+      ...c,
+      name: user.name,
+      phone: user.phone,
+      email: user.email,
+      cccd: user.cccd,
+      dob: user.dob,
+      gender: user.gender,
+      address: user.address,
+      job: user.job,
+      workplace: user.workplace,
+      hasAccount: true,
+      accountEmail: user.email,
+      updatedAt: new Date().toLocaleDateString("vi-VN")
+    } : c));
+
+    setLinkAccountModal({ isOpen: false, customer: null });
+    showAlert(`Đã liên kết thành công tài khoản Tenant ${user.name} (${user.email}) với hồ sơ khách thuê!`, "success", "Liên kết thành công");
+  };
+
+  const filteredSystemUsers = mockSystemTenantUsers
+    .filter(u => !customers.some(c => c.cccd === u.cccd || c.phone === u.phone))
+    .filter(u => {
+      const q = systemSearchTerm.toLowerCase().trim();
+      if (!q) return true;
+      return u.name.toLowerCase().includes(q) ||
+        u.phone.includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.cccd.includes(q);
+    });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -95,28 +314,28 @@ export default function CustomersPage() {
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
             Quản lý khách thuê
           </h1>
-          <p className="text-sm text-zinc-500 mt-1 font-medium">
-            Danh sách khách thuê theo tòa nhà, phòng và trạng thái
+          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
+            Danh sách khách thuê theo tòa nhà, phòng và trạng thái liên kết
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => alert("Tính năng Import danh sách khách thuê bằng Excel đang được phát triển.")}
-            className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+            onClick={() => showAlert("Tính năng Import danh sách khách thuê bằng Excel đang được phát triển.", "info", "Tính năng thử nghiệm")}
+            className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
           >
-            <Upload className="w-4 h-4" /> Import
+            <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
           </button>
           <button
-            onClick={() => alert("Xuất file Excel danh sách khách thuê thành công.")}
-            className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+            onClick={() => showAlert("Đã xuất danh sách khách thuê ra file Excel thành công!", "success", "Xuất file thành công")}
+            className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
           >
-            <Download className="w-4 h-4" /> Export
+            <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
           </button>
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+            onClick={handleOpenAddModal}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Thêm khách thuê
+            <UserPlus className="w-4 h-4" /> Thêm khách thuê
           </button>
         </div>
       </div>
@@ -340,24 +559,24 @@ export default function CustomersPage() {
                     <a
                       href={`tel:${customer.phone}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="py-1.5 bg-red-600 text-white border border-zinc-200 rounded-lg text-[11px] font-bold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
+                      className="py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-[11px] font-extrabold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                     >
-                      Gọi
+                      <PhoneCall className="w-3 h-3" /> Gọi
                     </a>
                     <a
                       href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="py-1.5 bg-[#0068FF] text-white rounded-lg text-[11px] font-bold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
+                      className="py-1.5 bg-[#0068FF] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                     >
-                      Zalo
+                      <MessageCircle className="w-3 h-3" /> Zalo
                     </a>
                     <Link
                       href={`/landlord/customers/${customer.id}`}
-                      className="py-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-lg text-[11px] font-bold hover:bg-[#2AC1BC]/20 transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                      className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                     >
-                      Xem
+                      <Eye className="w-3 h-3" /> Xem
                     </Link>
                   </div>
                 </div>
@@ -420,24 +639,24 @@ export default function CustomersPage() {
                             <a
                               href={`tel:${customer.phone}`}
                               title="Gọi điện"
-                              className="px-2 py-1 bg-red-600 text-white border border-zinc-200 rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
+                              className="px-2.5 py-1 bg-red-600 text-white border border-zinc-200 rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
                             >
-                              Gọi
+                              <PhoneCall className="w-3 h-3" /> Gọi
                             </a>
                             <a
                               href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
                               target="_blank"
                               rel="noreferrer"
                               title="Chat Zalo"
-                              className="px-2 py-1 bg-[#0068FF] text-white rounded-lg text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs flex items-center gap-1"
+                              className="px-2.5 py-1 bg-[#0068FF] text-white rounded-lg text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs flex items-center gap-1"
                             >
-                              Zalo
+                              <MessageCircle className="w-3 h-3" /> Zalo
                             </a>
                             <Link
                               href={`/landlord/customers/${customer.id}`}
-                              className="px-2 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-lg text-xs font-bold hover:bg-[#2AC1BC]/20 transition-colors flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
                             >
-                              Xem
+                              <Eye className="w-3 h-3" /> Xem
                             </Link>
                           </div>
                         </td>
@@ -490,52 +709,239 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      {/* Add Tenant Modal */}
-      {
-        isModalOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-            onMouseDown={(e) => {
-              if (e.target === e.currentTarget) handleCloseModal();
-            }}
-          >
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onInput={() => setIsDirty(true)} onChange={() => setIsDirty(true)}>
-              <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-accent/10 text-accent rounded-lg">
-                    <User className="w-5 h-5" />
-                  </div>
+      {/* Add / Edit Tenant Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleCloseModal();
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onInput={() => setIsDirty(true)} onChange={() => setIsDirty(true)}>
+            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-lg">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
                   <h2 className="text-xl font-bold text-zinc-900">{selectedCustomer ? "Chỉnh sửa khách thuê" : "Thêm khách thuê mới"}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">Quản lý hồ sơ và liên kết tài khoản Tenant trên hệ thống</p>
                 </div>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <div className="p-6 overflow-y-auto flex-1 space-y-6 custom-scrollbar bg-zinc-50/50">
+            <div className="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar bg-zinc-50/50">
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Họ tên <span className="text-red-500">*</span></label>
-                    <input type="text" defaultValue={selectedCustomer?.name || ""} placeholder="Nguyễn Văn A" className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white" />
+              {/* 2-WAY ADD TENANT SELECTION TABS */}
+              {!selectedCustomer && (
+                <div className="space-y-3">
+                  <div className="p-1.5 bg-zinc-200/60 rounded-2xl border border-zinc-200 grid grid-cols-2 gap-1.5 font-bold text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddMode("manual");
+                        setSelectedSystemUser(null);
+                        setHasAccountState(false);
+                      }}
+                      className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${addMode === "manual"
+                        ? "bg-white text-zinc-900 shadow-xs font-black border border-zinc-200"
+                        : "text-zinc-500 hover:text-zinc-800"
+                        }`}
+                    >
+                      <UserPlus className="w-4 h-4 text-[#2AC1BC]" />
+                      <span>Khách chưa có account</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAddMode("existing_user")}
+                      className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${addMode === "existing_user"
+                        ? "bg-[#FF6B35] text-white shadow-xs font-black"
+                        : "text-zinc-500 hover:text-zinc-800"
+                        }`}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Khách đã có account</span>
+                    </button>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Số CCCD/CMND</label>
-                    <input type="text" defaultValue={selectedCustomer?.cccd || ""} placeholder="001234567890" className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white" />
+
+                  {/* WAY 1 BANNER */}
+                  {addMode === "manual" && (
+                    <div className="p-3 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-medium text-blue-800 flex items-start gap-2.5">
+                      <AlertTriangle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-extrabold block text-blue-900 mb-0.5">Thêm mới thủ công</span>
+                        Khách thuê chưa đăng ký tài khoản trên hệ thống Dormio.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* WAY 2 SYSTEM USER SEARCH & AUTO POPULATE */}
+                  {addMode === "existing_user" && (
+                    <div className="p-4 bg-orange-50/60 border border-orange-200/80 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-black text-orange-950 uppercase tracking-wider flex items-center gap-1.5">
+                          <Users className="w-4 h-4 text-[#FF6B35]" /> Tìm & Chọn tài khoản trong hệ thống
+                        </label>
+                        <span className="text-[10px] font-black text-[#FF6B35] bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
+                          Auto-Fill 100%
+                        </span>
+                      </div>
+
+                      <div className="relative">
+                        <Search className="w-4 h-4 text-[#FF6B35] absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={systemSearchTerm}
+                          onChange={(e) => setSystemSearchTerm(e.target.value)}
+                          placeholder="Nhập tên, số điện thoại (VD: 0912...), email hoặc số CCCD..."
+                          className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] bg-white font-bold text-zinc-900 shadow-2xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar pr-1">
+                        {filteredSystemUsers.length === 0 ? (
+                          <p className="text-xs text-zinc-400 italic p-4 text-center bg-white/60 rounded-xl border border-dashed border-zinc-200">Không tìm thấy tài khoản Tenant nào trùng khớp với từ khóa tìm kiếm.</p>
+                        ) : (
+                          filteredSystemUsers.map((user) => {
+                            const isSelected = selectedSystemUser?.userId === user.userId;
+                            return (
+                              <div
+                                key={user.userId}
+                                onClick={() => handleSelectSystemUser(user)}
+                                className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isSelected
+                                  ? "bg-gradient-to-r from-orange-50 to-amber-50/50 border-[#FF6B35] ring-2 ring-[#FF6B35]/20 shadow-xs"
+                                  : "bg-white border-zinc-200/80 hover:border-orange-300 hover:bg-orange-50/30 hover:shadow-2xs"
+                                  }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-[#FF6B35] text-white flex items-center justify-center font-black text-sm uppercase shrink-0 shadow-2xs">
+                                    {user.name.charAt(0)}
+                                  </div>
+                                  <div className="space-y-1 min-w-0">
+                                    <div className="font-black text-zinc-900 text-sm truncate flex items-center gap-1.5">
+                                      <span>{user.name}</span>
+                                      {isSelected && (
+                                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black">
+                                          Đã chọn
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 text-xs text-zinc-600 font-medium">
+                                      <div className="flex items-center gap-1.5 text-zinc-700">
+                                        <Phone className="w-3.5 h-3.5 text-[#FF6B35] shrink-0" />
+                                        <span className="font-bold text-zinc-800">{user.phone}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 text-zinc-500">
+                                        <CreditCard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                        <span>CCCD: {user.cccd}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 text-zinc-500 truncate">
+                                        <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                        <span className="truncate">{user.email}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  className={`px-3.5 py-1.5 text-xs font-black rounded-xl transition-all shrink-0 cursor-pointer ${isSelected
+                                    ? "bg-[#FF6B35] text-white shadow-xs"
+                                    : "bg-orange-50 text-[#FF6B35] border border-orange-200 hover:bg-[#FF6B35] hover:text-white"
+                                    }`}
+                                >
+                                  {isSelected ? "Đã chọn" : "Chọn thêm"}
+                                </button>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      {selectedSystemUser && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 font-bold flex items-center gap-2">
+                          <span>Đã tự động tải và cập nhật hồ sơ từ tài khoản <strong>{selectedSystemUser.name}</strong> ({selectedSystemUser.email})!</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PERSONAL INFO FIELDS */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider border-b border-zinc-200 pb-1">THÔNG TIN HỒ SƠ KHÁCH THUÊ</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Họ và tên khách thuê <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      placeholder="VD: Nguyễn Văn A"
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Số CCCD / CMND <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={cccdInput}
+                      onChange={(e) => setCccdInput(e.target.value)}
+                      placeholder="VD: 001201099882"
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Ngày sinh</label>
-                    <input type="date" defaultValue={selectedCustomer?.dob || ""} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white text-zinc-700" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Số điện thoại liên hệ <span className="text-red-500">*</span></label>
+                    <input
+                      type="tel"
+                      value={phoneInput}
+                      onChange={(e) => setPhoneInput(e.target.value)}
+                      placeholder="VD: 0987654321"
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                    />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Giới tính</label>
-                    <select defaultValue={selectedCustomer?.gender || "nam"} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Địa chỉ Email</label>
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder="VD: email@example.com"
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Ngày sinh</label>
+                    <input
+                      type="date"
+                      value={dobInput}
+                      onChange={(e) => setDobInput(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-800 bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Giới tính</label>
+                    <select
+                      value={genderInput}
+                      onChange={(e) => setGenderInput(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                    >
                       <option value="nam">Nam</option>
                       <option value="nu">Nữ</option>
                       <option value="khac">Khác</option>
@@ -543,75 +949,160 @@ export default function CustomersPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-zinc-700">Địa chỉ thường trú</label>
-                  <textarea rows={2} defaultValue={selectedCustomer?.address || ""} placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/TP" className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white resize-none"></textarea>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-700">Địa chỉ thường trú</label>
+                  <textarea
+                    rows={2}
+                    value={addressInput}
+                    onChange={(e) => setAddressInput(e.target.value)}
+                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
+                  ></textarea>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Số điện thoại</label>
-                    <input type="tel" defaultValue={selectedCustomer?.phone || ""} placeholder="0901234567" className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Nghề nghiệp</label>
+                    <input
+                      type="text"
+                      value={jobInput}
+                      onChange={(e) => setJobInput(e.target.value)}
+                      placeholder="VD: Kỹ sư phần mềm, Sinh viên..."
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                    />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Email</label>
-                    <input type="email" defaultValue={selectedCustomer?.email || ""} placeholder="email@example.com" className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Nghề nghiệp</label>
-                    <input type="text" defaultValue={selectedCustomer?.job || ""} placeholder="VD: Kỹ sư, Sinh viên..." className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Nơi làm việc</label>
-                    <input type="text" defaultValue={selectedCustomer?.workplace || ""} placeholder="VD: Công ty ABC..." className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Ảnh mặt trước</label>
-                    <div className="border border-dashed border-blue-300 bg-blue-50/50 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-blue-50 transition-colors cursor-pointer group">
-                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
-                        <UploadCloud className="w-5 h-5 text-zinc-400 group-hover:text-accent transition-colors" />
-                      </div>
-                      <span className="text-sm font-bold text-zinc-900">Kéo thả hoặc nhấn để chọn</span>
-                      <span className="text-xs text-zinc-500 mt-1">Tối đa 5MB</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-zinc-700">Ảnh mặt sau</label>
-                    <div className="border border-dashed border-blue-300 bg-blue-50/50 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-blue-50 transition-colors cursor-pointer group">
-                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
-                        <UploadCloud className="w-5 h-5 text-zinc-400 group-hover:text-accent transition-colors" />
-                      </div>
-                      <span className="text-sm font-bold text-zinc-900">Kéo thả hoặc nhấn để chọn</span>
-                      <span className="text-xs text-zinc-500 mt-1">Tối đa 5MB</span>
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Nơi làm việc / Học tập</label>
+                    <input
+                      type="text"
+                      value={workplaceInput}
+                      onChange={(e) => setWorkplaceInput(e.target.value)}
+                      placeholder="VD: Công ty FPT, Đại học SPKT..."
+                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-zinc-700">Ghi chú</label>
-                  <textarea rows={3} defaultValue={selectedCustomer?.note || ""} placeholder="Ghi chú thêm về khách thuê" className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white resize-none"></textarea>
-                </div>
 
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-700">Ghi chú thêm</label>
+                  <textarea
+                    rows={2}
+                    value={noteInput}
+                    onChange={(e) => setNoteInput(e.target.value)}
+                    placeholder="Ghi chú thêm về thông tin cá nhân khách thuê..."
+                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
+                  ></textarea>
+                </div>
               </div>
 
-              <div className="p-6 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50/50">
+            </div>
+
+            <div className="p-4 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+              <div className="text-xs font-bold text-zinc-500">
+                Trạng thái TK: {hasAccountState ? <span className="text-emerald-600 font-extrabold">✓ Đã liên kết Account</span> : <span className="text-amber-600 font-extrabold">Chưa liên kết TK</span>}
+              </div>
+
+              <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={handleCloseModal}
-                  className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+                  className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
-                  onClick={() => { setIsModalOpen(false); setIsDirty(false); }}
-                  className="px-6 py-2.5 text-sm font-bold text-white bg-accent rounded-xl hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
+                  type="button"
+                  onClick={handleSaveCustomer}
+                  className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
                 >
                   {selectedCustomer ? "Lưu thay đổi" : "Lưu khách thuê"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+      }
+
+      {/* QUICK LINK ACCOUNT MODAL */}
+      {
+        linkAccountModal.isOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+            onMouseDown={(e) => { if (e.target === e.currentTarget) setLinkAccountModal({ isOpen: false, customer: null }); }}
+          >
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-orange-50/80">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#FF6B35] text-white rounded-xl">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-zinc-900">Liên Kết Tài Khoản Tenant</h2>
+                    <p className="text-xs text-zinc-500 font-medium">Hồ sơ: {linkAccountModal.customer?.name} ({linkAccountModal.customer?.phone})</p>
+                  </div>
+                </div>
+                <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full transition-colors cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={linkSearchQuery}
+                    onChange={(e) => setLinkSearchQuery(e.target.value)}
+                    placeholder="Tìm tài khoản theo tên, SĐT, Email..."
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] font-bold text-zinc-900 bg-white"
+                  />
+                </div>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                  {mockSystemTenantUsers
+                    .filter(u => !linkSearchQuery || u.name.toLowerCase().includes(linkSearchQuery.toLowerCase()) || u.phone.includes(linkSearchQuery) || u.email.toLowerCase().includes(linkSearchQuery))
+                    .map((u) => (
+                      <div key={u.userId} className="p-3 bg-white border border-zinc-200/80 hover:border-orange-300 hover:bg-orange-50/30 rounded-2xl flex items-center justify-between gap-3 text-xs transition-all shadow-2xs">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-[#FF6B35] text-white flex items-center justify-center font-black text-xs uppercase shrink-0 shadow-2xs">
+                            {u.name.charAt(0)}
+                          </div>
+                          <div className="space-y-0.5 min-w-0">
+                            <div className="font-extrabold text-zinc-900 text-xs truncate">{u.name}</div>
+                            <div className="flex flex-col gap-0.5 text-[11px] text-zinc-500 font-medium">
+                              <div className="flex items-center gap-1.5 text-zinc-700">
+                                <Phone className="w-3 h-3 text-[#FF6B35] shrink-0" />
+                                <span className="font-bold">{u.phone}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
+                                <span>CCCD: {u.cccd}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 truncate">
+                                <User className="w-3 h-3 text-zinc-400 shrink-0" />
+                                <span className="truncate">{u.email}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => handleLinkAccountSubmit(u)}
+                          className="px-3.5 py-1.5 bg-[#FF6B35] hover:bg-[#e05a2b] text-white font-black text-xs rounded-xl transition-all shadow-2xs shrink-0 cursor-pointer"
+                        >
+                          Liên kết
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-zinc-100 flex justify-end bg-zinc-50">
+                <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100">
+                  Đóng
                 </button>
               </div>
             </div>
@@ -622,29 +1113,136 @@ export default function CustomersPage() {
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+        type={confirmModal.type}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
-    </div >
+
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+      />
+    </div>
   );
 }
 
-function ConfirmModal({ isOpen, title, message, onConfirm, onCancel }: { isOpen: boolean, title: string, message: string, onConfirm: () => void, onCancel: () => void }) {
+function ConfirmModal({
+  isOpen,
+  title,
+  message,
+  confirmText = "Đồng ý",
+  cancelText = "Hủy bỏ",
+  type = "warning",
+  onConfirm,
+  onCancel
+}: {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  type?: "danger" | "warning" | "info";
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
   if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-        <div className="p-6">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4 text-red-500 shadow-inner">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-          <h3 className="text-xl font-bold text-zinc-900 mb-2">{title}</h3>
-          <p className="text-sm text-zinc-500">{message}</p>
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-200 mx-auto flex items-center justify-center shadow-inner">
+          <AlertTriangle className="w-7 h-7" />
         </div>
-        <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end gap-3">
-          <button onClick={onCancel} className="px-4 py-2 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">Hủy</button>
-          <button onClick={onConfirm} className="px-4 py-2 text-sm font-bold text-white bg-danger rounded-lg hover:bg-danger-hover shadow-md shadow-orange-600/20 transition-colors">Đồng ý</button>
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
         </div>
+        <div className="grid grid-cols-2 gap-2.5 pt-2">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AlertModal({
+  isOpen,
+  title,
+  message,
+  type = "info",
+  onClose
+}: {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  type?: "warning" | "error" | "success" | "info";
+  onClose: () => void;
+}) {
+  if (!isOpen) return null;
+
+  const config = {
+    warning: {
+      bgColor: "bg-amber-500/10 text-amber-600 border-amber-200",
+      icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
+      btnColor: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
+    },
+    error: {
+      bgColor: "bg-rose-500/10 text-rose-600 border-rose-200",
+      icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
+      btnColor: "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20"
+    },
+    success: {
+      bgColor: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
+      icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
+      btnColor: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+    },
+    info: {
+      bgColor: "bg-orange-50 text-[#FF6B35] border-orange-200",
+      icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
+      btnColor: "bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20"
+    }
+  }[type];
+
+  return (
+    <div
+      className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
+        <div className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}>
+          {config.icon}
+        </div>
+
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
+        </div>
+
+        <button
+          onClick={onClose}
+          className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
+        >
+          Đã hiểu
+        </button>
       </div>
     </div>
   );
