@@ -340,9 +340,9 @@ export default function CustomersPage() {
                     <a
                       href={`tel:${customer.phone}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="py-1.5 bg-white text-zinc-800 border border-zinc-200 rounded-lg text-[11px] font-bold hover:bg-zinc-50 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
+                      className="py-1.5 bg-red-600 text-white border border-zinc-200 rounded-lg text-[11px] font-bold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                     >
-                      📞 Gọi
+                      Gọi
                     </a>
                     <a
                       href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
@@ -351,13 +351,13 @@ export default function CustomersPage() {
                       onClick={(e) => e.stopPropagation()}
                       className="py-1.5 bg-[#0068FF] text-white rounded-lg text-[11px] font-bold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                     >
-                      💬 Zalo
+                      Zalo
                     </a>
                     <Link
                       href={`/landlord/customers/${customer.id}`}
                       className="py-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-lg text-[11px] font-bold hover:bg-[#2AC1BC]/20 transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                     >
-                      📄 Xem
+                      Xem
                     </Link>
                   </div>
                 </div>
@@ -420,9 +420,9 @@ export default function CustomersPage() {
                             <a
                               href={`tel:${customer.phone}`}
                               title="Gọi điện"
-                              className="px-2 py-1 bg-white text-zinc-800 border border-zinc-200 rounded-lg text-xs font-bold hover:bg-zinc-50 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
+                              className="px-2 py-1 bg-red-600 text-white border border-zinc-200 rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
                             >
-                              📞 Gọi
+                              Gọi
                             </a>
                             <a
                               href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
@@ -431,13 +431,13 @@ export default function CustomersPage() {
                               title="Chat Zalo"
                               className="px-2 py-1 bg-[#0068FF] text-white rounded-lg text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs flex items-center gap-1"
                             >
-                              💬 Zalo
+                              Zalo
                             </a>
                             <Link
                               href={`/landlord/customers/${customer.id}`}
                               className="px-2 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-lg text-xs font-bold hover:bg-[#2AC1BC]/20 transition-colors flex items-center gap-1 cursor-pointer"
                             >
-                              📄 Xem
+                              Xem
                             </Link>
                           </div>
                         </td>

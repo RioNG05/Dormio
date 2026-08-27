@@ -110,10 +110,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">{customer.name}</h1>
                 <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${customer.status === 'Đang ở'
-                    ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                    : customer.status === 'Sắp hết hợp đồng'
-                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                      : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                  ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                  : customer.status === 'Sắp hết hợp đồng'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-zinc-100 text-zinc-600 border-zinc-200'
                   }`}>
                   {customer.status}
                 </span>
@@ -131,7 +131,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             href={`tel:${customer.phone}`}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
           >
-            📞 Gọi điện
+            Gọi điện
           </a>
           <a
             href={`https://zalo.me/${customer.phone}`}
@@ -139,7 +139,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             rel="noreferrer"
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#0068FF] hover:bg-[#0052cc] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
           >
-            💬 Nhắn Zalo
+            Nhắn Zalo
           </a>
           <button
             onClick={() => setIsEditModalOpen(true)}
@@ -193,7 +193,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
               <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase">Giới tính</span>
-                <p className="font-bold text-zinc-800">{customer.gender === "nam" ? "Nam 👨" : "Nữ 👩"}</p>
+                <p className="font-bold text-zinc-800">{customer.gender === "nam" ? "Nam" : "Nữ"}</p>
               </div>
 
               <div className="sm:col-span-2 p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
@@ -255,7 +255,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   />
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs gap-1">
-                    🔍 Nhấn để xem ảnh phóng to
+                    Nhấn để xem ảnh phóng to
                   </div>
                 </div>
               </div>
@@ -321,7 +321,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                   <div className="flex justify-between text-[11px] text-zinc-500 font-semibold">
                     <span>Thời hạn:</span>
-                    <span>01/01/2026 ➔ 01/01/2027</span>
+                    <span>01/01/2026 - 01/01/2027</span>
                   </div>
                   <div className="flex justify-between text-[11px] text-emerald-700 font-bold pt-1">
                     <span>Tiền cọc giữ:</span>
