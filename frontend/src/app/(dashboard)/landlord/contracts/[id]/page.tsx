@@ -954,7 +954,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 onClick={handleAddMember}
                 className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
-                {addMemberTab === 'select' ? 'Gán Thành Viên' : 'Tạo & Đồng Bộ Khách Thuê'}
+                {addMemberTab === 'select' ? 'Thêm Thành Viên' : 'Thêm Khách Thuê Mới'}
               </button>
             </div>
           </div>
