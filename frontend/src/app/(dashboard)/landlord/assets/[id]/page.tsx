@@ -263,25 +263,38 @@ export default function AssetDetailPage() {
 
             <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight leading-snug">{asset.name}</h1>
 
-            {/* LOCATION & TENANT SUB-BAR DIRECTLY UNDER TITLE */}
+            {/* LOCATION & TENANT SUB-BAR DIRECTLY UNDER TITLE (Links integrated into Room Name & Tenant Name) */}
             <div className="flex flex-wrap items-center gap-3.5 text-xs font-semibold text-zinc-600 pt-2 border-t border-zinc-100">
               <div className="flex items-center gap-1.5 bg-zinc-50 px-3 py-1.5 rounded-xl border border-zinc-200/80">
                 <Home className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span>Vị trí lắp đặt: <strong className="text-zinc-900">{hasRoomLink ? `Phòng ${asset.room}` : asset.room}</strong></span>
-                {hasRoomLink && (
-                  <Link href={`/landlord/rooms?id=${asset.room}`} className="ml-1 text-[#2AC1BC] hover:underline font-bold">
-                    [Xem phòng &rarr;]
-                  </Link>
-                )}
+                <span>
+                  Vị trí lắp đặt:{" "}
+                  {hasRoomLink ? (
+                    <Link
+                      href={`/landlord/rooms?id=${asset.room}`}
+                      className="font-extrabold text-[#2AC1BC] hover:underline hover:text-[#25ad87] transition-colors"
+                    >
+                      Phòng {asset.room}
+                    </Link>
+                  ) : (
+                    <strong className="text-zinc-900 font-extrabold">{asset.room}</strong>
+                  )}
+                </span>
               </div>
 
               {hasRoomLink && (
                 <div className="flex items-center gap-1.5 bg-emerald-50/80 px-3 py-1.5 rounded-xl border border-emerald-200/80">
                   <User className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Khách thuê phòng: <strong className="text-zinc-900">{currentTenant.name}</strong> ({currentTenant.phone})</span>
-                  <Link href="/landlord/customers" className="ml-1 text-emerald-700 hover:underline font-bold">
-                    [Hồ sơ &rarr;]
-                  </Link>
+                  <span>
+                    Khách thuê phòng:{" "}
+                    <Link
+                      href="/landlord/customers"
+                      className="font-extrabold text-emerald-700 hover:underline hover:text-emerald-800 transition-colors"
+                    >
+                      {currentTenant.name}
+                    </Link>{" "}
+                    <span className="text-zinc-600 font-medium">({currentTenant.phone})</span>
+                  </span>
                 </div>
               )}
             </div>
