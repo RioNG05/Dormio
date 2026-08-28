@@ -64,6 +64,7 @@ Load these skills (read their SKILL.md) when working on:
 6. **One chat system** — reuse CONVERSATION/MESSAGE for both BHMS and BHRP
 7. **mustChangePassword** — check on login; block dashboard if true, redirect to change-password
 8. **Platform deposit conversion** — UPDATE existing DEPOSIT row, never INSERT new one
+9. **Standardized Pagination**: `Hiển thị [<input type="number">] / trang | X-Y trên Z [mục]`, 5-page window jumping (`windowStart ± 5`), default Table=10, Grid=6, Select-All applies to current page only.
 
 ## Module Breakdown
 
