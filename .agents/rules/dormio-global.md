@@ -133,6 +133,9 @@
   - Initial defaults: Grid view = **6/trang** (cards x2 per page), Table/List view = **10/trang**. Switching Grid ↔ List auto-updates itemsPerPage (6 vs 10).
   - 5-page window jumping: Prev/Next buttons jump by 5 pages (`windowStart ± windowSize`). Teal `#2AC1BC` for active page.
   - Table Select All checkbox: Toggling header checkbox selects/deselects **only current page items (`paginatedItems`)**.
+- **Modal Reset & Pop-up Confirmation**:
+  - Exiting any unsubmitted modal (via Hủy bỏ / Cancel, X icon, or backdrop click) MUST completely reset all form draft input fields.
+  - If form has unsaved input changes, ALWAYS display a custom **Pop-up Confirmation Modal** ("Xác nhận đóng form" with `[Tiếp tục chỉnh sửa]` and `[Hủy thay đổi & Đóng]`) instead of browser native `alert` / `confirm`.
 
 ---
 
