@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 
@@ -148,7 +148,8 @@ export default function ContractsPage() {
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
   const [contracts, setContracts] = useState(generateMockContracts());
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(6);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   if (!isMounted) {
     return null;
@@ -900,155 +901,322 @@ export default function ContractsPage() {
             })}
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-full sm:w-64 shrink-0">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Tìm tên, số phòng, mã HĐ..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-            />
+          {/* Search Input & View Mode Switcher */}
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Tìm tên, số phòng, mã HĐ..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+              />
+            </div>
+
+            <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
+              <button
+                onClick={() => { setViewMode("grid"); setRowsPerPage(6); setCurrentPage(1); }}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"}`}
+                title="Xem dạng thẻ (Grid)"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => { setViewMode("list"); setRowsPerPage(10); setCurrentPage(1); }}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"}`}
+                title="Xem dạng bảng (List)"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-          {/* Table Container with Visible Horizontal Scrollbar */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
-            <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-              <table className="w-full min-w-[850px] text-xs text-left border-collapse">
-                <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
-                  <tr>
-                    <th className="px-4 py-3.5 w-12 text-center whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={paginatedContracts.length > 0 && paginatedContracts.every(c => selectedContractIds.includes(c.id))}
-                        onChange={handleSelectAll}
-                        className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                      />
-                    </th>
-                    <th className="px-5 py-3.5 whitespace-nowrap">PHÒNG & MÃ HĐ</th>
-                    <th className="px-5 py-3.5 whitespace-nowrap">KHÁCH THUÊ</th>
-                    <th className="px-5 py-3.5 whitespace-nowrap">THỜI HẠN HỢP ĐỒNG</th>
-                    <th className="px-5 py-3.5 whitespace-nowrap">GIÁ THUÊ</th>
-                    <th className="px-5 py-3.5 whitespace-nowrap">THU TIỀN</th>
-                    <th className="px-5 py-3.5 whitespace-nowrap">TRẠNG THÁI</th>
-                    <th className="px-5 py-3.5 text-right whitespace-nowrap">THAO TÁC</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 bg-white">
-                  {paginatedContracts.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="p-8 text-center text-zinc-400 font-bold">
-                        Không tìm thấy hợp đồng nào phù hợp với bộ lọc.
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedContracts.map((c, idx) => {
-                      const isSelected = selectedContractIds.includes(c.id);
-                      return (
-                        <tr
-                          key={c.id || idx}
-                          onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                          className={`hover:bg-zinc-50/80 transition-colors group cursor-pointer ${isSelected ? 'bg-[#2AC1BC]/5' : ''}`}
-                        >
-                          <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={(e) => handleSelectOne(e, c.id)}
-                              className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                            />
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-sm text-[#2AC1BC]">Phòng {c.room}</span>
-                                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                  {c.building === 'dormio' ? 'Dormio Premier' : 'Dormio Campus'}
-                                </span>
-                              </div>
-                              <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold">
-                                <span>{c.id}</span>
-                                <button
-                                  onClick={(e) => copyToClipboard(e, c.id)}
-                                  className="p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded"
-                                  title="Sao chép mã hợp đồng"
-                                >
-                                  <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="flex flex-col">
-                              <span className="font-extrabold text-zinc-900 text-sm">{c.tenant}</span>
-                              {c.members && c.members.length > 0 && (
-                                <span className="text-[10px] font-bold text-zinc-500 mt-0.5 flex items-center gap-1">
-                                  <Users className="w-3 h-3 text-zinc-400" /> +{c.members.length} thành viên
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-zinc-700 text-xs">{c.startDate} <span className="text-zinc-300 font-normal">-</span> {c.endDate}</span>
-                              {c.isOverdue && (
-                                <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
-                                  Hết hạn
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 font-black text-zinc-900 text-sm whitespace-nowrap">
-                            {c.price}
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
-                              }`}>
-                              {c.paymentStatus === 'Còn nợ' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>}
-                              {c.paymentStatus}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                'bg-zinc-100 text-zinc-600 border-zinc-200'
-                              }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
-                                c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
-                                }`}></span>
-                              {c.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1 text-zinc-400">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setIsExtendModalOpen(true); setSelectedContract(c); }}
-                                className="p-1.5 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors cursor-pointer"
-                                title="Gia hạn hợp đồng"
-                              >
-                                <CalendarDays className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setIsTerminateModalOpen(true); setSelectedContract(c); }}
-                                className="p-1.5 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                                title="Chấm dứt hợp đồng"
-                              >
-                                <Ban className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+      {/* Grid View or Table View Container */}
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {paginatedContracts.length === 0 ? (
+            <div className="col-span-full p-8 text-center text-zinc-400 font-bold bg-white border border-zinc-200/80 rounded-2xl">
+              Không tìm thấy hợp đồng nào phù hợp với bộ lọc.
             </div>
+          ) : (
+            paginatedContracts.map((c, idx) => {
+              const isSelected = selectedContractIds.includes(c.id);
+              return (
+                <div
+                  key={c.id || idx}
+                  onClick={() => router.push(`/landlord/contracts/${c.id}`)}
+                  className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden ${
+                    isSelected ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 ring-2 ring-[#2AC1BC]/20' : 'border-zinc-200/80 hover:border-[#2AC1BC]/40'
+                  }`}
+                >
+                  {/* Card Header: Checkbox + Room & Building & Status */}
+                  <div>
+                    <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100">
+                      <div className="flex items-start gap-2.5">
+                        <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleSelectOne(e, c.id)}
+                            className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-black text-base text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
+                              Phòng {c.room}
+                            </h3>
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                              {c.building === 'dormio' ? 'Dormio Premier' : 'Dormio Campus'}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
+                            <span>Mã: {c.id}</span>
+                            <button
+                              onClick={(e) => copyToClipboard(e, c.id)}
+                              className="p-0.5 hover:text-[#2AC1BC] transition-colors rounded"
+                              title="Sao chép mã hợp đồng"
+                            >
+                              <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border shrink-0 ${
+                        c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                        'bg-zinc-100 text-zinc-600 border-zinc-200'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
+                          c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
+                        }`} />
+                        {c.status}
+                      </span>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="py-3 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-zinc-400" /> Đại diện thuê:
+                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-extrabold text-zinc-900">{c.tenant}</span>
+                          {c.members && c.members.length > 0 && (
+                            <span className="text-[10px] font-bold text-zinc-500 flex items-center gap-1">
+                              <Users className="w-3 h-3 text-zinc-400" /> +{c.members.length} người ở cùng
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                          <DollarSign className="w-3.5 h-3.5 text-zinc-400" /> Giá thuê:
+                        </span>
+                        <span className="font-black text-sm text-[#2AC1BC]">{c.price} / tháng</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                          <CalendarDays className="w-3.5 h-3.5 text-zinc-400" /> Thời hạn:
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-zinc-800">{c.startDate} - {c.endDate}</span>
+                          {c.isOverdue && (
+                            <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                              Hết hạn
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
+                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                          <CreditCard className="w-3.5 h-3.5 text-zinc-400" /> Thu tiền:
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${
+                          c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}>
+                          {c.paymentStatus === 'Còn nợ' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />}
+                          {c.paymentStatus}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsDetailViewOpen(true); }}
+                      className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Chi tiết
+                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsExtendModalOpen(true); }}
+                        className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                        title="Gia hạn hợp đồng"
+                      >
+                        <CalendarDays className="w-3.5 h-3.5" /> Gia hạn
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsTerminateModalOpen(true); }}
+                        className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                        title="Chấm dứt hợp đồng"
+                      >
+                        <Ban className="w-3.5 h-3.5" /> Chấm dứt
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      ) : (
+        /* Table Container with Visible Horizontal Scrollbar */
+        <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
+          <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
+            <table className="w-full min-w-[850px] text-xs text-left border-collapse">
+              <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
+                <tr>
+                  <th className="px-4 py-3.5 w-12 text-center whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={paginatedContracts.length > 0 && paginatedContracts.every(c => selectedContractIds.includes(c.id))}
+                      onChange={handleSelectAll}
+                      className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
+                    />
+                  </th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">PHÒNG & MÃ HĐ</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">KHÁCH THUÊ</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">THỜI HẠN HỢP ĐỒNG</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">GIÁ THUÊ</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">THU TIỀN</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">TRẠNG THÁI</th>
+                  <th className="px-5 py-3.5 text-right whitespace-nowrap">THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 bg-white">
+                {paginatedContracts.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-zinc-400 font-bold">
+                      Không tìm thấy hợp đồng nào phù hợp với bộ lọc.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedContracts.map((c, idx) => {
+                    const isSelected = selectedContractIds.includes(c.id);
+                    return (
+                      <tr
+                        key={c.id || idx}
+                        onClick={() => router.push(`/landlord/contracts/${c.id}`)}
+                        className={`hover:bg-zinc-50/80 transition-colors group cursor-pointer ${isSelected ? 'bg-[#2AC1BC]/5' : ''}`}
+                      >
+                        <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleSelectOne(e, c.id)}
+                            className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
+                          />
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-sm text-[#2AC1BC]">Phòng {c.room}</span>
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                {c.building === 'dormio' ? 'Dormio Premier' : 'Dormio Campus'}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold">
+                              <span>{c.id}</span>
+                              <button
+                                onClick={(e) => copyToClipboard(e, c.id)}
+                                className="p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded"
+                                title="Sao chép mã hợp đồng"
+                              >
+                                <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="font-extrabold text-zinc-900 text-sm">{c.tenant}</span>
+                            {c.members && c.members.length > 0 && (
+                              <span className="text-[10px] font-bold text-zinc-500 mt-0.5 flex items-center gap-1">
+                                <Users className="w-3 h-3 text-zinc-400" /> +{c.members.length} thành viên
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-zinc-700 text-xs">{c.startDate} <span className="text-zinc-300 font-normal">-</span> {c.endDate}</span>
+                            {c.isOverdue && (
+                              <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                                Hết hạn
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 font-black text-zinc-900 text-sm whitespace-nowrap">
+                          {c.price}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                            }`}>
+                            {c.paymentStatus === 'Còn nợ' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>}
+                            {c.paymentStatus}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              'bg-zinc-100 text-zinc-600 border-zinc-200'
+                            }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
+                              c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
+                              }`}></span>
+                            {c.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1 text-zinc-400">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setIsExtendModalOpen(true); setSelectedContract(c); }}
+                              className="p-1.5 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors cursor-pointer"
+                              title="Gia hạn hợp đồng"
+                            >
+                              <CalendarDays className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setIsTerminateModalOpen(true); setSelectedContract(c); }}
+                              className="p-1.5 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Chấm dứt hợp đồng"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
+        </div>
+      )}
 
           {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
