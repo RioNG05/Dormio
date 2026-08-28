@@ -81,11 +81,14 @@ export default function RoomsPage() {
     if (isDirty) {
       setConfirmModal({
         isOpen: true,
-        title: 'Cảnh báo chưa lưu',
-        message: 'Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn đóng trang này không?',
+        title: 'Xác nhận đóng form',
+        message: 'Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?',
         onConfirm: () => {
           setIsModalOpen(false);
-          setTimeout(() => setIsDirty(false), 200);
+          setIsDirty(false);
+          setFormRoomNumber("");
+          setFormNotes("");
+          setSelectedAmenities([]);
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         }
       });
@@ -766,21 +769,55 @@ export default function RoomsPage() {
   );
 }
 
-function ConfirmModal({ isOpen, title, message, onConfirm, onCancel }: { isOpen: boolean, title: string, message: string, onConfirm: () => void, onCancel: () => void }) {
+function ConfirmModal({
+  isOpen,
+  title = "Xác nhận đóng form",
+  message = "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
+  onConfirm,
+  onCancel
+}: {
+  isOpen: boolean;
+  title?: string;
+  message?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-        <div className="p-6">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4 text-red-500 shadow-inner">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-          <h3 className="text-xl font-bold text-zinc-900 mb-2">{title}</h3>
-          <p className="text-sm text-zinc-500">{message}</p>
+    <div
+      className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
+        {/* Warning Amber Icon Badge */}
+        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
+          <AlertTriangle className="w-7 h-7" />
         </div>
-        <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end gap-3">
-          <button onClick={onCancel} className="px-4 py-2 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">Hủy</button>
-          <button onClick={onConfirm} className="px-4 py-2 text-sm font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 shadow-md shadow-rose-600/20 transition-colors">Đồng ý</button>
+
+        {/* Header Title & Subtitle */}
+        <div className="space-y-2">
+          <h3 className="text-xl font-black text-zinc-900 tracking-tight">{title}</h3>
+          <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+            {message}
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
+          >
+            Tiếp tục chỉnh sửa
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
+          >
+            Hủy thay đổi & Đóng
+          </button>
         </div>
       </div>
     </div>

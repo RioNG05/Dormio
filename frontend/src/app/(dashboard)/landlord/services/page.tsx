@@ -1139,8 +1139,8 @@ function ConfirmModal({
   isOpen,
   title,
   message,
-  confirmText = "Đồng ý",
-  cancelText = "Hủy bỏ",
+  confirmText = "Hủy thay đổi & Đóng",
+  cancelText = "Tiếp tục chỉnh sửa",
   onConfirm,
   onCancel
 }: {
@@ -1156,27 +1156,34 @@ function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
     >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-200 mx-auto flex items-center justify-center shadow-inner">
+      <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
+        {/* Warning Amber Icon Badge */}
+        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
           <AlertTriangle className="w-7 h-7" />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
+
+        {/* Header Title & Subtitle */}
+        <div className="space-y-2">
+          <h3 className="text-xl font-black text-zinc-900 tracking-tight">{title}</h3>
+          <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">{message}</p>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 pt-2">
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-center gap-3 pt-2">
           <button
+            type="button"
             onClick={onCancel}
-            className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
           >
             {cancelText}
           </button>
           <button
+            type="button"
             onClick={onConfirm}
-            className="px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+            className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
           >
             {confirmText}
           </button>
