@@ -833,94 +833,85 @@ export default function ContractsPage() {
                 </p>
               </div>
 
-              <div className="flex flex-col items-end gap-3 w-full lg:w-auto mt-4 lg:mt-0">
-                <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
-                    <Building2 className="w-5 h-5 text-zinc-400 shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Số tòa nhà</span>
-                      <span className="font-black text-white text-lg leading-none mt-1">1</span>
-                    </div>
-                  </div>
+          {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets, Services, Customers) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
+              <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng HĐ</span>
+                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{contracts.length}</span>
+              </div>
+            </div>
 
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                    <FileSignature className="w-5 h-5 text-rose-500 shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng hợp đồng</span>
-                      <span className="font-black text-rose-500 text-lg leading-none mt-1">{contracts.length}</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Còn hiệu lực</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Còn hiệu lực" || c.status === "Đang hiệu lực").length}</span>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-3 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[145px]">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Còn hiệu lực</span>
-                      <span className="font-black text-white text-lg leading-none mt-1">{contracts.filter(c => c.status === "Còn hiệu lực" || c.status === "Đang hiệu lực").length}</span>
-                    </div>
-                  </div>
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Sắp hết hạn</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Sắp hết hạn" || c.status === "Quá hạn").length}</span>
+              </div>
+            </div>
 
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[145px]">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Sắp hết hạn</span>
-                      <span className="font-black text-white text-lg leading-none mt-1">{contracts.filter(c => c.status === "Sắp hết hạn" || c.status === "Quá hạn").length}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã chấm dứt</span>
-                      <span className="font-black text-white text-lg leading-none mt-1">{contracts.filter(c => c.status === "Chấm dứt" || c.status === "Đã chấm dứt").length}</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã chấm dứt</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Chấm dứt" || c.status === "Đã chấm dứt").length}</span>
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Filters & Quick Status Tabs Bar */}
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between pt-2">
-            <div className="flex flex-wrap items-center gap-2">
-              {[
-                { label: "Tất cả", value: "" },
-                { label: "Đang hiệu lực", value: "Đang hiệu lực" },
-                { label: "Sắp hết hạn", value: "Sắp hết hạn" },
-                { label: "Quá hạn", value: "Quá hạn" },
-                { label: "Đã chấm dứt", value: "Đã chấm dứt" },
-              ].map((tab) => {
-                const isActive = statusFilter === tab.value;
-                return (
-                  <button
-                    key={tab.value}
-                    onClick={() => { setStatusFilter(tab.value); setCurrentPage(1); }}
-                    className={`px-3 py-1.5 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${isActive
-                      ? "bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/20"
-                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                      }`}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              {/* Search */}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  type="text"
-                  placeholder="Tìm tên, số phòng, mã HĐ..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                  className="w-full pl-9 pr-4 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all bg-white"
-                />
-              </div>
-            </div>
+      {/* SINGLE ROW TOOLBAR (Filter Pills + Search Bar all in 1 Row) */}
+      <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Status Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+            {[
+              { label: "Tất cả", value: "" },
+              { label: "Đang hiệu lực", value: "Đang hiệu lực" },
+              { label: "Sắp hết hạn", value: "Sắp hết hạn" },
+              { label: "Quá hạn", value: "Quá hạn" },
+              { label: "Đã chấm dứt", value: "Đã chấm dứt" },
+            ].map((tab) => {
+              const isActive = statusFilter === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => { setStatusFilter(tab.value); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20"
+                      : "bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
+
+          {/* Search Input */}
+          <div className="relative w-full sm:w-64 shrink-0">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Tìm tên, số phòng, mã HĐ..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+            />
+          </div>
+        </div>
+      </div>
 
           {/* Table Container with Visible Horizontal Scrollbar */}
           <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
