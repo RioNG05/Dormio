@@ -164,6 +164,10 @@ export default function ServicesPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+
   // Building prefix helper
   const buildingPrefix = activeBuilding.id === "vinahouse" ? "B2" : "B1";
 
@@ -376,6 +380,9 @@ export default function ServicesPage() {
     return matchesSearch && matchesType;
   });
 
+  const totalPages = Math.ceil(filteredServices.length / itemsPerPage) || 1;
+  const paginatedServices = filteredServices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const meteredCount = services.filter(s => s.type === "Theo chỉ số đồng hồ").length;
   const roomFixedCount = services.filter(s => s.type === "Cố định theo phòng").length;
   const personFixedCount = services.filter(s => s.type === "Cố định theo người" || s.type === "Theo số lượng / Đăng ký").length;
@@ -518,7 +525,7 @@ export default function ServicesPage() {
             <span className="text-xs text-zinc-400 font-semibold sm:hidden">Chế độ xem:</span>
             <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200">
               <button
-                onClick={() => setViewMode("grid")}
+                onClick={() => { setViewMode("grid"); setItemsPerPage(6); setCurrentPage(1); }}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
                   }`}
                 title="Xem dạng thẻ (Grid)"
@@ -526,7 +533,7 @@ export default function ServicesPage() {
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setViewMode("list")}
+                onClick={() => { setViewMode("list"); setItemsPerPage(10); setCurrentPage(1); }}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
                   }`}
                 title="Xem dạng bảng (List)"
@@ -565,7 +572,7 @@ export default function ServicesPage() {
         /* GRID VIEW CARDS */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredServices.length > 0 ? (
-            filteredServices.map((service) => (
+            paginatedServices.map((service) => (
               <div
                 key={service.id}
                 className={`bg-white border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${service.isActive ? "border-zinc-200/90" : "border-zinc-200 opacity-70 bg-zinc-50/50"
@@ -703,7 +710,7 @@ export default function ServicesPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredServices.map((service) => (
+                  paginatedServices.map((service) => (
                     <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors">
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
@@ -781,6 +788,72 @@ export default function ServicesPage() {
           </div>
         </div>
       )}
+
+      {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+            <span>Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={itemsPerPage || ""}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                setCurrentPage(1);
+              }}
+              className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+            />
+            <span>/ trang</span>
+          </div>
+
+          <span className="hidden sm:inline text-zinc-300">|</span>
+
+          <div>
+            <span className="font-extrabold text-zinc-800">{filteredServices.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(currentPage * itemsPerPage, filteredServices.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredServices.length}</span> dịch vụ
+          </div>
+        </div>
+        {(() => {
+          const windowSize = 5;
+          const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
+          const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+          const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+          return (
+            <div className="flex items-center gap-1.5">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                &larr; Trước
+              </button>
+              {visiblePages.map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                    currentPage === page
+                      ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                      : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
+                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                Sau &rarr;
+              </button>
+            </div>
+          );
+        })()}
+      </div>
 
       {/* ADD / EDIT SERVICE MODAL */}
       {isModalOpen && (

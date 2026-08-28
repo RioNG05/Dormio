@@ -23,7 +23,7 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [sortFilter, setSortFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -80,7 +80,7 @@ export default function CustomersPage() {
   const [linkSearchQuery, setLinkSearchQuery] = useState("");
 
 
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     setCurrentPage(1);
@@ -431,16 +431,14 @@ export default function CustomersPage() {
               <button
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${
-                  statusFilter === tab.id
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${statusFilter === tab.id
                     ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs"
                     : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
-                }`}
+                  }`}
               >
                 <span className="whitespace-nowrap">{tab.label}</span>
-                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${
-                  statusFilter === tab.id ? "bg-white/20 text-white" : tab.color
-                }`}>
+                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${statusFilter === tab.id ? "bg-white/20 text-white" : tab.color
+                  }`}>
                   {tab.count}
                 </span>
               </button>
@@ -480,19 +478,17 @@ export default function CustomersPage() {
           {/* Right Controls: View Mode Switcher */}
           <div className="flex items-center justify-end gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0 self-end lg:self-auto">
             <button
-              onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
-              }`}
+              onClick={() => { setViewMode("grid"); setItemsPerPage(6); setCurrentPage(1); }}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
+                }`}
               title="Xem dạng thẻ (Grid)"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
-              }`}
+              onClick={() => { setViewMode("list"); setItemsPerPage(10); setCurrentPage(1); }}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
+                }`}
               title="Xem dạng bảng (List)"
             >
               <List className="w-4 h-4" />
@@ -670,43 +666,70 @@ export default function CustomersPage() {
         )
       }
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
-        <div className="flex items-center gap-2 text-sm text-zinc-600 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-200/50 shadow-sm">
-          <span className="font-medium">Hiển thị</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-            className="bg-transparent focus:outline-none font-bold text-primary cursor-pointer"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-          <span className="font-medium">/ trang</span>
-        </div>
+      {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+            <span>Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={itemsPerPage || ""}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                setCurrentPage(1);
+              }}
+              className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+            />
+            <span>/ trang</span>
+          </div>
 
-        <div className="flex items-center gap-4 bg-white/70 backdrop-blur-md px-4 py-1.5 rounded-xl border border-zinc-200/50 shadow-sm">
-          <span className="text-sm font-medium text-zinc-600">
-            {sortedCustomers.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + itemsPerPage, sortedCustomers.length)} của <span className="font-bold text-zinc-900">{sortedCustomers.length}</span>
-          </span>
-          <div className="flex gap-1 border-l border-zinc-200/50 pl-3 ml-1">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-500"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              disabled={currentPage === totalPages || totalPages === 0}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-500"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+          <span className="hidden sm:inline text-zinc-300">|</span>
+
+          <div>
+            <span className="font-extrabold text-zinc-800">{sortedCustomers.length === 0 ? 0 : startIndex + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(startIndex + itemsPerPage, sortedCustomers.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{sortedCustomers.length}</span> khách thuê
           </div>
         </div>
+        {(() => {
+          const windowSize = 5;
+          const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
+          const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+          const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+          return (
+            <div className="flex items-center gap-1.5">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                &larr; Trước
+              </button>
+              {visiblePages.map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                    currentPage === page
+                      ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                      : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
+                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                Sau &rarr;
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Add / Edit Tenant Modal */}
