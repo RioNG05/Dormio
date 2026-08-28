@@ -85,6 +85,9 @@ export default function RemindersPage() {
   const [notifTargetScope, setNotifTargetScope] = useState("Toàn bộ tòa nhà");
   const [notifChannel, setNotifChannel] = useState<NotificationItem["channel"]>("Thông báo hệ thống");
 
+  // Unsaved Changes Confirmation Modal state
+  const [confirmCloseTarget, setConfirmCloseTarget] = useState<"task" | "notif" | null>(null);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -365,6 +368,43 @@ export default function RemindersPage() {
     }));
   };
 
+  const closeAndResetTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setTaskTitle("");
+    setTaskCategory("Bảo trì");
+    setTaskAssignee("Nguyễn Văn Tuấn (Kỹ thuật)");
+    setTaskRoom("101");
+    setTaskPriority("Trung bình");
+    setTaskDueDate("2026-08-30");
+    setTaskDueTime("17:00");
+    setTaskNotes("");
+  };
+
+  const closeAndResetNotifModal = () => {
+    setIsNotifModalOpen(false);
+    setNotifTitle("");
+    setNotifContent("");
+    setNotifCategory("Điện nước");
+    setNotifTargetScope("Toàn bộ tòa nhà");
+    setNotifChannel("Thông báo hệ thống");
+  };
+
+  const requestCloseTaskModal = () => {
+    if (taskTitle.trim() !== "" || taskNotes.trim() !== "") {
+      setConfirmCloseTarget("task");
+    } else {
+      closeAndResetTaskModal();
+    }
+  };
+
+  const requestCloseNotifModal = () => {
+    if (notifTitle.trim() !== "" || notifContent.trim() !== "") {
+      setConfirmCloseTarget("notif");
+    } else {
+      closeAndResetNotifModal();
+    }
+  };
+
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskTitle.trim()) return;
@@ -387,9 +427,7 @@ export default function RemindersPage() {
     };
 
     setTasks([newTask, ...tasks]);
-    setIsTaskModalOpen(false);
-    setTaskTitle("");
-    setTaskNotes("");
+    closeAndResetTaskModal();
   };
 
   const handleSendNotification = (e: React.FormEvent) => {
@@ -410,9 +448,7 @@ export default function RemindersPage() {
     };
 
     setNotifications([newNotif, ...notifications]);
-    setIsNotifModalOpen(false);
-    setNotifTitle("");
-    setNotifContent("");
+    closeAndResetNotifModal();
   };
 
   // Filter Tasks
@@ -689,27 +725,25 @@ export default function RemindersPage() {
               </>
             )}
 
-            {/* View Switcher (For Reminders Tab) */}
-            {activeTab === "reminders" && (
-              <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0 ml-auto sm:ml-0">
-                <button
-                  onClick={() => { setViewMode("grid"); setItemsPerPage(6); setTaskPage(1); }}
-                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
-                    }`}
-                  title="Dạng thẻ Grid"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => { setViewMode("list"); setItemsPerPage(10); setTaskPage(1); }}
-                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
-                    }`}
-                  title="Dạng danh sách List"
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            {/* View Switcher (For both Reminders & Notifications Tabs) */}
+            <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0 ml-auto sm:ml-0">
+              <button
+                onClick={() => { setViewMode("grid"); setItemsPerPage(6); setTaskPage(1); setNotifPage(1); }}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
+                  }`}
+                title="Dạng thẻ Grid"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => { setViewMode("list"); setItemsPerPage(10); setTaskPage(1); setNotifPage(1); }}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
+                  }`}
+                title="Dạng danh sách List"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1054,83 +1088,160 @@ export default function RemindersPage() {
       {/* 5. Tab 2: Tenant Notifications Broadcast Section */}
       {activeTab === "notifications" && (
         <div className="space-y-4">
-          <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-xs text-left border-collapse min-w-[950px]">
-                <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
-                  <tr>
-                    <th className="px-4 py-3.5 whitespace-nowrap w-80">Phân loại & Tiêu đề</th>
-                    <th className="px-4 py-3.5 whitespace-nowrap">Đối tượng nhận</th>
-                    <th className="px-4 py-3.5 whitespace-nowrap">Kênh gửi</th>
-                    <th className="px-4 py-3.5 whitespace-nowrap">Tỷ lệ đã đọc</th>
-                    <th className="px-4 py-3.5 whitespace-nowrap">Thời gian đăng</th>
-                    <th className="px-4 py-3.5 text-right whitespace-nowrap">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {paginatedNotifications.map((notif) => {
-                    const readPct = Math.round((notif.readCount / notif.totalTarget) * 100);
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginatedNotifications.length === 0 ? (
+                <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 font-bold">
+                  Không tìm thấy thông báo nào phù hợp với bộ lọc.
+                </div>
+              ) : (
+                paginatedNotifications.map((notif) => {
+                  const readPct = Math.round((notif.readCount / notif.totalTarget) * 100);
+                  return (
+                    <div
+                      key={notif.id}
+                      onClick={() => setSelectedNotifDetail(notif)}
+                      className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all cursor-pointer group flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Header: Category Badge + Sent At */}
+                        <div className="flex items-center justify-between gap-2 pb-3 border-b border-zinc-100">
+                          <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${
+                            notif.category === "Khẩn cấp" ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
+                            notif.category === "Điện nước" ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
+                            notif.category === "Tiền nhà" ? "bg-emerald-500/15 text-emerald-700 border border-emerald-500/30" :
+                            "bg-blue-500/15 text-blue-600 border border-blue-500/30"
+                          }`}>
+                            {notif.category}
+                          </span>
+                          <span className="text-[11px] font-semibold text-zinc-400">{notif.sentAt}</span>
+                        </div>
 
-                    return (
-                      <tr key={notif.id} className="hover:bg-zinc-50/80 transition-colors">
-                        <td className="px-4 py-4 max-w-sm">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${notif.category === "Khẩn cấp" ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
-                              notif.category === "Điện nước" ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
-                                notif.category === "Tiền nhà" ? "bg-[#2AC1BC]/15 text-[#2AC1BC] border border-[#2AC1BC]/30" :
-                                  "bg-blue-500/15 text-blue-600 border border-blue-500/30"
-                              }`}>
-                              {notif.category}
-                            </span>
-                            <span className="font-bold text-zinc-900 text-sm truncate">{notif.title}</span>
-                          </div>
-                          <p className="text-zinc-500 text-xs line-clamp-1">{notif.content}</p>
-                        </td>
+                        {/* Title & Content Body */}
+                        <div className="py-3 space-y-1.5">
+                          <h3 className="font-extrabold text-sm text-zinc-900 group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                            {notif.title}
+                          </h3>
+                          <p className="text-zinc-500 text-xs line-clamp-2 leading-relaxed">
+                            {notif.content}
+                          </p>
+                        </div>
 
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-700 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap">
+                        {/* Metadata Pills */}
+                        <div className="flex flex-wrap items-center gap-2 py-2 border-t border-zinc-100 text-xs font-bold text-zinc-700">
+                          <span className="inline-flex items-center gap-1.5 bg-zinc-100 px-2.5 py-1 rounded-full text-[11px]">
                             <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> {notif.targetScope}
                           </span>
-                        </td>
-
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] px-2.5 py-1 rounded-full text-[11px]">
                             <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" /> {notif.channel}
                           </span>
-                        </td>
+                        </div>
 
                         {/* Read Progress Bar */}
-                        <td className="px-4 py-4 whitespace-nowrap min-w-[160px]">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center justify-between text-[11px] font-bold">
-                              <span className="text-zinc-700">{notif.readCount}/{notif.totalTarget} Khách</span>
-                              <span className="text-[#2AC1BC]">{readPct}%</span>
-                            </div>
-                            <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                              <div className="h-full bg-[#2AC1BC] rounded-full transition-all" style={{ width: `${readPct}%` }} />
-                            </div>
+                        <div className="pt-2 border-t border-zinc-100">
+                          <div className="flex items-center justify-between text-[11px] font-bold mb-1">
+                            <span className="text-zinc-600">Đã đọc: {notif.readCount}/{notif.totalTarget} Khách</span>
+                            <span className="text-[#2AC1BC]">{readPct}%</span>
                           </div>
-                        </td>
+                          <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-[#2AC1BC] rounded-full transition-all" style={{ width: `${readPct}%` }} />
+                          </div>
+                        </div>
+                      </div>
 
-                        <td className="px-4 py-4 text-zinc-500 font-semibold whitespace-nowrap">
-                          {notif.sentAt}
-                        </td>
-
-                        <td className="px-4 py-4 text-right whitespace-nowrap">
-                          <button
-                            onClick={() => setSelectedNotifDetail(notif)}
-                            className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
-                          >
-                            <Eye className="w-3.5 h-3.5" /> Xem chi tiết
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      {/* Footer Action Button */}
+                      <div className="pt-3 mt-3 border-t border-zinc-100 flex items-center justify-end">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedNotifDetail(notif); }}
+                          className="w-full px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Xem chi tiết
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-xs text-left border-collapse min-w-[950px]">
+                  <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
+                    <tr>
+                      <th className="px-4 py-3.5 whitespace-nowrap w-80">Phân loại & Tiêu đề</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Đối tượng nhận</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Kênh gửi</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Tỷ lệ đã đọc</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Thời gian đăng</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {paginatedNotifications.map((notif) => {
+                      const readPct = Math.round((notif.readCount / notif.totalTarget) * 100);
+
+                      return (
+                        <tr key={notif.id} className="hover:bg-zinc-50/80 transition-colors">
+                          <td className="px-4 py-4 max-w-sm">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${notif.category === "Khẩn cấp" ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
+                                notif.category === "Điện nước" ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
+                                  notif.category === "Tiền nhà" ? "bg-emerald-500/15 text-emerald-700 border border-emerald-500/30" :
+                                    "bg-blue-500/15 text-blue-600 border border-blue-500/30"
+                                }`}>
+                                {notif.category}
+                              </span>
+                              <span className="font-bold text-zinc-900 text-sm truncate">{notif.title}</span>
+                            </div>
+                            <p className="text-zinc-500 text-xs line-clamp-1">{notif.content}</p>
+                          </td>
+
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-700 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap">
+                              <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> {notif.targetScope}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 whitespace-nowrap">
+                              <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" /> {notif.channel}
+                            </span>
+                          </td>
+
+                          {/* Read Progress Bar */}
+                          <td className="px-4 py-4 whitespace-nowrap min-w-[160px]">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center justify-between text-[11px] font-bold">
+                                <span className="text-zinc-700">{notif.readCount}/{notif.totalTarget} Khách</span>
+                                <span className="text-[#2AC1BC]">{readPct}%</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#2AC1BC] rounded-full transition-all" style={{ width: `${readPct}%` }} />
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-4 text-zinc-500 font-semibold whitespace-nowrap">
+                            {notif.sentAt}
+                          </td>
+
+                          <td className="px-4 py-4 text-right whitespace-nowrap">
+                            <button
+                              onClick={() => setSelectedNotifDetail(notif)}
+                              className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> Xem chi tiết
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Notifications Pagination Footer */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
@@ -1203,7 +1314,7 @@ export default function RemindersPage() {
       {isTaskModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={(e) => { if (e.target === e.currentTarget) setIsTaskModalOpen(false); }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) requestCloseTaskModal(); }}
         >
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-900 text-white">
@@ -1217,7 +1328,7 @@ export default function RemindersPage() {
                 </div>
               </div>
               <button
-                onClick={() => setIsTaskModalOpen(false)}
+                onClick={requestCloseTaskModal}
                 className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1334,7 +1445,7 @@ export default function RemindersPage() {
               <div className="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsTaskModalOpen(false)}
+                  onClick={requestCloseTaskModal}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   Hủy bỏ
@@ -1355,7 +1466,7 @@ export default function RemindersPage() {
       {isNotifModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={(e) => { if (e.target === e.currentTarget) setIsNotifModalOpen(false); }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) requestCloseNotifModal(); }}
         >
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-900 text-white">
@@ -1369,7 +1480,7 @@ export default function RemindersPage() {
                 </div>
               </div>
               <button
-                onClick={() => setIsNotifModalOpen(false)}
+                onClick={requestCloseNotifModal}
                 className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1461,7 +1572,7 @@ export default function RemindersPage() {
               <div className="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsNotifModalOpen(false)}
+                  onClick={requestCloseNotifModal}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   Hủy bỏ
@@ -1531,6 +1642,51 @@ export default function RemindersPage() {
                 className="px-5 py-2 text-xs font-bold text-white bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. MODAL POP-UP: Confirm Close Form with Unsaved Changes */}
+      {confirmCloseTarget && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmCloseTarget(null); }}
+        >
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
+            {/* Warning Amber Icon Badge */}
+            <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+
+            {/* Header Title & Subtitle */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-zinc-900 tracking-tight">Xác nhận đóng form</h3>
+              <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+                Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmCloseTarget(null)}
+                className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
+              >
+                Tiếp tục chỉnh sửa
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmCloseTarget === "task") closeAndResetTaskModal();
+                  if (confirmCloseTarget === "notif") closeAndResetNotifModal();
+                  setConfirmCloseTarget(null);
+                }}
+                className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
+              >
+                Hủy thay đổi & Đóng
               </button>
             </div>
           </div>
