@@ -23,6 +23,10 @@ export default function AssetsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -207,6 +211,9 @@ export default function AssetsPage() {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
+  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage) || 1;
+  const paginatedAssets = filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const inUseCount = assets.filter(a => a.status === "Đang sử dụng").length;
   const maintenanceCount = assets.filter(a => a.status === "Bảo trì" || a.status === "Hỏng hóc").length;
   const stockCount = assets.filter(a => a.status === "Sẵn sàng" || a.room === "Kho").length;
@@ -354,14 +361,14 @@ export default function AssetsPage() {
 
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
             <button
-              onClick={() => setViewMode("grid")}
+              onClick={() => { setViewMode("grid"); setItemsPerPage(6); setCurrentPage(1); }}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-600"}`}
               title="Chế độ lưới"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode("list")}
+              onClick={() => { setViewMode("list"); setItemsPerPage(10); setCurrentPage(1); }}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-600"}`}
               title="Chế độ danh sách"
             >
@@ -411,7 +418,7 @@ export default function AssetsPage() {
                 Không tìm thấy tài sản phù hợp
               </div>
             ) : (
-              filteredAssets.map(asset => {
+              paginatedAssets.map(asset => {
                 const dep = calculateDepreciation(asset);
                 return (
                   <div
@@ -504,7 +511,7 @@ export default function AssetsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredAssets.map((asset) => {
+                  paginatedAssets.map((asset) => {
                     const dep = calculateDepreciation(asset);
                     return (
                       <tr
@@ -558,6 +565,72 @@ export default function AssetsPage() {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+            <span>Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={itemsPerPage || ""}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                setCurrentPage(1);
+              }}
+              className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+            />
+            <span>/ trang</span>
+          </div>
+
+          <span className="hidden sm:inline text-zinc-300">|</span>
+
+          <div>
+            <span className="font-extrabold text-zinc-800">{filteredAssets.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(currentPage * itemsPerPage, filteredAssets.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredAssets.length}</span> tài sản
+          </div>
+        </div>
+        {(() => {
+          const windowSize = 5;
+          const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
+          const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+          const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+          return (
+            <div className="flex items-center gap-1.5">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                &larr; Trước
+              </button>
+              {visiblePages.map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                    currentPage === page
+                      ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                      : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
+                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                Sau &rarr;
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ADD / EDIT ASSET MODAL WITH SKU & DEPRECIATION */}

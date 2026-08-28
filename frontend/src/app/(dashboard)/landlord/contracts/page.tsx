@@ -171,10 +171,11 @@ export default function ContractsPage() {
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const currentPageIds = paginatedContracts.map(c => c.id);
     if (e.target.checked) {
-      setSelectedContractIds(contracts.map(c => c.id));
+      setSelectedContractIds(Array.from(new Set([...selectedContractIds, ...currentPageIds])));
     } else {
-      setSelectedContractIds([]);
+      setSelectedContractIds(selectedContractIds.filter(id => !currentPageIds.includes(id)));
     }
   };
 
@@ -922,7 +923,7 @@ export default function ContractsPage() {
                     <th className="px-4 py-3.5 w-12 text-center whitespace-nowrap">
                       <input
                         type="checkbox"
-                        checked={selectedContractIds.length > 0 && selectedContractIds.length === contracts.length}
+                        checked={paginatedContracts.length > 0 && paginatedContracts.every(c => selectedContractIds.includes(c.id))}
                         onChange={handleSelectAll}
                         className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
                       />
@@ -1049,43 +1050,70 @@ export default function ContractsPage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
-            <div className="flex items-center gap-2 text-sm text-zinc-600 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-200/50 shadow-sm">
-              <span className="font-medium">Hiển thị</span>
-              <select
-                value={rowsPerPage}
-                onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                className="bg-transparent focus:outline-none font-bold text-primary cursor-pointer"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="font-medium">/ trang</span>
-            </div>
+          {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+              <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+                <span>Hiển thị</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={rowsPerPage || ""}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                    setCurrentPage(1);
+                  }}
+                  className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                />
+                <span>/ trang</span>
+              </div>
 
-            <div className="flex items-center gap-4 bg-white/70 backdrop-blur-md px-4 py-1.5 rounded-xl border border-zinc-200/50 shadow-sm">
-              <span className="text-sm font-medium text-zinc-600">
-                {totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1} - {Math.min(currentPage * rowsPerPage, totalItems)} của <span className="font-bold text-zinc-900">{totalItems}</span>
-              </span>
-              <div className="flex gap-1 border-l border-zinc-200/50 pl-3 ml-1">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-500"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-500"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+              <span className="hidden sm:inline text-zinc-300">|</span>
+
+              <div>
+                <span className="font-extrabold text-zinc-800">{totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(currentPage * rowsPerPage, totalItems)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{totalItems}</span> hợp đồng
               </div>
             </div>
+            {(() => {
+              const windowSize = 5;
+              const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
+              const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+              const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+              return (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    &larr; Trước
+                  </button>
+                  {visiblePages.map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                        currentPage === page
+                          ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                          : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
+                    onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
+                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    Sau &rarr;
+                  </button>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Floating Action Bar */}
