@@ -677,13 +677,13 @@ export default function ServicesPage() {
           )}
         </div>
       ) : (
-        /* LIST VIEW TABLE (With sticky frozen column for Mã / Dịch vụ when scrolling horizontally) */
+        /* LIST VIEW TABLE */
         <div className="bg-white border border-zinc-200/80 rounded-2xl sm:rounded-3xl shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto relative">
+          <div className="overflow-x-auto">
             <table className="w-full text-xs text-left min-w-[900px]">
               <thead className="bg-zinc-50 text-zinc-500 uppercase font-extrabold border-b border-zinc-200 whitespace-nowrap">
                 <tr>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[200px] sticky left-0 z-20 bg-zinc-50 border-r border-zinc-200/80 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.08)]">
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[200px]">
                     Mã / Dịch vụ
                   </th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[170px]">Hình thức</th>
@@ -704,8 +704,8 @@ export default function ServicesPage() {
                   </tr>
                 ) : (
                   filteredServices.map((service) => (
-                    <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors group">
-                      <td className="px-4 sm:px-6 py-4 sticky left-0 z-10 bg-white group-hover:bg-zinc-50 border-r border-zinc-200/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                    <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors">
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${service.bg} ${service.color}`}>
                             {renderIcon(service.iconName, "w-4.5 h-4.5")}
