@@ -127,6 +127,11 @@
 - Auth state in Zustand store (`src/store/`).
 - Auth check in `middleware.ts` — redirect unauthenticated users to `/auth/login`.
 - TailwindCSS v4 for styling. Minimize inline `style={{}}`.
+- **Standardized Pagination Footer**:
+  - Left control: `Hiển thị [ <input type="number"> ] / trang` (no word "dòng", centered number) + `| X - Y trên tổng số Z [mục]`.
+  - Initial defaults: Table/List view = **10/trang**, Grid view = **6/trang** (cards x2 per page). Switching Grid ↔ List auto-updates itemsPerPage (6 vs 10).
+  - 5-page window jumping: Prev/Next buttons jump by 5 pages (`windowStart ± windowSize`). Teal `#2AC1BC` for active page.
+  - Table Select All checkbox: Toggling header checkbox selects/deselects **only current page items (`paginatedItems`)**.
 
 ---
 
