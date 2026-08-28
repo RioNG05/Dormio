@@ -243,58 +243,58 @@ export default function RoomsPage() {
             </p>
           </div>
 
-          <div className="flex flex-col items-end gap-3 w-full lg:w-auto mt-4 lg:mt-0">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
-                <Building2 className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+          {/* Stat Chips split into Row 1 (2 cards: Tổng phòng & Tỷ lệ lấp đầy) and Row 2 (4 cards: Đang thuê, Trống, Bảo trì, Đặt cọc) */}
+          <div className="flex flex-col items-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-4 lg:mt-0">
+            {/* HÀNG 1: 2 thẻ Thống Kê Tổng Quan */}
+            <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-2.5 sm:gap-3 w-full">
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[135px]">
+                <Home className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-zinc-400 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng số tầng</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">4</span>
+                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng phòng</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{totalRooms}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <Home className="w-5 h-5 text-rose-500 flex-shrink-0" />
+
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                <Target className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng số phòng</span>
-                  <span className="font-black text-rose-500 text-lg leading-none mt-1">{totalRooms}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <Target className="w-5 h-5 text-rose-500 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tỷ lệ lấp đầy</span>
-                  <span className="font-black text-rose-500 text-lg leading-none mt-1">{occupancyRate}%</span>
+                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Lấp đầy</span>
+                  <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{occupancyRate}%</span>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] flex-shrink-0"></div>
+            {/* HÀNG 2: 4 thẻ Đồng Cấp Chi Tiết Trạng Thái */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-row lg:justify-end gap-2.5 sm:gap-3 w-full">
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col">
                   <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang thuê</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{occupiedCount}</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{occupiedCount}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] flex-shrink-0"></div>
+
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Trống</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{vacantCount}</span>
+                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Phòng trống</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{vacantCount}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] flex-shrink-0"></div>
+
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
                 <div className="flex flex-col">
                   <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Bảo trì</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{maintenanceCount}</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{maintenanceCount}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 transition-colors rounded-xl border border-purple-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] flex-shrink-0"></div>
+
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 transition-colors rounded-xl border border-purple-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
                   <span className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">Đặt cọc</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{reservedCount}</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{reservedCount}</span>
                 </div>
               </div>
             </div>
@@ -302,65 +302,70 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Filters & Table */}
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-zinc-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Tìm phòng..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            />
-          </div>
-          <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
-            <div className="relative flex-shrink-0">
-              <Target className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
-              >
-                <option value="">Trạng thái</option>
-                <option value="Trống">Trống</option>
-                <option value="Đang thuê">Đang thuê</option>
-                <option value="Bảo trì">Bảo trì</option>
-                <option value="Đặt cọc">Đặt cọc</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+      {/* ROOM LIST CONTAINER CARD WITH INTEGRATED TOOLBAR */}
+      <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
+        {/* SINGLE ROW TOOLBAR CONTAINER (Matching exact size & format in user screenshot) */}
+        <div className="p-3 sm:p-4 border-b border-zinc-200/80">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Search Bar - Left side */}
+            <div className="relative w-full sm:w-72 shrink-0">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Tìm theo số phòng, khách thuê..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+              />
             </div>
 
-            <div className="relative flex-shrink-0">
-              <FileSignature className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-              <select
-                value={contractFilter}
-                onChange={(e) => setContractFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
-              >
-                <option value="">Hợp đồng</option>
-                <option value="active">Đang hiệu lực</option>
-                <option value="expired">Quá hạn</option>
-                <option value="expiring_soon">Sắp hết hạn (≤30 ngày)</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
-            </div>
+            {/* Right side Filter Dropdowns (Status, Contract, Invoice) - Responsive Grid on Mobile, Flex on Desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:flex md:items-center md:justify-end gap-2 w-full md:w-auto">
+              {/* Trạng thái phòng */}
+              <div className="relative w-full md:w-auto">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
+                >
+                  <option value="">Mọi trạng thái</option>
+                  <option value="Trống">Trống</option>
+                  <option value="Đang thuê">Đang thuê</option>
+                  <option value="Bảo trì">Bảo trì</option>
+                  <option value="Đặt cọc">Đặt cọc</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+              </div>
 
-            <div className="relative flex-shrink-0">
-              <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-              <select
-                value={invoiceFilter}
-                onChange={(e) => setInvoiceFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-colors font-medium"
-              >
-                <option value="">Hóa đơn</option>
-                <option value="paid">Đã thu</option>
-                <option value="overdue">Quá hạn</option>
-                <option value="debt">Còn nợ</option>
-                <option value="none">Chưa có</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+              {/* Hợp đồng */}
+              <div className="relative w-full md:w-auto">
+                <select
+                  value={contractFilter}
+                  onChange={(e) => setContractFilter(e.target.value)}
+                  className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
+                >
+                  <option value="">Tất cả Hợp đồng</option>
+                  <option value="active">HĐ Đang hiệu lực</option>
+                  <option value="expired">HĐ Quá hạn</option>
+                  <option value="expiring_soon">HĐ Sắp hết hạn</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+              </div>
+
+              {/* Hóa đơn */}
+              <div className="relative w-full md:w-auto">
+                <select
+                  value={invoiceFilter}
+                  onChange={(e) => setInvoiceFilter(e.target.value)}
+                  className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
+                >
+                  <option value="">Tất cả Hóa đơn</option>
+                  <option value="paid">Đã thanh toán</option>
+                  <option value="overdue">Quá hạn</option>
+                  <option value="debt">Còn nợ</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+              </div>
             </div>
           </div>
         </div>
