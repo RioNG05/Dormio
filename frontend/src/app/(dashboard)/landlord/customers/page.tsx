@@ -379,125 +379,125 @@ export default function CustomersPage() {
             </p>
           </div>
 
-          <div className="flex flex-col items-end gap-3 w-full lg:w-auto mt-4 lg:mt-0">
-            {/* Stats Row 1 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[145px]">
-                <Building2 className="w-5 h-5 text-zinc-400 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Số tòa nhà</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">1</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <Users className="w-5 h-5 text-rose-500 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng khách thuê</span>
-                  <span className="font-black text-rose-500 text-lg leading-none mt-1">{totalCustomers}</span>
-                </div>
+          {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets & Services) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
+              <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng khách</span>
+                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{totalCustomers}</span>
               </div>
             </div>
 
-            {/* Stats Row 2 */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] flex-shrink-0"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang ở</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{stayingCount}</span>
-                </div>
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang ở</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{stayingCount}</span>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-500/10 hover:bg-orange-500/20 transition-colors rounded-xl border border-orange-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)] flex-shrink-0"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-orange-400 tracking-wider">Sắp hết HĐ</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{expiringCount}</span>
-                </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Sắp hết HĐ</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{expiringCount}</span>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[145px]">
-                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] flex-shrink-0"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã rời</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">{leftCount}</span>
-                </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã rời</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{leftCount}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 1-Click Quick Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 pb-2">
-        {[
-          { id: "", label: "Tất cả", count: totalCustomers, color: "text-zinc-700 bg-zinc-100 border-zinc-200" },
-          { id: "Đang ở", label: "Đang ở", count: stayingCount, color: "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30" },
-          { id: "Sắp hết hợp đồng", label: "Sắp hết HĐ", count: expiringCount, color: "text-orange-700 bg-orange-50 border-orange-200" },
-          { id: "Đã rời", label: "Đã rời", count: leftCount, color: "text-blue-700 bg-blue-50 border-blue-200" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setStatusFilter(tab.id)}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer whitespace-nowrap ${statusFilter === tab.id
-              ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-xs"
-              : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50"
-              }`}
-          >
-            <span className="whitespace-nowrap">{tab.label}</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black whitespace-nowrap ${statusFilter === tab.id ? "bg-white/20 text-white" : tab.color
-              }`}>
-              {tab.count}
-            </span>
-          </button>
-        ))}
-      </div>
+      {/* SINGLE ROW TOOLBAR (Filter Pills + Search + Sort + View Switcher all in 1 Row) */}
+      <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Left Controls: Status Pills + Search + Sort */}
+          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+            {/* Filter Pills */}
+            {[
+              { id: "", label: "Tất cả", count: totalCustomers, color: "text-zinc-700 bg-zinc-100 border-zinc-200" },
+              { id: "Đang ở", label: "Đang ở", count: stayingCount, color: "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30" },
+              { id: "Sắp hết hợp đồng", label: "Sắp hết HĐ", count: expiringCount, color: "text-orange-700 bg-orange-50 border-orange-200" },
+              { id: "Đã rời", label: "Đã rời", count: leftCount, color: "text-blue-700 bg-blue-50 border-blue-200" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${
+                  statusFilter === tab.id
+                    ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs"
+                    : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                }`}
+              >
+                <span className="whitespace-nowrap">{tab.label}</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${
+                  statusFilter === tab.id ? "bg-white/20 text-white" : tab.color
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex flex-wrap gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
-          <div className="relative w-full md:w-64 flex-shrink-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Tìm tên, SĐT, CCCD..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC]"
-            />
+            {/* Separator Line */}
+            <div className="hidden xl:block h-6 w-px bg-zinc-200 mx-1 shrink-0" />
+
+            {/* Search Input */}
+            <div className="relative w-full sm:w-52 shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Tìm tên, SĐT, CCCD..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+              />
+            </div>
+
+            {/* Sort Select */}
+            <div className="relative shrink-0">
+              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+              <select
+                value={sortFilter}
+                onChange={(e) => setSortFilter(e.target.value)}
+                className="pl-8 pr-7 py-1.5 text-xs font-semibold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-100 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap"
+              >
+                <option value="">Sắp xếp</option>
+                <option value="name_asc">Theo tên (A-Z)</option>
+                <option value="room_asc">Theo số phòng</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            </div>
           </div>
 
-          {/* Sắp xếp */}
-          <div className="relative flex-shrink-0">
-            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-            <select
-              value={sortFilter}
-              onChange={(e) => setSortFilter(e.target.value)}
-              className="pl-9 pr-8 py-2 text-sm text-zinc-700 bg-white border border-zinc-200 rounded-lg appearance-none hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] cursor-pointer transition-colors font-medium whitespace-nowrap"
+          {/* Right Controls: View Mode Switcher */}
+          <div className="flex items-center justify-end gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0 self-end lg:self-auto">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+              title="Xem dạng thẻ (Grid)"
             >
-              <option value="">Sắp xếp</option>
-              <option value="name_asc">Theo tên (A-Z)</option>
-              <option value="room_asc">Theo số phòng</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+              title="Xem dạng bảng (List)"
+            >
+              <List className="w-4 h-4" />
+            </button>
           </div>
-        </div>
-
-        {/* View Mode Switcher */}
-        <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-xs font-bold" : "text-zinc-500 hover:text-zinc-900"
-              }`}
-            title="Xem dạng thẻ (Grid)"
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-xs font-bold" : "text-zinc-500 hover:text-zinc-900"
-              }`}
-            title="Xem dạng danh sách (List)"
-          >
-            <List className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
