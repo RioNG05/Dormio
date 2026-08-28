@@ -331,8 +331,8 @@ export default function AssetsPage() {
               key={cat}
               onClick={() => setCategoryFilter(cat)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${categoryFilter === cat
-                  ? "bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
+                ? "bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20"
+                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
                 }`}
             >
               {cat === "" ? "Tất cả danh mục" : cat}
@@ -430,9 +430,9 @@ export default function AssetsPage() {
                           </span>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${asset.status === 'Đang sử dụng' ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30' :
-                            asset.status === 'Sẵn sàng' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                              asset.status === 'Bảo trì' ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse' :
-                                'bg-rose-50 text-rose-600 border-rose-200'
+                          asset.status === 'Sẵn sàng' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                            asset.status === 'Bảo trì' ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse' :
+                              'bg-rose-50 text-rose-600 border-rose-200'
                           }`}>
                           {asset.status}
                         </span>
@@ -481,19 +481,19 @@ export default function AssetsPage() {
             )}
           </div>
         ) : (
-          /* LIST VIEW */
+          /* LIST VIEW TABLE */
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-zinc-50 text-zinc-500 uppercase font-bold border-b border-zinc-200">
+            <table className="w-full text-xs text-left min-w-[900px]">
+              <thead className="bg-zinc-50 text-zinc-500 uppercase font-extrabold border-b border-zinc-200 whitespace-nowrap">
                 <tr>
                   <th className="px-4 sm:px-6 py-3.5">Mã SKU</th>
                   <th className="px-4 sm:px-6 py-3.5">Tên tài sản</th>
-                  <th className="px-4 sm:px-6 py-3.5">Danh mục</th>
-                  <th className="px-4 sm:px-6 py-3.5">Vị trí</th>
-                  <th className="px-4 sm:px-6 py-3.5">Giá gốc</th>
-                  <th className="px-4 sm:px-6 py-3.5">Giá hiện tại (Khấu hao)</th>
-                  <th className="px-4 sm:px-6 py-3.5">Trạng thái</th>
-                  <th className="px-4 sm:px-6 py-3.5 text-right">Thao tác</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[120px]">Danh mục</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[120px]">Vị trí</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[130px]">Giá gốc</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[180px]">Giá khấu hao</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[130px]">Trạng thái</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[130px] text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-medium">
@@ -512,27 +512,29 @@ export default function AssetsPage() {
                         onClick={() => router.push(`/landlord/assets/${asset.id}`)}
                         className="hover:bg-zinc-50/80 transition-colors cursor-pointer group"
                       >
-                        <td className="px-4 sm:px-6 py-4">
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span className="font-black text-[#2AC1BC] block font-mono">{asset.sku || asset.id}</span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">{asset.name}</td>
-                        <td className="px-4 sm:px-6 py-4 text-zinc-500">{asset.category}</td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-800">{asset.room}</td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900">{asset.value}</td>
-                        <td className="px-4 sm:px-6 py-4 font-black text-emerald-600">
+                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors whitespace-nowrap">
+                          {asset.name}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 text-zinc-500 whitespace-nowrap">{asset.category}</td>
+                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-800 whitespace-nowrap">{asset.room}</td>
+                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 whitespace-nowrap">{asset.value}</td>
+                        <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 whitespace-nowrap">
                           {dep.currentValue.toLocaleString("vi-VN")} ₫
                           <span className="text-[10px] text-zinc-400 font-medium block">Còn {dep.remainingPercent}%</span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${asset.status === 'Đang sử dụng' ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30' :
-                              asset.status === 'Sẵn sàng' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                                asset.status === 'Bảo trì' ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse' :
-                                  'bg-rose-50 text-rose-600 border-rose-200'
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${asset.status === 'Đang sử dụng' ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30' :
+                            asset.status === 'Sẵn sàng' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                              asset.status === 'Bảo trì' ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse' :
+                                'bg-rose-50 text-rose-600 border-rose-200'
                             }`}>
                             {asset.status}
                           </span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 text-right">
+                        <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={(e) => handleOpenEditModal(asset, e)}
