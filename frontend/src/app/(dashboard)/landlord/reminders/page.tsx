@@ -65,7 +65,8 @@ export default function RemindersPage() {
   // Pagination State
   const [taskPage, setTaskPage] = useState(1);
   const [notifPage, setNotifPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const ITEMS_PER_PAGE = itemsPerPage;
 
   // New Task Form State
   const [taskTitle, setTaskTitle] = useState("");
@@ -549,7 +550,7 @@ export default function RemindersPage() {
               }`}
           >
             <BellRing className="w-4 h-4" />
-            <span>Giao Việc & Nhắc Nhở Nhân Viên</span>
+            <span>Nhắc nhở</span>
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-extrabold ${activeTab === "reminders" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
               }`}>
               {tasks.length}
@@ -564,7 +565,7 @@ export default function RemindersPage() {
               }`}
           >
             <MessageSquare className="w-4 h-4" />
-            <span>Thông Báo Khách Thuê</span>
+            <span>Thông Báo</span>
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-extrabold ${activeTab === "notifications" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
               }`}>
               {notifications.length}
@@ -579,7 +580,7 @@ export default function RemindersPage() {
               onClick={() => setIsTaskModalOpen(true)}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Giao việc & Nhắc nhở
+              <Plus className="w-4 h-4" /> Thêm nhắc nhở
             </button>
           ) : (
             <button
@@ -608,13 +609,13 @@ export default function RemindersPage() {
           </div>
 
           {/* Right Side Filters */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:items-center md:justify-end gap-2 w-full md:w-auto">
+          <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto">
             {/* Category Filter */}
-            <div className="relative w-fit">
+            <div className="relative flex-1 sm:flex-initial min-w-[130px]">
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-fit pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
+                className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
               >
                 <option value="">Tất cả phân loại</option>
                 {activeTab === "reminders" ? (
@@ -639,11 +640,11 @@ export default function RemindersPage() {
 
             {/* Notifications Specific Filter: Kênh Gửi */}
             {activeTab === "notifications" && (
-              <div className="relative w-fit">
+              <div className="relative flex-1 sm:flex-initial min-w-[130px]">
                 <select
                   value={channelFilter}
                   onChange={(e) => setChannelFilter(e.target.value)}
-                  className="w-fit pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
+                  className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
                 >
                   <option value="">Tất cả kênh gửi</option>
                   <option value="Thông báo hệ thống">Thông báo hệ thống</option>
@@ -657,11 +658,11 @@ export default function RemindersPage() {
             {/* Reminders specific filters */}
             {activeTab === "reminders" && (
               <>
-                <div className="relative w-fit">
+                <div className="relative flex-1 sm:flex-initial min-w-[130px]">
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-fit pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
+                    className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
                   >
                     <option value="">Mọi trạng thái</option>
                     <option value="Chờ xử lý">Chờ xử lý</option>
@@ -672,11 +673,11 @@ export default function RemindersPage() {
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                 </div>
 
-                <div className="relative w-fit">
+                <div className="relative flex-1 sm:flex-initial min-w-[130px]">
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="w-fit pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
+                    className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
                   >
                     <option value="">Mọi mức ưu tiên</option>
                     <option value="Gấp">Gấp / Cao</option>
@@ -690,9 +691,9 @@ export default function RemindersPage() {
 
             {/* View Switcher (For Reminders Tab) */}
             {activeTab === "reminders" && (
-              <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
+              <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0 ml-auto sm:ml-0">
                 <button
-                  onClick={() => setViewMode("grid")}
+                  onClick={() => { setViewMode("grid"); setItemsPerPage(6); setTaskPage(1); }}
                   className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
                     }`}
                   title="Dạng thẻ Grid"
@@ -700,7 +701,7 @@ export default function RemindersPage() {
                   <LayoutGrid className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setViewMode("list")}
+                  onClick={() => { setViewMode("list"); setItemsPerPage(10); setTaskPage(1); }}
                   className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
                     }`}
                   title="Dạng danh sách List"
@@ -759,7 +760,7 @@ export default function RemindersPage() {
                               task.priority === "Trung bình" ? "bg-amber-500/15 text-amber-600 border border-amber-500/20" :
                                 "bg-zinc-100 text-zinc-600 border border-zinc-200"
                               }`}>
-                              {task.priority === "Gấp" ? "⚡ Gấp / Ưu tiên cao" : task.priority}
+                              {task.priority === "Gấp" ? " Gấp / Ưu tiên" : task.priority}
                             </span>
 
                             {task.room && (
@@ -818,7 +819,7 @@ export default function RemindersPage() {
                             }`}
                         >
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>{isLateCompleted ? "✓ Xong (Trễ hạn)" : isCompleted ? "Đã xong" : "Xác nhận xong"}</span>
+                          <span>{isLateCompleted ? "Trễ hạn" : isCompleted ? "Đã xong" : "Xác nhận"}</span>
                         </button>
                       </div>
                     </div>
@@ -828,37 +829,67 @@ export default function RemindersPage() {
 
               {/* Task Pagination Footer */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-200/80 bg-white p-4 rounded-2xl border">
-                <div className="text-xs font-semibold text-zinc-500">
-                  Hiển thị <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> công việc
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+                    <span>Hiển thị</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={itemsPerPage || ""}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                        setTaskPage(1);
+                      }}
+                      className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                    />
+                    <span>/ trang</span>
+                  </div>
+
+                  <span className="hidden sm:inline text-zinc-300">|</span>
+
+                  <div>
+                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> công việc
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    disabled={taskPage === 1}
-                    onClick={() => setTaskPage(p => Math.max(p - 1, 1))}
-                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    &larr; Trước
-                  </button>
-                  {Array.from({ length: totalTaskPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setTaskPage(page)}
-                      className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${taskPage === page
-                        ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
-                        : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    disabled={taskPage === totalTaskPages || totalTaskPages === 0}
-                    onClick={() => setTaskPage(p => Math.min(p + 1, totalTaskPages))}
-                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    Sau &rarr;
-                  </button>
-                </div>
+                {(() => {
+                  const windowSize = 5;
+                  const windowStart = Math.floor((taskPage - 1) / windowSize) * windowSize + 1;
+                  const windowEnd = Math.min(windowStart + windowSize - 1, totalTaskPages);
+                  const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+                  return (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        disabled={taskPage === 1}
+                        onClick={() => setTaskPage(Math.max(windowStart - windowSize, 1))}
+                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        &larr; Trước
+                      </button>
+                      {visiblePages.map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setTaskPage(page)}
+                          className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${taskPage === page
+                            ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                            : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        disabled={taskPage === totalTaskPages || windowStart + windowSize > totalTaskPages}
+                        onClick={() => setTaskPage(Math.min(windowStart + windowSize, totalTaskPages))}
+                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        Sau &rarr;
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           ) : (
@@ -953,37 +984,67 @@ export default function RemindersPage() {
 
               {/* Task Pagination Footer */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
-                <div className="text-xs font-semibold text-zinc-500">
-                  Hiển thị <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> công việc
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+                    <span>Hiển thị</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={itemsPerPage || ""}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                        setTaskPage(1);
+                      }}
+                      className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                    />
+                    <span>/ trang</span>
+                  </div>
+
+                  <span className="hidden sm:inline text-zinc-300">|</span>
+
+                  <div>
+                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> công việc
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    disabled={taskPage === 1}
-                    onClick={() => setTaskPage(p => Math.max(p - 1, 1))}
-                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    &larr; Trước
-                  </button>
-                  {Array.from({ length: totalTaskPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setTaskPage(page)}
-                      className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${taskPage === page
-                        ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
-                        : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    disabled={taskPage === totalTaskPages || totalTaskPages === 0}
-                    onClick={() => setTaskPage(p => Math.min(p + 1, totalTaskPages))}
-                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    Sau &rarr;
-                  </button>
-                </div>
+                {(() => {
+                  const windowSize = 5;
+                  const windowStart = Math.floor((taskPage - 1) / windowSize) * windowSize + 1;
+                  const windowEnd = Math.min(windowStart + windowSize - 1, totalTaskPages);
+                  const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+                  return (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        disabled={taskPage === 1}
+                        onClick={() => setTaskPage(Math.max(windowStart - windowSize, 1))}
+                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        &larr; Trước
+                      </button>
+                      {visiblePages.map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setTaskPage(page)}
+                          className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${taskPage === page
+                            ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                            : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        disabled={taskPage === totalTaskPages || windowStart + windowSize > totalTaskPages}
+                        onClick={() => setTaskPage(Math.min(windowStart + windowSize, totalTaskPages))}
+                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        Sau &rarr;
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -1073,37 +1134,67 @@ export default function RemindersPage() {
 
           {/* Notifications Pagination Footer */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
-            <div className="text-xs font-semibold text-zinc-500">
-              Hiển thị <span className="font-extrabold text-zinc-800">{(notifPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(notifPage * ITEMS_PER_PAGE, filteredNotifications.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredNotifications.length}</span> thông báo
+            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+              <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+                <span>Hiển thị</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={itemsPerPage || ""}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                    setNotifPage(1);
+                  }}
+                  className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                />
+                <span>/ trang</span>
+              </div>
+
+              <span className="hidden sm:inline text-zinc-300">|</span>
+
+              <div>
+                <span className="font-extrabold text-zinc-800">{(notifPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(notifPage * ITEMS_PER_PAGE, filteredNotifications.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredNotifications.length}</span> thông báo
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                disabled={notifPage === 1}
-                onClick={() => setNotifPage(p => Math.max(p - 1, 1))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-              >
-                &larr; Trước
-              </button>
-              {Array.from({ length: totalNotifPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setNotifPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${notifPage === page
-                    ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
-                    : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                    }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                disabled={notifPage === totalNotifPages || totalNotifPages === 0}
-                onClick={() => setNotifPage(p => Math.min(p + 1, totalNotifPages))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-              >
-                Sau &rarr;
-              </button>
-            </div>
+            {(() => {
+              const windowSize = 5;
+              const windowStart = Math.floor((notifPage - 1) / windowSize) * windowSize + 1;
+              const windowEnd = Math.min(windowStart + windowSize - 1, totalNotifPages);
+              const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+              return (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    disabled={notifPage === 1}
+                    onClick={() => setNotifPage(Math.max(windowStart - windowSize, 1))}
+                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    &larr; Trước
+                  </button>
+                  {visiblePages.map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setNotifPage(page)}
+                      className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${notifPage === page
+                        ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                        : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    disabled={notifPage === totalNotifPages || windowStart + windowSize > totalNotifPages}
+                    onClick={() => setNotifPage(Math.min(windowStart + windowSize, totalNotifPages))}
+                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    Sau &rarr;
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -1198,7 +1289,7 @@ export default function RemindersPage() {
                     onChange={(e) => setTaskPriority(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                   >
-                    <option value="Gấp">⚡ Gấp / Ưu tiên cao</option>
+                    <option value="Gấp">Gấp / Ưu tiên</option>
                     <option value="Trung bình">Bình thường</option>
                     <option value="Thấp">Thấp</option>
                   </select>
