@@ -219,23 +219,52 @@ function MessagesContent() {
         setActiveChat(matchConv);
         setMobileShowChat(true);
 
-        if (autoSend && urlInvId) {
-          const existingMsgs = messagesMap[matchConv.id] || [];
-          const alreadySent = existingMsgs.some(m => m.systemAction?.invoiceId === urlInvId);
+        if (autoSend) {
+          const type = searchParams.get("type");
+          const depId = searchParams.get("depId");
 
-          if (!alreadySent) {
-            const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
+          if (urlInvId) {
+            const existingMsgs = messagesMap[matchConv.id] || [];
+            const alreadySent = existingMsgs.some(m => m.systemAction?.invoiceId === urlInvId);
+
+            if (!alreadySent) {
+              const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
+              const autoMsg: Message = {
+                id: `inv-msg-${Date.now()}`,
+                sender: "me",
+                text: `📌 THÔNG BÁO HÓA ĐƠN THÁNG ${urlPeriod || "NÀY"}: Ban quản lý gửi thông báo thanh toán tiền phòng ${matchConv.room}. Tổng tiền: ${formattedAmount}. Quý khách vui lòng quét mã VietQR trong chi tiết hóa đơn hoặc chuyển khoản theo đúng hạn.`,
+                time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+                isSystem: true,
+                systemAction: {
+                  label: "Xem Hóa Đơn Chi Tiết",
+                  actionType: "invoice",
+                  invoiceId: urlInvId,
+                  period: urlPeriod,
+                }
+              };
+
+              setMessagesMap(prev => ({
+                ...prev,
+                [matchConv.id]: [...(prev[matchConv.id] || []), autoMsg]
+              }));
+
+              setConversations(prev => prev.map(c => c.id === matchConv.id ? {
+                ...c,
+                lastMessage: `📌 Đã gửi thông báo hóa đơn ${urlInvId}`,
+                time: "Vừa xong"
+              } : c));
+            }
+          } else if (type === "upgrade" || depId) {
+            const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "2.500.000 ₫";
             const autoMsg: Message = {
-              id: `inv-msg-${Date.now()}`,
+              id: `dep-upgrade-msg-${Date.now()}`,
               sender: "me",
-              text: `📌 THÔNG BÁO HÓA ĐƠN THÁNG ${urlPeriod || "NÀY"}: Ban quản lý gửi thông báo thanh toán tiền phòng ${matchConv.room}. Tổng tiền: ${formattedAmount}. Quý khách vui lòng quét mã VietQR trong chi tiết hóa đơn hoặc chuyển khoản theo đúng hạn.`,
+              text: `💳 THÔNG BÁO THU BỔ SUNG & NÂNG CỌC HỢP ĐỒNG: Ban quản lý gửi mã VietQR thu tiền cọc bổ sung cho ${matchConv.room} (${matchConv.tenant}). Số tiền cần thanh toán: +${formattedAmount}. Quý khách vui lòng quét mã VietQR bên dưới để hoàn tất nâng cọc hợp đồng.`,
               time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
               isSystem: true,
               systemAction: {
-                label: "Xem Hóa Đơn Chi Tiết",
-                actionType: "invoice",
-                invoiceId: urlInvId,
-                period: urlPeriod,
+                label: "Quét Mã VietQR Nâng Cọc HĐ",
+                actionType: "reminder",
               }
             };
 
@@ -246,14 +275,14 @@ function MessagesContent() {
 
             setConversations(prev => prev.map(c => c.id === matchConv.id ? {
               ...c,
-              lastMessage: `📌 Đã gửi thông báo hóa đơn ${urlInvId}`,
+              lastMessage: `💳 Đã gửi VietQR thu cọc bổ sung +${formattedAmount}`,
               time: "Vừa xong"
             } : c));
           }
         }
       }
     }
-  }, [isMounted, urlRoom, urlTenant, urlInvId, urlAmount, urlPeriod, autoSend]);
+  }, [isMounted, urlRoom, urlTenant, urlInvId, urlAmount, urlPeriod, autoSend, searchParams]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
