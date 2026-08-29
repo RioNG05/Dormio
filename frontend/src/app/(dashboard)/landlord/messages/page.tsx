@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useRef, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Send, Paperclip, Smile, ImageIcon, Phone, Circle, Search, Info,
   Building2, User, FileText, CheckCheck, Clock, Sparkles, ChevronRight,
@@ -57,9 +57,17 @@ interface Message {
   attachments?: string[];
 }
 
-export default function LandlordMessagesPage() {
+function MessagesContent() {
   const { activeBuilding } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const urlRoom = searchParams.get("room") || searchParams.get("search") || "";
+  const urlTenant = searchParams.get("tenant") || "";
+  const urlInvId = searchParams.get("invId") || "";
+  const urlAmount = searchParams.get("amount") || "";
+  const urlPeriod = searchParams.get("period") || "";
+  const autoSend = searchParams.get("autoSend") === "true";
 
   const [isMounted, setIsMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "unread" | "read" | "tenant" | "new_lead">("all");
@@ -198,6 +206,54 @@ export default function LandlordMessagesPage() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    if (urlRoom || urlTenant || urlInvId) {
+      const matchConv = conversations.find((c) =>
+        (urlRoom && (c.room.toLowerCase().includes(urlRoom.toLowerCase()) || c.room.replace('Phòng ', '') === urlRoom)) ||
+        (urlTenant && c.tenant.toLowerCase().includes(urlTenant.toLowerCase()))
+      );
+
+      if (matchConv) {
+        setActiveChat(matchConv);
+        setMobileShowChat(true);
+
+        if (autoSend && urlInvId) {
+          const existingMsgs = messagesMap[matchConv.id] || [];
+          const alreadySent = existingMsgs.some(m => m.systemAction?.invoiceId === urlInvId);
+
+          if (!alreadySent) {
+            const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
+            const autoMsg: Message = {
+              id: `inv-msg-${Date.now()}`,
+              sender: "me",
+              text: `📌 THÔNG BÁO HÓA ĐƠN THÁNG ${urlPeriod || "NÀY"}: Ban quản lý gửi thông báo thanh toán tiền phòng ${matchConv.room}. Tổng tiền: ${formattedAmount}. Quý khách vui lòng quét mã VietQR trong chi tiết hóa đơn hoặc chuyển khoản theo đúng hạn.`,
+              time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+              isSystem: true,
+              systemAction: {
+                label: "Xem Hóa Đơn Chi Tiết",
+                actionType: "invoice",
+                invoiceId: urlInvId,
+                period: urlPeriod,
+              }
+            };
+
+            setMessagesMap(prev => ({
+              ...prev,
+              [matchConv.id]: [...(prev[matchConv.id] || []), autoMsg]
+            }));
+
+            setConversations(prev => prev.map(c => c.id === matchConv.id ? {
+              ...c,
+              lastMessage: `📌 Đã gửi thông báo hóa đơn ${urlInvId}`,
+              time: "Vừa xong"
+            } : c));
+          }
+        }
+      }
+    }
+  }, [isMounted, urlRoom, urlTenant, urlInvId, urlAmount, urlPeriod, autoSend]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -786,5 +842,13 @@ export default function LandlordMessagesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LandlordMessagesPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs font-bold text-zinc-400">Đang tải tin nhắn...</div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }
