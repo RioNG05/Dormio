@@ -64,6 +64,8 @@ Load these skills (read their SKILL.md) when working on:
 6. **One chat system** — reuse CONVERSATION/MESSAGE for both BHMS and BHRP
 7. **mustChangePassword** — check on login; block dashboard if true, redirect to change-password
 8. **Platform deposit conversion** — UPDATE existing DEPOSIT row, never INSERT new one
+9. **Standardized View & Pagination**: All landlord list modules must support parallel **Grid & Table/List** views with **Grid view as default** (`viewMode = "grid"`). Pagination: `Hiển thị [<input type="number">] / trang | X-Y trên Z [mục]`, 5-page window jumping (`windowStart ± 5`), default Grid=6, Table=10, Select-All applies to current page only.
+10. **Modal Reset Behavior**: Exiting any unsubmitted modal (via Hủy bỏ / Cancel, X icon, or backdrop click) MUST completely reset all form draft fields. If there are unsaved input changes, ALWAYS show a custom **Pop-up Confirmation Modal** ("Xác nhận đóng form" with `[Tiếp tục chỉnh sửa]` & `[Hủy thay đổi & Đóng]`) instead of browser native `alert`/`confirm`.
 
 ## Module Breakdown
 

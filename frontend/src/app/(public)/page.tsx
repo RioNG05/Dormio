@@ -1,9 +1,18 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Building, CreditCard, ShieldCheck, Zap } from "lucide-react";
+import { Search, MapPin, Building, CreditCard, ShieldCheck, ChevronDown, ArrowRight, Banknote, Sparkles, Star, Zap } from "lucide-react";
+import { formatVND } from "@/utils";
 
 export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<"phong" | "studio" | "nguyencan">("phong");
+  const [processTab, setProcessTab] = useState<"tenant" | "landlord">("tenant");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [priceFilter, setPriceFilter] = useState("");
+  const [selectedCityFilter, setSelectedCityFilter] = useState<"all" | "hcm" | "hanoi">("all");
+
   const featuredRooms = [
     {
       id: "1",
@@ -31,322 +40,462 @@ export default function HomePage() {
     },
   ];
 
+  const filteredFeaturedRooms = featuredRooms.filter((room) => {
+    if (selectedCityFilter === "hcm") return room.address.includes("TP. HCM");
+    if (selectedCityFilter === "hanoi") return room.address.includes("Hà Nội");
+    return true;
+  });
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section based on AnHome reference */}
-      <section className="relative pt-10 pb-24 lg:pt-16 lg:pb-32 overflow-hidden bg-white">
-        {/* Grid Background Pattern */}
-        <div className="absolute inset-0 z-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgwem0zOSAzOVYxaC0zOHYzOGgzOHoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2YwZjBmMCIvPjwvc3ZnPg==')] opacity-15" />
-        {/* Soft Radial Glow */}
-        <div className="absolute top-1/4 -left-[20%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[150px] z-0 pointer-events-none" />
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* High-End Professional Hero Section (Fit Screen Height & Seamless Section Transition Divider) */}
+      <section className="relative min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center overflow-hidden border-b border-zinc-800">
+        
+        {/* Dark Radial Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
+        
+        {/* Soft Ambient Glow Orbs behind text */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#2AC1BC]/20 rounded-full blur-[140px] pointer-events-none z-0" />
+        <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-[#FF6B35]/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+          
+          {/* Glowing Glassmorphism Pill Badge */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 sm:mb-6 shadow-[0_0_25px_rgba(42,193,188,0.25)] backdrop-blur-xl transition-transform hover:scale-105">
+            <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
+            <span>GIẢI PHÁP QUẢN LÝ NHÀ TRỌ TOÀN DIỆN & SÀN TÌM PHÒNG TỰ ĐỘNG</span>
+          </div>
 
-            {/* Left Column - Content */}
-            <div className="flex flex-col items-start text-left gap-6">
-              {/* Badge */}
-              <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-bold text-primary tracking-wide">
-                <ShieldCheck className="mr-2 h-4 w-4" />
-                GIẢI PHÁP QUẢN LÝ NHÀ TRỌ TOÀN DIỆN
-              </div>
+          {/* Headline with Single Continuous Gradient from Teal to Orange on 'dễ dàng, tiện lợi' */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.18] drop-shadow-md">
+            <span className="inline-block whitespace-nowrap">Quản lý nhà trọ</span> <br />
+            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap">
+              chuyên nghiệp,
+            </span> <br />
+            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
+              dễ dàng, tiện lợi
+            </span>
+          </h1>
 
-              {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 leading-[1.15]">
-                Quản lý nhà trọ <br /> chuyên nghiệp, <br />
-                <span className="text-primary">dễ dàng, tiện lợi</span>
-              </h1>
+          {/* Sub-headline */}
+          <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl mx-auto leading-relaxed mt-4 sm:mt-5 font-medium tracking-wide text-balance">
+            Tiết kiệm thời gian, giảm thiểu rủi ro và tối ưu doanh thu với phần mềm quản lý nhà trọ thông minh Dormio.
+          </p>
 
-              {/* Sub-headline */}
-              <p className="text-lg text-zinc-500 max-w-lg leading-relaxed">
-                Tiết kiệm thời gian, giảm thiểu rủi ro và tối ưu doanh thu với phần mềm quản lý nhà trọ thông minh Dormio.
-              </p>
-
-              {/* Features List */}
-              <div className="flex flex-col sm:flex-row flex-wrap gap-x-8 gap-y-4 mt-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-full bg-primary/10 text-primary">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  </div>
-                  <span className="text-sm font-semibold text-zinc-700">Tiết kiệm thời gian</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-full bg-primary/10 text-primary">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                  </div>
-                  <span className="text-sm font-semibold text-zinc-700">Giảm thiểu rủi ro</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-full bg-primary/10 text-primary">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                  </div>
-                  <span className="text-sm font-semibold text-zinc-700">Tăng hiệu quả kinh doanh</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 w-full sm:w-auto">
-                <Link href="/register?role=landlord" className="w-full sm:w-auto">
-                  <Button className="w-full sm:w-auto px-8 h-12 rounded-xl bg-primary hover:bg-primary-hover text-white text-base font-semibold shadow-lg shadow-primary/25">
-                    Dùng thử miễn phí 7 ngày &rarr;
-                  </Button>
-                </Link>
-                <Link href="#features" className="w-full sm:w-auto">
-                  <Button className="w-full sm:w-auto px-8 h-12 rounded-xl bg-accent hover:bg-accent-hover text-white text-base font-semibold shadow-lg shadow-accent/25 transition-colors">
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
-                    Xem tính năng
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Trust Indicator */}
-              <div className="flex items-center gap-4 mt-6">
-                <div className="flex -space-x-3">
-                  <div className="w-9 h-9 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-bold text-orange-600">AM</div>
-                  <div className="w-9 h-9 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-600">CH</div>
-                  <div className="w-9 h-9 rounded-full bg-pink-100 border-2 border-white flex items-center justify-center text-xs font-bold text-pink-600">AT</div>
-                  <div className="w-9 h-9 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-xs font-bold text-green-600">LN</div>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex text-amber-400 text-sm">
-                    ★★★★★
-                  </div>
-                  <span className="text-sm text-zinc-500">
-                    Hơn <strong className="text-zinc-900">10.000+</strong> chủ trọ tin dùng Dormio
-                  </span>
-                </div>
-              </div>
+          {/* Floating Search Card Widget with Premium Shadows */}
+          <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-zinc-900 border border-white/80 animate-in fade-in duration-700">
+            
+            {/* Category Tabs */}
+            <div className="flex items-center justify-center sm:justify-start gap-2 mb-3.5 border-b border-zinc-100 pb-3">
+              <button
+                onClick={() => setActiveTab("phong")}
+                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
+                  activeTab === "phong"
+                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                    : "text-zinc-500 font-bold hover:text-zinc-900"
+                }`}
+              >
+                Thuê phòng
+              </button>
+              <button
+                onClick={() => setActiveTab("studio")}
+                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
+                  activeTab === "studio"
+                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                    : "text-zinc-500 font-bold hover:text-zinc-900"
+                }`}
+              >
+                Studio
+              </button>
+              <button
+                onClick={() => setActiveTab("nguyencan")}
+                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
+                  activeTab === "nguyencan"
+                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                    : "text-zinc-500 font-bold hover:text-zinc-900"
+                }`}
+              >
+                Nguyên căn
+              </button>
             </div>
 
-            {/* Right Column - Mockup Graphic */}
-            <div className="relative w-full h-[500px] flex items-center justify-center lg:justify-end">
-              {/* Graphic Container */}
-              <div className="relative w-full max-w-[550px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-zinc-100 overflow-hidden flex flex-col">
-                {/* Browser/Window Header */}
-                <div className="h-10 bg-zinc-50/80 border-b border-zinc-100 flex items-center px-4 gap-2">
-                  <div className="w-3 h-3 rounded-full bg-zinc-200"></div>
-                  <div className="w-3 h-3 rounded-full bg-zinc-200"></div>
-                  <div className="w-3 h-3 rounded-full bg-zinc-200"></div>
-                </div>
-                {/* Mockup Body */}
-                <div className="flex flex-1 p-4 gap-4 bg-zinc-50/50">
-                  {/* Sidebar Menu */}
-                  <div className="w-24 flex flex-col gap-2">
-                    <div className="bg-primary/10 text-primary text-xs font-bold rounded-lg p-2 flex flex-col items-center gap-1 border border-primary/20">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                      Tổng quan
-                    </div>
-                    <div className="text-zinc-400 text-xs font-semibold rounded-lg p-2 flex flex-col items-center gap-1">
-                      <Building className="w-5 h-5" />
-                      Phòng trọ
-                    </div>
-                    <div className="text-zinc-400 text-xs font-semibold rounded-lg p-2 flex flex-col items-center gap-1">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      Hợp đồng
-                    </div>
-                  </div>
-                  {/* Main content grid */}
-                  <div className="flex-1 flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white border border-zinc-100 rounded-xl p-4 shadow-sm">
-                        <div className="text-xs text-zinc-500 mb-1">Tổng số phòng</div>
-                        <div className="text-xl font-bold text-zinc-900">128</div>
-                      </div>
-                      <div className="bg-white border border-zinc-100 rounded-xl p-4 shadow-sm">
-                        <div className="text-xs text-zinc-500 mb-1">Đang thuê</div>
-                        <div className="text-xl font-bold text-zinc-900">96</div>
-                      </div>
-                      <div className="bg-white border border-zinc-100 rounded-xl p-4 shadow-sm">
-                        <div className="text-xs text-zinc-500 mb-1">Doanh thu tháng</div>
-                        <div className="text-xl font-bold text-zinc-900">45.620.000đ</div>
-                        <div className="text-[10px] font-bold text-primary mt-1">+12,5%</div>
-                      </div>
-                      <div className="bg-white border border-zinc-100 rounded-xl p-4 shadow-sm">
-                        <div className="text-xs text-zinc-500 mb-1">Công nợ</div>
-                        <div className="text-xl font-bold text-accent">12.850.000đ</div>
-                        <div className="text-[10px] font-bold text-accent mt-1">-3,2%</div>
-                      </div>
-                    </div>
-                    {/* Mock Chart */}
-                    <div className="bg-white border border-zinc-100 rounded-xl p-4 shadow-sm flex items-end gap-2 h-32">
-                      {[40, 60, 45, 70, 55, 80, 50].map((h, i) => (
-                        <div key={i} className="w-full bg-primary/40 rounded-t-sm" style={{ height: `${h}%` }}></div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating Widget Mockup */}
-                <div className="absolute -bottom-6 -left-6 bg-white border border-zinc-100 rounded-2xl p-4 shadow-xl w-40 z-20 flex flex-col gap-3">
-                  <div>
-                    <div className="text-[10px] text-zinc-400">Doanh thu</div>
-                    <div className="text-sm font-bold text-zinc-900">45.620.000đ</div>
-                  </div>
-                  <div className="w-full bg-zinc-100 h-1 rounded-full overflow-hidden">
-                    <div className="bg-primary h-full w-3/4"></div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-zinc-400">Đã thu tháng này</div>
-                    <div className="text-sm font-bold text-zinc-900">38/96 <span className="font-normal text-xs">phòng</span></div>
-                  </div>
+            {/* Inputs Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end">
+              <div className="sm:col-span-5 space-y-1">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">TỪ KHÓA / ĐỊA ĐIỂM</label>
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    placeholder="Nhập địa điểm, quận, tòa nhà..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 h-11 text-xs font-semibold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+                  />
                 </div>
               </div>
+
+              <div className="sm:col-span-4 space-y-1">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">KHOẢNG GIÁ</label>
+                <div className="relative">
+                  <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <select
+                    value={priceFilter}
+                    onChange={(e) => setPriceFilter(e.target.value)}
+                    className="w-full pl-9 pr-8 h-11 text-xs font-bold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all cursor-pointer"
+                  >
+                    <option value="">Tất cả mức giá</option>
+                    <option value="under3">Dưới 3 triệu / tháng</option>
+                    <option value="3to5">3 - 5 triệu / tháng</option>
+                    <option value="above5">Trên 5 triệu / tháng</option>
+                  </select>
+                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
+                </div>
+              </div>
+
+              <div className="sm:col-span-3 space-y-1">
+                <span className="text-[10px] font-black text-transparent select-none uppercase tracking-wider block hidden sm:block">&nbsp;</span>
+                <Link href="/rooms" className="block w-full">
+                  <button className="w-full h-11 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#FF6B35]/25 flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
+                    <Search className="w-3.5 h-3.5" /> Tìm Ngay
+                  </button>
+                </Link>
+              </div>
             </div>
+          </div>
+
+          {/* Action Buttons Below Search */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
+            <Link href="/register">
+              <button className="px-7 py-3 bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] hover:from-[#23B3AE] hover:to-[#32C5B5] text-white font-black text-xs sm:text-sm rounded-full shadow-[0_10px_30px_rgba(42,193,188,0.35)] transition-all hover:scale-105 cursor-pointer">
+                Dùng thử miễn phí 7 ngày &rarr;
+              </button>
+            </Link>
+            <Link href="#features">
+              <button className="px-7 py-3 bg-zinc-900/80 hover:bg-[#FF6B35] text-white font-black text-xs sm:text-sm rounded-full border border-zinc-700/80 hover:border-[#FF6B35] backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300 cursor-pointer">
+                Khám phá hệ thống
+              </button>
+            </Link>
+          </div>
+
+          {/* Social Proof Stars */}
+          <div className="flex items-center justify-center gap-2 mt-5 sm:mt-6 text-xs text-zinc-400 font-medium">
+            <div className="flex text-amber-400 text-sm tracking-widest">★★★★★</div>
+            <span className="text-zinc-300">
+              Hơn <strong className="text-white font-black">10.000+</strong> chủ trọ & <strong className="text-white font-black">50.000+</strong> người thuê tin dùng
+            </span>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-white border-y border-zinc-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900">Tại sao chọn Dormio?</h2>
-            <p className="mt-4 text-zinc-500">Trải nghiệm tìm phòng và quản lý khác biệt hoàn toàn.</p>
+      {/* Process 3 Steps Section based on exact user reference image */}
+      <section id="features" className="py-20 bg-zinc-50/50 border-b border-zinc-100 animate-in fade-in duration-500">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          
+          {/* Top Pill Badge */}
+          <div className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-extrabold tracking-wider uppercase mb-3 border border-[#2AC1BC]/20">
+            QUY TRÌNH ĐƠN GIẢN
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              { icon: ShieldCheck, title: "Xác thực 100%", desc: "Mọi tin đăng và chủ nhà đều được kiểm duyệt kỹ lưỡng, đảm bảo an toàn tuyệt đối." },
-              { icon: Building, title: "Quản lý thông minh", desc: "Hệ thống quản lý hợp đồng, hóa đơn và khiếu nại dành riêng cho người thuê và chủ nhà." },
-              { icon: CreditCard, title: "Thanh toán tiện lợi", desc: "Thanh toán tiền phòng, điện nước hàng tháng dễ dàng qua các cổng thanh toán trực tuyến." },
-            ].map((feature, idx) => (
-              <div key={idx} className="flex flex-col items-center text-center p-6 rounded-3xl bg-primary/5 border border-primary/10 shadow-sm hover:shadow-xl hover:bg-primary/10 transition-all duration-300">
-                <div className="p-4 bg-primary/10 rounded-2xl mb-6 text-primary">
-                  <feature.icon className="h-8 w-8" />
+          {/* Main Headline */}
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-zinc-900 leading-snug">
+            <span className="block sm:inline">Vận hành trong 3 bước </span>
+            <span className="block sm:inline">siêu tốc</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-500 font-medium max-w-xl mx-auto mt-2 mb-8 leading-relaxed">
+            Dù bạn là Khách thuê đang tìm không gian sống hay Chủ trọ muốn tối ưu quản lý.
+          </p>
+
+          {/* Interactive Role Switcher Pill Tabs (NO WORD WRAPPING / CHỐNG RỚT CHỮ) */}
+          <div className="inline-flex items-center p-1 sm:p-1.5 bg-white border border-zinc-200/80 rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
+            <button
+              onClick={() => setProcessTab("tenant")}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                processTab === "tenant"
+                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              Dành cho Khách thuê
+            </button>
+            <button
+              onClick={() => setProcessTab("landlord")}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                processTab === "landlord"
+                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              Dành cho Chủ trọ
+            </button>
+          </div>
+
+          {/* 3 Step Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left">
+            {processTab === "tenant" ? (
+              <>
+                {/* Step 01 */}
+                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
+                    01
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-extrabold text-zinc-900">Tìm kiếm & Lọc phòng trọ</h3>
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                      Dễ dàng tìm kiếm phòng trọ chính chủ, xem ảnh thực tế, tiện ích và mức giá minh bạch 100%.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-zinc-900 mb-3">{feature.title}</h3>
-                <p className="text-zinc-600 leading-relaxed">{feature.desc}</p>
+
+                {/* Step 02 */}
+                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] font-black text-sm flex items-center justify-center">
+                    02
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-extrabold text-zinc-900">Đặt lịch xem & Cọc giữ chỗ</h3>
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                      Hẹn lịch xem phòng trực tiếp hoặc đặt cọc giữ chỗ trực tuyến an toàn qua cổng sàn Dormio.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 03 */}
+                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
+                    03
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-extrabold text-zinc-900">Ký Hợp đồng & Thanh toán</h3>
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                      Ký hợp đồng điện tử tiện lợi, nhận hóa đơn hàng tháng và thanh toán VietQR tự động.
+                    </p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Step 01 Landlord */}
+                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
+                    01
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-extrabold text-zinc-900">Tạo nhà trọ & Đăng tin cho thuê</h3>
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                      Thiết lập sơ đồ phòng trọ, giá thuê, phí dịch vụ và xuất bản bài đăng niêm yết tự động.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 02 Landlord */}
+                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] font-black text-sm flex items-center justify-center">
+                    02
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-extrabold text-zinc-900">Quản lý hợp đồng & Nhận cọc</h3>
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                      Tự động hóa lập hợp đồng thuê, duyệt cọc giữ chỗ và quản lý danh sách khách thuê sinh hoạt.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 03 Landlord */}
+                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
+                    03
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-extrabold text-zinc-900">Thu hóa đơn VietQR & Báo cáo</h3>
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                      Gửi hóa đơn thu tiền điện nước hàng tháng qua Zalo/App và theo dõi báo cáo doanh thu công nợ.
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Rooms Section */}
+      <section className="py-20 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
+          <div>
+            <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block mb-1">SÀN CHO THUÊ BHRP</span>
+            <h2 className="text-3xl font-black tracking-tight text-zinc-900">
+              Phòng Trọ Nổi Bật Chính Chủ
+            </h2>
+            <p className="text-xs text-zinc-500 mt-1 font-semibold">
+              Những không gian sống chất lượng cao được kiểm duyệt chất lượng tốt nhất.
+            </p>
+          </div>
+
+          {/* City Filter Tabs */}
+          <div className="flex items-center gap-2 bg-zinc-100 p-1.5 rounded-2xl">
+            <button
+              onClick={() => setSelectedCityFilter("all")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedCityFilter === "all" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              Tất cả
+            </button>
+            <button
+              onClick={() => setSelectedCityFilter("hcm")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedCityFilter === "hcm" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              TP. HCM
+            </button>
+            <button
+              onClick={() => setSelectedCityFilter("hanoi")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedCityFilter === "hanoi" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              Hà Nội
+            </button>
+          </div>
+        </div>
+
+        {/* Room Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredFeaturedRooms.map((room) => (
+            <div
+              key={room.id}
+              className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm border border-zinc-200 hover:shadow-xl transition-all duration-300"
+            >
+              <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
+                <img
+                  src={room.image}
+                  alt={room.title}
+                  className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white shadow-sm flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" /> Xác thực
+                </div>
+              </div>
+
+              <div className="flex flex-1 flex-col p-6 gap-3">
+                <h3 className="font-extrabold text-base text-zinc-900 leading-snug line-clamp-2 group-hover:text-[#2AC1BC] transition-colors">
+                  {room.title}
+                </h3>
+                <div className="flex items-center text-xs text-zinc-500 font-semibold gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                  <span className="truncate">{room.address}</span>
+                </div>
+
+                <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-lg font-black text-rose-600">
+                      {formatVND(room.price)}
+                    </span>
+                    <span className="text-xs text-zinc-400 font-normal">/tháng</span>
+                  </div>
+                  <Link href={`/rooms/${room.id}`}>
+                    <button className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                      Xem chi tiết <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Verified Tenant Reviews & Social Proof Section */}
+      <section className="py-20 bg-zinc-50 border-y border-zinc-200/80">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14 space-y-2">
+            <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block">ĐÁNH GIÁ THỰC TẾ 100%</span>
+            <h2 className="text-3xl font-black tracking-tight text-zinc-900">
+              Khách Thuê & Chủ Trọ Nói Gì Về Dormio?
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 font-semibold max-w-xl mx-auto">
+              Hơn 50.000+ sinh viên, người đi làm và chủ nhà trọ đã tìm phòng & vận hành thành công.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Nguyễn Hoàng Minh",
+                role: "Sinh viên ĐH Ngoại Thương",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+                text: "Mình đã đặt cọc giữ chỗ phòng trọ ở Chùa Láng qua VietQR trên Dormio rất an toàn. Đến xem phòng đúng 100% như ảnh, chủ nhà thân thiện!",
+                rating: 5,
+                room: "Phòng Đôi Sinh Viên Cầu Giấy"
+              },
+              {
+                name: "Chị Trần Thanh Hà",
+                role: "Chủ chuỗi 4 nhà trọ Quận 1",
+                avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80",
+                text: "Tính năng gạch nợ VietQR tự động của Dormio thực sự tuyệt vời. Hàng tháng đến ngày 5 là tiền về đủ, không phải đi gõ cửa từng phòng giục nợ.",
+                rating: 5,
+                room: "Chủ trọ vận hành BHMS"
+              },
+              {
+                name: "Lê Minh Tuấn",
+                role: "Kỹ sư phần mềm (Quận 7)",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+                text: "Ứng dụng tìm phòng rất nhanh. Mình bấm Ctrl + K tìm ngay căn Studio Nguyễn Huệ ban công cực đẹp. Tính năng cọc online quá tiện!",
+                rating: 5,
+                room: "Căn hộ Studio Nguyễn Huệ"
+              }
+            ].map((review, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6"
+              >
+                <div className="space-y-4">
+                  <div className="flex text-amber-400 text-sm tracking-widest">
+                    {"★".repeat(review.rating)}
+                  </div>
+                  <p className="text-xs text-zinc-600 font-semibold leading-relaxed italic">
+                    "{review.text}"
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-zinc-100 flex items-center gap-3">
+                  <img src={review.avatar} alt={review.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  <div>
+                    <h4 className="font-extrabold text-xs text-zinc-900">{review.name}</h4>
+                    <span className="text-[11px] font-bold text-[#2AC1BC] block">{review.role}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Rooms Section */}
-      <section className="py-24 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-end md:items-center justify-between mb-12 gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900">
-              Phòng Trọ Nổi Bật
+      {/* Bottom CTA Banner */}
+      <section className="relative my-16 mx-4 sm:mx-6 lg:mx-auto max-w-7xl rounded-3xl overflow-hidden bg-zinc-900 text-white shadow-2xl border border-zinc-800">
+        <div className="px-8 py-14 md:px-16 flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className="space-y-2 text-center lg:text-left">
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+              Sẵn sàng trải nghiệm quản lý nhà trọ thông minh?
             </h2>
-            <p className="text-zinc-500 mt-2">
-              Những không gian sống chất lượng cao được đánh giá tốt nhất.
+            <p className="text-zinc-400 text-xs sm:text-sm font-semibold">
+              Bắt đầu dùng thử miễn phí 7 ngày ngay hôm nay. Không cần thẻ tín dụng!
             </p>
           </div>
-          <Link href="/rooms" className="inline-flex items-center justify-center rounded-xl bg-[#ee6927] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#d55e23] transition-colors">
-            Xem tất cả phòng →
-          </Link>
-        </div>
-
-        {/* Room Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featuredRooms.map((room) => (
-            <Link
-              key={room.id}
-              href={`/rooms/${room.id}`}
-              className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-lg border border-zinc-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              {/* Image Placeholder */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={room.image}
-                  alt={room.title}
-                  className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute top-4 left-4 bg-[#ee6927] px-3 py-1 rounded-full text-xs font-bold text-white shadow-sm">
-                  Xác thực
-                </div>
-              </div>
-
-              {/* Room Details */}
-              <div className="flex flex-1 flex-col p-6 gap-4">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="font-semibold text-lg text-zinc-900 leading-tight line-clamp-2 group-hover:text-[#ee6927] transition-colors">
-                    {room.title}
-                  </h3>
-                </div>
-                <div className="flex items-center text-sm text-zinc-500 gap-1.5">
-                  <MapPin className="h-4 w-4 shrink-0" />
-                  <span className="line-clamp-1">{room.address}</span>
-                </div>
-
-                <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-xl font-bold text-[#ee6927]">
-                      {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(room.price)}
-                    </span>
-                    <span className="text-xs text-zinc-400 font-normal">/tháng</span>
-                  </div>
-                  <div className="flex items-center gap-1 bg-zinc-50 px-2.5 py-1 rounded-md text-sm font-medium text-zinc-600">
-                    <Building className="h-4 w-4" />
-                    {room.area} m²
-                  </div>
-                </div>
-              </div>
+          <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
+            <Link href="/register">
+              <button className="px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] text-white rounded-xl text-xs font-bold shadow-lg shadow-[#2AC1BC]/20 transition-all cursor-pointer">
+                Dùng thử miễn phí ngay
+              </button>
             </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Services CTA Section based on Image 2 */}
-      <section className="relative my-20 mx-4 sm:mx-6 lg:mx-auto max-w-7xl rounded-[2.5rem] overflow-hidden bg-primary shadow-2xl">
-        <div className="relative px-8 py-16 md:px-16 md:py-20 flex flex-col lg:flex-row items-center justify-between gap-12 text-white">
-
-          {/* Graphic / Icon */}
-          <div className="hidden lg:flex items-center justify-center shrink-0 w-32 h-32">
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                <path d="M50 20L20 45V85H80V45L50 20Z" fill="white" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-                <path d="M40 85V55H60V85" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-                <path d="M50 10V20" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                <rect x="25" y="55" width="10" height="10" fill="currentColor" />
-                <rect x="65" y="55" width="10" height="10" fill="currentColor" />
-              </svg>
-            </div>
+            <Link href="/contact">
+              <button className="px-8 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                Tư vấn trực tiếp
+              </button>
+            </Link>
           </div>
-
-          {/* Content & Buttons */}
-          <div className="flex-1 text-center lg:text-left flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl leading-tight">
-                Sẵn sàng quản lý nhà trọ hiệu quả hơn?
-              </h2>
-              <p className="text-white/90 text-lg">
-                Tham gia cùng hàng ngàn chủ trọ đã tin dùng Dormio ngay hôm nay!
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <Link href="/register?role=landlord" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto bg-white text-primary hover:bg-zinc-100 border-none px-8 h-12 rounded-xl text-base font-bold shadow-xl transition-transform hover:-translate-y-1">
-                  Dùng thử miễn phí 7 ngày
-                </Button>
-              </Link>
-              <Link href="/pricing" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto px-8 h-12 rounded-xl bg-accent hover:bg-accent-hover text-white text-base font-semibold shadow-lg shadow-accent/25 transition-colors">
-                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
-                  Tìm hiểu thêm
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Value Props List */}
-          <div className="flex flex-col gap-4 shrink-0 text-white/90 lg:pl-12 lg:border-l lg:border-white/20">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-              <span className="font-medium text-sm md:text-base">Không cần thẻ tín dụng</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-              <span className="font-medium text-sm md:text-base">Hỗ trợ 24/7</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-              <span className="font-medium text-sm md:text-base">Huỷ bất kỳ lúc nào</span>
-            </div>
-          </div>
-
         </div>
       </section>
     </div>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
+import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard, Home, Users, FileText, Bell,
   Wallet, CreditCard,
@@ -11,7 +12,7 @@ import {
   UserCircle, Calendar, Clock,
   Settings, HelpCircle,
   LogOut, Menu, X, ChevronDown, ChevronRight,
-  AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle
+  AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2
 } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -95,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return (
         <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-0.5">
           {tenantMenus.map((item, idx) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href !== '/tenant' && pathname?.startsWith(item.href + '/'));
             return (
               <Link
                 key={idx}
@@ -120,7 +121,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {landlordMenus.map((block, idx) => {
           // Top-level single item
           if (!('group' in block)) {
-            const isActive = pathname === block.href;
+            const isActive = pathname === block.href || (block.href !== '/landlord' && pathname?.startsWith(block.href + '/'));
             return (
               <Link
                 key={idx}
@@ -154,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {isOpen && (
                 <div className="mt-0.5 mb-3 space-y-0.5">
                   {block.items!.map((item, i) => {
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || (item.href !== '/landlord' && pathname?.startsWith(item.href + '/'));
                     return (
                       <Link
                         key={i}
@@ -183,6 +184,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
     );
   };
+
+  const { buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
+
+  // DYNAMICALLY UPDATE BROWSER DOCUMENT TITLE BASED ON ACTIVE BUILDING & ROUTE
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && activeBuilding?.name) {
+      let pageTitle = "Dormio BHMS";
+      if (pathname === "/landlord") {
+        pageTitle = `Tổng Quan — ${activeBuilding.name}`;
+      } else if (pathname?.startsWith("/landlord/rooms")) {
+        pageTitle = `Sơ Đồ Phòng — ${activeBuilding.name}`;
+      } else if (pathname?.startsWith("/landlord/contracts")) {
+        pageTitle = `Hợp Đồng Thuê — ${activeBuilding.name}`;
+      } else if (pathname?.startsWith("/landlord/invoices")) {
+        pageTitle = `Hóa Đơn & Thu Tiền — ${activeBuilding.name}`;
+      } else if (pathname?.startsWith("/landlord/customers") || pathname?.startsWith("/landlord/tenants")) {
+        pageTitle = `Khách Thuê — ${activeBuilding.name}`;
+      } else if (pathname?.startsWith("/landlord/services")) {
+        pageTitle = `Bảng Dịch Vụ — ${activeBuilding.name}`;
+      } else if (pathname?.startsWith("/landlord/reports")) {
+        pageTitle = `Báo Cáo Doanh Thu — ${activeBuilding.name}`;
+      } else {
+        pageTitle = `${activeBuilding.name} | Dormio BHMS`;
+      }
+
+      document.title = pageTitle;
+    }
+  }, [activeBuilding?.name, pathname]);
+
+  const BuildingSelector = () => (
+    <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
+      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
+        TÒA NHÀ ĐANG QUẢN LÝ:
+      </span>
+      <div className="relative">
+        <select
+          value={activeBuildingId}
+          onChange={(e) => selectBuilding(e.target.value)}
+          className="w-full bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-xs appearance-none pr-7"
+        >
+          {buildings.map(b => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+    </div>
+  );
 
   const Logo = () => (
     <Link href="/" className="flex items-center gap-2.5">
@@ -222,6 +271,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center h-14 px-4 border-b border-zinc-100">
             <Logo />
           </div>
+
+          {/* Global Landlord Building Selector */}
+          {!isTenant && <BuildingSelector />}
+
           <NavContent />
           <UserFooter />
         </div>
@@ -241,6 +294,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Global Landlord Building Selector on Mobile Drawer */}
+            {!isTenant && <BuildingSelector />}
+
             <NavContent />
             <UserFooter />
           </aside>
@@ -250,23 +307,62 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <div className="flex flex-col flex-1 lg:pl-64 min-w-0">
         {/* Mobile topbar */}
-        <header className="flex lg:hidden items-center justify-between h-14 px-4 border-b border-zinc-200 bg-white sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 bg-white sticky top-0 z-30 gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 -ml-1.5 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+              className="p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
             <Logo />
           </div>
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+
+          {/* Building Selector Dropdown on Mobile Topbar for Landlord */}
+          {!isTenant && (
+            <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
+              <select
+                value={activeBuildingId}
+                onChange={(e) => selectBuilding(e.target.value)}
+                className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none pr-6 truncate"
+              >
+                {buildings.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          )}
+
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
             R
           </div>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar for Tenants */}
+      {isTenant && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-2 py-1.5 flex justify-around items-center shadow-lg">
+          {tenantMenus.map((item, idx) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={idx}
+                href={item.href}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${isActive ? "text-[#2AC1BC] font-black" : "text-zinc-400 hover:text-zinc-700 font-bold"
+                  }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? "text-[#2AC1BC]" : "text-zinc-400"}`} />
+                <span className="text-[10px] tracking-tight">{item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
       {!isTenant && <AIChatBot />}
     </div>
   );

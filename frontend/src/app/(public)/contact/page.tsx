@@ -1,136 +1,252 @@
-import React from "react";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { siteConfig } from "@/config/site";
+"use client";
+
+import React, { useState } from "react";
+import {
+  Sparkles, Phone, Mail, MapPin, MessageSquare, Send, CheckCircle2, ChevronDown, Clock, ShieldCheck, ExternalLink
+} from "lucide-react";
+import Link from "next/link";
 
 export default function ContactPage() {
+  const [topic, setTopic] = useState("tu-van");
+  const [customSubject, setCustomSubject] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [content, setContent] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName || !phone || !content) return;
+    setSubmitted(true);
+  };
+
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-zinc-50 py-12 md:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 md:text-5xl">
-            Liên hệ với chúng tôi
+    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20 overflow-x-hidden">
+
+      {/* 100% Full-Width Screen Hero Banner Header */}
+      <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
+        <div className="relative z-10 max-w-4xl mx-auto space-y-4">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2AC1BC]/20 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/30 shadow-lg">
+            <Sparkles className="w-4 h-4" /> HỖ TRỢ TRỰC TUYẾN DORMIO 24/7
+          </span>
+
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
+            <span>Liên Hệ Hỗ Trợ &</span> <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent">
+              Tư Vấn Giải Pháp
+            </span>
           </h1>
-          <p className="mt-4 text-lg text-zinc-500 max-w-2xl mx-auto">
-            Bạn có câu hỏi, góp ý hay cần hỗ trợ? Hãy để lại thông tin, đội ngũ Dormio sẽ phản hồi bạn trong thời gian sớm nhất.
+
+          <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto text-balance">
+            Bạn có câu hỏi, góp ý hay cần tư vấn giải pháp quản lý nhà trọ? Hãy gửi yêu cầu cho chúng tôi.
           </p>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Info */}
-          <div className="flex flex-col gap-8">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-zinc-900 mb-6">Thông tin liên hệ</h2>
-              
-              <div className="flex flex-col gap-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Mail className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-900">Email</h3>
-                    <p className="mt-1 text-zinc-500">{siteConfig.contact.email}</p>
-                  </div>
-                </div>
+      {/* Main Content Area */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16 w-full">
 
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Phone className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-900">Điện thoại</h3>
-                    <p className="mt-1 text-zinc-500">{siteConfig.contact.phone}</p>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <MapPin className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-900">Văn phòng</h3>
-                    <p className="mt-1 text-zinc-500">
-                      Tòa nhà Innovation, Công viên phần mềm Quang Trung, <br />
-                      Quận 12, TP. Hồ Chí Minh
-                    </p>
-                  </div>
-                </div>
-              </div>
+          {/* Left Column: Direct Support Channels (Leveraging Both Primary Colors) */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="space-y-2">
+              <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block">KÊNH LIÊN HỆ TRỰC TIẾP</span>
+              <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
+                Chúng tôi luôn sẵn sàng hỗ trợ
+              </h2>
+              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                Đội ngũ CSKH Dormio làm việc từ 08:00 - 21:00 tất cả các ngày trong tuần.
+              </p>
             </div>
 
-            {/* Social Links Box */}
-            <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-              <h2 className="text-xl font-bold text-zinc-900 mb-4">Kết nối với Dormio</h2>
-              <p className="text-zinc-500 mb-6">Theo dõi chúng tôi trên mạng xã hội để cập nhật những tính năng và ưu đãi mới nhất.</p>
-              <div className="flex gap-4">
-                <a href={siteConfig.links.facebook} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors">
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                  </svg>
-                </a>
-                <a href={siteConfig.links.zalo} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-sm font-bold text-zinc-600 hover:bg-primary hover:text-white transition-colors">
-                  Zalo
-                </a>
+            <div className="space-y-4 pt-2">
+              {/* Channel 1: SĐT / Zalo (Clickable tel:) */}
+              <a
+                href="tel:0901234567"
+                className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#FF6B35] transition-all group shadow-xs cursor-pointer block"
+                title="Bấm để gọi điện tư vấn ngay"
+              >
+                <div className="p-3.5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-zinc-900 text-sm">Hotline & Zalo OA Khẩn Cấp</h3>
+                  <p className="text-xs font-black text-[#FF6B35] mt-0.5 group-hover:underline">0901.234.567 (Tư vấn 24/7)</p>
+                  <span className="text-[10px] text-zinc-400 font-medium block mt-1">Phản hồi nhanh trong 3 phút • Bấm để gọi</span>
+                </div>
+              </a>
+
+              {/* Channel 2: Email (Clickable mailto:) */}
+              <a
+                href="mailto:support@dormio.vn"
+                className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#2AC1BC] transition-all group shadow-xs cursor-pointer block"
+                title="Bấm để gửi email hỗ trợ"
+              >
+                <div className="p-3.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-zinc-900 text-sm">Email Hỗ Trợ Kỹ Thuật & VietQR</h3>
+                  <p className="text-xs font-semibold text-zinc-800 mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline">support@dormio.vn</p>
+                  <span className="text-[10px] text-zinc-400 font-medium block mt-1">Giải đáp chi tiết trong 2 giờ • Bấm để gửi mail</span>
+                </div>
+              </a>
+
+              {/* Channel 3: Địa chỉ Trụ Sở */}
+              <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-zinc-400 transition-all group shadow-xs">
+                <div className="p-3.5 bg-zinc-900 text-white rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                  <MapPin className="w-5 h-5 text-[#2AC1BC]" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-extrabold text-zinc-900 text-sm">Văn Phòng Trụ Sở Dormio</h3>
+                  <p className="text-xs text-zinc-600 font-medium leading-relaxed">Tòa nhà FPT, Khu Công Nghệ Cao, Q.9, TP. Thủ Đức, TP. HCM</p>
+
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=T%C3%B2a+nh%C3%A0+FPT+Khu+C%C3%B4ng+Ngh%E1%BB%87+Cao+Quan+9+Ho+Chi+Minh"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2AC1BC] hover:underline pt-1"
+                  >
+                    <span>Mở Google Maps chỉ đường</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Contact Form */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-zinc-900 mb-6">Gửi tin nhắn</h2>
-            <form className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="name" className="text-sm font-semibold text-zinc-700">Họ và tên *</label>
-                  <input
-                    id="name"
-                    type="text"
-                    placeholder="Nguyễn Văn A"
-                    className="w-full rounded-lg border border-zinc-200 p-3 text-sm focus:outline-primary focus:border-primary transition-colors"
+          {/* Right Column: Contact Form */}
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/80 shadow-xl space-y-6">
+            {submitted ? (
+              <div className="text-center py-12 space-y-4">
+                <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-black text-zinc-900">Gửi yêu cầu thành công!</h3>
+                <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+                  Cảm ơn bạn đã liên hệ với Dormio. Đội ngũ chuyên gia sẽ gọi điện phản hồi tới số điện thoại <strong className="text-zinc-900">{phone}</strong> trong vòng 15 phút.
+                </p>
+                <button
+                  onClick={() => setSubmitted(false)}
+                  className="px-6 py-2.5 bg-zinc-900 text-white font-extrabold text-xs rounded-xl hover:bg-zinc-800 transition-all cursor-pointer shadow-md"
+                >
+                  Gửi yêu cầu khác
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h3 className="text-lg font-black text-zinc-900">Gửi Tin Nhắn Yêu Cầu Hỗ Trợ</h3>
+                  <p className="text-xs text-zinc-500 font-medium">Điền thông tin bên dưới để chuyên viên tư vấn Dormio liên hệ hỗ trợ bạn.</p>
+                </div>
+
+                {/* Topic Selection */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700">Chủ đề bạn cần hỗ trợ *</label>
+                  <div className="relative">
+                    <select
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      className="w-full pl-4 pr-10 py-3 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
+                    >
+                      <option value="tu-van">Tư vấn gói phần mềm quản lý trọ (BHMS)</option>
+                      <option value="bhrp">Hỗ trợ đăng tin cho thuê phòng (BHRP)</option>
+                      <option value="ky-thuat">Báo lỗi kỹ thuật & Thanh toán VietQR</option>
+                      <option value="khac">Khác (Chủ đề khác)</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
+                  </div>
+                </div>
+
+                {/* Dynamic input when topic === "khac" */}
+                {topic === "khac" && (
+                  <div className="space-y-1.5 animate-in fade-in duration-300">
+                    <label className="text-xs font-bold text-zinc-700">Tiêu đề cụ thể *</label>
+                    <input
+                      type="text"
+                      placeholder="Nhập tiêu đề chủ đề cần hỗ trợ..."
+                      value={customSubject}
+                      onChange={(e) => setCustomSubject(e.target.value)}
+                      className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
+                    />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700">Họ và tên *</label>
+                    <input
+                      type="text"
+                      placeholder="Nhập họ và tên..."
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700">Số điện thoại liên hệ *</label>
+                    <input
+                      type="text"
+                      placeholder="Nhập số điện thoại..."
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700">Nội dung chi tiết câu hỏi *</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Mô tả chi tiết thắc mắc hoặc câu hỏi của bạn..."
                     required
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="contact" className="text-sm font-semibold text-zinc-700">Email hoặc Số điện thoại *</label>
-                  <input
-                    id="contact"
-                    type="text"
-                    placeholder="name@example.com"
-                    className="w-full rounded-lg border border-zinc-200 p-3 text-sm focus:outline-primary focus:border-primary transition-colors"
-                    required
-                  />
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="subject" className="text-sm font-semibold text-zinc-700">Chủ đề *</label>
-                <input
-                  id="subject"
-                  type="text"
-                  placeholder="Ví dụ: Cần tư vấn phần mềm quản lý"
-                  className="w-full rounded-lg border border-zinc-200 p-3 text-sm focus:outline-primary focus:border-primary transition-colors"
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="message" className="text-sm font-semibold text-zinc-700">Nội dung *</label>
-                <textarea
-                  id="message"
-                  rows={5}
-                  placeholder="Hãy mô tả chi tiết vấn đề hoặc câu hỏi của bạn..."
-                  className="w-full rounded-lg border border-zinc-200 p-3 text-sm focus:outline-primary focus:border-primary transition-colors resize-y"
-                  required
-                ></textarea>
-              </div>
-
-              <Button type="submit" className="w-full sm:w-auto h-12 bg-primary hover:bg-primary-hover text-white px-8 rounded-xl font-semibold mt-2">
-                <Send className="mr-2 h-4 w-4" />
-                Gửi tin nhắn ngay
-              </Button>
-            </form>
+                {/* Solid Brand Teal Action Button */}
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+                >
+                  <Send className="w-4 h-4" /> Gửi Yêu Cầu Hỗ Trợ Ngay &rarr;
+                </button>
+              </form>
+            )}
           </div>
         </div>
+
+        {/* Bottom CTA Banner */}
+        <div className="bg-zinc-900 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-2xl border border-zinc-800">
+          <h2 className="text-2xl sm:text-4xl font-black text-white leading-snug">
+            Sẵn sàng trải nghiệm quản lý nhà trọ thông minh?
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto font-medium">
+            Đăng ký tài khoản Dormio ngay hôm nay để trải nghiệm miễn phí 7 ngày đầy đủ các tính năng nâng cao.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <Link href="/register" className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105">
+                Dùng thử miễn phí 7 ngày &rarr;
+              </button>
+            </Link>
+            <Link href="/pricing" className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto px-8 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white font-extrabold text-xs rounded-2xl transition-all cursor-pointer">
+                Xem chi tiết bảng giá
+              </button>
+            </Link>
+          </div>
+        </div>
+
       </div>
     </div>
   );
