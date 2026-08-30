@@ -72,6 +72,21 @@
 - Employees are scoped to their `EMPLOYEE_ASSIGNMENT.boardingHouseId` only.
 - ID card images must be served via short-lived signed URLs from a private bucket only.
 
+### Swagger / API Documentation for BHMS Endpoints
+
+Every BHMS landlord controller endpoint **MUST** apply both decorators from `src/common/swagger`:
+
+```typescript
+import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
+
+@ApiAuth()              // applies @ApiBearerAuth('JWT') + 401/403 responses
+@ApiBoardingHouseHeader() // documents X-Boarding-House-Id header with UUID format
+```
+
+- `@ApiAuth()` — shorthand for `@ApiBearerAuth('JWT')` + standard 401 Unauthorized + 403 Forbidden responses.
+- `@ApiBoardingHouseHeader()` — adds `X-Boarding-House-Id` header with `required: true`, `format: uuid` and a description explaining the PropertyOwnershipGuard check.
+- These two decorators are **mandatory on every non-public BHMS endpoint**. Never apply `@ApiBearerAuth()` directly; always use `@ApiAuth()` for consistency.
+
 ---
 
 ## Soft Delete / Data Integrity
@@ -139,6 +154,15 @@
 
 ---
 
+## Language Rules
+
+- **Backend (NestJS)**: All code, comments, log messages, error codes, DTO field names, Swagger `@ApiOperation` summaries/descriptions, `@ApiProperty` descriptions, and `@ApiResponse` descriptions MUST be written in **English**.
+- **Frontend (Next.js)**: UI-visible text (labels, buttons, headings, placeholder text, error messages shown to users) MUST be in **Vietnamese** (the target user language). Code comments, variable names, and non-user-facing strings should be in English.
+- **Spec documents** (`docs/spec/*.md`): Vietnamese is acceptable since they target internal stakeholders.
+- **This rules file and AGENTS.md files**: English.
+
+---
+
 ## Hard Rules (NEVER Do This)
 
 - Do NOT use `Float` for money fields.
@@ -149,3 +173,4 @@
 - Do NOT let `00000000` remain as a permanent password — check `mustChangePassword` on login.
 - Do NOT insert a new `DEPOSIT` when converting platform deposit to contract — update the existing row.
 - Do NOT generate `POST` when landlord uses AI draft — create only on explicit publish action.
+- Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `backend/`.

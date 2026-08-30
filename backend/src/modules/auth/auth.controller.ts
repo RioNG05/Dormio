@@ -9,14 +9,24 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiConflictResponse,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import {
+  RegisterResponseDto,
+  LoginResponseDto,
+  ChangePasswordResponseDto,
+} from './dto/auth-response.dto';
+import { ApiAuth } from '../../common/swagger';
+import { ApiSuccessResponse, ApiErrorResponse } from '../../common/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from './types/jwt-payload.type';
@@ -31,9 +41,20 @@ export class AuthController {
   @Public()
   @Post('register')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
-  @ApiOperation({ summary: 'Register a new landlord account' })
-  @ApiResponse({ status: 201, description: 'Account created, token returned' })
-  @ApiResponse({ status: 409, description: 'Phone number already exists' })
+  @ApiOperation({
+    summary: 'Register a new landlord account',
+    description:
+      'Creates a new account with the `landlord` role. Returns a JWT token and sanitized user object. ' +
+      'Each phone number can only be registered once.',
+  })
+  @ApiCreatedResponse({
+    description: 'Registration successful — returns token and user object',
+    type: ApiSuccessResponse(RegisterResponseDto),
+  })
+  @ApiConflictResponse({
+    description: '`phone_number_already_exists` — the phone number is already registered',
+    type: ApiErrorResponse,
+  })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -44,12 +65,21 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
-  @ApiOperation({ summary: 'Login with phone number and password' })
-  @ApiResponse({
-    status: 200,
-    description: 'Login successful. Check mustChangePassword flag.',
+  @ApiOperation({
+    summary: 'Login with phone number and password',
+    description:
+      'Returns a JWT token along with the `mustChangePassword` flag. ' +
+      'If `mustChangePassword` is `true`, the frontend must redirect the user to `/change-password` ' +
+      'before granting access to the dashboard.',
   })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiOkResponse({
+    description: 'Login successful — check the `mustChangePassword` flag',
+    type: ApiSuccessResponse(LoginResponseDto),
+  })
+  @ApiUnauthorizedResponse({
+    description: '`invalid_credentials` — wrong phone number or password',
+    type: ApiErrorResponse,
+  })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -57,13 +87,22 @@ export class AuthController {
   // ─── Change Password ────────────────────────────────────────────────────────
 
   @Patch('change-password')
-  @ApiBearerAuth()
+  @ApiAuth()
   @ApiOperation({
-    summary: 'Change password (required when mustChangePassword is true)',
+    summary: 'Change account password',
+    description:
+      'Mandatory when `mustChangePassword` is `true` (accounts created by a landlord on behalf of a tenant/staff). ' +
+      'The new password must differ from the current one and be at least 8 characters.',
   })
-  @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({ status: 400, description: 'Current password incorrect' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOkResponse({
+    description: 'Password changed successfully',
+    type: ApiSuccessResponse(ChangePasswordResponseDto),
+  })
+  @ApiBadRequestResponse({
+    description:
+      '`current_password_incorrect` or `new_password_must_differ`',
+    type: ApiErrorResponse,
+  })
   async changePassword(
     @Body() dto: ChangePasswordDto,
     @CurrentUser() user: JwtPayload,
