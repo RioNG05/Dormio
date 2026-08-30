@@ -110,55 +110,55 @@ enum PostPurchaseStatus {
 }
 
 enum InvoiceStatus {
-  UNPAID
-  PAID
-  OVERDUE
+  unpaid
+  paid
+  overdue
 }
 
 enum PaymentType {
-  CHARGE
-  REFUND
+  charge
+  refund
 }
 
 enum PaymentMethod {
-  CASH
-  BANKING
+  cash
+  banking
 }
 
 enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
+  pending
+  success
+  failed
 }
 
 enum MessageAttachmentType {
-  IMAGE
-  FILE
+  image
+  file
 }
 
 enum AiMessageRole {
-  USER
-  ASSISTANT
+  user
+  assistant
 }
 
 enum AuditLogAction {
-  CREATE
-  UPDATE
-  DELETE
-  LOGIN
-  PAYMENT
+  create
+  update
+  delete
+  login
+  payment
 }
 
 enum GrievencePriority {
-  LOW
-  MEDIUM
-  HIGH
+  low
+  medium
+  high
 }
 
 enum GrievenceStatus {
-  PENDING
-  IN_PROGRESS
-  RESOLVED
+  pending
+  in_progress
+  resolved
 }
 
 enum AssignmentStatus {
@@ -199,6 +199,11 @@ enum NotifyStatus {
   canceled
 }
 
+enum OtpPurpose {
+  login_verifycation
+  reset_password
+}
+
 model User {
   id                 String     @id @default(uuid())
   username           String?    @db.VarChar(255)
@@ -226,7 +231,6 @@ model User {
   postReaches           PostReach[]
   aiConversations       AiConversation[]
   auditLogs             AuditLog[]
-  grievences            Grievance[]
   sentNotifications     Notification[]        @relation("Sender")
   receivedNotifications Notification[]        @relation("Receiver")
   employee              Employee?
@@ -234,6 +238,9 @@ model User {
   recurrencePatterns    RecurrencePattern[]
   createdNotifications  MassNotificationJob[] @relation("CreateNotify")
   targetedNotifications MassNotificationJob[] @relation("TargetNotify")
+  otpCodes              OtpCode[]
+  grievanceSends        Grievance[]           @relation("GrievanceSender")
+  grievanceResolves     Grievance[]           @relation("GrievanceResolver")
 
   @@map("users")
 }
@@ -304,8 +311,8 @@ model Expense {
   id              String        @id @default(uuid())
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
-  roomId          String        @map("room_id") @db.Uuid
-  room            Room          @relation(fields: [roomId], references: [id])
+  roomId          String?       @map("room_id") @db.Uuid
+  room            Room?         @relation(fields: [roomId], references: [id])
   name            String        @db.VarChar(255)
   description     String?
   category        String
@@ -744,15 +751,17 @@ model GrievanceImage {
 model Grievance {
   id              String            @id @default(uuid())
   tenantId        String            @map("tenant_id") @db.Uuid
-  tenant          User              @relation(fields: [tenantId], references: [id])
+  tenant          User              @relation("GrievanceSender", fields: [tenantId], references: [id])
   boardingHouseId String            @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse     @relation(fields: [boardingHouseId], references: [id])
   roomId          String            @map("room_id") @db.Uuid
   room            Room              @relation(fields: [roomId], references: [id])
   title           String
   description     String
-  priority        GrievencePriority @default(MEDIUM)
+  priority        GrievencePriority @default(medium)
   status          GrievenceStatus
+  resolvedBy      String            @map("resolved_by") @db.Uuid
+  resolvedByUser  User              @relation("GrievanceResolver", fields: [resolvedBy], references: [id])
   resolvedAt      DateTime?         @map("resolved_at")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime?         @updatedAt @map("updated_at")
@@ -896,4 +905,16 @@ model MassNotificationJob {
   createdAt     DateTime      @default(now()) @map("created_at")
 
   @@map("mass_notification_jobs")
+}
+
+model OtpCode {
+  id           String     @id @default(uuid())
+  userId       String     @db.Uuid
+  user         User       @relation(fields: [userId], references: [id])
+  codeHash     String     @map("code_hash")
+  purpose      OtpPurpose
+  expiresAt    DateTime   @map("expires_at")
+  verifiedAt   DateTime   @map("verified_at")
+  attemptCount Int        @map("attempt_count")
+  createdAt    DateTime   @default(now()) @map("created_at")
 }

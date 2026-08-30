@@ -1,62 +1,129 @@
 # Overview — Boarding House Management & Rental Platform
 
-> **Purpose**: This is the entry point of a multi-file technical specification. Each module has its own file in this folder. AI coding agents implementing any use case (UC) below should treat Prisma model/field names as authoritative — they are copied directly from `schema.prisma`, not from an earlier ERD draft. If a model or field mentioned here doesn't exist in `schema.prisma`, treat `schema.prisma` as the source of truth and flag the mismatch instead of guessing.
+> **Purpose**: This is the entry point of a multi-file technical specification, regenerated to match the uploaded `schema.prisma` and the latest business-flow descriptions (role model, contract confirm/reject, meter-first billing, staff/tenant onboarding with OTP). AI coding agents should treat Prisma model/field names here as authoritative — copied directly from `schema.prisma`. If something here conflicts with your copy of `schema.prisma`, the schema file wins; flag the mismatch instead of guessing.
 
-**Stack**: NestJS (backend) · Prisma + PostgreSQL (data layer) · React Native/Expo (tenant/staff mobile) · Next.js (landlord web dashboard + rental platform).
+**Stack**: NestJS (backend) · Prisma + PostgreSQL · Next.js (web only — landlord dashboard, tenant portal, staff portal, rental platform, admin portal all served as responsive web apps in the browser; no native mobile app).
 
 **File map:**
 | File | Covers |
 |---|---|
-| `00-overview-and-conventions.md` | This file — global rules, schema changelog |
-| `01-bhms-landlord.md` | Module 1 (BHMS), actor: Landlord — UC-L-01 → UC-L-24 |
-| `02-bhms-staff.md` | Module 1 (BHMS), actor: Staff — UC-S-01 → UC-S-02 |
-| `03-bhms-tenant.md` | Module 1 (BHMS), actor: Tenant — UC-T-01 → UC-T-07 |
-| `04-bhrp-poster.md` | Module 2 (BHRP), landlord acting as poster — UC-P-01 → UC-P-02 |
-| `05-bhrp-platform-user.md` | Module 2 (BHRP), actor: Prospective Tenant — UC-PU-01 → UC-PU-05 |
-| `06-admin.md` | Module 3, actor: Admin — UC-A-01 → UC-A-05 |
+| `00-overview-and-conventions.md` | This file — global rules, schema gaps |
+| `07-auth-and-roles.md` | **Read this early** — the role model, registration, becoming a Landlord, staff/tenant onboarding with random password + OTP, contract confirm/reject |
+| `01-bhms-landlord.md` | UC-L-01 → UC-L-24: Landlord — property, rooms, contracts, billing, staff, scheduling |
+| `02-bhms-staff.md` | UC-S-01, UC-S-02: Staff schedule & timekeeping |
+| `03-bhms-tenant.md` | UC-T-01 → UC-T-07: Tenant notifications, meter-first billing, grievances |
+| `04-bhrp-poster.md` | UC-P-01, UC-P-02: Landlord acting as poster on the rental platform |
+| `05-bhrp-platform-user.md` | UC-PU-01 → UC-PU-05: Prospective tenant — browsing, identity + deposit, chat |
+| `06-admin.md` | UC-A-01 → UC-A-05: Admin analytics, grievance resolution, mass notifications |
 
 ---
 
-## Global Conventions (apply to every UC in every file)
+## Global Conventions
 
-- **IDs**: every model uses `String @id @default(uuid())`. All FK params in API contracts are UUID strings, not integers.
-- **Multi-tenancy**: one `User` (role=`landlord`) can own multiple `BoardingHouse` rows. Every BHMS query must be scoped by `boardingHouseId` — never assume a landlord has exactly one property. List/aggregate endpoints accept `boardingHouseId` (or `boardingHouseId[]` for Pro cross-property reports) as an explicit filter, never inferred from the user alone. See UC-L-23 for the enforcement mechanism.
-- **Financial records are never hard-deleted**: `Payment`, `Invoice`, `Contract`, `Deposit` use status transitions instead. Default `onDelete: Restrict` on these relations unless a UC explicitly says otherwise.
-- **Money fields**: `Decimal` in Prisma → `DECIMAL(12,2)` in Postgres. Never `Float`.
-- **Payment amount sign convention**: `Payment.amount` is **always positive**, including refunds (`PaymentType.REFUND`). Net revenue = `SUM(amount) WHERE type='CHARGE' AND status='SUCCESS'` minus `SUM(amount) WHERE type='REFUND' AND status='SUCCESS'`.
-- **Audit logging**: any mutation to `Contract`, `Deposit`, `Payment`, `Invoice`, `EmployeeAssignment`, `Attendance`, `UserSubscription` must write an `AuditLog` row (`action`, `entityType`, `entityId`, `oldValue`, `newValue`, `userId`) inside the same DB transaction as the mutation. Implement via a Prisma middleware/interceptor, not manual calls scattered across services.
-- **Role-based access**: `User.role` (`landlord | tenant | employee | admin`) gates every endpoint. Tenant-role users must never query another tenant's `Contract`/`Invoice`/`Payment`. Employee-role users are scoped to boarding houses where they have an `active` `EmployeeAssignment`.
-- **Async side effects**: SMS/Zalo/Email dispatch and payment-gateway calls must go through a job queue (e.g. BullMQ), never synchronously inside the HTTP request that creates the triggering record. A flaky third-party API must never block a contract/payment/invoice write.
+- **IDs**: every model uses `String @id @default(uuid())`. All FK params in API contracts are UUID strings.
+- **Multi-tenancy**: one `User` can own multiple `BoardingHouse` rows (see `07-auth-and-roles.md` — ownership, not `role`, is what makes someone a "landlord" for a given property). Every BHMS query must be scoped by `boardingHouseId`, validated server-side via `PropertyOwnershipGuard` (UC-L-23) on every request.
+- **Authorization is relationship-based, not `role`-based** — see `07-auth-and-roles.md` for the full explanation. This is the single most important architectural rule in the whole system; do not write a naive `@Roles('landlord')` guard anywhere in the codebase.
+- **Financial records are never hard-deleted**: `Payment`, `Invoice`, `Contract`, `Deposit` use status transitions. Default `onDelete: Restrict` unless a UC says otherwise.
+- **Money fields**: `Decimal` in Prisma → `DECIMAL(12,2)` in Postgres. Never `Float`. (See Schema Gaps — `InvoiceItem.amount` currently violates this.)
+- **Payment amount sign convention**: `Payment.amount` is always positive, including refunds (`PaymentType.refund`). Net revenue = `SUM(amount) WHERE type='charge' AND status='success'` minus `SUM(amount) WHERE type='refund' AND status='success'`.
+- **Payment ↔ target linkage**: `Payment` has five nullable target FKs — `invoiceId`, `depositId`, `postPurchaseId`, `subscriptionId`, `contractId` (the last one is for `rentPaymentCycle='upfront'` one-time rent payments). **All five are `@unique`** in the current schema — each target can have at most one `Payment` row, ever. This has three consequences every implementer must understand:
+  1. **No retry-by-inserting.** If a charge fails, update the existing `Payment` row's `status`/`transactionRef` in place — do not insert a second row for the same target. Failed-attempt history lives in `AuditLog`, not in multiple `Payment` rows.
+  2. **Refunds don't reuse the target FK.** A refund is a **new** `Payment` row, but it leaves `depositId` (or whichever target FK) `NULL` — that slot is already taken by the original charge. Instead, link the two via the self-relation: `Payment.refundPaymentId` (on the **original charge** row) points at the refund row's `id`. To find a deposit's refund: `Payment WHERE depositId = X` → follow `.refundPaymentId` → that's the refund. See UC-PU-04 in `05-bhrp-platform-user.md` for a worked example.
+  3. **The "which target" constraint is conditional on `type`, not a flat "exactly one of five" rule** — this was missing from earlier drafts of this spec and must be enforced:
+     - `type = 'charge'` → **exactly one** of the five target FKs must be non-null. A charge with zero targets is an orphaned payment (paying for nothing); a charge with two or more targets is ambiguous (which one actually got the money?).
+     - `type = 'refund'` → **all five target FKs must be `NULL`.** A refund is identified purely through the reverse of `refundPaymentId` (i.e. some charge row points at it) — it never sets its own `depositId`/`invoiceId`/etc., because that slot already belongs to the original charge (per point 2 above).
 
----
-
-## Schema Changelog — decisions made after reviewing `schema.prisma`
-
-These are corrections agreed on top of the uploaded schema. If your copy of `schema.prisma` doesn't yet reflect them, apply these before implementing the UCs below — several flows in this spec assume they're fixed:
-
-1. **`Payment.payerId` must NOT be `@unique`.** It was `@unique` in the reviewed draft, which would mean each user could only ever make one payment in the entire system. Confirmed bug — remove `@unique`.
-2. **`Payment.depositId` / `postPurchaseId` / `subscriptionId` / `invoiceId` must NOT be `@unique`.** Same issue — a `@unique` constraint here blocks retrying a failed payment and blocks creating a `REFUND`-type `Payment` row pointing at the same `depositId` as the original charge. Confirmed bug — remove `@unique` from all four.
-3. **`PostPurchase` intentionally has no `quantityUsed` field.** Compute used quota dynamically: `COUNT(Post WHERE postPurchaseId = :id)`. This is a confirmed design choice, not a gap — do not add the field back.
-4. **`Room.roomTypeId` was missing** (the `RoomType` model existed but nothing referenced it). Confirmed gap — add `roomTypeId String @map("room_type_id") @db.Uuid` + `roomType RoomType @relation(fields: [roomTypeId], references: [id])` to `Room`, and `rooms Room[]` back-relation on `RoomType`.
-5. **`DepositType` enum is `{ platform, contract }` only — `hold_room` was removed.** Rationale (confirmed by product owner): *every* deposit is inherently "holding a room", so a separate `hold_room` type added no information beyond what `contractId` being null/non-null already tells you. The distinction that matters is **origin of the deposit**, not whether it's holding a room:
-   - `type = 'contract'`: landlord recorded it manually/offline (`recordedManually = true`). `contractId` may be `NULL` (landlord is just holding the room for someone, no contract yet — this replaces the old `hold_room` case) or set (deposit tied to a contract created directly, the "external source" flow — see UC-L-04).
-   - `type = 'platform'`: tenant paid it online through the rental platform (`recordedManually = false`), always starts with `postId` set and `contractId = NULL`, later gets `contractId` attached when a contract is created from it (UC-L-04b).
-6. **`Deposit.recordedBy` must be nullable (`String?`)**, not required. It only has a value when `recordedManually = true`. Platform deposits (`type = 'platform'`) have no human "recorder" — `recordedBy` stays `NULL` for those.
-7. **`Contract` has no `source` field.** The platform-vs-external distinction from earlier design discussions is no longer stored as an explicit enum on `Contract`. Derive it when needed: a contract came from the platform if it has an associated `Deposit WHERE type='platform'`, or equivalently if its linked `Post.resultedContractId` points back to it. Don't reintroduce a `source` column — derive, don't duplicate.
-8. **Identity/ID-card data moved from `Contract` to `UserIdentification`** — a 1:1 profile per `User` (`userId @unique`), holding `identityNumber`, `fullName`, `dateOfBirth`, `gender`, `nationality`, `placeOfOrigin`/`placeOfResidence` (JSON), issue/expiry dates, and `cardFrontUrl`/`cardBackUrl`. This is a meaningful upgrade from the earlier per-contract image fields: **a tenant verifies their identity once**, and it's reused across every contract they sign, rather than re-uploading ID photos each time. See UC-L-04 for how this interacts with contract creation.
-9. **`InvoiceItem.amount` is typed `Int`.** This looks like it should be `Decimal` (line items are money, e.g. electricity cost for the period) — flag this to the schema owner before running a production migration; the spec below assumes it will be corrected to `Decimal` since storing money as `Int` truncates fractional units and breaks the `SUM` reconciliation used throughout the billing flows.
-10. **`Room.status` gained a `deposited` value** (`available | deposited | occupied | maintainace`\*) not present in earlier drafts — a room moves to `deposited` once a platform deposit exists for it and back to `available` if that deposit is refunded without becoming a contract, or to `occupied` once a contract is created. This is a genuine improvement (previously a room in this in-between state would still show as `available`, which is misleading). *(Note: enum value is spelled `maintainace` in the schema — a typo for `maintenance`. Match the existing spelling in code until the schema is corrected; do not silently "fix" the string in application code, or comparisons against the DB enum will break.)*
-11. **`BoardingHouse` address is now structured** (`country`, `province`, `city`, `district`, `ward`, `street`, `houseNumber`) instead of a single `address` string. Any UC referencing "địa chỉ" now means this full structured object — search/filter UIs (UC-PU-01) should expose province/district as separate filter facets rather than free-text address search.
-12. **`Contract.monthlyPaymentDate`** (an `Int`, day-of-month) is new — this is the billing anchor day used by UC-L-06's invoice-generation cron instead of a fixed platform-wide billing day. The cron must read this per-contract, not assume every contract bills on the 1st.
+     Enforce with a raw-SQL `CHECK` constraint added via a manual Prisma migration (Prisma's schema language has no native `CHECK` support):
+     ```sql
+     ALTER TABLE payments ADD CONSTRAINT chk_payment_target_by_type CHECK (
+       (type = 'charge' AND (
+         (invoice_id IS NOT NULL)::int + (deposit_id IS NOT NULL)::int +
+         (post_purchase_id IS NOT NULL)::int + (subscription_id IS NOT NULL)::int +
+         (contract_id IS NOT NULL)::int = 1
+       ))
+       OR
+       (type = 'refund' AND
+         invoice_id IS NULL AND deposit_id IS NULL AND post_purchase_id IS NULL AND
+         subscription_id IS NULL AND contract_id IS NULL
+       )
+     );
+     ```
+     Mirror this check at the application/service layer too (don't rely on the DB constraint alone to surface a clean error message to the caller) — validate before insert, not just let the DB reject it.
+- **Audit logging**: any mutation to `Contract`, `Deposit`, `Payment`, `Invoice`, `EmployeeAssignment`, `Attendance`, `UserSubscription` must write an `AuditLog` row inside the same transaction as the mutation. Implement via a Prisma middleware/interceptor.
+- **Async side effects**: SMS/Zalo/Email dispatch and payment-gateway calls go through a job queue (e.g. BullMQ), never synchronously inside the HTTP request that creates the triggering record.
 
 ---
 
 ## Cross-Module Shared Infrastructure
 
-These are implemented once and reused by multiple UCs across different files — do not reimplement per module:
+- **`Conversation` / `Message` / `MessageAttachment`**: shared by UC-L-11 (landlord↔tenant chat) and UC-PU-05 (prospective tenant↔poster chat). Same tables, same WebSocket gateway.
+- **`AiConversation` / `AiMessage`**: shared by UC-L-12 (post suggestions) and UC-L-24 (cross-property strategy reports) — see Schema Gaps below regarding `boardingHouseId` needing to become nullable for the latter.
+- **`Payment`**: the single settlement table for `Invoice`, `Deposit`, `PostPurchase`, `UserSubscription`, and upfront-rent `Contract` payments. See the refund pattern above.
+- **`Notification`**: `receiverId = NULL` is the broadcast convention (UC-L-13, UC-T-01, UC-A-04). Fan-out to individual recipients happens at delivery time.
+- **`UserService.findOrCreateByPhone()`**: shared helper for "landlord types a phone number, system finds-or-creates a `User`", used identically by UC-L-04 Flow B (tenant) and UC-L-19 (staff) — including generating a random password and flagging `mustChangePassword=true`. See `07-auth-and-roles.md` UC-AUTH-03 for the full first-login OTP flow this triggers. Do not implement this twice.
 
-- **`Conversation` / `Message` / `MessageAttachment`**: shared by UC-L-11 (landlord↔tenant chat in BHMS) and UC-PU-05 (prospective tenant↔poster chat in BHRP). Same tables, same WebSocket gateway.
-- **`AiConversation` / `AiMessage`**: shared by UC-L-12 (post suggestions) and UC-L-24 (cross-property strategy reports). Differentiate by `boardingHouseId` (single property vs `NULL` for cross-property context) — there is no separate `purpose` enum in the current schema, so the calling service must pass enough context in the first `AiMessage(role=USER)` prompt for the distinction to be meaningful downstream (e.g. when rendering conversation history back to the landlord).
-- **`Payment`**: the single settlement table for `Invoice`, `Deposit`, `PostPurchase`, and `UserSubscription` — see UC-L-06, UC-PU-04, UC-P-01, and the landlord's plan-purchase flow respectively. Exactly one of the four target FKs should be set per row (enforce with an application-layer check and/or a raw-SQL `CHECK` constraint added via a manual Prisma migration, since Prisma's schema language has no native `CHECK` support).
-- **`AuditLog`**: see Global Conventions above.
-- **`Notification`**: `receiverId = NULL` is the broadcast convention (used by UC-L-13, UC-T-01, UC-T-02, UC-A-04's resolution alerts). Fan-out to individual recipients happens at delivery time, not by pre-creating one row per recipient.
+---
+
+## Schema Gaps — must be resolved before implementing the affected use cases
+
+Grouped by severity. These are gaps found while writing the business-flow spec against the uploaded `schema.prisma` — none of them are implemented yet.
+
+### A. Required fields that must become nullable (will cause INSERT failures otherwise)
+
+These model a state that only exists *after* some later event — as written, Prisma will refuse to create the row before that event ever happens, which breaks the normal lifecycle:
+
+| Model.field | Why it must be nullable |
+|---|---|
+| `Attendance.checkIn` / `checkOut` | A shift starts with neither set; `checkOut` in particular is only known after the tenant/employee finishes their shift (UC-S-02). |
+| `Grievance.resolvedAt` | Only set once an admin resolves it (UC-A-04) — every `pending` grievance needs this to be `NULL`. |
+| `EmployeeAssignment.leftAt` | Only set when the assignment ends — an `active` assignment has no end date yet. |
+| `Message.readAt` | Only set once the recipient reads it — most messages start unread. |
+| `Expense.paidAt` | `Expense.status` defaults to `pending`; a pending expense hasn't been paid yet. |
+
+### B. Missing fields/models needed for specific flows
+
+| Addition | Needed for |
+|---|---|
+| `MeterReading.invoiceId` (nullable FK → `Invoice`) | UC-L-06/UC-T-03's meter-first billing flow — without this there's no way to tell which readings are "unconsumed" vs already billed into a past invoice. |
+| `Contract.confirmedAt`, `Contract.rejectedAt`, `Contract.rejectionReason` (nullable) | UC-AUTH-04 — the tenant confirm/reject step for platform-originated contracts. |
+| `OtpCode` model (new table: `id`, `userId`, `codeHash`, `purpose`, `expiresAt`, `verifiedAt`, `attemptCount`, `createdAt`) | UC-AUTH-03 — first-login SMS verification for accounts created via the manual phone-entry flow. |
+| `Grievance.resolutionNote` (nullable text) | UC-A-04 — `GrievenceStatus` already includes `rejected`, but there's no field to record *why* something was resolved or rejected. |
+| `AiConversation.boardingHouseId` → make nullable | UC-L-24's cross-property AI strategy reports have no single `boardingHouseId` to attach to. |
+
+### C. Data-type / design concerns to flag to the schema owner
+
+| Field | Concern |
+|---|---|
+| `InvoiceItem.amount` (`Int`) | Should be `Decimal` — a metered utility line item can have fractional cost; `Int` truncates it and breaks `SUM` reconciliation against `Invoice.totalAmount`. |
+| `Expense.roomId` (required) | No way to record a property-wide expense not tied to one room (e.g. a shared-area repair). |
+| `TenantContract.contractId` (required) | The business description mentions landlords can "add someone to a room without a contract" — as written, that's not possible without a `Contract` row existing (see the footnote in `01-bhms-landlord.md` UC-L-04 Flow B). Confirm whether every occupancy really does need a backing `Contract` row (our working assumption), or whether a lighter-weight "occupant without contract" concept needs to be introduced.
+
+---
+
+## Role Model — summary (full detail in `07-auth-and-roles.md`)
+
+`User.role` (`poster | tenant | employee | landlord | admin`) is a **display-only "highest achieved role" label**. It is never the sole basis for a permission check except for `admin`. Every other capability is derived from a relationship: `BoardingHouse.ownerId` (landlord-for-property), active `EmployeeAssignment` (employee-for-property), active `TenantContract` (tenant-for-property), or simply being authenticated at all (poster-level capabilities). Read `07-auth-and-roles.md` before writing any guard, controller, or authorization check anywhere in the codebase.
+
+---
+
+## Media Storage — Cloudinary + AWS S3, used together from day one
+
+Two providers, split strictly by **sensitivity** — not a single provider, and not a "start simple, migrate later" plan. Build both integrations from the start:
+
+| Group | Fields | Provider | Delivery |
+|---|---|---|---|
+| **Public, display-optimized images** | `User.avatarUrl`, `Room.image_url`, `PostImage.url`, `BoardingHouse.thumbnail` | **Cloudinary** | `type: upload` (public). Enable `f_auto,q_auto` for automatic format/compression, and eager transformations at upload time to pre-generate thumbnails. This is Cloudinary's strength — image CDN + on-the-fly transforms — keep it scoped to exactly this group. |
+| **Private images (PII)** | `UserIdentification.cardFrontUrl`/`cardBackUrl`, `GrievanceImage.url`, `MessageAttachment.url` (when `type='image'`) | **AWS S3** | Private bucket, `Block Public Access` fully enabled. Store only the **S3 object key** in the DB field, never a URL. Generate a **pre-signed URL** (`GetObjectCommand` + `getSignedUrl`, short expiry — e.g. 5–15 minutes) at request time via the AWS SDK, on every read. Never persist a signed URL anywhere — it expires and leaks the signature if cached. |
+| **Documents (non-image)** | `ContractDocument.url`, `MessageAttachment.url` (when `type='file'`) | **AWS S3** | Same private-bucket + presigned-URL pattern. S3 is the right home for this from the start — proper Lifecycle rules (e.g. transition old contract documents to Glacier/Deep Archive after N months), and no image-CDN features are relevant to a PDF/Word file, so there's no reason to route it through Cloudinary even temporarily. |
+
+**Why split this way instead of one provider for everything:** Cloudinary's value (transforms, CDN, `f_auto/q_auto`) only applies to images meant for public display — it adds nothing for a private ID card photo or a contract PDF, where the actual requirement is strict access control and durable storage, which is S3's strength. Running both from day one avoids a later migration and keeps each provider doing only what it's good at.
+
+**Implementation notes:**
+- Two upload services in the codebase: `CloudinaryUploadService` (public image group) and `S3UploadService` (private image + document group) — route by field/use-case at the call site, not by a runtime content-type sniff.
+- **Cloudinary upload flow:** client requests a signed upload signature from the backend → uploads directly to Cloudinary from the client → backend receives the resulting `public_id`/URL and writes it to the relevant field.
+- **S3 upload flow:** client requests a pre-signed `PUT` URL from the backend (`PutObjectCommand` + `getSignedUrl`) → uploads directly to S3 from the client → backend receives the resulting object key and writes it to the relevant field. Never proxy file bytes through the NestJS server itself in either flow — presigned/signed direct upload avoids the extra hop and memory/bandwidth cost on the API server.
+- S3 bucket: enable default encryption at rest (SSE-S3 or SSE-KMS) in addition to Block Public Access — defense in depth, don't rely solely on "we always generate presigned URLs" as the only safeguard.
+- **Key naming convention (S3 objects)**: `{entityType}/{entityId}/{uuid}.{ext}` (e.g. `contracts/8f2a.../4c1e....pdf`, `identifications/User-9b3.../front.jpg`) — predictable prefixes make lifecycle rules, per-entity cleanup on delete, and cost auditing by prefix straightforward.
+- `MessageAttachment.type` (`image | file`) determines routing: `image` still goes to **S3**, not Cloudinary, because message attachments in a private conversation are not "public display" content even when they happen to be an image — sensitivity, not file type, drives the routing decision.
+
+**Hard rule regardless of the above:** `UserIdentification.cardFrontUrl/cardBackUrl` and `ContractDocument.url` must never be reachable via a permanent, unsigned URL from either provider. Leaking either is a serious personal-data/legal-document exposure — treat any code path that returns a public/unsigned URL for these two fields as a bug blocking release, not a style preference.
