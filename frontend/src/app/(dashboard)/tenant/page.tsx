@@ -84,7 +84,7 @@ export default function TenantInfoPage() {
           setTenancyData(response.data);
         }
       } catch (err) {
-        console.warn("Could not load tenancy from backend, using fallback data:", err);
+        console.warn("Could not load tenancy from backend:", err);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -122,35 +122,6 @@ export default function TenantInfoPage() {
     }
   };
 
-  // Resolved Room & Building Info (real or fallback mockup)
-  const roomInfo = tenancyData
-    ? {
-        roomNumber: tenancyData.room.roomNumber,
-        buildingName: tenancyData.boardingHouse.name,
-        address: tenancyData.boardingHouse.address,
-        landlord: tenancyData.boardingHouse.landlord.name,
-        phone: tenancyData.boardingHouse.landlord.phoneNumber,
-        phoneDisplay: formatPhoneDisplay(tenancyData.boardingHouse.landlord.phoneNumber),
-        contractStart: formatDate(tenancyData.contract.startDate),
-        contractEnd: formatDate(tenancyData.contract.endDate),
-        rentPrice: tenancyData.contract.rentPrice,
-        deposit: tenancyData.contract.depositAmount,
-        documentUrl: tenancyData.contract.documents?.[0]?.url,
-      }
-    : {
-        roomNumber: "101",
-        buildingName: "Khu trọ cao cấp An Bình",
-        address: "123 Đường An Bình, Phường 4, Quận 5, TP.HCM",
-        landlord: "Nguyễn Văn Rio",
-        phone: "0901234567",
-        phoneDisplay: "0901.234.567",
-        contractStart: "01/01/2026",
-        contractEnd: "31/12/2026",
-        rentPrice: 4500000,
-        deposit: 4500000,
-        documentUrl: undefined,
-      };
-
   // Service icon & color resolver
   const getServiceStyle = (name: string) => {
     const lower = name.toLowerCase();
@@ -169,65 +140,86 @@ export default function TenantInfoPage() {
     return { icon: Sparkles, color: "text-indigo-500", bg: "bg-indigo-100" };
   };
 
-  const services = tenancyData?.services?.length
-    ? tenancyData.services.map((svc) => {
-        const style = getServiceStyle(svc.name);
-        return {
-          name: svc.name,
-          price: `${new Intl.NumberFormat("vi-VN").format(svc.price)}đ / ${svc.unit}`,
-          ...style,
-        };
-      })
-    : [
-        { name: "Điện", price: "3.500đ / kWh", icon: Zap, color: "text-amber-500", bg: "bg-amber-100" },
-        { name: "Nước sinh hoạt", price: "20.000đ / m³", icon: Droplets, color: "text-blue-500", bg: "bg-blue-100" },
-        { name: "Vệ sinh (Rác)", price: "50.000đ / tháng", icon: Trash2, color: "text-emerald-500", bg: "bg-emerald-100" },
-        { name: "Internet (Wifi)", price: "100.000đ / tháng", icon: Wifi, color: "text-purple-500", bg: "bg-purple-100" },
-      ];
-
-  // Announcements
-  const allAnnouncements = tenancyData?.announcements?.length
-    ? tenancyData.announcements.map((item, i) => ({
-        id: item.id || i + 1,
-        title: item.title,
-        date: formatDate(item.createdAt),
-        content: item.content,
-        isNew: item.isNew,
-      }))
-    : Array.from({ length: 15 }).map((_, i) => ({
-        id: i + 1,
-        title: i === 0 ? "Thông báo lịch cắt điện định kỳ" : i === 1 ? "Nhắc nhở giữ gìn vệ sinh chung" : `Thông báo từ quản lý số #${15 - i}`,
-        date: `1${Math.max(0, 9 - (i % 10))}/07/2026`,
-        content: i === 0
-          ? "Điện lực Quận 5 thông báo cắt điện từ 08:00 - 12:00 sáng ngày 16/07 để bảo trì lưới điện."
-          : "Chi tiết nội dung thông báo... Vui lòng đọc kỹ và thực hiện theo đúng quy định của ban quản lý toà nhà.",
-        isNew: i < 2,
-      }));
-
-  // Pagination Logic
+  // Pagination Logic for announcements
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const totalPages = Math.max(1, Math.ceil(allAnnouncements.length / itemsPerPage));
-  const currentAnnouncements = allAnnouncements.slice(
+  const announcementsList = tenancyData?.announcements || [];
+  const totalPages = Math.max(1, Math.ceil(announcementsList.length / itemsPerPage));
+  const currentAnnouncements = announcementsList.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
   const handleViewContract = () => {
-    if (roomInfo.documentUrl) {
-      window.open(roomInfo.documentUrl, "_blank");
+    const docUrl = tenancyData?.contract.documents?.[0]?.url;
+    if (docUrl) {
+      window.open(docUrl, "_blank");
     } else {
       alert("Hợp đồng điện tử đã được xác nhận trực tuyến.");
     }
   };
 
   const handleExportContract = () => {
-    if (roomInfo.documentUrl) {
-      window.open(roomInfo.documentUrl, "_blank");
+    const docUrl = tenancyData?.contract.documents?.[0]?.url;
+    if (docUrl) {
+      window.open(docUrl, "_blank");
     } else {
-      alert("Đang tải file hợp đồng (mockup).pdf...");
+      alert("Đang tải file hợp đồng...");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-16 text-zinc-500 text-sm font-medium">
+        Đang tải thông tin trọ...
+      </div>
+    );
+  }
+
+  if (!tenancyData) {
+    return (
+      <div className="flex flex-col gap-8 pb-12 animate-in fade-in duration-500">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Thông tin trọ</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Chi tiết về phòng trọ, dịch vụ và các thông báo mới nhất từ chủ nhà.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-16 text-center shadow-sm flex flex-col items-center justify-center gap-3">
+          <div className="p-4 bg-zinc-100 rounded-full text-zinc-400">
+            <Building className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-zinc-800">Chưa có thông tin thuê phòng</h3>
+          <p className="text-sm text-zinc-500 max-w-md">
+            Bạn hiện chưa có hợp đồng thuê phòng nào đang hoạt động trong hệ thống.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const roomInfo = {
+    roomNumber: tenancyData.room.roomNumber,
+    buildingName: tenancyData.boardingHouse.name,
+    address: tenancyData.boardingHouse.address,
+    landlord: tenancyData.boardingHouse.landlord.name,
+    phone: tenancyData.boardingHouse.landlord.phoneNumber,
+    phoneDisplay: formatPhoneDisplay(tenancyData.boardingHouse.landlord.phoneNumber),
+    contractStart: formatDate(tenancyData.contract.startDate),
+    contractEnd: formatDate(tenancyData.contract.endDate),
+    rentPrice: tenancyData.contract.rentPrice,
+    deposit: tenancyData.contract.depositAmount,
+  };
+
+  const services = (tenancyData.services || []).map((svc) => {
+    const style = getServiceStyle(svc.name);
+    return {
+      name: svc.name,
+      price: `${new Intl.NumberFormat("vi-VN").format(svc.price)}đ / ${svc.unit}`,
+      ...style,
+    };
+  });
 
   return (
     <div className="flex flex-col gap-8 pb-12 animate-in fade-in duration-500">
@@ -331,22 +323,26 @@ export default function TenantInfoPage() {
           {/* Card: Dịch vụ */}
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
             <h3 className="text-base font-bold text-zinc-900 mb-6">Biểu phí dịch vụ đang áp dụng</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {services.map((svc, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-4 p-4 rounded-xl border border-zinc-100 bg-zinc-50 hover:bg-white hover:border-zinc-200 transition-colors"
-                >
-                  <div className={`p-2.5 rounded-lg ${svc.bg} ${svc.color} shrink-0`}>
-                    <svc.icon className="w-5 h-5" />
+            {services.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {services.map((svc, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-zinc-100 bg-zinc-50 hover:bg-white hover:border-zinc-200 transition-colors"
+                  >
+                    <div className={`p-2.5 rounded-lg ${svc.bg} ${svc.color} shrink-0`}>
+                      <svc.icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-zinc-900">{svc.name}</div>
+                      <div className="text-xs font-semibold text-zinc-500 mt-0.5">{svc.price}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm font-bold text-zinc-900">{svc.name}</div>
-                    <div className="text-xs font-semibold text-zinc-500 mt-0.5">{svc.price}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-500">Không có dịch vụ bổ sung nào.</p>
+            )}
           </div>
         </div>
 
@@ -359,33 +355,40 @@ export default function TenantInfoPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 pr-4 custom-scrollbar">
-              <div className="flex flex-col gap-5">
-                {currentAnnouncements.map((item) => (
-                  <div key={item.id} className="relative pl-6 pb-2 border-l-2 border-zinc-100 last:border-transparent">
-                    {/* Timeline dot */}
-                    <div
-                      className={`absolute left-[-9px] top-1 w-4 h-4 rounded-full border-4 border-white ${
-                        item.isNew ? "bg-primary" : "bg-zinc-300"
-                      }`}
-                    ></div>
+              {currentAnnouncements.length > 0 ? (
+                <div className="flex flex-col gap-5">
+                  {currentAnnouncements.map((item) => (
+                    <div key={item.id} className="relative pl-6 pb-2 border-l-2 border-zinc-100 last:border-transparent">
+                      {/* Timeline dot */}
+                      <div
+                        className={`absolute left-[-9px] top-1 w-4 h-4 rounded-full border-4 border-white ${
+                          item.isNew ? "bg-primary" : "bg-zinc-300"
+                        }`}
+                      ></div>
 
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-zinc-400">{item.date}</span>
-                        {item.isNew && (
-                          <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-extrabold uppercase tracking-wide">
-                            Mới
-                          </span>
-                        )}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-zinc-400">{formatDate(item.createdAt)}</span>
+                          {item.isNew && (
+                            <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-extrabold uppercase tracking-wide">
+                              Mới
+                            </span>
+                          )}
+                        </div>
+                        <h4 className={`text-sm font-bold ${item.isNew ? "text-zinc-900" : "text-zinc-700"}`}>
+                          {item.title}
+                        </h4>
+                        <p className="text-sm text-zinc-500 leading-relaxed">{item.content}</p>
                       </div>
-                      <h4 className={`text-sm font-bold ${item.isNew ? "text-zinc-900" : "text-zinc-700"}`}>
-                        {item.title}
-                      </h4>
-                      <p className="text-sm text-zinc-500 leading-relaxed">{item.content}</p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-zinc-400 gap-2">
+                  <Speaker className="w-6 h-6 text-zinc-300" />
+                  <p className="text-sm font-medium">Chưa có thông báo nào từ chủ trọ.</p>
+                </div>
+              )}
             </div>
 
             {/* Pagination Controls */}

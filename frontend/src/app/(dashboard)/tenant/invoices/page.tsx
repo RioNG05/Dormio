@@ -1,55 +1,92 @@
 "use client";
 
-import React, { useState } from "react";
-import { Receipt, CheckCircle2, AlertTriangle, Clock, ArrowRight, CreditCard, ChevronDown, ChevronUp, Search, ChevronLeft, TrendingUp, TrendingDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Receipt,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  ArrowRight,
+  CreditCard,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  ChevronLeft,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { api } from "@/services/api";
+
+interface InvoiceItemDetail {
+  name: string;
+  value: number;
+}
+
+interface InvoiceRecord {
+  id: string;
+  period: string;
+  amount: number;
+  status: "paid" | "unpaid" | "overdue";
+  dueDate: string;
+  createdDate: string;
+  paidDate: string | null;
+  details: InvoiceItemDetail[];
+}
 
 export default function TenantInvoicesPage() {
+  const [loading, setLoading] = useState(true);
+  const [allInvoices, setAllInvoices] = useState<InvoiceRecord[]>([]);
 
+  useEffect(() => {
+    let isMounted = true;
 
-  // Generate 24 mock invoices to demonstrate pagination
-  const allInvoices = Array.from({ length: 24 }).map((_, i) => {
-    const month = 7 - (i % 12);
-    const year = 2026 - Math.floor(i / 12);
-    const mStr = month <= 0 ? 12 + month : month;
-    const yStr = month <= 0 ? year - 1 : year;
-    const pStr = `${mStr.toString().padStart(2, '0')}/${yStr}`;
-    const dienAmount = 300000 + ((i * 37) % 20) * 10000; // 300k - 490k
-    const nuocAmount = 100000 + ((i * 19) % 10) * 10000; // 100k - 190k
-    const amount = 3500000 + dienAmount + nuocAmount + 150000;
+    async function fetchInvoices() {
+      try {
+        const response = await api.get<{ success: boolean; data: InvoiceRecord[] }>("/v1/tenant/invoices");
+        if (isMounted && response?.data) {
+          setAllInvoices(response.data);
+        }
+      } catch (err) {
+        console.warn("Could not load invoices from backend:", err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
 
-    return {
-      id: `INV-${pStr.replace('/', '')}`,
-      period: pStr,
-      amount: amount,
-      status: i === 0 ? "unpaid" : "paid",
-      dueDate: `05/${pStr}`,
-      createdDate: `01/${pStr}`,
-      paidDate: i === 0 ? null : `04/${pStr}`,
-      details: [
-        { name: "Tiền phòng", value: 3500000 },
-        { name: "Tiền điện", value: dienAmount },
-        { name: "Tiền nước", value: nuocAmount },
-        { name: "Dịch vụ (Rác, Wifi)", value: 150000 },
-      ]
+    fetchInvoices();
+
+    return () => {
+      isMounted = false;
     };
-  });
+  }, []);
 
   // Chart Data format (last 12 months for better visual)
-  const chartData = allInvoices.slice(0, 12).reverse().map(inv => ({
+  const chartData = allInvoices.slice(0, 12).reverse().map((inv) => ({
     name: inv.period,
-    "Tiền phòng": inv.details.find(d => d.name === "Tiền phòng")?.value || 0,
-    "Tiền điện": inv.details.find(d => d.name === "Tiền điện")?.value || 0,
-    "Tiền nước": inv.details.find(d => d.name === "Tiền nước")?.value || 0,
-    "Dịch vụ khác": inv.details.find(d => d.name === "Dịch vụ (Rác, Wifi)")?.value || 0,
+    "Tiền phòng": inv.details.find((d) => d.name === "Tiền phòng")?.value || 0,
+    "Tiền điện": inv.details.find((d) => d.name === "Tiền điện")?.value || 0,
+    "Tiền nước": inv.details.find((d) => d.name === "Tiền nước")?.value || 0,
+    "Dịch vụ khác": inv.details.find((d) => d.name.includes("Dịch vụ"))?.value || 0,
   }));
 
   // Trend logic
-  const currentInvoice = allInvoices[0];
+  const currentInvoice = allInvoices.find((inv) => inv.status === "unpaid") || allInvoices[0];
   const prevInvoice = allInvoices[1];
-  const diff = currentInvoice.amount - prevInvoice.amount;
-  const percentDiff = (Math.abs(diff) / prevInvoice.amount * 100).toFixed(1);
+  const diff = currentInvoice && prevInvoice ? currentInvoice.amount - prevInvoice.amount : 0;
+  const percentDiff =
+    prevInvoice && prevInvoice.amount > 0 ? (Math.abs(diff) / prevInvoice.amount * 100).toFixed(1) : "0";
   const isUp = diff > 0;
 
   // States
@@ -60,19 +97,18 @@ export default function TenantInvoicesPage() {
     tienPhong: false,
     tienDien: true,
     tienNuoc: true,
-    dichVuKhac: false
+    dichVuKhac: false,
   });
   const itemsPerPage = 12;
 
   const toggleRow = (id: string) => {
-    setExpandedRows(prev => {
+    setExpandedRows((prev) => {
       const isExpanding = !prev[id];
 
-      // Smooth scroll to row whether expanding or collapsing
       setTimeout(() => {
         const element = document.getElementById(`row-${id}`);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }, isExpanding ? 150 : 50);
 
@@ -82,13 +118,13 @@ export default function TenantInvoicesPage() {
 
   // Filter and Pagination Logic
   const filteredInvoices = filterMonth
-    ? allInvoices.filter(inv => inv.period.includes(filterMonth))
+    ? allInvoices.filter((inv) => inv.period.includes(filterMonth))
     : allInvoices;
 
-  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / itemsPerPage));
 
   // Ensure current page is valid when filtering changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
@@ -102,6 +138,14 @@ export default function TenantInvoicesPage() {
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-16 text-zinc-500 text-sm font-medium">
+        Đang tải thông tin hoá đơn...
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8 pb-12 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -113,36 +157,48 @@ export default function TenantInvoicesPage() {
         </div>
 
         {/* Card: Số tiền cần thanh toán */}
-        <div className="w-full md:w-auto shrink-0 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 shadow-sm flex items-center gap-6">
-          <div>
-            <div className="flex items-center gap-1.5 mb-1">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-              <h2 className="text-xs font-bold text-amber-800 uppercase tracking-wide">Cần thanh toán</h2>
-            </div>
-            <div className="flex items-end gap-3 mt-1">
-              <div className="text-xl font-extrabold text-amber-600 leading-none">
-                {formatCurrency(currentInvoice.amount)}
+        {currentInvoice && currentInvoice.status === "unpaid" ? (
+          <div className="w-full md:w-auto shrink-0 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 shadow-sm flex items-center gap-6">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <h2 className="text-xs font-bold text-amber-800 uppercase tracking-wide">Cần thanh toán</h2>
               </div>
-              {isUp ? (
-                <div className="flex items-center gap-0.5 text-xs font-bold text-rose-500 mb-0.5" title="Tăng so với tháng trước">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>+{percentDiff}%</span>
+              <div className="flex items-end gap-3 mt-1">
+                <div className="text-xl font-extrabold text-amber-600 leading-none">
+                  {formatCurrency(currentInvoice.amount)}
                 </div>
-              ) : (
-                <div className="flex items-center gap-0.5 text-xs font-bold text-emerald-500 mb-0.5" title="Giảm so với tháng trước">
-                  <TrendingDown className="w-3.5 h-3.5" />
-                  <span>-{percentDiff}%</span>
-                </div>
-              )}
+                {prevInvoice && (
+                  isUp ? (
+                    <div className="flex items-center gap-0.5 text-xs font-bold text-rose-500 mb-0.5" title="Tăng so với tháng trước">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>+{percentDiff}%</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-0.5 text-xs font-bold text-emerald-500 mb-0.5" title="Giảm so với tháng trước">
+                      <TrendingDown className="w-3.5 h-3.5" />
+                      <span>-{percentDiff}%</span>
+                    </div>
+                  )
+                )}
+              </div>
+              <p className="text-[11px] font-semibold text-amber-700/80 mt-1.5">
+                Hạn chót: {currentInvoice.dueDate}
+              </p>
             </div>
-            <p className="text-[11px] font-semibold text-amber-700/80 mt-1.5">
-              Hạn chót: {currentInvoice.dueDate} (Còn 3 ngày)
-            </p>
+            <Button className="bg-amber-500 hover:bg-amber-600 text-white shadow-md border-0 h-10 rounded-xl px-6 font-bold cursor-pointer">
+              Thanh toán
+            </Button>
           </div>
-          <Button className="bg-amber-500 hover:bg-amber-600 text-white shadow-md border-0 h-10 rounded-xl px-6 font-bold">
-            Thanh toán
-          </Button>
-        </div>
+        ) : (
+          <div className="w-full md:w-auto shrink-0 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 shadow-sm flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <div>
+              <div className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Tình trạng thanh toán</div>
+              <div className="text-sm font-bold text-emerald-700 mt-0.5">Không có hoá đơn cần thanh toán</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Chart: Thống kê chi phí */}
@@ -151,44 +207,99 @@ export default function TenantInvoicesPage() {
           <h2 className="text-base font-bold text-zinc-900 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-primary" /> Thống kê chi phí (12 tháng gần nhất)
           </h2>
-          
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
-              <input type="checkbox" checked={visibleLines.tienPhong} onChange={() => setVisibleLines(prev => ({...prev, tienPhong: !prev.tienPhong}))} className="w-4 h-4 rounded accent-[#8b5cf6]" />
-              <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]"></div>Tiền phòng</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
-              <input type="checkbox" checked={visibleLines.tienDien} onChange={() => setVisibleLines(prev => ({...prev, tienDien: !prev.tienDien}))} className="w-4 h-4 rounded accent-[#0ea5e9]" />
-              <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-[#0ea5e9]"></div>Tiền điện</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
-              <input type="checkbox" checked={visibleLines.tienNuoc} onChange={() => setVisibleLines(prev => ({...prev, tienNuoc: !prev.tienNuoc}))} className="w-4 h-4 rounded accent-[#10b981]" />
-              <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div>Tiền nước</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
-              <input type="checkbox" checked={visibleLines.dichVuKhac} onChange={() => setVisibleLines(prev => ({...prev, dichVuKhac: !prev.dichVuKhac}))} className="w-4 h-4 rounded accent-[#f59e0b]" />
-              <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></div>Dịch vụ khác</span>
-            </label>
-          </div>
+
+          {chartData.length > 0 && (
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
+                <input
+                  type="checkbox"
+                  checked={visibleLines.tienPhong}
+                  onChange={() => setVisibleLines((prev) => ({ ...prev, tienPhong: !prev.tienPhong }))}
+                  className="w-4 h-4 rounded accent-[#8b5cf6]"
+                />
+                <span className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]"></div>Tiền phòng
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
+                <input
+                  type="checkbox"
+                  checked={visibleLines.tienDien}
+                  onChange={() => setVisibleLines((prev) => ({ ...prev, tienDien: !prev.tienDien }))}
+                  className="w-4 h-4 rounded accent-[#0ea5e9]"
+                />
+                <span className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#0ea5e9]"></div>Tiền điện
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
+                <input
+                  type="checkbox"
+                  checked={visibleLines.tienNuoc}
+                  onChange={() => setVisibleLines((prev) => ({ ...prev, tienNuoc: !prev.tienNuoc }))}
+                  className="w-4 h-4 rounded accent-[#10b981]"
+                />
+                <span className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div>Tiền nước
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 select-none">
+                <input
+                  type="checkbox"
+                  checked={visibleLines.dichVuKhac}
+                  onChange={() => setVisibleLines((prev) => ({ ...prev, dichVuKhac: !prev.dichVuKhac }))}
+                  className="w-4 h-4 rounded accent-[#f59e0b]"
+                />
+                <span className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></div>Dịch vụ khác
+                </span>
+              </label>
+            </div>
+          )}
         </div>
+
         <div className="w-full h-72 sm:h-80 lg:h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717a' }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717a' }} dx={-10}
-                tickFormatter={(val) => `${val / 1000}k`} />
-              <Tooltip
-                cursor={{ fill: '#f4f4f5' }}
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                formatter={(value: number) => formatCurrency(value)}
-              />
-              {visibleLines.tienPhong && <Line type="monotone" dataKey="Tiền phòng" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />}
-              {visibleLines.tienDien && <Line type="monotone" dataKey="Tiền điện" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />}
-              {visibleLines.tienNuoc && <Line type="monotone" dataKey="Tiền nước" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />}
-              {visibleLines.dichVuKhac && <Line type="monotone" dataKey="Dịch vụ khác" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />}
-            </LineChart>
-          </ResponsiveContainer>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#71717a" }} dy={10} />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#71717a" }}
+                  dx={-10}
+                  tickFormatter={(val) => `${val / 1000}k`}
+                />
+                <Tooltip
+                  cursor={{ fill: "#f4f4f5" }}
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                  }}
+                  formatter={(value: number) => formatCurrency(value)}
+                />
+                {visibleLines.tienPhong && (
+                  <Line type="monotone" dataKey="Tiền phòng" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                )}
+                {visibleLines.tienDien && (
+                  <Line type="monotone" dataKey="Tiền điện" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                )}
+                {visibleLines.tienNuoc && (
+                  <Line type="monotone" dataKey="Tiền nước" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                )}
+                {visibleLines.dichVuKhac && (
+                  <Line type="monotone" dataKey="Dịch vụ khác" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-3 border border-dashed border-zinc-200 rounded-xl bg-zinc-50/50">
+              <CreditCard className="w-8 h-8 text-zinc-300" />
+              <p className="text-sm font-medium">Chưa có số liệu thống kê giao dịch nào</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -222,7 +333,7 @@ export default function TenantInvoicesPage() {
             <tbody className="divide-y divide-zinc-100">
               {paginatedInvoices.map((inv) => (
                 <React.Fragment key={inv.id}>
-                  <tr id={`row-${inv.id}`} className={`hover:bg-zinc-50 transition-colors ${expandedRows[inv.id] ? 'bg-zinc-50/50' : ''}`}>
+                  <tr id={`row-${inv.id}`} className={`hover:bg-zinc-50 transition-colors ${expandedRows[inv.id] ? "bg-zinc-50/50" : ""}`}>
                     <td className="px-6 py-4">
                       <div className="font-semibold text-zinc-900">{inv.id}</div>
                       <div className="text-xs text-zinc-400 mt-0.5">Hạn: {inv.dueDate}</div>
@@ -251,35 +362,43 @@ export default function TenantInvoicesPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleRow(inv.id)}
-                        className="rounded-lg font-semibold bg-white border border-zinc-200 shadow-xs"
+                        className="text-primary hover:text-primary-hover font-bold hover:bg-primary/10 rounded-lg h-8 gap-1 cursor-pointer"
                       >
                         {expandedRows[inv.id] ? "Thu gọn" : "Xem chi tiết"}
-                        {expandedRows[inv.id] ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                        {expandedRows[inv.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </Button>
                     </td>
                   </tr>
 
-                  {/* Expanded Row */}
+                  {/* Expanded Breakdown Rows */}
                   {expandedRows[inv.id] && (
-                    <tr className="bg-zinc-50/80 border-b border-zinc-100">
-                      <td colSpan={5} className="px-6 py-6">
-                        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm max-w-2xl mx-auto">
-                          <h4 className="font-bold text-zinc-900 mb-4 text-center">Bảng kê chi tiết phí - {inv.id}</h4>
-                          <div className="flex flex-col gap-3">
-                            {inv.details.map((detail, idx) => (
-                              <div key={idx} className="flex items-center justify-between border-b border-dashed border-zinc-200 pb-3 last:border-0 last:pb-0">
-                                <span className="text-sm font-medium text-zinc-600">{detail.name}</span>
-                                <span className="text-sm font-bold text-zinc-900">{formatCurrency(detail.value)}</span>
+                    <tr className="bg-zinc-50/70 border-b border-zinc-100 animate-in fade-in duration-200">
+                      <td colSpan={5} className="p-6">
+                        <div className="max-w-2xl bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4">
+                          <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                            <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                              Chi tiết các khoản phí
+                            </div>
+                            <div className="text-xs font-semibold text-zinc-500">
+                              Ngày lập: {inv.createdDate}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2.5 text-sm">
+                            {inv.details.map((item, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-zinc-700">
+                                <span>{item.name}</span>
+                                <span className="font-semibold text-zinc-900">{formatCurrency(item.value)}</span>
                               </div>
                             ))}
-                            <div className="flex items-center justify-between pt-3 mt-1 border-t-2 border-zinc-200">
-                              <span className="text-sm font-extrabold text-zinc-900 uppercase">Tổng cộng</span>
-                              <span className="text-lg font-extrabold text-primary">{formatCurrency(inv.amount)}</span>
+                            <div className="border-t border-zinc-100 pt-3 flex justify-between items-center font-bold text-base text-zinc-900">
+                              <span>Tổng thanh toán</span>
+                              <span className="text-primary">{formatCurrency(inv.amount)}</span>
                             </div>
                           </div>
                           {inv.status === "unpaid" && (
                             <div className="mt-6 flex justify-center">
-                              <Button className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white shadow-sm h-10 rounded-lg px-8 font-bold">
+                              <Button className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white shadow-sm h-10 rounded-lg px-8 font-bold cursor-pointer">
                                 Thanh toán hoá đơn này
                               </Button>
                             </div>
@@ -293,7 +412,9 @@ export default function TenantInvoicesPage() {
               {paginatedInvoices.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 font-medium">
-                    Không tìm thấy hoá đơn nào khớp với "{filterMonth}"
+                    {filterMonth
+                      ? `Không tìm thấy hoá đơn nào khớp với "${filterMonth}"`
+                      : "Chưa có số liệu thống kê giao dịch nào"}
                   </td>
                 </tr>
               )}
@@ -307,9 +428,9 @@ export default function TenantInvoicesPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="h-9 px-4 text-zinc-600 font-semibold bg-white"
+              className="h-9 px-4 text-zinc-600 font-semibold bg-white cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Trang trước
             </Button>
@@ -318,10 +439,11 @@ export default function TenantInvoicesPage() {
                 <button
                   key={idx}
                   onClick={() => setCurrentPage(idx + 1)}
-                  className={`w-8 h-8 rounded-lg text-sm font-bold flex items-center justify-center transition-colors ${currentPage === idx + 1
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-zinc-500 hover:bg-zinc-200"
-                    }`}
+                  className={`w-8 h-8 rounded-lg text-sm font-bold flex items-center justify-center transition-colors cursor-pointer ${
+                    currentPage === idx + 1
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-zinc-500 hover:bg-zinc-200"
+                  }`}
                 >
                   {idx + 1}
                 </button>
@@ -330,9 +452,9 @@ export default function TenantInvoicesPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="h-9 px-4 text-zinc-600 font-semibold bg-white"
+              className="h-9 px-4 text-zinc-600 font-semibold bg-white cursor-pointer"
             >
               Trang sau <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
