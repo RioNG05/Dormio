@@ -5,6 +5,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,6 +25,8 @@ import type { JwtPayload } from './types/jwt-payload.type';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
   // ─── Register ──────────────────────────────────────────────────────────────
@@ -35,6 +38,7 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Account created, token returned' })
   @ApiResponse({ status: 409, description: 'Phone number already exists' })
   async register(@Body() dto: RegisterDto) {
+    this.logger.log(`POST /auth/register called with phoneNumber: ${dto.phoneNumber}`);
     return this.authService.register(dto);
   }
 
@@ -51,6 +55,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto) {
+    this.logger.log(`POST /auth/login called with phoneNumber: ${dto.phoneNumber}`);
     return this.authService.login(dto);
   }
 
@@ -68,6 +73,7 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
     @CurrentUser() user: JwtPayload,
   ) {
+    this.logger.log(`PATCH /auth/change-password called by user: ${user?.id}`);
     await this.authService.changePassword(user.id, dto);
     return { message: 'Password changed successfully' };
   }

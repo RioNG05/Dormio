@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,6 +25,8 @@ import { NotificationResponseDto } from './dto/notification-response.dto';
 @ApiBearerAuth()
 @Controller('v1/notifications')
 export class NotificationsController {
+  private readonly logger = new Logger(NotificationsController.name);
+
   constructor(private readonly notificationsService: NotificationsService) {}
 
   // ─── GET /v1/notifications ────────────────────────────────────────────────
@@ -40,6 +43,7 @@ export class NotificationsController {
     type: [NotificationResponseDto],
   })
   async findAll(@Request() req: { user: { id: string } }) {
+    this.logger.log(`GET /v1/notifications called by user: ${req.user?.id}`);
     const data = await this.notificationsService.findAllForUser(req.user.id);
     return { success: true, data };
   }
@@ -65,6 +69,7 @@ export class NotificationsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: { user: { id: string } },
   ): Promise<void> {
+    this.logger.log(`PATCH /v1/notifications/${id}/read called by user: ${req.user?.id}`);
     await this.notificationsService.markAsRead(id, req.user.id);
   }
 }
