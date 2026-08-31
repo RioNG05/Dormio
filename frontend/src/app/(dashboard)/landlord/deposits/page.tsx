@@ -2110,10 +2110,3 @@ export default function DepositsPage() {
   );
 }
 
-export default function DepositsPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-xs font-bold text-zinc-400">Đang tải dữ liệu tiền cọc...</div>}>
-      <DepositsContent />
-    </Suspense>
-  );
-}

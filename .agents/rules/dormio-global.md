@@ -135,6 +135,19 @@ import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
 
 ---
 
+## API Logging & Swagger Documentation (MANDATORY)
+
+Whenever writing or modifying any backend endpoint in NestJS:
+1. **Endpoint Logger**: Every controller must define `private readonly logger = new Logger(ControllerName.name);` and log an info message upon entry (e.g. `this.logger.log('GET /v1/tenant/tenancy called by user ' + user.id);`).
+2. **Complete Swagger**: Every controller and route must be fully documented using `@nestjs/swagger`:
+   - `@ApiTags('Feature')`
+   - `@ApiBearerAuth()` (if protected)
+   - `@ApiOperation({ summary: '...', description: '...' })`
+   - `@ApiOkResponse({ type: ResponseDto, description: '...' })`, `@ApiResponse()`, etc.
+   - All request/response DTO properties must have `@ApiProperty()` or `@ApiPropertyOptional()`.
+
+---
+
 ## Frontend Conventions (Next.js)
 
 - Server Components by default. Use `"use client"` only for event handlers / browser APIs.

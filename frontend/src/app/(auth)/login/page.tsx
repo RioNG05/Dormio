@@ -3,14 +3,27 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  Phone, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight
+import {
+  Phone, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Loader2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/services/api";
+
+interface LoginApiResponse {
+  token: string;
+  mustChangePassword: boolean;
+  user: {
+    id: string;
+    phoneNumber?: string;
+    email?: string;
+    username?: string;
+    role: string;
+  };
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { loginWithToken } = useAuth();
 
   const [method, setMethod] = useState<"phone" | "email">("phone");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,24 +31,68 @@ export default function LoginPage() {
   // Form states
   const [accountIdentifier, setAccountIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accountIdentifier || !password) return;
-    
-    // Login user
-    login({
-      name: "Nguyễn Văn A",
-      email: method === "email" ? accountIdentifier : "nguyenvana@gmail.com",
-      phone: method === "phone" ? accountIdentifier : "0987654321",
-    });
 
-    router.push("/");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.post<any>("/v1/auth/login", {
+        identifier: accountIdentifier,
+        password,
+      });
+
+      const authData = response?.data || response;
+      const { token, user, mustChangePassword } = authData || {};
+
+      if (!token || !user) {
+        throw new Error("Không thể xác thực thông tin tài khoản.");
+      }
+
+      // Map role from backend to frontend (poster → tenant for display)
+      const displayRole = (user.role === "landlord" || user.role === "admin")
+        ? user.role as "landlord" | "admin"
+        : "tenant";
+
+      loginWithToken(token, {
+        id: user.id,
+        name: user.username || accountIdentifier,
+        email: user.email || "",
+        phone: user.phoneNumber,
+        role: displayRole,
+        mustChangePassword: !!mustChangePassword,
+      });
+
+      // Spec: if mustChangePassword → redirect to change-password page
+      if (mustChangePassword) {
+        router.push("/change-password");
+      } else if (displayRole === "landlord") {
+        router.push("/landlord");
+      } else if (displayRole === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/tenant");
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Đã xảy ra lỗi. Vui lòng thử lại.";
+      if (message.includes("invalid_credentials") || message.includes("401")) {
+        setError("Số điện thoại / email hoặc mật khẩu không đúng.");
+      } else {
+        setError(message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      
+
       {/* Top Header & Badge */}
       <div className="space-y-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
@@ -54,7 +111,7 @@ export default function LoginPage() {
       <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60">
         <button
           type="button"
-          onClick={() => setMethod("phone")}
+          onClick={() => { setMethod("phone"); setAccountIdentifier(""); setError(null); }}
           className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
@@ -63,7 +120,7 @@ export default function LoginPage() {
         </button>
         <button
           type="button"
-          onClick={() => setMethod("email")}
+          onClick={() => { setMethod("email"); setAccountIdentifier(""); setError(null); }}
           className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
@@ -74,7 +131,7 @@ export default function LoginPage() {
 
       {/* Login Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        
+
         {/* Phone or Email input */}
         <div className="space-y-1">
           <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">
@@ -126,35 +183,27 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600">
+            {error}
+          </div>
+        )}
+
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
+          disabled={isLoading}
+          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
         >
-          <span>Đăng nhập hệ thống</span>
-          <ArrowRight className="w-4 h-4" />
+          {isLoading ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Đang đăng nhập...</>
+          ) : (
+            <><span>Đăng nhập hệ thống</span><ArrowRight className="w-4 h-4" /></>
+          )}
         </button>
 
       </form>
-
-      {/* Social Options (REMOVED ZALO - ONLY GOOGLE REMAINS) */}
-      <div className="space-y-3 pt-2">
-        <div className="relative flex items-center justify-center">
-          <div className="border-t border-zinc-100 w-full" />
-          <span className="bg-white px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider absolute">HOẶC ĐĂNG NHẬP VỚI</span>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            login({ name: "Google User", email: "user@google.com" });
-            router.push("/");
-          }}
-          className="w-full py-3 px-4 border border-zinc-200 rounded-2xl text-xs font-bold text-zinc-700 hover:bg-zinc-50 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
-        >
-          <span className="font-black text-rose-500 text-sm">G</span> Đăng nhập bằng tài khoản Google
-        </button>
-      </div>
 
       {/* Bottom Auth Navigation Link */}
       <div className="text-center text-xs text-zinc-500 font-medium pt-2">

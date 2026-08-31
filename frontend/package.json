@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
+    "dev:turbo": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@swc/helpers": "^0.5.23",
     "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.24.0",
