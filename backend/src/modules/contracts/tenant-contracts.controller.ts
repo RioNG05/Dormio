@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, HttpStatus, HttpCode, Logger } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -14,6 +14,8 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 @ApiBearerAuth()
 @Controller('tenant/tenancy')
 export class TenantContractsController {
+  private readonly logger = new Logger(TenantContractsController.name);
+
   constructor(private readonly contractsService: ContractsService) {}
 
   // ─── GET /api/v1/tenant/tenancy ─────────────────────────────────────────────
@@ -30,6 +32,7 @@ export class TenantContractsController {
     type: TenancyDetailsDto,
   })
   async getMyTenancy(@CurrentUser() user: JwtPayload) {
+    this.logger.log(`GET /api/v1/tenant/tenancy called by user: ${user?.id}`);
     const data = await this.contractsService.getMyTenancyDetails(user.id);
     return { success: true, data };
   }

@@ -66,6 +66,9 @@ Load these skills (read their SKILL.md) when working on:
 8. **Platform deposit conversion** — UPDATE existing DEPOSIT row, never INSERT new one
 9. **Standardized View & Pagination**: All landlord list modules must support parallel **Grid & Table/List** views with **Grid view as default** (`viewMode = "grid"`). Pagination: `Hiển thị [<input type="number">] / trang | X-Y trên Z [mục]`, 5-page window jumping (`windowStart ± 5`), default Grid=6, Table=10, Select-All applies to current page only.
 10. **Modal Reset Behavior**: Exiting any unsubmitted modal (via Hủy bỏ / Cancel, X icon, or backdrop click) MUST completely reset all form draft fields. If there are unsaved input changes, ALWAYS show a custom **Pop-up Confirmation Modal** ("Xác nhận đóng form" with `[Tiếp tục chỉnh sửa]` & `[Hủy thay đổi & Đóng]`) instead of browser native `alert`/`confirm`.
+11. **API Logging & Swagger**: Whenever writing/updating any backend API endpoint:
+    - **Logger**: Always add a `Logger` (e.g., `private readonly logger = new Logger(ControllerName.name)`) and log an info message whenever the endpoint is invoked.
+    - **Swagger**: Always write complete Swagger documentation for the controller, methods, and DTOs (`@ApiTags`, `@ApiOperation`, `@ApiBearerAuth`, `@ApiOkResponse`, `@ApiResponse`, `@ApiProperty`, etc.).
 
 ## Module Breakdown
 
