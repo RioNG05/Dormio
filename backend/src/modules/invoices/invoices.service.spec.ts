@@ -178,8 +178,12 @@ describe('InvoicesService', () => {
   const mockPrisma = {
     tenantContract: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
     },
     invoice: {
+      findMany: jest.fn(),
+    },
+    payment: {
       findMany: jest.fn(),
     },
   };
@@ -297,6 +301,110 @@ describe('InvoicesService', () => {
       expect(result.summary.isUp).toBe(true);
       expect(result.summary.momChangeAmount).toBe(75000);
       expect(result.summary.momChangePercent).toBe(1.5);
+    });
+  });
+
+  describe('getTenantPaymentHistory', () => {
+    it('should aggregate lifetime invoices and upfront payments across all contracts', async () => {
+      mockPrisma.tenantContract.findMany.mockResolvedValue([
+        mockTenantContract,
+        {
+          id: 'tc-past-1',
+          tenantId: mockUserId,
+          contractId: 'contract-past-1',
+          isPrimary: true,
+          contract: {
+            id: 'contract-past-1',
+            status: 'expired',
+            room: {
+              id: 'room-past-1',
+              roomNumber: '302',
+              boardingHouse: { name: 'Dormio Bình Thạnh' },
+            },
+          },
+        },
+      ]);
+
+      mockPrisma.invoice.findMany.mockResolvedValue([
+        {
+          id: 'inv-1',
+          contractId: mockContractId,
+          totalAmount: 5125000,
+          status: 'paid',
+          dueDate: new Date('2026-08-05'),
+          createdAt: new Date('2026-08-01'),
+          contract: mockContract,
+          payment: {
+            id: 'pay-1',
+            paidAt: new Date('2026-08-04'),
+            method: 'banking',
+            transactionRef: 'MB123',
+            receiptNumber: 'REC-001',
+          },
+          invoiceItems: [
+            {
+              id: 'item-1',
+              serviceId: null,
+              quantity: 1,
+              unitPrice: 4500000,
+              amount: 4500000,
+              service: null,
+            },
+          ],
+        },
+        {
+          id: 'inv-2',
+          contractId: mockContractId,
+          totalAmount: 5200000,
+          status: 'unpaid',
+          dueDate: new Date('2026-09-05'),
+          createdAt: new Date('2026-08-31'),
+          contract: mockContract,
+          payment: null,
+          invoiceItems: [
+            {
+              id: 'item-2',
+              serviceId: null,
+              quantity: 1,
+              unitPrice: 4500000,
+              amount: 4500000,
+              service: null,
+            },
+          ],
+        },
+      ]);
+
+      mockPrisma.payment.findMany.mockResolvedValue([
+        {
+          id: 'pay-upfront-1',
+          amount: 10000000,
+          status: 'success',
+          method: 'banking',
+          transactionRef: 'UPFRONT-001',
+          paidAt: new Date('2026-01-01'),
+          depositId: null,
+        },
+      ]);
+
+      const result = await service.getTenantPaymentHistory(mockUserId);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(3);
+
+      // Verify summary calculations
+      expect(result.summary.totalTransactions).toBe(3);
+      expect(result.summary.totalPaidAmount).toBe(5125000 + 10000000);
+      expect(result.summary.totalPendingAmount).toBe(5200000);
+      expect(result.summary.lastPaymentDate).toBe(
+        new Date('2026-08-04').toISOString(),
+      );
+
+      // Verify itemized breakdown on record
+      const invRecord = result.data.find((r) => r.id === 'inv-1');
+      expect(invRecord).toBeDefined();
+      expect(invRecord?.source).toBe('monthly_invoice');
+      expect(invRecord?.breakdown[0].label).toBe('Tiền thuê phòng');
+      expect(invRecord?.paymentMethod).toBe('banking');
     });
   });
 });

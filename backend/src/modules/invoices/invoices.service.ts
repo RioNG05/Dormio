@@ -16,6 +16,12 @@ import {
   UtilityConsumptionDataPointDto,
   UsageAnalyticsSummaryDto,
 } from './dto/usage-analytics-response.dto';
+import {
+  PaymentHistoryResponseDto,
+  PaymentHistoryRecordDto,
+  PaymentHistorySummaryDto,
+  PaymentBreakdownItemDto,
+} from './dto/payment-history-response.dto';
 
 @Injectable()
 export class InvoicesService {
@@ -294,4 +300,188 @@ export class InvoicesService {
       chartData,
     };
   }
+
+  /**
+   * UC-T-08: Query full payment history across all contracts (past & active)
+   */
+  async getTenantPaymentHistory(
+    userId: string,
+  ): Promise<PaymentHistoryResponseDto> {
+    this.logger.log(`Fetching lifetime payment history for tenant user ${userId}`);
+
+    // 1. Resolve every Contract this tenant has ever been party to (active + ended)
+    const tenantContracts = await this.prisma.tenantContract.findMany({
+      where: { tenantId: userId },
+      include: {
+        contract: {
+          include: {
+            room: {
+              include: {
+                boardingHouse: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const contractIds = tenantContracts
+      .map((tc) => tc.contractId)
+      .filter((id): id is string => Boolean(id));
+
+    // 2. Fetch all Invoices tied to these contracts
+    const invoices =
+      contractIds.length > 0
+        ? await this.prisma.invoice.findMany({
+            where: {
+              contractId: { in: contractIds },
+            },
+            include: {
+              contract: {
+                include: {
+                  room: {
+                    include: {
+                      boardingHouse: true,
+                    },
+                  },
+                },
+              },
+              payment: true,
+              invoiceItems: {
+                include: {
+                  service: true,
+                },
+              },
+            },
+            orderBy: {
+              dueDate: 'desc',
+            },
+          })
+        : [];
+
+    // 3. Fetch standalone payments (e.g. upfront rent without invoice)
+    const standalonePayments = await this.prisma.payment.findMany({
+      where: {
+        payerId: userId,
+        invoiceId: null,
+      },
+      include: {
+        deposit: true,
+      },
+      orderBy: {
+        paidAt: 'desc',
+      },
+    });
+
+    // 4. Map Invoices to standard PaymentHistoryRecordDto
+    const invoiceRecords: PaymentHistoryRecordDto[] = invoices.map((inv) => {
+      const d = new Date(inv.dueDate);
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const period = `T${month}/${year}`;
+
+      const breakdown: PaymentBreakdownItemDto[] = inv.invoiceItems.map(
+        (item) => ({
+          label: item.service?.name || 'Tiền thuê phòng',
+          amount: Number(item.amount),
+          quantity: item.quantity,
+          unitPrice: Number(item.unitPrice),
+          type: item.service ? (item.service.isMetered ? 'metered' : 'service') : 'room',
+        }),
+      );
+
+      return {
+        id: inv.id,
+        source: 'monthly_invoice',
+        contractId: inv.contractId,
+        boardingHouseName:
+          inv.contract?.room?.boardingHouse?.name || 'Nhà trọ Dormio',
+        roomNumber: inv.contract?.room?.roomNumber || '-',
+        totalAmount: Number(inv.totalAmount),
+        paidAt: inv.payment?.paidAt ? inv.payment.paidAt.toISOString() : null,
+        dueDate: inv.dueDate.toISOString(),
+        period,
+        status: inv.status,
+        paymentMethod: (inv.payment?.method as 'cash' | 'banking') || null,
+        transactionRef: inv.payment?.transactionRef || null,
+        receiptNumber: inv.payment?.receiptNumber || null,
+        qrCodeUrl: inv.payment?.qrCodeUrl || null,
+        breakdown,
+        createdAt: inv.createdAt.toISOString(),
+      };
+    });
+
+    // 5. Map Standalone / Upfront payments
+    const upfrontRecords: PaymentHistoryRecordDto[] = standalonePayments.map(
+      (p) => {
+        const d = new Date(p.paidAt);
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const period = `T${month}/${year}`;
+
+        const breakdown: PaymentBreakdownItemDto[] = [
+          {
+            label: p.depositId ? 'Tiền cọc giữ phòng' : 'Tiền trọ trọn gói',
+            amount: Number(p.amount),
+            quantity: 1,
+            unitPrice: Number(p.amount),
+            type: p.depositId ? 'deposit' : 'room',
+          },
+        ];
+
+        return {
+          id: p.id,
+          source: 'upfront_rent',
+          contractId: null,
+          boardingHouseName: 'Dormio System',
+          roomNumber: '-',
+          totalAmount: Number(p.amount),
+          paidAt: p.paidAt.toISOString(),
+          dueDate: p.paidAt.toISOString(),
+          period,
+          status: p.status === 'success' ? 'paid' : p.status,
+          paymentMethod: (p.method as 'cash' | 'banking') || null,
+          transactionRef: p.transactionRef || null,
+          receiptNumber: p.receiptNumber || null,
+          qrCodeUrl: p.qrCodeUrl || null,
+          breakdown,
+          createdAt: p.paidAt.toISOString(),
+        };
+      },
+    );
+
+    // Merge and sort chronologically by date descending
+    const allRecords = [...invoiceRecords, ...upfrontRecords].sort(
+      (a, b) =>
+        new Date(b.paidAt || b.dueDate).getTime() -
+        new Date(a.paidAt || a.dueDate).getTime(),
+    );
+
+    // 6. Compute summary metrics
+    const totalPaidAmount = allRecords
+      .filter((r) => r.status === 'paid' || r.status === 'success')
+      .reduce((sum, r) => sum + r.totalAmount, 0);
+
+    const totalPendingAmount = allRecords
+      .filter((r) => r.status === 'unpaid' || r.status === 'overdue' || r.status === 'pending')
+      .reduce((sum, r) => sum + r.totalAmount, 0);
+
+    const paidRecords = allRecords.filter((r) => Boolean(r.paidAt));
+    const lastPaymentDate =
+      paidRecords.length > 0 ? paidRecords[0].paidAt : null;
+
+    const summary: PaymentHistorySummaryDto = {
+      totalPaidAmount,
+      totalPendingAmount,
+      totalTransactions: allRecords.length,
+      lastPaymentDate,
+    };
+
+    return {
+      success: true,
+      summary,
+      data: allRecords,
+    };
+  }
 }
+

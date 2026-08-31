@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { InvoicesService } from './invoices.service';
 import { TenantInvoicesListResponseDto } from './dto/tenant-invoices-response.dto';
 import { TenantUsageAnalyticsResponseDto } from './dto/usage-analytics-response.dto';
+import { PaymentHistoryResponseDto } from './dto/payment-history-response.dto';
 
 @ApiTags('Tenant Invoices & Analytics')
 @ApiBearerAuth('JWT')
@@ -78,4 +79,29 @@ export class InvoicesController {
     );
     return this.invoicesService.getTenantUsageAnalytics(userId);
   }
+
+  @Get('payments/history')
+  @ApiOperation({
+    summary: 'Lấy lịch sử thanh toán trọn đời của khách thuê (UC-T-08)',
+    description:
+      'Truy vấn tất cả các giao dịch thanh toán và hóa đơn qua mọi hợp đồng (kể cả hợp đồng đã kết thúc), chi tiết các khoản mục (tiền phòng, điện, nước, dịch vụ) và biên nhận.',
+  })
+  @ApiOkResponse({
+    description: 'Lịch sử thanh toán và thống kê tổng tiền đã thanh toán',
+    type: PaymentHistoryResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Chưa đăng nhập hoặc token không hợp lệ',
+  })
+  async getTenantPaymentHistory(
+    @Request() req: any,
+  ): Promise<PaymentHistoryResponseDto> {
+    const userId = req.user?.id || req.user?.sub;
+    this.logger.log(
+      `GET /api/v1/tenant/payments/history triggered by user ${userId}`,
+    );
+    return this.invoicesService.getTenantPaymentHistory(userId);
+  }
 }
+
