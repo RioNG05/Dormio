@@ -675,6 +675,45 @@ async function main() {
     ],
   });
 
+  // ─── 10b. HISTORICAL METER READINGS (UC-T-03 Baseline) ──────────────────────
+  console.log('⚡ Creating historical meter readings...');
+  await prisma.meterReading.createMany({
+    data: [
+      {
+        roomId: house1Rooms[0].id,
+        serviceId: h1Electricity.id,
+        readingValue: 1250,
+        imageUrl: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400&q=80',
+        invoiceId: inv1.id,
+        createdAt: new Date('2026-08-01'),
+      },
+      {
+        roomId: house1Rooms[0].id,
+        serviceId: h1Water.id,
+        readingValue: 45,
+        imageUrl: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=400&q=80',
+        invoiceId: inv1.id,
+        createdAt: new Date('2026-08-01'),
+      },
+      {
+        roomId: house1Rooms[10].id, // Room 301 (Tenant 2)
+        serviceId: h1Electricity.id,
+        readingValue: 2450,
+        imageUrl: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400&q=80',
+        invoiceId: null,
+        createdAt: new Date('2026-08-01'),
+      },
+      {
+        roomId: house1Rooms[10].id,
+        serviceId: h1Water.id,
+        readingValue: 88,
+        imageUrl: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=400&q=80',
+        invoiceId: null,
+        createdAt: new Date('2026-08-01'),
+      },
+    ],
+  });
+
   // ─── 11. PAYMENTS ───────────────────────────────────────────────────────────
   console.log('💵 Creating payments...');
   await prisma.payment.create({
