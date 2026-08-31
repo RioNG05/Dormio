@@ -74,9 +74,14 @@ export default function RegisterPage() {
         }
       }
 
-      const response = await api.post<RegisterApiResponse>("/v1/auth/register", payload);
+      const response = await api.post<any>("/v1/auth/register", payload);
 
-      const { token, user } = response;
+      const authData = response?.data || response;
+      const { token, user } = authData || {};
+
+      if (!token || !user) {
+        throw new Error("Không thể tạo tài khoản.");
+      }
 
       loginWithToken(token, {
         id: user.id,

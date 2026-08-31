@@ -42,12 +42,17 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await api.post<LoginApiResponse>("/v1/auth/login", {
+      const response = await api.post<any>("/v1/auth/login", {
         identifier: accountIdentifier,
         password,
       });
 
-      const { token, user, mustChangePassword } = response;
+      const authData = response?.data || response;
+      const { token, user, mustChangePassword } = authData || {};
+
+      if (!token || !user) {
+        throw new Error("Không thể xác thực thông tin tài khoản.");
+      }
 
       // Map role from backend to frontend (poster → tenant for display)
       const displayRole = (user.role === "landlord" || user.role === "admin")
@@ -60,7 +65,7 @@ export default function LoginPage() {
         email: user.email || "",
         phone: user.phoneNumber,
         role: displayRole,
-        mustChangePassword,
+        mustChangePassword: !!mustChangePassword,
       });
 
       // Spec: if mustChangePassword → redirect to change-password page
