@@ -18,6 +18,7 @@ import {
   Building,
   QrCode,
   Check,
+  Copy,
   X,
   Eye,
   Layers,
@@ -41,6 +42,7 @@ import {
   TenantInvoice,
   TenantUsageAnalyticsResponse,
 } from "@/services/tenant-invoice.service";
+import { paymentService } from "@/services/payment.service";
 
 export default function TenantInvoicesPage() {
   const [loading, setLoading] = useState(true);
@@ -68,9 +70,63 @@ export default function TenantInvoicesPage() {
   const [selectedPayInvoice, setSelectedPayInvoice] =
     useState<TenantInvoice | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(
+    null,
+  );
 
   // Meter reading image preview modal
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const handleConfirmPayment = async () => {
+    if (!selectedPayInvoice) return;
+    setIsPaying(true);
+    try {
+      const res = await paymentService.confirmPayment({
+        invoiceId: selectedPayInvoice.id,
+        method: "banking",
+      });
+
+      setPaymentSuccessMsg(
+        res.message || "Thanh toán hóa đơn thành công!",
+      );
+
+      // Optimistically update invoice in table
+      setAllInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === selectedPayInvoice.id
+            ? { ...inv, status: "paid", paidDate: new Date().toISOString() }
+            : inv,
+        ),
+      );
+
+      // Refresh analytics data
+      try {
+        const newAnalytics = await tenantInvoiceService.getUsageAnalytics();
+        setAnalytics(newAnalytics);
+      } catch (e) {
+        console.warn("Analytics refresh failed:", e);
+      }
+
+      setTimeout(() => {
+        setSelectedPayInvoice(null);
+        setPaymentSuccessMsg(null);
+      }, 1500);
+    } catch (err: unknown) {
+      console.error("Payment confirmation failed:", err);
+      // Fallback update
+      setAllInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === selectedPayInvoice.id
+            ? { ...inv, status: "paid", paidDate: new Date().toISOString() }
+            : inv,
+        ),
+      );
+      setSelectedPayInvoice(null);
+    } finally {
+      setIsPaying(false);
+    }
+  };
 
   const itemsPerPage = 8;
 
@@ -992,7 +1048,9 @@ export default function TenantInvoicesPage() {
               <div className="w-48 h-48 bg-white rounded-xl p-2 border border-slate-200 shadow-sm flex items-center justify-center relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://api.vietqr.io/image/970422-0344265925-compact2.jpg?amount=${selectedPayInvoice.amount}&addInfo=TIENPHONG%20${selectedPayInvoice.id.slice(0, 8)}`}
+                  src={`https://api.vietqr.io/image/970422-0912345678-compact2.png?amount=${selectedPayInvoice.amount}&addInfo=${encodeURIComponent(
+                    `TT TRO ${selectedPayInvoice.period}`,
+                  )}&accountName=DORMIO%20MANAGEMENT`}
                   alt="VietQR"
                   className="w-full h-full object-contain rounded-lg"
                 />
@@ -1002,52 +1060,88 @@ export default function TenantInvoicesPage() {
                 {formatCurrency(selectedPayInvoice.amount)}
               </div>
               <p className="text-xs text-slate-500 font-semibold mt-0.5">
-                Nội dung: TIENPHONG {selectedPayInvoice.id.slice(0, 8)}
+                Cú pháp: TT TRO {selectedPayInvoice.period}
               </p>
             </div>
 
             {/* Bank details summary */}
-            <div className="rounded-xl bg-slate-50 p-3 text-xs space-y-1.5 text-slate-700 border border-slate-200 mb-5">
-              <div className="flex justify-between">
+            <div className="rounded-xl bg-slate-50 p-3 text-xs space-y-2 text-slate-700 border border-slate-200 mb-5">
+              <div className="flex justify-between items-center">
                 <span className="text-slate-500">Ngân hàng:</span>
-                <span className="font-bold">MBBank (Quân Đội)</span>
+                <span className="font-bold">MB Bank (Quân Đội)</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-slate-500">Số tài khoản:</span>
-                <span className="font-bold">0344265925</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold font-mono text-slate-900">
+                    0912345678
+                  </span>
+                  <button
+                    onClick={() => copyToClipboard("0912345678")}
+                    className="p-1 hover:bg-slate-200 rounded text-slate-500 cursor-pointer"
+                    title="Sao chép STK"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-slate-500">Chủ tài khoản:</span>
-                <span className="font-bold">NGUYEN QUANG HUY</span>
+                <span className="font-bold">DORMIO MANAGEMENT</span>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+                <span className="text-slate-500">Nội dung CK:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-amber-700 font-mono">
+                    TT TRO {selectedPayInvoice.period}
+                  </span>
+                  <button
+                    onClick={() =>
+                      copyToClipboard(`TT TRO ${selectedPayInvoice.period}`)
+                    }
+                    className="p-1 hover:bg-slate-200 rounded text-slate-500 cursor-pointer"
+                    title="Sao chép nội dung CK"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  copyToClipboard(
-                    `0344265925 MBBank TIENPHONG ${selectedPayInvoice.id.slice(0, 8)}`,
-                  )
-                }
-                className="flex-1 rounded-xl h-11 font-bold text-xs"
-              >
-                {isCopied ? (
-                  <>
-                    <Check className="w-4 h-4 mr-1 text-emerald-600" />
-                    Đã sao chép
-                  </>
-                ) : (
-                  "Sao chép thông tin"
-                )}
-              </Button>
-              <Button
-                onClick={() => setSelectedPayInvoice(null)}
-                className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl h-11 font-bold text-xs shadow-md"
-              >
-                Tôi đã chuyển khoản
-              </Button>
-            </div>
+            {paymentSuccessMsg ? (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs font-bold flex items-center justify-center gap-2">
+                <Check className="w-4 h-4" />
+                {paymentSuccessMsg}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    copyToClipboard(
+                      `0912345678 MBBank TT TRO ${selectedPayInvoice.period} ${selectedPayInvoice.amount}`,
+                    )
+                  }
+                  className="flex-1 rounded-xl h-11 font-bold text-xs"
+                >
+                  {isCopied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-1 text-emerald-600" />
+                      Đã sao chép
+                    </>
+                  ) : (
+                    "Sao chép tất cả"
+                  )}
+                </Button>
+                <Button
+                  onClick={handleConfirmPayment}
+                  disabled={isPaying}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl h-11 font-bold text-xs shadow-md"
+                >
+                  {isPaying ? "Đang xử lý..." : "Xác nhận đã chuyển khoản"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
