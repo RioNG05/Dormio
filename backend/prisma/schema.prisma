@@ -351,10 +351,14 @@ model MeterReading {
   service      Service  @relation(fields: [serviceId], references: [id])
   roomId       String   @map("room_id") @db.Uuid
   room         Room     @relation(fields: [roomId], references: [id])
-  readingValue Decimal  @map("reading_value")
+  readingValue Decimal? @map("reading_value")
   imageUrl     String?  @map("image_url")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  invoiceId String?  @map("invoice_id") @db.Uuid
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@index([roomId, invoiceId])
   @@map("meter_readings")
 }
 
@@ -590,8 +594,9 @@ model Invoice {
   dueDate     DateTime      @map("due_date")
   createdAt   DateTime      @default(now()) @map("created_at")
 
-  payment      Payment?
-  invoiceItems InvoiceItem[]
+  payment       Payment?
+  invoiceItems  InvoiceItem[]
+  meterReadings MeterReading[]
 
   @@map("invoice")
 }

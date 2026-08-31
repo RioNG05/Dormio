@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { BillingCronModule } from './modules/billing-cron/billing-cron.module';
+import { MeterReadingsModule } from './modules/meter-readings/meter-readings.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -60,6 +61,7 @@ import { AppService } from './app.service';
     NotificationsModule,
     ContractsModule,
     BillingCronModule,
+    MeterReadingsModule,
   ],
 
   controllers: [AppController],

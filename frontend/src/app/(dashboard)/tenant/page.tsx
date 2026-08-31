@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Building,
   MapPin,
@@ -18,6 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Gauge,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
@@ -318,6 +321,35 @@ export default function TenantInfoPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Card: Nhập chỉ số điện nước CTA (UC-T-03) */}
+          <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-500/10 via-cyan-500/5 to-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-teal-600 text-white rounded-xl shadow-md shrink-0">
+                <Gauge className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 text-[11px] font-bold uppercase tracking-wider mb-1">
+                  <Sparkles className="w-3 h-3 text-teal-600" />
+                  Đồng hồ đo OCR
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Nhập chỉ số điện & nước kỳ này
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Chụp ảnh đồng hồ để tự động nhận diện chỉ số và lập hóa đơn chu kỳ thanh toán.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/tenant/meter-readings"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold shadow-sm transition-all shrink-0"
+            >
+              Nhập chỉ số ngay
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
 
           {/* Card: Dịch vụ */}

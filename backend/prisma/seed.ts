@@ -96,7 +96,7 @@ async function main() {
 
   // ─── 1. USERS ───────────────────────────────────────────────────────────────
   console.log('👤 Creating users...');
-  const password88 = await bcrypt.hash('88888888', 10);
+  const password88 = await bcrypt.hash('123456789', 10);
   const passwordCommon = await bcrypt.hash('Secret@123', 10);
 
   // 1.1 Admin User (Requirement: ngquanghuy.work@gmail.com, 0344265925, 88888888, admin)
@@ -325,7 +325,7 @@ async function main() {
 
   // ─── 5. ROOMS (20 rooms in House 1, 20 rooms in House 2) ───────────────────
   console.log('🚪 Creating 20 rooms in House 1 and 20 rooms in House 2 (Total 40 rooms)...');
-  
+
   const house1Rooms: Room[] = [];
   // House 1: Floors 1 & 2 = Common (10 rooms), Floors 3 & 4 = Duplex (10 rooms)
   for (let f = 1; f <= 4; f++) {
