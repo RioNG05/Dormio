@@ -13,9 +13,10 @@ datasource db {
 }
 
 enum UserRole {
-  landlord
+  poster
   tenant
   employee
+  landlord
   admin
 }
 
@@ -205,14 +206,14 @@ enum OtpPurpose {
 }
 
 model User {
-  id                 String     @id @default(uuid())
+  id                 String     @id @default(uuid()) @db.Uuid
   username           String?    @db.VarChar(255)
   phoneNumber        String     @unique @map("phone_number") @db.VarChar(20)
   email              String?    @unique @db.VarChar(255)
   hashedPassword     String     @map("hashed_password") @db.VarChar(255)
   bio                String?
   avatarUrl          String?    @map("avatar_url")
-  role               UserRole   @default(tenant)
+  role               UserRole   @default(poster)
   status             UserStatus @default(active)
   roomId             String?    @default(uuid()) @map("room_id") @db.Uuid
   createdAt          DateTime   @default(now()) @map("created_at")
@@ -246,7 +247,7 @@ model User {
 }
 
 model UserIdentification {
-  id                     String    @id @default(uuid())
+  id                     String    @id @default(uuid()) @db.Uuid
   userId                 String    @unique @map("user_id") @db.Uuid
   user                   User      @relation(fields: [userId], references: [id])
   identityNumber         String    @unique @db.VarChar(255)
@@ -258,7 +259,7 @@ model UserIdentification {
   placeOfResidence       Json      @map("place_of_residence")
   issueDate              DateTime  @map("issue_date")
   expiryDate             DateTime  @map("expiry_date")
-  personalIdentification String    @map("personal_identification")
+  personalIdentification String    @map("personal_identification") @db.Uuid
   note                   String
   cardFrontUrl           String    @map("card_front_url")
   cardBackUrl            String    @map("card_back_url")
@@ -269,7 +270,7 @@ model UserIdentification {
 }
 
 model BoardingHouse {
-  id          String              @id @default(uuid())
+  id          String              @id @default(uuid()) @db.Uuid
   owner       User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String              @map("owner_id") @db.Uuid
   name        String              @db.VarChar(255)
@@ -308,7 +309,7 @@ model BoardingHouse {
 }
 
 model Expense {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
   roomId          String?       @map("room_id") @db.Uuid
@@ -325,7 +326,7 @@ model Expense {
 }
 
 model Service {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
   name            String        @db.VarChar(255)
@@ -345,7 +346,7 @@ model Service {
 }
 
 model MeterReading {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @db.Uuid
   serviceId    String   @map("service_id") @db.Uuid
   service      Service  @relation(fields: [serviceId], references: [id])
   roomId       String   @map("room_id") @db.Uuid
@@ -358,7 +359,7 @@ model MeterReading {
 }
 
 model RoomService {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   roomId    String   @map("room_id") @db.Uuid
   room      Room     @relation(fields: [roomId], references: [id])
   serviceId String   @map("service_id") @db.Uuid
@@ -369,7 +370,7 @@ model RoomService {
 }
 
 model RoomType {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
   name            String        @db.VarChar(255)
@@ -383,11 +384,11 @@ model RoomType {
 }
 
 model Room {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
   roomNumber      String        @map("room_number") @db.VarChar(255)
-  roomTypeId      String        @map("room_type_id")
+  roomTypeId      String        @map("room_type_id") @db.Uuid
   roomType        RoomType      @relation(fields: [roomTypeId], references: [id])
   area            Decimal?      @db.Decimal()
   floor           Int
@@ -410,7 +411,7 @@ model Room {
 }
 
 model Contract {
-  id                 String         @id @default(uuid())
+  id                 String         @id @default(uuid()) @db.Uuid
   roomId             String         @db.Uuid
   room               Room           @relation(fields: [roomId], references: [id])
   rentPrice          Decimal        @map("rent_price")
@@ -432,7 +433,7 @@ model Contract {
 }
 
 model ContractDocument {
-  id         String   @id @default(uuid())
+  id         String   @id @default(uuid()) @db.Uuid
   contractId String   @map("contract_id") @db.Uuid
   contract   Contract @relation(fields: [contractId], references: [id])
   url        String
@@ -442,7 +443,7 @@ model ContractDocument {
 }
 
 model TenantContract {
-  id         String   @id @default(uuid())
+  id         String   @id @default(uuid()) @db.Uuid
   tenantId   String   @map("tenant_id") @db.Uuid
   tenant     User     @relation(fields: [tenantId], references: [id])
   contractId String   @map("contract_id") @db.Uuid
@@ -469,7 +470,7 @@ model SubscriptionPlan {
 }
 
 model UserSubscription {
-  id               String              @id @default(uuid())
+  id               String              @id @default(uuid()) @db.Uuid
   userId           String              @map("user_id") @db.Uuid
   user             User                @relation(fields: [userId], references: [id])
   planName         SubscriptionPackage @map("plan_name")
@@ -486,7 +487,7 @@ model UserSubscription {
 }
 
 model PostPurchase {
-  id               String             @id @default(uuid())
+  id               String             @id @default(uuid()) @db.Uuid
   buyerId          String             @map("buyer_id") @db.Uuid
   buyer            User               @relation(fields: [buyerId], references: [id])
   quantityPurchase Int                @map("quantity_purchase")
@@ -503,7 +504,7 @@ model PostPurchase {
 }
 
 model Post {
-  id                 String        @id @default(uuid())
+  id                 String        @id @default(uuid()) @db.Uuid
   postedBy           String        @map("posted_by") @db.Uuid
   postedByUser       User          @relation(fields: [postedBy], references: [id])
   roomId             String?       @map("room_id") @db.Uuid
@@ -513,9 +514,9 @@ model Post {
   depositAmount      Decimal       @map("deposti_amount")
   status             PostStatus
   sourceType         SourceType    @map("source_type")
-  postPurchaseId     String?       @map("post_purchase_id")
+  postPurchaseId     String?       @map("post_purchase_id") @db.Uuid
   postPurchase       PostPurchase? @relation(fields: [postPurchaseId], references: [id])
-  resultedContractId String?       @unique @map("resulted_contract_id")
+  resultedContractId String?       @unique @map("resulted_contract_id") @db.Uuid
   contract           Contract?     @relation(fields: [resultedContractId], references: [id])
   createdAt          DateTime      @default(now()) @map("created_at")
   updatedAt          DateTime?     @updatedAt @map("updated_at")
@@ -530,14 +531,14 @@ model Post {
 }
 
 model PostImage {
-  id     String @id @default(uuid())
+  id     String @id @default(uuid()) @db.Uuid
   postId String @map("post_id") @db.Uuid
   post   Post   @relation(fields: [postId], references: [id])
   url    String
 }
 
 model SavedPost {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   postId      String   @map("post_id") @db.Uuid
   post        Post     @relation(fields: [postId], references: [id])
   savedBy     String   @db.Uuid
@@ -546,23 +547,23 @@ model SavedPost {
 }
 
 model PostReach {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @db.Uuid
   postId       String   @map("post_id") @db.Uuid
   post         Post     @relation(fields: [postId], references: [id])
-  viewedBy     String   @map("viewed_by")
+  viewedBy     String   @map("viewed_by") @db.Uuid
   viewedByUser User     @relation(fields: [viewedBy], references: [id])
   viewedAt     DateTime @map("viewed_at")
 }
 
 model Deposit {
-  id               String        @id @default(uuid())
+  id               String        @id @default(uuid()) @db.Uuid
   roomId           String        @map("room_id") @db.Uuid
   room             Room          @relation(fields: [roomId], references: [id])
-  boardingHouseId  String        @map("boarding_house_id")
+  boardingHouseId  String        @map("boarding_house_id") @db.Uuid
   boardingHouse    BoardingHouse @relation(fields: [boardingHouseId], references: [id])
-  contractId       String?       @unique @map("contract_id")
+  contractId       String?       @unique @map("contract_id") @db.Uuid
   contract         Contract?     @relation(fields: [contractId], references: [id])
-  postId           String?       @unique @map("post_id")
+  postId           String?       @unique @map("post_id") @db.Uuid
   post             Post?         @relation(fields: [postId], references: [id])
   type             DepositType
   amount           Decimal
@@ -579,7 +580,7 @@ model Deposit {
 }
 
 model Invoice {
-  id          String        @id @default(uuid())
+  id          String        @id @default(uuid()) @db.Uuid
   roomId      String        @map("room_id") @db.Uuid
   room        Room          @relation(fields: [roomId], references: [id])
   contractId  String?       @map("contract_id") @db.Uuid
@@ -596,7 +597,7 @@ model Invoice {
 }
 
 model InvoiceItem {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   invoiceId String   @map("invoice_id") @db.Uuid
   invoice   Invoice  @relation(fields: [invoiceId], references: [id])
   serviceId String?  @map("service_id") @db.Uuid
@@ -609,7 +610,7 @@ model InvoiceItem {
 }
 
 model Payment {
-  id              String            @id @default(uuid())
+  id              String            @id @default(uuid()) @db.Uuid
   refundPaymentId String?           @unique @map("payment_refund_id") @db.Uuid
   refundPayment   Payment?          @relation("RefundPayment", fields: [refundPaymentId], references: [id])
   originalPayment Payment[]         @relation("RefundPayment")
@@ -638,7 +639,7 @@ model Payment {
 }
 
 model Conversation {
-  id        String    @id @default(uuid())
+  id        String    @id @default(uuid()) @db.Uuid
   name      String    @db.VarChar(255)
   user1Id   String    @map("user1_id") @db.Uuid
   user2Id   String    @map("user2_id") @db.Uuid
@@ -652,7 +653,7 @@ model Conversation {
 }
 
 model Message {
-  id             String    @id @default(uuid())
+  id             String    @id @default(uuid()) @db.Uuid
   conversationId String    @map("conversation_id") @db.Uuid
   senderId       String    @map("sender_id") @db.Uuid
   content        String
@@ -667,7 +668,7 @@ model Message {
 }
 
 model MessageAttachment {
-  id        String                @id @default(uuid())
+  id        String                @id @default(uuid()) @db.Uuid
   messageId String                @map("message_id") @db.Uuid
   type      MessageAttachmentType
   url       String
@@ -680,7 +681,7 @@ model MessageAttachment {
 }
 
 model AiMessage {
-  id               String         @id @default(uuid())
+  id               String         @id @default(uuid()) @db.Uuid
   aiConversationId String         @map("ai_conversation_id") @db.Uuid
   aiConversation   AiConversation @relation(fields: [aiConversationId], references: [id])
   role             AiMessageRole
@@ -693,7 +694,7 @@ model AiMessage {
 }
 
 model AiConversation {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   userId          String        @map("user_id") @db.Uuid
   user            User          @relation(fields: [userId], references: [id])
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
@@ -706,7 +707,7 @@ model AiConversation {
 }
 
 model AuditLog {
-  id              String         @id @default(uuid())
+  id              String         @id @default(uuid()) @db.Uuid
   userId          String?        @map("user_id") @db.Uuid
   user            User?          @relation(fields: [userId], references: [id])
   boardingHouseId String?        @map("boarding_house_id") @db.Uuid
@@ -723,7 +724,7 @@ model AuditLog {
 }
 
 model Notification {
-  id              String         @id @default(uuid())
+  id              String         @id @default(uuid()) @db.Uuid
   boardingHouseId String?        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse? @relation(fields: [boardingHouseId], references: [id])
   senderId        String         @map("sender_id") @db.Uuid
@@ -739,7 +740,7 @@ model Notification {
 }
 
 model GrievanceImage {
-  id          String    @id @default(uuid())
+  id          String    @id @default(uuid()) @db.Uuid
   grievanceId String    @map("grievance_id") @db.Uuid
   grievance   Grievance @relation(fields: [grievanceId], references: [id])
   url         String
@@ -749,7 +750,7 @@ model GrievanceImage {
 }
 
 model Grievance {
-  id              String            @id @default(uuid())
+  id              String            @id @default(uuid()) @db.Uuid
   tenantId        String            @map("tenant_id") @db.Uuid
   tenant          User              @relation("GrievanceSender", fields: [tenantId], references: [id])
   boardingHouseId String            @map("boarding_house_id") @db.Uuid
@@ -772,7 +773,7 @@ model Grievance {
 }
 
 model Employee {
-  id        String    @id @default(uuid())
+  id        String    @id @default(uuid()) @db.Uuid
   userId    String    @unique @map("user_id") @db.Uuid
   user      User      @relation(fields: [userId], references: [id])
   createdAt DateTime  @default(now()) @map("created_at")
@@ -787,7 +788,7 @@ model Employee {
 }
 
 model JobPosition {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
   name            String        @db.VarChar(255)
@@ -801,7 +802,7 @@ model JobPosition {
 }
 
 model EmployeeAssignment {
-  id              String           @id @default(uuid())
+  id              String           @id @default(uuid()) @db.Uuid
   employeeId      String           @map("employee_id") @db.Uuid
   employee        Employee         @relation(fields: [employeeId], references: [id])
   positionId      String           @map("position_id") @db.Uuid
@@ -817,7 +818,7 @@ model EmployeeAssignment {
 }
 
 model Shift {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
   name            String
@@ -833,7 +834,7 @@ model Shift {
 }
 
 model RecurrencePattern {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   employeeId      String        @map("employee_id") @db.Uuid
   employee        Employee      @relation(fields: [employeeId], references: [id])
   boardingHouseId String        @map("boarding_house_id") @db.Uuid
@@ -854,7 +855,7 @@ model RecurrencePattern {
 }
 
 model WorkSchedule {
-  id              String             @id @default(uuid())
+  id              String             @id @default(uuid()) @db.Uuid
   employeeId      String             @map("employee_id") @db.Uuid
   employee        Employee           @relation(fields: [employeeId], references: [id])
   boardingHouseId String             @map("boarding_house_id") @db.Uuid
@@ -873,7 +874,7 @@ model WorkSchedule {
 }
 
 model Attendance {
-  id             String           @id @default(uuid())
+  id             String           @id @default(uuid()) @db.Uuid
   workScheduleId String           @map("work_schedule_id") @db.Uuid
   workSchedule   WorkSchedule     @relation(fields: [workScheduleId], references: [id])
   employeeId     String           @map("employee_id") @db.Uuid
@@ -890,7 +891,7 @@ model Attendance {
 }
 
 model MassNotificationJob {
-  id            String        @id @default(uuid())
+  id            String        @id @default(uuid()) @db.Uuid
   createdBy     String        @map("created_by") @db.Uuid
   channel       NotifyChannel
   createdByUser User          @relation("CreateNotify", fields: [createdBy], references: [id])
@@ -908,13 +909,15 @@ model MassNotificationJob {
 }
 
 model OtpCode {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @db.Uuid
   userId       String     @db.Uuid
   user         User       @relation(fields: [userId], references: [id])
   codeHash     String     @map("code_hash")
   purpose      OtpPurpose
   expiresAt    DateTime   @map("expires_at")
-  verifiedAt   DateTime   @map("verified_at")
-  attemptCount Int        @map("attempt_count")
+  verifiedAt   DateTime?  @map("verified_at")
+  attemptCount Int        @default(0) @map("attempt_count")
   createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@map("otp_codes")
 }

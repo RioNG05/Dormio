@@ -26,12 +26,22 @@ export class AuthService {
   // ─── Register ──────────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({
+    // Check phone uniqueness
+    const existingByPhone = await this.prisma.user.findUnique({
       where: { phoneNumber: dto.phoneNumber },
     });
-
-    if (existing) {
+    if (existingByPhone) {
       throw new ConflictException('phone_number_already_exists');
+    }
+
+    // Check email uniqueness if provided
+    if (dto.email) {
+      const existingByEmail = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+      if (existingByEmail) {
+        throw new ConflictException('email_already_exists');
+      }
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
@@ -39,10 +49,11 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         phoneNumber: dto.phoneNumber,
+        email: dto.email,
         hashedPassword,
         username: dto.fullName,
-        role: UserRole.landlord, // Default: landlords self-register
-        mustChangePassword: false,
+        role: UserRole.poster, // Spec: self-registered users start as poster
+        mustChangePassword: false, // Self-registered users choose their own password
       },
     });
 
@@ -55,8 +66,12 @@ export class AuthService {
   // ─── Login ─────────────────────────────────────────────────────────────────
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { phoneNumber: dto.phoneNumber },
+    // Spec: accept either phoneNumber or email as identifier
+    const isPhone = /^0[0-9]{9}$/.test(dto.identifier);
+    const user = await this.prisma.user.findFirst({
+      where: isPhone
+        ? { phoneNumber: dto.identifier }
+        : { email: dto.identifier },
     });
 
     if (!user) {
@@ -110,7 +125,7 @@ export class AuthService {
   async findOrCreateByPhone(
     phoneNumber: string,
     fullName?: string,
-    role: UserRole = UserRole.tenant,
+    role: UserRole = UserRole.poster, // Spec: base role is poster
   ): Promise<User> {
     const existing = await this.prisma.user.findUnique({
       where: { phoneNumber },
