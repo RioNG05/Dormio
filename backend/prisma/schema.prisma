@@ -569,7 +569,7 @@ model Deposit {
   amount           Decimal
   status           DepositStatus
   recordedManually Boolean       @map("recored_manually")
-  recordedBy       String?       @map("recored_by")
+  recordedBy       String?       @map("recored_by") @db.Uuid
   recordedByUser   User?         @relation(fields: [recordedBy], references: [id])
   note             String?
   createdAt        DateTime      @default(now()) @map("created_at")
