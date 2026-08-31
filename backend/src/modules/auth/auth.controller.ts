@@ -55,7 +55,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto) {
-    this.logger.log(`POST /auth/login called with phoneNumber: ${dto.phoneNumber}`);
+    this.logger.log(`POST /auth/login called with identifier: ${dto.identifier}`);
     return this.authService.login(dto);
   }
 
