@@ -18,6 +18,9 @@ module.exports = {
     // and queue behaviour is tested via the mockQueue stub.
     '^@nestjs/bullmq$': '<rootDir>/../test/__mocks__/@nestjs/bullmq.ts',
     '^@nestjs/bull-shared$': '<rootDir>/../test/__mocks__/@nestjs/bull-shared.ts',
+    // @nestjs/schedule also ships as ESM-only. @Cron() becomes a no-op so
+    // cron methods are called directly in tests.
+    '^@nestjs/schedule$': '<rootDir>/../test/__mocks__/@nestjs/schedule.ts',
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',

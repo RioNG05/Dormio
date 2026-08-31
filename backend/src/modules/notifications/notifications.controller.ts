@@ -15,14 +15,13 @@ import {
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiForbiddenResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { NotificationResponseDto } from './dto/notification-response.dto';
-import { ApiAuth } from '../../common/swagger';
-import { ApiErrorResponse } from '../../common/swagger/api-response.dto';
 
 @ApiTags('Notifications')
-@ApiAuth()
+@ApiBearerAuth()
 @Controller('v1/notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
@@ -58,11 +57,9 @@ export class NotificationsController {
   @ApiNoContentResponse({ description: 'Notification marked as read' })
   @ApiNotFoundResponse({
     description: 'Notification not found',
-    type: ApiErrorResponse,
   })
   @ApiForbiddenResponse({
     description: 'Notification does not belong to the requesting user',
-    type: ApiErrorResponse,
   })
   async markAsRead(
     @Param('id', ParseUUIDPipe) id: string,

@@ -3,12 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import configuration from './config/configuration';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
+import { BillingCronModule } from './modules/billing-cron/billing-cron.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -50,10 +52,14 @@ import { AppService } from './app.service';
       }),
     }),
 
-    // ─── Feature Modules ───────────────────────────────────────────────
+    // ─── Scheduling (cron jobs) ─────────────────────────────────────────────
+    ScheduleModule.forRoot(),
+
+    // ─── Feature Modules ───────────────────────────────────────────────────
     AuthModule,
     NotificationsModule,
     ContractsModule,
+    BillingCronModule,
   ],
 
   controllers: [AppController],

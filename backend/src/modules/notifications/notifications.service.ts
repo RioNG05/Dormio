@@ -21,6 +21,20 @@ export interface OnboardingNotificationParams {
   contractId: string;
 }
 
+export interface BillingNotificationParams {
+  /** The boarding house owner (landlord) as sender */
+  senderId: string;
+  /** The primary tenant of the contract */
+  receiverId: string;
+  boardingHouseId: string;
+  contractId: string;
+}
+
+export interface BillingDueNotificationParams extends BillingNotificationParams {
+  /** Whether the room has any active metered services */
+  hasMeteredServices: boolean;
+}
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -121,6 +135,90 @@ export class NotificationsService {
     await this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
+    });
+  }
+
+  // ─── UC-T-02: Billing reminder (5 days before due date) ─────────────────────
+
+  /**
+   * Creates a billing_reminder Notification and enqueues the async dispatch job.
+   *
+   * Triggered by the daily billing cron (UC-L-06 Part 1) when today is exactly
+   * 5 days before a contract's monthlyPaymentDate.
+   *
+   * Must be called OUTSIDE any active $transaction.
+   */
+  async createBillingReminderNotification(
+    params: BillingNotificationParams,
+  ): Promise<void> {
+    const { senderId, receiverId, boardingHouseId, contractId } = params;
+
+    const notification = await this.prisma.notification.create({
+      data: {
+        senderId,
+        receiverId,
+        boardingHouseId,
+        type: 'billing_reminder',
+        content: 'Sắp đến hạn đóng tiền trọ. Vui lòng chuẩn bị thanh toán đúng hạn.',
+        isRead: false,
+      },
+    });
+
+    this.logger.log(
+      `billing_reminder notification created: ${notification.id} for tenant ${receiverId}`,
+    );
+
+    await this.notifQueue.add('dispatch-notification', {
+      notificationId: notification.id,
+      type: 'billing_reminder',
+      receiverId,
+      contractId,
+    });
+  }
+
+  // ─── UC-T-02: Billing due (on the due date itself) ───────────────────────────
+
+  /**
+   * Creates a billing_due Notification and enqueues the async dispatch job.
+   *
+   * Triggered by the daily billing cron on the due date. Content varies:
+   * - hasMeteredServices=true  → "cần nhập chỉ số điện nước"
+   * - hasMeteredServices=false → "hóa đơn đã sẵn sàng"
+   *
+   * Must be called OUTSIDE any active $transaction.
+   */
+  async createBillingDueNotification(
+    params: BillingDueNotificationParams,
+  ): Promise<void> {
+    const { senderId, receiverId, boardingHouseId, contractId, hasMeteredServices } =
+      params;
+
+    const content = hasMeteredServices
+      ? 'Đã đến ngày thanh toán. Vui lòng nhập chỉ số điện nước để tạo hóa đơn.'
+      : 'Hóa đơn tháng này đã sẵn sàng. Vui lòng thanh toán đúng hạn.';
+
+    const notification = await this.prisma.notification.create({
+      data: {
+        senderId,
+        receiverId,
+        boardingHouseId,
+        type: 'billing_due',
+        content,
+        isRead: false,
+      },
+    });
+
+    this.logger.log(
+      `billing_due notification created: ${notification.id} for tenant ${receiverId} ` +
+        `(hasMeteredServices=${hasMeteredServices})`,
+    );
+
+    await this.notifQueue.add('dispatch-notification', {
+      notificationId: notification.id,
+      type: 'billing_due',
+      receiverId,
+      contractId,
+      hasMeteredServices,
     });
   }
 }
