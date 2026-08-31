@@ -33,6 +33,9 @@ describe('PostsService', () => {
     postPurchase: {
       findMany: jest.fn(),
     },
+    postReach: {
+      findMany: jest.fn(),
+    },
     room: {
       findUnique: jest.fn(),
     },
@@ -314,6 +317,97 @@ describe('PostsService', () => {
         where: { id: postId },
         data: { status: PostStatus.hidden },
       });
+    });
+  });
+
+  describe('getPosterAnalyticsOverview', () => {
+    const userId = 'poster-1';
+
+    it('should aggregate post counts, views, bookmarks and generate daily trend points', async () => {
+      const mockPosts = [
+        {
+          id: 'post-1',
+          title: 'Phòng 101',
+          status: PostStatus.posted,
+          depositAmount: 3000000,
+          room: { roomNumber: '101', boardingHouse: { name: 'Dormio Premier' } },
+          postImages: [{ id: 'img-1', url: 'https://example.com/1.jpg' }],
+          _count: { postReaches: 10, savedPosts: 3 },
+          createdAt: new Date(),
+        },
+        {
+          id: 'post-2',
+          title: 'Phòng 201',
+          status: PostStatus.posted,
+          depositAmount: 4000000,
+          room: null,
+          postImages: [],
+          _count: { postReaches: 5, savedPosts: 1 },
+          createdAt: new Date(),
+        },
+      ];
+
+      mockPrisma.post.findMany.mockResolvedValue(mockPosts);
+
+      const today = new Date();
+      mockPrisma.postReach.findMany.mockResolvedValue([
+        { viewedAt: today, viewedBy: 'user-a' },
+        { viewedAt: today, viewedBy: 'user-b' },
+      ]);
+
+      const result = await service.getPosterAnalyticsOverview(userId, 7);
+
+      expect(result.totalPosts).toEqual(2);
+      expect(result.activePosts).toEqual(2);
+      expect(result.totalViews).toEqual(15);
+      expect(result.totalSaved).toEqual(4);
+      expect(result.averageViewsPerPost).toEqual(7.5);
+      expect(result.dailyTrends).toHaveLength(7);
+      expect(result.topPosts[0].id).toEqual('post-1');
+    });
+  });
+
+  describe('getSinglePostAnalytics', () => {
+    const userId = 'poster-1';
+    const postId = 'post-1';
+
+    it('should throw ForbiddenException if user is not post author', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({
+        id: postId,
+        postedBy: 'other-user',
+      });
+
+      await expect(
+        service.getSinglePostAnalytics(userId, postId, 7),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return single post drill-down with daily trends and unique viewers', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({
+        id: postId,
+        postedBy: userId,
+        title: 'Phòng 101',
+        status: PostStatus.posted,
+        depositAmount: 3500000,
+        room: { roomNumber: '101', boardingHouse: { name: 'Dormio House' } },
+        postImages: [{ id: 'img-1', url: 'https://example.com/1.jpg' }],
+        _count: { postReaches: 8, savedPosts: 2 },
+        createdAt: new Date(),
+      });
+
+      const today = new Date();
+      mockPrisma.postReach.findMany.mockResolvedValue([
+        { viewedAt: today, viewedBy: 'user-a' },
+        { viewedAt: today, viewedBy: 'user-a' }, // duplicate viewer
+        { viewedAt: today, viewedBy: 'user-b' },
+      ]);
+
+      const result = await service.getSinglePostAnalytics(userId, postId, 7);
+
+      expect(result.post.id).toEqual(postId);
+      expect(result.totalViews).toEqual(8);
+      expect(result.totalUniqueViewers).toEqual(2);
+      expect(result.dailyTrends).toHaveLength(7);
     });
   });
 });

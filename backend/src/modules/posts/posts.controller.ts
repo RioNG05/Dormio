@@ -24,6 +24,10 @@ import {
   PostQuotaDto,
   PostResponseDto,
 } from './dto/post-response.dto';
+import {
+  PosterAnalyticsOverviewDto,
+  SinglePostAnalyticsDto,
+} from './dto/post-analytics.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { PostStatus } from '@prisma';
@@ -105,6 +109,30 @@ export class PostsController {
     return this.postsService.getMyPosts(user.id, query);
   }
 
+  @Get('analytics/overview')
+  @ApiOperation({
+    summary: 'UC-P-02: Get aggregate poster analytics dashboard overview',
+    description:
+      'Aggregates total views (COUNT(PostReach)), unique reach, saved counts, and day-by-day trend charts across all listings of the authenticated poster.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Aggregate poster analytics overview data',
+    type: PosterAnalyticsOverviewDto,
+  })
+  async getPosterAnalyticsOverview(
+    @CurrentUser() user: JwtPayload,
+    @Query('days') days?: number,
+  ): Promise<PosterAnalyticsOverviewDto> {
+    this.logger.log(
+      `GET /posts/analytics/overview called by user ${user.id} with days=${days || 14}`,
+    );
+    return this.postsService.getPosterAnalyticsOverview(
+      user.id,
+      days ? Number(days) : 14,
+    );
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get post listing details by ID',
@@ -125,6 +153,41 @@ export class PostsController {
   ): Promise<PostResponseDto> {
     this.logger.log(`GET /posts/${id} called by user ${user.id}`);
     return this.postsService.getPostById(user.id, id);
+  }
+
+  @Get(':id/analytics')
+  @ApiOperation({
+    summary: 'UC-P-02: Get drill-down analytics for a single rental listing',
+    description:
+      'Returns day-by-day views and unique reach trend data for a single post belonging to the authenticated poster.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Drill-down post analytics and trend data',
+    type: SinglePostAnalyticsDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'User is not the author of this post',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Post not found',
+  })
+  async getSinglePostAnalytics(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('days') days?: number,
+  ): Promise<SinglePostAnalyticsDto> {
+    this.logger.log(
+      `GET /posts/${id}/analytics called by user ${user.id} with days=${days || 14}`,
+    );
+    return this.postsService.getSinglePostAnalytics(
+      user.id,
+      id,
+      days ? Number(days) : 14,
+    );
   }
 
   @Patch(':id/status')

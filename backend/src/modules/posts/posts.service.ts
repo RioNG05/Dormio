@@ -14,6 +14,12 @@ import {
   PostResponseDto,
 } from './dto/post-response.dto';
 import {
+  DailyReachPointDto,
+  PosterAnalyticsOverviewDto,
+  SinglePostAnalyticsDto,
+  TopPostAnalyticsDto,
+} from './dto/post-analytics.dto';
+import {
   PostStatus,
   SourceType,
   PostPurchaseStatus,
@@ -418,6 +424,226 @@ export class PostsService {
     });
 
     return this.getPostById(userId, postId);
+  }
+
+  /**
+   * UC-P-02: Poster Analytics Dashboard Overview
+   *
+   * Query Post WHERE postedBy = userId, joined PostReach for aggregate view counts
+   * (COUNT(PostReach) GROUP BY postId) and daily reach trends.
+   */
+  async getPosterAnalyticsOverview(
+    userId: string,
+    days: number = 14,
+  ): Promise<PosterAnalyticsOverviewDto> {
+    const validDays = Math.max(1, Math.min(days, 90));
+    this.logger.log(
+      `Calculating poster analytics overview for user ${userId} over last ${validDays} days`,
+    );
+
+    // 1. Fetch all user posts with reach and bookmark relations
+    const posts = await this.prisma.post.findMany({
+      where: {
+        postedBy: userId,
+      },
+      include: {
+        postImages: true,
+        room: {
+          include: {
+            boardingHouse: true,
+          },
+        },
+        _count: {
+          select: {
+            postReaches: true,
+            savedPosts: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const totalPosts = posts.length;
+    const activePosts = posts.filter((p) => p.status === PostStatus.posted).length;
+    const totalViews = posts.reduce((sum, p) => sum + (p._count?.postReaches ?? 0), 0);
+    const totalSaved = posts.reduce((sum, p) => sum + (p._count?.savedPosts ?? 0), 0);
+    const averageViewsPerPost =
+      activePosts > 0 ? Math.round((totalViews / activePosts) * 10) / 10 : 0;
+
+    const postIds = posts.map((p) => p.id);
+
+    // 2. Fetch daily reach trend records within the time window
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (validDays - 1));
+    startDate.setHours(0, 0, 0, 0);
+
+    const reachRecords =
+      postIds.length > 0
+        ? await this.prisma.postReach.findMany({
+            where: {
+              postId: { in: postIds },
+              viewedAt: { gte: startDate },
+            },
+            select: {
+              viewedAt: true,
+              viewedBy: true,
+            },
+          })
+        : [];
+
+    const dailyTrends = this.buildDailyTrendMap(reachRecords, validDays);
+
+    // 3. Format top performing posts
+    const topPosts: TopPostAnalyticsDto[] = [...posts]
+      .sort((a, b) => (b._count?.postReaches ?? 0) - (a._count?.postReaches ?? 0))
+      .map((p) => ({
+        id: p.id,
+        title: p.title,
+        status: p.status,
+        depositAmount: Number(p.depositAmount),
+        roomNumber: p.room?.roomNumber ?? null,
+        boardingHouseName: p.room?.boardingHouse?.name ?? null,
+        thumbnailUrl: p.postImages?.[0]?.url ?? null,
+        viewsCount: p._count?.postReaches ?? 0,
+        savedCount: p._count?.savedPosts ?? 0,
+        createdAt: p.createdAt,
+      }));
+
+    return {
+      totalPosts,
+      activePosts,
+      totalViews,
+      totalSaved,
+      averageViewsPerPost,
+      dailyTrends,
+      topPosts,
+    };
+  }
+
+  /**
+   * UC-P-02: Single Post Drill-Down Analytics
+   *
+   * Same query filtered to one postId, broken out by day (GROUP BY date_trunc('day', viewedAt))
+   * for a detailed trend chart.
+   */
+  async getSinglePostAnalytics(
+    userId: string,
+    postId: string,
+    days: number = 14,
+  ): Promise<SinglePostAnalyticsDto> {
+    const validDays = Math.max(1, Math.min(days, 90));
+    this.logger.log(
+      `Calculating single post analytics for post ${postId} over ${validDays} days by user ${userId}`,
+    );
+
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        postImages: true,
+        room: {
+          include: {
+            boardingHouse: true,
+          },
+        },
+        _count: {
+          select: {
+            postReaches: true,
+            savedPosts: true,
+          },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Tin đăng với ID ${postId} không tồn tại`);
+    }
+
+    if (post.postedBy !== userId) {
+      throw new ForbiddenException(
+        'Bạn không có quyền xem thống kê của tin đăng không thuộc về bạn',
+      );
+    }
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (validDays - 1));
+    startDate.setHours(0, 0, 0, 0);
+
+    const reachRecords = await this.prisma.postReach.findMany({
+      where: {
+        postId,
+        viewedAt: { gte: startDate },
+      },
+      select: {
+        viewedAt: true,
+        viewedBy: true,
+      },
+    });
+
+    const dailyTrends = this.buildDailyTrendMap(reachRecords, validDays);
+    const uniqueViewersSet = new Set(reachRecords.map((r) => r.viewedBy));
+
+    const postDto: TopPostAnalyticsDto = {
+      id: post.id,
+      title: post.title,
+      status: post.status,
+      depositAmount: Number(post.depositAmount),
+      roomNumber: post.room?.roomNumber ?? null,
+      boardingHouseName: post.room?.boardingHouse?.name ?? null,
+      thumbnailUrl: post.postImages?.[0]?.url ?? null,
+      viewsCount: post._count?.postReaches ?? 0,
+      savedCount: post._count?.savedPosts ?? 0,
+      createdAt: post.createdAt,
+    };
+
+    return {
+      post: postDto,
+      totalViews: post._count?.postReaches ?? 0,
+      totalUniqueViewers: uniqueViewersSet.size,
+      dailyTrends,
+    };
+  }
+
+  private buildDailyTrendMap(
+    records: { viewedAt: Date; viewedBy: string }[],
+    days: number,
+  ): DailyReachPointDto[] {
+    const result: DailyReachPointDto[] = [];
+    const now = new Date();
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(now.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      result.push({
+        date: dateStr,
+        views: 0,
+        uniqueViewers: 0,
+      });
+    }
+
+    const uniqueUsersByDate: Record<string, Set<string>> = {};
+    for (const item of result) {
+      uniqueUsersByDate[item.date] = new Set<string>();
+    }
+
+    for (const record of records) {
+      const recordDateStr = new Date(record.viewedAt).toISOString().split('T')[0];
+      const point = result.find((p) => p.date === recordDateStr);
+      if (point) {
+        point.views++;
+        if (record.viewedBy) {
+          uniqueUsersByDate[recordDateStr]?.add(record.viewedBy);
+        }
+      }
+    }
+
+    for (const point of result) {
+      point.uniqueViewers = uniqueUsersByDate[point.date]?.size ?? point.views;
+    }
+
+    return result;
   }
 
   private mapToResponseDto(post: any): PostResponseDto {

@@ -61,6 +61,42 @@ export interface PaginatedPostsResponse {
   };
 }
 
+export interface DailyReachPoint {
+  date: string;
+  views: number;
+  uniqueViewers: number;
+}
+
+export interface TopPostAnalytics {
+  id: string;
+  title: string;
+  status: "draft" | "posted" | "hidden";
+  depositAmount: number;
+  roomNumber?: string | null;
+  boardingHouseName?: string | null;
+  thumbnailUrl?: string | null;
+  viewsCount: number;
+  savedCount: number;
+  createdAt: string;
+}
+
+export interface PosterAnalyticsOverview {
+  totalPosts: number;
+  activePosts: number;
+  totalViews: number;
+  totalSaved: number;
+  averageViewsPerPost: number;
+  dailyTrends: DailyReachPoint[];
+  topPosts: TopPostAnalytics[];
+}
+
+export interface SinglePostAnalytics {
+  post: TopPostAnalytics;
+  totalViews: number;
+  totalUniqueViewers: number;
+  dailyTrends: DailyReachPoint[];
+}
+
 export const postService = {
   /**
    * Check remaining posting quota for today and available purchased credits
@@ -110,5 +146,23 @@ export const postService = {
    */
   async updatePostStatus(id: string, status: "draft" | "posted" | "hidden"): Promise<PostListing> {
     return api.patch<PostListing>(`/posts/${id}/status`, { status });
+  },
+
+  /**
+   * UC-P-02: Get aggregate poster analytics overview
+   */
+  async getAnalyticsOverview(days: number = 14): Promise<PosterAnalyticsOverview> {
+    return api.get<PosterAnalyticsOverview>("/posts/analytics/overview", {
+      params: { days: days.toString() },
+    });
+  },
+
+  /**
+   * UC-P-02: Get single post drill-down analytics
+   */
+  async getPostAnalytics(postId: string, days: number = 14): Promise<SinglePostAnalytics> {
+    return api.get<SinglePostAnalytics>(`/posts/${postId}/analytics`, {
+      params: { days: days.toString() },
+    });
   },
 };

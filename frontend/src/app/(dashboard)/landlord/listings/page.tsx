@@ -225,12 +225,20 @@ export default function ListingsPage() {
           </p>
         </div>
 
-        <Link
-          href="/landlord/listings/create"
-          className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" /> Đăng tin phòng trống mới
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/landlord/listings/analytics"
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl transition-all shadow-sm cursor-pointer"
+          >
+            <Eye className="w-4 h-4 text-[#2ac1bc]" /> Thống kê hiệu quả (UC-P-02)
+          </Link>
+          <Link
+            href="/landlord/listings/create"
+            className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Đăng tin phòng trống mới
+          </Link>
+        </div>
       </div>
 
       {/* Dark Banner Card Hero */}
