@@ -69,6 +69,7 @@ Load these skills (read their SKILL.md) when working on:
 11. **API Logging & Swagger**: Whenever writing/updating any backend API endpoint:
     - **Logger**: Always add a `Logger` (e.g., `private readonly logger = new Logger(ControllerName.name)`) and log an info message whenever the endpoint is invoked.
     - **Swagger**: Always write complete Swagger documentation for the controller, methods, and DTOs (`@ApiTags`, `@ApiOperation`, `@ApiBearerAuth`, `@ApiOkResponse`, `@ApiResponse`, `@ApiProperty`, etc.).
+12. **Language Convention (English Codebase)**: All source code (variables, functions, classes, interfaces, types, DTOs, enums, DB models/columns), comments, docstrings, logs, git commit messages, and technical documentation MUST be written in **English**. **Vietnamese** is strictly reserved for user-facing UI labels, client-visible messages/toasts, notification contents, and localized business display text.
 
 ## Module Breakdown
 

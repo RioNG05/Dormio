@@ -56,6 +56,17 @@
 
 ---
 
+## Language & Localization Conventions
+
+- **Source Code (English Only)**:
+  - All variables, functions, classes, interfaces, types, DTOs, enums, constants, database models and columns **MUST** be named in **English**.
+  - All code comments, docstrings, logger messages, and Git commit messages **MUST** be written in **English**.
+- **User Interface & End-User Messages (Vietnamese Only)**:
+  - All user-facing UI labels, form placeholders, table headers, buttons, toast/modal messages, validation messages shown to users, and notification content **MUST** be written in **Vietnamese**.
+  - System-level error codes remain English (`UNAUTHORIZED`, `INVOICE_NOT_FOUND`), but the user-facing message/description must be in Vietnamese.
+
+---
+
 ## Money / Finance Rules
 
 - All monetary fields: `DECIMAL(12,2)` in Postgres. Prisma type: `Decimal`. **NEVER use Float**.
