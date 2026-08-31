@@ -12,6 +12,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { BillingCronModule } from './modules/billing-cron/billing-cron.module';
 import { MeterReadingsModule } from './modules/meter-readings/meter-readings.module';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -62,6 +63,7 @@ import { AppService } from './app.service';
     ContractsModule,
     BillingCronModule,
     MeterReadingsModule,
+    InvoicesModule,
   ],
 
   controllers: [AppController],
