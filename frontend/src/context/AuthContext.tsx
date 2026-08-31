@@ -3,13 +3,15 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface UserProfile {
+  id?: string;
   name: string;
   email: string;
   phone?: string;
-  role: "tenant" | "landlord" | "admin";
+  role: "tenant" | "landlord" | "admin" | "poster" | "employee";
   avatar: string;
   houseName?: string;
   houseAddress?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface BuildingItem {
@@ -30,6 +32,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   user: UserProfile | null;
   login: (userData?: Partial<UserProfile>) => void;
+  loginWithToken: (token: string, userData: Partial<UserProfile>) => void;
   logout: () => void;
   toggleLoginDemo: () => void;
   upgradeToLandlord: (houseDetails: { houseName: string; houseAddress: string }) => void;
@@ -54,6 +57,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   user: null,
   login: () => {},
+  loginWithToken: () => {},
   logout: () => {},
   toggleLoginDemo: () => {},
   upgradeToLandlord: () => {},
@@ -136,15 +140,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Read initial state from localStorage if available
   useEffect(() => {
     const savedState = localStorage.getItem("dormio_logged_in");
+    const savedToken = localStorage.getItem("auth_token");
     const savedRole = localStorage.getItem("dormio_user_role") as "tenant" | "landlord" | "admin" | null;
     const savedHouseName = localStorage.getItem("dormio_house_name");
     const savedHouseAddress = localStorage.getItem("dormio_house_address");
     const savedBuildingId = localStorage.getItem("dormio_active_building_id");
+    const savedName = localStorage.getItem("dormio_user_name");
+    const savedEmail = localStorage.getItem("dormio_user_email");
+    const savedPhone = localStorage.getItem("dormio_user_phone");
+    const savedId = localStorage.getItem("dormio_user_id");
 
-    if (savedState === "true") {
+    if (savedState === "true" && (savedToken || savedRole)) {
       setIsLoggedIn(true);
       setUser({
         ...defaultUser,
+        id: savedId || undefined,
+        name: savedName || defaultUser.name,
+        email: savedEmail || defaultUser.email,
+        phone: savedPhone || defaultUser.phone,
         role: savedRole || "tenant",
         houseName: savedHouseName || undefined,
         houseAddress: savedHouseAddress || undefined,
@@ -171,6 +184,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updatedUser);
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", updatedUser.role);
+  };
+
+  // Called by login/register pages after receiving a real JWT token from the backend
+  const loginWithToken = (token: string, userData: Partial<UserProfile>) => {
+    const resolvedRole = (userData.role as UserProfile["role"]) || "poster";
+    const updatedUser: UserProfile = {
+      ...defaultUser,
+      ...userData,
+      role: resolvedRole,
+    };
+    setIsLoggedIn(true);
+    setUser(updatedUser);
+    localStorage.setItem("auth_token", token);
+    localStorage.setItem("dormio_logged_in", "true");
+    localStorage.setItem("dormio_user_role", resolvedRole);
+    if (userData.id) localStorage.setItem("dormio_user_id", userData.id);
+    if (userData.name) localStorage.setItem("dormio_user_name", userData.name);
+    if (userData.email) localStorage.setItem("dormio_user_email", userData.email);
+    if (userData.phone) localStorage.setItem("dormio_user_phone", userData.phone);
   };
 
   const upgradeToLandlord = (houseDetails: { houseName: string; houseAddress: string }) => {
@@ -206,6 +238,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("dormio_house_name");
     localStorage.removeItem("dormio_house_address");
     localStorage.removeItem("dormio_active_building_id");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("dormio_user_id");
+    localStorage.removeItem("dormio_user_name");
+    localStorage.removeItem("dormio_user_email");
+    localStorage.removeItem("dormio_user_phone");
   };
 
   const toggleLoginDemo = () => {
@@ -267,6 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoggedIn,
         user,
         login,
+        loginWithToken,
         logout,
         toggleLoginDemo,
         upgradeToLandlord,
