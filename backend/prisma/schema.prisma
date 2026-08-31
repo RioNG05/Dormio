@@ -160,6 +160,7 @@ enum GrievenceStatus {
   pending
   in_progress
   resolved
+  rejected
 }
 
 enum AssignmentStatus {
@@ -765,9 +766,10 @@ model Grievance {
   title           String
   description     String
   priority        GrievencePriority @default(medium)
-  status          GrievenceStatus
-  resolvedBy      String            @map("resolved_by") @db.Uuid
-  resolvedByUser  User              @relation("GrievanceResolver", fields: [resolvedBy], references: [id])
+  status          GrievenceStatus   @default(pending)
+  resolvedBy      String?           @map("resolved_by") @db.Uuid
+  resolvedByUser  User?             @relation("GrievanceResolver", fields: [resolvedBy], references: [id])
+  resolutionNote  String?           @map("resolution_note")
   resolvedAt      DateTime?         @map("resolved_at")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime?         @updatedAt @map("updated_at")
