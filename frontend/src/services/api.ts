@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 type FetchOptions = RequestInit & {
   params?: Record<string, string>;
@@ -71,6 +71,14 @@ class ApiClient {
     return this.request<T>(endpoint, {
       ...options,
       method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  patch<T>(endpoint: string, data?: unknown, options?: FetchOptions) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "PATCH",
       body: data ? JSON.stringify(data) : undefined,
     });
   }

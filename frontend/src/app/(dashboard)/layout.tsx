@@ -86,6 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const tenantMenus = [
     { name: "Thông tin trọ", href: "/tenant", icon: Building },
+    { name: "Chỉ số điện nước", href: "/tenant/meter-readings", icon: Gauge },
     { name: "Thống kê & Hóa đơn", href: "/tenant/invoices", icon: Receipt },
     { name: "Tin nhắn", href: "/tenant/messages", icon: MessageCircle },
     { name: "Yêu cầu hỗ trợ", href: "/tenant/complaints", icon: MessageSquare },

@@ -21,6 +21,7 @@
 		"db:migrate": "pnpm --dir backend prisma migrate dev",
 		"db:migrate:prod": "pnpm --dir backend prisma migrate deploy",
 		"db:push": "pnpm --dir backend prisma db push",
+		"db:seed": "pnpm --dir backend seed",
 		"db:studio": "pnpm --dir backend prisma studio",
 		"db:reset": "pnpm --dir backend prisma migrate reset",
 		"seed": "pnpm --dir backend prisma db seed",

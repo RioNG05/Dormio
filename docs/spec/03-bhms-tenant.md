@@ -67,3 +67,26 @@ Read-only aggregate: active `Contract` + `Room` + `BoardingHouse` (basic info on
 4. Tenant polls/subscribes to their own `Grievance` rows for status tracking (`pending → in_progress → resolved` or `rejected`).
 
 **Schema note:** `resolvedBy` and the `rejected` status value already exist in `schema.prisma`. Only `Grievance.resolutionNote` (free-text explanation) is still missing — see `00-overview-and-conventions.md` Schema Gaps §B.
+
+---
+
+### UC-T-08 — View Payment History
+**Tier:** Free · **Models:** `Invoice`, `InvoiceItem`, `Payment`, `Contract`, `TenantContract`
+
+1. **Scope check first**: resolve every `Contract` this tenant has ever been party to — `TenantContract WHERE tenantId = current_user.id` joined `Contract`. This must include **past/ended contracts**, not just the currently active one — a tenant who moved out should still be able to see their old payment history. Never let the query silently default to only `status='active'`.
+2. **Single aggregated query**, not N+1 per invoice:
+   ```
+   Invoice WHERE contractId IN (<all of this tenant's contract ids>)
+     ├─ InvoiceItem (joined Service, for the per-line breakdown: rent / electricity / water / other services)
+     └─ Payment (0-or-1, per the Payment.invoiceId @unique constraint — see 00-overview-and-conventions.md)
+   ORDER BY dueDate desc
+   ```
+3. **Include upfront rent payments too**: if any of the tenant's contracts used `rentPaymentCycle='upfront'`, there's a separate `Payment(contractId=<that contract>, invoiceId=NULL)` row (see `01-bhms-landlord.md` UC-L-06 Part 3, step 1) that never went through `Invoice`/`InvoiceItem` at all. Fetch these separately — `Payment WHERE contractId IN (<contract ids>)` — and merge into the same response, tagged distinctly (e.g. `source: 'upfront_rent'` vs `source: 'monthly_invoice'`) so the frontend can render a sensible line item for it (label: "Tiền trọ trọn gói") even though it has no `InvoiceItem` breakdown.
+4. **Response shape per entry** (one row per `Invoice`, plus the upfront-rent rows from step 3):
+   - `totalAmount` (from `Invoice.totalAmount`, or `Payment.amount` for the upfront-rent case)
+   - `paidAt` (from the linked `Payment.paidAt` — `NULL` if `Invoice.status` is still `unpaid`/`overdue`, i.e. the tenant can see pending/unpaid entries in the same list, not just successfully paid ones)
+   - `status` (`Invoice.status`, or `Payment.status` for upfront-rent rows)
+   - `breakdown[]`: for each `InvoiceItem`, `{ label: service?.name ?? 'Tiền trọ', amount, quantity, unitPrice }` — `serviceId IS NULL` is the existing convention for the rent line item (see `01-bhms-landlord.md` UC-L-06 Part 3, step 2).
+5. **Tenant-scoping guard**: verify every `Invoice`/`Payment` row returned actually traces back to a `Contract` this tenant was party to via `TenantContract` — do not filter by `roomId` alone, since a room can have had multiple tenants across different contracts over time, and one tenant must never see another tenant's payment history for the same room.
+
+**No new schema changes needed for this UC** — it's a pure read composed entirely from existing `Invoice`/`InvoiceItem`/`Payment`/`Contract`/`TenantContract` relations.

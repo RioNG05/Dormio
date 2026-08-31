@@ -105,29 +105,39 @@ export class RoomService {
 
 ---
 
-## 5. Controller Pattern
+## 5. Controller Pattern (with Logger & Swagger)
 
 ```typescript
+@ApiTags("Rooms")
+@ApiBearerAuth()
 @Controller("rooms")
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 export class RoomController {
+  private readonly logger = new Logger(RoomController.name);
+
   constructor(private readonly service: RoomService) {}
 
   @Get()
+  @ApiOperation({ summary: "List all rooms for a boarding house" })
+  @ApiOkResponse({ description: "Rooms retrieved successfully", type: [RoomResponseDto] })
   async findAll(
     @Request() req,
     @Headers("x-boarding-house-id") boardingHouseId: string
   ) {
+    this.logger.log(`GET /rooms called for boardingHouseId: ${boardingHouseId} by user: ${req.user?.id}`);
     const data = await this.service.findAll(boardingHouseId);
     return { success: true, data };
   }
 
   @Post()
+  @ApiOperation({ summary: "Create a room" })
+  @ApiOkResponse({ description: "Room created successfully", type: RoomResponseDto })
   async create(
     @Body() dto: CreateRoomDto,
     @Request() req,
     @Headers("x-boarding-house-id") boardingHouseId: string
   ) {
+    this.logger.log(`POST /rooms called by user: ${req.user?.id}`);
     const data = await this.service.create(
       { ...dto, boardingHouseId },
       req.user.id
@@ -177,10 +187,11 @@ throw new BadRequestException("out_of_posting_quota");
 ---
 
 ## 8. Checklist
-
 - [ ] Module added to `app.module.ts` imports
 - [ ] `PropertyOwnershipGuard` on all BHMS routes
 - [ ] `AuditLog` in same `$transaction` for financial mutations
 - [ ] Money fields: `Decimal` type, never `number`/`float`
 - [ ] No hard-delete on financial records
 - [ ] No 3rd-party calls inside DB transactions
+- [ ] `Logger` instantiated and logs when each endpoint is called
+- [ ] Complete Swagger annotations (`@ApiTags`, `@ApiOperation`, `@ApiOkResponse`, `@ApiProperty`, etc.) added
