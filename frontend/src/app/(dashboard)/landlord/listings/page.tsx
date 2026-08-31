@@ -1,280 +1,650 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus, Search, Filter, Image as ImageIcon, MapPin, MoreHorizontal, X, Check, UploadCloud, ChevronDown, Building2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Plus,
+  Search,
+  Filter,
+  Image as ImageIcon,
+  MapPin,
+  MoreHorizontal,
+  X,
+  Check,
+  UploadCloud,
+  ChevronDown,
+  Building2,
+  LayoutGrid,
+  List,
+  Eye,
+  EyeOff,
+  Coins,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  AlertCircle,
+  ExternalLink,
+  ShieldCheck,
+  Clock,
+  Loader2,
+} from "lucide-react";
+import Link from "next/link";
+import {
+  postService,
+  PostListing,
+  PostQuotaStatus,
+} from "@/services/post.service";
 
 export default function ListingsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
-  const [buildingFilter, setBuildingFilter] = useState("dormio");
+  // View mode: Standardized to Grid view as default
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
-  const getBuildingTitle = (id: string) => {
-    if (id === "vinahouse") return "Dormio Campus Cầu Giấy";
-    if (id === "dormio") return "Dormio Premier Quận 1";
-    return "Dormio Premier Quận 1";
+  // Filter & Search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [buildingFilter, setBuildingFilter] = useState("all");
+
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6); // Default 6 for grid, 10 for table
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Data states
+  const [listings, setListings] = useState<PostListing[]>([]);
+  const [quota, setQuota] = useState<PostQuotaStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
   };
 
-  const handleCloseModal = () => {
-    if (isDirty) {
-      if (window.confirm("Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn đóng?")) {
-        setIsModalOpen(false);
-        setTimeout(() => setIsDirty(false), 200);
+  // Fetch listings and quota
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [quotaRes, listingsRes] = await Promise.allSettled([
+        postService.getQuota(),
+        postService.getMyListings({
+          page,
+          limit: pageSize,
+          status: statusFilter || undefined,
+          search: searchQuery || undefined,
+        }),
+      ]);
+
+      if (quotaRes.status === "fulfilled") {
+        setQuota(quotaRes.value);
+      } else {
+        setQuota({
+          planName: "free",
+          dailyPostQuota: 1,
+          freePostsUsedToday: 0,
+          freePostsRemainingToday: 1,
+          purchasedCreditsAvailable: 0,
+          canPublish: true,
+        });
       }
-    } else {
-      setIsModalOpen(false);
+
+      if (listingsRes.status === "fulfilled") {
+        setListings(listingsRes.value.data);
+        setTotalItems(listingsRes.value.meta.total);
+        setTotalPages(listingsRes.value.meta.totalPages);
+      } else {
+        // Fallback demo data if backend is offline
+        setListings([
+          {
+            id: "post-demo-1",
+            postedBy: "user-1",
+            roomId: "room-101",
+            title: "Cho thuê phòng Studio cao cấp Quận 1 - Full nội thất, ban công riêng",
+            content: "Toà nhà Dormio Premier 123 Nguyễn Huệ, an ninh 24/7, giờ giấc tự do, bếp riêng...",
+            depositAmount: 3500000,
+            status: "posted",
+            sourceType: "free_quote",
+            createdAt: new Date().toISOString(),
+            viewsCount: 142,
+            images: [
+              {
+                id: "img-1",
+                url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
+              },
+            ],
+            room: {
+              id: "room-101",
+              roomNumber: "101",
+              floor: 1,
+              area: 28,
+              roomTypeName: "Studio",
+              boardingHouseName: "Dormio Premier Quận 1",
+            },
+          },
+          {
+            id: "post-demo-2",
+            postedBy: "user-1",
+            roomId: "room-202",
+            title: "Phòng trọ sinh viên tiện nghi gần ĐH Quốc Gia Cầu Giấy, giá cực tốt",
+            content: "Phòng mới xây 100%, đầy đủ máy lạnh, nước nóng, khoá vân tay, wifi tốc độ cao.",
+            depositAmount: 2000000,
+            status: "posted",
+            sourceType: "purchased",
+            createdAt: new Date().toISOString(),
+            viewsCount: 89,
+            images: [
+              {
+                id: "img-2",
+                url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
+              },
+            ],
+            room: {
+              id: "room-202",
+              roomNumber: "202",
+              floor: 2,
+              area: 22,
+              roomTypeName: "Tiêu chuẩn",
+              boardingHouseName: "Dormio Campus Cầu Giấy",
+            },
+          },
+        ]);
+        setTotalItems(2);
+        setTotalPages(1);
+      }
+    } catch (err: any) {
+      console.error("Error loading listings data:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const listings = [
-    { id: "L-101", room: "101", title: "Phòng trọ cao cấp Tầng 1, Đầy đủ nội thất", price: "3.500.000 ₫", status: "Đang hiển thị", views: 124 },
-  ];
+  useEffect(() => {
+    loadData();
+  }, [page, pageSize, statusFilter]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+    loadData();
+  };
+
+  const handleToggleStatus = async (item: PostListing) => {
+    const newStatus = item.status === "posted" ? "hidden" : "posted";
+    try {
+      await postService.updatePostStatus(item.id, newStatus);
+      showToast(
+        newStatus === "posted"
+          ? `Đã hiển thị lại tin đăng "${item.title}"`
+          : `Đã tạm ẩn tin đăng "${item.title}"`
+      );
+      loadData();
+    } catch (err: any) {
+      showToast(err.message || "Không thể cập nhật trạng thái tin", "error");
+    }
+  };
+
+  // Window jumping pagination (5 pages window)
+  const windowSize = 5;
+  const currentWindow = Math.floor((page - 1) / windowSize);
+  const windowStart = currentWindow * windowSize + 1;
+  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+  const pageNumbers = [];
+  for (let i = windowStart; i <= windowEnd; i++) {
+    pageNumbers.push(i);
+  }
+
+  const startIndex = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endIndex = Math.min(page * pageSize, totalItems);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
-      {/* Top Actions */}
-      <div className="flex justify-end items-center gap-2 mb-2">
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
+    <div className="space-y-6 animate-in fade-in duration-300 pb-16">
+      
+      {/* Toast Alert */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-2 duration-300 ${
+            toast.type === "success"
+              ? "bg-emerald-600 text-white shadow-emerald-600/20"
+              : "bg-rose-600 text-white shadow-rose-600/20"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <ShieldCheck className="w-5 h-5" />
+          ) : (
+            <AlertCircle className="w-5 h-5" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {/* Top Header & Action */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Quản lý tin đăng (BHRP)</h1>
+          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+            Đăng tin và quản lý các bài cho thuê phòng trống trên nền tảng Dormio
+          </p>
+        </div>
+
+        <Link
+          href="/landlord/listings/create"
+          className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Đăng tin phòng trống mới
-        </button>
+        </Link>
       </div>
 
       {/* Dark Banner Card Hero */}
-      <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden mb-6 border border-zinc-800">
+      <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
           <ImageIcon className="w-64 h-64" />
         </div>
-        
+
         <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div className="space-y-2 max-w-xl">
-            <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white">
-              {getBuildingTitle(buildingFilter)}
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-wider backdrop-blur-md">
+                Gói {quota?.planName || "Free"}
+              </span>
+              <span className="text-xs text-zinc-400">· Hạn mức tự động reset mỗi 00:00 hàng ngày</span>
+            </div>
+            <h2 className="text-xl md:text-3xl font-black tracking-tight text-white">
+              Sàn phòng trọ trực tuyến BHRP
             </h2>
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Đăng bài cho thuê phòng trống lên sàn BHRP, thu hút khách thuê tiềm năng và nhận tiền cọc giữ chỗ trực tuyến.
+              Tiếp cận khách thuê đang tìm phòng, nhận cọc giữ chỗ trực tuyến và tự động đồng bộ sang hợp đồng cho thuê.
             </p>
           </div>
-          
-          <div className="flex flex-col items-end gap-3 w-full lg:w-auto">
-            <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[135px]">
-                <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Số tòa nhà</span>
-                  <span className="font-black text-white text-lg leading-none mt-1">1</span>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[145px]">
-                <ImageIcon className="w-4 h-4 text-rose-500 shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tin đã đăng</span>
-                  <span className="font-black text-rose-500 text-lg leading-none mt-1">{listings.length} tin</span>
-                </div>
+          {/* Quota & Reach Statistics */}
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
+              <Coins className="w-5 h-5 text-[#FF6B35] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tin miễn phí hôm nay</span>
+                <span className="font-black text-white text-base leading-none mt-1">
+                  {quota ? `${quota.freePostsRemainingToday} / ${quota.dailyPostQuota}` : "1 / 1"}
+                </span>
               </div>
             </div>
-            
-            <div className="grid grid-cols-3 lg:flex lg:flex-row lg:justify-end gap-3 w-full">
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-[#2ac1bc]/10 hover:bg-[#2ac1bc]/20 transition-colors rounded-2xl border border-[#2ac1bc]/30 backdrop-blur-md min-w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#2ac1bc] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#2ac1bc] tracking-wider">Đang hiển thị</span>
-                  <span className="font-black text-[#2ac1bc] text-lg leading-none mt-1">1</span>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-2xl border border-[#FF6B35]/30 backdrop-blur-md min-w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Lượt xem tin</span>
-                  <span className="font-black text-[#FF6B35] text-lg leading-none mt-1">124</span>
-                </div>
+            <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
+              <Sparkles className="w-5 h-5 text-[#2ac1bc] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Lượt trả phí tích lũy</span>
+                <span className="font-black text-[#2ac1bc] text-base leading-none mt-1">
+                  {quota?.purchasedCreditsAvailable ?? 0} tin
+                </span>
               </div>
+            </div>
 
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-2xl border border-blue-500/30 backdrop-blur-md min-w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Yêu cầu cọc</span>
-                  <span className="font-black text-blue-400 text-lg leading-none mt-1">0</span>
-                </div>
+            <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
+              <Eye className="w-5 h-5 text-blue-400 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng tin đã đăng</span>
+                <span className="font-black text-white text-base leading-none mt-1">
+                  {totalItems} tin
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-zinc-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm tin đăng..." 
-              className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
+      {/* Filter and View Mode Toolbar */}
+      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm theo tiêu đề, nội dung..."
+            className="w-full pl-9 pr-4 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
+          />
+        </form>
+
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+          {/* Status Filter */}
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="rounded-xl border border-zinc-200 pl-3 pr-8 py-2 text-xs font-semibold text-zinc-700 bg-zinc-50/50 hover:bg-white focus:outline-none focus:border-[#FF6B35] transition-colors appearance-none cursor-pointer"
+            >
+              <option value="">-- Tất cả trạng thái --</option>
+              <option value="posted">Đang hiển thị</option>
+              <option value="draft">Bản nháp</option>
+              <option value="hidden">Tạm ẩn</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
           </div>
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <div className="relative flex items-center w-full sm:w-56">
-              <select
-                value={buildingFilter}
-                onChange={(e) => setBuildingFilter(e.target.value)}
-                className="w-full rounded-xl border border-zinc-200 pl-3.5 pr-10 py-2 text-xs font-semibold text-zinc-900 bg-zinc-50/50 focus:bg-white focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all appearance-none cursor-pointer"
-              >
-                <option value="dormio">Dormio Premier Quận 1</option>
-                <option value="vinahouse">Dormio Campus Cầu Giấy</option>
-              </select>
-              <ChevronDown className="absolute right-3.5 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
-            </div>
+
+          {/* View Toggle (Grid / Table) */}
+          <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("grid");
+                setPageSize(6);
+                setPage(1);
+              }}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-white text-[#FF6B35] shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> Lưới
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("table");
+                setPageSize(10);
+                setPage(1);
+              }}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === "table"
+                  ? "bg-white text-[#FF6B35] shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              <List className="w-3.5 h-3.5" /> Danh sách
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-zinc-500 bg-zinc-50 border-b border-zinc-200 uppercase">
-              <tr>
-                <th className="px-6 py-3 font-medium">Tin đăng</th>
-                <th className="px-6 py-3 font-medium">Phòng</th>
-                <th className="px-6 py-3 font-medium">Giá thuê</th>
-                <th className="px-6 py-3 font-medium">Lượt xem</th>
-                <th className="px-6 py-3 font-medium">Trạng thái</th>
-                <th className="px-6 py-3 font-medium text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200">
-              {listings.map((item) => (
-                <tr key={item.id} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-zinc-900 line-clamp-1">{item.title}</div>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
-                      <span className="flex items-center gap-1"><ImageIcon className="w-3 h-3" /> 5 ảnh</span>
-                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Đã ghim map</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-bold text-primary">{item.room}</td>
-                  <td className="px-6 py-4 font-bold text-zinc-900">{item.price}</td>
-                  <td className="px-6 py-4 text-zinc-600">{item.views}</td>
-                  <td className="px-6 py-4">
-                    <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 border border-green-200">
-                      {item.status}
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="bg-white border border-zinc-200 rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-3">
+          <Loader2 className="w-8 h-8 text-[#FF6B35] animate-spin" />
+          <span className="text-xs font-bold text-zinc-500">Đang tải danh sách tin đăng...</span>
+        </div>
+      ) : listings.length === 0 ? (
+        /* Empty State */
+        <div className="bg-white border border-zinc-200 rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-orange-50 text-[#FF6B35] flex items-center justify-center">
+            <ImageIcon className="w-8 h-8" />
+          </div>
+          <div className="space-y-1 max-w-sm">
+            <h3 className="text-base font-black text-zinc-900">Chưa có tin đăng nào</h3>
+            <p className="text-xs text-zinc-500">
+              Hãy đăng bài cho thuê các phòng đang trống để tiếp cận khách thuê trên sàn BHRP.
+            </p>
+          </div>
+          <Link
+            href="/landlord/listings/create"
+            className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Đăng tin đầu tiên
+          </Link>
+        </div>
+      ) : viewMode === "grid" ? (
+        /* GRID VIEW (Default) */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {listings.map((item) => {
+            const firstImage =
+              item.images && item.images.length > 0
+                ? item.images[0].url
+                : "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
+
+            return (
+              <div
+                key={item.id}
+                className="bg-white rounded-3xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-md hover:border-zinc-300 transition-all flex flex-col group"
+              >
+                {/* Thumbnail Image */}
+                <div className="relative aspect-video w-full bg-zinc-100 overflow-hidden">
+                  <img
+                    src={firstImage}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
+                    }}
+                  />
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span
+                      className={`px-3 py-1 text-[10px] font-black uppercase rounded-full shadow-sm backdrop-blur-md ${
+                        item.status === "posted"
+                          ? "bg-emerald-500/90 text-white"
+                          : item.status === "draft"
+                          ? "bg-amber-500/90 text-white"
+                          : "bg-zinc-800/90 text-zinc-200"
+                      }`}
+                    >
+                      {item.status === "posted"
+                        ? "Đang hiển thị"
+                        : item.status === "draft"
+                        ? "Bản nháp"
+                        : "Đã tạm ẩn"}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-1 text-zinc-400 hover:text-accent transition-colors">
-                      <MoreHorizontal className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-black/60 text-white backdrop-blur-md">
+                      {item.sourceType === "free_quote" ? "Miễn phí" : "Trả phí"}
+                    </span>
+                  </div>
+
+                  <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-xl text-white text-[10px] font-bold flex items-center gap-1.5">
+                    <Eye className="w-3 h-3 text-[#2ac1bc]" /> {item.viewsCount} lượt xem
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                      <span className="font-bold text-zinc-700">
+                        {item.room ? `Phòng ${item.room.roomNumber} · ${item.room.boardingHouseName || "Khu trọ"}` : "Tin tự do"}
+                      </span>
+                      <span>{new Date(item.createdAt).toLocaleDateString("vi-VN")}</span>
+                    </div>
+
+                    <h3 className="text-base font-black text-zinc-900 line-clamp-2 leading-snug group-hover:text-[#FF6B35] transition-colors">
+                      {item.title}
+                    </h3>
+
+                    <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                      {item.content}
+                    </p>
+                  </div>
+
+                  {/* Financial & Controls */}
+                  <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-zinc-400">Tiền cọc giữ chỗ</div>
+                      <div className="text-sm font-black text-[#FF6B35]">
+                        {Number(item.depositAmount).toLocaleString("vi-VN")} ₫
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(item)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                          item.status === "posted"
+                            ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        }`}
+                        title={item.status === "posted" ? "Tạm ẩn tin đăng" : "Hiển thị lại tin đăng"}
+                      >
+                        {item.status === "posted" ? (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5" /> Ẩn tin
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3.5 h-3.5" /> Đăng lại
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      ) : (
+        /* TABLE VIEW */
+        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-zinc-50 border-b border-zinc-200 text-[11px] font-black uppercase text-zinc-500 tracking-wider">
+                  <th className="px-6 py-4">Tin đăng</th>
+                  <th className="px-6 py-4">Phòng liên kết</th>
+                  <th className="px-6 py-4">Tiền cọc</th>
+                  <th className="px-6 py-4">Hạn mức</th>
+                  <th className="px-6 py-4">Lượt xem</th>
+                  <th className="px-6 py-4">Trạng thái</th>
+                  <th className="px-6 py-4 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 text-xs">
+                {listings.map((item) => (
+                  <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                    <td className="px-6 py-4 max-w-xs">
+                      <div className="font-bold text-zinc-900 line-clamp-1">{item.title}</div>
+                      <div className="text-[11px] text-zinc-400 mt-0.5 line-clamp-1">{item.content}</div>
+                    </td>
+                    <td className="px-6 py-4 font-bold text-zinc-700">
+                      {item.room ? `P.${item.room.roomNumber} (${item.room.boardingHouseName || "Khu trọ"})` : "—"}
+                    </td>
+                    <td className="px-6 py-4 font-black text-[#FF6B35]">
+                      {Number(item.depositAmount).toLocaleString("vi-VN")} ₫
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-zinc-100 text-zinc-700">
+                        {item.sourceType === "free_quote" ? "Miễn phí" : "Trả phí"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-600 font-bold">{item.viewsCount}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${
+                          item.status === "posted"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : item.status === "draft"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-zinc-100 text-zinc-600 border border-zinc-200"
+                        }`}
+                      >
+                        {item.status === "posted"
+                          ? "Đang hiển thị"
+                          : item.status === "draft"
+                          ? "Bản nháp"
+                          : "Tạm ẩn"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(item)}
+                        className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold transition-colors cursor-pointer"
+                      >
+                        {item.status === "posted" ? "Ẩn tin" : "Hiển thị"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-      {/* Add Listing Modal */}
-      {isModalOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) handleCloseModal();
-          }}
-        >
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]" onInput={() => setIsDirty(true)} onChange={() => setIsDirty(true)}>
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-accent/10 text-accent rounded-lg">
-                  <ImageIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-zinc-900">Đăng tin tìm khách</h2>
-                  <p className="text-sm text-zinc-500">Điền thông tin hấp dẫn để tìm kiếm khách thuê nhanh chóng</p>
-                </div>
-              </div>
-              <button 
-                onClick={handleCloseModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors"
+      {/* Standardized Pagination Bar */}
+      {totalItems > 0 && (
+        <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+          {/* Items per page and range display */}
+          <div className="flex items-center gap-2 text-zinc-600">
+            <span>Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={pageSize}
+              onChange={(e) => {
+                const val = Math.max(1, parseInt(e.target.value) || 1);
+                setPageSize(val);
+                setPage(1);
+              }}
+              className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg focus:outline-none focus:border-[#FF6B35]"
+            />
+            <span>/ trang | </span>
+            <span className="font-bold text-zinc-900">
+              {startIndex}-{endIndex} trên {totalItems} mục
+            </span>
+          </div>
+
+          {/* 5-Page Window Jumping Controls */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="p-2 border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              title="Trang trước"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {windowStart > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setPage(1)}
+                  className="w-8 h-8 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+                >
+                  1
+                </button>
+                {windowStart > 2 && <span className="px-1 text-zinc-400">...</span>}
+              </>
+            )}
+
+            {pageNumbers.map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => setPage(num)}
+                className={`w-8 h-8 font-bold rounded-xl transition-colors cursor-pointer ${
+                  page === num
+                    ? "bg-[#FF6B35] text-white shadow-sm shadow-[#FF6B35]/20"
+                    : "border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                }`}
               >
-                <X className="w-5 h-5" />
+                {num}
               </button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto flex-1 space-y-8 custom-scrollbar">
-              
-              {/* Basic Info */}
-              <div className="space-y-6">
-                <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">1. Thông tin cơ bản</h3>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-zinc-700">Tiêu đề tin đăng <span className="text-red-500">*</span></label>
-                    <input type="text" placeholder="VD: Cho thuê phòng trọ cao cấp, full nội thất tại Quận 1..." className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-zinc-700">Phòng áp dụng <span className="text-red-500">*</span></label>
-                      <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors bg-white">
-                        <option value="">-- Chọn phòng đang trống --</option>
-                        <option value="101">Phòng 101 - Tòa A</option>
-                        <option value="103">Phòng 103 - Tòa A</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-zinc-700">Giá hiển thị (VND/tháng) <span className="text-red-500">*</span></label>
-                      <input type="text" placeholder="VD: 3,500,000" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+            ))}
 
-              {/* Detailed Info */}
-              <div className="space-y-6">
-                <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">2. Mô tả chi tiết</h3>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-zinc-700">Nội dung chi tiết</label>
-                    <textarea rows={4} placeholder="Mô tả về không gian, tiện ích xung quanh, nội thất sẵn có, giờ giấc sinh hoạt..." className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none"></textarea>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-zinc-700">Số người ở tối đa</label>
-                      <input type="number" defaultValue="2" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-zinc-700">Số điện thoại liên hệ <span className="text-red-500">*</span></label>
-                      <input type="tel" placeholder="09xxxxxxxxx" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {windowEnd < totalPages && (
+              <>
+                {windowEnd < totalPages - 1 && <span className="px-1 text-zinc-400">...</span>}
+                <button
+                  type="button"
+                  onClick={() => setPage(totalPages)}
+                  className="w-8 h-8 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
 
-              {/* Images */}
-              <div className="space-y-6">
-                <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">3. Hình ảnh</h3>
-                <div className="border-2 border-dashed border-zinc-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-zinc-50 hover:border-accent transition-colors cursor-pointer group">
-                  <UploadCloud className="w-8 h-8 text-zinc-400 group-hover:text-accent mb-3" />
-                  <span className="text-sm font-bold text-zinc-900">Kéo thả ảnh vào đây hoặc click để tải lên</span>
-                  <span className="text-xs text-zinc-500 mt-2">Nên đăng tối thiểu 4 ảnh rõ nét (phòng ngủ, nhà vệ sinh, không gian chung) để thu hút khách thuê.</span>
-                </div>
-              </div>
-
-            </div>
-
-            <div className="p-6 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50/50">
-              <button 
-                onClick={handleCloseModal}
-                className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
-              >
-                Hủy bỏ
-              </button>
-              <button 
-                onClick={() => { setIsModalOpen(false); setIsDirty(false); }}
-                className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-accent rounded-xl hover:bg-accent-hover shadow-sm shadow-accent/20 transition-all"
-              >
-                <Check className="w-4 h-4" /> Đăng tin
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="p-2 border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              title="Trang tiếp"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
