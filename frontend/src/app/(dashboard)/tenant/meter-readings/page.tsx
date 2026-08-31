@@ -147,6 +147,42 @@ export default function TenantMeterReadingsPage() {
     };
   }, []);
 
+  // Helper to compress camera / gallery photos before uploading
+  const compressImageFile = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const image = new window.Image();
+        image.onload = () => {
+          const maxDim = 1280;
+          let { width, height } = image;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(image, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          } else {
+            resolve(readerEvent.target?.result as string);
+          }
+        };
+        image.onerror = () => resolve(readerEvent.target?.result as string);
+        image.src = readerEvent.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Handle Photo Selection & OCR Upload
   const handlePhotoUpload = async (
     serviceId: string,
@@ -155,27 +191,25 @@ export default function TenantMeterReadingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Convert file to object URL / base64 preview
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const base64Url = event.target?.result as string;
+    // Compress photo to clean lightweight JPEG
+    const base64Url = await compressImageFile(file);
 
-      setReadingsState((prev) => ({
-        ...prev,
-        [serviceId]: {
-          ...prev[serviceId],
-          imageUrl: base64Url,
-          isScanning: true,
-          isEditing: false,
-        },
-      }));
+    setReadingsState((prev) => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        imageUrl: base64Url,
+        isScanning: true,
+        isEditing: false,
+      },
+    }));
 
-      try {
-        // Call backend upload & OCR extraction endpoint
-        const res = await meterReadingService.uploadMeterReading({
-          serviceId,
-          imageUrl: base64Url,
-        });
+    try {
+      // Call backend upload & OCR extraction endpoint
+      const res = await meterReadingService.uploadMeterReading({
+        serviceId,
+        imageUrl: base64Url,
+      });
 
         setReadingsState((prev) => ({
           ...prev,
@@ -188,7 +222,7 @@ export default function TenantMeterReadingsPage() {
             draftValue: String(res.readingValue),
           },
         }));
-      } catch (err) {
+      } catch (err: unknown) {
         console.warn("OCR upload API error, simulating local scan:", err);
         // Fallback simulation for offline UI demo
         setTimeout(() => {
@@ -208,8 +242,6 @@ export default function TenantMeterReadingsPage() {
         }, 1200);
       }
     };
-    reader.readAsDataURL(file);
-  };
 
   // Handle manual correction save
   const handleSaveCorrection = async (serviceId: string) => {

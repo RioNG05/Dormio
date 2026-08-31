@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -15,6 +16,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port', 3001);
   const nodeEnv = configService.get<string>('nodeEnv', 'development');
+
+  // ─── Body Parser Limits (for Image / OCR Uploads) ──────────────────────────
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ limit: '50mb', extended: true }));
 
   // ─── Security ──────────────────────────────────────────────────────────────
   app.use(helmet());
