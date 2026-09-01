@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Search, Command, X, MapPin, Building, ArrowRight, Menu, 
-  Building2, UserCheck, Sparkles, CheckCircle2, LogOut, ShieldCheck, Heart, ChevronDown
+  Building2, UserCheck, Sparkles, CheckCircle2, LogOut, ShieldCheck, Heart, ChevronDown,
+  BarChart3, PlusCircle
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
@@ -206,15 +207,26 @@ export default function PublicLayout({
                         <span>Thông tin cá nhân</span>
                       </Link>
 
-                      {/* 2. Phòng trọ đã thuê */}
-                      <Link
-                        href={user.role === "landlord" ? "/landlord/rooms" : "/tenant"}
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
-                      >
-                        <Building className="w-4 h-4 text-blue-500" />
-                        <span>Phòng trọ đã thuê</span>
-                      </Link>
+                      {/* 2. Quản lý phòng trọ / Phòng đã thuê */}
+                      {user.role === "landlord" ? (
+                        <Link
+                          href="/landlord"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                        >
+                          <Building className="w-4 h-4 text-blue-500" />
+                          <span>Quản lý nhà trọ (BHMS)</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/tenant"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                        >
+                          <Building className="w-4 h-4 text-blue-500" />
+                          <span>Cổng khách thuê</span>
+                        </Link>
+                      )}
 
                       {/* 3. Phòng trọ đã lưu */}
                       <Link
@@ -227,7 +239,29 @@ export default function PublicLayout({
                       </Link>
 
                       <div className="border-t border-zinc-100 pt-1">
-                        {/* 4. Đăng xuất */}
+                        {/* 4. Đăng tin tìm khách (BHRP) */}
+                        <Link
+                          href="/posts/create"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                        >
+                          <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
+                          <span>Đăng tin tìm khách</span>
+                        </Link>
+
+                        {/* 5. Thống kê hiệu quả tin đăng (UC-P-02) */}
+                        <Link
+                          href="/posts/analytics"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                        >
+                          <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
+                          <span>Thống kê hiệu quả tin đăng</span>
+                        </Link>
+                      </div>
+
+                      <div className="border-t border-zinc-100 pt-1">
+                        {/* 6. Đăng xuất */}
                         <button
                           onClick={() => {
                             setIsUserMenuOpen(false);
