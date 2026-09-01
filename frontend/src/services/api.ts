@@ -41,7 +41,19 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `API error: ${response.status}`);
+        let message = "";
+        if (typeof errorData.message === "string" && errorData.message.trim()) {
+          message = errorData.message;
+        } else if (Array.isArray(errorData.message) && errorData.message.length > 0) {
+          message = errorData.message.join(". ");
+        } else if (typeof errorData.error === "string" && errorData.error.trim()) {
+          message = errorData.error;
+        } else if (Array.isArray(errorData.error) && errorData.error.length > 0) {
+          message = errorData.error.join(". ");
+        } else {
+          message = `Yêu cầu không thành công (Mã lỗi ${response.status})`;
+        }
+        throw new Error(message);
       }
 
       // Trả về dữ liệu JSON hoặc rỗng nếu 204 No Content
