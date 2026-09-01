@@ -102,14 +102,27 @@ export const postService = {
    * Check remaining posting quota for today and available purchased credits
    */
   async getQuota(): Promise<PostQuotaStatus> {
-    return api.get<PostQuotaStatus>("/posts/quota");
+    const res = await api.get<{ success: boolean; data: PostQuotaStatus } | PostQuotaStatus>(
+      "/v1/posts/quota"
+    );
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as PostQuotaStatus;
   },
 
   /**
    * UC-P-01: Publish a new rental listing
    */
   async createPost(payload: CreatePostPayload): Promise<PostListing> {
-    return api.post<PostListing>("/posts", payload);
+    const res = await api.post<{ success: boolean; data: PostListing } | PostListing>(
+      "/v1/posts",
+      payload
+    );
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as PostListing;
   },
 
   /**
@@ -129,40 +142,80 @@ export const postService = {
     if (params?.search) queryParams.search = params.search;
     if (params?.boardingHouseId) queryParams.boardingHouseId = params.boardingHouseId;
 
-    return api.get<PaginatedPostsResponse>("/posts/my-listings", {
-      params: queryParams,
-    });
+    const res = await api.get<{ success: boolean; data: PaginatedPostsResponse } | PaginatedPostsResponse>(
+      "/v1/posts/my-listings",
+      {
+        params: queryParams,
+      }
+    );
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as PaginatedPostsResponse;
   },
 
   /**
    * Get post details by ID
    */
   async getPostById(id: string): Promise<PostListing> {
-    return api.get<PostListing>(`/posts/${id}`);
+    const res = await api.get<{ success: boolean; data: PostListing } | PostListing>(
+      `/v1/posts/${id}`
+    );
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as PostListing;
   },
 
   /**
    * Update post status (e.g. pause/hidden or draft to posted)
    */
-  async updatePostStatus(id: string, status: "draft" | "posted" | "hidden"): Promise<PostListing> {
-    return api.patch<PostListing>(`/posts/${id}/status`, { status });
+  async updatePostStatus(
+    id: string,
+    status: "draft" | "posted" | "hidden"
+  ): Promise<PostListing> {
+    const res = await api.patch<{ success: boolean; data: PostListing } | PostListing>(
+      `/v1/posts/${id}/status`,
+      { status }
+    );
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as PostListing;
   },
 
   /**
    * UC-P-02: Get aggregate poster analytics overview
    */
   async getAnalyticsOverview(days: number = 14): Promise<PosterAnalyticsOverview> {
-    return api.get<PosterAnalyticsOverview>("/posts/analytics/overview", {
-      params: { days: days.toString() },
-    });
+    const res = await api.get<{ success: boolean; data: PosterAnalyticsOverview } | PosterAnalyticsOverview>(
+      "/v1/posts/analytics/overview",
+      {
+        params: { days: days.toString() },
+      }
+    );
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as PosterAnalyticsOverview;
   },
 
   /**
    * UC-P-02: Get single post drill-down analytics
    */
-  async getPostAnalytics(postId: string, days: number = 14): Promise<SinglePostAnalytics> {
-    return api.get<SinglePostAnalytics>(`/posts/${postId}/analytics`, {
-      params: { days: days.toString() },
-    });
+  async getPostAnalytics(
+    postId: string,
+    days: number = 14
+  ): Promise<SinglePostAnalytics> {
+    const res = await api.get<{ success: boolean; data: SinglePostAnalytics } | SinglePostAnalytics>(
+      `/v1/posts/${postId}/analytics`,
+      {
+        params: { days: days.toString() },
+      }
+    );
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as SinglePostAnalytics;
   },
 };

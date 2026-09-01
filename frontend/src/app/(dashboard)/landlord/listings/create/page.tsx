@@ -197,14 +197,6 @@ export default function CreateListingPage() {
         </div>
       )}
 
-      {/* Error Alert */}
-      {errorMessage && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
-          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-          <span className="text-sm font-bold">{errorMessage}</span>
-        </div>
-      )}
-
       {/* Main Form */}
       <div className="bg-white p-8 rounded-3xl border border-zinc-200 shadow-sm space-y-8">
         
@@ -386,6 +378,14 @@ export default function CreateListingPage() {
             <span className="text-[11px] text-zinc-400 mt-1">Đăng tối thiểu 3-5 ảnh rõ nét để tăng 80% tỷ lệ liên hệ từ khách thuê.</span>
           </div>
         </div>
+
+        {/* Error Alert placed directly above the action buttons */}
+        {errorMessage && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            <div className="text-sm font-bold">{errorMessage}</div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-zinc-100 gap-4">
