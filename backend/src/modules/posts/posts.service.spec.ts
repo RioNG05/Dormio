@@ -163,8 +163,8 @@ describe('PostsService', () => {
   describe('createPost', () => {
     const userId = 'landlord-1';
     const createDto = {
-      title: 'Phòng trọ cao cấp trung tâm Quận 1',
-      content: 'Đầy đủ tiện nghi, giờ giấc tự do...',
+      title: 'Premium studio room in district 1',
+      content: 'Full furniture, 24/7 security, high speed internet...',
       depositAmount: 3500000,
       roomId: 'room-1',
       imageUrls: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
@@ -327,7 +327,7 @@ describe('PostsService', () => {
       const mockPosts = [
         {
           id: 'post-1',
-          title: 'Phòng 101',
+          title: 'Room 101',
           status: PostStatus.posted,
           depositAmount: 3000000,
           room: { roomNumber: '101', boardingHouse: { name: 'Dormio Premier' } },
@@ -337,7 +337,7 @@ describe('PostsService', () => {
         },
         {
           id: 'post-2',
-          title: 'Phòng 201',
+          title: 'Room 201',
           status: PostStatus.posted,
           depositAmount: 4000000,
           room: null,
@@ -386,7 +386,7 @@ describe('PostsService', () => {
       mockPrisma.post.findUnique.mockResolvedValue({
         id: postId,
         postedBy: userId,
-        title: 'Phòng 101',
+        title: 'Room 101',
         status: PostStatus.posted,
         depositAmount: 3500000,
         room: { roomNumber: '101', boardingHouse: { name: 'Dormio House' } },

@@ -141,7 +141,7 @@ export class PostsService {
       `User ${userId} rejected: posting quota exhausted (free: ${freePostsUsedToday}/${dailyQuota}, purchased: 0)`,
     );
     throw new ForbiddenException(
-      'Hết lượt đăng tin trong ngày. Vui lòng nâng cấp gói thành viên hoặc mua thêm lượt đăng tin.',
+      'Daily posting quota exhausted. Please upgrade your subscription plan or purchase post credits.',
     );
   }
 
@@ -256,12 +256,12 @@ export class PostsService {
       });
 
       if (!room) {
-        throw new NotFoundException(`Phòng với ID ${dto.roomId} không tồn tại`);
+        throw new NotFoundException(`Room with ID ${dto.roomId} was not found`);
       }
 
       if (room.boardingHouse.ownerId !== userId) {
         throw new ForbiddenException(
-          'Bạn không có quyền đăng tin cho phòng không thuộc quyền sở hữu của bạn',
+          'You do not have permission to publish a listing for a room owned by another landlord',
         );
       }
     }
@@ -322,7 +322,7 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`Tin đăng với ID ${postId} không tồn tại`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`);
     }
 
     return this.mapToResponseDto(post);
@@ -409,12 +409,12 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`Tin đăng với ID ${postId} không tồn tại`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`);
     }
 
     if (post.postedBy !== userId) {
       throw new ForbiddenException(
-        'Bạn không có quyền thay đổi trạng thái của tin đăng này',
+        'You do not have permission to change the status of this listing',
       );
     }
 
@@ -557,12 +557,12 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`Tin đăng với ID ${postId} không tồn tại`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`);
     }
 
     if (post.postedBy !== userId) {
       throw new ForbiddenException(
-        'Bạn không có quyền xem thống kê của tin đăng không thuộc về bạn',
+        'You do not have permission to view analytics for a listing that does not belong to you',
       );
     }
 

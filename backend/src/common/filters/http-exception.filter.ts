@@ -65,7 +65,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ? error.join('. ')
       : typeof error === 'string'
         ? error
-        : 'Đã có lỗi xảy ra khi xử lý yêu cầu';
+        : 'An error occurred while processing the request';
 
     const body: ErrorResponse = {
       success: false,

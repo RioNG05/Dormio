@@ -20,25 +20,25 @@ export class CreatePostDto {
   })
   @IsOptional()
   @Transform(({ value }) => (typeof value === 'string' && !value.trim() ? undefined : value))
-  @IsUUID('all', { message: 'ID phòng liên kết không đúng định dạng UUID' })
+  @IsUUID('all', { message: 'Invalid room ID UUID format' })
   roomId?: string;
 
   @ApiProperty({
     description: 'Post listing title',
-    example: 'Cho thuê phòng trọ cao cấp full nội thất Quận 1',
+    example: 'Premium Studio Room for Rent with Full Amenities',
   })
-  @IsString({ message: 'Tiêu đề tin đăng phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Tiêu đề tin đăng không được để trống' })
-  @MinLength(5, { message: 'Tiêu đề tin đăng phải có ít nhất 5 ký tự' })
+  @IsString({ message: 'Title must be a string' })
+  @IsNotEmpty({ message: 'Title cannot be empty' })
+  @MinLength(5, { message: 'Title must be at least 5 characters long' })
   title: string;
 
   @ApiProperty({
     description: 'Detailed post listing description/content',
-    example: 'Phòng trọ mới xây, máy lạnh, máy giặt riêng, an ninh 24/7, giờ giấc tự do...',
+    example: 'Newly built studio apartment with air conditioning, private washing machine, 24/7 security...',
   })
-  @IsString({ message: 'Nội dung mô tả phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Nội dung bài đăng không được để trống' })
-  @MinLength(10, { message: 'Nội dung bài đăng phải có ít nhất 10 ký tự' })
+  @IsString({ message: 'Content must be a string' })
+  @IsNotEmpty({ message: 'Content cannot be empty' })
+  @MinLength(10, { message: 'Content must be at least 10 characters long' })
   content: string;
 
   @ApiProperty({
@@ -46,8 +46,8 @@ export class CreatePostDto {
     example: 3500000,
   })
   @Type(() => Number)
-  @IsNumber({}, { message: 'Số tiền cọc giữ chỗ phải là số' })
-  @Min(0, { message: 'Số tiền cọc không được nhỏ hơn 0' })
+  @IsNumber({}, { message: 'Deposit amount must be a number' })
+  @Min(0, { message: 'Deposit amount cannot be less than 0' })
   depositAmount: number;
 
   @ApiPropertyOptional({
@@ -56,8 +56,8 @@ export class CreatePostDto {
     example: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688'],
   })
   @IsOptional()
-  @IsArray({ message: 'Danh sách hình ảnh phải là mảng' })
-  @IsString({ each: true, message: 'Đường dẫn hình ảnh phải là chuỗi hợp lệ' })
+  @IsArray({ message: 'imageUrls must be an array' })
+  @IsString({ each: true, message: 'Each image URL must be a valid string' })
   imageUrls?: string[];
 
   @ApiPropertyOptional({
@@ -66,6 +66,6 @@ export class CreatePostDto {
     default: PostStatus.posted,
   })
   @IsOptional()
-  @IsEnum(PostStatus, { message: 'Trạng thái bài đăng không hợp lệ (draft, posted, hidden)' })
+  @IsEnum(PostStatus, { message: 'Invalid post status (allowed: draft, posted, hidden)' })
   status?: PostStatus;
 }
