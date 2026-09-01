@@ -13,7 +13,7 @@ datasource db {
 }
 
 enum UserRole {
-  poster
+  leasing_agent
   tenant
   employee
   landlord
@@ -214,7 +214,7 @@ model User {
   hashedPassword     String     @map("hashed_password") @db.VarChar(255)
   bio                String?
   avatarUrl          String?    @map("avatar_url")
-  role               UserRole   @default(poster)
+  role               UserRole   @default(leasing_agent)
   status             UserStatus @default(active)
   roomId             String?    @default(uuid()) @map("room_id") @db.Uuid
   createdAt          DateTime   @default(now()) @map("created_at")
