@@ -102,7 +102,7 @@ These model a state that only exists *after* some later event — as written, Pr
 
 ## Role Model — summary (full detail in `07-auth-and-roles.md`)
 
-`User.role` (`poster | tenant | employee | landlord | admin`) is a **display-only "highest achieved role" label**. It is never the sole basis for a permission check except for `admin`. Every other capability is derived from a relationship: `BoardingHouse.ownerId` (landlord-for-property), active `EmployeeAssignment` (employee-for-property), active `TenantContract` (tenant-for-property), or simply being authenticated at all (poster-level capabilities). Read `07-auth-and-roles.md` before writing any guard, controller, or authorization check anywhere in the codebase.
+`User.role` (`leasing_agent | tenant | employee | landlord | admin`) is a **display-only "highest achieved role" label**. It is never the sole basis for a permission check except for `admin`. Every other capability is derived from a relationship: `BoardingHouse.ownerId` (landlord-for-property), active `EmployeeAssignment` (employee-for-property), active `TenantContract` (tenant-for-property), or simply being authenticated at all (leasing-agent-level capabilities). Read `07-auth-and-roles.md` before writing any guard, controller, or authorization check anywhere in the codebase — it also covers the important Posting Capability Split between Leasing Agent and Landlord.
 
 ---
 
