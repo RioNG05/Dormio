@@ -78,10 +78,13 @@ export default function ListingsPage() {
         setQuota(quotaRes.value);
       } else {
         setQuota({
+          isLandlord: true,
           planName: "free",
-          dailyPostQuota: 1,
+          baseDailyQuota: 3,
+          bonusDailyQuota: 0,
+          dailyPostQuota: 3,
           freePostsUsedToday: 0,
-          freePostsRemainingToday: 1,
+          freePostsRemainingToday: 3,
           purchasedCreditsAvailable: 0,
           canPublish: true,
         });
@@ -251,7 +254,7 @@ export default function ListingsPage() {
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-wider backdrop-blur-md">
-                Gói {quota?.planName || "Free"}
+                {quota?.isLandlord ? `Chủ trọ · Gói ${quota.planName || "Free"}` : "Môi giới (Leasing Agent)"}
               </span>
               <span className="text-xs text-zinc-400">· Hạn mức tự động reset mỗi 00:00 hàng ngày</span>
             </div>

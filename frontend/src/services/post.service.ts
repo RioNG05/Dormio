@@ -34,7 +34,10 @@ export interface PostListing {
 }
 
 export interface PostQuotaStatus {
+  isLandlord: boolean;
   planName: string;
+  baseDailyQuota: number;
+  bonusDailyQuota: number;
   dailyPostQuota: number;
   freePostsUsedToday: number;
   freePostsRemainingToday: number;

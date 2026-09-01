@@ -80,16 +80,25 @@ export class PostResponseDto {
 }
 
 export class PostQuotaDto {
-  @ApiProperty({ description: 'Plan name of the active subscription or free tier', example: 'free' })
+  @ApiProperty({ description: 'Whether the user is a landlord owning boarding houses', example: true })
+  isLandlord: boolean;
+
+  @ApiProperty({ description: 'Plan name of the active subscription or leasing agent', example: 'free' })
   planName: string;
 
-  @ApiProperty({ description: 'Daily free posting quota granted by plan', example: 1 })
+  @ApiProperty({ description: 'Base flat free quota for all posters', example: 3 })
+  baseDailyQuota: number;
+
+  @ApiProperty({ description: 'Bonus quota from active property management plan', example: 0 })
+  bonusDailyQuota: number;
+
+  @ApiProperty({ description: 'Total daily free posting quota (base + bonus)', example: 3 })
   dailyPostQuota: number;
 
   @ApiProperty({ description: 'Number of free posts used today', example: 0 })
   freePostsUsedToday: number;
 
-  @ApiProperty({ description: 'Number of free posts remaining today', example: 1 })
+  @ApiProperty({ description: 'Number of free posts remaining today', example: 3 })
   freePostsRemainingToday: number;
 
   @ApiProperty({ description: 'Total paid post credits currently available', example: 5 })

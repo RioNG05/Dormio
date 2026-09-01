@@ -14,6 +14,9 @@ describe('PostsService', () => {
   let service: PostsService;
 
   const mockPrisma = {
+    boardingHouse: {
+      count: jest.fn(),
+    },
     post: {
       count: jest.fn(),
       findUnique: jest.fn(),
@@ -56,41 +59,35 @@ describe('PostsService', () => {
   });
 
   describe('checkQuota', () => {
-    const userId = 'landlord-user-id';
+    const userId = 'test-user-id';
 
-    it('should grant free_quote if user has not exceeded daily free quota', async () => {
-      // 0 free posts used today
-      mockPrisma.post.count.mockResolvedValue(0);
-      // No active subscription, fallback to free plan (quota = 1)
-      mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
-      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({
-        planName: SubscriptionPackage.free,
-        dailyPostQuote: 1,
-      });
+    it('should grant free_quote to leasing agent (base quota = 3) without subscription lookup', async () => {
+      // 2 free posts used today, base quota = 3
+      mockPrisma.post.count.mockResolvedValue(2);
 
-      const allocation = await service.checkQuota(userId);
+      const allocation = await service.checkQuota(userId, false);
 
       expect(allocation).toEqual({
         sourceType: SourceType.free_quote,
         postPurchaseId: null,
       });
+      expect(mockPrisma.userSubscription.findFirst).not.toHaveBeenCalled();
     });
 
-    it('should grant free_quote if user has active pro subscription with higher daily quota', async () => {
-      // 3 free posts used today
-      mockPrisma.post.count.mockResolvedValue(3);
-      // Active Pro plan with quota = 20
+    it('should grant free_quote to landlord with plus subscription (3 base + 5 bonus = 8 quota)', async () => {
+      // 5 free posts used today, landlord with plus (bonus=5)
+      mockPrisma.post.count.mockResolvedValue(5);
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         userId,
-        planName: SubscriptionPackage.pro,
+        planName: SubscriptionPackage.plus,
         status: SubscriptionStatus.active,
         subscriptionPlan: {
-          planName: SubscriptionPackage.pro,
-          dailyPostQuote: 20,
+          planName: SubscriptionPackage.plus,
+          dailyPostQuote: 5,
         },
       });
 
-      const allocation = await service.checkQuota(userId);
+      const allocation = await service.checkQuota(userId, true);
 
       expect(allocation).toEqual({
         sourceType: SourceType.free_quote,
@@ -99,13 +96,8 @@ describe('PostsService', () => {
     });
 
     it('should fallback to purchased post credits (FIFO) when free quota is exhausted', async () => {
-      // 1 free post used today (free plan quota is 1)
-      mockPrisma.post.count.mockResolvedValue(1);
-      mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
-      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({
-        planName: SubscriptionPackage.free,
-        dailyPostQuote: 1,
-      });
+      // 3 free posts used today for leasing agent (base quota is 3)
+      mockPrisma.post.count.mockResolvedValue(3);
 
       // 2 paid packages: first package fully used (5/5), second package available (2/5)
       mockPrisma.postPurchase.findMany.mockResolvedValue([
@@ -127,7 +119,7 @@ describe('PostsService', () => {
         },
       ]);
 
-      const allocation = await service.checkQuota(userId);
+      const allocation = await service.checkQuota(userId, false);
 
       expect(allocation).toEqual({
         sourceType: SourceType.purchased,
@@ -136,12 +128,7 @@ describe('PostsService', () => {
     });
 
     it('should throw ForbiddenException if both free quota and purchased credits are exhausted', async () => {
-      mockPrisma.post.count.mockResolvedValue(1);
-      mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
-      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({
-        planName: SubscriptionPackage.free,
-        dailyPostQuote: 1,
-      });
+      mockPrisma.post.count.mockResolvedValue(3);
 
       mockPrisma.postPurchase.findMany.mockResolvedValue([
         {
@@ -154,14 +141,16 @@ describe('PostsService', () => {
         },
       ]);
 
-      await expect(service.checkQuota(userId)).rejects.toThrow(
+      await expect(service.checkQuota(userId, false)).rejects.toThrow(
         ForbiddenException,
       );
     });
   });
 
   describe('createPost', () => {
-    const userId = 'landlord-1';
+    const landlordId = 'landlord-1';
+    const leasingAgentId = 'agent-1';
+
     const createDto = {
       title: 'Premium studio room in district 1',
       content: 'Full furniture, 24/7 security, high speed internet...',
@@ -170,27 +159,27 @@ describe('PostsService', () => {
       imageUrls: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
     };
 
-    it('should throw NotFoundException if linked roomId does not exist', async () => {
-      mockPrisma.post.count.mockResolvedValue(0);
-      mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
-      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({
-        dailyPostQuote: 1,
-      });
+    it('should reject leasing agent with BadRequestException if roomId is provided', async () => {
+      mockPrisma.boardingHouse.count.mockResolvedValue(0); // Not a landlord
 
+      await expect(
+        service.createPost(leasingAgentId, createDto),
+      ).rejects.toThrow(
+        'Leasing agents can only publish general listings and cannot link to specific rooms',
+      );
+    });
+
+    it('should throw NotFoundException if landlord links roomId that does not exist', async () => {
+      mockPrisma.boardingHouse.count.mockResolvedValue(1); // Is a landlord
       mockPrisma.room.findUnique.mockResolvedValue(null);
 
-      await expect(service.createPost(userId, createDto)).rejects.toThrow(
+      await expect(service.createPost(landlordId, createDto)).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should throw ForbiddenException if room belongs to another landlord', async () => {
-      mockPrisma.post.count.mockResolvedValue(0);
-      mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
-      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({
-        dailyPostQuote: 1,
-      });
-
+      mockPrisma.boardingHouse.count.mockResolvedValue(1); // Is a landlord
       mockPrisma.room.findUnique.mockResolvedValue({
         id: 'room-1',
         boardingHouse: {
@@ -198,28 +187,26 @@ describe('PostsService', () => {
         },
       });
 
-      await expect(service.createPost(userId, createDto)).rejects.toThrow(
+      await expect(service.createPost(landlordId, createDto)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('should successfully create post and post images inside transaction', async () => {
+    it('should successfully create post and post images inside transaction for landlord', async () => {
+      mockPrisma.boardingHouse.count.mockResolvedValue(1);
       mockPrisma.post.count.mockResolvedValue(0);
       mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
-      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({
-        dailyPostQuote: 1,
-      });
 
       mockPrisma.room.findUnique.mockResolvedValue({
         id: 'room-1',
         boardingHouse: {
-          ownerId: userId,
+          ownerId: landlordId,
         },
       });
 
       const createdPostMock = {
         id: 'post-100',
-        postedBy: userId,
+        postedBy: landlordId,
         roomId: 'room-1',
         title: createDto.title,
         content: createDto.content,
@@ -259,12 +246,62 @@ describe('PostsService', () => {
         _count: { postReaches: 0 },
       });
 
-      const result = await service.createPost(userId, createDto);
+      const result = await service.createPost(landlordId, createDto);
 
       expect(result.id).toEqual('post-100');
       expect(result.title).toEqual(createDto.title);
       expect(result.sourceType).toEqual(SourceType.free_quote);
       expect(result.images).toHaveLength(2);
+    });
+
+    it('should successfully create general listing for leasing agent without roomId', async () => {
+      mockPrisma.boardingHouse.count.mockResolvedValue(0);
+      mockPrisma.post.count.mockResolvedValue(0);
+
+      const agentDto = {
+        title: 'General listing by leasing agent',
+        content: 'Convenient location, modern amenities...',
+        depositAmount: 2000000,
+        imageUrls: [],
+      };
+
+      const createdPostMock = {
+        id: 'post-200',
+        postedBy: leasingAgentId,
+        roomId: null,
+        title: agentDto.title,
+        content: agentDto.content,
+        depositAmount: 2000000,
+        status: PostStatus.posted,
+        sourceType: SourceType.free_quote,
+        postPurchaseId: null,
+        createdAt: new Date(),
+      };
+
+      mockPrisma.$transaction.mockImplementation(async (cb) => {
+        const tx = {
+          post: {
+            create: jest.fn().mockResolvedValue(createdPostMock),
+          },
+          postImage: {
+            createMany: jest.fn().mockResolvedValue({ count: 0 }),
+          },
+        };
+        return cb(tx);
+      });
+
+      mockPrisma.post.findUnique.mockResolvedValue({
+        ...createdPostMock,
+        postImages: [],
+        room: null,
+        _count: { postReaches: 0 },
+      });
+
+      const result = await service.createPost(leasingAgentId, agentDto);
+
+      expect(result.id).toEqual('post-200');
+      expect(result.roomId).toBeNull();
+      expect(result.sourceType).toEqual(SourceType.free_quote);
     });
   });
 

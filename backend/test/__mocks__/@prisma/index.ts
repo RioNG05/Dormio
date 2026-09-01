@@ -7,7 +7,7 @@
  */
 
 export enum UserRole {
-  poster = 'poster',
+  leasing_agent = 'leasing_agent',
   tenant = 'tenant',
   employee = 'employee',
   landlord = 'landlord',

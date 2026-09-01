@@ -184,6 +184,20 @@ async function main() {
     },
   });
 
+  // 1.7 Leasing Agent (Pure poster without boarding house ownership)
+  const leasingAgent = await prisma.user.create({
+    data: {
+      username: 'Hoàng Văn Môi Giới',
+      email: 'agent@dormio.vn',
+      phoneNumber: '0977889900',
+      hashedPassword: passwordCommon,
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
+      role: UserRole.leasing_agent,
+      status: UserStatus.active,
+      mustChangePassword: false,
+    },
+  });
+
   // ─── 2. USER IDENTIFICATIONS (CCCD / Passport) ──────────────────────────────
   console.log('🪪 Creating user identifications...');
   await prisma.userIdentification.create({
@@ -495,7 +509,7 @@ async function main() {
     data: [
       {
         planName: SubscriptionPackage.free,
-        dailyPostQuote: 1,
+        dailyPostQuote: 0, // Bonus for free landlord is 0 (total = 3 + 0 = 3)
         priceMonthly: 0,
         priceYearly: 0,
         maxRoom: 10,
@@ -503,7 +517,7 @@ async function main() {
       },
       {
         planName: SubscriptionPackage.plus,
-        dailyPostQuote: 5,
+        dailyPostQuote: 5, // Bonus for plus is 5 (total = 3 + 5 = 8)
         priceMonthly: 199000,
         priceYearly: 1990000,
         maxRoom: 50,
@@ -511,7 +525,7 @@ async function main() {
       },
       {
         planName: SubscriptionPackage.pro,
-        dailyPostQuote: 20,
+        dailyPostQuote: 10, // Bonus for pro is 10 (total = 3 + 10 = 13)
         priceMonthly: 499000,
         priceYearly: 4990000,
         maxRoom: 200,
