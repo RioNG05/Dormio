@@ -105,8 +105,8 @@ export const postService = {
     const res = await api.get<{ success: boolean; data: PostQuotaStatus } | PostQuotaStatus>(
       "/v1/posts/quota"
     );
-    if (res && typeof res === "object" && "data" in res && res.data) {
-      return res.data;
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PostQuotaStatus }).data;
     }
     return res as PostQuotaStatus;
   },
@@ -119,8 +119,8 @@ export const postService = {
       "/v1/posts",
       payload
     );
-    if (res && typeof res === "object" && "data" in res && res.data) {
-      return res.data;
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PostListing }).data;
     }
     return res as PostListing;
   },
@@ -148,8 +148,8 @@ export const postService = {
         params: queryParams,
       }
     );
-    if (res && typeof res === "object" && "data" in res && res.data) {
-      return res.data;
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PaginatedPostsResponse }).data;
     }
     return res as PaginatedPostsResponse;
   },
@@ -161,8 +161,8 @@ export const postService = {
     const res = await api.get<{ success: boolean; data: PostListing } | PostListing>(
       `/v1/posts/${id}`
     );
-    if (res && typeof res === "object" && "data" in res && res.data) {
-      return res.data;
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PostListing }).data;
     }
     return res as PostListing;
   },
@@ -178,8 +178,8 @@ export const postService = {
       `/v1/posts/${id}/status`,
       { status }
     );
-    if (res && typeof res === "object" && "data" in res && res.data) {
-      return res.data;
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PostListing }).data;
     }
     return res as PostListing;
   },
@@ -194,8 +194,8 @@ export const postService = {
         params: { days: days.toString() },
       }
     );
-    if (res && typeof res === "object" && "data" in res && res.data) {
-      return res.data;
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PosterAnalyticsOverview }).data;
     }
     return res as PosterAnalyticsOverview;
   },
@@ -213,8 +213,8 @@ export const postService = {
         params: { days: days.toString() },
       }
     );
-    if (res && typeof res === "object" && "data" in res && res.data) {
-      return res.data;
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: SinglePostAnalytics }).data;
     }
     return res as SinglePostAnalytics;
   },
