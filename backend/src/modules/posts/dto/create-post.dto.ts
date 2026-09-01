@@ -10,7 +10,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PostStatus } from '@prisma';
 
 export class CreatePostDto {
@@ -19,7 +19,8 @@ export class CreatePostDto {
     example: '11111111-1111-1111-1111-111111111111',
   })
   @IsOptional()
-  @IsUUID('4', { message: 'ID phòng liên kết không đúng định dạng UUID' })
+  @Transform(({ value }) => (typeof value === 'string' && !value.trim() ? undefined : value))
+  @IsUUID('all', { message: 'ID phòng liên kết không đúng định dạng UUID' })
   roomId?: string;
 
   @ApiProperty({
