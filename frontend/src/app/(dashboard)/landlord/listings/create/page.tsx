@@ -54,10 +54,13 @@ export default function CreateListingPage() {
         console.warn("Could not fetch quota from server, using default quota display:", err);
         // Fallback display
         setQuota({
+          isLandlord: true,
           planName: "free",
-          dailyPostQuota: 1,
+          baseDailyQuota: 3,
+          bonusDailyQuota: 0,
+          dailyPostQuota: 3,
           freePostsUsedToday: 0,
-          freePostsRemainingToday: 1,
+          freePostsRemainingToday: 3,
           purchasedCreditsAvailable: 0,
           canPublish: true,
         });
