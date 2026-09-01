@@ -28,6 +28,8 @@ import {
   Prisma,
 } from '@prisma';
 
+export const BASE_DAILY_FREE_POST_QUOTA = 3;
+
 export interface QuotaAllocation {
   sourceType: SourceType;
   postPurchaseId: string | null;
@@ -40,15 +42,32 @@ export class PostsService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * Check if user is a landlord by checking ownership of at least one boarding house.
+   * Ground truth is BoardingHouse.ownerId = userId per 07-auth-and-roles.md.
+   */
+  async checkIsLandlord(userId: string): Promise<boolean> {
+    const count = await this.prisma.boardingHouse.count({
+      where: { ownerId: userId },
+    });
+    return count > 0;
+  }
+
+  /**
    * UC-P-01 Quota Check
    *
-   * 1. Count free posts created today by user (source_type = 'free_quote').
-   * 2. Find user's active subscription daily quota (defaults to 'free' plan if no active subscription).
-   * 3. If used < quota: allowed as free_quote.
-   * 4. Else: check PostPurchase for buyerId with status = 'paid' and COUNT(posts) < quantityPurchase, FIFO by activatedAt.
-   * 5. If neither: throws ForbiddenException.
+   * Step 3:
+   * - Free posts used today by user.
+   * - Total free quota:
+   *   - Leasing agent (is_landlord = false): flat BASE_DAILY_FREE_POST_QUOTA = 3.
+   *   - Landlord (is_landlord = true): BASE_DAILY_FREE_POST_QUOTA (3) + bonus from active UserSubscription (plus=5, pro=10, free=0).
+   * - If used < total free quota: allowed as free_quote.
+   * - Else: check PostPurchase for buyerId with status = 'paid' and COUNT(posts) < quantityPurchase, FIFO by activatedAt.
+   * - If neither: throws ForbiddenException.
    */
-  async checkQuota(userId: string): Promise<QuotaAllocation> {
+  async checkQuota(
+    userId: string,
+    isLandlord: boolean,
+  ): Promise<QuotaAllocation> {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -67,37 +86,30 @@ export class PostsService {
       },
     });
 
-    // b) Plan daily quota
-    const activeSub = await this.prisma.userSubscription.findFirst({
-      where: {
-        userId,
-        status: SubscriptionStatus.active,
-      },
-      orderBy: {
-        startDate: 'desc',
-      },
-      include: {
-        subscriptionPlan: true,
-      },
-    });
-
-    let dailyQuota = 1;
-    if (activeSub?.subscriptionPlan) {
-      dailyQuota = activeSub.subscriptionPlan.dailyPostQuote;
-    } else {
-      const freePlan = await this.prisma.subscriptionPlan.findUnique({
+    // b) Total free quota calculation
+    let bonusQuota = 0;
+    if (isLandlord) {
+      const activeSub = await this.prisma.userSubscription.findFirst({
         where: {
-          planName: SubscriptionPackage.free,
+          userId,
+          status: SubscriptionStatus.active,
+        },
+        orderBy: {
+          startDate: 'desc',
+        },
+        include: {
+          subscriptionPlan: true,
         },
       });
-      if (freePlan) {
-        dailyQuota = freePlan.dailyPostQuote;
-      }
+
+      bonusQuota = activeSub?.subscriptionPlan?.dailyPostQuote ?? 0;
     }
 
-    if (freePostsUsedToday < dailyQuota) {
+    const totalFreeDailyQuota = BASE_DAILY_FREE_POST_QUOTA + bonusQuota;
+
+    if (freePostsUsedToday < totalFreeDailyQuota) {
       this.logger.debug(
-        `User ${userId} using free quota (${freePostsUsedToday + 1}/${dailyQuota})`,
+        `User ${userId} (isLandlord: ${isLandlord}) using free quota (${freePostsUsedToday + 1}/${totalFreeDailyQuota})`,
       );
       return {
         sourceType: SourceType.free_quote,
@@ -138,7 +150,7 @@ export class PostsService {
     }
 
     this.logger.warn(
-      `User ${userId} rejected: posting quota exhausted (free: ${freePostsUsedToday}/${dailyQuota}, purchased: 0)`,
+      `User ${userId} rejected: posting quota exhausted (free: ${freePostsUsedToday}/${totalFreeDailyQuota}, purchased: 0)`,
     );
     throw new ForbiddenException(
       'Daily posting quota exhausted. Please upgrade your subscription plan or purchase post credits.',
@@ -149,6 +161,8 @@ export class PostsService {
    * Retrieves quota statistics for the authenticated poster.
    */
   async getQuotaStatus(userId: string): Promise<PostQuotaDto> {
+    const isLandlord = await this.checkIsLandlord(userId);
+
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -166,35 +180,29 @@ export class PostsService {
       },
     });
 
-    const activeSub = await this.prisma.userSubscription.findFirst({
-      where: {
-        userId,
-        status: SubscriptionStatus.active,
-      },
-      orderBy: {
-        startDate: 'desc',
-      },
-      include: {
-        subscriptionPlan: true,
-      },
-    });
+    let planName = 'leasing_agent';
+    let bonusDailyQuota = 0;
 
-    let planName = 'free';
-    let dailyPostQuota = 1;
-
-    if (activeSub?.subscriptionPlan) {
-      planName = activeSub.planName;
-      dailyPostQuota = activeSub.subscriptionPlan.dailyPostQuote;
-    } else {
-      const freePlan = await this.prisma.subscriptionPlan.findUnique({
+    if (isLandlord) {
+      const activeSub = await this.prisma.userSubscription.findFirst({
         where: {
-          planName: SubscriptionPackage.free,
+          userId,
+          status: SubscriptionStatus.active,
+        },
+        orderBy: {
+          startDate: 'desc',
+        },
+        include: {
+          subscriptionPlan: true,
         },
       });
-      if (freePlan) {
-        dailyPostQuota = freePlan.dailyPostQuote;
-      }
+
+      planName = activeSub?.planName ?? 'free';
+      bonusDailyQuota = activeSub?.subscriptionPlan?.dailyPostQuote ?? 0;
     }
+
+    const baseDailyQuota = BASE_DAILY_FREE_POST_QUOTA;
+    const dailyPostQuota = baseDailyQuota + bonusDailyQuota;
 
     const paidPurchases = await this.prisma.postPurchase.findMany({
       where: {
@@ -223,7 +231,10 @@ export class PostsService {
       freePostsRemainingToday > 0 || purchasedCreditsAvailable > 0;
 
     return {
+      isLandlord,
       planName,
+      baseDailyQuota,
+      bonusDailyQuota,
       dailyPostQuota,
       freePostsUsedToday,
       freePostsRemainingToday,
@@ -243,30 +254,41 @@ export class PostsService {
       `Creating post listing for user ${userId} with title "${dto.title}"`,
     );
 
-    // 1. Quota Check
-    const quota = await this.checkQuota(userId);
+    // Step 1 — Determine landlord-or-not
+    const isLandlord = await this.checkIsLandlord(userId);
 
-    // 2. Validate Room ownership if roomId is provided
-    if (dto.roomId) {
-      const room = await this.prisma.room.findUnique({
-        where: { id: dto.roomId },
-        include: {
-          boardingHouse: true,
-        },
-      });
-
-      if (!room) {
-        throw new NotFoundException(`Room with ID ${dto.roomId} was not found`);
-      }
-
-      if (room.boardingHouse.ownerId !== userId) {
-        throw new ForbiddenException(
-          'You do not have permission to publish a listing for a room owned by another landlord',
+    // Step 2 — Room-linking rule (validate before quota)
+    if (!isLandlord) {
+      if (dto.roomId) {
+        throw new BadRequestException(
+          'Leasing agents can only publish general listings and cannot link to specific rooms',
         );
+      }
+    } else {
+      if (dto.roomId) {
+        const room = await this.prisma.room.findUnique({
+          where: { id: dto.roomId },
+          include: {
+            boardingHouse: true,
+          },
+        });
+
+        if (!room) {
+          throw new NotFoundException(`Room with ID ${dto.roomId} was not found`);
+        }
+
+        if (room.boardingHouse.ownerId !== userId) {
+          throw new ForbiddenException(
+            'You do not have permission to publish a listing for a room owned by another landlord',
+          );
+        }
       }
     }
 
-    // 3. Database Insertion in transaction
+    // Step 3 — Quota Check
+    const quota = await this.checkQuota(userId, isLandlord);
+
+    // Step 4 — Database Insertion in transaction
     const farFuture = new Date('2099-12-31');
 
     const createdPost = await this.prisma.$transaction(async (tx) => {

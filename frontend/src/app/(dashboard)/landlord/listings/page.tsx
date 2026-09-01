@@ -78,10 +78,13 @@ export default function ListingsPage() {
         setQuota(quotaRes.value);
       } else {
         setQuota({
+          isLandlord: true,
           planName: "free",
-          dailyPostQuota: 1,
+          baseDailyQuota: 3,
+          bonusDailyQuota: 0,
+          dailyPostQuota: 3,
           freePostsUsedToday: 0,
-          freePostsRemainingToday: 1,
+          freePostsRemainingToday: 3,
           purchasedCreditsAvailable: 0,
           canPublish: true,
         });
@@ -227,12 +230,6 @@ export default function ListingsPage() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/landlord/listings/analytics"
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl transition-all shadow-sm cursor-pointer"
-          >
-            <Eye className="w-4 h-4 text-[#2ac1bc]" /> Thống kê hiệu quả (UC-P-02)
-          </Link>
-          <Link
             href="/landlord/listings/create"
             className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
           >
@@ -251,7 +248,7 @@ export default function ListingsPage() {
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-wider backdrop-blur-md">
-                Gói {quota?.planName || "Free"}
+                {quota?.isLandlord ? `Chủ trọ · Gói ${quota.planName || "Free"}` : "Môi giới (Leasing Agent)"}
               </span>
               <span className="text-xs text-zinc-400">· Hạn mức tự động reset mỗi 00:00 hàng ngày</span>
             </div>

@@ -54,10 +54,13 @@ export default function CreateListingPage() {
         console.warn("Could not fetch quota from server, using default quota display:", err);
         // Fallback display
         setQuota({
+          isLandlord: true,
           planName: "free",
-          dailyPostQuota: 1,
+          baseDailyQuota: 3,
+          bonusDailyQuota: 0,
+          dailyPostQuota: 3,
           freePostsUsedToday: 0,
-          freePostsRemainingToday: 1,
+          freePostsRemainingToday: 3,
           purchasedCreditsAvailable: 0,
           canPublish: true,
         });
@@ -227,22 +230,34 @@ export default function CreateListingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-zinc-700">
-                  Phòng liên kết (Tùy chọn)
+                  Phòng liên kết {quota?.isLandlord ? "(Tùy chọn cho Chủ trọ)" : "(Không áp dụng cho Môi giới)"}
                 </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                  <select
-                    value={roomId}
-                    onChange={(e) => handleFieldChange(setRoomId, e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white appearance-none cursor-pointer"
-                  >
-                    <option value="">-- Đăng tin chung (không gắn phòng) --</option>
-                    <option value="11111111-1111-1111-1111-111111111111">Phòng 101 - Dormio Premier Quận 1</option>
-                    <option value="22222222-2222-2222-2222-222222222222">Phòng 201 - Dormio Premier Quận 1</option>
-                    <option value="33333333-3333-3333-3333-333333333333">Phòng 301 - Dormio Premier Quận 1 (Duplex)</option>
-                  </select>
-                </div>
-                <span className="text-xs text-zinc-400">Nếu chọn phòng, hệ thống sẽ tự động xác thực quyền sở hữu của bạn.</span>
+                {quota?.isLandlord === false ? (
+                  <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center gap-3">
+                    <Building2 className="w-5 h-5 text-zinc-400 shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-zinc-700">Tài khoản Môi giới (Leasing Agent)</span>
+                      <p className="text-[11px] text-zinc-500">Đăng tin cho thuê tổng quan không liên kết phòng cụ thể.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                      <select
+                        value={roomId}
+                        onChange={(e) => handleFieldChange(setRoomId, e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white appearance-none cursor-pointer"
+                      >
+                        <option value="">-- Đăng tin chung (không gắn phòng) --</option>
+                        <option value="11111111-1111-1111-1111-111111111111">Phòng 101 - Dormio Premier Quận 1</option>
+                        <option value="22222222-2222-2222-2222-222222222222">Phòng 201 - Dormio Premier Quận 1</option>
+                        <option value="33333333-3333-3333-3333-333333333333">Phòng 301 - Dormio Premier Quận 1 (Duplex)</option>
+                      </select>
+                    </div>
+                    <span className="text-xs text-zinc-400">Nếu chọn phòng, hệ thống sẽ tự động xác thực quyền sở hữu của bạn.</span>
+                  </>
+                )}
               </div>
 
               <div className="space-y-2">
