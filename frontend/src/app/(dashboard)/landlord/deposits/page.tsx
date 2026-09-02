@@ -2111,3 +2111,11 @@ export default function DepositsPage() {
     </Suspense>
   );
 }
+
+export default function DepositsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs font-bold text-zinc-400">Đang tải dữ liệu tiền cọc...</div>}>
+      <DepositsContent />
+    </Suspense>
+  );
+}
