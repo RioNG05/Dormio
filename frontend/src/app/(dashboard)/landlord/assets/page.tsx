@@ -11,9 +11,11 @@ import {
   DollarSign, Home, AlertCircle, Info, Calendar, ArrowRight, BarChart3
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 import { Asset, initialMockAssets, calculateDepreciation } from "./data";
 
 export default function AssetsPage() {
+  const t = useTranslations("assets");
   const { activeBuilding } = useAuth();
   const router = useRouter();
 
@@ -228,10 +230,10 @@ export default function AssetsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            Quản lý tài sản
+            {t("title")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
-            Danh mục trang thiết bị, quản lý SKU, vị trí phòng và tính toán khấu hao tự động
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -251,7 +253,7 @@ export default function AssetsPage() {
             onClick={handleOpenAddModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Thêm tài sản mới
+            <Plus className="w-4 h-4" /> {t("addAsset")}
           </button>
         </div>
       </div>
@@ -269,7 +271,7 @@ export default function AssetsPage() {
                 {activeBuilding.name}
               </h2>
               <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                Mã: {buildingPrefix}
+                {t("codePrefix", { code: buildingPrefix })}
               </span>
             </div>
 
@@ -284,12 +286,12 @@ export default function AssetsPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>Google Maps</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Quản lý trang thiết bị theo Mã SKU riêng biệt. Giá trị khấu hao được tự động tính toán theo số tháng sử dụng thực tế.
+              {t("bannerSub")}
             </p>
           </div>
 
@@ -297,15 +299,15 @@ export default function AssetsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full md:w-[135px]">
               <Package className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng TS</span>
-                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{assets.length} món</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("totalAssetsShort")}</span>
+                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{t("itemsCount", { count: assets.length })}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full md:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Sử dụng</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("inUse")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{inUseCount}</span>
               </div>
             </div>
@@ -313,7 +315,7 @@ export default function AssetsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full md:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Bảo trì</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("underMaintenance")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{maintenanceCount}</span>
               </div>
             </div>
@@ -321,7 +323,7 @@ export default function AssetsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full md:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Trong kho</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("inStock")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{stockCount}</span>
               </div>
             </div>

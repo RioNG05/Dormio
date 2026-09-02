@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 export default function PublicLayout({
   children,
@@ -17,6 +19,8 @@ export default function PublicLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const tNav = useTranslations("nav");
+  const tFooter = useTranslations("footer");
   const { isLoggedIn, user, login, logout, toggleLoginDemo, upgradeToLandlord } = useAuth();
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
@@ -86,12 +90,12 @@ export default function PublicLayout({
   );
 
   const navItems = [
-    { href: "/", label: "Trang chủ" },
-    { href: "/rooms", label: "Phòng trọ" },
-    { href: "/features", label: "Tính năng" },
-    { href: "/pricing", label: "Bảng giá" },
-    { href: "/blog", label: "Blog" },
-    { href: "/contact", label: "Liên hệ" },
+    { href: "/", label: tNav("home") },
+    { href: "/rooms", label: tNav("rooms") },
+    { href: "/features", label: tNav("features") },
+    { href: "/pricing", label: tNav("pricing") },
+    { href: "/blog", label: tNav("blog") },
+    { href: "/contact", label: tNav("contact") },
   ];
 
   return (
@@ -135,14 +139,13 @@ export default function PublicLayout({
 
           {/* Desktop Right Action Buttons & User Menu */}
           <div className="hidden lg:flex items-center gap-3">
-            
             {/* Search Trigger */}
             <button
               onClick={() => setIsCommandOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200/80 border border-zinc-200 rounded-full text-xs text-zinc-500 font-semibold transition-all cursor-pointer mr-1"
             >
               <Search className="w-3.5 h-3.5 text-[#2AC1BC]" />
-              <span>Tìm nhanh...</span>
+              <span>{tNav("searchQuick")}</span>
             </button>
 
             {/* Auth Actions Conditional Rendering */}
@@ -159,13 +162,13 @@ export default function PublicLayout({
                     className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-black rounded-full shadow-md shadow-[#FF6B35]/25 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
                   >
                     <Building2 className="w-3.5 h-3.5" />
-                    <span>Đăng ký trở thành chủ trọ</span>
+                    <span>{tNav("becomeLandlord")}</span>
                   </button>
                 ) : (
                   <Link href="/landlord">
                     <button className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white text-xs font-black rounded-full shadow-md shadow-[#2AC1BC]/20 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105">
                       <Building2 className="w-3.5 h-3.5" />
-                      <span>Bảng điều khiển Chủ Trọ →</span>
+                      <span>{tNav("dashboard")} →</span>
                     </button>
                   </Link>
                 )}
@@ -236,7 +239,7 @@ export default function PublicLayout({
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left cursor-pointer"
                         >
                           <LogOut className="w-4 h-4 text-rose-500" />
-                          <span>Đăng xuất tài khoản</span>
+                          <span>{tNav("logout")}</span>
                         </button>
                       </div>
                     </div>
@@ -247,15 +250,20 @@ export default function PublicLayout({
             ) : (
               <div className="flex items-center gap-3">
                 <Link href="/login" className="text-xs font-bold text-zinc-700 hover:text-zinc-900 transition-colors px-2">
-                  Đăng nhập
+                  {tNav("login")}
                 </Link>
                 <Link href="/register">
                   <button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs font-bold rounded-full shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer">
-                    Dùng thử 7 ngày
+                    {tNav("trialBtn")}
                   </button>
                 </Link>
               </div>
             )}
+
+            {/* 🌐 VERY END RIGHT SIDE - Language Switcher */}
+            <div className="pl-1 border-l border-zinc-200/80">
+              <LanguageSwitcher />
+            </div>
 
           </div>
 
@@ -386,12 +394,12 @@ export default function PublicLayout({
                 <>
                   <Link href="/login" className="block w-full">
                     <button className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-extrabold text-xs rounded-2xl transition-all text-center">
-                      Đăng nhập tài khoản
+                      {tNav("login")}
                     </button>
                   </Link>
                   <Link href="/register" className="block w-full">
                     <button className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all text-center">
-                      Dùng thử 7 ngày miễn phí &rarr;
+                      {tNav("trialBtn")} &rarr;
                     </button>
                   </Link>
                 </>
@@ -574,40 +582,40 @@ export default function PublicLayout({
               <span className="text-xl font-black text-white">Dormio.</span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-              Nền tảng quản lý nhà trọ và tìm phòng trọ chính chủ số 1 Việt Nam. Tự động hóa 90% quy trình vận hành.
+              {tFooter("desc")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">Mô-đun Hệ Thống</h4>
+            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">{tFooter("systemModules")}</h4>
             <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
-              <li><Link href="/features" className="hover:text-white transition-colors">BHMS — Vận hành nhà trọ</Link></li>
-              <li><Link href="/features" className="hover:text-white transition-colors">BHRP — Sàn cho thuê phòng</Link></li>
-              <li><Link href="/features" className="hover:text-white transition-colors">Tự động thu tiền VietQR</Link></li>
-              <li><Link href="/features" className="hover:text-white transition-colors">AI OCR Quét chỉ số điện nước</Link></li>
+              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("bhms")}</Link></li>
+              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("bhrp")}</Link></li>
+              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("vietqr")}</Link></li>
+              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("aiOcr")}</Link></li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">Hỗ Trợ Khách Hàng</h4>
+            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">{tFooter("customerSupport")}</h4>
             <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
-              <li><Link href="/pricing" className="hover:text-white transition-colors">Bảng giá dịch vụ</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Liên hệ tư vấn</Link></li>
-              <li><Link href="/blog" className="hover:text-white transition-colors">Kinh nghiệm vận hành</Link></li>
-              <li><Link href="/privacy" className="hover:text-white transition-colors">Chính sách bảo mật</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("pricing")}</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">{tFooter("contact")}</Link></li>
+              <li><Link href="/blog" className="hover:text-white transition-colors">{tFooter("blog")}</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">{tFooter("privacy")}</Link></li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">Liên Hệ</h4>
-            <p className="text-xs text-zinc-400 font-medium">Hotline: 1900 8888 (24/7)</p>
-            <p className="text-xs text-zinc-400 font-medium">Email: support@dormio.vn</p>
-            <p className="text-xs text-zinc-400 font-medium">Địa chỉ: TP. Hồ Chí Minh & Hà Nội</p>
+            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">{tFooter("contactTitle")}</h4>
+            <p className="text-xs text-zinc-400 font-medium">{tFooter("hotline")}</p>
+            <p className="text-xs text-zinc-400 font-medium">{tFooter("email")}</p>
+            <p className="text-xs text-zinc-400 font-medium">{tFooter("address")}</p>
           </div>
         </div>
 
         <div className="mx-auto max-w-7xl border-t border-zinc-800 mt-8 pt-6 text-center text-[11px] text-zinc-500 font-medium">
-          © {new Date().getFullYear()} Dormio Platform. All rights reserved. Designed for Vietnamese Boarding House Management.
+          {tFooter("rights")}
         </div>
       </footer>
     </div>

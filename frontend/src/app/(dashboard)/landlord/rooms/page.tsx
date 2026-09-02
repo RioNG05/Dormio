@@ -9,10 +9,13 @@ import {
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 export default function RoomsPage() {
   const { activeBuilding, buildings } = useAuth();
   const router = useRouter();
+  const t = useTranslations("rooms");
+  const tCommon = useTranslations("common");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -180,15 +183,15 @@ export default function RoomsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Quản lý phòng</h1>
-          <p className="text-sm text-zinc-500">Danh sách phòng theo tòa nhà, loại phòng và trạng thái</p>
+          <h1 className="text-2xl font-bold text-zinc-900">{t("title")}</h1>
+          <p className="text-sm text-zinc-500">{t("subtitle")}</p>
         </div>
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
           <button className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
-            <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
+            <UploadCloud className="w-4 h-4 text-emerald-600" /> {tCommon("import")}
           </button>
           <button className="cursor-pointer px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
-            <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
+            <FileSpreadsheet className="w-4 h-4 text-blue-600" /> {tCommon("export")}
           </button>
           <button
             onClick={() => {
@@ -204,7 +207,7 @@ export default function RoomsPage() {
             }}
             className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Thêm phòng
+            <Plus className="w-4 h-4" /> {t("addRoom")}
           </button>
         </div>
       </div>
@@ -222,7 +225,7 @@ export default function RoomsPage() {
                 {activeBuilding.name}
               </h2>
               <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                Đang vận hành
+                {t("inOperation")}
               </span>
             </div>
 
@@ -237,12 +240,12 @@ export default function RoomsPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>{t("viewMap")}</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Quản lý tổng thể cấu trúc phòng, theo dõi tình trạng lưu trú và tài sản.
+              {t("bannerDesc")}
             </p>
           </div>
 
@@ -253,7 +256,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 backdrop-blur-md w-full lg:w-[135px]">
                 <Home className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-zinc-400 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng phòng</span>
+                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">{t("totalRooms")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{totalRooms}</span>
                 </div>
               </div>
@@ -261,7 +264,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
                 <Target className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Lấp đầy</span>
+                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("occupancy")}</span>
                   <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{occupancyRate}%</span>
                 </div>
               </div>
@@ -272,7 +275,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang thuê</span>
+                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("occupied")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{occupiedCount}</span>
                 </div>
               </div>
@@ -280,7 +283,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Phòng trống</span>
+                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("vacant")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{vacantCount}</span>
                 </div>
               </div>
@@ -288,7 +291,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Bảo trì</span>
+                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("maintenance")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{maintenanceCount}</span>
                 </div>
               </div>
@@ -296,7 +299,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 transition-colors rounded-xl border border-purple-500/30 backdrop-blur-md w-full lg:w-[135px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">Đặt cọc</span>
+                  <span className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">{t("deposit")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{reservedCount}</span>
                 </div>
               </div>
@@ -315,7 +318,7 @@ export default function RoomsPage() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm theo số phòng, khách thuê..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -331,11 +334,11 @@ export default function RoomsPage() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
                 >
-                  <option value="">Mọi trạng thái</option>
-                  <option value="Trống">Trống</option>
-                  <option value="Đang thuê">Đang thuê</option>
-                  <option value="Bảo trì">Bảo trì</option>
-                  <option value="Đặt cọc">Đặt cọc</option>
+                  <option value="">{t("allStatuses")}</option>
+                  <option value="Trống">{t("available")}</option>
+                  <option value="Đang thuê">{t("occupied")}</option>
+                  <option value="Bảo trì">{t("maintenance")}</option>
+                  <option value="Đặt cọc">{t("deposit")}</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
               </div>
@@ -347,10 +350,10 @@ export default function RoomsPage() {
                   onChange={(e) => setContractFilter(e.target.value)}
                   className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
                 >
-                  <option value="">Tất cả Hợp đồng</option>
-                  <option value="active">HĐ Đang hiệu lực</option>
-                  <option value="expired">HĐ Quá hạn</option>
-                  <option value="expiring_soon">HĐ Sắp hết hạn</option>
+                  <option value="">{t("allContracts")}</option>
+                  <option value="active">{t("activeContracts")}</option>
+                  <option value="expired">{t("expiredContracts")}</option>
+                  <option value="expiring_soon">{t("expiringSoonContracts")}</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
               </div>
@@ -362,10 +365,10 @@ export default function RoomsPage() {
                   onChange={(e) => setInvoiceFilter(e.target.value)}
                   className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap shadow-2xs"
                 >
-                  <option value="">Tất cả Hóa đơn</option>
-                  <option value="paid">Đã thanh toán</option>
-                  <option value="overdue">Quá hạn</option>
-                  <option value="debt">Còn nợ</option>
+                  <option value="">{t("allInvoices")}</option>
+                  <option value="paid">{t("paidInvoices")}</option>
+                  <option value="overdue">{t("overdueInvoices")}</option>
+                  <option value="debt">{t("debtInvoices")}</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
               </div>
@@ -379,9 +382,9 @@ export default function RoomsPage() {
               <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
                 <Search className="w-8 h-8 text-zinc-400" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-800 mb-1">Không tìm thấy phòng</h3>
+              <h3 className="text-lg font-bold text-zinc-800 mb-1">{t("notFoundTitle")}</h3>
               <p className="text-zinc-500 text-center max-w-sm">
-                Không có phòng nào phù hợp với bộ lọc tìm kiếm của bạn. Vui lòng thử lại với các tiêu chí khác.
+                {t("notFoundDesc")}
               </p>
               <button
                 onClick={() => {
@@ -393,14 +396,14 @@ export default function RoomsPage() {
                 }}
                 className="mt-6 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded-lg transition-colors"
               >
-                Xóa bộ lọc
+                {t("clearFilter")}
               </button>
             </div>
           ) : floors.map(floor => (
             <div key={floor} className="flex flex-col md:flex-row gap-4 bg-white p-3 rounded-xl border border-zinc-200 shadow-sm">
               <div className="flex-shrink-0 w-full md:w-28 bg-zinc-900 rounded-xl flex items-center justify-center px-4 py-3 text-white">
                 <span className="text-base font-black tracking-wider text-white flex items-center gap-1.5">
-                  <span className="text-xs font-black uppercase tracking-widest text-zinc-400">TẦNG</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-zinc-400">{t("floorLabel")}</span>
                   <span className="text-xl font-black text-white">{floor}</span>
                 </span>
               </div>
@@ -411,6 +414,8 @@ export default function RoomsPage() {
                   const isMaintenance = room.status === 'Bảo trì';
                   const isReserved = room.status === 'Đặt cọc';
                   const isVacant = room.status === 'Trống';
+
+                  const statusDisplay = isOccupied ? t("occupied") : isMaintenance ? t("maintenance") : isReserved ? t("deposit") : isVacant ? t("available") : room.status;
 
                   return (
                     <div
@@ -440,7 +445,7 @@ export default function RoomsPage() {
                             isVacant ? 'text-blue-600 bg-blue-500/15' :
                               'text-zinc-500 bg-zinc-100'
                         }`}>
-                        {room.status}
+                        {statusDisplay}
                       </span>
                     </div>
                   );

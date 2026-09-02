@@ -4,8 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, X, ShieldCheck, MapPin, Minimize2, Sparkles, Building2 } from "lucide-react";
 import { formatVND } from "@/utils";
+import { useTranslations } from "next-intl";
 
 export default function CompareRoomsPage() {
+  const t = useTranslations("comparePage");
+
   const roomsToCompare = [
     {
       id: "1",
@@ -48,8 +51,8 @@ export default function CompareRoomsPage() {
           </button>
         </Link>
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">So Sánh Phòng Trọ Side-by-Side</h1>
-          <p className="text-xs text-zinc-500">Đặt 2 phòng trọ cạnh nhau để so sánh thông số, giá thuê và tiện ích đi kèm</p>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{t("title")}</h1>
+          <p className="text-xs text-zinc-500">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -58,11 +61,11 @@ export default function CompareRoomsPage() {
           <table className="w-full text-xs text-left">
             <thead className="bg-zinc-50 text-zinc-500 uppercase font-bold border-b border-zinc-200">
               <tr>
-                <th className="px-6 py-4 w-48">Tiêu chí so sánh</th>
+                <th className="px-6 py-4 w-48">{t("colCriteria")}</th>
                 {roomsToCompare.map((r) => (
                   <th key={r.id} className="px-6 py-4 min-w-[280px]">
                     <div className="space-y-1">
-                      <span className="text-[#2ac1bc] font-extrabold text-xs block">Phòng {r.id}</span>
+                      <span className="text-[#2ac1bc] font-extrabold text-xs block">{t("roomNumber", { id: r.id })}</span>
                       <h3 className="font-extrabold text-zinc-900 text-sm normal-case line-clamp-2">{r.title}</h3>
                     </div>
                   </th>
@@ -71,7 +74,7 @@ export default function CompareRoomsPage() {
             </thead>
             <tbody className="divide-y divide-zinc-100 font-medium">
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Giá thuê / tháng</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowPrice")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4 text-rose-600 font-black text-base">
                     {formatVND(r.price)}
@@ -79,7 +82,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Tiền cọc giữ chỗ</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowDeposit")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4 text-zinc-900 font-bold">
                     {r.deposit}
@@ -87,7 +90,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Diện tích</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowArea")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4 text-zinc-800 font-bold">
                     {r.area} m²
@@ -95,7 +98,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Địa chỉ / Khu vực</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowAddress")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4 text-zinc-600 font-semibold">
                     {r.address}
@@ -103,7 +106,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Máy lạnh Inverter</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowAc")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4">
                     {r.ac ? <Check className="w-5 h-5 text-[#2ac1bc]" /> : <X className="w-5 h-5 text-zinc-300" />}
@@ -111,7 +114,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Tủ lạnh riêng</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowFridge")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4">
                     {r.fridge ? <Check className="w-5 h-5 text-[#2ac1bc]" /> : <X className="w-5 h-5 text-zinc-300" />}
@@ -119,7 +122,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Thang máy tòa nhà</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowElevator")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4">
                     {r.elevator ? <Check className="w-5 h-5 text-[#2ac1bc]" /> : <X className="w-5 h-5 text-zinc-300" />}
@@ -127,7 +130,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Khóa vân tay an ninh</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowFingerprint")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4">
                     {r.fingerprint ? <Check className="w-5 h-5 text-[#2ac1bc]" /> : <X className="w-5 h-5 text-zinc-300" />}
@@ -135,12 +138,12 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">Hành động</td>
+                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">{t("rowAction")}</td>
                 {roomsToCompare.map((r) => (
                   <td key={r.id} className="px-6 py-4">
                     <Link href={`/rooms/${r.id}`}>
                       <button className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-[#FF6B35]/20 cursor-pointer">
-                        Đặt Cọc Giữ Chỗ ngay
+                        {t("depositNowBtn")}
                       </button>
                     </Link>
                   </td>

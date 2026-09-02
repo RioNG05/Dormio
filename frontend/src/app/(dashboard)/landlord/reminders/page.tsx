@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 interface TaskItem {
   id: string;
@@ -45,6 +46,7 @@ interface NotificationItem {
 }
 
 export default function RemindersPage() {
+  const t = useTranslations("reminders");
   const { activeBuilding } = useAuth();
   const [activeTab, setActiveTab] = useState<"reminders" | "notifications">("reminders");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -524,23 +526,23 @@ export default function RemindersPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>Google Maps</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Phân công việc cho nhân viên tòa nhà và phát sóng thông báo khẩn, lịch cúp điện nước đến ứng dụng khách thuê.
+              {t("heroSubtitle")}
             </p>
           </div>
 
           {/* 4 Unified Stat Chips (Aesthetic Single Row matching Rooms, Contracts, Customers) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
             {/* 1. Công việc chờ xử lý (Cam) */}
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
-              <Clock3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />
+            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-xl border border-amber-500/30 backdrop-blur-md w-full lg:w-[135px]">
+              <Clock className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-amber-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Chờ làm</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{pendingCount}</span>
+                <span className="text-[9px] uppercase font-bold text-amber-400 tracking-wider">{t("pendingTasks")}</span>
+                <span className="font-black text-amber-500 text-base sm:text-lg leading-none mt-1">{pendingCount}</span>
               </div>
             </div>
 

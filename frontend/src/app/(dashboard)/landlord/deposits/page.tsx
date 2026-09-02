@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 // Deposit Item Interface (Strict 2 Deposit Types & Dual Status Display Support)
 export interface DepositItem {
@@ -399,6 +400,7 @@ const formatLargeMoney = (amount: number): string => {
 };
 
 function DepositsContent() {
+  const t = useTranslations("deposits");
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -729,10 +731,10 @@ function DepositsContent() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <PiggyBank className="w-6 h-6 text-[#2AC1BC]" /> Quản Lý Tiền Đặt Cọc
+            <PiggyBank className="w-6 h-6 text-[#2AC1BC]" /> {t("title")}
           </h1>
           <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            Quản lý 2 loại cọc: Cọc giữ chỗ & Cọc hợp đồng.
+            {t("sub")}
           </p>
         </div>
 
@@ -744,7 +746,7 @@ function DepositsContent() {
             }}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
           >
-            <Plus className="w-4 h-4 shrink-0" /> Thêm Khoản Đặt Cọc Mới
+            <Plus className="w-4 h-4 shrink-0" /> {t("addNew")}
           </button>
         </div>
       </div>
@@ -772,12 +774,12 @@ function DepositsContent() {
                 rel="noreferrer"
                 className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>Google Maps</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Theo dõi tiền cọc phòng, nâng cấp cọc giữ chỗ thành cọc hợp đồng khi thu đủ tiền và quản lý khấu trừ/hoàn cọc.
+              {t("bannerSub")}
             </p>
           </div>
 
@@ -788,7 +790,7 @@ function DepositsContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-2xl border border-[#2AC1BC]/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-[#2AC1BC] tracking-wider whitespace-nowrap">ĐANG GIỮ ({holdingCountTotal})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-[#2AC1BC] tracking-wider whitespace-nowrap">{t("holdingLabel", { count: holdingCountTotal })}</span>
                   <span className="font-black text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalHoldingAmount)}
                   </span>

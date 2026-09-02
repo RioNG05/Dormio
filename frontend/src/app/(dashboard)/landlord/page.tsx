@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { formatVND } from "@/utils";
+import { useTranslations } from "next-intl";
 
 export default function LandlordDashboardPage() {
+  const t = useTranslations("landlordDashboard");
   const router = useRouter();
   const { user, upgradeToLandlord, activeBuilding } = useAuth();
 
@@ -42,18 +44,18 @@ export default function LandlordDashboardPage() {
         {/* Welcome Empty State Header */}
         <div className="text-center space-y-3">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/30 shadow-lg">
-            <Sparkles className="w-4 h-4 fill-[#2AC1BC]" /> THIẾT LẬP NHÀ TRỌ BAN ĐẦU
+            <Sparkles className="w-4 h-4 fill-[#2AC1BC]" /> {t("welcomeBadge")}
           </span>
 
           <h1 className="text-3xl sm:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
-            Chào mừng bạn đến với <br />
+            {t("welcomeTitle")} <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] to-[#FF6B35] bg-clip-text text-transparent">
               Dormio Landlord Dashboard
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xl mx-auto">
-            Hệ thống quản lý của bạn đang ở trạng thái <strong>trống trơn</strong>. Hãy hoàn tất thiết lập tòa nhà trọ đầu tiên để bắt đầu tạo sơ đồ phòng, phát hành hợp đồng & gạch nợ VietQR tự động.
+            {t("welcomeSub")}
           </p>
         </div>
 
@@ -64,8 +66,8 @@ export default function LandlordDashboardPage() {
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-zinc-900">Tạo Khảo Sát Tòa Nhà Trọ Đầu Tiên</h2>
-              <p className="text-xs text-zinc-500 font-medium">Nhập thông tin cơ bản để Dormio tự động khởi tạo bộ quản lý phòng cho bạn.</p>
+              <h2 className="text-lg font-black text-zinc-900">{t("formCardTitle")}</h2>
+              <p className="text-xs text-zinc-500 font-medium">{t("formCardSub")}</p>
             </div>
           </div>
 
@@ -73,13 +75,13 @@ export default function LandlordDashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
               <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-zinc-700">TÊN KHU TRỌ / TÒA NHÀ ĐẦU TIÊN *</label>
+                <label className="text-xs font-extrabold text-zinc-700">{t("houseNameLabel")}</label>
                 <div className="relative">
                   <Building2 className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
-                    placeholder="Ví dụ: Trọ Cao Cấp An Bình"
+                    placeholder={t("houseNamePlaceholder")}
                     value={initHouseName}
                     onChange={(e) => setInitHouseName(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
@@ -88,13 +90,13 @@ export default function LandlordDashboardPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-zinc-700">ĐỊA CHỈ TÒA NHÀ *</label>
+                <label className="text-xs font-extrabold text-zinc-700">{t("houseAddressLabel")}</label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
-                    placeholder="123 Nguyễn Huệ, Quận 1, TP.HCM"
+                    placeholder={t("houseAddressPlaceholder")}
                     value={initHouseAddress}
                     onChange={(e) => setInitHouseAddress(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
@@ -107,7 +109,7 @@ export default function LandlordDashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
               <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-zinc-700">SỐ LƯỢNG PHÒNG DỰ KIẾN QUẢN LÝ</label>
+                <label className="text-xs font-extrabold text-zinc-700">{t("roomCountLabel")}</label>
                 <input
                   type="number"
                   placeholder="10"
@@ -118,7 +120,7 @@ export default function LandlordDashboardPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-zinc-700">GIÁ THUÊ TRUNG BÌNH DỰ KIẾN (VNĐ/tháng)</label>
+                <label className="text-xs font-extrabold text-zinc-700">{t("avgPriceLabel")}</label>
                 <input
                   type="number"
                   placeholder="4500000"
@@ -132,11 +134,11 @@ export default function LandlordDashboardPage() {
 
             {/* Feature Checklist Highlights */}
             <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-2">
-              <span className="text-[11px] font-extrabold text-zinc-600 block">TÍNH NĂNG ĐƯỢC TỰ ĐỘNG TÍCH HỢP CHO TÒA NHÀ MỚI:</span>
+              <span className="text-[11px] font-extrabold text-zinc-600 block">{t("integratedTitle")}</span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-bold text-zinc-700">
-                <span className="flex items-center gap-1.5 text-[#2AC1BC]"><CheckCircle2 className="w-4 h-4 shrink-0" /> Gạch nợ VietQR 24/7</span>
-                <span className="flex items-center gap-1.5 text-[#2AC1BC]"><CheckCircle2 className="w-4 h-4 shrink-0" /> Quét chỉ số điện nước AI</span>
-                <span className="flex items-center gap-1.5 text-[#2AC1BC]"><CheckCircle2 className="w-4 h-4 shrink-0" /> Hợp đồng điện tử PDF</span>
+                <span className="flex items-center gap-1.5 text-[#2AC1BC]"><CheckCircle2 className="w-4 h-4 shrink-0" /> {t("integratedF1")}</span>
+                <span className="flex items-center gap-1.5 text-[#2AC1BC]"><CheckCircle2 className="w-4 h-4 shrink-0" /> {t("integratedF2")}</span>
+                <span className="flex items-center gap-1.5 text-[#2AC1BC]"><CheckCircle2 className="w-4 h-4 shrink-0" /> {t("integratedF3")}</span>
               </div>
             </div>
 
@@ -145,7 +147,7 @@ export default function LandlordDashboardPage() {
               className="w-full py-4 bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] to-[#FF6B35] hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/20 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
             >
               <Zap className="w-4 h-4 fill-white" />
-              <span>🚀 Khởi Tạo Tòa Nhà & Vào Dashboard Quản Lý ngay &rarr;</span>
+              <span>{t("submitBtn")}</span>
             </button>
           </form>
         </div>
@@ -213,7 +215,7 @@ export default function LandlordDashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-zinc-200/80 pb-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
-            Tổng Quan — {activeBuilding.name}
+            {t("overviewTitle", { name: activeBuilding.name })}
           </h1>
           <p className="text-xs text-zinc-500 font-medium mt-0.5">
             {activeBuilding.address}
@@ -222,7 +224,7 @@ export default function LandlordDashboardPage() {
 
         <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 text-[11px] font-black rounded-full flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          VIETQR AUTO 24/7 ACTIVE
+          {t("vietqrActive")}
         </span>
       </div>
 
@@ -232,9 +234,9 @@ export default function LandlordDashboardPage() {
         {/* 1. TỔNG SỐ PHÒNG & TỶ LỆ LẤP ĐẦY = RED */}
         <div className="px-3.5 py-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
-            <span className="text-[10px] font-black text-rose-600 uppercase tracking-wider block">TỔNG SỐ PHÒNG</span>
+            <span className="text-[10px] font-black text-rose-600 uppercase tracking-wider block">{t("statTotalRooms")}</span>
             <div className="text-lg font-black text-rose-600 leading-tight mt-0.5">{activeBuilding.totalRooms} Phòng</div>
-            <span className="text-[10px] font-bold text-rose-500/80 block">Lấp đầy: {activeBuilding.occupancyRate}</span>
+            <span className="text-[10px] font-bold text-rose-500/80 block">{t("statOccupancy", { rate: activeBuilding.occupancyRate })}</span>
           </div>
           <Building className="w-5 h-5 text-rose-500 shrink-0 opacity-80" />
         </div>
@@ -242,9 +244,9 @@ export default function LandlordDashboardPage() {
         {/* 2. ĐANG THUÊ / ĐANG Ở = PRIMARY TEAL (#2AC1BC) */}
         <div className="px-3.5 py-3 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
-            <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">ĐANG THUÊ / ĐANG Ở</span>
+            <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">{t("statOccupied")}</span>
             <div className="text-lg font-black text-[#2AC1BC] leading-tight mt-0.5">{activeBuilding.occupiedRooms} Phòng</div>
-            <span className="text-[10px] font-bold text-[#2AC1BC]/80 block">Hợp đồng hiệu lực</span>
+            <span className="text-[10px] font-bold text-[#2AC1BC]/80 block">{t("statActiveContract")}</span>
           </div>
           <Users className="w-5 h-5 text-[#2AC1BC] shrink-0 opacity-80" />
         </div>
@@ -252,9 +254,9 @@ export default function LandlordDashboardPage() {
         {/* 3. PHÒNG TRỐNG = BLUE (#3B82F6) */}
         <div className="px-3.5 py-3 bg-blue-500/10 border border-blue-500/30 rounded-3xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block">PHÒNG TRỐNG</span>
+            <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block">{t("statVacant")}</span>
             <div className="text-lg font-black text-blue-600 leading-tight mt-0.5">{activeBuilding.vacantRooms} Phòng</div>
-            <span className="text-[10px] font-bold text-blue-500/80 block">Sẵn sàng đón khách</span>
+            <span className="text-[10px] font-bold text-blue-500/80 block">{t("statReady")}</span>
           </div>
           <Home className="w-5 h-5 text-blue-500 shrink-0 opacity-80" />
         </div>
@@ -262,9 +264,9 @@ export default function LandlordDashboardPage() {
         {/* 4. BẢO TRÌ / SẮP HẾT HẠN = PRIMARY ORANGE (#FF6B35) */}
         <div className="px-3.5 py-3 bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
-            <span className="text-[10px] font-black text-[#FF6B35] uppercase tracking-wider block">BẢO TRÌ / HẾT HẠN</span>
+            <span className="text-[10px] font-black text-[#FF6B35] uppercase tracking-wider block">{t("statMaintenance")}</span>
             <div className="text-lg font-black text-[#FF6B35] leading-tight mt-0.5">{activeBuilding.expiringRooms} Phòng</div>
-            <span className="text-[10px] font-bold text-[#FF6B35]/80 block">1 Hợp đồng • 1 Bảo trì</span>
+            <span className="text-[10px] font-bold text-[#FF6B35]/80 block">{t("statMaintDetail")}</span>
           </div>
           <Wrench className="w-5 h-5 text-[#FF6B35] shrink-0 opacity-80" />
         </div>
@@ -272,9 +274,9 @@ export default function LandlordDashboardPage() {
         {/* 5. ĐẶT CỌC GIỮ CHỖ = PURPLE (#8B5CF6) */}
         <div className="px-3.5 py-3 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs col-span-2 sm:col-span-1">
           <div>
-            <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">ĐẶT CỌC GIỮ CHỖ</span>
+            <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">{t("statDeposit")}</span>
             <div className="text-lg font-black text-purple-600 leading-tight mt-0.5">{activeBuilding.depositRooms} Phòng</div>
-            <span className="text-[10px] font-bold text-purple-500/80 block">Cọc Escrow Dormio</span>
+            <span className="text-[10px] font-bold text-purple-500/80 block">{t("statEscrow")}</span>
           </div>
           <Shield className="w-5 h-5 text-purple-500 shrink-0 opacity-80" />
         </div>
@@ -292,30 +294,32 @@ export default function LandlordDashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#2AC1BC]" />
-                <h2 className="text-sm sm:text-base font-black text-zinc-900">Doanh Thu Hàng Tháng</h2>
+                <h2 className="text-sm sm:text-base font-black text-zinc-900">{t("monthlyRevenueTitle")}</h2>
                 <div className="flex items-center bg-zinc-100 p-0.5 rounded-lg border border-zinc-200/80 ml-1">
                   <button
                     onClick={() => setRangeMode("6m")}
                     className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${rangeMode === "6m" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
                       }`}
                   >
-                    6 Tháng
+                    {t("range6m")}
                   </button>
                   <button
                     onClick={() => setRangeMode("12m")}
                     className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${rangeMode === "12m" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
                       }`}
                   >
-                    12 Tháng
+                    {t("range12m")}
                   </button>
                 </div>
               </div>
-              <p className="text-[11px] text-zinc-500 font-medium">Biến động dòng tiền thực nhận tòa <strong>{activeBuilding.name}</strong> ({rangeMode === "6m" ? "6 tháng gần nhất" : "12 tháng gần nhất"}).</p>
+              <p className="text-[11px] text-zinc-500 font-medium">
+                {rangeMode === "6m" ? t("revenueRangeDesc6m", { name: activeBuilding.name }) : t("revenueRangeDesc12m", { name: activeBuilding.name })}
+              </p>
             </div>
 
             <div className="flex items-center gap-2.5">
               <div className="text-left sm:text-right">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">THÁNG 8 (HIỆN TẠI)</span>
+                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">{t("currentMonthLabel")}</span>
                 <span className="text-base font-black text-[#2AC1BC] tracking-tight">45.000.000 ₫</span>
               </div>
               <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[11px] font-black flex items-center gap-1">
@@ -347,9 +351,9 @@ export default function LandlordDashboardPage() {
                       transform: 'translateX(-50%)'
                     }}
                   >
-                    <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Tháng {activeChartData[hoveredIndex].month}</div>
+                    <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">{t("tooltipMonth", { month: activeChartData[hoveredIndex].month })}</div>
                     <div className="text-xs font-black text-[#2AC1BC]">{activeChartData[hoveredIndex].val}.000.000 ₫</div>
-                    <div className="text-[8px] font-bold text-emerald-400">✓ Đã gạch nợ 100% VietQR</div>
+                    <div className="text-[8px] font-bold text-emerald-400">{t("tooltipCleared")}</div>
                   </div>
                 )}
 
@@ -419,7 +423,7 @@ export default function LandlordDashboardPage() {
           <div>
             <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
               <span className="text-xs font-black text-zinc-900 flex items-center gap-1.5">
-                <BarChart2 className="w-4 h-4 text-[#2AC1BC]" /> Tổng Quan Dòng Tiền
+                <BarChart2 className="w-4 h-4 text-[#2AC1BC]" /> {t("cashflowOverview")}
               </span>
               <span className="px-2 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full text-[10px] font-black">
                 VietQR 24/7
@@ -428,22 +432,22 @@ export default function LandlordDashboardPage() {
 
             <div className="space-y-2.5 mt-3">
               <div className="p-3 bg-[#2AC1BC]/5 rounded-xl border border-[#2AC1BC]/15 space-y-0.5">
-                <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">DOANH THU THÁNG 8</span>
+                <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">{t("augustRevenue")}</span>
                 <div className="text-lg font-black text-[#2AC1BC]">45.000.000 ₫</div>
-                <span className="text-[10px] font-bold text-emerald-600">Đã gạch nợ 6/6 hóa đơn (100%)</span>
+                <span className="text-[10px] font-bold text-emerald-600">{t("allInvoicesPaid")}</span>
               </div>
 
               <div className="p-3 bg-rose-500/5 rounded-xl border border-rose-500/15 space-y-0.5">
-                <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">CÔNG NỢ</span>
+                <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">{t("debtLabel")}</span>
                 <div className="text-lg font-black text-rose-500">0 ₫</div>
-                <span className="text-[10px] font-bold text-zinc-500">Không có hóa đơn quá hạn</span>
+                <span className="text-[10px] font-bold text-zinc-500">{t("noOverdue")}</span>
               </div>
             </div>
           </div>
 
           <Link href="/landlord/invoices" className="block pt-2 border-t border-zinc-100">
             <span className="text-[11px] font-bold text-[#2AC1BC] hover:underline flex items-center justify-between">
-              Xem chi tiết &rarr;
+              {t("viewDetails")}
             </span>
           </Link>
         </div>
@@ -461,10 +465,10 @@ export default function LandlordDashboardPage() {
           <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-purple-600 shrink-0" />
-              <h3 className="text-sm font-black text-zinc-900 group-hover:text-purple-600 transition-colors">Thông Báo Đặt Cọc</h3>
+              <h3 className="text-sm font-black text-zinc-900 group-hover:text-purple-600 transition-colors">{t("depositNotifTitle")}</h3>
             </div>
             <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 rounded-full text-[10px] font-black">
-              {depositNotifications.length} Mới
+              {t("newCount", { count: depositNotifications.length })}
             </span>
           </div>
 
@@ -483,7 +487,7 @@ export default function LandlordDashboardPage() {
           </div>
 
           <div className="text-[11px] font-bold text-purple-600 flex items-center justify-between pt-1 border-t border-zinc-100">
-            <span>Xem tất cả {depositNotifications.length} cọc giữ chỗ &rarr;</span>
+            <span>{t("viewAllDeposits", { count: depositNotifications.length })}</span>
           </div>
         </div>
 
@@ -495,10 +499,10 @@ export default function LandlordDashboardPage() {
           <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Wrench className="w-4 h-4 text-[#FF6B35] shrink-0" />
-              <h3 className="text-sm font-black text-zinc-900 group-hover:text-[#FF6B35] transition-colors">Yêu Cầu Bảo Trì</h3>
+              <h3 className="text-sm font-black text-zinc-900 group-hover:text-[#FF6B35] transition-colors">{t("maintRequestTitle")}</h3>
             </div>
             <span className="px-2 py-0.5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-full text-[10px] font-black">
-              {maintenanceRequests.length} Sự cố
+              {t("issuesCount", { count: maintenanceRequests.length })}
             </span>
           </div>
 
@@ -511,7 +515,7 @@ export default function LandlordDashboardPage() {
                   </div>
                   <span className={`text-[10px] font-extrabold block ${item.priority === 'high' ? 'text-rose-500' : item.priority === 'medium' ? 'text-amber-600' : 'text-emerald-600'
                     }`}>
-                    {item.priority === 'high' ? 'Mức độ cao' : item.priority === 'medium' ? 'Mức độ trung bình' : 'Mức độ nhẹ'}
+                    {item.priority === 'high' ? t("prioHigh") : item.priority === 'medium' ? t("prioMedium") : t("prioLow")}
                   </span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-[#FF6B35] group-hover:translate-x-1 transition-transform shrink-0" />
@@ -520,7 +524,7 @@ export default function LandlordDashboardPage() {
           </div>
 
           <div className="text-[11px] font-bold text-[#FF6B35] flex items-center justify-between pt-1 border-t border-zinc-100">
-            <span>Xem tất cả {maintenanceRequests.length} phiếu bảo trì &rarr;</span>
+            <span>{t("viewAllMaint", { count: maintenanceRequests.length })}</span>
           </div>
         </div>
 
@@ -532,10 +536,10 @@ export default function LandlordDashboardPage() {
           <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-              <h3 className="text-sm font-black text-zinc-900 group-hover:text-amber-600 transition-colors">Gia Hạn Hợp Đồng</h3>
+              <h3 className="text-sm font-black text-zinc-900 group-hover:text-amber-600 transition-colors">{t("contractExtensionTitle")}</h3>
             </div>
             <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 rounded-full text-[10px] font-black">
-              {expiringContracts.length} Cảnh báo
+              {t("warningsCount", { count: expiringContracts.length })}
             </span>
           </div>
 
@@ -546,7 +550,7 @@ export default function LandlordDashboardPage() {
                   <div className="flex items-center gap-1.5">
                     <span className="font-black text-zinc-900">{item.room} — {item.tenant}</span>
                   </div>
-                  <span className="text-[10px] text-amber-600 font-bold block">Còn {item.daysLeft} ngày (Hạn {item.endDate})</span>
+                  <span className="text-[10px] text-amber-600 font-bold block">{t("daysLeftText", { days: item.daysLeft, date: item.endDate })}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-1 transition-transform shrink-0" />
               </div>
@@ -554,7 +558,7 @@ export default function LandlordDashboardPage() {
           </div>
 
           <div className="text-[11px] font-bold text-amber-600 flex items-center justify-between pt-1 border-t border-zinc-100">
-            <span>Xem tất cả {expiringContracts.length} hợp đồng &rarr;</span>
+            <span>{t("viewAllContracts", { count: expiringContracts.length })}</span>
           </div>
         </div>
 
@@ -569,7 +573,7 @@ export default function LandlordDashboardPage() {
               onClick={() => router.push("/landlord/rooms")}
               className="flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
             >
-              <span>Thêm Phòng Mới</span>
+              <span>{t("addRoomBtn")}</span>
               <span className="p-1 bg-[#2AC1BC]/10 text-[#2AC1BC] group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <Plus className="w-3.5 h-3.5" />
               </span>
@@ -579,7 +583,7 @@ export default function LandlordDashboardPage() {
               onClick={() => router.push("/landlord/contracts")}
               className="flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
             >
-              <span>Tạo Hợp Đồng PDF</span>
+              <span>{t("createPdfContractBtn")}</span>
               <span className="p-1 bg-amber-500/10 text-amber-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <FileText className="w-3.5 h-3.5" />
               </span>
@@ -589,7 +593,7 @@ export default function LandlordDashboardPage() {
               onClick={() => router.push("/landlord/invoices")}
               className="flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
             >
-              <span>Lập Hóa Đơn VietQR</span>
+              <span>{t("createVietqrInvoiceBtn")}</span>
               <span className="p-1 bg-emerald-500/10 text-emerald-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <QrCode className="w-3.5 h-3.5" />
               </span>
@@ -602,7 +606,7 @@ export default function LandlordDashboardPage() {
           onClick={() => setSpeedDialOpen(!speedDialOpen)}
           className={`p-3.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center border ${speedDialOpen ? 'bg-zinc-900 text-white border-zinc-800 rotate-45' : 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:scale-105'
             }`}
-          title="Thao tác nhanh"
+          title={t("quickActions")}
         >
           <Plus className="w-6 h-6" />
         </button>

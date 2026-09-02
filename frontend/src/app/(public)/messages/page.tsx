@@ -6,8 +6,10 @@ import {
   MapPin, Phone, Building2, ChevronLeft, ShieldCheck, Sparkles
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function GuestMessagesPage() {
+  const t = useTranslations("guestMessagesPage");
   const [activeConversationId, setActiveConversationId] = useState("1");
   const [messageInput, setMessageInput] = useState("");
 
@@ -66,8 +68,8 @@ export default function GuestMessagesPage() {
           </button>
         </Link>
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Tin nhắn & Trao đổi</h1>
-          <p className="text-xs text-zinc-500">Trò chuyện trực tiếp với chủ nhà trọ trên Dormio Platform</p>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{t("title")}</h1>
+          <p className="text-xs text-zinc-500">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -79,7 +81,7 @@ export default function GuestMessagesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm đoạn chat, chủ nhà..."
+                placeholder={t("searchPlaceholder")}
                 className="w-full pl-9 pr-4 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all bg-zinc-50"
               />
             </div>
@@ -162,7 +164,7 @@ export default function GuestMessagesPage() {
           <form onSubmit={handleSendMessage} className="p-4 border-t border-zinc-200 bg-white flex items-center gap-2">
             <input
               type="text"
-              placeholder="Nhập tin nhắn trao đổi với chủ nhà..."
+              placeholder={t("inputPlaceholder")}
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               className="flex-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all bg-zinc-50"
@@ -171,7 +173,7 @@ export default function GuestMessagesPage() {
               type="submit"
               className="px-5 py-2.5 bg-[#2ac1bc] hover:bg-[#72b3a3] text-white rounded-xl text-xs font-bold shadow-md shadow-[#2ac1bc]/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              Gửi <Send className="w-3.5 h-3.5" />
+              {t("send")} <Send className="w-3.5 h-3.5" />
             </button>
           </form>
         </div>

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 export default function ContractsPage() {
+  const t = useTranslations("contracts");
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -831,7 +833,7 @@ export default function ContractsPage() {
                 </div>
 
                 <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-                  Quản lý tổng thể hợp đồng thuê phòng, theo dõi thời hạn hợp đồng và tình trạng gia hạn của khách lưu trú một cách chuyên nghiệp.
+                  {t("bannerSub")}
                 </p>
               </div>
 
@@ -840,7 +842,7 @@ export default function ContractsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng HĐ</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("totalContractsShort")}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{contracts.length}</span>
               </div>
             </div>
@@ -848,7 +850,7 @@ export default function ContractsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Còn hiệu lực</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("activeShort")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Còn hiệu lực" || c.status === "Đang hiệu lực").length}</span>
               </div>
             </div>
@@ -856,7 +858,7 @@ export default function ContractsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Sắp hết hạn</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("expiringSoon")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Sắp hết hạn" || c.status === "Quá hạn").length}</span>
               </div>
             </div>
@@ -864,7 +866,7 @@ export default function ContractsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã chấm dứt</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("terminated")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Chấm dứt" || c.status === "Đã chấm dứt").length}</span>
               </div>
             </div>
@@ -878,11 +880,11 @@ export default function ContractsPage() {
           {/* Status Filter Pills */}
           <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
             {[
-              { label: "Tất cả", value: "" },
-              { label: "Đang hiệu lực", value: "Đang hiệu lực" },
-              { label: "Sắp hết hạn", value: "Sắp hết hạn" },
-              { label: "Quá hạn", value: "Quá hạn" },
-              { label: "Đã chấm dứt", value: "Đã chấm dứt" },
+              { label: t("all"), value: "" },
+              { label: t("active"), value: "Đang hiệu lực" },
+              { label: t("expiringSoon"), value: "Sắp hết hạn" },
+              { label: t("expired"), value: "Quá hạn" },
+              { label: t("terminated"), value: "Đã chấm dứt" },
             ].map((tab) => {
               const isActive = statusFilter === tab.value;
               return (

@@ -10,6 +10,7 @@ import {
   Layers, ArrowUpRight, Clock, MapPin
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 export interface TierRate {
   name: string;
@@ -157,6 +158,7 @@ const initialServices: ServiceItem[] = [
 ];
 
 export default function ServicesPage() {
+  const t = useTranslations("services");
   const { activeBuilding } = useAuth();
 
   const [services, setServices] = useState<ServiceItem[]>(initialServices);
@@ -394,10 +396,10 @@ export default function ServicesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            Quản lý Dịch vụ & Tiện ích
+            {t("title")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
-            Cấu hình bảng giá điện, nước, internet và phí sinh hoạt cho tòa nhà
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -417,7 +419,7 @@ export default function ServicesPage() {
             onClick={handleOpenAddModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Thêm dịch vụ mới
+            <Plus className="w-4 h-4" /> {t("addNew")}
           </button>
         </div>
       </div>
@@ -447,12 +449,12 @@ export default function ServicesPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>Google Maps</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Cấu hình đơn giá điện, nước, dịch vụ vệ sinh và quản lý phí sinh hoạt tiện ích toàn nhà. Đơn giá sẽ tự động được sử dụng khi chốt số điện nước và tính hóa đơn hàng tháng.
+              {t("heroSubtitle")}
             </p>
           </div>
 
@@ -460,7 +462,7 @@ export default function ServicesPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full md:w-[135px]">
               <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng dịch vụ</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("totalServices")}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{services.length}</span>
               </div>
             </div>
@@ -468,7 +470,7 @@ export default function ServicesPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full md:w-[135px]">
               <Zap className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Theo đồng hồ</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("metered")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{meteredCount}</span>
               </div>
             </div>

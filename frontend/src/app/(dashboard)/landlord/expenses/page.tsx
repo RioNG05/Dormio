@@ -33,6 +33,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 // Define Expense Entity Interface according to Spec UC-L-17 & Prisma Schema
 export interface ExpenseItem {
@@ -167,6 +168,7 @@ const formatLargeMoney = (amount: number): string => {
 };
 
 export default function ExpensesPage() {
+  const t = useTranslations("expenses");
   const { activeBuilding } = useAuth();
   const router = useRouter();
 
@@ -427,10 +429,10 @@ export default function ExpensesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-[#2AC1BC]" /> Quản Lý Chi Phí Vận Hành
+            <Wallet className="w-6 h-6 text-[#2AC1BC]" /> {t("title")}
           </h1>
           <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            Theo dõi hóa đơn dịch vụ, chi phí bảo trì &amp; mua sắm thiết bị tòa nhà.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -443,7 +445,7 @@ export default function ExpensesPage() {
             }}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
           >
-            <Plus className="w-4 h-4 shrink-0" /> Thêm Khoản Chi Mới
+            <Plus className="w-4 h-4 shrink-0" /> {t("addNew")}
           </button>
         </div>
       </div>
@@ -471,12 +473,12 @@ export default function ExpensesPage() {
                 rel="noreferrer"
                 className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>Google Maps</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Kiểm soát ngân sách chi phí vận hành, bảo trì thiết bị và hóa đơn phát sinh minh bạch cho tòa nhà.
+              {t("heroSubtitle")}
             </p>
           </div>
 
@@ -486,9 +488,9 @@ export default function ExpensesPage() {
               {/* Card 1: Tổng Chi Phí */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">TỔNG CHI PHÍ</span>
-                  <span className="font-black text-rose-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
+                <div className="flex flex-col">
+                  <span className="text-[9px] uppercase font-black text-rose-400 tracking-wider whitespace-nowrap">{t("totalExpenses")}</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-tight mt-0.5">
                     {formatLargeMoney(totalExpenseAmount)}
                   </span>
                 </div>
@@ -497,9 +499,9 @@ export default function ExpensesPage() {
               {/* Card 2: Đã Thanh Toán */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-2xl border border-[#2AC1BC]/30 backdrop-blur-md min-w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-[#2AC1BC] tracking-wider whitespace-nowrap">ĐÃ THANH TOÁN</span>
-                  <span className="font-black text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
+                <div className="flex flex-col">
+                  <span className="text-[9px] uppercase font-black text-[#2AC1BC] tracking-wider whitespace-nowrap">{t("paidExpenses")}</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-tight mt-0.5">
                     {formatLargeMoney(paidExpenseAmount)}
                   </span>
                 </div>
@@ -507,10 +509,10 @@ export default function ExpensesPage() {
 
               {/* Card 3: Chờ Thanh Toán */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">CHỜ THANH TOÁN</span>
-                  <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)] shrink-0" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] uppercase font-black text-amber-400 tracking-wider whitespace-nowrap">{t("pendingExpenses")}</span>
+                  <span className="font-black text-white text-base sm:text-lg leading-tight mt-0.5">
                     {formatLargeMoney(pendingExpenseAmount)}
                   </span>
                 </div>

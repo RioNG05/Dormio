@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin, AlertCircle, CheckCircle2, Info, UserCheck, FileSpreadsheet, UserCircle2, PhoneCall, MessageCircle, Eye, Edit3, Link2, Mail, LogOut, Sparkles, ShieldCheck } from "lucide-react";
 import { generateMockCustomers, mockSystemTenantUsers, SystemTenantUser } from "./data";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 export default function CustomersPage() {
+  const t = useTranslations("customers");
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -312,10 +314,10 @@ export default function CustomersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            Quản lý khách thuê
+            {t("title")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
-            Danh sách khách thuê theo tòa nhà, phòng và trạng thái liên kết
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -335,7 +337,7 @@ export default function CustomersPage() {
             onClick={handleOpenAddModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <UserPlus className="w-4 h-4" /> Thêm khách thuê
+            <UserPlus className="w-4 h-4" /> {t("addCustomer")}
           </button>
         </div>
       </div>
@@ -354,7 +356,7 @@ export default function CustomersPage() {
                 {activeBuilding.name}
               </h2>
               <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                Đang vận hành
+                {t("staying")}
               </span>
             </div>
 
@@ -370,12 +372,12 @@ export default function CustomersPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>Google Maps</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Quản lý tổng thể danh sách khách hàng lưu trú, thông tin liên lạc và tình trạng hợp đồng.
+              {t("bannerSub")}
             </p>
           </div>
 
@@ -384,7 +386,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng khách</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("totalCustomers")}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{totalCustomers}</span>
               </div>
             </div>
@@ -392,7 +394,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang ở</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("staying")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{stayingCount}</span>
               </div>
             </div>
@@ -400,7 +402,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Sắp hết HĐ</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("expiringSoon")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{expiringCount}</span>
               </div>
             </div>
@@ -408,7 +410,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã rời</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("left")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{leftCount}</span>
               </div>
             </div>
@@ -423,10 +425,10 @@ export default function CustomersPage() {
           <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
             {/* Filter Pills */}
             {[
-              { id: "", label: "Tất cả", count: totalCustomers, color: "text-zinc-700 bg-zinc-100 border-zinc-200" },
-              { id: "Đang ở", label: "Đang ở", count: stayingCount, color: "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30" },
-              { id: "Sắp hết hợp đồng", label: "Sắp hết HĐ", count: expiringCount, color: "text-orange-700 bg-orange-50 border-orange-200" },
-              { id: "Đã rời", label: "Đã rời", count: leftCount, color: "text-blue-700 bg-blue-50 border-blue-200" },
+              { id: "", label: t("all"), count: totalCustomers, color: "text-zinc-700 bg-zinc-100 border-zinc-200" },
+              { id: "Đang ở", label: t("staying"), count: stayingCount, color: "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30" },
+              { id: "Sắp hết hợp đồng", label: t("expiringSoon"), count: expiringCount, color: "text-orange-700 bg-orange-50 border-orange-200" },
+              { id: "Đã rời", label: t("left"), count: leftCount, color: "text-blue-700 bg-blue-50 border-blue-200" },
             ].map((tab) => (
               <button
                 key={tab.id}

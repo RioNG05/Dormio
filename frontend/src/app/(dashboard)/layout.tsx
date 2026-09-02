@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
 import { useAuth } from "@/context/AuthContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, Home, Users, FileText, Bell,
   Wallet, CreditCard,
@@ -15,7 +16,10 @@ import {
   AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2
 } from "lucide-react";
 
+import { useTranslations } from "next-intl";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const tNav = useTranslations("nav");
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -33,62 +37,62 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isTenant = pathname?.startsWith('/tenant');
 
   const landlordMenus = [
-    { name: "Tổng quan", href: "/landlord", icon: LayoutDashboard },
+    { name: tNav("dashboard"), href: "/landlord", icon: LayoutDashboard },
     {
-      group: "Vận hành",
+      group: tNav("operations"),
       key: "van-hanh",
       items: [
-        { name: "Phòng", href: "/landlord/rooms", icon: DoorOpen },
-        { name: "Khách thuê", href: "/landlord/customers", icon: Users },
-        { name: "Hợp đồng", href: "/landlord/contracts", icon: FileText },
-        { name: "Tài sản", href: "/landlord/assets", icon: Package },
-        { name: "Dịch vụ", href: "/landlord/services", icon: Wrench },
-        { name: "Thông báo & Nhắc nhở", href: "/landlord/reminders", icon: Bell },
-        { name: "Tin nhắn", href: "/landlord/messages", icon: MessageCircle },
+        { name: tNav("rooms"), href: "/landlord/rooms", icon: DoorOpen },
+        { name: tNav("customers"), href: "/landlord/customers", icon: Users },
+        { name: tNav("contracts"), href: "/landlord/contracts", icon: FileText },
+        { name: tNav("assets"), href: "/landlord/assets", icon: Package },
+        { name: tNav("services"), href: "/landlord/services", icon: Wrench },
+        { name: tNav("reminders"), href: "/landlord/reminders", icon: Bell },
+        { name: tNav("messages"), href: "/landlord/messages", icon: MessageCircle },
       ]
     },
     {
-      group: "Sổ thu chi",
+      group: tNav("accounting"),
       key: "so-thu-chi",
       items: [
-        { name: "Hoá đơn", href: "/landlord/invoices", icon: Receipt },
-        { name: "Công nợ", href: "/landlord/debts", icon: AlertTriangle },
-        { name: "Đặt cọc", href: "/landlord/deposits", icon: Shield },
-        { name: "Chi phí", href: "/landlord/expenses", icon: Wallet },
+        { name: tNav("invoices"), href: "/landlord/invoices", icon: Receipt },
+        { name: tNav("debts"), href: "/landlord/debts", icon: AlertTriangle },
+        { name: tNav("deposits"), href: "/landlord/deposits", icon: Shield },
+        { name: tNav("expenses"), href: "/landlord/expenses", icon: Wallet },
       ]
     },
     {
-      group: "Kinh doanh",
+      group: tNav("business"),
       key: "kinh-doanh",
       items: [
-        { name: "Đăng tin", href: "/landlord/listings", icon: Globe },
-        { name: "Báo cáo", href: "/landlord/reports", icon: BarChart2 },
+        { name: tNav("listings"), href: "/landlord/listings", icon: Globe },
+        { name: tNav("reports"), href: "/landlord/reports", icon: BarChart2 },
       ]
     },
     {
-      group: "Nhân sự",
+      group: tNav("workforce"),
       key: "nhan-su",
       items: [
-        { name: "Nhân viên", href: "/landlord/workforce", icon: UserCircle },
-        { name: "Lịch làm", href: "/landlord/workforce/schedule", icon: Calendar },
-        { name: "Chấm công", href: "/landlord/workforce/attendance", icon: Clock },
+        { name: tNav("staff"), href: "/landlord/workforce", icon: UserCircle },
+        { name: tNav("schedule"), href: "/landlord/workforce/schedule", icon: Calendar },
+        { name: tNav("attendance"), href: "/landlord/workforce/attendance", icon: Clock },
       ]
     },
     {
-      group: "Khác",
+      group: tNav("other"),
       key: "khac",
       items: [
-        { name: "Cài đặt", href: "/landlord/settings", icon: Settings },
-        { name: "Trợ giúp", href: "/landlord/guide", icon: HelpCircle },
+        { name: tNav("settings"), href: "/landlord/settings", icon: Settings },
+        { name: tNav("guide"), href: "/landlord/guide", icon: HelpCircle },
       ]
     }
   ];
 
   const tenantMenus = [
-    { name: "Thông tin trọ", href: "/tenant", icon: Building },
-    { name: "Thống kê & Hóa đơn", href: "/tenant/invoices", icon: Receipt },
-    { name: "Tin nhắn", href: "/tenant/messages", icon: MessageCircle },
-    { name: "Yêu cầu hỗ trợ", href: "/tenant/complaints", icon: MessageSquare },
+    { name: tNav("home"), href: "/tenant", icon: Building },
+    { name: tNav("invoices"), href: "/tenant/invoices", icon: Receipt },
+    { name: tNav("messages"), href: "/tenant/messages", icon: MessageCircle },
+    { name: tNav("guide"), href: "/tenant/complaints", icon: MessageSquare },
   ];
 
   const NavContent = () => {
@@ -244,6 +248,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const UserFooter = ({ compact = false }: { compact?: boolean }) => (
     <div className={`border-t border-zinc-100 ${compact ? "p-3" : "p-3"}`}>
+      <div className="flex items-center justify-between px-2 mb-2">
+        <span className="text-xs font-semibold text-zinc-500">Ngôn ngữ / Lang:</span>
+        <LanguageSwitcher />
+      </div>
+
       <div className="flex items-center gap-3 px-2 py-2 mb-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold shrink-0">
           R

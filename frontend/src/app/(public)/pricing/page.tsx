@@ -3,8 +3,10 @@
 import React, { useState } from "react";
 import { Check, X, ShieldCheck, Sparkles, Building2, QrCode, Crown, Zap, HelpCircle, ChevronDown, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function PricingPage() {
+  const t = useTranslations("pricingPage");
   const [pricingSection, setPricingSection] = useState<"bhms" | "bhrp">("bhms");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -13,112 +15,112 @@ export default function PricingPage() {
 
   const bhmsPlans = [
     {
-      name: "Miễn Phí",
+      name: t("freePlanName"),
       priceMonthly: 0,
-      description: "Dành cho cá nhân kinh doanh trọ nhỏ lẻ, quản lý các tác vụ cơ bản.",
+      description: t("freePlanDesc"),
       features: [
-        "Quản lý tối đa 1 nhà trọ",
-        "Tối đa 5 phòng trọ",
-        "Lập hóa đơn thủ công",
-        "Hỗ trợ qua Email",
+        t("freeF1"),
+        t("freeF2"),
+        t("freeF3"),
+        t("freeF4"),
       ],
-      notIncluded: ["Quản lý hóa đơn VietQR tự động", "Báo cáo doanh thu chuyên sâu", "Quản lý nhân viên"],
-      cta: "Bắt Đầu Miễn Phí",
+      notIncluded: [t("freeN1"), t("freeN2"), t("freeN3")],
+      cta: t("freeCta"),
       popular: false,
     },
     {
-      name: "Chuyên Nghiệp",
+      name: t("proPlanName"),
       priceMonthly: 199000,
-      description: "Giải pháp hoàn hảo cho chủ nhà trọ quy mô vừa, cần tự động hóa thu tiền.",
+      description: t("proPlanDesc"),
       features: [
-        "Quản lý tối đa 5 nhà trọ",
-        "Tối đa 50 phòng trọ",
-        "Tạo hóa đơn & thu tiền VietQR tự động",
-        "Quét số điện nước AI OCR từ ảnh chụp",
-        "Báo cáo công nợ & Zalo nhắc nợ tự động",
-        "Hỗ trợ ưu tiên qua Zalo 24/7",
+        t("proF1"),
+        t("proF2"),
+        t("proF3"),
+        t("proF4"),
+        t("proF5"),
+        t("proF6"),
       ],
-      notIncluded: ["Phân quyền ca làm nhân viên"],
-      cta: "Đăng Ký Gói Chuyên Nghiệp",
+      notIncluded: [t("proN1")],
+      cta: t("proCta"),
       popular: true,
     },
     {
-      name: "Doanh Nghiệp",
+      name: t("entPlanName"),
       priceMonthly: 499000,
-      description: "Quản lý chuỗi trọ số lượng lớn với đầy đủ tính năng tự động hóa cao cấp.",
+      description: t("entPlanDesc"),
       features: [
-        "Không giới hạn số nhà trọ",
-        "Không giới hạn số phòng",
-        "Tính năng tự động hóa 100%",
-        "Phân quyền nhân viên & lịch phân ca",
-        "Báo cáo tài chính doanh thu chuyên sâu",
-        "Hỗ trợ chuyên gia 1-1 riêng biệt",
+        t("entF1"),
+        t("entF2"),
+        t("entF3"),
+        t("entF4"),
+        t("entF5"),
+        t("entF6"),
       ],
       notIncluded: [],
-      cta: "Liên Hệ Gói Doanh Nghiệp",
+      cta: t("entCta"),
       popular: false,
     },
   ];
 
   const bhrpPlans = [
     {
-      name: "Tin Thường",
+      name: t("stdListingName"),
       priceMonthly: 0,
-      description: "Dành cho chủ nhà trọ muốn đăng tin niêm yết cơ bản trên sàn cho thuê.",
+      description: t("stdListingDesc"),
       features: [
-        "Hiển thị danh sách tìm kiếm chuẩn",
-        "Tải lên tối đa 5 hình ảnh sắc nét",
-        "Liên hệ trực tiếp qua SĐT / Google Maps",
-        "Duyệt tin chuẩn trong 24h",
+        t("stdF1"),
+        t("stdF2"),
+        t("stdF3"),
+        t("stdF4"),
       ],
-      notIncluded: ["Nhãn Nổi Bật VIP", "Đẩy bài tự động", "Ghim Top 1 đầu trang"],
-      cta: "Đăng Tin Miễn Phí",
+      notIncluded: [t("stdN1"), t("stdN2"), t("stdN3")],
+      cta: t("stdCta"),
       popular: false,
     },
     {
-      name: "Tin VIP Vàng",
+      name: t("vipGoldName"),
       priceMonthly: 199000,
-      description: "Tăng 3x lượt tiếp cận khách thuê, gắn nhãn VIP Nổi Bật thu hút.",
+      description: t("vipGoldDesc"),
       features: [
-        "Nhãn nổi bật VIP Vàng ấn tượng",
-        "Tải lên tối đa 15 hình ảnh HD",
-        "Tự động đẩy bài 1 lần / ngày",
-        "Ưu tiên vị trí top đầu tìm kiếm",
-        "Được phép bật tính năng Cọc Escrow",
+        t("vipGoldF1"),
+        t("vipGoldF2"),
+        t("vipGoldF3"),
+        t("vipGoldF4"),
+        t("vipGoldF5"),
       ],
-      notIncluded: ["Ghim Top 1 vị trí cố định"],
-      cta: "Mua Gói VIP Vàng",
+      notIncluded: [t("vipGoldN1")],
+      cta: t("vipGoldCta"),
       popular: true,
     },
     {
-      name: "Tin VIP Kim Cương",
+      name: t("vipDiamondName"),
       priceMonthly: 499000,
-      description: "Được ghim vị trí Top 1 đầu trang chủ, tiếp cận 10x khách thuê tức thì.",
+      description: t("vipDiamondDesc"),
       features: [
-        "Ghim đứng đầu vị trí Top 1 danh mục",
-        "Nhãn Kim Cương phát sáng nổi bật",
-        "Tự động đẩy bài 3 lần / ngày",
-        "Hỗ trợ tối ưu hình ảnh & chuẩn SEO",
-        "Duyệt tin thần tốc trong 5 phút",
+        t("vipDiamondF1"),
+        t("vipDiamondF2"),
+        t("vipDiamondF3"),
+        t("vipDiamondF4"),
+        t("vipDiamondF5"),
       ],
       notIncluded: [],
-      cta: "Mua Gói VIP Kim Cương",
+      cta: t("vipDiamondCta"),
       popular: false,
     },
   ];
 
   const faqs = [
     {
-      q: "Dormio có tính phí thanh toán qua VietQR không?",
-      a: "Hoàn toàn KHÔNG. Dormio tích hợp cổng VietQR chuyển khoản trực tiếp từ ngân hàng khách thuê về tài khoản ngân hàng của chủ trọ mà không qua trung gian, chi phí là 0 đồng."
+      q: t("faq1Q"),
+      a: t("faq1A")
     },
     {
-      q: "Tôi có thể nâng cấp hoặc hủy gói bất kỳ lúc nào không?",
-      a: "Có. Bạn có thể nâng cấp gói dịch vụ bất kỳ lúc nào để mở rộng thêm số lượng phòng hoặc số lượng tin đăng. Tiền thừa của gói cũ sẽ được tính khấu trừ tự động."
+      q: t("faq2Q"),
+      a: t("faq2A")
     },
     {
-      q: "Làm sao để biết tính năng Escrow cọc phòng hoạt động ra sao?",
-      a: "Tiền cọc của khách thuê được Dormio tạm giữ an toàn 100%. Khi 2 bên chủ trọ và người thuê chấp nhận hợp đồng, tiền cọc sẽ giải ngân thẳng vào tài khoản của chủ trọ."
+      q: t("faq3Q"),
+      a: t("faq3A")
     }
   ];
 
@@ -130,18 +132,18 @@ export default function PricingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2AC1BC]/20 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/30 shadow-lg">
-            <Sparkles className="w-4 h-4" /> BẢNG GIÁ DỊCH VỤ MINH BẠCH
+            <Sparkles className="w-4 h-4" /> {t("badge")}
           </span>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">Bảng Giá Linh Hoạt,</span> <br />
+            <span className="inline-block whitespace-nowrap">{t("title1")}</span> <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              Tối Ưu Cho Mọi Quy Mô
+              {t("title2")}
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto text-balance">
-            Lựa chọn gói giải pháp phù hợp để vận hành chuỗi trọ hiệu quả và tiếp cận hàng ngàn khách thuê.
+            {t("subtitle")}
           </p>
         </div>
       </section>
@@ -160,7 +162,7 @@ export default function PricingPage() {
                   : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
-              <Building2 className="w-4 h-4" /> 1. Bảng Giá Quản Lý (BHMS)
+              <Building2 className="w-4 h-4" /> {t("bhmsTab")}
             </button>
 
             <button
@@ -171,7 +173,7 @@ export default function PricingPage() {
                   : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
-              <QrCode className="w-4 h-4" /> 2. Bảng Giá Đăng Tin (BHRP)
+              <QrCode className="w-4 h-4" /> {t("bhrpTab")}
             </button>
           </div>
 
@@ -183,7 +185,7 @@ export default function PricingPage() {
                 billingCycle === "monthly" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
-              Thanh toán Hàng Tháng
+              {t("payMonthly")}
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
@@ -191,9 +193,9 @@ export default function PricingPage() {
                 billingCycle === "yearly" ? "bg-zinc-900 text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
-              <span>Thanh toán Hàng Năm</span>
+              <span>{t("payYearly")}</span>
               <span className="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full uppercase">
-                Tiết kiệm 20%
+                {t("save20")}
               </span>
             </button>
           </div>
@@ -204,11 +206,11 @@ export default function PricingPage() {
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <span className="px-3.5 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/20 uppercase inline-block whitespace-nowrap">
-                GÓI QUẢN LÝ NHÀ TRỌ (BHMS) — CHO CHỦ TRỌ
+                {t("bhmsBadge")}
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
-                <span className="inline-block whitespace-nowrap">Tự Động Hóa Vận Hành</span>{" "}
-                <span className="inline-block whitespace-nowrap">Tiết Kiệm 80% Thời Gian</span>
+                <span className="inline-block whitespace-nowrap">{t("bhmsTitle1")}</span>{" "}
+                <span className="inline-block whitespace-nowrap">{t("bhmsTitle2")}</span>
               </h2>
             </div>
 
@@ -227,7 +229,7 @@ export default function PricingPage() {
                   >
                     {plan.popular && (
                       <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#2AC1BC] text-white text-[10px] font-black rounded-full uppercase tracking-wider shadow-md whitespace-nowrap">
-                        ĐƯỢC CHỌN NHIỀU NHẤT
+                        {t("mostPopular")}
                       </span>
                     )}
 
@@ -242,17 +244,17 @@ export default function PricingPage() {
                           <span className="text-3xl font-black text-[#2AC1BC]">
                             {finalPrice === 0 ? "0 ₫" : `${finalPrice.toLocaleString("vi-VN")} ₫`}
                           </span>
-                          <span className="text-xs text-zinc-400 font-bold">/ tháng</span>
+                          <span className="text-xs text-zinc-400 font-bold"> {t("month")}</span>
                         </div>
                         {billingCycle === "yearly" && finalPrice > 0 && (
                           <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
-                            Thanh toán theo năm: {(finalPrice * 12).toLocaleString("vi-VN")} ₫ / năm
+                            {t("yearlyPayNote")}: {(finalPrice * 12).toLocaleString("vi-VN")} ₫
                           </span>
                         )}
                       </div>
 
                       <div className="space-y-3 pt-2">
-                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">Tính năng bao gồm:</span>
+                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">{t("included")}</span>
                         {plan.features.map((feat, fIdx) => (
                           <div key={fIdx} className="flex items-start gap-2 text-xs font-semibold text-zinc-700">
                             <Check className="w-4 h-4 text-[#2AC1BC] shrink-0 mt-0.5" />
@@ -292,11 +294,11 @@ export default function PricingPage() {
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <span className="px-3.5 py-1 bg-[#FF6B35]/10 text-[#FF6B35] text-xs font-black rounded-full border border-[#FF6B35]/20 uppercase inline-block whitespace-nowrap">
-                GÓI ĐĂNG TIN SÀN CHO THUÊ (BHRP)
+                {t("bhrpBadge")}
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
-                <span className="inline-block whitespace-nowrap">Tăng 3X Lượt Xem,</span>{" "}
-                <span className="inline-block whitespace-nowrap">Cho Thuê Phòng Thần Tốc</span>
+                <span className="inline-block whitespace-nowrap">{t("bhrpTitle1")}</span>{" "}
+                <span className="inline-block whitespace-nowrap">{t("bhrpTitle2")}</span>
               </h2>
             </div>
 
@@ -315,7 +317,7 @@ export default function PricingPage() {
                   >
                     {plan.popular && (
                       <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#FF6B35] text-white text-[10px] font-black rounded-full uppercase tracking-wider shadow-md whitespace-nowrap">
-                        TĂNG 3X LƯỢT XEM
+                        {t("bhrp3xViews")}
                       </span>
                     )}
 
@@ -330,17 +332,17 @@ export default function PricingPage() {
                           <span className="text-3xl font-black text-[#FF6B35]">
                             {finalPrice === 0 ? "0 ₫" : `${finalPrice.toLocaleString("vi-VN")} ₫`}
                           </span>
-                          <span className="text-xs text-zinc-400 font-bold">/ tháng</span>
+                          <span className="text-xs text-zinc-400 font-bold"> {t("month")}</span>
                         </div>
                         {billingCycle === "yearly" && finalPrice > 0 && (
                           <span className="text-[10px] text-amber-600 font-bold block mt-0.5">
-                            Thanh toán theo năm: {(finalPrice * 12).toLocaleString("vi-VN")} ₫ / năm
+                            {t("yearlyPayNote")}: {(finalPrice * 12).toLocaleString("vi-VN")} ₫
                           </span>
                         )}
                       </div>
 
                       <div className="space-y-3 pt-2">
-                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">Tính năng quyền lợi:</span>
+                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">{t("bhrpIncluded")}</span>
                         {plan.features.map((feat, fIdx) => (
                           <div key={fIdx} className="flex items-start gap-2 text-xs font-semibold text-zinc-700">
                             <Check className="w-4 h-4 text-[#FF6B35] shrink-0 mt-0.5" />
@@ -379,9 +381,9 @@ export default function PricingPage() {
         <div className="bg-zinc-50 rounded-3xl p-8 sm:p-12 border border-zinc-200/80 space-y-6">
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <h3 className="text-xl font-black text-zinc-900 flex items-center justify-center gap-2">
-              <HelpCircle className="w-5 h-5 text-[#2AC1BC]" /> Câu Hỏi Thường Gặp
+              <HelpCircle className="w-5 h-5 text-[#2AC1BC]" /> {t("faqTitle")}
             </h3>
-            <p className="text-xs text-zinc-500 font-medium">Giải đáp thắc mắc về các gói bảng giá và chi phí tích hợp dịch vụ.</p>
+            <p className="text-xs text-zinc-500 font-medium">{t("faqSubtitle")}</p>
           </div>
 
           <div className="max-w-3xl mx-auto space-y-3">
@@ -412,16 +414,16 @@ export default function PricingPage() {
         {/* Bottom CTA Registration Banner */}
         <div className="bg-zinc-900 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-2xl border border-zinc-800">
           <h2 className="text-2xl sm:text-4xl font-black text-white leading-snug">
-            <span className="inline-block whitespace-nowrap">Bắt đầu quản lý trọ thông minh</span>{" "}
-            <span className="inline-block whitespace-nowrap">ngay hôm nay</span>
+            <span className="inline-block whitespace-nowrap">{t("ctaTitle1")}</span>{" "}
+            <span className="inline-block whitespace-nowrap">{t("ctaTitle2")}</span>
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto font-medium">
-            Tạo tài khoản sử dụng miễn phí hoặc đăng ký dùng thử 7 ngày không cam kết.
+            {t("ctaSubtitle")}
           </p>
           <div className="flex justify-center">
             <Link href="/register">
               <button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105">
-                Đăng ký tài khoản ngay &rarr;
+                {t("ctaBtn")}
               </button>
             </Link>
           </div>

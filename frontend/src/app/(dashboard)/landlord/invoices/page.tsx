@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 // Invoice Item Interface
 interface InvoiceItem {
@@ -40,6 +41,7 @@ interface InvoiceItem {
 }
 
 function InvoicesContent() {
+  const t = useTranslations("invoices");
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -457,7 +459,7 @@ function InvoicesContent() {
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Theo dõi công nợ, tiền phòng, điện nước và chốt số tự động qua VietQR & AI OCR.
+              {t("bannerSub")}
             </p>
           </div>
 
@@ -468,7 +470,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">TỔNG HÓA ĐƠN</span>
+                  <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">{t("totalInvoicesShort")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{totalInvoicesCount}</span>
                 </div>
               </div>
@@ -477,7 +479,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">QUÁ HẠN</span>
+                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">{t("overdueShort")}</span>
                   <span className="font-black text-rose-400 text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{overdueCount}</span>
                 </div>
               </div>
@@ -486,7 +488,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors rounded-2xl border border-emerald-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">ĐÃ THU ({paidCount})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">{t("paidShort", { count: paidCount })}</span>
                   <span className="font-black text-emerald-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalPaidAmount)}
                   </span>
@@ -497,7 +499,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">CHƯA THU ({unpaidCount})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">{t("unpaidShort", { count: unpaidCount })}</span>
                   <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalUnpaidAmount)}
                   </span>

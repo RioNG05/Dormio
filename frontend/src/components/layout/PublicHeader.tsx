@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 import {
   Menu,
   X,
@@ -27,18 +29,20 @@ import {
 
 export function PublicHeader() {
   const pathname = usePathname();
+  const tNav = useTranslations("nav");
+  const tCommon = useTranslations("common");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const { isLoggedIn, user, logout, toggleLoginDemo } = useAuth();
 
   const navLinks = [
-    { href: "/", label: "Trang chủ", icon: Home },
-    { href: "/rooms", label: "Phòng trọ", icon: Building2 },
-    { href: "/features", label: "Tính năng", icon: Layers },
-    { href: "/pricing", label: "Bảng giá", icon: Tag },
-    { href: "/blog", label: "Blog", icon: BookOpen },
-    { href: "/contact", label: "Liên hệ", icon: Mail },
+    { href: "/", label: tNav("home"), icon: Home },
+    { href: "/rooms", label: tNav("rooms"), icon: Building2 },
+    { href: "/features", label: tNav("features"), icon: Layers },
+    { href: "/pricing", label: tNav("pricing"), icon: Tag },
+    { href: "/blog", label: tNav("blog"), icon: BookOpen },
+    { href: "/contact", label: tNav("contact"), icon: Mail },
   ];
 
   return (
@@ -85,8 +89,8 @@ export function PublicHeader() {
               <Link href="/landlord">
                 <Button className="rounded-xl px-3 sm:px-4 py-2 bg-[#FF6B35] hover:bg-[#d55e23] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#FF6B35]/25 flex items-center gap-1.5 transition-all hover:scale-105">
                   <Building2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Đăng ký trở thành chủ trọ</span>
-                  <span className="sm:hidden">Làm Chủ trọ</span>
+                  <span className="hidden sm:inline">{tNav("becomeLandlord")}</span>
+                  <span className="sm:hidden">{tNav("becomeLandlordMobile")}</span>
                 </Button>
               </Link>
 
@@ -173,15 +177,20 @@ export function PublicHeader() {
                 href="/login"
                 className="hidden sm:inline-flex text-xs md:text-sm font-bold text-zinc-700 hover:text-[#2AC1BC] transition-colors px-2.5 py-1.5"
               >
-                Đăng nhập
+                {tNav("login")}
               </Link>
               <Link href="/register">
                 <Button className="rounded-xl px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs md:text-sm font-bold shadow-md shadow-[#2AC1BC]/25">
-                  Đăng ký tài khoản
+                  {tNav("register")}
                 </Button>
               </Link>
             </>
           )}
+
+          {/* 🌐 Rightmost Position - Language Switcher */}
+          <div className="pl-1 border-l border-zinc-200">
+            <LanguageSwitcher />
+          </div>
 
           {/* Mobile Hamburger Toggle Button */}
           <button

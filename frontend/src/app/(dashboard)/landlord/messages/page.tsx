@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 
 // Media Attachment Interface
 interface MediaAttachment {
@@ -58,6 +59,7 @@ interface Message {
 }
 
 function MessagesContent() {
+  const t = useTranslations("messagesPage");
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -370,7 +372,7 @@ function MessagesContent() {
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "all" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              Tất cả ({conversations.length})
+              {t("all", { count: conversations.length })}
             </button>
 
             <button
@@ -378,7 +380,7 @@ function MessagesContent() {
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "unread" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              Chưa đọc ({conversations.filter(c => c.unread > 0).length})
+              {t("unread", { count: conversations.filter(c => c.unread > 0).length })}
             </button>
 
             <button
@@ -386,15 +388,15 @@ function MessagesContent() {
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "read" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              Đã đọc ({conversations.filter(c => c.unread === 0).length})
+              {t("read", { count: conversations.filter(c => c.unread === 0).length })}
             </button>
 
             <button
               onClick={() => setActiveTab("tenant")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "tenant" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "tenant" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-[#2AC1BC] hover:bg-zinc-200/70"
                 }`}
             >
-              Khách thuê ({conversations.filter(c => c.type === "tenant").length})
+              {t("tenant", { count: conversations.filter(c => c.type === "tenant").length })}
             </button>
 
             <button
@@ -402,7 +404,7 @@ function MessagesContent() {
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "new_lead" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              Khách mới ({conversations.filter(c => c.type === "lead").length})
+              {t("newLead", { count: conversations.filter(c => c.type === "lead").length })}
             </button>
           </div>
         </div>

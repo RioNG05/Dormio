@@ -8,8 +8,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { formatVND } from "@/utils";
+import { useTranslations } from "next-intl";
 
 export default function SavedPostsPage() {
+  const t = useTranslations("savedPostsPage");
   const { isLoggedIn } = useAuth();
 
   const [savedRooms, setSavedRooms] = useState([
@@ -74,15 +76,15 @@ export default function SavedPostsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
           <div className="relative z-10 max-w-4xl mx-auto space-y-4">
             <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> TÍNH NĂNG DÀNH CHO THÀNH VIÊN
+              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> {t("memberBadge")}
             </span>
 
             <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
-              <span>Danh Sách Phòng Trọ Đã Lưu</span>
+              <span>{t("badge")}</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto">
-              Vui lòng đăng nhập tài khoản để xem và quản lý danh sách các phòng trọ yêu thích của bạn.
+              {t("subtitle")}
             </p>
           </div>
         </section>
@@ -94,21 +96,21 @@ export default function SavedPostsPage() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-zinc-900">Yêu Cầu Đăng Nhập Tài Khoản</h2>
+            <h2 className="text-2xl font-black text-zinc-900">{t("lockTitle")}</h2>
             <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-md mx-auto">
-              Trang danh sách lưu trữ phòng trọ chỉ dành cho thành viên đã có tài khoản trên nền tảng Dormio. Đăng nhập ngay để lưu giữ các căn hộ ưng ý & đối chiếu so sánh giá 24/7!
+              {t("lockDesc")}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link href="/login" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all cursor-pointer hover:scale-105">
-                Đăng nhập tài khoản ngay &rarr;
+                {t("loginBtn")}
               </button>
             </Link>
             <Link href="/register" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-8 py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-2xl transition-all cursor-pointer">
-                Tạo tài khoản mới
+                {t("registerBtn")}
               </button>
             </Link>
           </div>
@@ -125,18 +127,18 @@ export default function SavedPostsPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> DANH SÁCH PHÒNG TRỌ ĐÃ LƯU
+            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> {t("badge")}
           </span>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">Danh Sách Yêu Thích</span> <br />
+            <span className="inline-block whitespace-nowrap">{t("title1")}</span> <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              So Sánh & Đặt Cọc
+              {t("title2")}
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto text-balance">
-            Tùy chọn tích chọn các phòng trọ để mở đối chiếu so sánh thông số giá thuê, tiền cọc và tiện ích.
+            {t("subtitle")}
           </p>
         </div>
       </section>
@@ -148,11 +150,11 @@ export default function SavedPostsPage() {
             <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
               <Heart className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black text-zinc-900">Chưa có phòng trọ nào được lưu</h3>
-            <p className="text-xs text-zinc-500 font-medium">Hãy dạo xem danh sách phòng trọ chính chủ và nhấp vào biểu tượng trái tim để lưu lại.</p>
+            <h3 className="text-xl font-black text-zinc-900">{t("emptyTitle")}</h3>
+            <p className="text-xs text-zinc-500 font-medium">{t("emptySub")}</p>
             <Link href="/rooms">
               <button className="px-6 py-3 bg-[#2AC1BC] text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-[#72b3a3] transition-all cursor-pointer">
-                Khám phá danh sách phòng ngay &rarr;
+                {t("exploreRooms")}
               </button>
             </Link>
           </div>
@@ -165,10 +167,10 @@ export default function SavedPostsPage() {
                   {selectedForCompare.length}
                 </span>
                 <span className="hidden sm:inline">
-                  Đã lưu <strong className="text-white">{savedRooms.length}</strong> phòng • Đã chọn <strong className="text-[#2AC1BC]">{selectedForCompare.length}</strong> phòng so sánh
+                  {t("selectedInfo", { savedCount: savedRooms.length, compareCount: selectedForCompare.length })}
                 </span>
                 <span className="sm:hidden text-white font-bold">
-                  Đã chọn {selectedForCompare.length} phòng
+                  {t("selectedMobile", { compareCount: selectedForCompare.length })}
                 </span>
               </div>
 
@@ -178,7 +180,7 @@ export default function SavedPostsPage() {
                 disabled={selectedForCompare.length === 0}
                 className="px-6 py-3 bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] to-[#FF6B35] disabled:opacity-40 hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#2AC1BC]/20 flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shrink-0"
               >
-                <Scale className="w-4 h-4" /> Bắt đầu so sánh ({selectedForCompare.length}) →
+                <Scale className="w-4 h-4" /> {t("compareBtn", { count: selectedForCompare.length })}
               </button>
             </div>
 
@@ -206,7 +208,7 @@ export default function SavedPostsPage() {
                         onChange={() => { }} // handled by div click
                         className="w-4 h-4 accent-[#2AC1BC] cursor-pointer"
                       />
-                      <span>{isSelected ? "Đã chọn so sánh" : "Chọn so sánh"}</span>
+                      <span>{isSelected ? t("selectedCompare") : t("selectCompare")}</span>
                     </div>
 
                     {/* Image */}
@@ -219,7 +221,6 @@ export default function SavedPostsPage() {
                       <button
                         onClick={() => removeSaved(room.id)}
                         className="absolute top-3 right-3 p-2 bg-zinc-900/80 hover:bg-rose-600 text-white rounded-full transition-colors cursor-pointer"
-                        title="Bỏ lưu"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -237,7 +238,6 @@ export default function SavedPostsPage() {
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
-                          title="Mở Google Maps xem vị trí chính xác"
                         >
                           <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
                           <span className="truncate">{room.address}</span>
@@ -251,18 +251,18 @@ export default function SavedPostsPage() {
                         </div>
 
                         <span className="text-[11px] font-bold text-zinc-500 block">
-                          Tiền cọc: {room.depositAmount > 0 ? formatVND(room.depositAmount) : "Miễn phí cọc"}
+                          {t("rowDeposit")}: {room.depositAmount > 0 ? formatVND(room.depositAmount) : t("freeDeposit")}
                         </span>
 
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Link href={`/rooms/${room.id}`}>
                             <button className="w-full py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold text-xs rounded-xl transition-all cursor-pointer text-center">
-                              Xem Chi Tiết
+                              {t("viewDetails")}
                             </button>
                           </Link>
                           <Link href={`/rooms/${room.id}`}>
                             <button className="w-full py-2.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center">
-                              Đặt Cọc Giữ Phòng
+                              {t("depositNow")}
                             </button>
                           </Link>
                         </div>
@@ -286,10 +286,10 @@ export default function SavedPostsPage() {
             <div className="flex justify-between items-center pb-4 border-b border-zinc-100">
               <div>
                 <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-[#2AC1BC]" /> Bảng Đối Chiếu So Sánh Chi Tiết ({selectedRoomsData.length} Phòng)
+                  <Scale className="w-5 h-5 text-[#2AC1BC]" /> {t("modalTitle", { count: selectedRoomsData.length })}
                 </h3>
                 <p className="text-xs text-zinc-500 font-medium mt-0.5">
-                  So sánh trực quan giá thuê, tiền cọc, diện tích và tiện ích đi kèm.
+                  {t("modalSub")}
                 </p>
               </div>
               <button
@@ -305,7 +305,7 @@ export default function SavedPostsPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-200">
-                    <th className="p-3 text-xs font-black text-zinc-400 uppercase w-44">Tiêu chí so sánh</th>
+                    <th className="p-3 text-xs font-black text-zinc-400 uppercase w-44">{t("colCriteria")}</th>
                     {selectedRoomsData.map((room) => (
                       <th key={room.id} className="p-3 min-w-[220px]">
                         <div className="space-y-2">
@@ -318,7 +318,7 @@ export default function SavedPostsPage() {
                 </thead>
                 <tbody className="divide-y divide-zinc-100 text-xs font-semibold">
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Giá thuê / tháng</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("rowPrice")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 font-black text-rose-500 text-sm">
                         {formatVND(room.price)}
@@ -326,15 +326,15 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Tiền cọc giữ chỗ</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("rowDeposit")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 font-bold text-zinc-900">
-                        {room.depositAmount > 0 ? formatVND(room.depositAmount) : <span className="text-emerald-600 font-black">Miễn phí cọc xem phòng</span>}
+                        {room.depositAmount > 0 ? formatVND(room.depositAmount) : <span className="text-emerald-600 font-black">{t("freeDeposit")}</span>}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Diện tích phòng</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("rowArea")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-800 font-extrabold">
                         {room.area} m²
@@ -342,7 +342,7 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Địa chỉ chi tiết</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("rowAddress")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-600">
                         {room.address}
@@ -350,7 +350,7 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Tiện ích đi kèm</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("rowAmenities")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3">
                         <div className="flex flex-wrap gap-1">
@@ -364,7 +364,7 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Chủ nhà trọ</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("rowLandlord")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-700 font-bold">
                         {room.landlord.name} ({room.landlord.phone})
@@ -372,12 +372,12 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Hành động</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("rowAction")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3">
                         <Link href={`/rooms/${room.id}`}>
                           <button className="w-full py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all">
-                            Xem & Đặt Cọc &rarr;
+                            {t("viewAndDeposit")}
                           </button>
                         </Link>
                       </td>
