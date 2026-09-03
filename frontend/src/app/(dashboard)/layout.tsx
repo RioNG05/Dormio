@@ -351,27 +351,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar for Tenants */}
-      {isTenant && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-2 py-1.5 flex justify-around items-center shadow-lg">
-          {tenantMenus.map((item, idx) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={idx}
-                href={item.href}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${isActive ? "text-[#2AC1BC] font-black" : "text-zinc-400 hover:text-zinc-700 font-bold"
-                  }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? "text-[#2AC1BC]" : "text-zinc-400"}`} />
-                <span className="text-[10px] tracking-tight">{item.name}</span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
       {!isTenant && <AIChatBot />}
     </div>
   );
