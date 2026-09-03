@@ -1361,7 +1361,7 @@ const en = {
     congratsDesc: "Your account has been upgraded successfully. Automatically redirecting to the BHMS Management Dashboard...",
     searchPlaceholder: "Search rooms, districts, articles...",
     instantSearchTitle: "INSTANT SEARCH RESULTS ({count})"
-  }
+  },
   workforce: {
     title: "Staff & Workforce Management",
     subtitle: "Manage security guards, cleaners, building managers and shift assignments",

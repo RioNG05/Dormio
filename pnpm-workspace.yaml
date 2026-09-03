@@ -1,7 +1,14 @@
+packages:
+  - 'backend'
+  - 'frontend'
+
 allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
   '@prisma/engines': true
   '@scarf/scarf': true
   bcrypt: true
   msgpackr-extract: true
   prisma: true
   unrs-resolver: true
+  sharp: false

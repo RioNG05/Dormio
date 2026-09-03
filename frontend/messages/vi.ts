@@ -1361,7 +1361,7 @@ const vi = {
     congratsDesc: "Tài khoản của bạn đã được nâng cấp thành công. Đang tự động chuyển hướng tới Bảng điều khiển quản lý BHMS...",
     searchPlaceholder: "Tìm phòng trọ, quận huyện, bài viết...",
     instantSearchTitle: "KẾT QUẢ TÌM KIẾM TỨC THÌ ({count})"
-  }
+  },
   workforce: {
     title: "Nhân sự & Phân công",
     subtitle: "Quản lý danh sách bảo vệ, tạp vụ, người quản lý và lịch phân ca",
