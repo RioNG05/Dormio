@@ -32,6 +32,7 @@ Key shared infrastructure (create once, use everywhere):
 - `src/common/interceptors/` — ResponseInterceptor (wraps responses), AuditInterceptor
 - `src/common/decorators/` — @Roles(), @CurrentUser()
 - `src/common/filters/` — GlobalExceptionFilter
+- `src/common/swagger/` — `@ApiAuth()`, `@ApiBoardingHouseHeader()`, `ApiSuccessResponse<T>`, `ApiPaginatedResponse<T>`, `ApiErrorResponse`
 
 ## Prisma Usage
 
@@ -63,3 +64,21 @@ Queues to create:
 
 NestJS WebSocket gateway for chat. Load `nestjs-module` skill for WebSocket pattern.
 Chat rooms: `conversationId`. Events: `message:send`, `message:received`, `typing`.
+
+---
+
+## Language
+
+**English only** in all backend code. This is a strict rule:
+
+- Variable names, function names, class names — English
+- Code comments — English
+- Log messages (`this.logger.log`, `console.log`) — English
+- Error codes returned in exceptions (e.g. `'phone_number_already_exists'`) — English (snake_case)
+- Swagger `@ApiOperation` summaries and descriptions — English
+- `@ApiProperty` descriptions and examples — English
+- `@ApiResponse` descriptions — English
+- DTO field names — English (camelCase)
+
+Vietnamese is **only permitted** in `@ApiProperty({ example: '...' })` values that demonstrate
+Vietnamese-specific data (e.g. phone numbers, names), never in descriptions or summaries.

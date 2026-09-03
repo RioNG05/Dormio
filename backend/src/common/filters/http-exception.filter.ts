@@ -11,6 +11,7 @@ import { Request, Response } from 'express';
 interface ErrorResponse {
   success: false;
   statusCode: number;
+  message: string;
   error: string | string[];
   path: string;
   timestamp: string;
@@ -19,7 +20,7 @@ interface ErrorResponse {
 /**
  * Global HTTP exception filter.
  * Normalizes all errors to a consistent JSON structure:
- * { success: false, statusCode, error, path, timestamp }
+ * { success: false, statusCode, message, error, path, timestamp }
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -45,7 +46,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ) {
         const res = exceptionResponse as Record<string, unknown>;
         // class-validator returns { message: string[] }
-        error = (res.message as string | string[]) ?? exception.message;
+        error = (res.message as string | string[]) ?? (res.error as string) ?? exception.message;
       } else {
         error = exception.message;
       }
@@ -60,9 +61,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
+    const readableMessage = Array.isArray(error)
+      ? error.join('. ')
+      : typeof error === 'string'
+        ? error
+        : 'An error occurred while processing the request';
+
     const body: ErrorResponse = {
       success: false,
       statusCode,
+      message: readableMessage,
       error,
       path: request.url,
       timestamp: new Date().toISOString(),
