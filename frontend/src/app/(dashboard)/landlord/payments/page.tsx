@@ -1,7 +1,9 @@
+import { useTranslations } from "@/context/LanguageContext";
 import React from "react";
 import { Plus, Search, Filter, CreditCard, ArrowDownLeft, MoreHorizontal } from "lucide-react";
 
 export default function PaymentsPage() {
+  const t = useTranslations("invoices");
   const payments = [
     { id: "PT-001", invoice: "INV-202307-102", room: "102", date: "20/07/2023", amount: "3.450.000 ₫", method: "Chuyển khoản", status: "Thành công" },
   ];

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import {
   DollarSign, Home, AlertCircle, Info, Calendar, ArrowRight, BarChart3
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 import { Asset, initialMockAssets, calculateDepreciation } from "./data";
 
 export default function AssetsPage() {
@@ -942,3 +942,4 @@ function AlertModal({
     </div>
   );
 }
+

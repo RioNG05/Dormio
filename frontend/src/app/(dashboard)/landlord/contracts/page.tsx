@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function ContractsPage() {
   const t = useTranslations("contracts");
@@ -1818,3 +1818,4 @@ export default function ContractsPage() {
     </div>
   );
 }
+

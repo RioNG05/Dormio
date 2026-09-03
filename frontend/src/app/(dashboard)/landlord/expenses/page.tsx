@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 // Define Expense Entity Interface according to Spec UC-L-17 & Prisma Schema
 export interface ExpenseItem {

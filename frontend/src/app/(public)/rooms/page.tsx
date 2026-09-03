@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import {
   ArrowRight, User, Heart, Share2, Copy, Check, ShieldAlert, ArrowDownUp
 } from "lucide-react";
 import { formatVND } from "@/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function RoomsPage() {
   const t = useTranslations("roomsPage");
@@ -629,3 +629,4 @@ export default function RoomsPage() {
     </div>
   );
 }
+

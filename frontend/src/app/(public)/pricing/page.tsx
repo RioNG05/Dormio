@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { Check, X, ShieldCheck, Sparkles, Building2, QrCode, Crown, Zap, HelpCircle, ChevronDown, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function PricingPage() {
   const t = useTranslations("pricingPage");
@@ -433,3 +433,4 @@ export default function PricingPage() {
     </div>
   );
 }
+

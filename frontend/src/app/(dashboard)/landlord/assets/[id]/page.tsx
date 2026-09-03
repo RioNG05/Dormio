@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -23,6 +24,7 @@ const mockRoomTenants: Record<string, { name: string; phone: string }> = {
 };
 
 export default function AssetDetailPage() {
+  const t = useTranslations("assets");
   const { id } = useParams();
   const router = useRouter();
   const { activeBuilding } = useAuth();

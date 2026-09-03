@@ -1,10 +1,12 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState } from "react";
 import { MessageSquare, Plus, AlertTriangle, CheckCircle2, Clock, X, ShieldAlert, UploadCloud, File, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TenantAdminComplaintsPage() {
+  const t = useTranslations("tenantPortal");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{name: string, size: string}[]>([]);
 

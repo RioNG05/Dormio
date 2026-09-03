@@ -1,9 +1,11 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState } from "react";
 import { Plus, Calendar as CalendarIcon, X, Clock } from "lucide-react";
 
 export default function SchedulePage() {
+  const t = useTranslations("workforce");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 

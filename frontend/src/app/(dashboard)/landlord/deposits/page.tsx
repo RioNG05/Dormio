@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 // Deposit Item Interface (Strict 2 Deposit Types & Dual Status Display Support)
 export interface DepositItem {
@@ -21,13 +21,13 @@ export interface DepositItem {
   buildingName: string;
   tenantName: string;
   tenantPhone: string;
-  depositType: "Cọc giữ chỗ" | "Cọc hợp đồng"; // Exactly 2 Deposit Types
+  depositType: "Cá»c giá»¯ chá»—" | "Cá»c há»£p Ä‘á»“ng"; // Exactly 2 Deposit Types
   amount: number; // Current active deposit amount held
   originalAmount: number; // Initial deposit amount
   depositDate: string;
   expiryDate: string;
-  status: "Đang giữ" | "Đã hoàn" | "Đã khấu trừ"; // Base status category
-  isDeductedPartially?: boolean; // Flag indicating if any deduction occurred (triggers parallel "Đã khấu trừ" badge)
+  status: "Äang giá»¯" | "ÄÃ£ hoÃ n" | "ÄÃ£ kháº¥u trá»«"; // Base status category
+  isDeductedPartially?: boolean; // Flag indicating if any deduction occurred (triggers parallel "ÄÃ£ kháº¥u trá»«" badge)
   deductedAmount?: number; // Total amount deducted
   refundAmount?: number; // Final amount refunded to tenant
   deductionReason?: string;
@@ -36,367 +36,367 @@ export interface DepositItem {
   note?: string;
 }
 
-// Exactly 20 Mock Deposit Data Items (10 Items for Cọc giữ chỗ, 10 Items for Cọc hợp đồng)
+// Exactly 20 Mock Deposit Data Items (10 Items for Cá»c giá»¯ chá»—, 10 Items for Cá»c há»£p Ä‘á»“ng)
 const initialDeposits: DepositItem[] = [
-  // ================= 10 ITEMS FOR "CỌC GIỮ CHỖ" =================
+  // ================= 10 ITEMS FOR "Cá»ŒC GIá»® CHá»–" =================
   {
     id: "DEP-202608-102",
     roomId: "102",
-    roomName: "Phòng 102",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Trần Thị Mai",
+    roomName: "PhÃ²ng 102",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Tráº§n Thá»‹ Mai",
     tenantPhone: "0977234567",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 1000000,
     originalAmount: 1000000,
     depositDate: "15/08/2026",
     expiryDate: "25/08/2026",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Cọc giữ chỗ hẹn chốt hợp đồng. Cần thu bổ sung 2.000.000 ₫ để nâng lên Cọc Hợp Đồng.",
+    note: "Cá»c giá»¯ chá»— háº¹n chá»‘t há»£p Ä‘á»“ng. Cáº§n thu bá»• sung 2.000.000 â‚« Ä‘á»ƒ nÃ¢ng lÃªn Cá»c Há»£p Äá»“ng.",
   },
   {
     id: "DEP-202608-104",
     roomId: "104",
-    roomName: "Phòng 104",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Bùi Phương Thảo",
+    roomName: "PhÃ²ng 104",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "BÃ¹i PhÆ°Æ¡ng Tháº£o",
     tenantPhone: "0935888999",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 1500000,
     originalAmount: 1500000,
     depositDate: "20/08/2026",
     expiryDate: "02/09/2026",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Cọc giữ chỗ hẹn dọn vào đầu tháng 9. Dự kiến cọc HĐ: 4.500.000 ₫",
+    note: "Cá»c giá»¯ chá»— háº¹n dá»n vÃ o Ä‘áº§u thÃ¡ng 9. Dá»± kiáº¿n cá»c HÄ: 4.500.000 â‚«",
   },
   {
     id: "DEP-202608-202",
     roomId: "202",
-    roomName: "Phòng 202",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Phạm Minh Anh",
+    roomName: "PhÃ²ng 202",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Pháº¡m Minh Anh",
     tenantPhone: "0933456789",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 0,
     originalAmount: 2000000,
     depositDate: "01/08/2026",
     expiryDate: "10/08/2026",
-    status: "Đã hoàn",
+    status: "ÄÃ£ hoÃ n",
     isDeductedPartially: false,
     refundAmount: 2000000,
-    note: "Đã hoàn cọc 100% (2.000.000 ₫) do khách không dọn vào đúng cam kết",
+    note: "ÄÃ£ hoÃ n cá»c 100% (2.000.000 â‚«) do khÃ¡ch khÃ´ng dá»n vÃ o Ä‘Ãºng cam káº¿t",
   },
   {
     id: "DEP-202608-204",
     roomId: "204",
-    roomName: "Phòng 204",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Võ Gia Huy",
+    roomName: "PhÃ²ng 204",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "VÃµ Gia Huy",
     tenantPhone: "0912333444",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 2000000,
     originalAmount: 2000000,
     depositDate: "22/08/2026",
     expiryDate: "30/08/2026",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Cọc giữ chỗ trực tuyến qua Sàn BHRP. Chờ ký hợp đồng trực tiếp.",
+    note: "Cá»c giá»¯ chá»— trá»±c tuyáº¿n qua SÃ n BHRP. Chá» kÃ½ há»£p Ä‘á»“ng trá»±c tiáº¿p.",
   },
   {
     id: "DEP-202608-302",
     roomId: "302",
-    roomName: "Phòng 302",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Ngô Thanh Hương",
+    roomName: "PhÃ²ng 302",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "NgÃ´ Thanh HÆ°Æ¡ng",
     tenantPhone: "0966677889",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 0,
     originalAmount: 3000000,
     depositDate: "05/08/2026",
     expiryDate: "12/08/2026",
-    status: "Đã khấu trừ",
+    status: "ÄÃ£ kháº¥u trá»«",
     isDeductedPartially: true,
     deductedAmount: 3000000,
     refundAmount: 0,
-    deductionReason: "Bỏ cọc sau quá hạn 10 ngày không đến ký hợp đồng. Khấu trừ 100% tiền cọc.",
-    note: "Khách bùng cọc",
+    deductionReason: "Bá» cá»c sau quÃ¡ háº¡n 10 ngÃ y khÃ´ng Ä‘áº¿n kÃ½ há»£p Ä‘á»“ng. Kháº¥u trá»« 100% tiá»n cá»c.",
+    note: "KhÃ¡ch bÃ¹ng cá»c",
   },
   {
     id: "DEP-202608-304",
     roomId: "304",
-    roomName: "Phòng 304",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Phan Văn Việt",
+    roomName: "PhÃ²ng 304",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Phan VÄƒn Viá»‡t",
     tenantPhone: "0903444555",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 0,
     originalAmount: 1500000,
     depositDate: "10/07/2026",
     expiryDate: "17/07/2026",
-    status: "Đã hoàn",
+    status: "ÄÃ£ hoÃ n",
     isDeductedPartially: false,
     refundAmount: 1500000,
-    note: "Hoàn cọc giữ chỗ 100% do phòng bận sửa chữa ống nước",
+    note: "HoÃ n cá»c giá»¯ chá»— 100% do phÃ²ng báº­n sá»­a chá»¯a á»‘ng nÆ°á»›c",
   },
   {
     id: "DEP-202608-402",
     roomId: "402",
-    roomName: "Phòng 402",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Dương Minh Triết",
+    roomName: "PhÃ²ng 402",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "DÆ°Æ¡ng Minh Triáº¿t",
     tenantPhone: "0938555666",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 2000000,
     originalAmount: 2500000,
     depositDate: "25/08/2026",
     expiryDate: "05/09/2026",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: true,
     deductedAmount: 500000,
-    deductionReason: "Trừ 500.000 ₫ tiền vi phạm đổi ngày hẹn giữ phòng quá 2 lần (Vẫn giữ 2.000.000 ₫ còn lại)",
-    note: "Cọc giữ chỗ (Hiển thị 2 nhãn: Đang giữ + Đã khấu trừ)",
+    deductionReason: "Trá»« 500.000 â‚« tiá»n vi pháº¡m Ä‘á»•i ngÃ y háº¹n giá»¯ phÃ²ng quÃ¡ 2 láº§n (Váº«n giá»¯ 2.000.000 â‚« cÃ²n láº¡i)",
+    note: "Cá»c giá»¯ chá»— (Hiá»ƒn thá»‹ 2 nhÃ£n: Äang giá»¯ + ÄÃ£ kháº¥u trá»«)",
   },
   {
     id: "DEP-202608-502",
     roomId: "502",
-    roomName: "Phòng 502",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Lâm Hoài Thương",
+    roomName: "PhÃ²ng 502",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "LÃ¢m HoÃ i ThÆ°Æ¡ng",
     tenantPhone: "0909123456",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 0,
     originalAmount: 1800000,
     depositDate: "28/08/2026",
     expiryDate: "10/09/2026",
-    status: "Đã hoàn",
+    status: "ÄÃ£ hoÃ n",
     isDeductedPartially: true,
     deductedAmount: 500000,
     refundAmount: 1300000,
-    deductionReason: "Trừ 500.000 ₫ chi phí hủy giữ chỗ sát giờ. Hoàn trả 1.300.000 ₫ còn lại.",
-    note: "Cọc giữ chỗ (Hiển thị 2 nhãn: Đã hoàn + Đã khấu trừ)",
+    deductionReason: "Trá»« 500.000 â‚« chi phÃ­ há»§y giá»¯ chá»— sÃ¡t giá». HoÃ n tráº£ 1.300.000 â‚« cÃ²n láº¡i.",
+    note: "Cá»c giá»¯ chá»— (Hiá»ƒn thá»‹ 2 nhÃ£n: ÄÃ£ hoÃ n + ÄÃ£ kháº¥u trá»«)",
   },
   {
     id: "DEP-202608-504",
     roomId: "504",
-    roomName: "Phòng 504",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Trương Tấn Sang",
+    roomName: "PhÃ²ng 504",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "TrÆ°Æ¡ng Táº¥n Sang",
     tenantPhone: "0988777666",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 0,
     originalAmount: 2000000,
     depositDate: "15/07/2026",
     expiryDate: "22/07/2026",
-    status: "Đã hoàn",
+    status: "ÄÃ£ hoÃ n",
     isDeductedPartially: false,
     refundAmount: 2000000,
-    note: "Khách đổi lịch công tác không thuê nữa. Đã hoàn 100% tiền cọc giữ chỗ.",
+    note: "KhÃ¡ch Ä‘á»•i lá»‹ch cÃ´ng tÃ¡c khÃ´ng thuÃª ná»¯a. ÄÃ£ hoÃ n 100% tiá»n cá»c giá»¯ chá»—.",
   },
   {
     id: "DEP-202608-602",
     roomId: "602",
-    roomName: "Phòng 602",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Cao Thùy Trang",
+    roomName: "PhÃ²ng 602",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Cao ThÃ¹y Trang",
     tenantPhone: "0934111222",
-    depositType: "Cọc giữ chỗ",
+    depositType: "Cá»c giá»¯ chá»—",
     amount: 0,
     originalAmount: 2500000,
     depositDate: "02/08/2026",
     expiryDate: "10/08/2026",
-    status: "Đã khấu trừ",
+    status: "ÄÃ£ kháº¥u trá»«",
     isDeductedPartially: true,
     deductedAmount: 2500000,
     refundAmount: 0,
-    deductionReason: "Quá hạn 15 ngày không tới ký hợp đồng và không liên lạc được. Khấu trừ 100% cọc.",
-    note: "Khách hủy lịch không thông báo",
+    deductionReason: "QuÃ¡ háº¡n 15 ngÃ y khÃ´ng tá»›i kÃ½ há»£p Ä‘á»“ng vÃ  khÃ´ng liÃªn láº¡c Ä‘Æ°á»£c. Kháº¥u trá»« 100% cá»c.",
+    note: "KhÃ¡ch há»§y lá»‹ch khÃ´ng thÃ´ng bÃ¡o",
   },
 
-  // ================= 10 ITEMS FOR "CỌC HỢP ĐỒNG" =================
+  // ================= 10 ITEMS FOR "Cá»ŒC Há»¢P Äá»’NG" =================
   {
     id: "DEP-202608-101",
     roomId: "101",
-    roomName: "Phòng 101",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Nguyễn Văn Tuấn",
+    roomName: "PhÃ²ng 101",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Nguyá»…n VÄƒn Tuáº¥n",
     tenantPhone: "0988123456",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 3500000,
     originalAmount: 3500000,
     depositDate: "10/08/2026",
     expiryDate: "10/08/2027",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Tiền cọc bảo đảm hợp đồng 12 tháng chính thức",
+    note: "Tiá»n cá»c báº£o Ä‘áº£m há»£p Ä‘á»“ng 12 thÃ¡ng chÃ­nh thá»©c",
   },
   {
     id: "DEP-202608-103",
     roomId: "103",
-    roomName: "Phòng 103",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Đỗ Quốc Bảo",
+    roomName: "PhÃ²ng 103",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Äá»— Quá»‘c Báº£o",
     tenantPhone: "0905123987",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 4000000,
     originalAmount: 1500000,
     depositDate: "05/08/2026",
     expiryDate: "05/08/2027",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
     convertedAt: "12/08/2026",
     additionalPaidAmount: 2500000,
-    note: "Đã nâng cấp thành công từ Cọc giữ chỗ (Thu bổ sung 2.500.000 ₫ ngày 12/08/2026)",
+    note: "ÄÃ£ nÃ¢ng cáº¥p thÃ nh cÃ´ng tá»« Cá»c giá»¯ chá»— (Thu bá»• sung 2.500.000 â‚« ngÃ y 12/08/2026)",
   },
   {
     id: "DEP-202608-201",
     roomId: "201",
-    roomName: "Phòng 201",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Lê Hoàng Nam",
+    roomName: "PhÃ²ng 201",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "LÃª HoÃ ng Nam",
     tenantPhone: "0911345678",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 3000000,
     originalAmount: 4000000,
     depositDate: "01/06/2026",
     expiryDate: "01/06/2027",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: true,
     deductedAmount: 1000000,
-    deductionReason: "Trừ 1.000.000 ₫ tiền vi phạm quy định làm hư hại cửa kính (Vẫn tiếp tục giữ 3.000.000 ₫ còn lại)",
-    note: "Hợp đồng 1 năm (Khấu trừ 1.000.000 ₫ cửa kính, giữ 3.000.000 ₫ còn lại)",
+    deductionReason: "Trá»« 1.000.000 â‚« tiá»n vi pháº¡m quy Ä‘á»‹nh lÃ m hÆ° háº¡i cá»­a kÃ­nh (Váº«n tiáº¿p tá»¥c giá»¯ 3.000.000 â‚« cÃ²n láº¡i)",
+    note: "Há»£p Ä‘á»“ng 1 nÄƒm (Kháº¥u trá»« 1.000.000 â‚« cá»­a kÃ­nh, giá»¯ 3.000.000 â‚« cÃ²n láº¡i)",
   },
   {
     id: "DEP-202608-203",
     roomId: "203",
-    roomName: "Phòng 203",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Vũ Hải Yến",
+    roomName: "PhÃ²ng 203",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "VÅ© Háº£i Yáº¿n",
     tenantPhone: "0978666555",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 5000000,
     originalAmount: 5000000,
     depositDate: "15/05/2026",
     expiryDate: "15/05/2028",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Cọc hợp đồng 2 năm phòng VIP ban công",
+    note: "Cá»c há»£p Ä‘á»“ng 2 nÄƒm phÃ²ng VIP ban cÃ´ng",
   },
   {
     id: "DEP-202608-301",
     roomId: "301",
-    roomName: "Phòng 301",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Hoàng Đức Trí",
+    roomName: "PhÃ²ng 301",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "HoÃ ng Äá»©c TrÃ­",
     tenantPhone: "0944567890",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 0,
     originalAmount: 4500000,
     depositDate: "01/01/2026",
     expiryDate: "01/08/2026",
-    status: "Đã hoàn",
+    status: "ÄÃ£ hoÃ n",
     isDeductedPartially: true,
     deductedAmount: 1500000,
     refundAmount: 3000000,
-    deductionReason: "Khấu trừ 1.500.000 ₫ chi phí móp tủ lạnh & sơn lại tường. Hoàn trả 3.000.000 ₫ còn lại.",
-    note: "Thanh lý hợp đồng đúng hạn (Hoàn 3.000.000 ₫ + Khấu trừ 1.500.000 ₫)",
+    deductionReason: "Kháº¥u trá»« 1.500.000 â‚« chi phÃ­ mÃ³p tá»§ láº¡nh & sÆ¡n láº¡i tÆ°á»ng. HoÃ n tráº£ 3.000.000 â‚« cÃ²n láº¡i.",
+    note: "Thanh lÃ½ há»£p Ä‘á»“ng Ä‘Ãºng háº¡n (HoÃ n 3.000.000 â‚« + Kháº¥u trá»« 1.500.000 â‚«)",
   },
   {
     id: "DEP-202608-303",
     roomId: "303",
-    roomName: "Phòng 303",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Đặng Khánh Linh",
+    roomName: "PhÃ²ng 303",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Äáº·ng KhÃ¡nh Linh",
     tenantPhone: "0987111222",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 4500000,
     originalAmount: 4500000,
     depositDate: "01/07/2026",
     expiryDate: "01/07/2027",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Hợp đồng 12 tháng tiêu chuẩn",
+    note: "Há»£p Ä‘á»“ng 12 thÃ¡ng tiÃªu chuáº©n",
   },
   {
     id: "DEP-202608-401",
     roomId: "401",
-    roomName: "Phòng 401",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Nguyễn Khánh An",
+    roomName: "PhÃ²ng 401",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Nguyá»…n KhÃ¡nh An",
     tenantPhone: "0971222333",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 0,
     originalAmount: 5000000,
     depositDate: "01/03/2026",
     expiryDate: "01/03/2027",
-    status: "Đã khấu trừ",
+    status: "ÄÃ£ kháº¥u trá»«",
     isDeductedPartially: true,
     deductedAmount: 5000000,
     refundAmount: 0,
-    deductionReason: "Đơn phương chấm dứt hợp đồng trước hạn không báo trước. Khấu trừ 100% tiền cọc theo điều khoản.",
-    note: "Bùng hợp đồng trước hạn",
+    deductionReason: "ÄÆ¡n phÆ°Æ¡ng cháº¥m dá»©t há»£p Ä‘á»“ng trÆ°á»›c háº¡n khÃ´ng bÃ¡o trÆ°á»›c. Kháº¥u trá»« 100% tiá»n cá»c theo Ä‘iá»u khoáº£n.",
+    note: "BÃ¹ng há»£p Ä‘á»“ng trÆ°á»›c háº¡n",
   },
   {
     id: "DEP-202608-403",
     roomId: "403",
-    roomName: "Phòng 403",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Trịnh Kim Ngân",
+    roomName: "PhÃ²ng 403",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Trá»‹nh Kim NgÃ¢n",
     tenantPhone: "0919777888",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 3800000,
     originalAmount: 3800000,
     depositDate: "12/04/2026",
     expiryDate: "12/04/2027",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Hợp đồng thuê 1 năm",
+    note: "Há»£p Ä‘á»“ng thuÃª 1 nÄƒm",
   },
   {
     id: "DEP-202608-501",
     roomId: "501",
-    roomName: "Phòng 501",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Hồ Quang Hiếu",
+    roomName: "PhÃ²ng 501",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Há»“ Quang Hiáº¿u",
     tenantPhone: "0982999000",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 6000000,
     originalAmount: 6000000,
     depositDate: "01/02/2026",
     expiryDate: "01/02/2028",
-    status: "Đang giữ",
+    status: "Äang giá»¯",
     isDeductedPartially: false,
-    note: "Tiền cọc căn Studio Penthouse tầng 5 cao cấp",
+    note: "Tiá»n cá»c cÄƒn Studio Penthouse táº§ng 5 cao cáº¥p",
   },
   {
     id: "DEP-202608-503",
     roomId: "503",
-    roomName: "Phòng 503",
-    buildingName: "Dormio Premier Quận 1",
-    tenantName: "Tạ Mỹ Duyên",
+    roomName: "PhÃ²ng 503",
+    buildingName: "Dormio Premier Quáº­n 1",
+    tenantName: "Táº¡ Má»¹ DuyÃªn",
     tenantPhone: "0908333222",
-    depositType: "Cọc hợp đồng",
+    depositType: "Cá»c há»£p Ä‘á»“ng",
     amount: 0,
     originalAmount: 4200000,
     depositDate: "10/02/2026",
     expiryDate: "10/08/2026",
-    status: "Đã hoàn",
+    status: "ÄÃ£ hoÃ n",
     isDeductedPartially: false,
     refundAmount: 4200000,
-    note: "Thanh lý hợp đồng 6 tháng đúng hạn, hoàn trả 100% tiền cọc 4.200.000 ₫",
+    note: "Thanh lÃ½ há»£p Ä‘á»“ng 6 thÃ¡ng Ä‘Ãºng háº¡n, hoÃ n tráº£ 100% tiá»n cá»c 4.200.000 â‚«",
   },
 ];
 
 // Large Money Formatter Helper (Prevents digit wrapping)
 const formatLargeMoney = (amount: number): string => {
   if (amount >= 1000000000) {
-    return `${(amount / 1000000000).toFixed(2).replace(/\.00$/, "")} Tỷ ₫`;
+    return `${(amount / 1000000000).toFixed(2).replace(/\.00$/, "")} Tá»· â‚«`;
   }
   if (amount >= 1000000) {
-    return `${(amount / 1000000).toFixed(2).replace(/\.00$/, "")}M ₫`;
+    return `${(amount / 1000000).toFixed(2).replace(/\.00$/, "")}M â‚«`;
   }
-  return `${amount.toLocaleString("vi-VN")} ₫`;
+  return `${amount.toLocaleString("vi-VN")} â‚«`;
 };
 
 function DepositsContent() {
@@ -409,9 +409,9 @@ function DepositsContent() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid"); // Rule #9 default
 
   // Top Segment Switcher for 2 Deposit Types
-  const [selectedDepositTypeTab, setSelectedDepositTypeTab] = useState<"Cọc giữ chỗ" | "Cọc hợp đồng">("Cọc giữ chỗ");
+  const [selectedDepositTypeTab, setSelectedDepositTypeTab] = useState<"Cá»c giá»¯ chá»—" | "Cá»c há»£p Ä‘á»“ng">("Cá»c giá»¯ chá»—");
 
-  // Status Filter Tab per active Deposit Type (Đang giữ | Đã hoàn | Đã khấu trừ)
+  // Status Filter Tab per active Deposit Type (Äang giá»¯ | ÄÃ£ hoÃ n | ÄÃ£ kháº¥u trá»«)
   const [activeStatusTab, setActiveStatusTab] = useState<"all" | "holding" | "refunded" | "deducted">("all");
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -440,39 +440,39 @@ function DepositsContent() {
     setDepositsList(prev => prev.map(d => {
       if (d.id === showRefundModal.id) {
         if (actualRefund === 0 && deductAmt >= showRefundModal.amount) {
-          // Deduct 100% (0 refund) -> Status: "Đã khấu trừ"
+          // Deduct 100% (0 refund) -> Status: "ÄÃ£ kháº¥u trá»«"
           return {
             ...d,
-            status: "Đã khấu trừ",
+            status: "ÄÃ£ kháº¥u trá»«",
             amount: 0,
             refundAmount: 0,
             isDeductedPartially: true,
             deductedAmount: showRefundModal.amount,
-            deductionReason: refundForm.deductionReason || "Khấu trừ 100% tiền cọc",
-            note: refundForm.note ? `${d.note || ""} [Khấu trừ 100% cọc lúc ${nowStr}: ${refundForm.note}]` : d.note,
+            deductionReason: refundForm.deductionReason || "Kháº¥u trá»« 100% tiá»n cá»c",
+            note: refundForm.note ? `${d.note || ""} [Kháº¥u trá»« 100% cá»c lÃºc ${nowStr}: ${refundForm.note}]` : d.note,
           };
         } else if (deductAmt > 0) {
-          // Partial deduction + Partial refund -> Status: "Đã hoàn" (renders both badges: Đã hoàn & Đã khấu trừ)
+          // Partial deduction + Partial refund -> Status: "ÄÃ£ hoÃ n" (renders both badges: ÄÃ£ hoÃ n & ÄÃ£ kháº¥u trá»«)
           return {
             ...d,
-            status: "Đã hoàn",
+            status: "ÄÃ£ hoÃ n",
             amount: 0,
             refundAmount: actualRefund,
             isDeductedPartially: true,
             deductedAmount: deductAmt,
-            deductionReason: refundForm.deductionReason || "Khấu trừ một phần tiền cọc",
-            note: refundForm.note ? `${d.note || ""} [Hoàn cọc ${actualRefund.toLocaleString("vi-VN")} ₫, khấu trừ ${deductAmt.toLocaleString("vi-VN")} ₫ lúc ${nowStr}: ${refundForm.note}]` : d.note,
+            deductionReason: refundForm.deductionReason || "Kháº¥u trá»« má»™t pháº§n tiá»n cá»c",
+            note: refundForm.note ? `${d.note || ""} [HoÃ n cá»c ${actualRefund.toLocaleString("vi-VN")} â‚«, kháº¥u trá»« ${deductAmt.toLocaleString("vi-VN")} â‚« lÃºc ${nowStr}: ${refundForm.note}]` : d.note,
           };
         } else {
-          // 100% Refund -> Status: "Đã hoàn"
+          // 100% Refund -> Status: "ÄÃ£ hoÃ n"
           return {
             ...d,
-            status: "Đã hoàn",
+            status: "ÄÃ£ hoÃ n",
             amount: 0,
             refundAmount: showRefundModal.amount,
             isDeductedPartially: false,
             deductedAmount: 0,
-            note: refundForm.note ? `${d.note || ""} [Hoàn 100% cọc ${showRefundModal.amount.toLocaleString("vi-VN")} ₫ lúc ${nowStr}: ${refundForm.note}]` : d.note,
+            note: refundForm.note ? `${d.note || ""} [HoÃ n 100% cá»c ${showRefundModal.amount.toLocaleString("vi-VN")} â‚« lÃºc ${nowStr}: ${refundForm.note}]` : d.note,
           };
         }
       }
@@ -492,7 +492,7 @@ function DepositsContent() {
     roomName: "103",
     tenantName: "",
     tenantPhone: "",
-    depositType: "Cọc giữ chỗ" as "Cọc giữ chỗ" | "Cọc hợp đồng",
+    depositType: "Cá»c giá»¯ chá»—" as "Cá»c giá»¯ chá»—" | "Cá»c há»£p Ä‘á»“ng",
     amount: "1000000",
     expiryDate: "2026-09-15",
     note: "",
@@ -529,22 +529,22 @@ function DepositsContent() {
     }
   }, [upgradeForm.targetContractAmount, showUpgradeModal]);
 
-  // 1. Total Counts for Top Segment Switcher (Cọc giữ chỗ vs Cọc hợp đồng)
-  const holdTypeCountTotal = depositsList.filter(d => d.depositType === "Cọc giữ chỗ").length;
-  const contractTypeCountTotal = depositsList.filter(d => d.depositType === "Cọc hợp đồng").length;
+  // 1. Total Counts for Top Segment Switcher (Cá»c giá»¯ chá»— vs Cá»c há»£p Ä‘á»“ng)
+  const holdTypeCountTotal = depositsList.filter(d => d.depositType === "Cá»c giá»¯ chá»—").length;
+  const contractTypeCountTotal = depositsList.filter(d => d.depositType === "Cá»c há»£p Ä‘á»“ng").length;
 
   // 2. Deposits scoped to Active Deposit Type Tab
   const activeTypeDeposits = depositsList.filter(d => d.depositType === selectedDepositTypeTab);
 
   // 3. Status Tab Counts per Active Deposit Type (Including partial deductions)
   const statusTotalCount = activeTypeDeposits.length;
-  const statusHoldingCount = activeTypeDeposits.filter(d => d.status === "Đang giữ").length;
-  const statusRefundedCount = activeTypeDeposits.filter(d => d.status === "Đã hoàn").length;
-  const statusDeductedCount = activeTypeDeposits.filter(d => d.status === "Đã khấu trừ" || (d.isDeductedPartially && (d.deductedAmount || 0) > 0)).length;
+  const statusHoldingCount = activeTypeDeposits.filter(d => d.status === "Äang giá»¯").length;
+  const statusRefundedCount = activeTypeDeposits.filter(d => d.status === "ÄÃ£ hoÃ n").length;
+  const statusDeductedCount = activeTypeDeposits.filter(d => d.status === "ÄÃ£ kháº¥u trá»«" || (d.isDeductedPartially && (d.deductedAmount || 0) > 0)).length;
 
   // 4. Final Filtered Deposits Array
   const filteredDeposits = depositsList.filter((dep) => {
-    // Must match top segment Deposit Type (Cọc giữ chỗ OR Cọc hợp đồng)
+    // Must match top segment Deposit Type (Cá»c giá»¯ chá»— OR Cá»c há»£p Ä‘á»“ng)
     if (dep.depositType !== selectedDepositTypeTab) return false;
 
     // Search query match
@@ -557,9 +557,9 @@ function DepositsContent() {
     if (!matchSearch) return false;
 
     // Status filter match
-    if (activeStatusTab === "holding") return dep.status === "Đang giữ";
-    if (activeStatusTab === "refunded") return dep.status === "Đã hoàn";
-    if (activeStatusTab === "deducted") return dep.status === "Đã khấu trừ" || (dep.isDeductedPartially && (dep.deductedAmount || 0) > 0);
+    if (activeStatusTab === "holding") return dep.status === "Äang giá»¯";
+    if (activeStatusTab === "refunded") return dep.status === "ÄÃ£ hoÃ n";
+    if (activeStatusTab === "deducted") return dep.status === "ÄÃ£ kháº¥u trá»«" || (dep.isDeductedPartially && (dep.deductedAmount || 0) > 0);
 
     return true;
   });
@@ -572,24 +572,24 @@ function DepositsContent() {
 
   // Stat Card Totals (Covering both deposit types)
   const totalHoldingAmount = depositsList
-    .filter(d => d.status === "Đang giữ")
+    .filter(d => d.status === "Äang giá»¯")
     .reduce((acc, d) => acc + d.amount, 0);
 
   const totalHoldTypeAmount = depositsList
-    .filter(d => d.depositType === "Cọc giữ chỗ" && d.status === "Đang giữ")
+    .filter(d => d.depositType === "Cá»c giá»¯ chá»—" && d.status === "Äang giá»¯")
     .reduce((acc, d) => acc + d.amount, 0);
 
   const totalRefundedAmount = depositsList
-    .filter(d => d.status === "Đã hoàn")
+    .filter(d => d.status === "ÄÃ£ hoÃ n")
     .reduce((acc, d) => acc + (d.refundAmount || 0), 0);
 
   const totalDeductedAmount = depositsList
     .reduce((acc, d) => acc + (d.deductedAmount || 0), 0);
 
-  const holdingCountTotal = depositsList.filter(d => d.status === "Đang giữ").length;
-  const holdTypeHoldingCountTotal = depositsList.filter(d => d.depositType === "Cọc giữ chỗ" && d.status === "Đang giữ").length;
-  const refundedCountTotal = depositsList.filter(d => d.status === "Đã hoàn").length;
-  const deductedCountTotal = depositsList.filter(d => d.status === "Đã khấu trừ" || (d.isDeductedPartially && (d.deductedAmount || 0) > 0)).length;
+  const holdingCountTotal = depositsList.filter(d => d.status === "Äang giá»¯").length;
+  const holdTypeHoldingCountTotal = depositsList.filter(d => d.depositType === "Cá»c giá»¯ chá»—" && d.status === "Äang giá»¯").length;
+  const refundedCountTotal = depositsList.filter(d => d.status === "ÄÃ£ hoÃ n").length;
+  const deductedCountTotal = depositsList.filter(d => d.status === "ÄÃ£ kháº¥u trá»«" || (d.isDeductedPartially && (d.deductedAmount || 0) > 0)).length;
 
   // Handle Upgrade Hold Deposit -> Contract Deposit
   const handleConfirmUpgradeToContract = () => {
@@ -602,12 +602,12 @@ function DepositsContent() {
       if (d.id === showUpgradeModal.id) {
         return {
           ...d,
-          depositType: "Cọc hợp đồng",
-          status: "Đang giữ",
+          depositType: "Cá»c há»£p Ä‘á»“ng",
+          status: "Äang giá»¯",
           amount: targetAmt,
           additionalPaidAmount: addAmt,
           convertedAt: nowStr,
-          note: `${d.note || ""} (Đã thu bổ sung ${addAmt.toLocaleString("vi-VN")} ₫ và nâng cấp thành Cọc Hợp Đồng ngày ${nowStr})`
+          note: `${d.note || ""} (ÄÃ£ thu bá»• sung ${addAmt.toLocaleString("vi-VN")} â‚« vÃ  nÃ¢ng cáº¥p thÃ nh Cá»c Há»£p Äá»“ng ngÃ y ${nowStr})`
         };
       }
       return d;
@@ -616,16 +616,16 @@ function DepositsContent() {
     if (selectedDeposit?.id === showUpgradeModal.id) {
       setSelectedDeposit(prev => prev ? {
         ...prev,
-        depositType: "Cọc hợp đồng",
-        status: "Đang giữ",
+        depositType: "Cá»c há»£p Ä‘á»“ng",
+        status: "Äang giá»¯",
         amount: targetAmt,
         additionalPaidAmount: addAmt,
         convertedAt: nowStr,
       } : null);
     }
 
-    // Switch view to Cọc hợp đồng tab after upgrade
-    setSelectedDepositTypeTab("Cọc hợp đồng");
+    // Switch view to Cá»c há»£p Ä‘á»“ng tab after upgrade
+    setSelectedDepositTypeTab("Cá»c há»£p Ä‘á»“ng");
     setActiveStatusTab("holding");
     setShowUpgradeModal(null);
     setIsFormDirty(false);
@@ -639,7 +639,7 @@ function DepositsContent() {
     const newDep: DepositItem = {
       id: `DEP-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${newDepositForm.roomName}`,
       roomId: newDepositForm.roomName,
-      roomName: `Phòng ${newDepositForm.roomName}`,
+      roomName: `PhÃ²ng ${newDepositForm.roomName}`,
       buildingName: activeBuilding.name,
       tenantName: newDepositForm.tenantName,
       tenantPhone: newDepositForm.tenantPhone,
@@ -648,9 +648,9 @@ function DepositsContent() {
       originalAmount: initialAmt,
       depositDate: new Date().toLocaleDateString("vi-VN"),
       expiryDate: newDepositForm.expiryDate,
-      status: "Đang giữ",
+      status: "Äang giá»¯",
       isDeductedPartially: false,
-      note: newDepositForm.note || (newDepositForm.depositType === "Cọc giữ chỗ" ? "Cọc giữ chỗ chờ hẹn lịch chốt hợp đồng" : "Cọc hợp đồng bảo đảm thuê nhà"),
+      note: newDepositForm.note || (newDepositForm.depositType === "Cá»c giá»¯ chá»—" ? "Cá»c giá»¯ chá»— chá» háº¹n lá»‹ch chá»‘t há»£p Ä‘á»“ng" : "Cá»c há»£p Ä‘á»“ng báº£o Ä‘áº£m thuÃª nhÃ "),
     };
 
     setDepositsList([newDep, ...depositsList]);
@@ -665,7 +665,7 @@ function DepositsContent() {
       roomName: "103",
       tenantName: "",
       tenantPhone: "",
-      depositType: "Cọc giữ chỗ",
+      depositType: "Cá»c giá»¯ chá»—",
       amount: "1000000",
       expiryDate: "2026-09-15",
       note: "",
@@ -691,26 +691,26 @@ function DepositsContent() {
     setIsFormDirty(false);
   };
 
-  // Render Clean Status Badges (Strict: "Đang giữ" always shows single badge; "Đã hoàn" shows parallel "Đã hoàn + Đã khấu trừ" if partial deduction exists)
+  // Render Clean Status Badges (Strict: "Äang giá»¯" always shows single badge; "ÄÃ£ hoÃ n" shows parallel "ÄÃ£ hoÃ n + ÄÃ£ kháº¥u trá»«" if partial deduction exists)
   const renderStatusBadge = (dep: DepositItem) => {
-    if (dep.status === "Đang giữ") {
+    if (dep.status === "Äang giá»¯") {
       return (
         <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-[#2AC1BC]/15 text-[#0d6e6b] border border-[#2AC1BC]/30">
-          Đang giữ
+          Äang giá»¯
         </span>
       );
     }
 
-    if (dep.status === "Đã hoàn") {
+    if (dep.status === "ÄÃ£ hoÃ n") {
       const hasDeduction = dep.isDeductedPartially || (dep.deductedAmount && dep.deductedAmount > 0);
       return (
         <div className="flex flex-wrap items-center gap-1 justify-end sm:justify-start">
           <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-            Đã hoàn
+            ÄÃ£ hoÃ n
           </span>
           {hasDeduction && (
-            <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200" title={`Đã khấu trừ ${dep.deductedAmount?.toLocaleString("vi-VN")} ₫`}>
-              Đã khấu trừ
+            <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200" title={`ÄÃ£ kháº¥u trá»« ${dep.deductedAmount?.toLocaleString("vi-VN")} â‚«`}>
+              ÄÃ£ kháº¥u trá»«
             </span>
           )}
         </div>
@@ -720,7 +720,7 @@ function DepositsContent() {
     // 100% Deduction status
     return (
       <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-        Đã khấu trừ
+        ÄÃ£ kháº¥u trá»«
       </span>
     );
   };
@@ -786,7 +786,7 @@ function DepositsContent() {
           {/* Right Stat Cards (2 Rows, 2 Cards per Row, Non-wrapping Money Amounts) */}
           <div className="flex flex-col items-stretch sm:items-end gap-3 w-full lg:w-auto">
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto">
-              {/* Card 1: Đang Giữ */}
+              {/* Card 1: Äang Giá»¯ */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-2xl border border-[#2AC1BC]/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
@@ -797,33 +797,33 @@ function DepositsContent() {
                 </div>
               </div>
 
-              {/* Card 2: Cọc Giữ Chỗ */}
+              {/* Card 2: Cá»c Giá»¯ Chá»— */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">CỌC GIỮ CHỖ ({holdTypeHoldingCountTotal})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">Cá»ŒC GIá»® CHá»– ({holdTypeHoldingCountTotal})</span>
                   <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalHoldTypeAmount)}
                   </span>
                 </div>
               </div>
 
-              {/* Card 3: Đã Hoàn Cọc */}
+              {/* Card 3: ÄÃ£ HoÃ n Cá»c */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-purple-500/10 hover:bg-purple-500/20 transition-colors rounded-2xl border border-purple-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-purple-400 tracking-wider whitespace-nowrap">ĐÃ HOÀN ({refundedCountTotal})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-purple-400 tracking-wider whitespace-nowrap">ÄÃƒ HOÃ€N ({refundedCountTotal})</span>
                   <span className="font-black text-purple-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalRefundedAmount)}
                   </span>
                 </div>
               </div>
 
-              {/* Card 4: Tổng Đã Khấu Trừ */}
+              {/* Card 4: Tá»•ng ÄÃ£ Kháº¥u Trá»« */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">ĐÃ KHẤU TRỪ ({deductedCountTotal})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">ÄÃƒ KHáº¤U TRá»ª ({deductedCountTotal})</span>
                   <span className="font-black text-rose-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalDeductedAmount)}
                   </span>
@@ -842,19 +842,19 @@ function DepositsContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-zinc-100 p-1 rounded-2xl sm:rounded-full border border-zinc-200/80 w-full md:w-auto">
             <button
               onClick={() => {
-                setSelectedDepositTypeTab("Cọc giữ chỗ");
+                setSelectedDepositTypeTab("Cá»c giá»¯ chá»—");
                 setActiveStatusTab("all");
                 setCurrentPage(1);
               }}
-              className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${selectedDepositTypeTab === "Cọc giữ chỗ"
+              className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${selectedDepositTypeTab === "Cá»c giá»¯ chá»—"
                 ? "bg-amber-500 text-white shadow-xs"
                 : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
                 }`}
             >
               <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span className="whitespace-nowrap">Cọc Giữ Chỗ Xem Phòng</span>
+              <span className="whitespace-nowrap">Cá»c Giá»¯ Chá»— Xem PhÃ²ng</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${selectedDepositTypeTab === "Cọc giữ chỗ"
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${selectedDepositTypeTab === "Cá»c giá»¯ chá»—"
                   ? "bg-white/20 text-white"
                   : "bg-zinc-200 text-zinc-700"
                   }`}
@@ -865,19 +865,19 @@ function DepositsContent() {
 
             <button
               onClick={() => {
-                setSelectedDepositTypeTab("Cọc hợp đồng");
+                setSelectedDepositTypeTab("Cá»c há»£p Ä‘á»“ng");
                 setActiveStatusTab("all");
                 setCurrentPage(1);
               }}
-              className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${selectedDepositTypeTab === "Cọc hợp đồng"
+              className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${selectedDepositTypeTab === "Cá»c há»£p Ä‘á»“ng"
                 ? "bg-[#2AC1BC] text-white shadow-xs"
                 : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
                 }`}
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />
-              <span className="whitespace-nowrap">Cọc Hợp Đồng Thuê</span>
+              <span className="whitespace-nowrap">Cá»c Há»£p Äá»“ng ThuÃª</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${selectedDepositTypeTab === "Cọc hợp đồng"
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${selectedDepositTypeTab === "Cá»c há»£p Ä‘á»“ng"
                   ? "bg-white/20 text-white"
                   : "bg-zinc-200 text-zinc-700"
                   }`}
@@ -894,7 +894,7 @@ function DepositsContent() {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm phòng, tên khách, SĐT, mã..."
+                placeholder="TÃ¬m phÃ²ng, tÃªn khÃ¡ch, SÄT, mÃ£..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -910,7 +910,7 @@ function DepositsContent() {
                 onClick={() => setViewMode("grid")}
                 className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
                   }`}
-                title="Dạng Lưới (Grid)"
+                title="Dáº¡ng LÆ°á»›i (Grid)"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
@@ -918,7 +918,7 @@ function DepositsContent() {
                 onClick={() => setViewMode("table")}
                 className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "table" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
                   }`}
-                title="Dạng Bảng (Table)"
+                title="Dáº¡ng Báº£ng (Table)"
               >
                 <List className="w-3.5 h-3.5" />
               </button>
@@ -929,14 +929,14 @@ function DepositsContent() {
         {/* Status Filter Tabs */}
         <div className="overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 flex items-center justify-between gap-2 shrink-0 text-xs font-bold">
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline">Trạng thái:</span>
+            <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline">Tráº¡ng thÃ¡i:</span>
 
             <button
               onClick={() => { setActiveStatusTab("all"); setCurrentPage(1); }}
               className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap ${activeStatusTab === "all" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              Tất cả ({statusTotalCount})
+              Táº¥t cáº£ ({statusTotalCount})
             </button>
 
             <button
@@ -944,7 +944,7 @@ function DepositsContent() {
               className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap ${activeStatusTab === "holding" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20"
                 }`}
             >
-              Đang giữ ({statusHoldingCount})
+              Äang giá»¯ ({statusHoldingCount})
             </button>
 
             <button
@@ -952,7 +952,7 @@ function DepositsContent() {
               className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap ${activeStatusTab === "refunded" ? "bg-purple-600 text-white shadow-2xs" : "bg-purple-50 text-purple-700 hover:bg-purple-100"
                 }`}
             >
-              Đã hoàn ({statusRefundedCount})
+              ÄÃ£ hoÃ n ({statusRefundedCount})
             </button>
 
             <button
@@ -960,12 +960,12 @@ function DepositsContent() {
               className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap border ${activeStatusTab === "deducted" ? "bg-rose-500 text-white border-rose-600 shadow-2xs" : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
                 }`}
             >
-              Đã khấu trừ ({statusDeductedCount})
+              ÄÃ£ kháº¥u trá»« ({statusDeductedCount})
             </button>
           </div>
 
           <span className="text-[11px] font-bold text-zinc-400 shrink-0 hidden sm:inline">
-            Đang xem: <strong className="text-zinc-800">{selectedDepositTypeTab}</strong>
+            Äang xem: <strong className="text-zinc-800">{selectedDepositTypeTab}</strong>
           </span>
         </div>
       </div>
@@ -974,17 +974,17 @@ function DepositsContent() {
       {paginatedDeposits.length === 0 ? (
         <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
           <PiggyBank className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-zinc-800">Không tìm thấy khoản cọc nào trong danh mục {selectedDepositTypeTab}</h3>
-          <p className="text-xs text-zinc-400">Thử chọn trạng thái khác hoặc nhập cụm từ tìm kiếm mới.</p>
+          <h3 className="font-extrabold text-sm text-zinc-800">KhÃ´ng tÃ¬m tháº¥y khoáº£n cá»c nÃ o trong danh má»¥c {selectedDepositTypeTab}</h3>
+          <p className="text-xs text-zinc-400">Thá»­ chá»n tráº¡ng thÃ¡i khÃ¡c hoáº·c nháº­p cá»¥m tá»« tÃ¬m kiáº¿m má»›i.</p>
         </div>
       ) : viewMode === "grid" ? (
         /* GRID VIEW (Rule #9 Default) */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedDeposits.map((dep) => {
-            const isHoldType = dep.depositType === "Cọc giữ chỗ";
-            const isHolding = dep.status === "Đang giữ";
-            const isRefunded = dep.status === "Đã hoàn";
-            const isDeducted = dep.status === "Đã khấu trừ";
+            const isHoldType = dep.depositType === "Cá»c giá»¯ chá»—";
+            const isHolding = dep.status === "Äang giá»¯";
+            const isRefunded = dep.status === "ÄÃ£ hoÃ n";
+            const isDeducted = dep.status === "ÄÃ£ kháº¥u trá»«";
 
             return (
               <div
@@ -1012,19 +1012,19 @@ function DepositsContent() {
                   {/* Tenant Details */}
                   <div className="space-y-1 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 font-medium">Người cọc:</span>
+                      <span className="text-zinc-500 font-medium">NgÆ°á»i cá»c:</span>
                       <span className="font-bold text-zinc-900">{dep.tenantName}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 font-medium">Số điện thoại:</span>
+                      <span className="text-zinc-500 font-medium">Sá»‘ Ä‘iá»‡n thoáº¡i:</span>
                       <span className="font-bold text-zinc-700">{dep.tenantPhone}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 font-medium">Ngày đặt cọc:</span>
+                      <span className="text-zinc-500 font-medium">NgÃ y Ä‘áº·t cá»c:</span>
                       <span className="font-semibold text-zinc-600">{dep.depositDate}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 font-medium">{isHoldType ? "Hạn chốt HĐ:" : "Thời hạn cọc:"}</span>
+                      <span className="text-zinc-500 font-medium">{isHoldType ? "Háº¡n chá»‘t HÄ:" : "Thá»i háº¡n cá»c:"}</span>
                       <span className={`font-bold ${isHoldType && isHolding ? "text-amber-600" : "text-zinc-600"}`}>
                         {dep.expiryDate}
                       </span>
@@ -1036,15 +1036,15 @@ function DepositsContent() {
                 <div className="pt-3 border-t border-zinc-100 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">Tiền cọc hiện giữ</span>
+                      <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">Tiá»n cá»c hiá»‡n giá»¯</span>
                       <span className="font-black text-base text-[#2AC1BC]">
-                        {dep.amount.toLocaleString("vi-VN")} ₫
+                        {dep.amount.toLocaleString("vi-VN")} â‚«
                       </span>
                     </div>
 
                     {isHoldType && isHolding && (
                       <span className="text-[10px] font-extrabold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-md">
-                        Cọc Giữ Chỗ
+                        Cá»c Giá»¯ Chá»—
                       </span>
                     )}
                   </div>
@@ -1054,7 +1054,7 @@ function DepositsContent() {
                       onClick={() => setSelectedDeposit(dep)}
                       className="flex-1 py-2 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      <Eye className="w-3.5 h-3.5" /> Chi tiết
+                      <Eye className="w-3.5 h-3.5" /> Chi tiáº¿t
                     </button>
 
                     {/* Rule: Convert Hold Deposit -> Contract Deposit by collecting additional funds */}
@@ -1065,9 +1065,9 @@ function DepositsContent() {
                           setIsFormDirty(false);
                         }}
                         className="py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                        title="Thu bổ sung tiền cọc & nâng thành Cọc Hợp Đồng"
+                        title="Thu bá»• sung tiá»n cá»c & nÃ¢ng thÃ nh Cá»c Há»£p Äá»“ng"
                       >
-                        <Sparkles className="w-3.5 h-3.5" /> Nâng Cọc HĐ
+                        <Sparkles className="w-3.5 h-3.5" /> NÃ¢ng Cá»c HÄ
                       </button>
                     )}
 
@@ -1076,7 +1076,7 @@ function DepositsContent() {
                       <button
                         onClick={() => router.push(`/landlord/messages?room=${encodeURIComponent(dep.roomId)}&tenant=${encodeURIComponent(dep.tenantName)}&depId=${encodeURIComponent(dep.id)}&amount=${dep.amount}&autoSend=true`)}
                         className="p-2 bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-700 hover:text-[#2AC1BC] rounded-xl transition-all cursor-pointer"
-                        title="Gửi tin nhắn qua Chat"
+                        title="Gá»­i tin nháº¯n qua Chat"
                       >
                         <Send className="w-3.5 h-3.5 text-[#2AC1BC]" />
                       </button>
@@ -1094,14 +1094,14 @@ function DepositsContent() {
             <table className="w-full text-xs text-left min-w-[700px]">
               <thead className="text-[11px] text-zinc-500 bg-zinc-50 border-b border-zinc-200 uppercase font-black tracking-wider">
                 <tr>
-                  <th className="px-4 py-3">Mã Cọc</th>
-                  <th className="px-4 py-3">Phòng</th>
-                  <th className="px-4 py-3">Khách cọc</th>
-                  <th className="px-4 py-3">Loại cọc</th>
-                  <th className="px-4 py-3">Số tiền giữ</th>
-                  <th className="px-4 py-3">Ngày cọc</th>
-                  <th className="px-4 py-3">Trạng thái</th>
-                  <th className="px-4 py-3 text-right">Thao tác</th>
+                  <th className="px-4 py-3">MÃ£ Cá»c</th>
+                  <th className="px-4 py-3">PhÃ²ng</th>
+                  <th className="px-4 py-3">KhÃ¡ch cá»c</th>
+                  <th className="px-4 py-3">Loáº¡i cá»c</th>
+                  <th className="px-4 py-3">Sá»‘ tiá»n giá»¯</th>
+                  <th className="px-4 py-3">NgÃ y cá»c</th>
+                  <th className="px-4 py-3">Tráº¡ng thÃ¡i</th>
+                  <th className="px-4 py-3 text-right">Thao tÃ¡c</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-semibold">
@@ -1117,12 +1117,12 @@ function DepositsContent() {
                       <div className="text-[10px] text-zinc-400 font-normal">{dep.tenantPhone}</div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className={`px-2 py-0.5 text-[10px] font-black rounded-md border ${dep.depositType === "Cọc hợp đồng" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                      <span className={`px-2 py-0.5 text-[10px] font-black rounded-md border ${dep.depositType === "Cá»c há»£p Ä‘á»“ng" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
                         }`}>
                         {dep.depositType}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">{dep.amount.toLocaleString("vi-VN")} ₫</td>
+                    <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">{dep.amount.toLocaleString("vi-VN")} â‚«</td>
                     <td className="px-4 py-3.5 text-zinc-600">{dep.depositDate}</td>
                     <td className="px-4 py-3.5">
                       {renderStatusBadge(dep)}
@@ -1133,18 +1133,18 @@ function DepositsContent() {
                           onClick={() => setSelectedDeposit(dep)}
                           className="px-2.5 py-1 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
                         >
-                          <Eye className="w-3.5 h-3.5" /> Chi tiết
+                          <Eye className="w-3.5 h-3.5" /> Chi tiáº¿t
                         </button>
-                        {dep.depositType === "Cọc giữ chỗ" && dep.status === "Đang giữ" && (
+                        {dep.depositType === "Cá»c giá»¯ chá»—" && dep.status === "Äang giá»¯" && (
                           <button
                             onClick={() => {
                               setShowUpgradeModal(dep);
                               setIsFormDirty(false);
                             }}
                             className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1"
-                            title="Thu bổ sung & nâng thành cọc hợp đồng"
+                            title="Thu bá»• sung & nÃ¢ng thÃ nh cá»c há»£p Ä‘á»“ng"
                           >
-                            <Sparkles className="w-3.5 h-3.5" /> Nâng Cọc HĐ
+                            <Sparkles className="w-3.5 h-3.5" /> NÃ¢ng Cá»c HÄ
                           </button>
                         )}
                       </div>
@@ -1160,7 +1160,7 @@ function DepositsContent() {
       {/* Pagination Bar (Standard Dormio Rule #9) */}
       <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
         <div className="flex items-center gap-3">
-          <span className="text-zinc-500">Hiển thị</span>
+          <span className="text-zinc-500">Hiá»ƒn thá»‹</span>
           <select
             value={pageSize}
             onChange={(e) => {
@@ -1174,7 +1174,7 @@ function DepositsContent() {
             <option value={20}>20</option>
           </select>
           <span className="text-zinc-500">
-            / trang | <strong className="text-zinc-900">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</strong> trên <strong className="text-zinc-900">{totalItems}</strong> mục
+            / trang | <strong className="text-zinc-900">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</strong> trÃªn <strong className="text-zinc-900">{totalItems}</strong> má»¥c
           </span>
         </div>
 
@@ -1228,9 +1228,9 @@ function DepositsContent() {
                 </div>
                 <div>
                   <h3 className="font-black text-base text-zinc-900 flex items-center gap-2">
-                    Chi Tiết Khoản Cọc {selectedDeposit.id}
+                    Chi Tiáº¿t Khoáº£n Cá»c {selectedDeposit.id}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">{selectedDeposit.roomName} • {selectedDeposit.buildingName}</p>
+                  <p className="text-xs text-zinc-500 font-semibold">{selectedDeposit.roomName} â€¢ {selectedDeposit.buildingName}</p>
                 </div>
               </div>
 
@@ -1247,7 +1247,7 @@ function DepositsContent() {
               {/* Tenant & Deposit Meta Card */}
               <div className="p-4 bg-zinc-50/80 border border-zinc-200/80 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Thông Tin Khách Thuê</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">ThÃ´ng Tin KhÃ¡ch ThuÃª</span>
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-[#2AC1BC]" />
                     <p className="font-black text-sm text-zinc-900">{selectedDeposit.tenantName}</p>
@@ -1259,7 +1259,7 @@ function DepositsContent() {
                 </div>
 
                 <div className="space-y-1.5 sm:text-right flex flex-col sm:items-end justify-between">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Loại Cọc &amp; Trạng Thái</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Loáº¡i Cá»c &amp; Tráº¡ng ThÃ¡i</span>
                   <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
                     <span className="font-extrabold text-zinc-800 bg-zinc-200/70 px-2.5 py-0.5 rounded-md text-[11px] inline-block whitespace-nowrap">
                       {selectedDeposit.depositType}
@@ -1273,22 +1273,22 @@ function DepositsContent() {
               <div className="p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 text-white rounded-3xl space-y-3 shadow-xl">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400">
-                    Số Tiền Cọc Hiện Đang Giữ
+                    Sá»‘ Tiá»n Cá»c Hiá»‡n Äang Giá»¯
                   </span>
                   <span className="text-xs text-zinc-400 font-medium">
-                    Hạn: <strong className="text-zinc-200 font-bold">{selectedDeposit.expiryDate}</strong>
+                    Háº¡n: <strong className="text-zinc-200 font-bold">{selectedDeposit.expiryDate}</strong>
                   </span>
                 </div>
 
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-[#2AC1BC] tracking-tight whitespace-nowrap">
                     <span>{selectedDeposit.amount.toLocaleString("vi-VN")}</span>
-                    <span className="text-xl sm:text-2xl font-bold">₫</span>
+                    <span className="text-xl sm:text-2xl font-bold">â‚«</span>
                   </div>
 
                   {selectedDeposit.originalAmount > selectedDeposit.amount && (
                     <span className="text-[11px] text-zinc-400 font-medium italic whitespace-nowrap">
-                      (Ban đầu: {selectedDeposit.originalAmount.toLocaleString("vi-VN")} ₫)
+                      (Ban Ä‘áº§u: {selectedDeposit.originalAmount.toLocaleString("vi-VN")} â‚«)
                     </span>
                   )}
                 </div>
@@ -1296,7 +1296,7 @@ function DepositsContent() {
                 {selectedDeposit.note && (
                   <div className="pt-2.5 border-t border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-start gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
-                    <p><strong>Ghi chú:</strong> {selectedDeposit.note}</p>
+                    <p><strong>Ghi chÃº:</strong> {selectedDeposit.note}</p>
                   </div>
                 )}
               </div>
@@ -1306,31 +1306,31 @@ function DepositsContent() {
                 <div className="p-4 bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-200 rounded-2xl space-y-2.5 text-rose-950 font-semibold shadow-2xs">
                   <div className="flex items-center justify-between border-b border-rose-200/80 pb-2">
                     <span className="font-extrabold flex items-center gap-1.5 text-xs text-rose-900">
-                      <Scissors className="w-4 h-4 text-rose-600" /> Chi Tiết Khấu Trừ Tiền Cọc
+                      <Scissors className="w-4 h-4 text-rose-600" /> Chi Tiáº¿t Kháº¥u Trá»« Tiá»n Cá»c
                     </span>
                     <span className="font-black text-rose-700 text-sm whitespace-nowrap">
-                      -{selectedDeposit.deductedAmount?.toLocaleString("vi-VN")} ₫
+                      -{selectedDeposit.deductedAmount?.toLocaleString("vi-VN")} â‚«
                     </span>
                   </div>
 
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between text-zinc-600">
-                      <span>Số tiền cọc ban đầu:</span>
-                      <span className="font-bold whitespace-nowrap">{selectedDeposit.originalAmount.toLocaleString("vi-VN")} ₫</span>
+                      <span>Sá»‘ tiá»n cá»c ban Ä‘áº§u:</span>
+                      <span className="font-bold whitespace-nowrap">{selectedDeposit.originalAmount.toLocaleString("vi-VN")} â‚«</span>
                     </div>
                     <div className="flex justify-between text-rose-700 font-bold">
-                      <span>Khấu trừ vi phạm:</span>
-                      <span className="whitespace-nowrap">-{selectedDeposit.deductedAmount?.toLocaleString("vi-VN")} ₫</span>
+                      <span>Kháº¥u trá»« vi pháº¡m:</span>
+                      <span className="whitespace-nowrap">-{selectedDeposit.deductedAmount?.toLocaleString("vi-VN")} â‚«</span>
                     </div>
                     <div className="flex justify-between text-purple-700 font-black border-t border-rose-200/80 pt-1.5">
-                      <span>Số tiền thực tế hoàn trả:</span>
-                      <span className="whitespace-nowrap">{(selectedDeposit.refundAmount || 0).toLocaleString("vi-VN")} ₫</span>
+                      <span>Sá»‘ tiá»n thá»±c táº¿ hoÃ n tráº£:</span>
+                      <span className="whitespace-nowrap">{(selectedDeposit.refundAmount || 0).toLocaleString("vi-VN")} â‚«</span>
                     </div>
                   </div>
 
                   {selectedDeposit.deductionReason && (
                     <p className="text-[11px] text-rose-800 italic pt-1 border-t border-rose-200/80">
-                      💡 <strong>Lý do:</strong> {selectedDeposit.deductionReason}
+                      ðŸ’¡ <strong>LÃ½ do:</strong> {selectedDeposit.deductionReason}
                     </p>
                   )}
                 </div>
@@ -1340,9 +1340,9 @@ function DepositsContent() {
               {selectedDeposit.convertedAt && (
                 <div className="p-3.5 bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-200 rounded-2xl text-amber-900 font-semibold space-y-1 shadow-2xs">
                   <p className="font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-600 shrink-0" /> Đã thu bổ sung {selectedDeposit.additionalPaidAmount?.toLocaleString("vi-VN")} ₫ &amp; Nâng thành Cọc Hợp Đồng!
+                    <Sparkles className="w-4 h-4 text-amber-600 shrink-0" /> ÄÃ£ thu bá»• sung {selectedDeposit.additionalPaidAmount?.toLocaleString("vi-VN")} â‚« &amp; NÃ¢ng thÃ nh Cá»c Há»£p Äá»“ng!
                   </p>
-                  <p className="text-[11px] text-amber-700">Ngày nâng cấp: {selectedDeposit.convertedAt}</p>
+                  <p className="text-[11px] text-amber-700">NgÃ y nÃ¢ng cáº¥p: {selectedDeposit.convertedAt}</p>
                 </div>
               )}
             </div>
@@ -1358,11 +1358,11 @@ function DepositsContent() {
                 }}
                 className="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> Chat Ngay Với Khách
+                <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> Chat Ngay Vá»›i KhÃ¡ch
               </button>
 
               <div className="flex items-center gap-2 ml-auto">
-                {selectedDeposit.depositType === "Cọc giữ chỗ" && selectedDeposit.status === "Đang giữ" && (
+                {selectedDeposit.depositType === "Cá»c giá»¯ chá»—" && selectedDeposit.status === "Äang giá»¯" && (
                   <button
                     onClick={() => {
                       setShowUpgradeModal(selectedDeposit);
@@ -1371,11 +1371,11 @@ function DepositsContent() {
                     }}
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <Sparkles className="w-4 h-4" /> Nâng Cọc HĐ
+                    <Sparkles className="w-4 h-4" /> NÃ¢ng Cá»c HÄ
                   </button>
                 )}
 
-                {selectedDeposit.status === "Đang giữ" && (
+                {selectedDeposit.status === "Äang giá»¯" && (
                   <button
                     onClick={() => {
                       setShowRefundModal(selectedDeposit);
@@ -1385,7 +1385,7 @@ function DepositsContent() {
                     }}
                     className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <RotateCcw className="w-4 h-4" /> Hoàn &amp; Khấu Trừ Cọc
+                    <RotateCcw className="w-4 h-4" /> HoÃ n &amp; Kháº¥u Trá»« Cá»c
                   </button>
                 )}
               </div>
@@ -1410,8 +1410,8 @@ function DepositsContent() {
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Thu Bổ Sung & Nâng Cọc Hợp Đồng</h3>
-                  <p className="text-xs text-zinc-500 font-semibold">{showUpgradeModal.roomName} • {showUpgradeModal.tenantName}</p>
+                  <h3 className="font-black text-base text-zinc-900">Thu Bá»• Sung & NÃ¢ng Cá»c Há»£p Äá»“ng</h3>
+                  <p className="text-xs text-zinc-500 font-semibold">{showUpgradeModal.roomName} â€¢ {showUpgradeModal.tenantName}</p>
                 </div>
               </div>
 
@@ -1429,19 +1429,19 @@ function DepositsContent() {
               <div className="p-3 bg-gradient-to-r from-amber-500/10 via-teal-500/10 to-emerald-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-zinc-700 font-medium leading-relaxed">
-                  <strong className="text-zinc-900 font-black">Tiện ích thông minh Dormio:</strong> Tự động tính chênh lệch & hỗ trợ 3 hình thức thu tiền cọc bổ sung mượt mà!
+                  <strong className="text-zinc-900 font-black">Tiá»‡n Ã­ch thÃ´ng minh Dormio:</strong> Tá»± Ä‘á»™ng tÃ­nh chÃªnh lá»‡ch & há»— trá»£ 3 hÃ¬nh thá»©c thu tiá»n cá»c bá»• sung mÆ°á»£t mÃ !
                 </p>
               </div>
 
               {/* Amount Breakdown & Calculation Card */}
               <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-zinc-600 text-xs">
-                  <span>Tiền Cọc Đã Thu:</span>
-                  <span className="font-black text-zinc-900 whitespace-nowrap">{showUpgradeModal.amount.toLocaleString("vi-VN")} ₫</span>
+                  <span>Tiá»n Cá»c ÄÃ£ Thu:</span>
+                  <span className="font-black text-zinc-900 whitespace-nowrap">{showUpgradeModal.amount.toLocaleString("vi-VN")} â‚«</span>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Tiền Cọc Hợp Đồng (VNĐ) *</label>
+                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Tiá»n Cá»c Há»£p Äá»“ng (VNÄ) *</label>
                   <input
                     type="number"
                     value={upgradeForm.targetContractAmount}
@@ -1457,10 +1457,10 @@ function DepositsContent() {
                 <div className="p-3.5 bg-amber-500/10 border border-amber-300/80 rounded-xl flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <span className="text-[10px] uppercase font-black text-amber-700 tracking-wider block truncate">
-                      Số Tiền Thu Bổ Sung
+                      Sá»‘ Tiá»n Thu Bá»• Sung
                     </span>
                     <span className="text-lg sm:text-xl font-black text-amber-900 leading-none mt-1 block whitespace-nowrap">
-                      +{upgradeForm.additionalAmount.toLocaleString("vi-VN")} ₫
+                      +{upgradeForm.additionalAmount.toLocaleString("vi-VN")} â‚«
                     </span>
                   </div>
                   <ArrowRight className="w-5 h-5 text-amber-600 shrink-0" />
@@ -1470,7 +1470,7 @@ function DepositsContent() {
               {/* 3 Payment Methods Selector */}
               <div className="space-y-2">
                 <label className="block text-[11px] font-extrabold text-zinc-700 uppercase tracking-wider">
-                  Chọn Phương Thức Thu Tiền &amp; Xác Nhận Nâng Cọc:
+                  Chá»n PhÆ°Æ¡ng Thá»©c Thu Tiá»n &amp; XÃ¡c Nháº­n NÃ¢ng Cá»c:
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -1485,11 +1485,11 @@ function DepositsContent() {
                   >
                     <div className="flex items-center justify-between">
                       <Smartphone className="w-4 h-4 text-[#2AC1BC]" />
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-[#2AC1BC]/20 text-[#2AC1BC]">Tự động</span>
+                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-[#2AC1BC]/20 text-[#2AC1BC]">Tá»± Ä‘á»™ng</span>
                     </div>
                     <div>
-                      <div className="font-extrabold text-xs text-zinc-900">1. VietQR Hệ Thống</div>
-                      <div className="text-[10px] text-zinc-500 font-medium leading-tight mt-0.5">Tự động nâng cọc HĐ ngay khi tiền về</div>
+                      <div className="font-extrabold text-xs text-zinc-900">1. VietQR Há»‡ Thá»‘ng</div>
+                      <div className="text-[10px] text-zinc-500 font-medium leading-tight mt-0.5">Tá»± Ä‘á»™ng nÃ¢ng cá»c HÄ ngay khi tiá»n vá»</div>
                     </div>
                   </button>
 
@@ -1504,11 +1504,11 @@ function DepositsContent() {
                   >
                     <div className="flex items-center justify-between">
                       <Send className="w-4 h-4 text-blue-600" />
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700">Chuyển khoản</span>
+                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700">Chuyá»ƒn khoáº£n</span>
                     </div>
                     <div>
-                      <div className="font-extrabold text-xs text-zinc-900">2. Nhắc Zalo / SMS</div>
-                      <div className="text-[10px] text-zinc-500 font-medium leading-tight mt-0.5">Kèm STK chủ trọ, bấm xác nhận sau</div>
+                      <div className="font-extrabold text-xs text-zinc-900">2. Nháº¯c Zalo / SMS</div>
+                      <div className="text-[10px] text-zinc-500 font-medium leading-tight mt-0.5">KÃ¨m STK chá»§ trá», báº¥m xÃ¡c nháº­n sau</div>
                     </div>
                   </button>
 
@@ -1523,11 +1523,11 @@ function DepositsContent() {
                   >
                     <div className="flex items-center justify-between">
                       <DollarSign className="w-4 h-4 text-emerald-600" />
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700">Trực tiếp</span>
+                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700">Trá»±c tiáº¿p</span>
                     </div>
                     <div>
-                      <div className="font-extrabold text-xs text-zinc-900">3. Thu Tiền Mặt</div>
-                      <div className="text-[10px] text-zinc-500 font-medium leading-tight mt-0.5">Chủ trọ nhận tiền mặt &amp; ấn xác nhận</div>
+                      <div className="font-extrabold text-xs text-zinc-900">3. Thu Tiá»n Máº·t</div>
+                      <div className="text-[10px] text-zinc-500 font-medium leading-tight mt-0.5">Chá»§ trá» nháº­n tiá»n máº·t &amp; áº¥n xÃ¡c nháº­n</div>
                     </div>
                   </button>
                 </div>
@@ -1537,10 +1537,10 @@ function DepositsContent() {
               {upgradeCollectionMethod === "vietqr" && (
                 <div className="p-3.5 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl space-y-2.5 text-[#0f5351]">
                   <p className="text-[11px] font-bold">
-                    Nhấp nút để gửi mã VietQR thu tiền <strong className="whitespace-nowrap">+{upgradeForm.additionalAmount.toLocaleString("vi-VN")} ₫</strong> đến Người Thuê Trọ qua Chat.
+                    Nháº¥p nÃºt Ä‘á»ƒ gá»­i mÃ£ VietQR thu tiá»n <strong className="whitespace-nowrap">+{upgradeForm.additionalAmount.toLocaleString("vi-VN")} â‚«</strong> Ä‘áº¿n NgÆ°á»i ThuÃª Trá» qua Chat.
                   </p>
                   <p className="text-[11px] font-bold">
-                    Hệ thống sẽ <strong>TỰ ĐỘNG XÁC NHẬN &amp; NÂNG CỌC HĐ</strong>.
+                    Há»‡ thá»‘ng sáº½ <strong>Tá»° Äá»˜NG XÃC NHáº¬N &amp; NÃ‚NG Cá»ŒC HÄ</strong>.
                   </p>
                   <button
                     type="button"
@@ -1552,7 +1552,7 @@ function DepositsContent() {
                     className="w-full py-3 px-3 bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 text-center"
                   >
                     <Smartphone className="w-4 h-4 shrink-0" />
-                    <span>Gửi Mã VietQR Qua Chat (Tự Động Nâng Cọc)</span>
+                    <span>Gá»­i MÃ£ VietQR Qua Chat (Tá»± Äá»™ng NÃ¢ng Cá»c)</span>
                   </button>
                 </div>
               )}
@@ -1560,8 +1560,8 @@ function DepositsContent() {
               {upgradeCollectionMethod === "zalo_sms" && (
                 <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl space-y-3 text-blue-900">
                   <p className="text-[11px] font-bold leading-relaxed">
-                    Sao chép mẫu tin nhắn đã soạn sẵn STK ngân hàng của Chủ trọ, sau đó
-                    mở trực tiếp Zalo hoặc tin nhắn SMS của số điện thoại <strong>{showUpgradeModal.tenantName}</strong> ({showUpgradeModal.tenantPhone}).
+                    Sao chÃ©p máº«u tin nháº¯n Ä‘Ã£ soáº¡n sáºµn STK ngÃ¢n hÃ ng cá»§a Chá»§ trá», sau Ä‘Ã³
+                    má»Ÿ trá»±c tiáº¿p Zalo hoáº·c tin nháº¯n SMS cá»§a sá»‘ Ä‘iá»‡n thoáº¡i <strong>{showUpgradeModal.tenantName}</strong> ({showUpgradeModal.tenantPhone}).
                   </p>
 
 
@@ -1576,9 +1576,9 @@ function DepositsContent() {
                         window.open(`https://zalo.me/${cleanPhone}`, "_blank");
                       }}
                       className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
-                      title="Mở Zalo trực tiếp của người thuê"
+                      title="Má»Ÿ Zalo trá»±c tiáº¿p cá»§a ngÆ°á»i thuÃª"
                     >
-                      <Send className="w-4 h-4" /> Mở Zalo ({showUpgradeModal.tenantPhone})
+                      <Send className="w-4 h-4" /> Má»Ÿ Zalo ({showUpgradeModal.tenantPhone})
                     </button>
 
                     {/* Direct SMS Link */}
@@ -1590,9 +1590,9 @@ function DepositsContent() {
                         window.location.href = `sms:${cleanPhone}?body=${encodeURIComponent(text)}`;
                       }}
                       className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
-                      title="Gửi SMS trực tiếp"
+                      title="Gá»­i SMS trá»±c tiáº¿p"
                     >
-                      <Smartphone className="w-4 h-4" /> Gửi Tin Nhắn SMS
+                      <Smartphone className="w-4 h-4" /> Gá»­i Tin Nháº¯n SMS
                     </button>
                   </div>
 
@@ -1601,7 +1601,7 @@ function DepositsContent() {
                     onClick={() => setShowZaloModal(true)}
                     className="w-full py-2 bg-blue-100 hover:bg-blue-200 text-blue-900 font-extrabold text-[11px] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <FileText className="w-3.5 h-3.5" /> Xem Mẫu Tin Nhắn &amp; Sao Chép
+                    <FileText className="w-3.5 h-3.5" /> Xem Máº«u Tin Nháº¯n &amp; Sao ChÃ©p
                   </button>
                 </div>
               )}
@@ -1609,10 +1609,10 @@ function DepositsContent() {
               {upgradeCollectionMethod === "cash" && (
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 space-y-1">
                   <p className="text-[11px] font-bold">
-                    Người thuê trọ đóng trực tiếp tiền mặt <strong>+{upgradeForm.additionalAmount.toLocaleString("vi-VN")} ₫</strong>.
+                    NgÆ°á»i thuÃª trá» Ä‘Ã³ng trá»±c tiáº¿p tiá»n máº·t <strong>+{upgradeForm.additionalAmount.toLocaleString("vi-VN")} â‚«</strong>.
                   </p>
                   <p className="text-[11px] font-bold">
-                    Chủ trọ bấm nút <strong>[Xác Nhận Đã Thu &amp; Nâng Cọc HĐ]</strong> bên dưới.
+                    Chá»§ trá» báº¥m nÃºt <strong>[XÃ¡c Nháº­n ÄÃ£ Thu &amp; NÃ¢ng Cá»c HÄ]</strong> bÃªn dÆ°á»›i.
                   </p>
                 </div>
               )}
@@ -1625,13 +1625,13 @@ function DepositsContent() {
                 onClick={() => requestCloseModal("upgrade")}
                 className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer text-center"
               >
-                Hủy
+                Há»§y
               </button>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 {upgradeCollectionMethod === "vietqr" && (
                   <span className="text-[10px] text-zinc-400 font-medium italic text-center sm:text-right">
-                    VietQR tự động xác nhận khi tiền về
+                    VietQR tá»± Ä‘á»™ng xÃ¡c nháº­n khi tiá»n vá»
                   </span>
                 )}
                 <button
@@ -1640,8 +1640,8 @@ function DepositsContent() {
                   onClick={handleConfirmUpgradeToContract}
                   title={
                     upgradeCollectionMethod === "vietqr"
-                      ? "VietQR tự động xác nhận nâng cọc khi tiền về tài khoản, không cần bấm xác nhận thủ công"
-                      : "Xác nhận đã thu đủ tiền và nâng thành Cọc Hợp Đồng"
+                      ? "VietQR tá»± Ä‘á»™ng xÃ¡c nháº­n nÃ¢ng cá»c khi tiá»n vá» tÃ i khoáº£n, khÃ´ng cáº§n báº¥m xÃ¡c nháº­n thá»§ cÃ´ng"
+                      : "XÃ¡c nháº­n Ä‘Ã£ thu Ä‘á»§ tiá»n vÃ  nÃ¢ng thÃ nh Cá»c Há»£p Äá»“ng"
                   }
                   className={`px-5 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 text-center ${upgradeCollectionMethod === "vietqr"
                     ? "bg-zinc-200 text-zinc-400 border border-zinc-300 cursor-not-allowed opacity-40 shadow-none select-none"
@@ -1649,7 +1649,7 @@ function DepositsContent() {
                     }`}
                 >
                   <Check className="w-4 h-4 shrink-0" />
-                  <span>Xác Nhận Đã Thu &amp; Nâng Cọc HĐ</span>
+                  <span>XÃ¡c Nháº­n ÄÃ£ Thu &amp; NÃ¢ng Cá»c HÄ</span>
                 </button>
               </div>
             </div>
@@ -1669,7 +1669,7 @@ function DepositsContent() {
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2 text-blue-600">
                 <Send className="w-5 h-5" />
-                <h3 className="font-extrabold text-base text-zinc-900">Mẫu Tin Nhắn Zalo / SMS</h3>
+                <h3 className="font-extrabold text-base text-zinc-900">Máº«u Tin Nháº¯n Zalo / SMS</h3>
               </div>
               <button onClick={() => setShowZaloModal(false)} className="text-zinc-400 hover:text-zinc-700 cursor-pointer">
                 <X className="w-5 h-5" />
@@ -1677,7 +1677,7 @@ function DepositsContent() {
             </div>
 
             <p className="text-xs text-zinc-500 font-semibold">
-              Sao chép nội dung tin nhắn dưới đây để gửi cho khách <strong>{showUpgradeModal.tenantName}</strong> ({showUpgradeModal.tenantPhone}) qua Zalo hoặc SMS:
+              Sao chÃ©p ná»™i dung tin nháº¯n dÆ°á»›i Ä‘Ã¢y Ä‘á»ƒ gá»­i cho khÃ¡ch <strong>{showUpgradeModal.tenantName}</strong> ({showUpgradeModal.tenantPhone}) qua Zalo hoáº·c SMS:
             </p>
 
             <div className="p-3 bg-zinc-900 text-zinc-100 rounded-2xl text-xs font-mono space-y-2 relative border border-zinc-800">
@@ -1692,13 +1692,13 @@ function DepositsContent() {
                 <br />
                 STK Ngan Hang Chu Tro:
                 <br />
-                • Ngan hang: MB Bank (Ngan hang Quan Doi)
+                â€¢ Ngan hang: MB Bank (Ngan hang Quan Doi)
                 <br />
-                • So tai khoan: 9999888899
+                â€¢ So tai khoan: 9999888899
                 <br />
-                • Chu tai khoan: CHU TRO DORMIO
+                â€¢ Chu tai khoan: CHU TRO DORMIO
                 <br />
-                • Noi dung CK: COC {showUpgradeModal.roomName} {showUpgradeModal.tenantPhone}
+                â€¢ Noi dung CK: COC {showUpgradeModal.roomName} {showUpgradeModal.tenantPhone}
                 <br />
                 Xin cam on!
               </p>
@@ -1716,7 +1716,7 @@ function DepositsContent() {
                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 {copySuccess ? <Check className="w-4 h-4 text-emerald-300" /> : <Send className="w-4 h-4" />}
-                {copySuccess ? "Đã sao chép tin nhắn!" : "Sao Chép Tin Nhắn Zalo / SMS"}
+                {copySuccess ? "ÄÃ£ sao chÃ©p tin nháº¯n!" : "Sao ChÃ©p Tin Nháº¯n Zalo / SMS"}
               </button>
             </div>
           </div>
@@ -1738,8 +1738,8 @@ function DepositsContent() {
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Thêm Khoản Đặt Cọc Mới</h3>
-                  <p className="text-xs text-zinc-500 font-semibold">Tạo khoản Cọc Giữ Chỗ hoặc Cọc Hợp Đồng</p>
+                  <h3 className="font-black text-base text-zinc-900">ThÃªm Khoáº£n Äáº·t Cá»c Má»›i</h3>
+                  <p className="text-xs text-zinc-500 font-semibold">Táº¡o khoáº£n Cá»c Giá»¯ Chá»— hoáº·c Cá»c Há»£p Äá»“ng</p>
                 </div>
               </div>
 
@@ -1754,7 +1754,7 @@ function DepositsContent() {
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Số Phòng *</label>
+                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Sá»‘ PhÃ²ng *</label>
                   <input
                     type="text"
                     value={newDepositForm.roomName}
@@ -1762,13 +1762,13 @@ function DepositsContent() {
                       setNewDepositForm({ ...newDepositForm, roomName: e.target.value });
                       setIsFormDirty(true);
                     }}
-                    placeholder="Ví dụ: 103"
+                    placeholder="VÃ­ dá»¥: 103"
                     className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Loại Đặt Cọc (2 Loại) *</label>
+                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Loáº¡i Äáº·t Cá»c (2 Loáº¡i) *</label>
                   <select
                     value={newDepositForm.depositType}
                     onChange={(e) => {
@@ -1777,15 +1777,15 @@ function DepositsContent() {
                     }}
                     className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   >
-                    <option value="Cọc giữ chỗ">Cọc giữ chỗ (Chờ hẹn lịch chốt HĐ)</option>
-                    <option value="Cọc hợp đồng">Cọc hợp đồng (Đã ký hợp đồng thuê)</option>
+                    <option value="Cá»c giá»¯ chá»—">Cá»c giá»¯ chá»— (Chá» háº¹n lá»‹ch chá»‘t HÄ)</option>
+                    <option value="Cá»c há»£p Ä‘á»“ng">Cá»c há»£p Ä‘á»“ng (ÄÃ£ kÃ½ há»£p Ä‘á»“ng thuÃª)</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Tên Người Đặt Cọc *</label>
+                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">TÃªn NgÆ°á»i Äáº·t Cá»c *</label>
                   <input
                     type="text"
                     value={newDepositForm.tenantName}
@@ -1793,13 +1793,13 @@ function DepositsContent() {
                       setNewDepositForm({ ...newDepositForm, tenantName: e.target.value });
                       setIsFormDirty(true);
                     }}
-                    placeholder="Ví dụ: Nguyễn Văn A"
+                    placeholder="VÃ­ dá»¥: Nguyá»…n VÄƒn A"
                     className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Số Điện Thoại *</label>
+                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Sá»‘ Äiá»‡n Thoáº¡i *</label>
                   <input
                     type="text"
                     value={newDepositForm.tenantPhone}
@@ -1815,7 +1815,7 @@ function DepositsContent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Số Tiền Đặt Cọc (VNĐ) *</label>
+                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Sá»‘ Tiá»n Äáº·t Cá»c (VNÄ) *</label>
                   <input
                     type="number"
                     value={newDepositForm.amount}
@@ -1828,7 +1828,7 @@ function DepositsContent() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Thời Hạn Hết Cọc / Chốt HĐ</label>
+                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Thá»i Háº¡n Háº¿t Cá»c / Chá»‘t HÄ</label>
                   <input
                     type="date"
                     value={newDepositForm.expiryDate}
@@ -1842,7 +1842,7 @@ function DepositsContent() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Ghi Chú Ban Đầu</label>
+                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Ghi ChÃº Ban Äáº§u</label>
                 <textarea
                   rows={3}
                   value={newDepositForm.note}
@@ -1850,7 +1850,7 @@ function DepositsContent() {
                     setNewDepositForm({ ...newDepositForm, note: e.target.value });
                     setIsFormDirty(true);
                   }}
-                  placeholder="Ghi chú điều kiện giữ cọc hoặc thỏa thuận thu thêm..."
+                  placeholder="Ghi chÃº Ä‘iá»u kiá»‡n giá»¯ cá»c hoáº·c thá»a thuáº­n thu thÃªm..."
                   className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                 />
               </div>
@@ -1861,13 +1861,13 @@ function DepositsContent() {
                 onClick={() => requestCloseModal("create")}
                 className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer"
               >
-                Hủy
+                Há»§y
               </button>
               <button
                 onClick={handleCreateDeposit}
                 className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md cursor-pointer"
               >
-                Lưu Khoản Đặt Cọc
+                LÆ°u Khoáº£n Äáº·t Cá»c
               </button>
             </div>
           </div>
@@ -1890,8 +1890,8 @@ function DepositsContent() {
                   <RotateCcw className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Hoàn &amp; Khấu Trừ Tiền Cọc</h3>
-                  <p className="text-xs text-zinc-500 font-semibold">{showRefundModal.roomName} • {showRefundModal.tenantName}</p>
+                  <h3 className="font-black text-base text-zinc-900">HoÃ n &amp; Kháº¥u Trá»« Tiá»n Cá»c</h3>
+                  <p className="text-xs text-zinc-500 font-semibold">{showRefundModal.roomName} â€¢ {showRefundModal.tenantName}</p>
                 </div>
               </div>
 
@@ -1907,15 +1907,15 @@ function DepositsContent() {
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
               {/* Held Amount Banner */}
               <div className="p-4 bg-gradient-to-r from-purple-500/10 via-zinc-50 to-purple-500/10 border border-purple-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
-                <span className="text-zinc-600 font-semibold truncate">Số tiền cọc ban đầu hiện giữ:</span>
-                <span className="font-black text-purple-900 text-sm sm:text-base whitespace-nowrap">{showRefundModal.amount.toLocaleString("vi-VN")} ₫</span>
+                <span className="text-zinc-600 font-semibold truncate">Sá»‘ tiá»n cá»c ban Ä‘áº§u hiá»‡n giá»¯:</span>
+                <span className="font-black text-purple-900 text-sm sm:text-base whitespace-nowrap">{showRefundModal.amount.toLocaleString("vi-VN")} â‚«</span>
               </div>
 
               {/* Deduction Amount Input */}
               <div className="space-y-2">
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700">
-                    Số Tiền Khấu Trừ (VNĐ)
+                    Sá»‘ Tiá»n Kháº¥u Trá»« (VNÄ)
                   </label>
                 </div>
 
@@ -1932,7 +1932,7 @@ function DepositsContent() {
 
                 {/* Quick Presets Pills (3-Column Grid) */}
                 <div className="space-y-1.5 pt-1">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Chọn Nhanh Số Tiền Khấu Trừ:</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Chá»n Nhanh Sá»‘ Tiá»n Kháº¥u Trá»«:</span>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
@@ -1945,8 +1945,8 @@ function DepositsContent() {
                         : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
                         }`}
                     >
-                      <span className="text-[11px] sm:text-xs whitespace-nowrap">Hoàn 100%</span>
-                      <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">(0 ₫)</span>
+                      <span className="text-[11px] sm:text-xs whitespace-nowrap">HoÃ n 100%</span>
+                      <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">(0 â‚«)</span>
                     </button>
 
                     <button
@@ -1960,8 +1960,8 @@ function DepositsContent() {
                         : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
                         }`}
                     >
-                      <span className="text-[11px] sm:text-xs whitespace-nowrap">Trừ 50%</span>
-                      <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">({(showRefundModal.amount / 2).toLocaleString("vi-VN")} ₫)</span>
+                      <span className="text-[11px] sm:text-xs whitespace-nowrap">Trá»« 50%</span>
+                      <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">({(showRefundModal.amount / 2).toLocaleString("vi-VN")} â‚«)</span>
                     </button>
 
                     <button
@@ -1975,8 +1975,8 @@ function DepositsContent() {
                         : "bg-rose-100 hover:bg-rose-200 text-rose-700"
                         }`}
                     >
-                      <span className="text-[11px] sm:text-xs whitespace-nowrap">Trừ 100%</span>
-                      <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">({showRefundModal.amount.toLocaleString("vi-VN")} ₫)</span>
+                      <span className="text-[11px] sm:text-xs whitespace-nowrap">Trá»« 100%</span>
+                      <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">({showRefundModal.amount.toLocaleString("vi-VN")} â‚«)</span>
                     </button>
                   </div>
                 </div>
@@ -1985,7 +1985,7 @@ function DepositsContent() {
               {/* Deduction Reason Input */}
               {Number(refundForm.deductedAmount) > 0 && (
                 <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <label className="block text-[11px] font-extrabold text-rose-800">Lý Do Khấu Trừ *</label>
+                  <label className="block text-[11px] font-extrabold text-rose-800">LÃ½ Do Kháº¥u Trá»« *</label>
                   <textarea
                     rows={2}
                     value={refundForm.deductionReason}
@@ -1993,7 +1993,7 @@ function DepositsContent() {
                       setRefundForm({ ...refundForm, deductionReason: e.target.value });
                       setIsFormDirty(true);
                     }}
-                    placeholder="Nhập chi tiết lý do khấu trừ (Hư hại sofa, làm bẩn sơn tường, vi phạm điều khoản...)"
+                    placeholder="Nháº­p chi tiáº¿t lÃ½ do kháº¥u trá»« (HÆ° háº¡i sofa, lÃ m báº©n sÆ¡n tÆ°á»ng, vi pháº¡m Ä‘iá»u khoáº£n...)"
                     className="w-full px-3 py-2 bg-rose-50/40 border border-rose-200 rounded-xl font-medium text-rose-950 focus:outline-none focus:border-rose-500 text-xs"
                   />
                 </div>
@@ -2001,7 +2001,7 @@ function DepositsContent() {
 
               {/* Refund Note Input */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-extrabold text-zinc-700">Ghi Chú Hoàn Cọc</label>
+                <label className="block text-[11px] font-extrabold text-zinc-700">Ghi ChÃº HoÃ n Cá»c</label>
                 <textarea
                   rows={2}
                   value={refundForm.note}
@@ -2009,7 +2009,7 @@ function DepositsContent() {
                     setRefundForm({ ...refundForm, note: e.target.value });
                     setIsFormDirty(true);
                   }}
-                  placeholder="Phương thức hoàn tiền (Chuyển khoản VietQR / Tiền mặt...)"
+                  placeholder="PhÆ°Æ¡ng thá»©c hoÃ n tiá»n (Chuyá»ƒn khoáº£n VietQR / Tiá»n máº·t...)"
                   className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-purple-500 text-xs"
                 />
               </div>
@@ -2022,20 +2022,20 @@ function DepositsContent() {
                 return (
                   <div className="p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50/80 border border-purple-200 rounded-2xl space-y-2 text-xs shadow-2xs">
                     <div className="flex justify-between items-center text-zinc-600">
-                      <span>Số tiền cọc ban đầu:</span>
-                      <span className="font-bold text-zinc-900 whitespace-nowrap">{showRefundModal.amount.toLocaleString("vi-VN")} ₫</span>
+                      <span>Sá»‘ tiá»n cá»c ban Ä‘áº§u:</span>
+                      <span className="font-bold text-zinc-900 whitespace-nowrap">{showRefundModal.amount.toLocaleString("vi-VN")} â‚«</span>
                     </div>
 
                     {deductAmt > 0 && (
                       <div className="flex justify-between items-center text-rose-700 font-bold border-t border-purple-200/60 pt-1.5">
-                        <span>Khấu trừ vi phạm / hư hại:</span>
-                        <span className="font-black whitespace-nowrap">-{deductAmt.toLocaleString("vi-VN")} ₫</span>
+                        <span>Kháº¥u trá»« vi pháº¡m / hÆ° háº¡i:</span>
+                        <span className="font-black whitespace-nowrap">-{deductAmt.toLocaleString("vi-VN")} â‚«</span>
                       </div>
                     )}
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-purple-900 font-black text-xs sm:text-sm border-t border-purple-200 pt-2">
-                      <span>Số tiền thực tế hoàn trả cho khách:</span>
-                      <span className="text-base sm:text-lg text-purple-700 whitespace-nowrap">{actualRefund.toLocaleString("vi-VN")} ₫</span>
+                      <span>Sá»‘ tiá»n thá»±c táº¿ hoÃ n tráº£ cho khÃ¡ch:</span>
+                      <span className="text-base sm:text-lg text-purple-700 whitespace-nowrap">{actualRefund.toLocaleString("vi-VN")} â‚«</span>
                     </div>
                   </div>
                 );
@@ -2049,14 +2049,14 @@ function DepositsContent() {
                 onClick={() => requestCloseModal("refund")}
                 className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer text-center"
               >
-                Hủy
+                Há»§y
               </button>
               <button
                 type="button"
                 onClick={handleRefundDeposit}
                 className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01]"
               >
-                <Check className="w-4 h-4" /> Xác Nhận Hoàn &amp; Khấu Trừ Cọc
+                <Check className="w-4 h-4" /> XÃ¡c Nháº­n HoÃ n &amp; Kháº¥u Trá»« Cá»c
               </button>
             </div>
           </div>
@@ -2076,11 +2076,11 @@ function DepositsContent() {
               <div className="p-2 bg-amber-50 border border-amber-200 rounded-xl">
                 <AlertTriangle className="w-5 h-5" />
               </div>
-              <h3 className="font-extrabold text-base text-zinc-900">Xác Nhận Đóng Form</h3>
+              <h3 className="font-extrabold text-base text-zinc-900">XÃ¡c Nháº­n ÄÃ³ng Form</h3>
             </div>
 
             <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
-              Bạn đang có thông tin nhập dở chưa lưu. Bạn có chắc chắn muốn thoát và hủy bỏ các thay đổi?
+              Báº¡n Ä‘ang cÃ³ thÃ´ng tin nháº­p dá»Ÿ chÆ°a lÆ°u. Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n thoÃ¡t vÃ  há»§y bá» cÃ¡c thay Ä‘á»•i?
             </p>
 
             <div className="flex items-center gap-3 pt-2">
@@ -2088,13 +2088,13 @@ function DepositsContent() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                Tiáº¿p tá»¥c chá»‰nh sá»­a
               </button>
               <button
                 onClick={handleConfirmCloseModal}
                 className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer"
               >
-                Hủy thay đổi & Đóng
+                Há»§y thay Ä‘á»•i & ÄÃ³ng
               </button>
             </div>
           </div>
@@ -2106,16 +2106,9 @@ function DepositsContent() {
 
 export default function DepositsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs font-bold text-zinc-400">Đang tải dữ liệu tiền cọc...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs font-bold text-zinc-400">Äang táº£i dá»¯ liá»‡u tiá»n cá»c...</div>}>
       <DepositsContent />
     </Suspense>
   );
 }
 
-export default function DepositsPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-xs font-bold text-zinc-400">Đang tải dữ liệu tiền cọc...</div>}>
-      <DepositsContent />
-    </Suspense>
-  );
-}

@@ -1,3 +1,28 @@
+export type SupportedLocale = "vi" | "en";
+
+export interface LocalizedField {
+  vi: string;
+  en: string;
+}
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    [key: string]: any;
+  };
+}
+
+export interface RequestLocaleOptions {
+  lang?: SupportedLocale;
+  [key: string]: any;
+}
+
 export interface User {
   id: string;
   name: string;

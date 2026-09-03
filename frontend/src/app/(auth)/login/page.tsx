@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -7,10 +7,12 @@ import {
   Phone, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const t = useTranslations("auth");
 
   const [method, setMethod] = useState<"phone" | "email">("phone");
   const [showPassword, setShowPassword] = useState(false);
@@ -39,14 +41,14 @@ export default function LoginPage() {
       {/* Top Header & Badge */}
       <div className="space-y-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> ĐĂNG NHẬP HỆ THỐNG
+          <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t("loginBadge")}
         </span>
 
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-          Chào mừng quay trở lại!
+          {t("loginHeading")}
         </h1>
         <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-          Đăng nhập để truy cập Bảng điều khiển quản lý và dữ liệu phòng trọ.
+          {t("loginSubheading")}
         </p>
       </div>
 
@@ -59,7 +61,7 @@ export default function LoginPage() {
             method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Phone className="w-3.5 h-3.5" /> Số điện thoại
+          <Phone className="w-3.5 h-3.5" /> {t("phoneMethod")}
         </button>
         <button
           type="button"
@@ -68,7 +70,7 @@ export default function LoginPage() {
             method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Mail className="w-3.5 h-3.5" /> Địa chỉ Email
+          <Mail className="w-3.5 h-3.5" /> {t("emailMethod")}
         </button>
       </div>
 
@@ -78,7 +80,7 @@ export default function LoginPage() {
         {/* Phone or Email input */}
         <div className="space-y-1">
           <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">
-            {method === "phone" ? "SỐ ĐIỆN THOẠI *" : "ĐỊA CHỈ EMAIL *"}
+            {method === "phone" ? t("phoneLabel") : t("emailLabel")}
           </label>
           <div className="relative">
             {method === "phone" ? (
@@ -100,9 +102,9 @@ export default function LoginPage() {
         {/* Password Field & Forgot Link */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">MẬT KHẨU *</label>
+            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("passwordLabel")}</label>
             <Link href="/forgot-password" className="text-xs font-extrabold text-[#2AC1BC] hover:underline">
-              Quên mật khẩu?
+              {t("forgotPassword")}
             </Link>
           </div>
 
@@ -131,17 +133,17 @@ export default function LoginPage() {
           type="submit"
           className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
         >
-          <span>Đăng nhập hệ thống</span>
+          <span>{t("loginSubmit")}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
 
       </form>
 
-      {/* Social Options (REMOVED ZALO - ONLY GOOGLE REMAINS) */}
+      {/* Social Options */}
       <div className="space-y-3 pt-2">
         <div className="relative flex items-center justify-center">
           <div className="border-t border-zinc-100 w-full" />
-          <span className="bg-white px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider absolute">HOẶC ĐĂNG NHẬP VỚI</span>
+          <span className="bg-white px-3 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider absolute">{t("orLoginWith")}</span>
         </div>
 
         <button
@@ -152,15 +154,15 @@ export default function LoginPage() {
           }}
           className="w-full py-3 px-4 border border-zinc-200 rounded-2xl text-xs font-bold text-zinc-700 hover:bg-zinc-50 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
         >
-          <span className="font-black text-rose-500 text-sm">G</span> Đăng nhập bằng tài khoản Google
+          <span className="font-black text-rose-500 text-sm">G</span> {t("loginGoogle")}
         </button>
       </div>
 
       {/* Bottom Auth Navigation Link */}
       <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-        Chưa có tài khoản?{" "}
+        {t("noAccount")}{" "}
         <Link href="/register" className="font-extrabold text-[#2AC1BC] hover:underline">
-          Đăng ký ngay
+          {t("registerNow")}
         </Link>
       </div>
 

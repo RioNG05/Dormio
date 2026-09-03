@@ -1,15 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { NextIntlClientProvider } from "next-intl";
-import viMessages from "../../messages/vi";
-import enMessages from "../../messages/en";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import viMessages from "@/messages/vi";
+import enMessages from "@/messages/en";
+import { getStoredLocale, setStoredLocale as persistStoredLocale, type SupportedLocale } from "@/utils";
 
-export type SupportedLocale = "vi" | "en";
+export type { SupportedLocale };
 
 interface LanguageContextType {
   locale: SupportedLocale;
   setLocale: (lang: SupportedLocale) => void;
+  t: (namespace?: string) => (key: string, values?: Record<string, any>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -21,39 +22,43 @@ const messagesMap: Record<SupportedLocale, any> = {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<SupportedLocale>("vi");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const savedLang = localStorage.getItem("dormio_lang") as SupportedLocale;
-    if (savedLang && (savedLang === "vi" || savedLang === "en")) {
-      setLocaleState(savedLang);
+    const initial = getStoredLocale();
+    setLocaleState(initial);
+    if (typeof document !== "undefined" && document.documentElement) {
+      document.documentElement.lang = initial;
     }
   }, []);
 
   const setLocale = (lang: SupportedLocale) => {
     setLocaleState(lang);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("dormio_lang", lang);
-      document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000`;
-    }
+    persistStoredLocale(lang);
   };
 
-  const activeMessages = messagesMap[locale] || viMessages;
+  const t = useCallback(
+    (namespace?: string) => {
+      const messages = messagesMap[locale] || viMessages;
+      const fallbackMessages = viMessages;
+      const scopedMessages = namespace ? messages[namespace] || {} : messages;
+      const scopedFallback = namespace ? (fallbackMessages as any)[namespace] || {} : fallbackMessages;
+
+      return (key: string, values?: Record<string, any>): string => {
+        let text = scopedMessages[key] ?? scopedFallback[key] ?? key;
+        if (typeof text === "string" && values) {
+          Object.entries(values).forEach(([k, v]) => {
+            text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+          });
+        }
+        return typeof text === "string" ? text : String(text);
+      };
+    },
+    [locale]
+  );
 
   return (
-    <LanguageContext.Provider value={{ locale, setLocale }}>
-      <NextIntlClientProvider
-        locale={locale}
-        messages={activeMessages}
-        timeZone="Asia/Ho_Chi_Minh"
-        onError={(error) => {
-          // Suppress missing message runtime crash overlay in dev
-        }}
-        getMessageFallback={({ key }) => key}
-      >
-        {children}
-      </NextIntlClientProvider>
+    <LanguageContext.Provider value={{ locale, setLocale, t }}>
+      {children}
     </LanguageContext.Provider>
   );
 }
@@ -61,7 +66,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
+    return {
+      locale: "vi" as SupportedLocale,
+      setLocale: () => {},
+      t: (namespace?: string) => (key: string, values?: Record<string, any>) => {
+        const scoped = namespace ? (viMessages as any)[namespace] || {} : viMessages;
+        let text = scoped[key] ?? key;
+        if (typeof text === "string" && values) {
+          Object.entries(values).forEach(([k, v]) => {
+            text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+          });
+        }
+        return text;
+      },
+    };
   }
   return context;
+}
+
+export function useTranslations(namespace?: string) {
+  const { t } = useLanguage();
+  return t(namespace);
 }

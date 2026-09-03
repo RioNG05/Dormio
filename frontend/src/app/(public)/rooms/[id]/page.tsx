@@ -8,7 +8,7 @@ import {
   Zap, Droplets, Wifi, Trash2, Check, MessageSquare, Heart, Share2, Copy, ShieldAlert, ExternalLink
 } from "lucide-react";
 import { formatVND } from "@/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function RoomDetailPage() {
   const t = useTranslations("roomDetailPage");

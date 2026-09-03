@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -10,7 +10,7 @@ import {
   Layers, ArrowUpRight, Clock, MapPin
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export interface TierRate {
   name: string;
@@ -1258,3 +1258,4 @@ function AlertModal({
     </div>
   );
 }
+

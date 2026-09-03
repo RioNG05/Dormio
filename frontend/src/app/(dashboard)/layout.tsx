@@ -16,7 +16,7 @@ import {
   AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2
 } from "lucide-react";
 
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const tNav = useTranslations("nav");
@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: tNav("home"), href: "/tenant", icon: Building },
     { name: tNav("invoices"), href: "/tenant/invoices", icon: Receipt },
     { name: tNav("messages"), href: "/tenant/messages", icon: MessageCircle },
-    { name: tNav("guide"), href: "/tenant/complaints", icon: MessageSquare },
+    { name: tNav("complaints"), href: "/tenant/complaints", icon: MessageSquare },
   ];
 
   const NavContent = () => {
@@ -220,7 +220,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const BuildingSelector = () => (
     <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
       <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
-        TÒA NHÀ ĐANG QUẢN LÝ:
+        {tNav("managingBuilding")}
       </span>
       <div className="relative">
         <select
@@ -249,7 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const UserFooter = ({ compact = false }: { compact?: boolean }) => (
     <div className={`border-t border-zinc-100 ${compact ? "p-3" : "p-3"}`}>
       <div className="flex items-center justify-between px-2 mb-2">
-        <span className="text-xs font-semibold text-zinc-500">Ngôn ngữ / Lang:</span>
+        <span className="text-xs font-semibold text-zinc-500">{tNav("langLabel")}</span>
         <LanguageSwitcher />
       </div>
 
@@ -259,7 +259,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         <div className="overflow-hidden">
           <div className="text-sm font-semibold text-zinc-900 truncate">Nguyễn Văn Rio</div>
-          <div className="text-xs text-zinc-400 truncate">{isTenant ? "Người thuê" : "Chủ nhà trọ"}</div>
+          <div className="text-xs text-zinc-400 truncate">{isTenant ? tNav("tenantRole") : tNav("landlordRole")}</div>
         </div>
       </div>
       <Link
@@ -267,7 +267,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg hover:bg-orange-100 transition-colors"
       >
         <LogOut className="h-4 w-4 shrink-0" />
-        Đăng xuất
+        {tNav("logout")}
       </Link>
     </div>
   );

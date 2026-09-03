@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,6 +7,7 @@ import { Check, ChevronRight, ChevronLeft, FileSignature, User, DollarSign, Home
 import Link from "next/link";
 
 export default function CreateContractPage() {
+  const t = useTranslations("contracts");
   const router = useRouter();
   const [step, setStep] = useState(1);
 

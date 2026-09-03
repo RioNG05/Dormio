@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -7,7 +7,7 @@ import {
   ArrowRight, Check, Bot, MapPin, Calculator, ShieldAlert, Scale
 } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function FeaturesPage() {
   const t = useTranslations("featuresPage");
@@ -262,3 +262,4 @@ export default function FeaturesPage() {
     </div>
   );
 }
+

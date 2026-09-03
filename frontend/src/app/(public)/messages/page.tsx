@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { 
@@ -6,7 +6,7 @@ import {
   MapPin, Phone, Building2, ChevronLeft, ShieldCheck, Sparkles
 } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function GuestMessagesPage() {
   const t = useTranslations("guestMessagesPage");

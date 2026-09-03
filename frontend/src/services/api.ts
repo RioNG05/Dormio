@@ -1,37 +1,58 @@
+import { getStoredLocale, type SupportedLocale } from "@/utils";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
-type FetchOptions = RequestInit & {
+export type FetchOptions = RequestInit & {
   params?: Record<string, string>;
+  lang?: SupportedLocale;
+  boardingHouseId?: string;
 };
 
 class ApiClient {
   private async request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-    const { params, headers, ...customOptions } = options;
+    const { params, headers, lang, boardingHouseId, ...customOptions } = options;
 
-    // 1. Tạo query params nếu có
-    let url = `${API_BASE_URL}${endpoint}`;
-    if (params) {
-      const searchParams = new URLSearchParams(params);
-      url += `?${searchParams.toString()}`;
+    // 1. Xác định active locale (từ options, query params, hoặc storage/cookie)
+    const activeLocale: SupportedLocale =
+      lang || (params?.lang as SupportedLocale) || getStoredLocale() || "vi";
+
+    // 2. Tạo URLSearchParams đính kèm ngôn ngữ (?lang=en)
+    const searchParams = new URLSearchParams(params || {});
+    if (!searchParams.has("lang")) {
+      searchParams.set("lang", activeLocale);
     }
 
-    // 2. Thiết lập headers mặc định (JSON và Authorization token từ localStorage nếu ở client-side)
-    const defaultHeaders: HeadersInit = {
+    const queryString = searchParams.toString();
+    const url = `${API_BASE_URL}${endpoint}${queryString ? `?${queryString}` : ""}`;
+
+    // 3. Thiết lập headers mặc định: JSON, Accept-Language, Auth token & X-Boarding-House-Id
+    const defaultHeaders: Record<string, string> = {
       "Content-Type": "application/json",
+      "Accept-Language": activeLocale,
     };
 
     if (typeof window !== "undefined") {
+      // Authorization token
       const token = localStorage.getItem("auth_token");
       if (token) {
         defaultHeaders["Authorization"] = `Bearer ${token}`;
       }
+
+      // X-Boarding-House-Id multi-tenancy context
+      const activeHouseId =
+        boardingHouseId || localStorage.getItem("dormio_active_building_id");
+      if (activeHouseId) {
+        defaultHeaders["X-Boarding-House-Id"] = activeHouseId;
+      }
+    } else if (boardingHouseId) {
+      defaultHeaders["X-Boarding-House-Id"] = boardingHouseId;
     }
 
     const config: RequestInit = {
       method: "GET",
       headers: {
         ...defaultHeaders,
-        ...headers,
+        ...(headers as Record<string, string>),
       },
       ...customOptions,
     };
@@ -48,7 +69,7 @@ class ApiClient {
       if (response.status === 204) {
         return {} as T;
       }
-      return await response.json() as T;
+      return (await response.json()) as T;
     } catch (error) {
       console.error(`Request to ${url} failed:`, error);
       throw error;

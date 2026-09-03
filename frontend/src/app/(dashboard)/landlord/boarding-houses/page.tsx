@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import { 
   Building2, Plus, Search, MapPin, Home, Users, ChevronDown, MoreHorizontal, Settings, ExternalLink
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function BoardingHousesPage() {
   const t = useTranslations("landlordDashboard");

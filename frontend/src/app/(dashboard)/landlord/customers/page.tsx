@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -6,10 +6,19 @@ import { useRouter } from "next/navigation";
 import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin, AlertCircle, CheckCircle2, Info, UserCheck, FileSpreadsheet, UserCircle2, PhoneCall, MessageCircle, Eye, Edit3, Link2, Mail, LogOut, Sparkles, ShieldCheck } from "lucide-react";
 import { generateMockCustomers, mockSystemTenantUsers, SystemTenantUser } from "./data";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
-export default function CustomersPage() {
+
+  export default function CustomersPage() {
   const t = useTranslations("customers");
+  const { locale } = useLanguage();
+
+  const getCustomerStatusLabel = (status: string) => {
+    if (status === "Đang ở" || status === "staying") return t("staying");
+    if (status === "Sắp hết hợp đồng" || status === "expiringSoon" || status === "expiring") return t("expiringSoon");
+    if (status === "Đã rời" || status === "left") return t("left");
+    return status;
+  };
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,10 +101,10 @@ export default function CustomersPage() {
     if (isDirty) {
       setConfirmModal({
         isOpen: true,
-        title: "Xác nhận đóng form",
-        message: "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
-        confirmText: "Hủy thay đổi & Đóng",
-        cancelText: "Tiếp tục chỉnh sửa",
+        title: t("confirmDeleteTitle"),
+        message: t("confirmDeleteMsg"),
+        confirmText: t("cancelBtn"),
+        cancelText: t("saveCustomerBtn"),
         type: "warning",
         onConfirm: () => {
           setIsModalOpen(false);
@@ -454,7 +463,7 @@ export default function CustomersPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm tên, SĐT, CCCD..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -469,9 +478,9 @@ export default function CustomersPage() {
                 onChange={(e) => setSortFilter(e.target.value)}
                 className="pl-8 pr-7 py-1.5 text-xs font-semibold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-100 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap"
               >
-                <option value="">Sắp xếp</option>
-                <option value="name_asc">Theo tên (A-Z)</option>
-                <option value="room_asc">Theo số phòng</option>
+                <option value="">{t("sort")}</option>
+                <option value="name_asc">{t("sortName")}</option>
+                <option value="room_asc">{t("sortRoom")}</option>
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             </div>
@@ -568,13 +577,13 @@ export default function CustomersPage() {
                       onClick={(e) => e.stopPropagation()}
                       className="py-1.5 bg-[#0068FF] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                     >
-                      <MessageCircle className="w-3 h-3" /> Zalo
+                      <MessageCircle className="w-3 h-3" /> {t("zaloBtn")}
                     </a>
                     <Link
                       href={`/landlord/customers/${customer.id}`}
                       className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                     >
-                      <Eye className="w-3 h-3" /> Xem
+                      <Eye className="w-3 h-3" /> {t("viewBtn")}
                     </Link>
                   </div>
                 </div>
@@ -589,7 +598,7 @@ export default function CustomersPage() {
                   <tr>
                     <th className="px-6 py-4 whitespace-nowrap">Tên khách thuê</th>
                     <th className="px-6 py-4 whitespace-nowrap">SĐT</th>
-                    <th className="px-6 py-4 whitespace-nowrap">CCCD/CMND</th>
+                    <th className="px-6 py-4 whitespace-nowrap">{t("cccd")}</th>
                     <th className="px-6 py-4 whitespace-nowrap">Tòa nhà</th>
                     <th className="px-6 py-4 whitespace-nowrap">Phòng hiện tại</th>
                     <th className="px-6 py-4 whitespace-nowrap">Trạng thái</th>
@@ -749,8 +758,8 @@ export default function CustomersPage() {
                   <User className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-zinc-900">{selectedCustomer ? "Chỉnh sửa khách thuê" : "Thêm khách thuê mới"}</h2>
-                  <p className="text-xs text-zinc-500 font-medium">Quản lý hồ sơ và liên kết tài khoản Tenant trên hệ thống</p>
+                  <h2 className="text-xl font-bold text-zinc-900">{selectedCustomer ? t("editCustomerTitle") : t("addCustomerTitle")}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">{t("customerModalSubtitle")}</p>
                 </div>
               </div>
               <button
@@ -780,7 +789,7 @@ export default function CustomersPage() {
                         }`}
                     >
                       <UserPlus className="w-4 h-4 text-[#2AC1BC]" />
-                      <span>Khách chưa có account</span>
+                      <span>{t("noAccountTab")}</span>
                     </button>
 
                     <button
@@ -792,7 +801,7 @@ export default function CustomersPage() {
                         }`}
                     >
                       <Users className="w-4 h-4" />
-                      <span>Khách đã có account</span>
+                      <span>{t("hasAccountTab")}</span>
                     </button>
                   </div>
 
@@ -801,8 +810,8 @@ export default function CustomersPage() {
                     <div className="p-3 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-medium text-blue-800 flex items-start gap-2.5">
                       <AlertTriangle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-extrabold block text-blue-900 mb-0.5">Thêm mới thủ công</span>
-                        Khách thuê chưa đăng ký tài khoản trên hệ thống Dormio.
+                        <span className="font-extrabold block text-blue-900 mb-0.5">{t("manualAdd")}</span>
+                        {t("manualAddDesc")}
                       </div>
                     </div>
                   )}
@@ -812,7 +821,7 @@ export default function CustomersPage() {
                     <div className="p-4 bg-orange-50/60 border border-orange-200/80 rounded-2xl space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-orange-950 uppercase tracking-wider flex items-center gap-1.5">
-                          <Users className="w-4 h-4 text-[#FF6B35]" /> Tìm & Chọn tài khoản trong hệ thống
+                          <Users className="w-4 h-4 text-[#FF6B35]" /> {t("systemSearchLabel")}
                         </label>
                         <span className="text-[10px] font-black text-[#FF6B35] bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
                           Auto-Fill 100%
@@ -825,14 +834,14 @@ export default function CustomersPage() {
                           type="text"
                           value={systemSearchTerm}
                           onChange={(e) => setSystemSearchTerm(e.target.value)}
-                          placeholder="Nhập tên, số điện thoại (VD: 0912...), email hoặc số CCCD..."
+                          placeholder={t("systemSearchPlaceholder")}
                           className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] bg-white font-bold text-zinc-900 shadow-2xs"
                         />
                       </div>
 
                       <div className="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar pr-1">
                         {filteredSystemUsers.length === 0 ? (
-                          <p className="text-xs text-zinc-400 italic p-4 text-center bg-white/60 rounded-xl border border-dashed border-zinc-200">Không tìm thấy tài khoản Tenant nào trùng khớp với từ khóa tìm kiếm.</p>
+                          <p className="text-xs text-zinc-400 italic p-4 text-center bg-white/60 rounded-xl border border-dashed border-zinc-200">{t("systemSearchEmpty")}</p>
                         ) : (
                           filteredSystemUsers.map((user) => {
                             const isSelected = selectedSystemUser?.userId === user.userId;
@@ -882,7 +891,7 @@ export default function CustomersPage() {
                                     : "bg-orange-50 text-[#FF6B35] border border-orange-200 hover:bg-[#FF6B35] hover:text-white"
                                     }`}
                                 >
-                                  {isSelected ? "Đã chọn" : "Chọn thêm"}
+                                  {isSelected ? t("selected") : t("selectMore")}
                                 </button>
                               </div>
                             );
@@ -892,7 +901,7 @@ export default function CustomersPage() {
 
                       {selectedSystemUser && (
                         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 font-bold flex items-center gap-2">
-                          <span>Đã tự động tải và cập nhật hồ sơ từ tài khoản <strong>{selectedSystemUser.name}</strong> ({selectedSystemUser.email})!</span>
+                          <span>{t("autoPopulatedNotice")} <strong>{selectedSystemUser.name}</strong> ({selectedSystemUser.email})!</span>
                         </div>
                       )}
                     </div>
@@ -902,21 +911,21 @@ export default function CustomersPage() {
 
               {/* PERSONAL INFO FIELDS */}
               <div className="space-y-4">
-                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider border-b border-zinc-200 pb-1">THÔNG TIN HỒ SƠ KHÁCH THUÊ</h3>
+                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider border-b border-zinc-200 pb-1">{t("tenantProfileSection")}</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Họ và tên khách thuê <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-zinc-700">{t("fullNameLabel")} <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
-                      placeholder="VD: Nguyễn Văn A"
+                      placeholder={t("fullNamePlaceholder")}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Số CCCD / CMND <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-zinc-700">{t("cccdLabel")} <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={cccdInput}
@@ -929,7 +938,7 @@ export default function CustomersPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Số điện thoại liên hệ <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-zinc-700">{t("phoneLabel")} <span className="text-red-500">*</span></label>
                     <input
                       type="tel"
                       value={phoneInput}
@@ -939,7 +948,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Địa chỉ Email</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("emailLabel")}</label>
                     <input
                       type="email"
                       value={emailInput}
@@ -952,7 +961,7 @@ export default function CustomersPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Ngày sinh</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("dobLabel")}</label>
                     <input
                       type="date"
                       value={dobInput}
@@ -961,48 +970,48 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Giới tính</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("genderLabel")}</label>
                     <select
                       value={genderInput}
                       onChange={(e) => setGenderInput(e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     >
-                      <option value="nam">Nam</option>
-                      <option value="nu">Nữ</option>
-                      <option value="khac">Khác</option>
+                      <option value="nam">{t("genderMale")}</option>
+                      <option value="nu">{t("genderFemale")}</option>
+                      <option value="khac">{t("genderOther")}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700">Địa chỉ thường trú</label>
+                  <label className="text-xs font-bold text-zinc-700">{t("permanentAddressLabel")}</label>
                   <textarea
                     rows={2}
                     value={addressInput}
                     onChange={(e) => setAddressInput(e.target.value)}
-                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                    placeholder={t("permanentAddressPlaceholder")}
                     className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
                   ></textarea>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Nghề nghiệp</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("jobLabel")}</label>
                     <input
                       type="text"
                       value={jobInput}
                       onChange={(e) => setJobInput(e.target.value)}
-                      placeholder="VD: Kỹ sư phần mềm, Sinh viên..."
+                      placeholder={t("jobPlaceholder")}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Nơi làm việc / Học tập</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("workplaceLabel")}</label>
                     <input
                       type="text"
                       value={workplaceInput}
                       onChange={(e) => setWorkplaceInput(e.target.value)}
-                      placeholder="VD: Công ty FPT, Đại học SPKT..."
+                      placeholder={t("workplacePlaceholder")}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     />
                   </div>
@@ -1011,12 +1020,12 @@ export default function CustomersPage() {
 
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700">Ghi chú thêm</label>
+                  <label className="text-xs font-bold text-zinc-700">{t("notesMoreLabel")}</label>
                   <textarea
                     rows={2}
                     value={noteInput}
                     onChange={(e) => setNoteInput(e.target.value)}
-                    placeholder="Ghi chú thêm về thông tin cá nhân khách thuê..."
+                    placeholder={t("notesLabel")}
                     className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
                   ></textarea>
                 </div>
@@ -1026,7 +1035,7 @@ export default function CustomersPage() {
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50">
               <div className="text-xs font-bold text-zinc-500">
-                Trạng thái TK: {hasAccountState ? <span className="text-emerald-600 font-extrabold">✓ Đã liên kết Account</span> : <span className="text-amber-600 font-extrabold">Chưa liên kết TK</span>}
+                {t("accountStatusLabel")} {hasAccountState ? <span className="text-emerald-600 font-extrabold">{t("accountLinked")}</span> : <span className="text-amber-600 font-extrabold">{t("accountUnlinked")}</span>}
               </div>
 
               <div className="flex gap-2">
@@ -1034,9 +1043,7 @@ export default function CustomersPage() {
                   type="button"
                   onClick={handleCloseModal}
                   className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
-                >
-                  Hủy bỏ
-                </button>
+                >{t("cancelBtn")}</button>
                 <button
                   type="button"
                   onClick={handleSaveCustomer}
@@ -1065,8 +1072,8 @@ export default function CustomersPage() {
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-black text-zinc-900">Liên Kết Tài Khoản Tenant</h2>
-                    <p className="text-xs text-zinc-500 font-medium">Hồ sơ: {linkAccountModal.customer?.name} ({linkAccountModal.customer?.phone})</p>
+                    <h2 className="text-base font-black text-zinc-900">{t("linkAccountTitle")}</h2>
+                    <p className="text-xs text-zinc-500 font-medium">{t("profilePrefix")} {linkAccountModal.customer?.name} ({linkAccountModal.customer?.phone})</p>
                   </div>
                 </div>
                 <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full transition-colors cursor-pointer">
@@ -1081,7 +1088,7 @@ export default function CustomersPage() {
                     type="text"
                     value={linkSearchQuery}
                     onChange={(e) => setLinkSearchQuery(e.target.value)}
-                    placeholder="Tìm tài khoản theo tên, SĐT, Email..."
+                    placeholder={t("searchAccountPlaceholder")}
                     className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] font-bold text-zinc-900 bg-white"
                   />
                 </div>
@@ -1117,18 +1124,14 @@ export default function CustomersPage() {
                         <button
                           onClick={() => handleLinkAccountSubmit(u)}
                           className="px-3.5 py-1.5 bg-[#FF6B35] hover:bg-[#e05a2b] text-white font-black text-xs rounded-xl transition-all shadow-2xs shrink-0 cursor-pointer"
-                        >
-                          Liên kết
-                        </button>
+                        >{t("linkAction")}</button>
                       </div>
                     ))}
                 </div>
               </div>
 
               <div className="p-4 border-t border-zinc-100 flex justify-end bg-zinc-50">
-                <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100">
-                  Đóng
-                </button>
+                <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100">{t("closeModal")}</button>
               </div>
             </div>
           </div>
@@ -1175,6 +1178,9 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { locale } = useLanguage();
+  const displayConfirmText = confirmText || (locale === "en" ? "Discard & Close" : "Hủy thay đổi & Đóng");
+  const displayCancelText = cancelText || (locale === "en" ? "Continue Editing" : "Tiếp tục chỉnh sửa");
   if (!isOpen) return null;
 
   return (
@@ -1201,14 +1207,14 @@ function ConfirmModal({
             onClick={onCancel}
             className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
           >
-            {cancelText}
+            {displayCancelText}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
           >
-            {confirmText}
+            {displayConfirmText}
           </button>
         </div>
       </div>
@@ -1229,6 +1235,7 @@ function AlertModal({
   type?: "warning" | "error" | "success" | "info";
   onClose: () => void;
 }) {
+  const t = useTranslations("customers");
   if (!isOpen) return null;
 
   const config = {
@@ -1272,10 +1279,9 @@ function AlertModal({
         <button
           onClick={onClose}
           className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
-        >
-          Đã hiểu
-        </button>
+        >{t("understood")}</button>
       </div>
     </div>
   );
 }
+

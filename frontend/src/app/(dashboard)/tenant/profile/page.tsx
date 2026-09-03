@@ -1,9 +1,11 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function TenantProfileRedirect() {
+  const t = useTranslations("tenantPortal");
   const router = useRouter();
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React from "react";
 import { useRouter } from "next/navigation";
@@ -6,6 +7,7 @@ import { Check, ChevronLeft, UploadCloud } from "lucide-react";
 import Link from "next/link";
 
 export default function CreateListingPage() {
+  const t = useTranslations("rooms");
   const router = useRouter();
 
   const handleFinish = () => {

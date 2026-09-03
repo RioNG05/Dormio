@@ -1,9 +1,11 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState } from "react";
 import { Plus, Search, Filter, Image as ImageIcon, MapPin, MoreHorizontal, X, Check, UploadCloud, ChevronDown, Building2 } from "lucide-react";
 
 export default function ListingsPage() {
+  const t = useTranslations("rooms");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [buildingFilter, setBuildingFilter] = useState("dormio");

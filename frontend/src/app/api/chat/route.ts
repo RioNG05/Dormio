@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { DORMIO_SYSTEM_CONTEXT } from '@/lib/dormio-context';
+import { getDormioSystemContext } from '@/lib/dormio-context';
 
 const GEMINI_API_KEY = "AQ.Ab8RN6LnZ9CSBpMqmLp56X-JdrMcpyTR8SS9mccvB3s1m0fx9A";
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages, locale = "vi" } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid messages format' }, { status: 400 });
@@ -42,7 +42,9 @@ export async function POST(req: Request) {
       const originalText = contents[0].parts[0].text;
       // Only inject if it hasn't been injected yet
       if (!originalText.includes('[SYSTEM CONTEXT START]')) {
-        contents[0].parts[0].text = `[SYSTEM CONTEXT START]\n${DORMIO_SYSTEM_CONTEXT}\n[SYSTEM CONTEXT END]\n\nNgười dùng: ${originalText}`;
+        const systemPrompt = getDormioSystemContext(locale === 'en' ? 'en' : 'vi');
+        const userPrefix = locale === 'en' ? 'User:' : 'Người dùng:';
+        contents[0].parts[0].text = `[SYSTEM CONTEXT START]\n${systemPrompt}\n[SYSTEM CONTEXT END]\n\n${userPrefix} ${originalText}`;
       }
     }
 

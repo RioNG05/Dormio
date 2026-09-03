@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, X, ShieldCheck, MapPin, Minimize2, Sparkles, Building2 } from "lucide-react";
 import { formatVND } from "@/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function CompareRoomsPage() {
   const t = useTranslations("comparePage");
@@ -156,3 +156,4 @@ export default function CompareRoomsPage() {
     </div>
   );
 }
+

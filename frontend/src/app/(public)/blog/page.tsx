@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { Sparkles, Calendar, User, ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function BlogPage() {
   const t = useTranslations("blogPage");
@@ -283,3 +283,4 @@ export default function BlogPage() {
     </div>
   );
 }
+

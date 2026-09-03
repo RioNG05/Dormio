@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 import {
   Menu,
   X,
@@ -17,14 +17,11 @@ import {
   BookOpen,
   Mail,
   User,
-  ShieldCheck,
   ChevronDown,
-  Sparkles,
   LogOut,
   FileText,
   CreditCard,
-  UserCheck,
-  Heart
+  Heart,
 } from "lucide-react";
 
 export function PublicHeader() {
@@ -34,7 +31,7 @@ export function PublicHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
-  const { isLoggedIn, user, logout, toggleLoginDemo } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth();
 
   const navLinks = [
     { href: "/", label: tNav("home"), icon: Home },
@@ -70,10 +67,11 @@ export function PublicHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-xs lg:text-sm font-bold transition-colors ${isActive
-                  ? "text-[#2AC1BC]"
-                  : "text-zinc-600 hover:text-[#2AC1BC]"
-                  }`}
+                className={`text-xs lg:text-sm font-bold transition-colors ${
+                  isActive
+                    ? "text-[#2AC1BC]"
+                    : "text-zinc-600 hover:text-[#2AC1BC]"
+                }`}
               >
                 {link.label}
               </Link>
@@ -98,11 +96,14 @@ export function PublicHeader() {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-zinc-100 transition-colors border border-zinc-200/80 bg-white"
+                  className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-zinc-100 transition-colors border border-zinc-200/80 bg-white cursor-pointer"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"}
+                    src={
+                      user?.avatar ||
+                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+                    }
                     alt={user?.name || "User Avatar"}
                     className="w-8 h-8 rounded-xl object-cover border border-[#2AC1BC]/30"
                   />
@@ -117,10 +118,14 @@ export function PublicHeader() {
                   <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white p-3 shadow-2xl border border-zinc-200/80 z-50 flex flex-col gap-2 text-xs">
                     {/* User Info Header */}
                     <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex flex-col">
-                      <span className="font-bold text-zinc-900 text-sm">{user?.name || "Nguyễn Văn A"}</span>
-                      <span className="text-zinc-500 text-[11px]">{user?.email || "user@example.com"}</span>
+                      <span className="font-bold text-zinc-900 text-sm">
+                        {user?.name || "Nguyễn Văn A"}
+                      </span>
+                      <span className="text-zinc-500 text-[11px]">
+                        {user?.email || "user@example.com"}
+                      </span>
                       <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-[#2AC1BC] uppercase">
-                        ● Khách thuê trọ
+                        ● {tNav("tenantRole")}
                       </span>
                     </div>
 
@@ -131,7 +136,7 @@ export function PublicHeader() {
                       className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#FF6B35]/10 text-[#FF6B35] font-bold hover:bg-[#FF6B35]/20 transition-colors"
                     >
                       <Building2 className="w-4 h-4 shrink-0" />
-                      <span>Đăng ký trở thành chủ trọ &rarr;</span>
+                      <span>{tNav("becomeLandlord")} &rarr;</span>
                     </Link>
 
                     {/* Menu links */}
@@ -141,30 +146,30 @@ export function PublicHeader() {
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
                       >
-                        <Heart className="w-4 h-4 text-zinc-400" /> Phòng trọ đã lưu
+                        <Heart className="w-4 h-4 text-zinc-400" /> {tNav("savedRooms")}
                       </Link>
                       <Link
                         href="/tenant/contracts"
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
                       >
-                        <FileText className="w-4 h-4 text-zinc-400" /> Hợp đồng của tôi
+                        <FileText className="w-4 h-4 text-zinc-400" /> {tNav("myContracts")}
                       </Link>
                       <Link
                         href="/tenant/invoices"
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
                       >
-                        <CreditCard className="w-4 h-4 text-zinc-400" /> Hóa đơn tiền phòng
+                        <CreditCard className="w-4 h-4 text-zinc-400" /> {tNav("myInvoices")}
                       </Link>
                       <button
                         onClick={() => {
                           logout();
                           setUserDropdownOpen(false);
                         }}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-red-50 text-red-600 font-semibold text-left transition-colors mt-1 border-t border-zinc-100 w-full"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-red-50 text-red-600 font-semibold text-left transition-colors mt-1 border-t border-zinc-100 w-full cursor-pointer"
                       >
-                        <LogOut className="w-4 h-4" /> Đăng xuất tài khoản
+                        <LogOut className="w-4 h-4" /> {tNav("logout")}
                       </button>
                     </div>
                   </div>
@@ -195,7 +200,7 @@ export function PublicHeader() {
           {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors"
+            className="md:hidden p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -219,10 +224,11 @@ export function PublicHeader() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${isActive
-                    ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
-                    : "text-zinc-700 hover:bg-zinc-100"
-                    }`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    isActive
+                      ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
+                      : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
                 >
                   <Icon className="w-4 h-4 text-[#2AC1BC]" />
                   {link.label}
@@ -231,13 +237,18 @@ export function PublicHeader() {
             })}
           </div>
 
-          <div className="pt-3 border-t border-zinc-100 flex flex-col gap-2">
+          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between px-1">
+            <span className="text-xs font-bold text-zinc-500">{tNav("langLabel")}:</span>
+            <LanguageSwitcher />
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2">
             <Link
               href="/landlord"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#FF6B35] text-white text-sm font-bold shadow-md"
             >
-              <Building2 className="w-4 h-4" /> Đăng ký trở thành chủ trọ
+              <Building2 className="w-4 h-4" /> {tNav("becomeLandlord")}
             </Link>
 
             {isLoggedIn ? (
@@ -246,9 +257,9 @@ export function PublicHeader() {
                   logout();
                   setMobileMenuOpen(false);
                 }}
-                className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 mt-1"
+                className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 mt-1 cursor-pointer"
               >
-                <LogOut className="w-4 h-4" /> Đăng xuất ({user?.name})
+                <LogOut className="w-4 h-4" /> {tNav("logout")} ({user?.name})
               </button>
             ) : (
               <Link
@@ -256,7 +267,7 @@ export function PublicHeader() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-800 hover:bg-zinc-50"
               >
-                <User className="w-4 h-4" /> Đăng nhập tài khoản
+                <User className="w-4 h-4" /> {tNav("login")}
               </Link>
             )}
           </div>
@@ -265,5 +276,3 @@ export function PublicHeader() {
     </header>
   );
 }
-
-

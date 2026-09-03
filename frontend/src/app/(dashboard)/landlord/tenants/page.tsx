@@ -1,9 +1,11 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function TenantsPage() {
+  const t = useTranslations("customers");
   const router = useRouter();
 
   useEffect(() => {

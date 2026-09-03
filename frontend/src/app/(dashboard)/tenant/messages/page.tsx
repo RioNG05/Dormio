@@ -1,10 +1,12 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Paperclip, Smile, ImageIcon, MoreVertical, Phone, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TenantMessagesPage() {
+  const t = useTranslations("tenantPortal");
   const [messages, setMessages] = useState([
     { id: 1, sender: "landlord", text: "Chào bạn, tháng này tiền điện của phòng mình là 350k nhé.", time: "09:00 AM", isSystem: false },
     { id: 2, sender: "me", text: "Dạ vâng, em đã xem chi tiết hoá đơn trên hệ thống rồi ạ. Lát em sẽ chuyển khoản.", time: "09:15 AM", isSystem: false },

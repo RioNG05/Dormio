@@ -1,10 +1,12 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, ChevronLeft, Trash2, Home, Plus, Settings2 } from "lucide-react";
 
 export default function SetupWizardPage() {
+  const t = useTranslations("settings");
   const router = useRouter();
   const [step, setStep] = useState(1);
   

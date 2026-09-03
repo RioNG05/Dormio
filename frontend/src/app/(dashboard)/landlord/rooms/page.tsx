@@ -9,12 +9,32 @@ import {
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
+
+const amenityList = [
+  { id: "wifi", vi: "WiFi", en: "WiFi" },
+  { id: "ac", vi: "Điều hòa", en: "Air Conditioner" },
+  { id: "water_heater", vi: "Nóng lạnh", en: "Water Heater" },
+  { id: "wardrobe", vi: "Tủ quần áo", en: "Wardrobe" },
+  { id: "bed", vi: "Giường", en: "Bed" },
+  { id: "desk", vi: "Bàn học", en: "Study Desk" },
+  { id: "kitchen", vi: "Kệ bếp", en: "Kitchen Shelf" },
+  { id: "balcony", vi: "Ban công", en: "Balcony" },
+  { id: "private_wc", vi: "WC riêng", en: "Private Bathroom" },
+  { id: "washer", vi: "Máy giặt", en: "Washing Machine" },
+  { id: "tv", vi: "Tivi", en: "Television" },
+  { id: "fridge", vi: "Tủ lạnh", en: "Refrigerator" },
+  { id: "parking", vi: "Gửi xe", en: "Parking Space" },
+  { id: "elevator", vi: "Thang máy", en: "Elevator" },
+  { id: "camera", vi: "Camera", en: "Security Camera" },
+  { id: "security", vi: "Bảo vệ", en: "Security Guard" }
+];
 
 export default function RoomsPage() {
   const { activeBuilding, buildings } = useAuth();
   const router = useRouter();
   const t = useTranslations("rooms");
+  const { locale } = useLanguage();
   const tCommon = useTranslations("common");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -49,13 +69,31 @@ export default function RoomsPage() {
     }
   }, [router]);
 
+  
+  const getServiceName = (id: string, fallbackName: string) => {
+    if (id === 'bao_ve') return t("serviceSecurity");
+    if (id === 'dien') return t("serviceElectricity");
+    if (id === 'nuoc') return t("serviceWater");
+    if (id === 'rac') return t("serviceTrash");
+    if (id === 've_sinh') return t("serviceCleaning");
+    if (id === 'wifi') return t("serviceWifi");
+    return fallbackName;
+  };
+
+  const getServiceUnit = (id: string, unit: string) => {
+    if (id === 'dien') return locale === 'en' ? 'VND/kWh' : 'đ/kWh';
+    if (id === 'nuoc') return locale === 'en' ? 'VND/m³' : 'đ/m³';
+    if (id === 'bao_ve' || id === 'rac' || id === 've_sinh' || id === 'wifi') return locale === 'en' ? 'VND/room' : 'đ/phòng';
+    return unit;
+  };
+
   const [roomServices, setRoomServices] = useState([
-    { id: 'bao_ve', name: 'Bảo vệ', defaultPrice: '50.000', customPrice: '60.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-    { id: 'dien', name: 'Điện', defaultPrice: '3.500', customPrice: '3.500', unit: 'đ/kWh', isCustom: true, isRemovable: false },
-    { id: 'nuoc', name: 'Nước', defaultPrice: '25.000', customPrice: '25.000', unit: 'đ/m³', isCustom: true, isRemovable: false },
-    { id: 'rac', name: 'Rác', defaultPrice: '20.000', customPrice: '20.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-    { id: 've_sinh', name: 'Vệ sinh', defaultPrice: '30.000', customPrice: '30.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-    { id: 'wifi', name: 'Wifi', defaultPrice: '100.000', customPrice: '100.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
+    { id: 'bao_ve', name: t('serviceSecurity'), defaultPrice: '50.000', customPrice: '60.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
+    { id: 'dien', name: t('serviceElectricity'), defaultPrice: '3.500', customPrice: '3.500', unit: 'đ/kWh', isCustom: true, isRemovable: false },
+    { id: 'nuoc', name: t('serviceWater'), defaultPrice: '25.000', customPrice: '25.000', unit: 'đ/m³', isCustom: true, isRemovable: false },
+    { id: 'rac', name: t('serviceTrash'), defaultPrice: '20.000', customPrice: '20.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
+    { id: 've_sinh', name: t('serviceCleaning'), defaultPrice: '30.000', customPrice: '30.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
+    { id: 'wifi', name: t('serviceWifi'), defaultPrice: '100.000', customPrice: '100.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
   ]);
 
   const handleAddService = () => {
@@ -84,8 +122,8 @@ export default function RoomsPage() {
     if (isDirty) {
       setConfirmModal({
         isOpen: true,
-        title: 'Xác nhận đóng form',
-        message: 'Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?',
+        title: t('confirmCloseTitle'),
+        message: t('confirmCloseMessage'),
         onConfirm: () => {
           setIsModalOpen(false);
           setIsDirty(false);
@@ -114,13 +152,13 @@ export default function RoomsPage() {
           const isTrang = seed % 5 === 0;
           const isBaoTri = seed % 17 === 0;
 
-          let status = "Đang thuê";
-          if (isTrang) status = "Trống";
-          else if (isBaoTri) status = "Bảo trì";
-          else if (seed % 11 === 0) status = "Đặt cọc";
+          let status = "occupied";
+        if (isTrang) status = "vacant";
+        else if (isBaoTri) status = "maintenance";
+        else if (seed % 11 === 0) status = "reserved";
 
           const hash = parseInt(roomStr) * buildingSeq * 137 + 19;
-          const isRented = status === 'Đang thuê' || status === 'Đặt cọc';
+          const isRented = status === 'occupied' || status === 'reserved' || status === 'Đang thuê' || status === 'Đặt cọc';
           const fullRoomId = `${buildingSeq}${roomStr}`;
 
           data.push({
@@ -173,10 +211,10 @@ export default function RoomsPage() {
   const floors = Object.keys(groupedRooms).sort((a, b) => Number(b) - Number(a));
 
   const totalRooms = rooms.length;
-  const occupiedCount = rooms.filter(r => r.status === 'Đang thuê').length;
-  const vacantCount = rooms.filter(r => r.status === 'Trống').length;
-  const maintenanceCount = rooms.filter(r => r.status === 'Bảo trì').length;
-  const reservedCount = rooms.filter(r => r.status === 'Đặt cọc').length;
+  const occupiedCount = rooms.filter(r => r.status === 'occupied' || r.status === 'Đang thuê').length;
+  const vacantCount = rooms.filter(r => r.status === 'vacant' || r.status === 'Trống').length;
+  const maintenanceCount = rooms.filter(r => r.status === 'maintenance' || r.status === 'Bảo trì').length;
+  const reservedCount = rooms.filter(r => r.status === 'reserved' || r.status === 'Đặt cọc').length;
   const occupancyRate = totalRooms > 0 ? ((occupiedCount / totalRooms) * 100).toFixed(1) : '0.0';
 
   return (
@@ -410,18 +448,19 @@ export default function RoomsPage() {
 
               <div className="flex-1 flex flex-nowrap gap-3 items-center overflow-x-auto pb-2 scroll-smooth [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-zinc-50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-300">
                 {(groupedRooms[floor] || []).map((room: any) => {
-                  const isOccupied = room.status === 'Đang thuê';
-                  const isMaintenance = room.status === 'Bảo trì';
-                  const isReserved = room.status === 'Đặt cọc';
-                  const isVacant = room.status === 'Trống';
+                  const isOccupied = room.status === 'occupied' || room.status === 'Đang thuê';
+                  const isMaintenance = room.status === 'maintenance' || room.status === 'Bảo trì';
+                  const isReserved = room.status === 'reserved' || room.status === 'Đặt cọc';
+                  const isVacant = room.status === 'vacant' || room.status === 'Trống';
 
-                  const statusDisplay = isOccupied ? t("occupied") : isMaintenance ? t("maintenance") : isReserved ? t("deposit") : isVacant ? t("available") : room.status;
+                  const statusDisplay = isOccupied ? t("occupied") : isMaintenance ? t("maintenance") : isReserved ? t("reserved") : isVacant ? t("available") : room.status;
 
                   return (
                     <div
                       key={`${room.building}-${room.id}`}
                       onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                      className={`flex-shrink-0 relative flex flex-col items-center justify-center p-3 rounded-xl border w-[90px] h-[90px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${isOccupied ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:border-[#2AC1BC]' :
+                      title={`${room.id} - ${statusDisplay}`}
+                      className={`group flex-shrink-0 relative flex flex-col items-center justify-center p-3 rounded-2xl border w-[76px] h-[76px] sm:w-[84px] sm:h-[84px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-lg ${isOccupied ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:border-[#2AC1BC]' :
                         isMaintenance ? 'bg-[#FF6B35]/10 border-[#FF6B35]/30 hover:border-[#FF6B35]' :
                           isReserved ? 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500' :
                             isVacant ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500' :
@@ -433,20 +472,12 @@ export default function RoomsPage() {
                       {isReserved && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(139,92,246,0.8)]"></div>}
                       {isVacant && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]"></div>}
 
-                      <span className={`text-xl font-bold mt-1 ${isOccupied ? 'text-[#2AC1BC]' :
+                      <span className={`text-2xl font-black ${isOccupied ? 'text-[#2AC1BC]' :
                         isMaintenance ? 'text-[#FF6B35]' :
                           isReserved ? 'text-purple-600' :
                             isVacant ? 'text-blue-600' :
                               'text-zinc-700'
                         }`}>{room.id}</span>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider mt-1.5 px-2 py-0.5 rounded-full ${isOccupied ? 'text-[#2AC1BC] bg-[#2AC1BC]/15' :
-                        isMaintenance ? 'text-[#FF6B35] bg-[#FF6B35]/15' :
-                          isReserved ? 'text-purple-600 bg-purple-500/15' :
-                            isVacant ? 'text-blue-600 bg-blue-500/15' :
-                              'text-zinc-500 bg-zinc-100'
-                        }`}>
-                        {statusDisplay}
-                      </span>
                     </div>
                   );
                 })}
@@ -471,8 +502,8 @@ export default function RoomsPage() {
                   {selectedRoomId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-zinc-900">{selectedRoomId ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}</h2>
-                  <p className="text-sm text-zinc-500 mt-0.5">{selectedRoomId ? 'Cập nhật thông tin chi tiết của phòng và dịch vụ' : 'Điền thông tin chi tiết để tạo phòng trên hệ thống'}</p>
+                  <h2 className="text-xl font-black text-zinc-900">{selectedRoomId ? t('editRoomTitle') : t('createRoomTitle')}</h2>
+                  <p className="text-sm text-zinc-500 mt-0.5">{selectedRoomId ? t('editRoomDesc') : t('createRoomDesc')}</p>
                 </div>
               </div>
               <button
@@ -488,11 +519,11 @@ export default function RoomsPage() {
                 <div className="lg:col-span-3 space-y-6">
                   <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-                      <Home className="w-4 h-4 text-accent" /> Thông tin cơ bản
+                      <Home className="w-4 h-4 text-accent" /> {t('basicInfo')}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-zinc-700">Tòa nhà <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-semibold text-zinc-700">{t('buildingLabel')} <span className="text-red-500">*</span></label>
                         <select
                           value={formBuilding}
                           onChange={(e) => { setFormBuilding(e.target.value); setIsDirty(true); }}
@@ -510,7 +541,7 @@ export default function RoomsPage() {
                         </select>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-zinc-700">Số phòng <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-semibold text-zinc-700">{t('roomNumberLabel')} <span className="text-red-500">*</span></label>
                         <input
                           type="text"
                           value={formRoomNumber}
@@ -520,20 +551,20 @@ export default function RoomsPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-zinc-700">Loại phòng</label>
+                        <label className="text-sm font-semibold text-zinc-700">{t('roomTypeLabel')}</label>
                         <select
                           value={formRoomType}
                           onChange={(e) => { setFormRoomType(e.target.value); setIsDirty(true); }}
                           className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors bg-white font-medium text-zinc-900"
                         >
-                          <option value="studio">Studio (Khép kín)</option>
-                          <option value="1pn">1 Phòng ngủ (1PN)</option>
-                          <option value="2pn">2 Phòng ngủ (2PN)</option>
-                          <option value="duplex">Penthouse / Duplex</option>
+                          <option value="studio">{t('studioType')}</option>
+                          <option value="1pn">{t('oneBedType')}</option>
+                          <option value="2pn">{t('twoBedType')}</option>
+                          <option value="duplex">{t("penthouseType")}</option>
                         </select>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-zinc-700">Tầng</label>
+                        <label className="text-sm font-semibold text-zinc-700">{t('floor')}</label>
                         <input
                           type="text"
                           value={formFloor}
@@ -543,7 +574,7 @@ export default function RoomsPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-zinc-700">Diện tích</label>
+                        <label className="text-sm font-semibold text-zinc-700">{t('area')}</label>
                         <div className="relative">
                           <input
                             type="number"
@@ -556,7 +587,7 @@ export default function RoomsPage() {
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-zinc-700">Giá thuê <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-semibold text-zinc-700">{t('price')} <span className="text-red-500">*</span></label>
                         <div className="relative">
                           <input
                             type="text"
@@ -573,14 +604,14 @@ export default function RoomsPage() {
 
                   <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-                      <Receipt className="w-4 h-4 text-accent" /> Cấu hình dịch vụ phòng
+                      <Receipt className="w-4 h-4 text-accent" /> {t('serviceConfig')}
                     </h3>
                     <div className="space-y-3">
                       {roomServices.map((service) => (
                         <div key={service.id} className="border border-zinc-200 rounded-lg p-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition-colors hover:border-primary/30">
                           <div className="flex items-center gap-2 w-full sm:w-auto">
                             {!service.isRemovable ? (
-                              <span className="font-bold text-sm text-zinc-900">{service.name}</span>
+                              <span className="font-bold text-sm text-zinc-900">{getServiceName(service.id, service.name)}</span>
                             ) : (
                               <input
                                 type="text"
@@ -592,14 +623,14 @@ export default function RoomsPage() {
                             )}
                             {!service.isRemovable && (
                               <span className="text-xs text-zinc-500 hidden sm:inline-block">
-                                (Tòa nhà: {service.defaultPrice} {service.unit})
+                                ({t("buildingDefault")}: {service.defaultPrice} {getServiceUnit(service.id, service.unit)})
                               </span>
                             )}
                           </div>
 
                           <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-zinc-500">Tùy chỉnh</span>
+                              <span className="text-xs font-medium text-zinc-500">{t('customService')}</span>
                               <button
                                 onClick={() => handleUpdateService(service.id, 'isCustom', !service.isCustom)}
                                 className={`w-10 h-6 rounded-full relative transition-colors flex items-center ${service.isCustom ? 'bg-blue-500' : 'bg-zinc-200'}`}
@@ -632,7 +663,7 @@ export default function RoomsPage() {
                               <button
                                 onClick={() => handleRemoveService(service.id)}
                                 className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                                title="Xóa dịch vụ"
+                                title={t('deleteService')}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -645,20 +676,20 @@ export default function RoomsPage() {
                       onClick={handleAddService}
                       className="w-full mt-4 py-2 border-2 border-dashed border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
                     >
-                      <Plus className="w-4 h-4" /> Thêm dịch vụ khác
+                      <Plus className="w-4 h-4" /> {t('addOtherService')}
                     </button>
                   </div>
 
                   <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-                      <Upload className="w-4 h-4 text-accent" /> Hình ảnh phòng
+                      <Upload className="w-4 h-4 text-accent" /> {t('roomPhotos')}
                     </h3>
                     <div className="border-2 border-dashed border-zinc-200 rounded-xl p-8 flex flex-col items-center justify-center bg-zinc-50 hover:bg-zinc-100 hover:border-primary/50 transition-colors cursor-pointer group">
                       <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <Upload className="w-6 h-6 text-zinc-400 group-hover:text-primary transition-colors" />
                       </div>
-                      <p className="text-sm font-semibold text-zinc-700 mb-1">Nhấn để tải lên hoặc kéo thả ảnh vào đây</p>
-                      <p className="text-xs text-zinc-500">Hỗ trợ JPG, PNG (Tối đa 5MB)</p>
+                      <p className="text-sm font-semibold text-zinc-700 mb-1">{t('uploadPhotoHint')}</p>
+                      <p className="text-xs text-zinc-500">{t('supportedPhotoFormat')}</p>
                     </div>
                   </div>
                 </div>
@@ -667,39 +698,46 @@ export default function RoomsPage() {
                   <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                        <Target className="w-4 h-4 text-accent" /> Tiện nghi
+                        <Target className="w-4 h-4 text-accent" /> {t('amenitiesTitle')}
                       </h3>
-                      <span className="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{selectedAmenities.length} đã chọn</span>
+                      <span className="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{selectedAmenities.length} {t('selectedCount')}</span>
                     </div>
                     <div className="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1 pb-1">
-                      {['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Bàn học', 'Kệ bếp', 'Ban công', 'WC riêng', 'Máy giặt', 'Tivi', 'Tủ lạnh', 'Gửi xe', 'Thang máy', 'Camera', 'Bảo vệ'].map(item => (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() => {
-                            setSelectedAmenities(prev => prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item]);
-                            setIsDirty(true);
-                          }}
-                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${selectedAmenities.includes(item)
-                            ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
-                            : 'text-zinc-600 bg-white border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
-                            }`}
-                        >
-                          {item}
-                        </button>
-                      ))}
+                      {amenityList.map(a => {
+                        const isSelected = selectedAmenities.some(x => x === a.id || x === a.vi || x === a.en);
+                        return (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedAmenities(prev =>
+                                prev.some(x => x === a.id || x === a.vi || x === a.en)
+                                  ? prev.filter(x => x !== a.id && x !== a.vi && x !== a.en)
+                                  : [...prev, a.id]
+                              );
+                              setIsDirty(true);
+                            }}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${isSelected
+                              ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+                              : 'text-zinc-600 bg-white border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
+                              }`}
+                          >
+                            {locale === "en" ? a.en : a.vi}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-                      <FileSignature className="w-4 h-4 text-accent" /> Ghi chú
+                      <FileSignature className="w-4 h-4 text-accent" /> {t("notesTitle")}
                     </h3>
                     <textarea
                       rows={4}
                       value={formNotes}
                       onChange={(e) => { setFormNotes(e.target.value); setIsDirty(true); }}
-                      placeholder="Ghi chú thêm về tình trạng phòng, đồ đạc..."
+                      placeholder={t('notesPlaceholder')}
                       className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors resize-none"
                     ></textarea>
                   </div>
@@ -711,9 +749,7 @@ export default function RoomsPage() {
               <button
                 onClick={handleCloseModal}
                 className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
-              >
-                Hủy bỏ
-              </button>
+              >{t("cancelBtn")}</button>
               <button
                 onClick={() => {
                   if (selectedRoomId) {
@@ -754,9 +790,7 @@ export default function RoomsPage() {
                   setIsDirty(false);
                 }}
                 className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-accent rounded-xl hover:bg-accent-hover shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
-              >
-                Lưu phòng
-              </button>
+              >{t("saveRoomBtn")}</button>
             </div>
           </div>
         </div>
@@ -776,8 +810,8 @@ export default function RoomsPage() {
 
 function ConfirmModal({
   isOpen,
-  title = "Xác nhận đóng form",
-  message = "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
+  title,
+  message,
   onConfirm,
   onCancel
 }: {
@@ -787,6 +821,9 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("rooms");
+  const displayTitle = title || t("confirmCloseTitle");
+  const displayMessage = message || t("confirmCloseMessage");
   if (!isOpen) return null;
   return (
     <div
@@ -801,9 +838,9 @@ function ConfirmModal({
 
         {/* Header Title & Subtitle */}
         <div className="space-y-2">
-          <h3 className="text-xl font-black text-zinc-900 tracking-tight">{title}</h3>
+          <h3 className="text-xl font-black text-zinc-900 tracking-tight">{displayTitle}</h3>
           <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-            {message}
+            {displayMessage}
           </p>
         </div>
 
@@ -814,14 +851,14 @@ function ConfirmModal({
             onClick={onCancel}
             className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
           >
-            Tiếp tục chỉnh sửa
+            {t("continueEditing")}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
           >
-            Hủy thay đổi & Đóng
+            {t("discardAndClose")}
           </button>
         </div>
       </div>

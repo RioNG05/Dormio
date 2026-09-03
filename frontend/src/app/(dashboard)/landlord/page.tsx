@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { formatVND } from "@/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function LandlordDashboardPage() {
   const t = useTranslations("landlordDashboard");
@@ -614,3 +614,4 @@ export default function LandlordDashboardPage() {
     </div>
   );
 }
+

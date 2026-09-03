@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
   Sparkles, Phone, Mail, MapPin, MessageSquare, Send, CheckCircle2, ChevronDown, Clock, ShieldCheck, ExternalLink
 } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function ContactPage() {
   const t = useTranslations("contactPage");
@@ -237,3 +237,4 @@ export default function ContactPage() {
     </div>
   );
 }
+

@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
@@ -35,10 +36,45 @@ interface InvoiceRecord {
 }
 
 export default function RoomDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations("landlordRoomDetail");
+  const { locale } = useLanguage();
   const resolvedParams = use(params);
   const router = useRouter();
   const [room, setRoom] = useState<Room | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+
+  const formatPeriod = (periodStr: string) => {
+    if (locale === "en") {
+      return periodStr.replace("Tháng ", "Month ");
+    }
+    return periodStr;
+  };
+
+  const formatDeadline = (dlStr: string) => {
+    if (locale === "en") {
+      return dlStr.replace("(Quá hạn 5 ngày)", "(5 days overdue)");
+    }
+    return dlStr;
+  };
+
+  const getServiceNameLocal = (name: string) => {
+    if (name === "Điện") return t("electricityLabel");
+    if (name === "Nước") return t("waterLabel");
+    if (name === "Rác") return locale === "en" ? "Trash" : "Rác";
+    if (name === "Vệ sinh") return t("cleaningService");
+    if (name === "Bảo vệ") return t("securityService");
+    return name;
+  };
+
+  const getServiceUnitLocal = (unit: string) => {
+    if (locale === "en") {
+      if (unit.includes("kWh")) return "VND/kWh";
+      if (unit.includes("m³")) return "VND/m³";
+      return "VND/room";
+    }
+    return unit;
+  };
+
 
   // Modals & form state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -60,11 +96,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const [editAmenities, setEditAmenities] = useState<string[]>([]);
   const [editNotes, setEditNotes] = useState("");
   const [editServices, setEditServices] = useState([
-    { id: 'bao_ve', name: 'Bảo vệ', defaultPrice: '50.000', customPrice: '60.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
+    { id: 'bao_ve', name: t('securityService'), defaultPrice: '50.000', customPrice: '60.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
     { id: 'dien', name: 'Điện', defaultPrice: '3.500', customPrice: '3.500', unit: 'đ/kWh', isCustom: true, isRemovable: false },
     { id: 'nuoc', name: 'Nước', defaultPrice: '25.000', customPrice: '25.000', unit: 'đ/m³', isCustom: true, isRemovable: false },
     { id: 'rac', name: 'Rác', defaultPrice: '20.000', customPrice: '20.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-    { id: 've_sinh', name: 'Vệ sinh', defaultPrice: '30.000', customPrice: '30.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
+    { id: 've_sinh', name: t('cleaningService'), defaultPrice: '30.000', customPrice: '30.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
     { id: 'wifi', name: 'Wifi', defaultPrice: '100.000', customPrice: '100.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
   ]);
 
@@ -205,7 +241,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         setEditPrice(found.price || "3.000.000 ₫");
         setEditArea(found.area || "25");
         setEditFloor(found.floor || "1");
-        setEditAmenities(found.amenities || ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
+        setEditAmenities(found.amenities || ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', t('balcony'), 'WC riêng']);
         setEditNotes(found.notes || "");
       }
     }
@@ -240,7 +276,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
   // Base constants for financial logic
   const roomRentNum = parseInt((room.price || "3000000").replace(/\D/g, '')) || 3000000;
-  // Fixed services sum: Bảo vệ (60k) + Wifi (100k) + Rác (20k) + Vệ sinh (30k) = 210.000 ₫
+  // Fixed services sum: {t("securityService")} (60k) + Wifi (100k) + Rác (20k) + {t("cleaningService")} (30k) = 210.000 ₫
   const fixedServicesTotal = 210000;
   const elecUnitPrice = 3500;
   const waterUnitPrice = 25000;
@@ -360,7 +396,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const paginatedMeterHistory = filteredMeterHistory.slice((meterPage - 1) * ITEMS_PER_PAGE, meterPage * ITEMS_PER_PAGE);
 
   // Get current unpaid invoice if available
-  const unpaidInvoice = invoicesHistory.find(i => i.status === "Chưa thanh toán");
+  const unpaidInvoice = invoicesHistory.find(i => i.status === "Chưa thanh toán" || status === "unpaid");
   const unpaidRecord = unpaidInvoice ? meterHistory.find(m => m.period === unpaidInvoice.period) : null;
   const unpaidFinancials = unpaidRecord ? computeRecordFinancials(unpaidRecord) : null;
 
@@ -384,7 +420,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   isVacant ? 'text-blue-600 bg-blue-500/10 border-blue-500/30' :
                     'text-zinc-500 bg-zinc-100 border-zinc-200'
               }`}>
-              {room.status}
+              {room.status === "Đang thuê" ? t("occupied") : room.status === "Trống" ? t("vacant") : room.status === "Bảo trì" ? t("maintenance") : room.status === "Đặt cọc" ? t("reserved") : room.status}
             </span>
             <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-zinc-200/80 truncate max-w-[170px] sm:max-w-none">
               {room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1'}
@@ -400,7 +436,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               onClick={() => setIsMeterModalOpen(true)}
               className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
             >
-              <Gauge className="w-3.5 h-3.5" /> Chốt Điện Nước
+              <Gauge className="w-3.5 h-3.5" /> {t("recordUtilities")}
             </button>
           )}
 
@@ -409,14 +445,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               href={`/landlord/contracts/HD-01012026-${room.building === 'b2' ? 2 : 1}-${room.roomNumber}`}
               className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
             >
-              <Eye className="w-3.5 h-3.5 text-purple-600" /> Hợp Đồng
+              <Eye className="w-3.5 h-3.5 text-purple-600" /> {t("contractDuration")}
             </Link>
           ) : (
             <button
               onClick={() => setIsContractModalOpen(true)}
               className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
             >
-              <FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" /> Tạo Hợp Đồng
+              <FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("createContractBtn")}
             </button>
           )}
 
@@ -424,15 +460,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             onClick={() => setIsEditModalOpen(true)}
             className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Edit className="w-3.5 h-3.5 text-[#2AC1BC]" /> Sửa
+            <Edit className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("editRoom")}
           </button>
 
           <button
             onClick={() => {
               setConfirmModal({
                 isOpen: true,
-                title: 'Xóa phòng',
-                message: `Bạn có chắc chắn muốn xóa phòng ${room.roomNumber} này không? Các dữ liệu liên quan sẽ bị xóa!`,
+                title: t("confirmDeleteTitle"),
+                message: `${t("confirmDeleteMsg")} (Room ${room.roomNumber})`,
                 onConfirm: () => {
                   router.push('/landlord/rooms');
                   setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -441,7 +477,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             }}
             className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Trash2 className="w-3.5 h-3.5 text-rose-600" /> Xóa
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" /> {t("confirmDeleteBtn")}
           </button>
         </div>
       </div>
@@ -454,14 +490,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs overflow-hidden">
             <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-zinc-100">
               <h2 className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
-                <User className="w-4 h-4 text-[#2AC1BC]" /> Khách Thuê Hiện Tại
+                <User className="w-4 h-4 text-[#2AC1BC]" /> {t("currentTenantTitle")}
               </h2>
               {isOccupied && (
                 <button
                   onClick={() => setIsEditModalOpen(true)}
                   className="px-2.5 py-1 text-[11px] font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                 >
-                  <Edit className="w-3.5 h-3.5" /> Sửa thông tin
+                  <Edit className="w-3.5 h-3.5" /> {t("editTenantInfo")}
                 </button>
               )}
             </div>
@@ -478,7 +514,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-bold text-zinc-500 mt-0.5">
                         <span>SDT: {room.tenantPhone || '0977815704'}</span>
                         <span className="hidden sm:inline">•</span>
-                        <span>CCCD: {room.tenantCccd || '00109313040168'}</span>
+                        <span>{t("idCardLabel")} {room.tenantCccd || '00109313040168'}</span>
                       </div>
                     </div>
                   </div>
@@ -488,24 +524,24 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       href={`tel:${room.tenantPhone || '0977815704'}`}
                       className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      Gọi ngay
+                      {t("callNow")}
                     </a>
                     <Link
                       href={`/landlord/customers/${room.tenantCccd || '00109313040168'}`}
                       className="px-3.5 py-1.5 bg-[#2AC1BC] text-white rounded-xl text-xs font-bold hover:bg-[#25ad87] transition-all shadow-xs text-center flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      Hồ sơ
+                      {t("tenantProfile")}
                     </Link>
                   </div>
                 </div>
               ) : (
                 <div className="p-6 text-center bg-zinc-50 rounded-2xl border border-dashed border-zinc-200 space-y-2">
-                  <p className="text-xs text-zinc-500 font-bold">Phòng hiện tại đang trống, chưa có người ở.</p>
+                  <p className="text-xs text-zinc-500 font-bold">{t("vacantRoomDesc")}</p>
                   <button
                     onClick={() => setIsContractModalOpen(true)}
                     className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-xs"
                   >
-                    + Lập Hợp Đồng Nhận Khách Mới
+                    + {t("createNewContractBtn")}
                   </button>
                 </div>
               )}
@@ -516,7 +552,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs font-extrabold text-zinc-800">
               <Filter className="w-4 h-4 text-[#2AC1BC]" />
-              <span>BỘ LỌC LỊCH SỬ THÁNG / NĂM:</span>
+              <span>{t("monthYearFilter")}</span>
             </div>
             <div className="relative w-full sm:w-64">
               <select
@@ -524,24 +560,24 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 onChange={(e) => setSelectedFilterPeriod(e.target.value)}
                 className="w-full pl-3 pr-8 py-2 text-xs font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none"
               >
-                <option value="all">Tất cả các tháng</option>
-                <option value="Tháng 09/2026">Tháng 09/2026 (Hiện tại)</option>
-                <option value="Tháng 08/2026">Tháng 08/2026</option>
-                <option value="Tháng 07/2026">Tháng 07/2026</option>
+                <option value="all">{t("allMonths")}</option>
+                <option value="Tháng 09/2026">{locale === "en" ? "Month 09/2026 (Current)" : "Tháng 09/2026 (Hiện tại)"}</option>
+                <option value="Tháng 08/2026">{locale === "en" ? "Month 08/2026" : "Tháng 08/2026"}</option>
+                <option value="Tháng 07/2026">{locale === "en" ? "Month 07/2026" : "Tháng 07/2026"}</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
             </div>
           </div>
 
-          {/* SECTION 1: HÓA ĐƠN & CÔNG NỢ (Tự động tính tiền = Phòng + Dịch Vụ + Điện + Nước) */}
+          {/* SECTION 1: HÓA ĐƠN & {t("unpaidDebt")} (Tự động tính tiền = Phòng + Dịch Vụ + Điện + Nước) */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
               <h2 className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-[#2AC1BC]" /> Hóa Đơn & Công Nợ
+                <Receipt className="w-4 h-4 text-[#2AC1BC]" /> {t("invoicesHistory")}
               </h2>
               {unpaidInvoice && unpaidFinancials && (
                 <span className="self-start sm:self-auto px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200 rounded-full text-[10px] font-black animate-pulse">
-                  Còn 1 Hóa Đơn Chưa Thu ({unpaidFinancials.grandInvoiceTotal.toLocaleString('vi-VN')} ₫)
+                  {t("unpaidInvoiceAlert")} ({unpaidFinancials.grandInvoiceTotal.toLocaleString('vi-VN')} ₫)
                 </span>
               )}
             </div>
@@ -549,7 +585,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <div className="space-y-3">
               {filteredInvoices.length === 0 ? (
                 <div className="p-6 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
-                  Không tìm thấy hóa đơn nào trong kỳ lọc đã chọn.
+                  {t("noInvoicesPeriod")}
                 </div>
               ) : paginatedInvoices.map((inv) => {
                 const rec = meterHistory.find(m => m.period === inv.period) || {
@@ -561,7 +597,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   newWater: 0
                 };
                 const fin = computeRecordFinancials(rec);
-                const isUnpaid = inv.status === "Chưa thanh toán";
+                const isUnpaid = inv.status === "Chưa thanh toán" || status === "unpaid";
 
                 return (
                   <div
@@ -577,12 +613,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                             <span className="text-xs font-black text-zinc-900">{inv.id}-{room.roomNumber}</span>
-                            <span className={`text-[10px] font-bold ${isUnpaid ? 'text-rose-600' : 'text-zinc-500'}`}>({inv.period})</span>
+                            <span className={`text-[10px] font-bold ${isUnpaid ? 'text-rose-600' : 'text-zinc-500'}`}>({formatPeriod(inv.period)})</span>
                             <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isUnpaid ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
                               {isUnpaid ? 'Chưa thanh toán' : '✓ Đã thu'}
                             </span>
                           </div>
-                          <p className="text-[10px] text-zinc-500 font-semibold mt-0.5">Hạn thanh toán: <strong className={isUnpaid ? "text-rose-600" : "text-zinc-700"}>{inv.deadline}</strong></p>
+                          <p className="text-[10px] text-zinc-500 font-semibold mt-0.5">Hạn thanh toán: <strong className={isUnpaid ? "text-rose-600" : "text-zinc-700"}>{formatDeadline(inv.deadline)}</strong></p>
                         </div>
                       </div>
 
@@ -615,24 +651,24 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     {/* Breakdown details accordion/toggle */}
                     <div className="p-3 bg-white rounded-xl border border-zinc-200/60 text-xs space-y-1.5">
                       <div className="text-[11px] font-extrabold text-zinc-700 flex justify-between border-b border-zinc-100 pb-1">
-                        <span>CHI TIẾT TIỀN HÓA ĐƠN THÁNG:</span>
+                        <span>{t("invoiceBreakdown")}</span>
                         <span className="text-[#2AC1BC] font-black whitespace-nowrap">{fin.grandInvoiceTotal.toLocaleString('vi-VN')} ₫</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-zinc-600 font-semibold pt-1">
                         <div className="p-1.5 bg-zinc-50 rounded-lg">
-                          <span className="text-zinc-400 block text-[9px]">Tiền phòng:</span>
+                          <span className="text-zinc-400 block text-[9px]">{t("roomRentFee")}</span>
                           <strong className="text-zinc-900 whitespace-nowrap">{roomRentNum.toLocaleString('vi-VN')} ₫</strong>
                         </div>
                         <div className="p-1.5 bg-zinc-50 rounded-lg">
-                          <span className="text-zinc-400 block text-[9px]">Dịch vụ cố định:</span>
+                          <span className="text-zinc-400 block text-[9px]">{t("fixedServicesFee")}</span>
                           <strong className="text-zinc-900 whitespace-nowrap">{fixedServicesTotal.toLocaleString('vi-VN')} ₫</strong>
                         </div>
                         <div className="p-1.5 bg-amber-50 rounded-lg">
-                          <span className="text-amber-600 block text-[9px]">⚡ Điện ({fin.elecUse} kWh):</span>
+                          <span className="text-amber-600 block text-[9px]">⚡ {t("electricityLabel")} ({fin.elecUse} kWh):</span>
                           <strong className="text-amber-900 whitespace-nowrap">{fin.elecCost.toLocaleString('vi-VN')} ₫</strong>
                         </div>
                         <div className="p-1.5 bg-blue-50 rounded-lg">
-                          <span className="text-blue-600 block text-[9px]">💧 Nước ({fin.waterUse} m³):</span>
+                          <span className="text-blue-600 block text-[9px]">💧 {t("waterLabel")} ({fin.waterUse} m³):</span>
                           <strong className="text-blue-900 whitespace-nowrap">{fin.waterCost.toLocaleString('vi-VN')} ₫</strong>
                         </div>
                       </div>
@@ -642,7 +678,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-[10px] font-bold text-amber-800 flex items-start gap-1.5">
                           <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                           <div>
-                            <span>⚠️ Đã cập nhật lại hóa đơn do chỉnh sửa số điện/nước ({inv.editedAt}):</span>
+                            <span>⚠️ {t("invoiceUpdatedNotice")} ({inv.editedAt}):</span>
                             <span className="italic block text-amber-900 font-extrabold">"{inv.editReason}"</span>
                           </div>
                         </div>
@@ -665,7 +701,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       onClick={() => setInvoicePage(p => Math.max(1, p - 1))}
                       className="px-2.5 py-1 text-xs font-bold bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
-                      &larr; Trước
+                      &larr; {t("prevBtn")}
                     </button>
                     {Array.from({ length: totalInvoicePages }).map((_, idx) => (
                       <button
@@ -686,7 +722,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       onClick={() => setInvoicePage(p => Math.min(totalInvoicePages, p + 1))}
                       className="px-2.5 py-1 text-xs font-bold bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
-                      Sau &rarr;
+                      {t("nextBtn")} &rarr;
                     </button>
                   </div>
                 </div>
@@ -699,7 +735,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-zinc-100 pb-3">
               <div>
                 <h2 className="font-black text-zinc-900 text-xs sm:text-sm flex items-center gap-2">
-                  <History className="w-4 h-4 text-[#2AC1BC]" /> Lịch Sử Chốt Điện Nước
+                  <History className="w-4 h-4 text-[#2AC1BC]" /> {t("utilityReadings")}
                 </h2>
                 <p className="text-[10px] sm:text-[11px] text-zinc-500 font-medium mt-0.5">Cho phép chỉnh sửa khi có sai sót (yêu cầu ghi rõ lý do để lưu nhật ký).</p>
               </div>
@@ -708,26 +744,26 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 onClick={() => setIsMeterModalOpen(true)}
                 className="px-3.5 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-md shadow-[#2AC1BC]/20 flex items-center justify-center gap-1.5 shrink-0"
               >
-                <Gauge className="w-4 h-4" /> Chốt Số / Quét AI OCR
+                <Gauge className="w-4 h-4" /> {t("ocrScanBtn")}
               </button>
             </div>
 
             <div className="space-y-3">
               {filteredMeterHistory.length === 0 ? (
                 <div className="p-6 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
-                  Không có lịch sử chốt số điện nước nào trong kỳ lọc.
+                  {t("noInvoicesPeriod")}
                 </div>
               ) : paginatedMeterHistory.map((item) => {
                 const fin = computeRecordFinancials(item);
                 const matchingInvoice = invoicesHistory.find(inv => inv.period === item.period);
-                const isPaid = matchingInvoice?.status === "Đã thu";
+                const isPaid = matchingInvoice?.status === "Đã thu" || status === "paid";
 
                 return (
-                  <details key={item.period} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
+                  <details key={formatPeriod(item.period)} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
                     <summary className="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 sm:p-3.5 bg-zinc-50/80 hover:bg-zinc-100/80 cursor-pointer select-none outline-none transition-colors gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
-                          Chỉ Số {item.period}
+                          Chỉ Số {formatPeriod(item.period)}
                         </span>
                         <span className="text-[10px] font-bold text-zinc-400">({item.date})</span>
                         {item.editReason && (
@@ -745,9 +781,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         {isPaid ? (
                           <span
                             className="px-2.5 py-1 bg-zinc-100 text-zinc-400 border border-zinc-200 text-[10px] font-bold rounded-lg flex items-center gap-1 cursor-not-allowed select-none"
-                            title="Hóa đơn tháng này đã thanh toán. Không thể chỉnh sửa số điện nước."
+                            title={t("paidInvoiceLockedTooltip")}
                           >
-                            Đã khóa (Đã thu)
+                            {t("lockedPaid")}
                           </span>
                         ) : (
                           <button
@@ -759,7 +795,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             }}
                             className="px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
                           >
-                            <Edit className="w-3 h-3 text-amber-600" /> Sửa số điện nước
+                            <Edit className="w-3 h-3 text-amber-600" /> {t("editMeterTitle")}
                           </button>
                         )}
                         <span className="text-xs font-black text-zinc-900">Tổng: {fin.meterTotal.toLocaleString('vi-VN')} ₫</span>
@@ -770,7 +806,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div className="p-3 sm:p-4 bg-white border-t border-zinc-100 space-y-2.5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
                         <div className="flex items-center justify-between sm:justify-start gap-2">
-                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ ĐIỆN (3.500 ₫/kWh)</div>
+                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ {t("electricityLabel")} (3.500 VND/kWh)</div>
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.elecCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
@@ -781,7 +817,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                         <div className="flex items-center justify-between sm:justify-start gap-2">
-                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 NƯỚC (25.000 ₫/m³)</div>
+                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 {t("waterLabel")} (25.000 VND/m³)</div>
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.waterCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
@@ -793,7 +829,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       {/* Display edit reason log if present */}
                       {item.editReason && (
                         <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-0.5">
-                          <div className="font-bold text-amber-800 text-[11px]">📝 Nhật ký chỉnh sửa ({item.editedAt}):</div>
+                          <div className="font-bold text-amber-800 text-[11px]">📝 {t("auditLogTitle")} ({item.editedAt}):</div>
                           <p className="text-[11px] text-amber-900 italic font-semibold">"{item.editReason}"</p>
                         </div>
                       )}
@@ -852,20 +888,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <div>
                 <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
                   <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-[#FF6B35]" /> Bảo Trì ({maintenanceHistory.length})
+                    <Wrench className="w-4 h-4 text-[#FF6B35]" /> {t("incidentsTitle")} ({maintenanceHistory.length})
                   </h2>
                   <button
                     onClick={() => setIsIncidentModalOpen(true)}
                     className="px-3 py-1.5 text-xs font-black text-[#FF6B35] bg-[#FF6B35]/10 rounded-xl hover:bg-[#FF6B35]/20 transition-all cursor-pointer shadow-2xs"
                   >
-                    + Báo Sự Cố
+                    + {t("reportIncident")}
                   </button>
                 </div>
 
                 <div className="space-y-3 min-h-[195px] pt-1">
                   {maintenanceHistory.length === 0 ? (
                     <div className="p-4 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
-                      Chưa có lịch sử bảo trì nào cho phòng này.
+                      {t("noIncidentsFound")}
                     </div>
                   ) : (
                     maintenanceHistory
@@ -897,7 +933,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           )}
 
                           <div className="flex items-center justify-between text-[10px] text-zinc-500 font-bold pt-0.5 border-t border-zinc-100/60">
-                            <span>{item.completedDate ? `Hoàn thành: ${item.completedDate}` : `Báo ngày: ${item.reportDate}`}</span>
+                            <span>{item.completedDate ? `${t("completedDatePrefix")}: ${item.completedDate}` : `${t("reportDatePrefix")}: ${item.reportDate}`}</span>
                             <span className={item.priority === 'Mức độ cao' ? 'text-rose-600 font-black' : 'text-zinc-500'}>
                               {item.priority}
                             </span>
@@ -939,7 +975,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <div>
                 <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
                   <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-purple-600" /> Quản Lý Tiền Đặt Cọc
+                    <Wallet className="w-4 h-4 text-purple-600" /> {t("securityDeposit")}
                   </h2>
                   <span className="px-2.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200/80 rounded-full text-[10px] font-black">
                     Escrow
@@ -950,10 +986,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="mt-3 p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-indigo-500/10 rounded-2xl border border-purple-200/80 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-extrabold text-purple-800 uppercase tracking-wider">
-                      CỌC GIỮ AN TOÀN
+                      {t("escrowDepositSafe")}
                     </span>
                     <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full border border-emerald-200">
-                      Đã khóa cọc
+                      {t("lockedDeposit")}
                     </span>
                   </div>
 
@@ -965,11 +1001,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                   <div className="grid grid-cols-2 gap-2 border-t border-purple-200/50 pt-2.5 text-[10px]">
                     <div className="space-y-0.5">
-                      <span className="text-zinc-400 font-medium block">Ngày nhận cọc:</span>
+                      <span className="text-zinc-400 font-medium block">{t("depositReceivedDate")}:</span>
                       <span className="font-extrabold text-zinc-800">01/01/2026</span>
                     </div>
                     <div className="space-y-0.5 text-right">
-                      <span className="text-zinc-400 font-medium block">Thời hạn HĐ:</span>
+                      <span className="text-zinc-400 font-medium block">{t("contractDuration")}:</span>
                       <span className="font-extrabold text-zinc-800">01/01/2027</span>
                     </div>
                   </div>
@@ -982,7 +1018,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   onClick={() => showToast("Đã ghi nhận yêu cầu hoàn 3.000.000 ₫ cọc qua VietQR/Ví Escrow!", "success")}
                   className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Wallet className="w-4 h-4" /> Hoàn Cọc Cho Khách Thuê
+                  <Wallet className="w-4 h-4" /> {t("refundDepositBtn")}
                 </button>
               </div>
             </div>
@@ -997,33 +1033,33 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* COMPACT SIDEBAR 4 ROOM METRIC CARDS */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-4 space-y-3">
             <h2 className="flex items-center gap-2 font-black text-zinc-900 text-xs uppercase tracking-wider border-b border-zinc-100 pb-2">
-              <Home className="w-4 h-4 text-[#2AC1BC]" /> <span>THÔNG SỐ PHÒNG {room.roomNumber}</span>
+              <Home className="w-4 h-4 text-[#2AC1BC]" /> <span>{t("roomSpecsTitle")} {room.roomNumber}</span>
             </h2>
             <div className="grid grid-cols-2 gap-2.5">
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">GIÁ THUÊ</span>
+                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">{t("rentPrice")}</span>
                 <div className="text-sm font-black text-[#2AC1BC]">{room.price || '3.000.000 ₫'}</div>
-                <span className="text-[9px] text-zinc-500">Đầu tháng</span>
+                <span className="text-[9px] text-zinc-500">{t("beginningOfMonth")}</span>
               </div>
 
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">TIỀN CỌC</span>
+                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">{t("securityDeposit")}</span>
                 <div className="text-sm font-black text-purple-600">3.000.000 ₫</div>
-                <span className="text-[9px] text-emerald-600 font-bold">Khóa cọc</span>
+                <span className="text-[9px] text-emerald-600 font-bold">{t("lockedDeposit")}</span>
               </div>
 
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">CÔNG NỢ</span>
+                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">{t("unpaidDebt")}</span>
                 <div className="text-sm font-black text-rose-600">
                   {unpaidFinancials ? `${unpaidFinancials.grandInvoiceTotal.toLocaleString('vi-VN')} ₫` : '0 ₫'}
                 </div>
-                <span className="text-[9px] text-rose-600 font-bold">Còn nợ tháng này</span>
+                <span className="text-[9px] text-rose-600 font-bold">{t("unpaidThisMonth")}</span>
               </div>
 
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">DIỆN TÍCH</span>
+                <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">{t("area")}</span>
                 <div className="text-xs font-black text-zinc-900">{room.area || '25'} m² • T{room.floor}</div>
-                <span className="text-[9px] text-zinc-500">Ban công</span>
+                <span className="text-[9px] text-zinc-500">{t("balcony")}</span>
               </div>
             </div>
           </div>
@@ -1031,7 +1067,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* Giá dịch vụ định kỳ với Badge màu sắc */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
             <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Banknote className="w-4 h-4 text-[#2AC1BC]" /> Giá Dịch Vụ
+              <Banknote className="w-4 h-4 text-[#2AC1BC]" /> {t("servicePrices")}
             </h2>
             <div className="space-y-2.5">
               {(editServices && editServices.length > 0 ? editServices : defaultRoomServices).map((service) => (
@@ -1039,11 +1075,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-extrabold text-zinc-800">{service.name}</span>
                     {service.isCustom && (
-                      <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-md font-bold">Tùy chỉnh</span>
+                      <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-md font-bold">{t("customBadge")}</span>
                     )}
                   </div>
                   <span className="text-xs font-black text-[#2AC1BC]">
-                    {service.customPrice} {service.unit}
+                    {service.customPrice} {getServiceUnitLocal(service.unit)}
                   </span>
                 </div>
               ))}
@@ -1053,11 +1089,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* Tiện nghi phòng */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
             {(() => {
-              const amenitiesList = room.amenities || ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng'];
+              const amenitiesList = room.amenities || ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', t('balcony'), 'WC riêng'];
               return (
                 <>
                   <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
-                    <Sparkles className="w-4 h-4 text-[#2AC1BC]" /> Tiện Nghi ({amenitiesList.length})
+                    <Sparkles className="w-4 h-4 text-[#2AC1BC]" /> {t("amenitiesCount")} ({amenitiesList.length})
                   </h2>
 
                   <div className="flex flex-wrap gap-2">
@@ -1078,35 +1114,35 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* Quản lý trạng thái phòng */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
             <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> Trạng Thái Phòng
+              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t("roomStatusTitle")}
             </h2>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider block">CHUYỂN TRẠNG THÁI NHANH:</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider block">{t("quickStatusChange")}</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Trống' } : null)}
+                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'vacant' } : null)}
                   className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isVacant ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
                 >
                   Trống
                 </button>
 
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Đang thuê' } : null)}
+                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'occupied' } : null)}
                   className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isOccupied ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
                 >
                   Đang Thuê
                 </button>
 
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Bảo trì' } : null)}
+                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'maintenance' } : null)}
                   className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isMaintenance ? 'bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
                 >
                   Bảo Trì
                 </button>
 
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Đặt cọc' } : null)}
+                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'reserved' } : null)}
                   className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isReserved ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
                 >
                   Đặt Cọc
@@ -1127,8 +1163,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <Edit className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">Sửa Số Điện Nước - {correctModal.period}</h2>
-                  <p className="text-xs text-zinc-500 font-medium">Hóa đơn tháng tương ứng sẽ tự động cập nhật lại tổng tiền.</p>
+                  <h2 className="text-base font-black text-zinc-900">{t("editMeterTitle")} - {formatPeriod(correctModal.period)}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">{t("editMeterSub")}</p>
                 </div>
               </div>
               <button onClick={() => setCorrectModal(prev => ({ ...prev, isOpen: false }))} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
@@ -1146,8 +1182,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-2">
-                  <label className="block text-xs font-black text-zinc-900">⚡ Chỉ số ĐIỆN mới (kWh)</label>
-                  <span className="text-[10px] text-zinc-500 block font-semibold">Chỉ số cũ: {correctModal.oldElec}</span>
+                  <label className="block text-xs font-black text-zinc-900">{t("newElecLabel")}</label>
+                  <span className="text-[10px] text-zinc-500 block font-semibold">{t("oldElecLabel")} {correctModal.oldElec}</span>
                   <input
                     type="number"
                     value={correctModal.newElec}
@@ -1157,8 +1193,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
 
                 <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20 space-y-2">
-                  <label className="block text-xs font-black text-zinc-900">💧 Chỉ số NƯỚC mới (m³)</label>
-                  <span className="text-[10px] text-zinc-500 block font-semibold">Chỉ số cũ: {correctModal.oldWater}</span>
+                  <label className="block text-xs font-black text-zinc-900">{t("newWaterLabel")}</label>
+                  <span className="text-[10px] text-zinc-500 block font-semibold">{t("oldWaterLabel")} {correctModal.oldWater}</span>
                   <input
                     type="number"
                     value={correctModal.newWater}
@@ -1170,13 +1206,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               <div>
                 <label className="block text-xs font-black text-zinc-900 mb-1.5">
-                  Lý do điều chỉnh sai sót <span className="text-rose-600">* (Bắt buộc)</span>
+                  {t("reasonRequired")}
                 </label>
                 <textarea
                   rows={3}
                   value={correctModal.reason}
                   onChange={(e) => setCorrectModal(prev => ({ ...prev, reason: e.target.value, error: "" }))}
-                  placeholder="Ví dụ: Ghi nhầm chỉ số công tơ do chụp ảnh mờ, chủ trọ đính chính lại..."
+                  placeholder={t("reasonPlaceholder")}
                   className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium"
                 ></textarea>
               </div>
@@ -1210,8 +1246,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <Gauge className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">Chốt Điện Nước & Quét AI OCR</h2>
-                  <p className="text-xs text-zinc-500 font-medium">Ghi lại chỉ số điện nước hàng tháng cho Phòng {room.roomNumber}</p>
+                  <h2 className="text-base font-black text-zinc-900">{t("recordMeterTitle")}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">{t("recordMeterSub")} {room.roomNumber}</p>
                 </div>
               </div>
               <button onClick={() => setIsMeterModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
@@ -1222,7 +1258,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">Tháng </label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("monthLabel")} </label>
                   <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white">
                     {getAvailableMeterPeriods().monthOptions.map(m => (
                       <option key={m.value} value={m.value}>{m.label}</option>
@@ -1230,7 +1266,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">Năm</label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("yearLabel")}</label>
                   <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white">
                     {getAvailableMeterPeriods().yearOptions.map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -1246,8 +1282,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <Sparkles className="w-5 h-5" />
                   </div>
                 </div>
-                <h3 className="text-xs font-black text-zinc-900">Tính năng AI Quét Số Tự Động (OCR)</h3>
-                <p className="text-[10px] text-zinc-500 font-semibold">Tải lên ảnh chụp đồng hồ điện/nước, AI sẽ tự động trích xuất con số chính xác.</p>
+                <h3 className="text-xs font-black text-zinc-900">{t("aiOcrTitle")}</h3>
+                <p className="text-[10px] text-zinc-500 font-semibold">{t("aiOcrSub")}</p>
                 <button
                   type="button"
                   onClick={handleSimulateAiOcr}
@@ -1255,7 +1291,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                 >
                   {isOcrScanning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                  {isOcrScanning ? "Đang AI phân tích ảnh..." : "📸 Tải ảnh công tơ để AI quét số"}
+                  {isOcrScanning ? t("aiAnalyzing") : t("uploadMeterPhoto")}
                 </button>
                 {ocrSuccessMsg && (
                   <p className="text-[11px] font-bold text-emerald-600 bg-white/80 p-2 rounded-xl border border-emerald-200 animate-in fade-in">
@@ -1311,8 +1347,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <Edit className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-zinc-900">Chỉnh Sửa Thông Tin Phòng {room.roomNumber}</h2>
-                  <p className="text-xs text-zinc-500 font-medium">Cập nhật thông tin chi tiết phòng, giá thuê và tiện nghi.</p>
+                  <h2 className="text-lg font-black text-zinc-900">{t("editRoomTitle")} {room.roomNumber}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">{t("editRoomSub")}</p>
                 </div>
               </div>
               <button onClick={() => setIsEditModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
@@ -1323,7 +1359,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <div className="p-6 overflow-y-auto max-h-[75vh] space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">Số phòng *</label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">{t("roomNumberLabel")}</label>
                   <input
                     type="text"
                     value={editRoomNumber}
@@ -1332,7 +1368,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">Giá thuê hàng tháng *</label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">{t("monthlyRentInputLabel")}</label>
                   <input
                     type="text"
                     value={editPrice}
@@ -1341,7 +1377,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">Diện tích (m²)</label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">{t("areaInputLabel")}</label>
                   <input
                     type="text"
                     value={editArea}
@@ -1350,7 +1386,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">Tầng số</label>
+                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">{t("floorInputLabel")}</label>
                   <input
                     type="text"
                     value={editFloor}
@@ -1361,9 +1397,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-2">Danh sách tiện nghi</label>
+                <label className="block text-xs font-bold text-zinc-700 mb-2">{t("amenitiesListLabel")}</label>
                 <div className="flex flex-wrap gap-2">
-                  {['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng', 'Máy giặt', 'Tivi', 'Tủ lạnh', 'Bảo vệ'].map((item) => (
+                  {['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', t('balcony'), 'WC riêng', 'Máy giặt', 'Tivi', 'Tủ lạnh', t('securityService')].map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -1383,9 +1419,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-3">
                 <div className="flex justify-between items-center mb-1">
                   <h3 className="font-bold text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    <Banknote className="w-4 h-4 text-[#2AC1BC]" /> Giá Dịch Vụ Định Kỳ
+                    <Banknote className="w-4 h-4 text-[#2AC1BC]" /> {t("servicePrices")} Định Kỳ
                   </h3>
-                  <span className="text-[10px] text-zinc-500 font-medium">Bật "Tùy chỉnh" để đặt giá riêng</span>
+                  <span className="text-[10px] text-zinc-500 font-medium">Bật {t("customBadge")} để đặt giá riêng</span>
                 </div>
 
                 <div className="space-y-2.5">
@@ -1393,22 +1429,22 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div key={service.id} className="border border-zinc-200/80 rounded-xl p-3 bg-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 shadow-2xs">
                       <div className="flex items-center gap-2">
                         {!service.isRemovable ? (
-                          <span className="font-bold text-xs text-zinc-900">{service.name}</span>
+                          <span className="font-bold text-xs text-zinc-900">{getServiceNameLocal(service.name)}</span>
                         ) : (
                           <input
                             type="text"
                             value={service.name}
                             onChange={(e) => setEditServices(prev => prev.map(s => s.id === service.id ? { ...s, name: e.target.value } : s))}
                             className="w-24 text-xs font-bold text-zinc-900 bg-transparent border-b border-zinc-200 focus:border-[#2AC1BC] focus:outline-none"
-                            placeholder="Tên dịch vụ"
+                            placeholder={t("serviceNamePlaceholder")}
                           />
                         )}
-                        <span className="text-[10px] text-zinc-400 font-medium">({service.unit})</span>
+                        <span className="text-[10px] text-zinc-400 font-medium">({getServiceUnitLocal(service.unit)})</span>
                       </div>
 
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold text-zinc-500">Tùy chỉnh</span>
+                          <span className="text-[10px] font-bold text-zinc-500">{t("customBadge")}</span>
                           <button
                             type="button"
                             onClick={() => setEditServices(prev => prev.map(s => s.id === service.id ? { ...s, isCustom: !s.isCustom } : s))}
@@ -1447,17 +1483,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   onClick={() => setEditServices(prev => [...prev, { id: `custom_${Date.now()}`, name: '', defaultPrice: '0', customPrice: '0', unit: 'đ/tháng', isCustom: true, isRemovable: true }])}
                   className="w-full py-2 border-2 border-dashed border-zinc-200 rounded-xl text-xs font-bold text-zinc-600 hover:border-[#2AC1BC] hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/5 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Thêm dịch vụ tùy chỉnh mới
+                  <Plus className="w-3.5 h-3.5" /> {t("addCustomServiceBtn")}
                 </button>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1.5">Ghi chú phòng</label>
+                <label className="block text-xs font-bold text-zinc-700 mb-1.5">{t("roomNotesLabel")}</label>
                 <textarea
                   rows={3}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
-                  placeholder="Ghi chú thêm..."
+                  placeholder={t("roomNotesPlaceholder")}
                   className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
                 ></textarea>
               </div>
@@ -1499,8 +1535,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <Wrench className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">Báo Sự Cố Bảo Trì</h2>
-                  <p className="text-xs text-zinc-500 font-medium">Tạo phiếu ghi nhận sự cố hỏng hóc cho phòng {room.roomNumber}</p>
+                  <h2 className="text-base font-black text-zinc-900">{t("reportIncidentTitle")}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">{t("reportIncidentSub")} {room.roomNumber}</p>
                 </div>
               </div>
               <button type="button" onClick={() => setIsIncidentModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
@@ -1510,38 +1546,38 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Tên sự cố *</label>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">{t("incidentNameLabel")}</label>
                 <input
                   type="text"
                   required
                   value={incidentTitleInput}
                   onChange={(e) => setIncidentTitleInput(e.target.value)}
-                  placeholder="VD: Hỏng vòi nước nhà vệ sinh, chảy nước điều hòa..."
+                  placeholder={t("incidentNamePlaceholder")}
                   className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Mô tả chi tiết sự cố (Tùy chọn)</label>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">{t("incidentDescLabel")}</label>
                 <textarea
                   rows={3}
                   value={incidentDescInput}
                   onChange={(e) => setIncidentDescInput(e.target.value)}
-                  placeholder="VD: Vòi rửa chảy rỉ nước liên tục từ sáng nay, cần thợ thay gioăng cao su..."
+                  placeholder={t("incidentDescPlaceholder")}
                   className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Mức độ ưu tiên *</label>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">{t("incidentPriorityLabel")}</label>
                 <select
                   value={incidentPriorityInput}
                   onChange={(e) => setIncidentPriorityInput(e.target.value as any)}
                   className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                 >
-                  <option value="Mức độ nhẹ">Mức độ nhẹ</option>
-                  <option value="Mức độ trung bình">Mức độ trung bình</option>
-                  <option value="Mức độ cao">Mức độ cao (Cần gấp)</option>
+                  <option value="Mức độ nhẹ">{t("incidentPriorityLow")}</option>
+                  <option value="Mức độ trung bình">{t("incidentPriorityMedium")}</option>
+                  <option value="Mức độ cao">{t("incidentPriorityHigh")}</option>
                 </select>
               </div>
             </div>

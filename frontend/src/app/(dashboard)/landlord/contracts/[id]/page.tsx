@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
@@ -12,6 +13,7 @@ import { getContractById, Contract, ContractMember, ContractServiceItem } from "
 import { generateMockCustomers, Customer } from "../../customers/data";
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations("contracts");
   const resolvedParams = use(params);
   const router = useRouter();
   const [contract, setContract] = useState<Contract | null>(null);

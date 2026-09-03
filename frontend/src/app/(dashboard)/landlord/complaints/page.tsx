@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState } from "react";
 import { 
@@ -7,6 +8,7 @@ import {
 } from "lucide-react";
 
 export default function ComplaintsPage() {
+  const t = useTranslations("operations");
   const [buildingFilter, setBuildingFilter] = useState("dormio");
   const [statusFilter, setStatusFilter] = useState("");
 

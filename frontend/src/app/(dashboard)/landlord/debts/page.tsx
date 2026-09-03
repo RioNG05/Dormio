@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/context/LanguageContext";
 
 import React, { useState } from "react";
 import { 
@@ -7,6 +8,7 @@ import {
 } from "lucide-react";
 
 export default function DebtsPage() {
+  const t = useTranslations("invoices");
   const [searchQuery, setSearchQuery] = useState("");
   const [durationFilter, setDurationFilter] = useState("");
   const [buildingFilter, setBuildingFilter] = useState("dormio");

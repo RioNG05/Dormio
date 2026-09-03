@@ -1,7 +1,9 @@
+import { useTranslations } from "@/context/LanguageContext";
 import React from "react";
 import { Clock, Download } from "lucide-react";
 
 export default function AttendancePage() {
+  const t = useTranslations("workforce");
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

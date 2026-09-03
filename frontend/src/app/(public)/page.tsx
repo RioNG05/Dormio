@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building, CreditCard, ShieldCheck, ChevronDown, ArrowRight, Banknote, Sparkles, Star, Zap } from "lucide-react";
 import { formatVND } from "@/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function HomePage() {
   const t = useTranslations("home");
@@ -503,3 +503,4 @@ export default function HomePage() {
     </div>
   );
 }
+

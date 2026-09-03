@@ -10,7 +10,7 @@ import {
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function PublicLayout({
   children,
@@ -19,8 +19,10 @@ export default function PublicLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { locale } = useLanguage();
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
+  const tUpgrade = useTranslations("landlordUpgradeModal");
   const { isLoggedIn, user, login, logout, toggleLoginDemo, upgradeToLandlord } = useAuth();
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
@@ -139,14 +141,7 @@ export default function PublicLayout({
 
           {/* Desktop Right Action Buttons & User Menu */}
           <div className="hidden lg:flex items-center gap-3">
-            {/* Search Trigger */}
-            <button
-              onClick={() => setIsCommandOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200/80 border border-zinc-200 rounded-full text-xs text-zinc-500 font-semibold transition-all cursor-pointer mr-1"
-            >
-              <Search className="w-3.5 h-3.5 text-[#2AC1BC]" />
-              <span>{tNav("searchQuick")}</span>
-            </button>
+            
 
             {/* Auth Actions Conditional Rendering */}
             {isLoggedIn && user ? (
@@ -186,7 +181,7 @@ export default function PublicLayout({
                     />
                     <div className="hidden sm:block text-left">
                       <span className="text-xs font-black text-zinc-900 block leading-tight truncate max-w-[100px]">{user.name}</span>
-                      <span className="text-[9px] font-bold text-zinc-400 block">{user.role === "landlord" ? "Chủ nhà trọ" : "Khách thuê"}</span>
+                      <span className="text-[9px] font-bold text-zinc-400 block">{user.role === "landlord" ? tNav("landlordRole") : tNav("tenantRole")}</span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
                   </button>
@@ -206,7 +201,7 @@ export default function PublicLayout({
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
-                        <span>Thông tin cá nhân</span>
+                        <span>{tNav("myProfile")}</span>
                       </Link>
 
                       {/* 2. Phòng trọ đã thuê */}
@@ -216,7 +211,7 @@ export default function PublicLayout({
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <Building className="w-4 h-4 text-blue-500" />
-                        <span>Phòng trọ đã thuê</span>
+                        <span>{tNav("myRentedRooms")}</span>
                       </Link>
 
                       {/* 3. Phòng trọ đã lưu */}
@@ -226,7 +221,7 @@ export default function PublicLayout({
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                        <span>Phòng trọ đã lưu</span>
+                        <span>{tNav("mySavedRooms")}</span>
                       </Link>
 
                       <div className="border-t border-zinc-100 pt-1">
@@ -268,15 +263,7 @@ export default function PublicLayout({
           </div>
 
           {/* Mobile Controls */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <button
-              onClick={() => setIsCommandOpen(true)}
-              className="p-2 bg-zinc-100 text-zinc-700 rounded-full cursor-pointer hover:bg-zinc-200"
-            >
-              <Search className="w-4 h-4 text-[#2AC1BC]" />
-            </button>
-
-            <button
+          <div className="flex items-center gap-2 lg:hidden">`n            <LanguageSwitcher />`n            <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 bg-zinc-100 text-zinc-900 rounded-2xl cursor-pointer hover:bg-zinc-200 transition-all border border-zinc-200/80"
               aria-label="Toggle Navigation Menu"
@@ -310,7 +297,7 @@ export default function PublicLayout({
                     <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-zinc-200" />
                     <div>
                       <h4 className="text-xs font-black text-zinc-900">{user.name}</h4>
-                      <p className="text-[10px] text-zinc-400 font-semibold">{user.role === "landlord" ? "Chủ nhà trọ" : "Khách thuê phòng"}</p>
+                      <p className="text-[10px] text-zinc-400 font-semibold">{user.role === "landlord" ? tNav("landlordRole") : tNav("tenantRole")}</p>
                     </div>
                   </div>
 
@@ -344,7 +331,7 @@ export default function PublicLayout({
                     >
                       <div className="flex items-center gap-2.5">
                         <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
-                        <span>Thông tin cá nhân</span>
+                        <span>{tNav("myProfile")}</span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -357,7 +344,7 @@ export default function PublicLayout({
                     >
                       <div className="flex items-center gap-2.5">
                         <Building className="w-4 h-4 text-blue-500" />
-                        <span>Phòng trọ đã thuê</span>
+                        <span>{tNav("myRentedRooms")}</span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -370,7 +357,7 @@ export default function PublicLayout({
                     >
                       <div className="flex items-center gap-2.5">
                         <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                        <span>Phòng trọ đã lưu</span>
+                        <span>{tNav("mySavedRooms")}</span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -429,32 +416,32 @@ export default function PublicLayout({
                 <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-black text-zinc-900">Chúc Mừng Bạn Đã Trở Thành Chủ Trọ!</h3>
+                <h3 className="text-xl font-black text-zinc-900">{tUpgrade("congratsTitle")}</h3>
                 <p className="text-xs text-zinc-500 font-medium max-w-xs mx-auto">
-                  Tài khoản của bạn đã được nâng cấp thành công. Đang tự động chuyển hướng tới Bảng điều khiển quản lý BHMS...
+                  {tUpgrade("congratsDesc")}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleUpgradeSubmit} className="space-y-5">
                 <div className="space-y-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#FF6B35] text-[10px] font-black rounded-full uppercase tracking-wider">
-                    <Sparkles className="w-3 h-3 fill-[#FF6B35]" /> NÂNG CẤP TÀI KHOẢN CHỦ TRỌ
+                    <Sparkles className="w-3 h-3 fill-[#FF6B35]" /> {tUpgrade("badge")}
                   </span>
-                  <h3 className="text-xl font-black text-zinc-900">Đăng Ký Trở Thành Chủ Nhà Trọ</h3>
+                  <h3 className="text-xl font-black text-zinc-900">{tUpgrade("title")}</h3>
                   <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                    Nhập thông tin khu trọ đầu tiên của bạn để mở khóa bộ công cụ quản lý hợp đồng, gạch nợ VietQR tự động & quét điện nước OCR.
+                    {tUpgrade("desc")}
                   </p>
                 </div>
 
                 <div className="space-y-4 pt-1">
                   <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-zinc-700">TÊN KHU TRỌ / TÒA NHÀ ĐẦU TIÊN *</label>
+                    <label className="text-xs font-extrabold text-zinc-700">{tUpgrade("houseNameLabel")}</label>
                     <div className="relative">
                       <Building2 className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         required
-                        placeholder="Ví dụ: Trọ Cao Cấp An Bình"
+                        placeholder={tUpgrade("houseNamePlaceholder")}
                         value={houseName}
                         onChange={(e) => setHouseName(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#FF6B35]"
@@ -463,13 +450,13 @@ export default function PublicLayout({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-zinc-700">ĐỊA CHỈ TÒA NHÀ *</label>
+                    <label className="text-xs font-extrabold text-zinc-700">{tUpgrade("houseAddressLabel")}</label>
                     <div className="relative">
                       <MapPin className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         required
-                        placeholder="123 Nguyễn Huệ, Quận 1, TP.HCM"
+                        placeholder={tUpgrade("houseAddressPlaceholder")}
                         value={houseAddress}
                         onChange={(e) => setHouseAddress(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#FF6B35]"
@@ -478,10 +465,10 @@ export default function PublicLayout({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-zinc-700">SỐ LƯỢNG PHÒNG DỰ KIẾN QUẢN LÝ</label>
+                    <label className="text-xs font-extrabold text-zinc-700">{tUpgrade("roomCountLabel")}</label>
                     <input
                       type="number"
-                      placeholder="10"
+                      placeholder={tUpgrade("roomCountPlaceholder")}
                       value={roomCount}
                       onChange={(e) => setRoomCount(e.target.value)}
                       className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#FF6B35]"
@@ -493,7 +480,7 @@ export default function PublicLayout({
                   type="submit"
                   className="w-full py-3.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#FF6B35]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
                 >
-                  <span>Xác Nhận Đăng Ký Trở Thành Chủ Trọ &rarr;</span>
+                  <span>{tUpgrade("confirmBtn")}</span>
                 </button>
               </form>
             )}
@@ -514,7 +501,7 @@ export default function PublicLayout({
               <input
                 type="text"
                 autoFocus
-                placeholder="Tìm phòng trọ, quận huyện, bài viết..."
+                placeholder={tUpgrade("searchPlaceholder")}
                 value={commandQuery}
                 onChange={(e) => setCommandQuery(e.target.value)}
                 className="w-full pl-10 pr-10 py-2 text-sm font-bold text-zinc-900 focus:outline-none"
@@ -529,12 +516,14 @@ export default function PublicLayout({
 
             <div className="max-h-[60vh] overflow-y-auto space-y-2">
               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block px-3">
-                KẾT QUẢ TÌM KIẾM TỨC THÌ ({searchResults.length})
+                {tUpgrade("instantSearchTitle", { count: searchResults.length })}
               </span>
 
               {searchResults.length === 0 ? (
                 <div className="p-8 text-center text-xs font-semibold text-zinc-400">
-                  Không tìm thấy kết quả phù hợp cho "{commandQuery}"
+                  {locale === "en"
+                    ? `No results found for "${commandQuery}"`
+                    : `Không tìm thấy kết quả phù hợp cho "${commandQuery}"`}
                 </div>
               ) : (
                 searchResults.map((item, idx) => (
@@ -621,3 +610,6 @@ export default function PublicLayout({
     </div>
   );
 }
+
+
+
