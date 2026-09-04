@@ -52,7 +52,7 @@ export class AuthService {
         email: dto.email,
         hashedPassword,
         username: dto.fullName,
-        role: UserRole.poster, // Spec: self-registered users start as poster
+        role: UserRole.leasing_agent, // Self-registered users start as leasing agents.
         mustChangePassword: false, // Self-registered users choose their own password
       },
     });
@@ -125,7 +125,7 @@ export class AuthService {
   async findOrCreateByPhone(
     phoneNumber: string,
     fullName?: string,
-    role: UserRole = UserRole.poster, // Spec: base role is poster
+    role: UserRole = UserRole.leasing_agent, // Base role for newly created users.
   ): Promise<User> {
     const existing = await this.prisma.user.findUnique({
       where: { phoneNumber },

@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+
 
 type FetchOptions = RequestInit & {
   params?: Record<string, string>;
@@ -9,7 +10,7 @@ class ApiClient {
     const { params, headers, ...customOptions } = options;
 
     // 1. Tạo query params nếu có
-    let url = `${API_BASE_URL}${endpoint}`;
+    let url = `${API_URL}${endpoint}`;
     if (params) {
       const searchParams = new URLSearchParams(params);
       url += `?${searchParams.toString()}`;

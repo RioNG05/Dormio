@@ -117,7 +117,7 @@ PGADMIN_PORT=5050
 
 #### Tại thư mục `backend/.env`:
 ```env
-PORT=8080
+PORT=3001
 NODE_ENV=development
 
 DATABASE_URL="postgresql://dormio:dormio123@localhost:5432/dormio_db?schema=public"
