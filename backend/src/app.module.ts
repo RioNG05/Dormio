@@ -16,6 +16,7 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
 import { GrievancesModule } from './modules/grievances/grievances.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PostsModule } from './modules/posts/posts.module';
+import { BoardingHousesModule } from './modules/boarding-houses/boarding-houses.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -70,6 +71,7 @@ import { AppService } from './app.service';
     GrievancesModule,
     PaymentsModule,
     PostsModule,
+    BoardingHousesModule,
   ],
 
   controllers: [AppController],

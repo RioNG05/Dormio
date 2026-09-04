@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+const API_HOST = (process.env.NEXT_PUBLIC_API_URL || "http://localhost").replace(/\/$/, "");
+const API_PORT = process.env.NEXT_PUBLIC_API_PORT || "3001";
+const API_URL = `${API_HOST}:${API_PORT}/api`;
 
 
 type FetchOptions = RequestInit & {
