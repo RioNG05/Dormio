@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "@/context/LanguageContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 // Media Attachment Interface
 interface MediaAttachment {
@@ -60,6 +60,7 @@ interface Message {
 
 function MessagesContent() {
   const t = useTranslations("messagesPage");
+  const { locale } = useLanguage();
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -358,7 +359,7 @@ function MessagesContent() {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm tên, phòng, SĐT..."
+              placeholder={t("searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -413,7 +414,7 @@ function MessagesContent() {
         <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-zinc-100">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-xs font-bold text-zinc-400">
-              Không tìm thấy cuộc trò chuyện nào.
+              {locale === "en" ? "No conversations found." : "Không tìm thấy cuộc trò chuyện nào."}
             </div>
           ) : (
             filteredConversations.map((chat) => {
@@ -661,7 +662,7 @@ function MessagesContent() {
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder={`Soạn tin nhắn gửi đến ${activeChat.room}...`}
+                placeholder={locale === "en" ? `Compose message to ${activeChat.room}...` : `Soạn tin nhắn gửi đến ${activeChat.room}...`}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 className="w-full pl-4 pr-10 py-2.5 text-xs sm:text-sm font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -679,7 +680,7 @@ function MessagesContent() {
               disabled={!inputMessage.trim()}
               className="px-4 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
             >
-              <span>Gửi</span> <Send className="w-3.5 h-3.5" />
+              <span>{t("sendBtn")}</span> <Send className="w-3.5 h-3.5" />
             </button>
           </form>
         </div>
@@ -803,7 +804,7 @@ function MessagesContent() {
             <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl space-y-3 shadow-2xs">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
                 <span className="font-extrabold text-xs text-zinc-900 flex items-center gap-1.5">
-                  <FileImage className="w-4 h-4 text-[#2AC1BC]" /> Lưu trữ Hình ảnh & Tệp
+                  <FileImage className="w-4 h-4 text-[#2AC1BC]" /> {t("mediaFiles")}
                 </span>
                 <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-zinc-100 text-zinc-600 rounded-md">
                   {activeChat.mediaFiles?.length || 0}

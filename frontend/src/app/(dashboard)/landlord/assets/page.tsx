@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -11,11 +11,12 @@ import {
   DollarSign, Home, AlertCircle, Info, Calendar, ArrowRight, BarChart3
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "@/context/LanguageContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { Asset, initialMockAssets, calculateDepreciation } from "./data";
 
 export default function AssetsPage() {
   const t = useTranslations("assets");
+  const { locale } = useLanguage();
   const { activeBuilding } = useAuth();
   const router = useRouter();
 
@@ -82,10 +83,10 @@ export default function AssetsPage() {
     if (isDirty) {
       setConfirmModal({
         isOpen: true,
-        title: "Xác nhận đóng form",
-        message: "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
-        confirmText: "Hủy thay đổi & Đóng",
-        cancelText: "Tiếp tục chỉnh sửa",
+        title: locale === "en" ? "Confirm Form Close" : "Xác nhận đóng form",
+        message: locale === "en" ? "You have unsaved changes. Are you sure you want to discard changes and close?" : "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
+        confirmText: locale === "en" ? "Discard & Close" : "Hủy thay đổi & Đóng",
+        cancelText: locale === "en" ? "Continue Editing" : "Tiếp tục chỉnh sửa",
         onConfirm: () => {
           setIsModalOpen(false);
           setConfirmModal(prev => ({ ...prev, isOpen: false }));

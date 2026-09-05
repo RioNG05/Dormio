@@ -1,19 +1,21 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "@/context/LanguageContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function ContractsPage() {
   const t = useTranslations("contracts");
+  const { locale } = useLanguage();
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isDirty, setIsDirty] = useState(false);
+  const [showConfirmCloseModal, setShowConfirmCloseModal] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   React.useEffect(() => {
@@ -57,10 +59,7 @@ export default function ContractsPage() {
 
   const handleCloseModal = () => {
     if (isDirty) {
-      if (window.confirm("Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn đóng?")) {
-        setIsModalOpen(false);
-        setTimeout(() => { setIsDirty(false); setStep(1); }, 200);
-      }
+      setShowConfirmCloseModal(true);
     } else {
       setIsModalOpen(false);
       setTimeout(() => setStep(1), 200);
@@ -360,7 +359,7 @@ export default function ContractsPage() {
                 <Ban className="w-4 h-4" /> Chấm dứt
               </button>
               <button
-                onClick={() => alert("Hệ thống sẽ tạo form hợp đồng bản PDF để xuất. Chức năng này sẽ được cập nhật sau.")}
+                onClick={() => showToast(locale === "en" ? "PDF contract export form is being generated." : "Hệ thống sẽ tạo form hợp đồng bản PDF để xuất. Chức năng này sẽ được cập nhật sau.", "success")}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
               >
                 <Printer className="w-4 h-4" /> In hợp đồng
@@ -780,13 +779,13 @@ export default function ContractsPage() {
             </div>
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
               <button
-                onClick={() => alert("Tính năng Import hợp đồng bằng file Excel đang được phát triển.")}
+                onClick={() => showToast(locale === "en" ? "Excel import feature is under development." : "Tính năng Import hợp đồng bằng file Excel đang được phát triển.", "success")}
                 className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
               >
                 <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
               </button>
               <button
-                onClick={() => alert("Đã xuất danh sách hợp đồng ra file Excel thành công!")}
+                onClick={() => showToast(locale === "en" ? "Exported contract list to Excel successfully!" : "Đã xuất danh sách hợp đồng ra file Excel thành công!", "success")}
                 className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
               >
                 <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
@@ -1811,6 +1810,43 @@ export default function ContractsPage() {
                 </div>
               )}
 
+            </div>
+          </div>
+        </div>
+      )}
+      {showConfirmCloseModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-zinc-200 space-y-4 animate-in zoom-in-95 duration-150 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <Ban className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-base font-black text-zinc-900">
+                {locale === "en" ? "Discard Unsaved Changes?" : "Xác nhận đóng form"}
+              </h4>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                {locale === "en"
+                  ? "You have unsaved contract draft data. Are you sure you want to discard changes?"
+                  : "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?"}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => setShowConfirmCloseModal(false)}
+                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold rounded-xl text-xs cursor-pointer transition-colors"
+              >
+                {locale === "en" ? "Continue Editing" : "Tiếp tục chỉnh sửa"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmCloseModal(false);
+                  setIsModalOpen(false);
+                  setTimeout(() => { setIsDirty(false); setStep(1); }, 200);
+                }}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs cursor-pointer transition-colors"
+              >
+                {locale === "en" ? "Discard & Close" : "Hủy thay đổi & Đóng"}
+              </button>
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { getAllRooms, saveAllRooms, Room } from "./data";
 
 const amenityList = [
   { id: "wifi", vi: "WiFi", en: "WiFi" },
@@ -138,62 +139,38 @@ export default function RoomsPage() {
     }
   };
 
-  const generateMockRooms = () => {
-    const data: any[] = [];
-    const ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương"];
-    const dem = ["Văn", "Thị", "Hữu", "Minh", "Đức", "Ngọc", "Xuân", "Thu", "Thanh", "Hải", "Thành", "Công", "Quốc", "Khánh", "Gia"];
-    const ten = ["An", "Bình", "Cường", "Dũng", "Giang", "Hà", "Khang", "Linh", "Mai", "Nam", "Oanh", "Phong", "Quang", "Sơn", "Tuấn", "Uyên", "Vinh", "Vy", "Yến", "Tâm", "Thảo", "Trang", "Trung", "Tú", "Anh", "Bảo", "Châu", "Diệp", "Hân", "Khoa"];
+  const [rooms, setRooms] = useState<Room[]>([]);
 
-    const buildRooms = (buildingId: string, buildingSeq: number, floors: number, roomsPerFloor: number) => {
-      for (let f = 1; f <= floors; f++) {
-        for (let r = 1; r <= roomsPerFloor; r++) {
-          const roomStr = `${f}${r.toString().padStart(2, '0')}`;
-          const seed = f * 100 + r;
-          const isTrang = seed % 5 === 0;
-          const isBaoTri = seed % 17 === 0;
+  useEffect(() => {
+    setRooms(getAllRooms());
 
-          let status = "occupied";
-        if (isTrang) status = "vacant";
-        else if (isBaoTri) status = "maintenance";
-        else if (seed % 11 === 0) status = "reserved";
-
-          const hash = parseInt(roomStr) * buildingSeq * 137 + 19;
-          const isRented = status === 'occupied' || status === 'reserved' || status === 'Đang thuê' || status === 'Đặt cọc';
-          const fullRoomId = `${buildingSeq}${roomStr}`;
-
-          data.push({
-            id: roomStr,
-            fullRoomId: fullRoomId,
-            floor: f.toString(),
-            status: status,
-            building: buildingId,
-            buildingSeq: buildingSeq,
-            contract: isRented ? (seed % 7 === 0 ? "expired" : "active") : "none",
-            invoice: isRented ? (seed % 8 === 0 ? "debt" : "paid") : "none",
-            tenant: isRented ? `${ho[hash % ho.length]} ${dem[(hash * 3) % dem.length]} ${ten[(hash * 7) % ten.length]}` : undefined,
-            tenantId: isRented ? `KH${roomStr}-${buildingSeq}` : undefined,
-            amenities: ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']
-          });
-        }
-      }
+    const handleSync = () => {
+      setRooms(getAllRooms());
     };
-
-    buildRooms('b1', 1, 4, 15);
-    buildRooms('b2', 2, 3, 10);
-    return data;
-  };
-
-  const [rooms, setRooms] = useState(generateMockRooms());
+    window.addEventListener("dormio_rooms_updated", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("dormio_rooms_updated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
 
   if (!isMounted) {
     return null;
   }
 
-  // Filter rooms
+  const currentBuildingId = buildingFilter || activeBuilding?.id || 'b1';
+
+  // Filter rooms according to current landlord's active boarding house
   const filteredRooms = rooms.filter(room => {
     const matchSearch = room.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchBuilding = buildingFilter === "" || room.building === buildingFilter;
-    const matchStatus = statusFilter === "" || room.status === statusFilter;
+    const matchBuilding = room.building === currentBuildingId;
+    const matchStatus = statusFilter === "" ||
+      room.status === statusFilter ||
+      (statusFilter === "Trống" && (room.status === "vacant" || room.status === "Trống")) ||
+      (statusFilter === "Đang thuê" && (room.status === "occupied" || room.status === "Đang thuê")) ||
+      (statusFilter === "Bảo trì" && (room.status === "maintenance" || room.status === "Bảo trì")) ||
+      (statusFilter === "Đặt cọc" && (room.status === "reserved" || room.status === "Đặt cọc"));
     const matchContract = contractFilter === "" || room.contract === contractFilter;
     const matchInvoice = invoiceFilter === "" || room.invoice === invoiceFilter;
 
@@ -210,11 +187,12 @@ export default function RoomsPage() {
   // Sort floors descending
   const floors = Object.keys(groupedRooms).sort((a, b) => Number(b) - Number(a));
 
-  const totalRooms = rooms.length;
-  const occupiedCount = rooms.filter(r => r.status === 'occupied' || r.status === 'Đang thuê').length;
-  const vacantCount = rooms.filter(r => r.status === 'vacant' || r.status === 'Trống').length;
-  const maintenanceCount = rooms.filter(r => r.status === 'maintenance' || r.status === 'Bảo trì').length;
-  const reservedCount = rooms.filter(r => r.status === 'reserved' || r.status === 'Đặt cọc').length;
+  const currentBuildingRooms = rooms.filter(r => r.building === currentBuildingId);
+  const totalRooms = currentBuildingRooms.length;
+  const occupiedCount = currentBuildingRooms.filter(r => r.status === 'occupied' || r.status === 'Đang thuê').length;
+  const vacantCount = currentBuildingRooms.filter(r => r.status === 'vacant' || r.status === 'Trống').length;
+  const maintenanceCount = currentBuildingRooms.filter(r => r.status === 'maintenance' || r.status === 'Bảo trì').length;
+  const reservedCount = currentBuildingRooms.filter(r => r.status === 'reserved' || r.status === 'Đặt cọc').length;
   const occupancyRate = totalRooms > 0 ? ((occupiedCount / totalRooms) * 100).toFixed(1) : '0.0';
 
   return (
@@ -233,7 +211,8 @@ export default function RoomsPage() {
           </button>
           <button
             onClick={() => {
-              setFormBuilding("b1");
+              setSelectedRoomId(null);
+              setFormBuilding(currentBuildingId);
               setFormRoomNumber("");
               setFormRoomType("studio");
               setFormFloor("1");
@@ -432,61 +411,64 @@ export default function RoomsPage() {
                   setContractFilter("");
                   setInvoiceFilter("");
                 }}
-                className="mt-6 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded-lg transition-colors"
+                className="mt-6 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
               >
                 {t("clearFilter")}
               </button>
             </div>
-          ) : floors.map(floor => (
-            <div key={floor} className="flex flex-col md:flex-row gap-4 bg-white p-3 rounded-xl border border-zinc-200 shadow-sm">
-              <div className="flex-shrink-0 w-full md:w-28 bg-zinc-900 rounded-xl flex items-center justify-center px-4 py-3 text-white">
-                <span className="text-base font-black tracking-wider text-white flex items-center gap-1.5">
-                  <span className="text-xs font-black uppercase tracking-widest text-zinc-400">{t("floorLabel")}</span>
-                  <span className="text-xl font-black text-white">{floor}</span>
-                </span>
+          ) : (
+            floors.map(floor => (
+              <div key={floor} className="flex flex-col md:flex-row gap-4 bg-white p-3 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="flex-shrink-0 w-full md:w-28 bg-zinc-900 rounded-xl flex items-center justify-center px-4 py-3 text-white">
+                  <span className="text-base font-black tracking-wider text-white flex items-center gap-1.5">
+                    <span className="text-xs font-black uppercase tracking-widest text-zinc-400">{t("floorLabel")}</span>
+                    <span className="text-xl font-black text-white">{floor}</span>
+                  </span>
+                </div>
+
+                <div className="flex-1 flex flex-nowrap gap-3 items-center overflow-x-auto pb-2 scroll-smooth [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-zinc-50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-300">
+                  {(groupedRooms[floor] || []).map((room: any) => {
+                    const isOccupied = room.status === 'occupied' || room.status === 'Đang thuê';
+                    const isMaintenance = room.status === 'maintenance' || room.status === 'Bảo trì';
+                    const isReserved = room.status === 'reserved' || room.status === 'Đặt cọc';
+                    const isVacant = room.status === 'vacant' || room.status === 'Trống';
+
+                    const statusDisplay = isOccupied ? t("occupied") : isMaintenance ? t("maintenance") : isReserved ? t("reserved") : isVacant ? t("available") : room.status;
+
+                    return (
+                      <div
+                        key={`${room.building}-${room.id}`}
+                        onClick={() => router.push(`/landlord/rooms/${room.fullRoomId || room.id}`)}
+                        title={`${room.roomNumber || room.id} - ${statusDisplay}`}
+                        className={`group flex-shrink-0 relative flex flex-col items-center justify-center p-3 rounded-2xl border w-[76px] h-[76px] sm:w-[84px] sm:h-[84px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-lg ${isOccupied ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:border-[#2AC1BC]' :
+                          isMaintenance ? 'bg-[#FF6B35]/10 border-[#FF6B35]/30 hover:border-[#FF6B35]' :
+                            isReserved ? 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500' :
+                              isVacant ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500' :
+                                'bg-white border-zinc-200 hover:border-zinc-300'
+                          }`}
+                      >
+                        {isOccupied && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#2AC1BC] shadow-[0_0_6px_rgba(42,193,188,0.8)]"></div>}
+                        {isMaintenance && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#FF6B35] shadow-[0_0_6px_rgba(255,107,53,0.8)]"></div>}
+                        {isReserved && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(139,92,246,0.8)]"></div>}
+                        {isVacant && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]"></div>}
+
+                        <span className={`text-2xl font-black ${isOccupied ? 'text-[#2AC1BC]' :
+                          isMaintenance ? 'text-[#FF6B35]' :
+                            isReserved ? 'text-purple-600' :
+                              isVacant ? 'text-blue-600' :
+                                'text-zinc-700'
+                          }`}>
+                          {room.roomNumber || room.id}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-
-              <div className="flex-1 flex flex-nowrap gap-3 items-center overflow-x-auto pb-2 scroll-smooth [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-zinc-50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-300">
-                {(groupedRooms[floor] || []).map((room: any) => {
-                  const isOccupied = room.status === 'occupied' || room.status === 'Đang thuê';
-                  const isMaintenance = room.status === 'maintenance' || room.status === 'Bảo trì';
-                  const isReserved = room.status === 'reserved' || room.status === 'Đặt cọc';
-                  const isVacant = room.status === 'vacant' || room.status === 'Trống';
-
-                  const statusDisplay = isOccupied ? t("occupied") : isMaintenance ? t("maintenance") : isReserved ? t("reserved") : isVacant ? t("available") : room.status;
-
-                  return (
-                    <div
-                      key={`${room.building}-${room.id}`}
-                      onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                      title={`${room.id} - ${statusDisplay}`}
-                      className={`group flex-shrink-0 relative flex flex-col items-center justify-center p-3 rounded-2xl border w-[76px] h-[76px] sm:w-[84px] sm:h-[84px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-lg ${isOccupied ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:border-[#2AC1BC]' :
-                        isMaintenance ? 'bg-[#FF6B35]/10 border-[#FF6B35]/30 hover:border-[#FF6B35]' :
-                          isReserved ? 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500' :
-                            isVacant ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500' :
-                              'bg-white border-zinc-200 hover:border-zinc-300'
-                        }`}
-                    >
-                      {isOccupied && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#2AC1BC] shadow-[0_0_6px_rgba(42,193,188,0.8)]"></div>}
-                      {isMaintenance && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#FF6B35] shadow-[0_0_6px_rgba(255,107,53,0.8)]"></div>}
-                      {isReserved && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(139,92,246,0.8)]"></div>}
-                      {isVacant && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]"></div>}
-
-                      <span className={`text-2xl font-black ${isOccupied ? 'text-[#2AC1BC]' :
-                        isMaintenance ? 'text-[#FF6B35]' :
-                          isReserved ? 'text-purple-600' :
-                            isVacant ? 'text-blue-600' :
-                              'text-zinc-700'
-                        }`}>{room.id}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
-
       {/* Add Room Modal */}
       {isModalOpen && (
         <div
@@ -743,54 +725,64 @@ export default function RoomsPage() {
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-6 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
-              <button
-                onClick={handleCloseModal}
-                className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
-              >{t("cancelBtn")}</button>
-              <button
-                onClick={() => {
-                  if (selectedRoomId) {
-                    setRooms(prev => prev.map(r => {
-                      if (`${r.building}-${r.id}` === selectedRoomId) {
-                        return {
-                          ...r,
-                          id: formRoomNumber || r.id,
-                          building: formBuilding || r.building,
-                          floor: formFloor || r.floor,
-                          area: formArea || r.area,
-                          price: formPrice || r.price,
-                          roomType: formRoomType,
-                          notes: formNotes,
-                          amenities: [...selectedAmenities]
-                        };
-                      }
-                      return r;
-                    }));
-                  } else {
-                    const newId = formRoomNumber || `10${rooms.length + 1}`;
-                    const newRoom = {
-                      id: newId,
-                      floor: formFloor || "1",
-                      status: "Trống",
-                      building: formBuilding || "dormio",
-                      contract: "none",
-                      invoice: "none",
-                      area: formArea || "25",
-                      price: formPrice || "3.000.000",
-                      roomType: formRoomType,
-                      notes: formNotes,
-                      amenities: [...selectedAmenities]
-                    };
-                    setRooms(prev => [newRoom, ...prev]);
-                  }
-                  setIsModalOpen(false);
-                  setIsDirty(false);
-                }}
-                className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-accent rounded-xl hover:bg-accent-hover shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
-              >{t("saveRoomBtn")}</button>
+              <div className="p-6 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-colors cursor-pointer"
+                >{t("cancelBtn")}</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedRoomId) {
+                      const updated = rooms.map(r => {
+                        if (`${r.building}-${r.id}` === selectedRoomId || `${r.building}-${r.roomNumber}` === selectedRoomId) {
+                          return {
+                            ...r,
+                            roomNumber: formRoomNumber || r.roomNumber,
+                            building: formBuilding || r.building,
+                            floor: formFloor || r.floor,
+                            area: formArea || r.area,
+                            price: formPrice || r.price,
+                            notes: formNotes,
+                            amenities: [...selectedAmenities]
+                          };
+                        }
+                        return r;
+                      });
+                      setRooms(updated);
+                      saveAllRooms(updated);
+                    } else {
+                      const targetBuilding = formBuilding || currentBuildingId || "b1";
+                      const bSeq = targetBuilding === 'b2' ? 2 : targetBuilding === 'b3' ? 3 : 1;
+                      const newRoomNum = formRoomNumber || `${formFloor || 1}01`;
+                      const fullRoomId = `${bSeq}${newRoomNum}`;
+                      const newRoom: Room = {
+                        id: fullRoomId,
+                        fullRoomId: fullRoomId,
+                        roomNumber: newRoomNum,
+                        building: targetBuilding,
+                        buildingSeq: bSeq,
+                        floor: formFloor || "1",
+                        status: "vacant",
+                        contract: "none",
+                        invoice: "none",
+                        area: formArea || "25",
+                        price: formPrice || "3.000.000 ₫",
+                        notes: formNotes,
+                        amenities: [...selectedAmenities]
+                      };
+                      const updated = [newRoom, ...rooms];
+                      setRooms(updated);
+                      saveAllRooms(updated);
+                    }
+                    setIsModalOpen(false);
+                    setIsDirty(false);
+                  }}
+                  className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-accent rounded-xl hover:bg-accent-hover shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+                >{t("saveRoomBtn")}</button>
+              </div>
             </div>
           </div>
         </div>

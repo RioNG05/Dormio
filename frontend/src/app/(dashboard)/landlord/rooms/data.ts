@@ -9,12 +9,13 @@ export interface RoomService {
 }
 
 export interface Room {
-  id: string;          // Formatted ID: buildingSeq + roomStr (e.g. 1101, 1205, 2101)
-  roomNumber: string;  // Raw room number (e.g. 101, 205)
-  building: string;    // Building ID ('b1', 'b2', 'dormio', 'vinahouse')
-  buildingSeq: number; // Building Sequence number (1, 2...)
+  id: string;          // Formatted ID: buildingSeq + roomStr (e.g. 1101, 1205, 2101, 3101)
+  fullRoomId: string;  // Unique identifier for routing (e.g. 1101, 2101, 3101)
+  roomNumber: string;  // Raw room number displayed on card (e.g. 101, 205)
+  building: string;    // Building ID ('b1', 'b2', 'b3')
+  buildingSeq: number; // Building Sequence number (1, 2, 3...)
   floor: string;
-  status: "Đang thuê" | "Trống" | "Bảo trì" | "Đặt cọc" | string;
+  status: "occupied" | "vacant" | "maintenance" | "reserved" | "Đang thuê" | "Trống" | "Bảo trì" | "Đặt cọc" | string;
   contract: "active" | "expired" | "none" | string;
   invoice: "paid" | "debt" | "none" | string;
   price?: string;
@@ -46,27 +47,26 @@ export const generateMockRooms = (): Room[] => {
     for (let f = 1; f <= floors; f++) {
       for (let r = 1; r <= roomsPerFloor; r++) {
         const roomStr = `${f}${r.toString().padStart(2, '0')}`;
-        const seed = f * 100 + r;
-        const isTrang = seed % 5 === 0;
-        const isBaoTri = seed % 17 === 0;
+        const seed = parseInt(roomStr) + buildingSeq * 17;
+        const isTrang = (seed % 5 === 0) || (seed % 7 === 0);
+        const isBaoTri = (seed % 13 === 0);
 
-        let status = "Đang thuê";
-        if (isTrang) status = "Trống";
-        else if (isBaoTri) status = "Bảo trì";
-        else if (seed % 11 === 0) status = "Đặt cọc";
+        let status = "occupied";
+        if (isTrang) status = "vacant";
+        else if (isBaoTri) status = "maintenance";
+        else if (seed % 11 === 0) status = "reserved";
 
         const hash = parseInt(roomStr) * buildingSeq * 137 + 19;
-        const isRented = status === 'Đang thuê' || status === 'Đặt cọc';
+        const isRented = status === 'occupied' || status === 'reserved';
         const tenantCccd = isRented ? `00109${(1000000 + hash * 5678).toString()}` : undefined;
-
-        // Formula: buildingSeq + roomStr (e.g., 1101, 1205, 2101)
         const fullRoomId = `${buildingSeq}${roomStr}`;
 
         data.push({
-          id: fullRoomId,
+          id: roomStr,
+          fullRoomId: fullRoomId,
           roomNumber: roomStr,
           building: buildingId,
-          buildingSeq,
+          buildingSeq: buildingSeq,
           floor: f.toString(),
           status: status,
           contract: isRented ? (seed % 7 === 0 ? "expired" : "active") : "none",
@@ -74,7 +74,7 @@ export const generateMockRooms = (): Room[] => {
           price: "3.000.000 ₫",
           area: "25",
           tenant: isRented ? `${ho[hash % ho.length]} ${dem[(hash * 3) % dem.length]} ${ten[(hash * 7) % ten.length]}` : undefined,
-          tenantPhone: isRented ? `09${(10000000 + hash * 1234).toString()}` : undefined,
+          tenantPhone: isRented ? `09${(10000000 + hash * 1234).toString().padStart(8, '0')}` : undefined,
           tenantCccd: tenantCccd,
           tenantId: tenantCccd,
           amenities: ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng'],
@@ -86,41 +86,94 @@ export const generateMockRooms = (): Room[] => {
 
   buildRooms('b1', 1, 4, 15);
   buildRooms('b2', 2, 3, 10);
+  buildRooms('b3', 3, 5, 8);
   return data;
 };
 
+export const cleanRoomNumber = (val?: string): string => {
+  if (!val) return "101";
+  const trimmed = val.trim();
+  // If it's a 4-digit number like 1408, 1101, 2101, 3408, strip the first digit (building sequence)
+  if (trimmed.length === 4 && /^[1-9]\d{3}$/.test(trimmed)) {
+    return trimmed.slice(1);
+  }
+  return trimmed;
+};
+
+const STORAGE_KEY = "dormio_rooms_store_v5";
+
+export const getAllRooms = (): Room[] => {
+  if (typeof window === "undefined") {
+    return generateMockRooms();
+  }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed: Room[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(r => {
+          const roomNum = cleanRoomNumber(r.roomNumber || r.id);
+          return {
+            ...r,
+            id: roomNum,
+            roomNumber: roomNum,
+            fullRoomId: r.fullRoomId || `${r.buildingSeq || 1}${roomNum}`
+          };
+        });
+      }
+    }
+  } catch (e) {
+    console.error("Error loading rooms from storage", e);
+  }
+  const initial = generateMockRooms();
+  saveAllRooms(initial);
+  return initial;
+};
+
+export const saveAllRooms = (rooms: Room[]) => {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms));
+      window.dispatchEvent(new Event("dormio_rooms_updated"));
+    } catch (e) {
+      console.error("Error saving rooms to storage", e);
+    }
+  }
+};
+
 export const getRoomById = (id: string): Room | null => {
-  const rooms = generateMockRooms();
+  const rooms = getAllRooms();
   const rawId = decodeURIComponent(id).trim();
 
-  // 1. Direct match by full id (e.g. 1101)
-  let found = rooms.find(r => r.id === rawId);
+  // 1. Direct match by fullRoomId or id (e.g. 1101, 2101, 3101) or roomNumber
+  let found = rooms.find(r => r.fullRoomId === rawId || r.id === rawId || r.roomNumber === rawId);
 
-  // 2. Legacy fallback match by building-room string (e.g. b1-101 or dormio-101 or 101)
+  // 2. Fallback match by compound or building-room string (e.g. b1-101 or 101)
   if (!found) {
     if (rawId.includes('-')) {
       const parts = rawId.split('-');
       const roomNum = parts[1];
-      const seq = parts[0] === 'b2' || parts[0] === 'vinahouse' ? 2 : 1;
-      found = rooms.find(r => r.id === `${seq}${roomNum}`);
+      const seq = parts[0] === 'b2' ? 2 : parts[0] === 'b3' ? 3 : 1;
+      found = rooms.find(r => r.fullRoomId === `${seq}${roomNum}` || (r.roomNumber === roomNum && r.buildingSeq === seq));
     } else if (rawId.length === 3) {
       // If only raw 3-digit room number passed, default to building 1
-      found = rooms.find(r => r.id === `1${rawId}`);
+      found = rooms.find(r => r.fullRoomId === `1${rawId}` || r.roomNumber === rawId);
     }
   }
 
   // 3. Fallback generator if id is completely dynamic
   if (!found) {
-    const bSeq = rawId.startsWith('2') ? 2 : 1;
-    const roomStr = rawId.slice(1) || "101";
+    const bSeq = rawId.startsWith('2') ? 2 : rawId.startsWith('3') ? 3 : 1;
+    const roomStr = rawId.length > 3 ? rawId.slice(1) : rawId;
 
     found = {
-      id: rawId,
+      id: roomStr,
+      fullRoomId: rawId,
       roomNumber: roomStr,
-      building: bSeq === 1 ? 'b1' : 'b2',
+      building: bSeq === 1 ? 'b1' : bSeq === 2 ? 'b2' : 'b3',
       buildingSeq: bSeq,
       floor: roomStr.charAt(0) || "1",
-      status: "Đang thuê",
+      status: "occupied",
       contract: "active",
       invoice: "paid",
       price: "3.000.000 ₫",
@@ -135,4 +188,17 @@ export const getRoomById = (id: string): Room | null => {
   }
 
   return found || null;
+};
+
+export const updateRoom = (id: string, updates: Partial<Room>): Room | null => {
+  const rooms = getAllRooms();
+  const rawId = decodeURIComponent(id).trim();
+  const index = rooms.findIndex(r => r.fullRoomId === rawId || r.id === rawId || r.roomNumber === rawId);
+  if (index !== -1) {
+    const updated = { ...rooms[index], ...updates };
+    rooms[index] = updated;
+    saveAllRooms(rooms);
+    return updated;
+  }
+  return null;
 };

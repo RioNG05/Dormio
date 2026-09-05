@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "@/context/LanguageContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 interface TaskItem {
   id: string;
@@ -47,6 +47,7 @@ interface NotificationItem {
 
 export default function RemindersPage() {
   const t = useTranslations("reminders");
+  const { locale } = useLanguage();
   const { activeBuilding } = useAuth();
   const [activeTab, setActiveTab] = useState<"reminders" | "notifications">("reminders");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -1664,9 +1665,13 @@ export default function RemindersPage() {
 
             {/* Header Title & Subtitle */}
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-zinc-900 tracking-tight">Xác nhận đóng form</h3>
+              <h3 className="text-xl font-black text-zinc-900 tracking-tight">
+                {locale === "en" ? "Confirm Form Close" : "Xác nhận đóng form"}
+              </h3>
               <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-                Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?
+                {locale === "en"
+                  ? "You have unsaved changes. Are you sure you want to discard changes and close?"
+                  : "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?"}
               </p>
             </div>
 
@@ -1677,7 +1682,7 @@ export default function RemindersPage() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
               >
-                Tiếp tục chỉnh sửa
+                {locale === "en" ? "Continue Editing" : "Tiếp tục chỉnh sửa"}
               </button>
               <button
                 type="button"
@@ -1688,7 +1693,7 @@ export default function RemindersPage() {
                 }}
                 className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
               >
-                Hủy thay đổi & Đóng
+                {locale === "en" ? "Discard & Close" : "Hủy thay đổi & Đóng"}
               </button>
             </div>
           </div>

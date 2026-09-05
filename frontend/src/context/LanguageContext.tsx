@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import viMessages from "@/messages/vi";
 import enMessages from "@/messages/en";
 import { getStoredLocale, setStoredLocale as persistStoredLocale, type SupportedLocale } from "@/utils";
@@ -86,5 +86,5 @@ export function useLanguage() {
 
 export function useTranslations(namespace?: string) {
   const { t } = useLanguage();
-  return t(namespace);
+  return useMemo(() => t(namespace), [t, namespace]);
 }

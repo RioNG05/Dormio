@@ -1,3 +1,5 @@
+"use client";
+
 import { useTranslations } from "@/context/LanguageContext";
 import React from "react";
 import { Clock, Download } from "lucide-react";

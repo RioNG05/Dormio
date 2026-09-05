@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -207,6 +207,7 @@ export default function ExpensesPage() {
   // Global Rule #10: Form Dirty State & Confirmation Modal
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [confirmCloseTarget, setConfirmCloseTarget] = useState<"create" | "edit" | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Rule #9 Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -259,9 +260,10 @@ export default function ExpensesPage() {
   // Create Expense Submission
   const handleCreateExpense = () => {
     if (!expenseForm.name.trim() || !expenseForm.amount || Number(expenseForm.amount) <= 0) {
-      alert("Vui lòng điền đầy đủ Tên khoản chi và Số tiền hợp lệ.");
+      setFormError("Vui lòng điền đầy đủ Tên khoản chi và Số tiền hợp lệ.");
       return;
     }
+    setFormError(null);
 
     const newCode = `CP-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(expensesList.length + 1).padStart(2, "0")}`;
     const newExpense: ExpenseItem = {
@@ -1038,6 +1040,11 @@ export default function ExpensesPage() {
 
             {/* Modal Body Form */}
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+              {formError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-bold animate-in fade-in">
+                  {formError}
+                </div>
+              )}
               <div>
                 <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Tên Khoản Chi *</label>
                 <input

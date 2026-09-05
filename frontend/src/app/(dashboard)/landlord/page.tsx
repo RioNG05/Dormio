@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -11,11 +11,12 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { formatVND } from "@/utils";
-import { useTranslations } from "@/context/LanguageContext";
+import { formatCurrency, formatVND } from "@/utils";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function LandlordDashboardPage() {
   const t = useTranslations("landlordDashboard");
+  const { locale } = useLanguage();
   const router = useRouter();
   const { user, upgradeToLandlord, activeBuilding } = useAuth();
 
@@ -186,26 +187,90 @@ export default function LandlordDashboardPage() {
 
   // EXPANDED RICH MOCK DATA FOR DEPOSIT NOTIFICATIONS
   const depositNotifications = [
-    { id: "d1", room: "P.203", tenant: "Vũ Minh Anh", amount: 1000000, date: "Hôm nay 10:15", type: "Cọc Escrow Dormio", status: "Chờ duyệt HĐ" },
-    { id: "d2", room: "P.104", tenant: "Lê Văn C", amount: 2000000, date: "Hôm qua 14:30", type: "Cọc giữ phòng 15 ngày", status: "Đã xác nhận" },
-    { id: "d3", room: "P.305", tenant: "Phạm Thị Hương", amount: 1500000, date: "24/08/2026", type: "Cọc qua VietQR", status: "Chờ chuyển đến" },
-    { id: "d4", room: "P.201", tenant: "Đặng Hoàng Nam", amount: 2500000, date: "22/08/2026", type: "Cọc 1 tháng tiền phòng", status: "Hoàn tất" },
+    {
+      id: "d1",
+      room: locale === "en" ? "Room 203" : "P.203",
+      tenant: "Vũ Minh Anh",
+      amount: 1000000,
+      date: locale === "en" ? "Today 10:15" : "Hôm nay 10:15",
+      type: locale === "en" ? "Dormio Escrow Deposit" : "Cọc Escrow Dormio",
+      status: locale === "en" ? "Pending Approval" : "Chờ duyệt HĐ",
+    },
+    {
+      id: "d2",
+      room: locale === "en" ? "Room 104" : "P.104",
+      tenant: "Lê Văn C",
+      amount: 2000000,
+      date: locale === "en" ? "Yesterday 14:30" : "Hôm qua 14:30",
+      type: locale === "en" ? "15-day Hold Deposit" : "Cọc giữ phòng 15 ngày",
+      status: locale === "en" ? "Confirmed" : "Đã xác nhận",
+    },
+    {
+      id: "d3",
+      room: locale === "en" ? "Room 305" : "P.305",
+      tenant: "Phạm Thị Hương",
+      amount: 1500000,
+      date: "24/08/2026",
+      type: locale === "en" ? "VietQR Deposit" : "Cọc qua VietQR",
+      status: locale === "en" ? "Awaiting Move-in" : "Chờ chuyển đến",
+    },
+    {
+      id: "d4",
+      room: locale === "en" ? "Room 201" : "P.201",
+      tenant: "Đặng Hoàng Nam",
+      amount: 2500000,
+      date: "22/08/2026",
+      type: locale === "en" ? "1-Month Lease Deposit" : "Cọc 1 tháng tiền phòng",
+      status: locale === "en" ? "Completed" : "Hoàn tất",
+    },
   ];
 
   // EXPANDED RICH MOCK DATA FOR MAINTENANCE REQUESTS
   const maintenanceRequests = [
-    { id: "m1", room: "P.302", issue: "Hỏng điều hòa tầng 3 (Kêu to, không mát)", priority: "high", reporter: "Đặng Hoàng Bảo", date: "Hôm nay 09:30", status: "Chưa xử lý" },
-    { id: "m2", room: "P.101", issue: "Rò rỉ vòi nước phòng tắm", priority: "medium", reporter: "Nguyễn Văn A", date: "Hôm qua 16:45", status: "Đang xử lý" },
-    { id: "m3", room: "P.205", issue: "Nghẽn đường ống thoát nước ban công", priority: "high", reporter: "Trần Thị Lan", date: "25/08/2026", status: "Chưa xử lý" },
-    { id: "m4", room: "P.402", issue: "Hỏng công tắc đèn phòng khách", priority: "low", reporter: "Võ Hoàng Khoa", date: "24/08/2026", status: "Đã xong" },
+    {
+      id: "m1",
+      room: locale === "en" ? "Room 302" : "P.302",
+      issue: locale === "en" ? "Floor 3 AC broken (Loud noise, not cold)" : "Hỏng điều hòa tầng 3 (Kêu to, không mát)",
+      priority: "high",
+      reporter: "Đặng Hoàng Bảo",
+      date: locale === "en" ? "Today 09:30" : "Hôm nay 09:30",
+      status: locale === "en" ? "Pending" : "Chưa xử lý",
+    },
+    {
+      id: "m2",
+      room: locale === "en" ? "Room 101" : "P.101",
+      issue: locale === "en" ? "Bathroom faucet leaking" : "Rò rỉ vòi nước phòng tắm",
+      priority: "medium",
+      reporter: "Nguyễn Văn A",
+      date: locale === "en" ? "Yesterday 16:45" : "Hôm qua 16:45",
+      status: locale === "en" ? "In Progress" : "Đang xử lý",
+    },
+    {
+      id: "m3",
+      room: locale === "en" ? "Room 205" : "P.205",
+      issue: locale === "en" ? "Balcony drainage clogged" : "Nghẽn đường ống thoát nước ban công",
+      priority: "high",
+      reporter: "Trần Thị Lan",
+      date: "25/08/2026",
+      status: locale === "en" ? "Pending" : "Chưa xử lý",
+    },
+    {
+      id: "m4",
+      room: locale === "en" ? "Room 402" : "P.402",
+      issue: locale === "en" ? "Living room light switch broken" : "Hỏng công tắc đèn phòng khách",
+      priority: "low",
+      reporter: "Võ Hoàng Khoa",
+      date: "24/08/2026",
+      status: locale === "en" ? "Done" : "Đã xong",
+    },
   ];
 
   // EXPANDED RICH MOCK DATA FOR CONTRACT EXTENSIONS
   const expiringContracts = [
-    { id: "c1", room: "P.202", tenant: "Phạm Quốc Huy", phone: "0933.222.111", daysLeft: 18, endDate: "15/09/2026" },
-    { id: "c2", room: "P.105", tenant: "Trịnh Thị Mai", phone: "0988.777.666", daysLeft: 7, endDate: "04/09/2026" },
-    { id: "c3", room: "P.301", tenant: "Hoàng Văn Đức", phone: "0912.345.678", daysLeft: 12, endDate: "09/09/2026" },
-    { id: "c4", room: "P.404", tenant: "Bùi Quang Minh", phone: "0909.888.999", daysLeft: 25, endDate: "22/09/2026" },
+    { id: "c1", room: locale === "en" ? "Room 202" : "P.202", tenant: "Phạm Quốc Huy", phone: "0933.222.111", daysLeft: 18, endDate: "15/09/2026" },
+    { id: "c2", room: locale === "en" ? "Room 105" : "P.105", tenant: "Trịnh Thị Mai", phone: "0988.777.666", daysLeft: 7, endDate: "04/09/2026" },
+    { id: "c3", room: locale === "en" ? "Room 301" : "P.301", tenant: "Hoàng Văn Đức", phone: "0912.345.678", daysLeft: 12, endDate: "09/09/2026" },
+    { id: "c4", room: locale === "en" ? "Room 404" : "P.404", tenant: "Bùi Quang Minh", phone: "0909.888.999", daysLeft: 25, endDate: "22/09/2026" },
   ];
 
   return (
@@ -235,7 +300,7 @@ export default function LandlordDashboardPage() {
         <div className="px-3.5 py-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
             <span className="text-[10px] font-black text-rose-600 uppercase tracking-wider block">{t("statTotalRooms")}</span>
-            <div className="text-lg font-black text-rose-600 leading-tight mt-0.5">{activeBuilding.totalRooms} Phòng</div>
+            <div className="text-lg font-black text-rose-600 leading-tight mt-0.5">{activeBuilding.totalRooms} {t("roomUnitCapital")}</div>
             <span className="text-[10px] font-bold text-rose-500/80 block">{t("statOccupancy", { rate: activeBuilding.occupancyRate })}</span>
           </div>
           <Building className="w-5 h-5 text-rose-500 shrink-0 opacity-80" />
@@ -245,7 +310,7 @@ export default function LandlordDashboardPage() {
         <div className="px-3.5 py-3 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
             <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">{t("statOccupied")}</span>
-            <div className="text-lg font-black text-[#2AC1BC] leading-tight mt-0.5">{activeBuilding.occupiedRooms} Phòng</div>
+            <div className="text-lg font-black text-[#2AC1BC] leading-tight mt-0.5">{activeBuilding.occupiedRooms} {t("roomUnitCapital")}</div>
             <span className="text-[10px] font-bold text-[#2AC1BC]/80 block">{t("statActiveContract")}</span>
           </div>
           <Users className="w-5 h-5 text-[#2AC1BC] shrink-0 opacity-80" />
@@ -255,7 +320,7 @@ export default function LandlordDashboardPage() {
         <div className="px-3.5 py-3 bg-blue-500/10 border border-blue-500/30 rounded-3xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
             <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block">{t("statVacant")}</span>
-            <div className="text-lg font-black text-blue-600 leading-tight mt-0.5">{activeBuilding.vacantRooms} Phòng</div>
+            <div className="text-lg font-black text-blue-600 leading-tight mt-0.5">{activeBuilding.vacantRooms} {t("roomUnitCapital")}</div>
             <span className="text-[10px] font-bold text-blue-500/80 block">{t("statReady")}</span>
           </div>
           <Home className="w-5 h-5 text-blue-500 shrink-0 opacity-80" />
@@ -265,7 +330,7 @@ export default function LandlordDashboardPage() {
         <div className="px-3.5 py-3 bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
           <div>
             <span className="text-[10px] font-black text-[#FF6B35] uppercase tracking-wider block">{t("statMaintenance")}</span>
-            <div className="text-lg font-black text-[#FF6B35] leading-tight mt-0.5">{activeBuilding.expiringRooms} Phòng</div>
+            <div className="text-lg font-black text-[#FF6B35] leading-tight mt-0.5">{activeBuilding.expiringRooms} {t("roomUnitCapital")}</div>
             <span className="text-[10px] font-bold text-[#FF6B35]/80 block">{t("statMaintDetail")}</span>
           </div>
           <Wrench className="w-5 h-5 text-[#FF6B35] shrink-0 opacity-80" />
@@ -275,7 +340,7 @@ export default function LandlordDashboardPage() {
         <div className="px-3.5 py-3 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs col-span-2 sm:col-span-1">
           <div>
             <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">{t("statDeposit")}</span>
-            <div className="text-lg font-black text-purple-600 leading-tight mt-0.5">{activeBuilding.depositRooms} Phòng</div>
+            <div className="text-lg font-black text-purple-600 leading-tight mt-0.5">{activeBuilding.depositRooms} {t("roomUnitCapital")}</div>
             <span className="text-[10px] font-bold text-purple-500/80 block">{t("statEscrow")}</span>
           </div>
           <Shield className="w-5 h-5 text-purple-500 shrink-0 opacity-80" />
@@ -320,7 +385,7 @@ export default function LandlordDashboardPage() {
             <div className="flex items-center gap-2.5">
               <div className="text-left sm:text-right">
                 <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">{t("currentMonthLabel")}</span>
-                <span className="text-base font-black text-[#2AC1BC] tracking-tight">45.000.000 ₫</span>
+                <span className="text-base font-black text-[#2AC1BC] tracking-tight">{formatCurrency(45000000, locale)}</span>
               </div>
               <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[11px] font-black flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" /> +12.5%
@@ -352,7 +417,7 @@ export default function LandlordDashboardPage() {
                     }}
                   >
                     <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">{t("tooltipMonth", { month: activeChartData[hoveredIndex].month })}</div>
-                    <div className="text-xs font-black text-[#2AC1BC]">{activeChartData[hoveredIndex].val}.000.000 ₫</div>
+                    <div className="text-xs font-black text-[#2AC1BC]">{formatCurrency(activeChartData[hoveredIndex].val * 1000000, locale)}</div>
                     <div className="text-[8px] font-bold text-emerald-400">{t("tooltipCleared")}</div>
                   </div>
                 )}
@@ -433,13 +498,13 @@ export default function LandlordDashboardPage() {
             <div className="space-y-2.5 mt-3">
               <div className="p-3 bg-[#2AC1BC]/5 rounded-xl border border-[#2AC1BC]/15 space-y-0.5">
                 <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">{t("augustRevenue")}</span>
-                <div className="text-lg font-black text-[#2AC1BC]">45.000.000 ₫</div>
+                <div className="text-lg font-black text-[#2AC1BC]">{formatCurrency(45000000, locale)}</div>
                 <span className="text-[10px] font-bold text-emerald-600">{t("allInvoicesPaid")}</span>
               </div>
 
               <div className="p-3 bg-rose-500/5 rounded-xl border border-rose-500/15 space-y-0.5">
                 <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">{t("debtLabel")}</span>
-                <div className="text-lg font-black text-rose-500">0 ₫</div>
+                <div className="text-lg font-black text-rose-500">{formatCurrency(0, locale)}</div>
                 <span className="text-[10px] font-bold text-zinc-500">{t("noOverdue")}</span>
               </div>
             </div>
@@ -479,7 +544,7 @@ export default function LandlordDashboardPage() {
                   <div className="flex items-center gap-1.5">
                     <span className="font-black text-zinc-900">{item.room} — {item.tenant}</span>
                   </div>
-                  <span className="text-[10px] text-purple-600 font-bold block">{item.type}: {formatVND(item.amount)}</span>
+                  <span className="text-[10px] text-purple-600 font-bold block">{item.type}: {formatCurrency(item.amount, locale)}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-purple-600 group-hover:translate-x-1 transition-transform shrink-0" />
               </div>

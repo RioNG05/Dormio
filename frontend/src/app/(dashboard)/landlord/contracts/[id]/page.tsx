@@ -286,7 +286,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </button>
 
           <button
-            onClick={() => alert("Xuất Hợp đồng bản PDF thành công!")}
+            onClick={() => showToast("Xuất Hợp đồng bản PDF thành công!", "success")}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
           >
             <Printer className="w-3.5 h-3.5" /> In PDF

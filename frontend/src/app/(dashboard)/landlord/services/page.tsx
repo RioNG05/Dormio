@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -10,7 +10,7 @@ import {
   Layers, ArrowUpRight, Clock, MapPin
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "@/context/LanguageContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export interface TierRate {
   name: string;
@@ -159,6 +159,7 @@ const initialServices: ServiceItem[] = [
 
 export default function ServicesPage() {
   const t = useTranslations("services");
+  const { locale } = useLanguage();
   const { activeBuilding } = useAuth();
 
   const [services, setServices] = useState<ServiceItem[]>(initialServices);
@@ -270,10 +271,10 @@ export default function ServicesPage() {
     if (isDirty) {
       setConfirmModal({
         isOpen: true,
-        title: "Xác nhận đóng form",
-        message: "Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng và hủy các thông tin đã nhập?",
-        confirmText: "Hủy thay đổi & Đóng",
-        cancelText: "Tiếp tục sửa",
+        title: locale === "en" ? "Confirm Form Close" : "Xác nhận đóng form",
+        message: locale === "en" ? "You have unsaved changes. Are you sure you want to discard changes and close?" : "Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng và hủy các thông tin đã nhập?",
+        confirmText: locale === "en" ? "Discard & Close" : "Hủy thay đổi & Đóng",
+        cancelText: locale === "en" ? "Continue Editing" : "Tiếp tục sửa",
         onConfirm: () => {
           setIsModalOpen(false);
           setConfirmModal(prev => ({ ...prev, isOpen: false }));

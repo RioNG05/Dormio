@@ -1,3 +1,5 @@
+"use client";
+
 import { useTranslations } from "@/context/LanguageContext";
 import React from "react";
 import { Plus, Search, Filter, CreditCard, ArrowDownLeft, MoreHorizontal } from "lucide-react";
