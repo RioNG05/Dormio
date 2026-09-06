@@ -60,12 +60,27 @@ export interface BoardingHouse {
   roomTypes: BoardingHouseRoomType[];
 }
 
+export interface BoardingHouseListItem extends BoardingHouse {
+  totalRooms: number;
+}
+
 export async function createBoardingHouse(
   payload: CreateBoardingHousePayload,
 ): Promise<BoardingHouse> {
   const response = await api.post<{ success: boolean; data: BoardingHouse }>(
     '/v1/boarding-houses',
     payload,
+  );
+  return response.data;
+}
+
+/**
+ * Fetch all boarding houses owned by the authenticated landlord.
+ * Used to populate the building selector in AuthContext with real UUIDs.
+ */
+export async function getMyBoardingHouses(): Promise<BoardingHouseListItem[]> {
+  const response = await api.get<{ success: boolean; data: BoardingHouseListItem[] }>(
+    '/v1/boarding-houses',
   );
   return response.data;
 }

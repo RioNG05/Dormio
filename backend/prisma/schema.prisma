@@ -412,6 +412,8 @@ model Room {
   invoices      Invoice[]
   grievences    Grievance[]
 
+  @@unique([boardingHouseId, roomNumber])
+  @@index([boardingHouseId])
   @@map("rooms")
 }
 

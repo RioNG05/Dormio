@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { getMyBoardingHouses } from "@/services/boarding-house.service";
 
 export interface UserProfile {
   id?: string;
@@ -136,6 +137,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ]);
     }
   }, [user?.houseName, user?.houseAddress]);
+  /**
+   * Fetch real boarding houses from the backend and sync the buildings state.
+   * Falls back silently — mock data remains if the landlord has no properties yet.
+   */
+  const loadBuildingsFromApi = useCallback(async () => {
+    try {
+      const houses = await getMyBoardingHouses();
+      if (houses.length > 0) {
+        const mapped = houses.map((h) => ({
+          id: h.id,
+          name: h.name,
+          address: [h.houseNumber, h.street, h.ward, h.district, h.province]
+            .filter(Boolean)
+            .join(", "),
+          totalRooms: h.totalRooms,
+          occupiedRooms: 0,
+          vacantRooms: 0,
+          expiringRooms: 0,
+          depositRooms: 0,
+          occupancyRate: "0%",
+        }));
+        setBuildings(mapped);
+        // Only update activeBuildingId if the currently stored one is a mock (non-UUID)
+        setActiveBuildingId((prev) => {
+          const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!UUID_RE.test(prev) && mapped.length > 0) {
+            const saved = localStorage.getItem("dormio_active_building_id");
+            const validSaved = saved && UUID_RE.test(saved) && mapped.some((b) => b.id === saved);
+            const nextId = validSaved ? saved! : mapped[0].id;
+            localStorage.setItem("dormio_active_building_id", nextId);
+            return nextId;
+          }
+          return prev;
+        });
+      }
+    } catch {
+      // Silently ignore – mock buildings remain as fallback
+    }
+  }, []);
 
   // Read initial state from localStorage if available
   useEffect(() => {
@@ -151,6 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedId = localStorage.getItem("dormio_user_id");
 
     if (savedState === "true" && (savedToken || savedRole)) {
+      const resolvedRole = (savedRole as UserProfile["role"]) || "tenant";
       setIsLoggedIn(true);
       setUser({
         ...defaultUser,
@@ -158,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: savedName || defaultUser.name,
         email: savedEmail || defaultUser.email,
         phone: savedPhone || defaultUser.phone,
-        role: savedRole || "tenant",
+        role: resolvedRole,
         houseName: savedHouseName || undefined,
         houseAddress: savedHouseAddress || undefined,
       });
@@ -166,8 +207,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (savedBuildingId) {
         setActiveBuildingId(savedBuildingId);
       }
+
+      // If user is a landlord with a token, load real buildings from API
+      if (savedToken && resolvedRole === "landlord") {
+        loadBuildingsFromApi();
+      }
     }
-  }, []);
+  }, [loadBuildingsFromApi]);
 
   const selectBuilding = (id: string) => {
     setActiveBuildingId(id);
@@ -203,6 +249,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (userData.name) localStorage.setItem("dormio_user_name", userData.name);
     if (userData.email) localStorage.setItem("dormio_user_email", userData.email);
     if (userData.phone) localStorage.setItem("dormio_user_phone", userData.phone);
+
+    // Immediately load real buildings so all dashboard pages use real UUIDs
+    if (resolvedRole === "landlord") {
+      loadBuildingsFromApi();
+    }
   };
 
   const upgradeToLandlord = (houseDetails: { houseName: string; houseAddress: string }) => {

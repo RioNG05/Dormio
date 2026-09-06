@@ -1,16 +1,19 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, UseGuards } from '@nestjs/common';
 import {
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ApiAuth } from '../../common/swagger';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { BoardingHousesService } from './boarding-houses.service';
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
 import {
+  BoardingHouseListResponseDto,
   BoardingHouseResponseDto,
   CreateBoardingHouseResponseDto,
 } from './dto/boarding-house-response.dto';
@@ -23,6 +26,25 @@ export class BoardingHousesController {
   constructor(
     private readonly boardingHousesService: BoardingHousesService,
   ) {}
+
+  @Get()
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'List all boarding houses owned by the authenticated landlord',
+    description:
+      'Returns all properties owned by the current user. Used by the frontend to populate the building selector with real UUIDs.',
+  })
+  @ApiOkResponse({
+    description: 'Properties listed successfully',
+    type: BoardingHouseListResponseDto,
+  })
+  async listMyProperties(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<BoardingHouseListResponseDto> {
+    this.logger.log(`GET /boarding-houses called by user ${user.id}`);
+    return this.boardingHousesService.listMyProperties(user.id);
+  }
 
   @Post()
   @ApiAuth()

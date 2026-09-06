@@ -3,6 +3,7 @@ import { Prisma, UserRole } from '@prisma';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
 import {
+  BoardingHouseListResponseDto,
   BoardingHouseResponseDto,
   BoardingHouseRoomTypeResponseDto,
   BoardingHouseServiceResponseDto,
@@ -96,6 +97,63 @@ export class BoardingHousesService {
           description: roomType.description,
         }),
       ),
+    };
+  }
+
+  /**
+   * List all boarding houses owned by a landlord (UC-L-01 context)
+   */
+  async listMyProperties(userId: string): Promise<BoardingHouseListResponseDto> {
+    this.logger.log(`Listing all boarding houses for user ${userId}`);
+
+    const houses = await this.prisma.boardingHouse.findMany({
+      where: { ownerId: userId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        services: true,
+        roomTypes: true,
+        _count: {
+          select: {
+            rooms: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: houses.map((house) => ({
+        id: house.id,
+        name: house.name,
+        description: house.description,
+        country: house.country,
+        province: house.province,
+        city: house.city,
+        ward: house.ward,
+        district: house.district,
+        street: house.street,
+        houseNumber: house.houseNumber,
+        totalFloor: house.totalFloor,
+        builtAt: house.builtAt.toISOString(),
+        status: house.status,
+        totalRooms: house._count.rooms,
+        services: house.services.map(
+          (service): BoardingHouseServiceResponseDto => ({
+            id: service.id,
+            name: service.name,
+            unit: service.unit,
+            price: this.formatMoney(service.price),
+            isMetered: service.isMetered,
+          }),
+        ),
+        roomTypes: house.roomTypes.map(
+          (roomType): BoardingHouseRoomTypeResponseDto => ({
+            id: roomType.id,
+            name: roomType.name,
+            description: roomType.description,
+          }),
+        ),
+      })),
     };
   }
 
