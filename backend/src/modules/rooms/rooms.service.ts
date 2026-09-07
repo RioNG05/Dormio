@@ -5,10 +5,20 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, RoomStatus, SubscriptionPackage, SubscriptionStatus } from '@prisma';
+import {
+  ContractStatus,
+  Prisma,
+  RoomStatus,
+  SubscriptionPackage,
+  SubscriptionStatus,
+} from '@prisma';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
+import {
+  RoomDashboardContractDto,
+  RoomDashboardResponseDto,
+} from './dto/room-dashboard-response.dto';
 import { RoomQueryDto } from './dto/room-query.dto';
 import {
   BulkGenerateRoomsResponseDto,
@@ -387,6 +397,203 @@ export class RoomsService {
     }
 
     return this.mapRoomToDto(room);
+  }
+
+  /**
+   * UC-L-05: Single aggregated query for room dashboard
+   * Room -> RoomService -> Service
+   *      -> Contract WHERE status='active' -> TenantContract -> User (current tenants + CCCD)
+   *      -> Contract (all, order by startDate desc) — rental history
+   *      -> Invoices (recent 12)
+   *      -> MeterReadings (recent 10)
+   */
+  async getRoomDashboard(
+    boardingHouseId: string,
+    roomId: string,
+  ): Promise<RoomDashboardResponseDto> {
+    this.logger.log(
+      `Fetching room dashboard for room ${roomId} in boarding house ${boardingHouseId}`,
+    );
+
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+      include: {
+        roomType: true,
+        roomServices: {
+          include: {
+            service: true,
+          },
+        },
+        contracts: {
+          orderBy: { startDate: 'desc' },
+          include: {
+            tenantContracts: {
+              include: {
+                tenant: {
+                  include: {
+                    userIdentification: true,
+                  },
+                },
+              },
+            },
+            deposit: true,
+            contractDocuments: {
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        },
+        invoices: {
+          orderBy: { dueDate: 'desc' },
+          take: 12,
+          include: {
+            payment: true,
+          },
+        },
+        meterReadings: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`);
+    }
+
+    // Identify current active contract (if any)
+    const activeContract = room.contracts.find(
+      (c) => c.status === ContractStatus.active,
+    );
+
+    let currentContractDto: RoomDashboardContractDto | null = null;
+    if (activeContract) {
+      const tenants = activeContract.tenantContracts.map((tc) => {
+        const tenant = tc.tenant;
+        const ident = tenant.userIdentification;
+        return {
+          id: tenant.id,
+          fullName:
+            ident?.fullName ||
+            tenant.username ||
+            tenant.phoneNumber ||
+            'Khách thuê',
+          phoneNumber: tenant.phoneNumber,
+          email: tenant.email,
+          avatarUrl: tenant.avatarUrl,
+          isPrimary: tc.isPrimary,
+          hasIdentification: Boolean(ident),
+          identityNumber: ident?.identityNumber ?? null,
+          dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
+          gender: ident?.gender ?? null,
+        };
+      });
+
+      currentContractDto = {
+        id: activeContract.id,
+        startDate: activeContract.startDate.toISOString(),
+        endDate: activeContract.endDate.toISOString(),
+        rentPrice: String(activeContract.rentPrice),
+        monthlyPaymentDate: activeContract.monthlyPaymentDate,
+        status: activeContract.status,
+        note: activeContract.note,
+        deposit: activeContract.deposit
+          ? {
+              id: activeContract.deposit.id,
+              amount: String(activeContract.deposit.amount),
+              status: activeContract.deposit.status,
+              type: activeContract.deposit.type,
+            }
+          : null,
+        tenants,
+        documents: activeContract.contractDocuments.map((doc) => ({
+          id: doc.id,
+          url: doc.url,
+          createdAt: doc.createdAt.toISOString(),
+        })),
+      };
+    }
+
+    // Map rental history from all contracts
+    const rentalHistory = room.contracts.map((c) => {
+      const primaryTenantContract =
+        c.tenantContracts.find((tc) => tc.isPrimary) ?? c.tenantContracts[0];
+      const primaryTenant = primaryTenantContract?.tenant;
+      const primaryTenantName =
+        primaryTenant?.userIdentification?.fullName ||
+        primaryTenant?.username ||
+        primaryTenant?.phoneNumber ||
+        'Chưa cập nhật';
+      const primaryTenantPhone = primaryTenant?.phoneNumber || '';
+
+      return {
+        id: c.id,
+        startDate: c.startDate.toISOString(),
+        endDate: c.endDate.toISOString(),
+        rentPrice: String(c.rentPrice),
+        status: c.status,
+        primaryTenantName,
+        primaryTenantPhone,
+        tenantsCount: c.tenantContracts.length,
+      };
+    });
+
+    // Map invoices
+    const invoices = room.invoices.map((inv) => ({
+      id: inv.id,
+      totalAmount: String(inv.totalAmount),
+      status: inv.status,
+      dueDate: inv.dueDate.toISOString(),
+      createdAt: inv.createdAt.toISOString(),
+      paymentStatus: inv.payment?.status ?? null,
+      paymentMethod: inv.payment?.method ?? null,
+    }));
+
+    // Map meter readings
+    const meterReadings = room.meterReadings.map((mr) => ({
+      id: mr.id,
+      serviceId: mr.serviceId,
+      serviceName: mr.service.name,
+      readingValue: mr.readingValue !== null ? String(mr.readingValue) : null,
+      imageUrl: mr.imageUrl,
+      createdAt: mr.createdAt.toISOString(),
+    }));
+
+    // Map room services
+    const services = room.roomServices.map((rs) => ({
+      id: rs.service.id,
+      name: rs.service.name,
+      price: String(rs.service.price),
+      unit: rs.service.unit,
+      isMetered: rs.service.isMetered,
+    }));
+
+    return {
+      room: {
+        id: room.id,
+        boardingHouseId: room.boardingHouseId,
+        roomNumber: room.roomNumber,
+        floor: room.floor,
+        area: room.area ? String(room.area) : null,
+        maxOccupants: room.maxOccupants,
+        status: room.status,
+        imageUrl: room.image_url,
+        roomType: {
+          id: room.roomType.id,
+          name: room.roomType.name,
+          description: room.roomType.description,
+        },
+        createdAt: room.createdAt.toISOString(),
+        updatedAt: room.updatedAt?.toISOString() ?? null,
+      },
+      services,
+      currentContract: currentContractDto,
+      rentalHistory,
+      invoices,
+      meterReadings,
+    };
   }
 
   /**

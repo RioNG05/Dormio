@@ -26,6 +26,7 @@ import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
+import { RoomDashboardResponseDto } from './dto/room-dashboard-response.dto';
 import { RoomQueryDto } from './dto/room-query.dto';
 import {
   BulkGenerateRoomsResponseDto,
@@ -147,6 +148,28 @@ export class RoomsController {
       `GET /rooms called by user ${user.id} for house ${boardingHouseId} (page=${query.page}, limit=${query.limit})`,
     );
     return this.roomsService.getRooms(boardingHouseId, query);
+  }
+
+  @Get(':id/dashboard')
+  @ApiOperation({
+    summary: 'View Room Dashboard (UC-L-05)',
+    description:
+      'Performs a single aggregated query to return room specifications, attached services, current active contract with tenants and identification, full rental history, invoices, and meter readings.',
+  })
+  @ApiOkResponse({
+    description: 'Room dashboard retrieved successfully',
+    type: RoomDashboardResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Room not found in this property' })
+  async getRoomDashboard(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<RoomDashboardResponseDto> {
+    this.logger.log(
+      `GET /rooms/${id}/dashboard called by user ${user.id} for house ${boardingHouseId}`,
+    );
+    return this.roomsService.getRoomDashboard(boardingHouseId, id);
   }
 
   @Get(':id')

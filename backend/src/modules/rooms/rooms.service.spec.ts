@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, RoomStatus, SubscriptionPackage } from '@prisma';
+import { ContractStatus, Prisma, RoomStatus, SubscriptionPackage } from '@prisma';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RoomsService } from './rooms.service';
 
@@ -525,6 +525,172 @@ describe('RoomsService', () => {
       await expect(
         service.updateRoom(boardingHouseId, 'room-1', { roomNumber: '102' }),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('getRoomDashboard', () => {
+    const roomId = 'room-uuid-1';
+
+    it('throws NotFoundException when room does not exist in property', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue(null);
+
+      await expect(service.getRoomDashboard(boardingHouseId, roomId)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockPrisma.room.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: roomId, boardingHouseId },
+        }),
+      );
+    });
+
+    it('returns full aggregated dashboard when room is occupied with active contract and tenants', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({
+        id: roomId,
+        boardingHouseId,
+        roomNumber: '101',
+        floor: 1,
+        area: new Prisma.Decimal('28.5'),
+        maxOccupants: 2,
+        status: RoomStatus.occupied,
+        image_url: 'https://example.com/room101.jpg',
+        createdAt: new Date('2026-09-01T00:00:00.000Z'),
+        updatedAt: null,
+        roomType: {
+          id: 'rt-1',
+          name: 'Studio Master',
+          description: 'With balcony',
+        },
+        roomServices: [
+          {
+            service: {
+              id: 'srv-1',
+              name: 'Electricity',
+              price: new Prisma.Decimal('3500.00'),
+              unit: 'kWh',
+              isMetered: true,
+            },
+          },
+        ],
+        contracts: [
+          {
+            id: 'contract-1',
+            startDate: new Date('2026-09-01T00:00:00.000Z'),
+            endDate: new Date('2027-09-01T00:00:00.000Z'),
+            rentPrice: new Prisma.Decimal('3500000.00'),
+            monthlyPaymentDate: 5,
+            status: ContractStatus.active,
+            note: 'Monthly rent on 5th',
+            deposit: {
+              id: 'dep-1',
+              amount: new Prisma.Decimal('3500000.00'),
+              status: 'active',
+              type: 'room_deposit',
+            },
+            tenantContracts: [
+              {
+                isPrimary: true,
+                tenant: {
+                  id: 'tenant-1',
+                  username: 'annguyen',
+                  phoneNumber: '0912345678',
+                  email: 'an@example.com',
+                  avatarUrl: null,
+                  userIdentification: {
+                    fullName: 'Nguyen Van An',
+                    identityNumber: '079201009999',
+                    dateOfBirth: new Date('1998-05-12T00:00:00.000Z'),
+                    gender: 'male',
+                  },
+                },
+              },
+            ],
+            contractDocuments: [
+              {
+                id: 'doc-1',
+                url: 'https://storage.example.com/contract-1.pdf',
+                createdAt: new Date('2026-09-01T00:00:00.000Z'),
+              },
+            ],
+          },
+        ],
+        invoices: [
+          {
+            id: 'inv-1',
+            totalAmount: new Prisma.Decimal('3850000.00'),
+            status: 'paid',
+            dueDate: new Date('2026-09-10T00:00:00.000Z'),
+            createdAt: new Date('2026-09-01T00:00:00.000Z'),
+            payment: {
+              status: 'completed',
+              method: 'bank_transfer',
+            },
+          },
+        ],
+        meterReadings: [
+          {
+            id: 'mr-1',
+            serviceId: 'srv-1',
+            readingValue: new Prisma.Decimal('1240.50'),
+            imageUrl: 'https://example.com/meter.jpg',
+            createdAt: new Date('2026-09-01T00:00:00.000Z'),
+            service: {
+              name: 'Electricity',
+            },
+          },
+        ],
+      });
+
+      const result = await service.getRoomDashboard(boardingHouseId, roomId);
+
+      expect(result.room.id).toBe(roomId);
+      expect(result.room.roomNumber).toBe('101');
+      expect(result.room.roomType.name).toBe('Studio Master');
+      expect(result.services).toHaveLength(1);
+      expect(result.currentContract).not.toBeNull();
+      expect(result.currentContract?.rentPrice).toBe('3500000');
+      expect(result.currentContract?.tenants).toHaveLength(1);
+      expect(result.currentContract?.tenants[0].fullName).toBe('Nguyen Van An');
+      expect(result.currentContract?.tenants[0].hasIdentification).toBe(true);
+      expect(result.rentalHistory).toHaveLength(1);
+      expect(result.rentalHistory[0].primaryTenantName).toBe('Nguyen Van An');
+      expect(result.invoices).toHaveLength(1);
+      expect(result.invoices[0].totalAmount).toBe('3850000');
+      expect(result.meterReadings).toHaveLength(1);
+      expect(result.meterReadings[0].serviceName).toBe('Electricity');
+    });
+
+    it('returns clean aggregate with currentContract: null when room is vacant', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({
+        id: roomId,
+        boardingHouseId,
+        roomNumber: '102',
+        floor: 1,
+        area: new Prisma.Decimal('20.0'),
+        maxOccupants: 2,
+        status: RoomStatus.available,
+        image_url: null,
+        createdAt: new Date('2026-09-01T00:00:00.000Z'),
+        updatedAt: null,
+        roomType: {
+          id: 'rt-1',
+          name: 'Standard Room',
+          description: null,
+        },
+        roomServices: [],
+        contracts: [],
+        invoices: [],
+        meterReadings: [],
+      });
+
+      const result = await service.getRoomDashboard(boardingHouseId, roomId);
+
+      expect(result.room.id).toBe(roomId);
+      expect(result.room.status).toBe(RoomStatus.available);
+      expect(result.currentContract).toBeNull();
+      expect(result.rentalHistory).toEqual([]);
+      expect(result.invoices).toEqual([]);
+      expect(result.meterReadings).toEqual([]);
     });
   });
 });

@@ -119,7 +119,7 @@ describe('InvoicesService', () => {
       roomId: mockRoomId,
       totalAmount: 5200000,
       status: 'unpaid',
-      dueDate: new Date('2026-09-05'),
+      dueDate: new Date('2026-09-15'),
       createdAt: new Date('2026-08-31'),
       payment: null,
       invoiceItems: [

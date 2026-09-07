@@ -181,3 +181,96 @@ export async function updateRoom(
     },
   });
 }
+
+export interface RoomDashboardTenant {
+  id: string;
+  fullName: string;
+  phoneNumber: string;
+  email?: string | null;
+  avatarUrl?: string | null;
+  isPrimary: boolean;
+  hasIdentification: boolean;
+  identityNumber?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+}
+
+export interface RoomDashboardDeposit {
+  id: string;
+  amount: string;
+  status: string;
+  type: string;
+}
+
+export interface RoomDashboardDocument {
+  id: string;
+  url: string;
+  createdAt: string;
+}
+
+export interface RoomDashboardContract {
+  id: string;
+  startDate: string;
+  endDate: string;
+  rentPrice: string;
+  monthlyPaymentDate: number;
+  status: string;
+  note?: string | null;
+  deposit?: RoomDashboardDeposit | null;
+  tenants: RoomDashboardTenant[];
+  documents: RoomDashboardDocument[];
+}
+
+export interface RoomDashboardRentalHistoryItem {
+  id: string;
+  startDate: string;
+  endDate: string;
+  rentPrice: string;
+  status: string;
+  primaryTenantName: string;
+  primaryTenantPhone: string;
+  tenantsCount: number;
+}
+
+export interface RoomDashboardInvoice {
+  id: string;
+  totalAmount: string;
+  status: string;
+  dueDate: string;
+  createdAt: string;
+  paymentStatus?: string | null;
+  paymentMethod?: string | null;
+}
+
+export interface RoomDashboardMeterReading {
+  id: string;
+  serviceId: string;
+  serviceName: string;
+  readingValue?: string | null;
+  imageUrl?: string | null;
+  createdAt: string;
+}
+
+export interface RoomDashboardResponse {
+  room: RoomItem;
+  services: RoomServiceItem[];
+  currentContract?: RoomDashboardContract | null;
+  rentalHistory: RoomDashboardRentalHistoryItem[];
+  invoices: RoomDashboardInvoice[];
+  meterReadings: RoomDashboardMeterReading[];
+}
+
+/**
+ * Get aggregated Room Dashboard (UC-L-05)
+ */
+export async function getRoomDashboard(
+  boardingHouseId: string,
+  roomId: string,
+): Promise<RoomDashboardResponse> {
+  return api.get<RoomDashboardResponse>(`/v1/rooms/${roomId}/dashboard`, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  });
+}
+
