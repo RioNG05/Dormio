@@ -502,7 +502,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="p-6 text-center bg-zinc-50 rounded-2xl border border-dashed border-zinc-200 space-y-2">
                   <p className="text-xs text-zinc-500 font-bold">Phòng hiện tại đang trống, chưa có người ở.</p>
                   <button
-                    onClick={() => setIsContractModalOpen(true)}
+                    onClick={() => router.push(`/landlord/contracts/create?roomId=${room?.id || resolvedParams.id || ''}`)}
                     className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-xs"
                   >
                     + Lập Hợp Đồng Nhận Khách Mới
