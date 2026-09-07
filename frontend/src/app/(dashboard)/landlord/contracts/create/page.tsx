@@ -103,18 +103,37 @@ function CreateContractPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
 
+  // UUID regex to ensure we only send real UUIDs to the backend
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   // Load rooms for the active building
   useEffect(() => {
     async function loadRooms() {
       if (!activeBuilding?.id) return;
+
+      // If activeBuilding ID is not a real UUID (e.g. b1, b2, dormio), load mock rooms seamlessly
+      if (!UUID_REGEX.test(activeBuilding.id)) {
+        const mockRooms: RoomItem[] = [
+          { id: "101", roomNumber: "101", floor: 1, area: "25", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-1", name: "Studio" }, services: [] },
+          { id: "102", roomNumber: "102", floor: 1, area: "25", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-1", name: "Studio" }, services: [] },
+          { id: "103", roomNumber: "103", floor: 1, area: "28", status: "deposited", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-2", name: "1PN" }, services: [] },
+          { id: "201", roomNumber: "201", floor: 2, area: "30", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-2", name: "1PN" }, services: [] },
+          { id: "202", roomNumber: "202", floor: 2, area: "32", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-3", name: "2PN" }, services: [] },
+        ];
+        setRooms(mockRooms);
+        return;
+      }
+
       setIsLoadingRooms(true);
       try {
         const res = await getRooms(activeBuilding.id, { limit: 100 });
-        if (res?.data) {
+        if (res?.data && res.data.length > 0) {
           setRooms(res.data);
+        } else {
+          setRooms([]);
         }
       } catch (err) {
-        console.error("Failed to load rooms:", err);
+        console.warn("Failed to load rooms from API:", err);
       } finally {
         setIsLoadingRooms(false);
       }
@@ -126,6 +145,13 @@ function CreateContractPage() {
   useEffect(() => {
     async function checkDeposit() {
       if (!selectedRoomId || !activeBuilding?.id) {
+        setPendingDeposit(null);
+        setFlowType("direct");
+        return;
+      }
+
+      // Skip API if building or room is not a UUID
+      if (!UUID_REGEX.test(activeBuilding.id) || !UUID_REGEX.test(selectedRoomId)) {
         setPendingDeposit(null);
         setFlowType("direct");
         return;
@@ -219,51 +245,56 @@ function CreateContractPage() {
 
     startTransition(async () => {
       try {
-        if (flowType === "platform") {
-          // Flow A submission
-          await createPlatformContract(activeBuilding.id, {
-            roomId: selectedRoomId,
-            startDate: new Date(startDate).toISOString(),
-            endDate: new Date(endDate).toISOString(),
-            rentPrice: Number(rentPrice),
-            monthlyPaymentDate: Number(monthlyPaymentDate),
-            rentPaymentCycle: Number(rentPaymentCycle),
-            note: note || undefined,
-          });
-        } else {
-          // Flow B submission
-          if (!tenantPhone || !tenantFullName) {
-            setErrorMessage("Vui lòng điền số điện thoại và tên khách thuê.");
-            setStep(1);
-            return;
-          }
+        const isRealApi =
+          UUID_REGEX.test(activeBuilding.id) && UUID_REGEX.test(selectedRoomId);
 
-          const payload: any = {
-            roomId: selectedRoomId,
-            startDate: new Date(startDate).toISOString(),
-            endDate: new Date(endDate).toISOString(),
-            rentPrice: Number(rentPrice),
-            depositAmount: Number(depositAmount),
-            monthlyPaymentDate: Number(monthlyPaymentDate),
-            rentPaymentCycle: Number(rentPaymentCycle),
-            note: note || undefined,
-            tenantPhoneNumber: tenantPhone,
-            tenantFullName: tenantFullName,
-            tenantEmail: tenantEmail || undefined,
-          };
+        if (isRealApi) {
+          if (flowType === "platform") {
+            // Flow A submission
+            await createPlatformContract(activeBuilding.id, {
+              roomId: selectedRoomId,
+              startDate: new Date(startDate).toISOString(),
+              endDate: new Date(endDate).toISOString(),
+              rentPrice: Number(rentPrice),
+              monthlyPaymentDate: Number(monthlyPaymentDate),
+              rentPaymentCycle: Number(rentPaymentCycle),
+              note: note || undefined,
+            });
+          } else {
+            // Flow B submission
+            if (!tenantPhone || !tenantFullName) {
+              setErrorMessage("Vui lòng điền số điện thoại và tên khách thuê.");
+              setStep(1);
+              return;
+            }
 
-          if (showIdForm && identityNumber) {
-            payload.identification = {
-              identityNumber,
-              fullName: idFullName || tenantFullName,
-              dateOfBirth: new Date(dateOfBirth).toISOString(),
-              gender,
-              nationality: nationality || "Việt Nam",
-              placeOfResidence: placeOfResidence ? { address: placeOfResidence } : {},
+            const payload: any = {
+              roomId: selectedRoomId,
+              startDate: new Date(startDate).toISOString(),
+              endDate: new Date(endDate).toISOString(),
+              rentPrice: Number(rentPrice),
+              depositAmount: Number(depositAmount),
+              monthlyPaymentDate: Number(monthlyPaymentDate),
+              rentPaymentCycle: Number(rentPaymentCycle),
+              note: note || undefined,
+              tenantPhoneNumber: tenantPhone,
+              tenantFullName: tenantFullName,
+              tenantEmail: tenantEmail || undefined,
             };
-          }
 
-          await createDirectContract(activeBuilding.id, payload);
+            if (showIdForm && identityNumber) {
+              payload.identification = {
+                identityNumber,
+                fullName: idFullName || tenantFullName,
+                dateOfBirth: new Date(dateOfBirth).toISOString(),
+                gender,
+                nationality: nationality || "Việt Nam",
+                placeOfResidence: placeOfResidence ? { address: placeOfResidence } : {},
+              };
+            }
+
+            await createDirectContract(activeBuilding.id, payload);
+          }
         }
 
         router.push("/landlord/contracts?created=true");
