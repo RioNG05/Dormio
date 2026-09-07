@@ -25,6 +25,7 @@ import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.g
 import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto';
+import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomQueryDto } from './dto/room-query.dto';
 import {
   BulkGenerateRoomsResponseDto,
@@ -44,6 +45,39 @@ export class RoomsController {
   private readonly logger = new Logger(RoomsController.name);
 
   constructor(private readonly roomsService: RoomsService) {}
+
+  @Post()
+  @ApiOperation({
+    summary: 'Create a single room (UC-L-03)',
+    description:
+      'Creates an individual room in the boarding house, validates landlord subscription quota, ensures room number uniqueness, and attaches specified or autoApplied services as RoomService.',
+  })
+  @ApiCreatedResponse({
+    description: 'Room created successfully',
+    type: RoomResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Invalid input, invalid service IDs, or subscription plan max room limit exceeded',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Specified roomTypeId does not exist for this boarding house',
+  })
+  @ApiConflictResponse({
+    description: 'Room number already exists in this boarding house',
+  })
+  async createRoom(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Body() dto: CreateRoomDto,
+  ): Promise<RoomResponseDto> {
+    this.logger.log(
+      `POST /rooms called by user ${user.id} for house ${boardingHouseId} (roomNumber=${dto.roomNumber})`,
+    );
+    return this.roomsService.createRoom(user.id, boardingHouseId, dto);
+  }
 
   @Post('bulk-generate')
   @ApiOperation({
@@ -115,11 +149,33 @@ export class RoomsController {
     return this.roomsService.getRooms(boardingHouseId, query);
   }
 
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get single room details (UC-L-03 / UC-L-05)',
+    description:
+      'Returns single room details including joined roomType and roomServices for editing or room dashboard.',
+  })
+  @ApiOkResponse({
+    description: 'Room retrieved successfully',
+    type: RoomResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Room not found in this property' })
+  async getRoomById(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<RoomResponseDto> {
+    this.logger.log(
+      `GET /rooms/${id} called by user ${user.id} for house ${boardingHouseId}`,
+    );
+    return this.roomsService.getRoomById(boardingHouseId, id);
+  }
+
   @Patch(':id')
   @ApiOperation({
-    summary: 'Update a single room (reusable for UC-L-03 editable grid)',
+    summary: 'Update a single room (UC-L-03)',
     description:
-      'Updates attributes for a room such as roomNumber, floor, area, maxOccupants, roomTypeId, or status.',
+      'Updates attributes for a room such as roomNumber, floor, area, maxOccupants, roomTypeId, status, imageUrl, or synchronized service attachments.',
   })
   @ApiOkResponse({
     description: 'Room updated successfully',

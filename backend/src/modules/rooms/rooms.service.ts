@@ -8,6 +8,7 @@ import {
 import { Prisma, RoomStatus, SubscriptionPackage, SubscriptionStatus } from '@prisma';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto';
+import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomQueryDto } from './dto/room-query.dto';
 import {
   BulkGenerateRoomsResponseDto,
@@ -260,7 +261,136 @@ export class RoomsService {
   }
 
   /**
-   * Update room attributes (UC-L-03 reusable endpoint)
+   * UC-L-03: Create a single room with subscription quota check and service attachment
+   */
+  async createRoom(
+    landlordId: string,
+    boardingHouseId: string,
+    dto: CreateRoomDto,
+  ): Promise<RoomResponseDto> {
+    this.logger.log(
+      `Creating single room '${dto.roomNumber}' for boarding house ${boardingHouseId} by landlord ${landlordId}`,
+    );
+
+    // 1. Subscription Plan Room Limit check (UC-L-03)
+    const maxRoom = await this.resolveMaxRoomLimit(landlordId);
+    const currentRoomCount = await this.prisma.room.count({
+      where: { boardingHouseId },
+    });
+
+    if (currentRoomCount + 1 > maxRoom) {
+      throw new BadRequestException(
+        `Cannot create room. Your active subscription allows a maximum of ${maxRoom} rooms for this property (currently ${currentRoomCount}/${maxRoom}). Please upgrade your plan.`,
+      );
+    }
+
+    // 2. RoomType check
+    const roomType = await this.prisma.roomType.findFirst({
+      where: { id: dto.roomTypeId, boardingHouseId },
+    });
+    if (!roomType) {
+      throw new NotFoundException(
+        `RoomType with ID ${dto.roomTypeId} was not found for this property`,
+      );
+    }
+
+    // 3. Room number collision check within this boarding house
+    const existingRoom = await this.prisma.room.findFirst({
+      where: {
+        boardingHouseId,
+        roomNumber: dto.roomNumber.trim(),
+      },
+    });
+    if (existingRoom) {
+      throw new ConflictException(
+        `Room number '${dto.roomNumber.trim()}' already exists in this property`,
+      );
+    }
+
+    // 4. Resolve services to attach
+    let serviceIdsToAttach: string[] = [];
+    if (dto.serviceIds && dto.serviceIds.length > 0) {
+      const validServices = await this.prisma.service.findMany({
+        where: { id: { in: dto.serviceIds }, boardingHouseId },
+        select: { id: true },
+      });
+      if (validServices.length !== dto.serviceIds.length) {
+        throw new BadRequestException(
+          'One or more selected serviceIds are invalid or do not belong to this property',
+        );
+      }
+      serviceIdsToAttach = dto.serviceIds;
+    } else {
+      // Auto-attach active autoApplied services for this property (spec requirement)
+      const autoServices = await this.prisma.service.findMany({
+        where: {
+          boardingHouseId,
+          status: 'active',
+          autoApplied: true,
+        },
+        select: { id: true },
+      });
+      serviceIdsToAttach = autoServices.map((s) => s.id);
+    }
+
+    // 5. Create room and attached services in a transaction
+    const created = await this.prisma.$transaction(async (tx) => {
+      return tx.room.create({
+        data: {
+          boardingHouseId,
+          roomNumber: dto.roomNumber.trim(),
+          floor: dto.floor,
+          roomTypeId: dto.roomTypeId,
+          area: dto.area !== undefined ? new Prisma.Decimal(dto.area) : null,
+          maxOccupants: dto.maxOccupants ?? null,
+          status: dto.status ?? RoomStatus.available,
+          image_url: dto.imageUrl ?? null,
+          roomServices: {
+            create: serviceIdsToAttach.map((serviceId) => ({ serviceId })),
+          },
+        },
+        include: {
+          roomType: true,
+          roomServices: {
+            include: {
+              service: true,
+            },
+          },
+        },
+      });
+    });
+
+    return this.mapRoomToDto(created);
+  }
+
+  /**
+   * UC-L-03/05: Get single room details with joined relations
+   */
+  async getRoomById(
+    boardingHouseId: string,
+    roomId: string,
+  ): Promise<RoomResponseDto> {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+      include: {
+        roomType: true,
+        roomServices: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`);
+    }
+
+    return this.mapRoomToDto(room);
+  }
+
+  /**
+   * UC-L-03: Update room attributes and synchronize services
    */
   async updateRoom(
     boardingHouseId: string,
@@ -302,24 +432,68 @@ export class RoomsService {
       }
     }
 
-    const updated = await this.prisma.room.update({
-      where: { id: roomId },
-      data: {
-        ...(dto.roomNumber ? { roomNumber: dto.roomNumber.trim() } : {}),
-        ...(dto.floor !== undefined ? { floor: dto.floor } : {}),
-        ...(dto.area !== undefined ? { area: new Prisma.Decimal(dto.area) } : {}),
-        ...(dto.maxOccupants !== undefined ? { maxOccupants: dto.maxOccupants } : {}),
-        ...(dto.roomTypeId ? { roomTypeId: dto.roomTypeId } : {}),
-        ...(dto.status ? { status: dto.status } : {}),
-      },
-      include: {
-        roomType: true,
-        roomServices: {
-          include: {
-            service: true,
+    // Validate services if provided
+    if (dto.serviceIds && dto.serviceIds.length > 0) {
+      const validServices = await this.prisma.service.findMany({
+        where: { id: { in: dto.serviceIds }, boardingHouseId },
+        select: { id: true },
+      });
+      if (validServices.length !== dto.serviceIds.length) {
+        throw new BadRequestException(
+          'One or more selected serviceIds are invalid or do not belong to this property',
+        );
+      }
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Synchronize services if serviceIds array is provided
+      if (dto.serviceIds !== undefined) {
+        const existingRoomServices = await tx.roomService.findMany({
+          where: { roomId },
+          select: { id: true, serviceId: true },
+        });
+
+        const currentServiceIdSet = new Set(existingRoomServices.map((rs) => rs.serviceId));
+        const targetServiceIdSet = new Set(dto.serviceIds);
+
+        const toRemove = existingRoomServices.filter(
+          (rs) => !targetServiceIdSet.has(rs.serviceId),
+        );
+        const toAdd = dto.serviceIds.filter((id) => !currentServiceIdSet.has(id));
+
+        if (toRemove.length > 0) {
+          await tx.roomService.deleteMany({
+            where: { id: { in: toRemove.map((rs) => rs.id) } },
+          });
+        }
+
+        if (toAdd.length > 0) {
+          await tx.roomService.createMany({
+            data: toAdd.map((serviceId) => ({ roomId, serviceId })),
+          });
+        }
+      }
+
+      return tx.room.update({
+        where: { id: roomId },
+        data: {
+          ...(dto.roomNumber ? { roomNumber: dto.roomNumber.trim() } : {}),
+          ...(dto.floor !== undefined ? { floor: dto.floor } : {}),
+          ...(dto.area !== undefined ? { area: new Prisma.Decimal(dto.area) } : {}),
+          ...(dto.maxOccupants !== undefined ? { maxOccupants: dto.maxOccupants } : {}),
+          ...(dto.roomTypeId ? { roomTypeId: dto.roomTypeId } : {}),
+          ...(dto.status ? { status: dto.status } : {}),
+          ...(dto.imageUrl !== undefined ? { image_url: dto.imageUrl } : {}),
+        },
+        include: {
+          roomType: true,
+          roomServices: {
+            include: {
+              service: true,
+            },
           },
         },
-      },
+      });
     });
 
     return this.mapRoomToDto(updated);

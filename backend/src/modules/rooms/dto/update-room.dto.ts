@@ -51,4 +51,22 @@ export class UpdateRoomDto {
   @IsOptional()
   @IsEnum(RoomStatus)
   status?: RoomStatus;
+
+  @ApiPropertyOptional({
+    example: 'https://res.cloudinary.com/demo/image/upload/room101.jpg',
+    description: 'Image URL representing the room',
+  })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['b1aebc99-9c0b-4ef8-bb6d-6bb9bd380a22'],
+    description:
+      'List of service UUIDs attached to this room. If provided, existing room services will be synchronized with this list.',
+  })
+  @IsOptional()
+  @IsUUID('all', { each: true, message: 'Each serviceId must be a valid UUID' })
+  serviceIds?: string[];
 }

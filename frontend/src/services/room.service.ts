@@ -117,20 +117,63 @@ export async function getRooms(
   });
 }
 
+export interface CreateRoomPayload {
+  roomNumber: string;
+  floor: number;
+  roomTypeId: string;
+  area?: number;
+  maxOccupants?: number;
+  status?: string;
+  imageUrl?: string;
+  serviceIds?: string[];
+}
+
+export interface UpdateRoomPayload {
+  roomNumber?: string;
+  floor?: number;
+  roomTypeId?: string;
+  area?: number;
+  maxOccupants?: number;
+  status?: string;
+  imageUrl?: string;
+  serviceIds?: string[];
+}
+
 /**
- * Update single room attributes
+ * Create a single room (UC-L-03)
+ */
+export async function createRoom(
+  boardingHouseId: string,
+  payload: CreateRoomPayload,
+): Promise<RoomItem> {
+  return api.post<RoomItem>('/v1/rooms', payload, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  });
+}
+
+/**
+ * Get single room details (UC-L-03 / UC-L-05)
+ */
+export async function getRoom(
+  boardingHouseId: string,
+  roomId: string,
+): Promise<RoomItem> {
+  return api.get<RoomItem>(`/v1/rooms/${roomId}`, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  });
+}
+
+/**
+ * Update single room attributes and attached services (UC-L-03)
  */
 export async function updateRoom(
   boardingHouseId: string,
   roomId: string,
-  payload: Partial<{
-    roomNumber: string;
-    floor: number;
-    area: number;
-    maxOccupants: number;
-    roomTypeId: string;
-    status: string;
-  }>,
+  payload: UpdateRoomPayload,
 ): Promise<RoomItem> {
   return api.patch<RoomItem>(`/v1/rooms/${roomId}`, payload, {
     headers: {

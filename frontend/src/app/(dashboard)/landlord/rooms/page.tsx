@@ -6,14 +6,17 @@ import {
   Target, FileSignature, Receipt, ChevronDown, Eye,
   Trash2, Edit, AlertTriangle, Sparkles, MapPin, UploadCloud,
   FileSpreadsheet, Grid, List, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, Loader2, CheckCircle2, ShieldAlert
+  ChevronsLeft, ChevronsRight, Loader2, CheckCircle2, ShieldAlert, AlertCircle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   bulkGenerateRooms,
+  createRoom,
+  getRoom,
   getRoomMetadata,
   getRooms,
+  updateRoom,
   type RoomItem,
   type RoomMetadata,
   type RoomServiceItem,
@@ -71,16 +74,22 @@ export default function RoomsPage() {
     onConfirm: () => {},
   });
 
-  // Single room form states
+  // Single room form states (UC-L-03)
   const [formBuilding, setFormBuilding] = useState("b1");
   const [formRoomNumber, setFormRoomNumber] = useState("");
-  const [formRoomType, setFormRoomType] = useState("studio");
+  const [formRoomTypeId, setFormRoomTypeId] = useState("");
   const [formFloor, setFormFloor] = useState("1");
   const [formArea, setFormArea] = useState("25");
-  const [formPrice, setFormPrice] = useState("3.000.000");
+  const [formMaxOccupants, setFormMaxOccupants] = useState("2");
+  const [formStatus, setFormStatus] = useState("available");
+  const [formImageUrl, setFormImageUrl] = useState("");
+  const [formPrice, setFormPrice] = useState("3.500.000");
   const [formNotes, setFormNotes] = useState("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [isSingleSubmitting, setIsSingleSubmitting] = useState(false);
+  const [singleError, setSingleError] = useState<string | null>(null);
 
   // Bulk Generate form states (UC-L-02)
   const [bulkFloorCount, setBulkFloorCount] = useState<number>(3);
@@ -221,6 +230,101 @@ export default function RoomsPage() {
     }
   }, [activeBuilding?.id, fetchBuildingData]);
 
+  // Reset single room form drafts (Rule 10)
+  const resetSingleForm = useCallback(() => {
+    setSelectedRoomId(null);
+    setFormRoomNumber("");
+    setFormFloor("1");
+    setFormArea("25");
+    setFormMaxOccupants("2");
+    setFormStatus("available");
+    setFormImageUrl("");
+    setFormPrice("3.500.000");
+    setFormNotes("");
+    setSingleError(null);
+    setIsSingleDirty(false);
+    if (metadata?.roomTypes?.[0]) {
+      setFormRoomTypeId(metadata.roomTypes[0].id);
+    } else {
+      setFormRoomTypeId("");
+    }
+    if (metadata?.services) {
+      setSelectedServiceIds(metadata.services.map((s) => s.id));
+    } else {
+      setSelectedServiceIds([]);
+    }
+    setSelectedAmenities(['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
+  }, [metadata]);
+
+  // Open create modal
+  const handleOpenCreateModal = () => {
+    resetSingleForm();
+    setIsSingleModalOpen(true);
+  };
+
+  // Open edit modal for an existing room
+  const handleOpenEditModal = async (room: any) => {
+    setSelectedRoomId(room.fullRoomId || room.id);
+    setFormBuilding(room.building || activeBuilding?.id || "b1");
+    setFormRoomNumber(room.id || "");
+    setFormFloor(room.floor || "1");
+    setFormArea(room.area ? String(room.area).replace(/[^\d.]/g, "") : "25");
+    setFormMaxOccupants(room.maxOccupants ? String(room.maxOccupants) : "2");
+    setFormStatus(
+      room.status === 'Trống' ? 'available' :
+      room.status === 'Đang thuê' ? 'occupied' :
+      room.status === 'Bảo trì' ? 'maintainace' :
+      room.status === 'Đặt cọc' ? 'deposited' : (room.status || 'available')
+    );
+    setFormImageUrl(room.imageUrl || "");
+    setFormPrice(room.price || "3.500.000");
+    setFormNotes(room.notes || "");
+    setSingleError(null);
+    setIsSingleDirty(false);
+
+    if (metadata?.roomTypes) {
+      const matchType = metadata.roomTypes.find(
+        (rt) => rt.name.toLowerCase() === (room.roomType || "").toLowerCase() || rt.id === room.roomTypeId,
+      );
+      setFormRoomTypeId(matchType ? matchType.id : (metadata.roomTypes[0]?.id || ""));
+    }
+
+    const buildingId = activeBuilding?.id || "";
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (UUID_RE.test(buildingId) && UUID_RE.test(room.fullRoomId)) {
+      try {
+        const fullRoom = await getRoom(buildingId, room.fullRoomId);
+        if (fullRoom) {
+          setFormRoomNumber(fullRoom.roomNumber);
+          setFormFloor(String(fullRoom.floor));
+          if (fullRoom.area) setFormArea(String(fullRoom.area));
+          if (fullRoom.maxOccupants) setFormMaxOccupants(String(fullRoom.maxOccupants));
+          if (fullRoom.status) setFormStatus(fullRoom.status);
+          if (fullRoom.imageUrl) setFormImageUrl(fullRoom.imageUrl);
+          if (fullRoom.roomType) setFormRoomTypeId(fullRoom.roomType.id);
+          if (fullRoom.services) setSelectedServiceIds(fullRoom.services.map((s) => s.id));
+        }
+      } catch {
+        if (metadata?.services && Array.isArray(room.services)) {
+          const matchedIds = metadata.services
+            .filter((s) => room.services.includes(s.name) || room.services.includes(s.id))
+            .map((s) => s.id);
+          setSelectedServiceIds(matchedIds);
+        }
+      }
+    } else {
+      if (metadata?.services && Array.isArray(room.services)) {
+        const matchedIds = metadata.services
+          .filter((s) => room.services.includes(s.name))
+          .map((s) => s.id);
+        setSelectedServiceIds(matchedIds);
+      }
+    }
+
+    setSelectedAmenities(room.amenities || ['WiFi', 'Điều hòa', 'WC riêng']);
+    setIsSingleModalOpen(true);
+  };
+
   // Handle single room modal close with Rule 10 dirty check
   const handleCloseSingleModal = () => {
     if (isSingleDirty) {
@@ -230,15 +334,143 @@ export default function RoomsPage() {
         message: "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
         onConfirm: () => {
           setIsSingleModalOpen(false);
-          setIsSingleDirty(false);
-          setFormRoomNumber("");
-          setFormNotes("");
-          setSelectedAmenities([]);
+          resetSingleForm();
           setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         },
       });
     } else {
       setIsSingleModalOpen(false);
+      resetSingleForm();
+    }
+  };
+
+  // Handle single room submit (UC-L-03)
+  const handleSingleRoomSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSingleError(null);
+
+    if (!formRoomNumber.trim()) {
+      setSingleError("Vui lòng nhập số phòng.");
+      return;
+    }
+
+    const floorNum = parseInt(formFloor, 10);
+    if (isNaN(floorNum) || floorNum < 1) {
+      setSingleError("Tầng phải là một số nguyên lớn hơn hoặc bằng 1.");
+      return;
+    }
+
+    const buildingId = activeBuilding?.id || "b1";
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    setIsSingleSubmitting(true);
+    try {
+      if (UUID_RE.test(buildingId) && formRoomTypeId) {
+        if (selectedRoomId && UUID_RE.test(selectedRoomId)) {
+          // UC-L-03: Update Room
+          await updateRoom(buildingId, selectedRoomId, {
+            roomNumber: formRoomNumber.trim(),
+            floor: floorNum,
+            area: formArea ? parseFloat(formArea) : undefined,
+            maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : undefined,
+            roomTypeId: formRoomTypeId,
+            status: formStatus,
+            imageUrl: formImageUrl.trim() || undefined,
+            serviceIds: selectedServiceIds,
+          });
+
+          setToastMessage({
+            type: "success",
+            text: `Đã cập nhật phòng ${formRoomNumber.trim()} thành công!`,
+          });
+        } else {
+          // UC-L-03: Create Room
+          await createRoom(buildingId, {
+            roomNumber: formRoomNumber.trim(),
+            floor: floorNum,
+            area: formArea ? parseFloat(formArea) : undefined,
+            maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : undefined,
+            roomTypeId: formRoomTypeId,
+            status: formStatus,
+            imageUrl: formImageUrl.trim() || undefined,
+            serviceIds: selectedServiceIds,
+          });
+
+          setToastMessage({
+            type: "success",
+            text: `Đã tạo mới phòng ${formRoomNumber.trim()} thành công!`,
+          });
+        }
+
+        await fetchBuildingData(buildingId);
+      } else {
+        // Fallback for mock mode
+        const selectedTypeName = metadata?.roomTypes.find((rt) => rt.id === formRoomTypeId)?.name || "Studio";
+        const selectedServiceNames = metadata?.services
+          .filter((s) => selectedServiceIds.includes(s.id))
+          .map((s) => s.name) || ["Điện", "Nước", "WiFi"];
+
+        const statusLabel =
+          formStatus === 'available' ? 'Trống' :
+          formStatus === 'occupied' ? 'Đang thuê' :
+          formStatus === 'maintainace' ? 'Bảo trì' : 'Đặt cọc';
+
+        if (selectedRoomId) {
+          setRooms((prev) =>
+            prev.map((r) =>
+              (r.fullRoomId === selectedRoomId || r.id === selectedRoomId)
+                ? {
+                    ...r,
+                    id: formRoomNumber.trim(),
+                    floor: String(floorNum),
+                    area: formArea || "25",
+                    maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : 2,
+                    status: statusLabel,
+                    roomType: selectedTypeName,
+                    price: formPrice || "3.500.000",
+                    notes: formNotes,
+                    services: selectedServiceNames,
+                    amenities: [...selectedAmenities],
+                  }
+                : r,
+            ),
+          );
+          setToastMessage({
+            type: "success",
+            text: `Đã cập nhật phòng ${formRoomNumber.trim()} thành công!`,
+          });
+        } else {
+          const newRoom = {
+            id: formRoomNumber.trim(),
+            fullRoomId: `room-${formRoomNumber.trim()}`,
+            floor: String(floorNum),
+            status: statusLabel,
+            building: buildingId,
+            buildingSeq: 1,
+            contract: "none",
+            invoice: "none",
+            area: formArea || "25",
+            price: formPrice || "3.500.000",
+            roomType: selectedTypeName,
+            notes: formNotes,
+            amenities: [...selectedAmenities],
+            services: selectedServiceNames,
+          };
+          setRooms((prev) => [newRoom, ...prev]);
+          setToastMessage({
+            type: "success",
+            text: `Đã thêm phòng ${formRoomNumber.trim()} thành công!`,
+          });
+        }
+      }
+
+      setIsSingleModalOpen(false);
+      setIsSingleDirty(false);
+    } catch (err: any) {
+      const msg = err?.message || "Không thể lưu thông tin phòng. Vui lòng thử lại.";
+      setSingleError(msg);
+    } finally {
+      setIsSingleSubmitting(false);
     }
   };
 
@@ -535,19 +767,9 @@ export default function RoomsPage() {
             <span>Tạo phòng tự động</span>
           </button>
 
-          {/* Single Room Add Button */}
+          {/* Single Room Add Button (UC-L-03) */}
           <button
-            onClick={() => {
-              setFormBuilding(activeBuilding?.id || "b1");
-              setFormRoomNumber("");
-              setFormRoomType("studio");
-              setFormFloor("1");
-              setFormArea("25");
-              setFormPrice("3.000.000");
-              setFormNotes("");
-              setSelectedAmenities(['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
-              setIsSingleModalOpen(true);
-            }}
+            onClick={handleOpenCreateModal}
             className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Thêm phòng
@@ -823,6 +1045,18 @@ export default function RoomsPage() {
                             className="absolute top-2 left-2 w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC] cursor-pointer"
                           />
 
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditModal(room);
+                            }}
+                            className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-800 hover:bg-white/80 rounded-md transition-all cursor-pointer opacity-80 hover:opacity-100"
+                            title="Chỉnh sửa phòng (UC-L-03)"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+
                           <span
                             className={`text-lg font-black mt-1 ${
                               isOccupied
@@ -935,6 +1169,13 @@ export default function RoomsPage() {
                           </div>
                         </td>
                         <td className="p-3 text-right space-x-1.5">
+                          <button
+                            onClick={() => handleOpenEditModal(room)}
+                            className="p-1.5 text-zinc-500 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                            title="Chỉnh sửa phòng (UC-L-03)"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
                             className="p-1.5 text-zinc-500 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
@@ -1377,6 +1618,7 @@ export default function RoomsPage() {
             onInput={() => setIsSingleDirty(true)}
             onChange={() => setIsSingleDirty(true)}
           >
+            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-white z-10">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
@@ -1388,8 +1630,8 @@ export default function RoomsPage() {
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
                     {selectedRoomId
-                      ? "Cập nhật thông tin chi tiết của phòng và dịch vụ"
-                      : "Điền thông tin chi tiết để tạo phòng trên hệ thống"}
+                      ? "Cập nhật thông tin chi tiết của phòng và dịch vụ áp dụng (UC-L-03)"
+                      : "Điền thông tin chi tiết để tạo phòng trên hệ thống và liên kết dịch vụ (UC-L-03)"}
                   </p>
                 </div>
               </div>
@@ -1401,176 +1643,320 @@ export default function RoomsPage() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-zinc-50/50">
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 space-y-6">
-                  <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs">
-                    <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-                      <Home className="w-4 h-4 text-[#2AC1BC]" /> Thông tin cơ bản
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-zinc-700">Tòa nhà <span className="text-red-500">*</span></label>
-                        <select
-                          value={formBuilding}
-                          onChange={(e) => { setFormBuilding(e.target.value); setIsSingleDirty(true); }}
-                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                        >
-                          {(buildings && buildings.length > 0 ? buildings : [
-                            { id: "b1", name: "Dormio Premier Quận 1" },
-                            { id: "b2", name: "Dormio Campus Cầu Giấy" },
-                          ]).map((b: any) => (
-                            <option key={b.id} value={b.id}>
-                              {b.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-zinc-700">Số phòng <span className="text-red-500">*</span></label>
-                        <input
-                          type="text"
-                          value={formRoomNumber}
-                          onChange={(e) => { setFormRoomNumber(e.target.value); setIsSingleDirty(true); }}
-                          placeholder="VD: 101, A01"
-                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-zinc-700">Loại phòng</label>
-                        <select
-                          value={formRoomType}
-                          onChange={(e) => { setFormRoomType(e.target.value); setIsSingleDirty(true); }}
-                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                        >
-                          <option value="studio">Studio (Khép kín)</option>
-                          <option value="1pn">1 Phòng ngủ (1PN)</option>
-                          <option value="2pn">2 Phòng ngủ (2PN)</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-zinc-700">Tầng</label>
-                        <input
-                          type="text"
-                          value={formFloor}
-                          onChange={(e) => { setFormFloor(e.target.value); setIsSingleDirty(true); }}
-                          placeholder="VD: 1, 2..."
-                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-zinc-700">Diện tích (m²)</label>
-                        <input
-                          type="number"
-                          value={formArea}
-                          onChange={(e) => { setFormArea(e.target.value); setIsSingleDirty(true); }}
-                          placeholder="25"
-                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-zinc-700">Giá thuê (VNĐ)</label>
-                        <input
-                          type="text"
-                          value={formPrice}
-                          onChange={(e) => { setFormPrice(e.target.value); setIsSingleDirty(true); }}
-                          placeholder="3.500.000"
-                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-[#2AC1BC]"
-                        />
-                      </div>
-                    </div>
+            {/* Modal Content */}
+            <form onSubmit={handleSingleRoomSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-zinc-50/50 space-y-6">
+                {/* Error Banner */}
+                {singleError && (
+                  <div className="p-4 bg-rose-50 border border-rose-200/80 rounded-2xl text-rose-800 text-xs font-semibold flex items-start gap-2.5 shadow-2xs animate-in fade-in">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    <span>{singleError}</span>
                   </div>
-                </div>
+                )}
 
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs">
-                    <h3 className="font-bold text-zinc-900 text-sm mb-4 flex items-center gap-2">
-                      <Target className="w-4 h-4 text-[#2AC1BC]" /> Tiện nghi
-                    </h3>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'WC riêng'].map((item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() => {
-                            setSelectedAmenities((prev) =>
-                              prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item],
-                            );
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  {/* Left Column: Basic Details */}
+                  <div className="lg:col-span-3 space-y-6">
+                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-4">
+                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                        <Home className="w-4 h-4 text-[#2AC1BC]" /> Thông tin phòng
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">Tòa nhà</label>
+                          <div className="w-full px-3 py-2 text-xs border border-zinc-200 bg-zinc-50 rounded-xl font-medium text-zinc-700 truncate">
+                            {activeBuilding?.name || "Dormio Boarding House"}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">
+                            Số phòng <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={formRoomNumber}
+                            onChange={(e) => {
+                              setFormRoomNumber(e.target.value);
+                              setIsSingleDirty(true);
+                            }}
+                            placeholder="VD: 101, A01"
+                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">
+                            Loại phòng <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            value={formRoomTypeId}
+                            onChange={(e) => {
+                              setFormRoomTypeId(e.target.value);
+                              setIsSingleDirty(true);
+                            }}
+                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
+                          >
+                            {metadata?.roomTypes && metadata.roomTypes.length > 0 ? (
+                              metadata.roomTypes.map((rt) => (
+                                <option key={rt.id} value={rt.id}>
+                                  {rt.name}
+                                </option>
+                              ))
+                            ) : (
+                              <>
+                                <option value="studio">Studio (Khép kín)</option>
+                                <option value="1pn">1 Phòng ngủ (1PN)</option>
+                                <option value="2pn">2 Phòng ngủ (2PN)</option>
+                              </>
+                            )}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">
+                            Tầng <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            required
+                            value={formFloor}
+                            onChange={(e) => {
+                              setFormFloor(e.target.value);
+                              setIsSingleDirty(true);
+                            }}
+                            placeholder="VD: 1, 2..."
+                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">Diện tích (m²)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min={1}
+                            value={formArea}
+                            onChange={(e) => {
+                              setFormArea(e.target.value);
+                              setIsSingleDirty(true);
+                            }}
+                            placeholder="25"
+                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">Số người tối đa</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={formMaxOccupants}
+                            onChange={(e) => {
+                              setFormMaxOccupants(e.target.value);
+                              setIsSingleDirty(true);
+                            }}
+                            placeholder="2"
+                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">Trạng thái phòng</label>
+                          <select
+                            value={formStatus}
+                            onChange={(e) => {
+                              setFormStatus(e.target.value);
+                              setIsSingleDirty(true);
+                            }}
+                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
+                          >
+                            <option value="available">Trống (Sẵn sàng cho thuê)</option>
+                            <option value="occupied">Đang thuê</option>
+                            <option value="maintainace">Bảo trì</option>
+                            <option value="deposited">Đặt cọc</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-zinc-700">Giá thuê tham khảo (VNĐ)</label>
+                          <input
+                            type="text"
+                            value={formPrice}
+                            onChange={(e) => {
+                              setFormPrice(e.target.value);
+                              setIsSingleDirty(true);
+                            }}
+                            placeholder="3.500.000"
+                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-[#2AC1BC]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 pt-1">
+                        <label className="text-xs font-bold text-zinc-700">URL ảnh đại diện phòng</label>
+                        <input
+                          type="text"
+                          value={formImageUrl}
+                          onChange={(e) => {
+                            setFormImageUrl(e.target.value);
                             setIsSingleDirty(true);
                           }}
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                            selectedAmenities.includes(item)
-                              ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
-                              : "text-zinc-600 bg-white border-zinc-200 hover:bg-zinc-50"
-                          }`}
-                        >
-                          {item}
-                        </button>
-                      ))}
+                          placeholder="https://images.unsplash.com/photo-..."
+                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Room Services Association (UC-L-03) */}
+                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                          <Receipt className="w-4 h-4 text-[#2AC1BC]" /> Dịch vụ phòng (UC-L-03)
+                        </h3>
+                        <span className="text-[11px] font-semibold text-zinc-500">
+                          Đã chọn {selectedServiceIds.length} dịch vụ
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-500 leading-relaxed">
+                        Tích chọn các dịch vụ áp dụng cho phòng này. Dịch vụ không chọn sẽ tự động tách khỏi phòng.
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        {metadata?.services && metadata.services.length > 0 ? (
+                          metadata.services.map((srv) => {
+                            const isChecked = selectedServiceIds.includes(srv.id);
+                            return (
+                              <label
+                                key={srv.id}
+                                className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                                  isChecked
+                                    ? "bg-[#2AC1BC]/10 border-[#2AC1BC]/40 text-[#2AC1BC]"
+                                    : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => {
+                                      setSelectedServiceIds((prev) =>
+                                        prev.includes(srv.id)
+                                          ? prev.filter((id) => id !== srv.id)
+                                          : [...prev, srv.id],
+                                      );
+                                      setIsSingleDirty(true);
+                                    }}
+                                    className="w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC]"
+                                  />
+                                  <span className="truncate">{srv.name}</span>
+                                </div>
+                                <span className="text-[11px] font-mono text-zinc-500 shrink-0">
+                                  {srv.price} đ/{srv.unit}
+                                </span>
+                              </label>
+                            );
+                          })
+                        ) : (
+                          ["Điện (3.500 đ/kWh)", "Nước (25.000 đ/m³)", "WiFi (100.000 đ/tháng)", "Rác (20.000 đ/phòng)"].map((label, idx) => (
+                            <label
+                              key={idx}
+                              className="flex items-center gap-2 p-2.5 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                defaultChecked
+                                className="w-3.5 h-3.5 rounded text-[#2AC1BC]"
+                              />
+                              <span>{label}</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs">
-                    <h3 className="font-bold text-zinc-900 text-sm mb-3 flex items-center gap-2">
-                      <FileSignature className="w-4 h-4 text-[#2AC1BC]" /> Ghi chú
-                    </h3>
-                    <textarea
-                      rows={3}
-                      value={formNotes}
-                      onChange={(e) => { setFormNotes(e.target.value); setIsSingleDirty(true); }}
-                      placeholder="Ghi chú thêm về phòng..."
-                      className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
-                    />
+                  {/* Right Column: Amenities & Notes */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                        <Target className="w-4 h-4 text-[#2AC1BC]" /> Tiện nghi phòng
+                      </h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng'].map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => {
+                              setSelectedAmenities((prev) =>
+                                prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item],
+                              );
+                              setIsSingleDirty(true);
+                            }}
+                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                              selectedAmenities.includes(item)
+                                ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
+                                : "text-zinc-600 bg-white border-zinc-200 hover:bg-zinc-50"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-2">
+                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                        <FileSignature className="w-4 h-4 text-[#2AC1BC]" /> Ghi chú nội bộ
+                      </h3>
+                      <textarea
+                        rows={4}
+                        value={formNotes}
+                        onChange={(e) => {
+                          setFormNotes(e.target.value);
+                          setIsSingleDirty(true);
+                        }}
+                        placeholder="Ghi chú thêm về hiện trạng phòng, nội thất bàn giao..."
+                        className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-5 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
-              <button
-                type="button"
-                onClick={handleCloseSingleModal}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const newId = formRoomNumber || `10${rooms.length + 1}`;
-                  const newRoom = {
-                    id: newId,
-                    fullRoomId: `room-${newId}`,
-                    floor: formFloor || "1",
-                    status: "Trống",
-                    building: formBuilding || "dormio",
-                    contract: "none",
-                    invoice: "none",
-                    area: formArea || "25",
-                    price: formPrice || "3.500.000",
-                    roomType: formRoomType,
-                    notes: formNotes,
-                    amenities: [...selectedAmenities],
-                    services: ["Điện", "Nước", "WiFi"],
-                  };
-                  setRooms((prev) => [newRoom, ...prev]);
-                  setIsSingleModalOpen(false);
-                  setIsSingleDirty(false);
-                  setToastMessage({
-                    type: "success",
-                    text: `Đã thêm phòng ${newId} thành công!`,
-                  });
-                }}
-                className="px-6 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm transition-all cursor-pointer"
-              >
-                Lưu phòng
-              </button>
-            </div>
+              {/* Modal Actions */}
+              <div className="p-5 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
+                <button
+                  type="button"
+                  onClick={handleCloseSingleModal}
+                  disabled={isSingleSubmitting}
+                  className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSingleSubmitting}
+                  className="flex items-center gap-2 px-6 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-sm transition-all cursor-pointer"
+                >
+                  {isSingleSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : selectedRoomId ? (
+                    <Edit className="w-4 h-4" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  {isSingleSubmitting
+                    ? "Đang lưu..."
+                    : selectedRoomId
+                    ? "Lưu thay đổi"
+                    : "Tạo phòng"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
