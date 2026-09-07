@@ -32,12 +32,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 
 @ApiTags('Landlord Contracts')
 @ApiBearerAuth()
-@ApiHeader({
-  name: 'X-Boarding-House-Id',
-  required: true,
-  description: 'Active Boarding House UUID context',
-})
-@UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('landlord/contracts')
 export class LandlordContractsController {
   private readonly logger = new Logger(LandlordContractsController.name);
@@ -47,6 +42,12 @@ export class LandlordContractsController {
   // ─── GET /api/v1/landlord/contracts/rooms/:roomId/pending-deposit ──────────
 
   @Get('rooms/:roomId/pending-deposit')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Check Pending Platform Deposit for Room (UC-L-04 Flow A pre-check)',
@@ -97,6 +98,12 @@ export class LandlordContractsController {
   // ─── POST /api/v1/landlord/contracts/platform ───────────────────────────────
 
   @Post('platform')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Generate Contract From Platform Deposit (UC-L-04 Flow A)',
@@ -129,6 +136,12 @@ export class LandlordContractsController {
   // ─── POST /api/v1/landlord/contracts/direct ─────────────────────────────────
 
   @Post('direct')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Generate Direct Rental Contract (UC-L-04 Flow B)',
@@ -161,6 +174,12 @@ export class LandlordContractsController {
   // ─── GET /api/v1/landlord/contracts ─────────────────────────────────────────
 
   @Get()
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'List Landlord Contracts (with pagination, search, status filter)',
@@ -188,6 +207,12 @@ export class LandlordContractsController {
   // ─── GET /api/v1/landlord/contracts/:id ─────────────────────────────────────
 
   @Get(':id')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Get Contract Detail by ID',

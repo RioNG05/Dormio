@@ -120,7 +120,7 @@ export async function getPendingPlatformDeposit(
   roomId: string,
 ): Promise<{ success: boolean; data: PendingDepositResponse | null }> {
   return api.get<{ success: boolean; data: PendingDepositResponse | null }>(
-    `/landlord/contracts/rooms/${roomId}/pending-deposit`,
+    `/v1/landlord/contracts/rooms/${roomId}/pending-deposit`,
     {
       headers: {
         'X-Boarding-House-Id': buildingId,
@@ -136,7 +136,7 @@ export async function searchTenantByPhone(
   phoneNumber: string,
 ): Promise<{ success: boolean; data: TenantSearchResult }> {
   return api.get<{ success: boolean; data: TenantSearchResult }>(
-    `/landlord/contracts/tenants/search`,
+    `/v1/landlord/contracts/tenants/search`,
     {
       params: { phoneNumber },
     },
@@ -151,7 +151,7 @@ export async function createPlatformContract(
   payload: CreateContractPlatformPayload,
 ): Promise<{ success: boolean; data: any }> {
   return api.post<{ success: boolean; data: any }>(
-    `/landlord/contracts/platform`,
+    `/v1/landlord/contracts/platform`,
     payload,
     {
       headers: {
@@ -169,7 +169,7 @@ export async function createDirectContract(
   payload: CreateContractDirectPayload,
 ): Promise<{ success: boolean; data: any }> {
   return api.post<{ success: boolean; data: any }>(
-    `/landlord/contracts/direct`,
+    `/v1/landlord/contracts/direct`,
     payload,
     {
       headers: {
@@ -197,7 +197,7 @@ export async function getLandlordContracts(
   if (params?.page) queryParams.page = String(params.page);
   if (params?.limit) queryParams.limit = String(params.limit);
 
-  return api.get<ContractListResponse>(`/landlord/contracts`, {
+  return api.get<ContractListResponse>(`/v1/landlord/contracts`, {
     headers: {
       'X-Boarding-House-Id': buildingId,
     },
@@ -213,7 +213,7 @@ export async function getContractById(
   contractId: string,
 ): Promise<{ success: boolean; data: any }> {
   return api.get<{ success: boolean; data: any }>(
-    `/landlord/contracts/${contractId}`,
+    `/v1/landlord/contracts/${contractId}`,
     {
       headers: {
         'X-Boarding-House-Id': buildingId,
@@ -221,3 +221,4 @@ export async function getContractById(
     },
   );
 }
+
