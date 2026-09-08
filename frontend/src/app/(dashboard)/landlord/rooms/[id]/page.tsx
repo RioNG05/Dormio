@@ -17,6 +17,11 @@ import {
   RoomDashboardContract,
   RoomDashboardTenant,
 } from "@/services/room.service";
+import {
+  meterReadingService,
+  LandlordActiveMeteredService,
+  LandlordMeterPeriodHistory,
+} from "@/services/meter-reading.service";
 import { getRoomById, defaultRoomServices, Room } from "../data";
 
 interface MeterHistoryRecord {
@@ -138,33 +143,27 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     floor: "",
   });
 
-  // Meter modal input states
-  const [selectedMonth, setSelectedMonth] = useState("Tháng 8");
-  const [selectedYear, setSelectedYear] = useState("2026");
-  const [formElec, setFormElec] = useState("1428");
-  const [formWater, setFormWater] = useState("45");
+  // Current date for default picker
+  const currentMonthNum = new Date().getMonth() + 1;
+  const currentYearNum = new Date().getFullYear();
 
-  // Meter Readings History Data
-  const [meterHistory, setMeterHistory] = useState<MeterHistoryRecord[]>([
-    { period: "Tháng 09/2026", date: "01/09/2026 08:00", oldElec: 1428, newElec: 1530, oldWater: 45, newWater: 49, isOpen: true },
-    { period: "Tháng 08/2026", date: "01/08/2026 08:30", oldElec: 1318, newElec: 1428, oldWater: 42, newWater: 45, isOpen: false },
-    { period: "Tháng 07/2026", date: "01/07/2026 09:15", oldElec: 1210, newElec: 1318, oldWater: 38, newWater: 42, isOpen: false },
-    { period: "Tháng 06/2026", date: "01/06/2026 08:10", oldElec: 1100, newElec: 1210, oldWater: 34, newWater: 38, isOpen: false },
-    { period: "Tháng 05/2026", date: "01/05/2026 08:45", oldElec: 990, newElec: 1100, oldWater: 30, newWater: 34, isOpen: false },
-    { period: "Tháng 04/2026", date: "01/04/2026 09:00", oldElec: 880, newElec: 990, oldWater: 26, newWater: 30, isOpen: false }
-  ]);
+  // Meter modal input states
+  const [selectedMonth, setSelectedMonth] = useState(`Tháng ${currentMonthNum}`);
+  const [selectedYear, setSelectedYear] = useState(currentYearNum.toString());
+  const [formElec, setFormElec] = useState("");
+  const [formWater, setFormWater] = useState("");
+  const [isSubmittingMeter, setIsSubmittingMeter] = useState(false);
+
+  // Meter Readings History & Active Services Data (UC-L-09)
+  const [meterHistory, setMeterHistory] = useState<MeterHistoryRecord[]>([]);
+  const [meterHistoryRaw, setMeterHistoryRaw] = useState<LandlordMeterPeriodHistory[]>([]);
+  const [roomMeteredServices, setRoomMeteredServices] = useState<LandlordActiveMeteredService[]>([]);
 
   // Invoices History List (initialized empty; loaded from API)
   const [invoicesHistory, setInvoicesHistory] = useState<InvoiceRecord[]>([]);
 
-  // Maintenance History List & Pagination
-  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([
-    { id: "M1", title: "Hỏng máy lạnh (Chảy nước)", description: "Máy lạnh tầng 4 chảy tràn nước ra sàn phòng ngủ", reportDate: "25/08/2026", status: "Đang xử lý", priority: "Mức độ cao" },
-    { id: "M2", title: "Thay bóng đèn nhà vệ sinh", description: "Bóng đèn led 12W bị cháy cần thay mới", reportDate: "10/07/2026", completedDate: "12/07/2026", status: "Đã xong", priority: "Mức độ nhẹ" },
-    { id: "M3", title: "Sửa vòi nước bồn rửa chén rỉ nước", reportDate: "05/05/2026", completedDate: "06/05/2026", status: "Đã xong", priority: "Mức độ trung bình" },
-    { id: "M4", title: "Bảo dưỡng máy giặt định kỳ", reportDate: "15/03/2026", completedDate: "15/03/2026", status: "Đã xong", priority: "Mức độ nhẹ" },
-    { id: "M5", title: "Sửa khoá cửa vân tay phòng", reportDate: "10/01/2026", completedDate: "11/01/2026", status: "Đã xong", priority: "Mức độ cao" }
-  ]);
+  // Maintenance History List & Pagination (initialized empty; no mockup data)
+  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([]);
   const [maintPage, setMaintPage] = useState(1);
   const MAINT_PER_PAGE = 2;
 
@@ -302,8 +301,53 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               })
             );
           }
+
+          // Load active metered services & meter history (UC-L-09)
+          try {
+            const [meterServicesRes, meterHistoryRes] = await Promise.all([
+              meterReadingService.getLandlordRoomMeteredServices(activeBuilding.id, resolvedParams.id),
+              meterReadingService.getLandlordRoomMeterHistory(activeBuilding.id, resolvedParams.id),
+            ]);
+
+            if (meterServicesRes?.services) {
+              setRoomMeteredServices(meterServicesRes.services);
+              const elec = meterServicesRes.services.find(s => s.serviceName.toLowerCase().includes('điện'));
+              const water = meterServicesRes.services.find(s => s.serviceName.toLowerCase().includes('nước'));
+              if (elec?.unbilledReading?.readingValue != null) {
+                setFormElec(elec.unbilledReading.readingValue.toString());
+              }
+              if (water?.unbilledReading?.readingValue != null) {
+                setFormWater(water.unbilledReading.readingValue.toString());
+              }
+            }
+
+            if (meterHistoryRes?.history) {
+              setMeterHistoryRaw(meterHistoryRes.history);
+              const mapped = meterHistoryRes.history.map((h, idx) => {
+                const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+                const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+                return {
+                  period: h.period,
+                  date: h.date,
+                  oldElec: elec?.oldReading ?? 0,
+                  newElec: elec?.newReading ?? 0,
+                  oldWater: water?.oldReading ?? 0,
+                  newWater: water?.newReading ?? 0,
+                  isOpen: idx === 0,
+                  editReason: h.editReason,
+                  editedAt: h.editedAt,
+                };
+              });
+              setMeterHistory(mapped);
+            }
+          } catch (mErr) {
+            console.warn("Could not load landlord meter readings:", mErr);
+            setMeterHistory([]);
+          }
         } catch (err: any) {
           console.error("Failed to load room dashboard from API:", err);
+          setMeterHistory([]);
+          setMaintenanceHistory([]);
           // Fallback to local mock data
           const found = getRoomById(resolvedParams.id);
           setRoom(found);
@@ -511,41 +555,128 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     });
   };
 
-  // Save correction action with mandatory reason check
-  const handleSaveCorrection = () => {
+  const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false);
+
+  // Close meter modal with unsaved confirmation check (Rule 10)
+  const handleCloseMeterModal = () => {
+    if (formElec.trim() !== "" || formWater.trim() !== "") {
+      setDiscardConfirmModal({
+        isOpen: true,
+        onConfirm: () => {
+          setFormElec("");
+          setFormWater("");
+          setIsMeterModalOpen(false);
+          setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      });
+    } else {
+      setIsMeterModalOpen(false);
+    }
+  };
+
+  // Close correction modal with unsaved confirmation check (Rule 10)
+  const handleCloseCorrectionModal = () => {
+    if (correctModal.reason.trim() !== "") {
+      setDiscardConfirmModal({
+        isOpen: true,
+        onConfirm: () => {
+          setCorrectModal(prev => ({ ...prev, isOpen: false }));
+          setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      });
+    } else {
+      setCorrectModal(prev => ({ ...prev, isOpen: false }));
+    }
+  };
+
+  // Save correction action with mandatory reason check (UC-L-09)
+  const handleSaveCorrection = async () => {
     if (!correctModal.reason.trim()) {
       setCorrectModal(prev => ({ ...prev, error: "Vui lòng điền lý do điều chỉnh chỉ số (Bắt buộc)" }));
       return;
     }
 
-    const nowStr = new Date().toLocaleString('vi-VN');
+    if (!activeBuilding?.id || !resolvedParams.id) {
+      showToast("Không xác định được phòng hoặc nhà trọ!", "error");
+      return;
+    }
 
-    setMeterHistory(prev => prev.map(item => {
-      if (item.period === correctModal.period) {
-        return {
-          ...item,
-          newElec: Number(correctModal.newElec),
-          newWater: Number(correctModal.newWater),
-          editReason: correctModal.reason,
-          editedAt: nowStr
-        };
+    const rawPeriod = meterHistoryRaw.find(h => h.period === correctModal.period);
+    if (!rawPeriod) {
+      setMeterHistory(prev => prev.map(item => {
+        if (item.period === correctModal.period) {
+          return {
+            ...item,
+            newElec: Number(correctModal.newElec),
+            newWater: Number(correctModal.newWater),
+            editReason: correctModal.reason,
+            editedAt: new Date().toLocaleString('vi-VN')
+          };
+        }
+        return item;
+      }));
+      setCorrectModal(prev => ({ ...prev, isOpen: false }));
+      showToast("Đã điều chỉnh chỉ số điện nước!", "success");
+      return;
+    }
+
+    try {
+      setIsSubmittingCorrection(true);
+      const elecItem = rawPeriod.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+      const waterItem = rawPeriod.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+
+      const updatePromises = [];
+      if (elecItem && Number(correctModal.newElec) !== elecItem.newReading) {
+        updatePromises.push(
+          meterReadingService.updateLandlordMeterReading(activeBuilding.id, elecItem.id, {
+            readingValue: Number(correctModal.newElec),
+            reason: correctModal.reason,
+          })
+        );
       }
-      return item;
-    }));
-
-    setInvoicesHistory(prev => prev.map(inv => {
-      if (inv.period === correctModal.period) {
-        return {
-          ...inv,
-          editReason: correctModal.reason,
-          editedAt: nowStr
-        };
+      if (waterItem && Number(correctModal.newWater) !== waterItem.newReading) {
+        updatePromises.push(
+          meterReadingService.updateLandlordMeterReading(activeBuilding.id, waterItem.id, {
+            readingValue: Number(correctModal.newWater),
+            reason: correctModal.reason,
+          })
+        );
       }
-      return inv;
-    }));
 
-    setCorrectModal(prev => ({ ...prev, isOpen: false }));
-    showToast("Đã điều chỉnh chỉ số điện nước và ghi nhật ký!", "success");
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
+      }
+
+      setCorrectModal(prev => ({ ...prev, isOpen: false }));
+      showToast("Đã điều chỉnh chỉ số điện nước và ghi nhật ký thành công!", "success");
+
+      // Reload meter history
+      const newHistoryRes = await meterReadingService.getLandlordRoomMeterHistory(activeBuilding.id, resolvedParams.id);
+      if (newHistoryRes?.history) {
+        setMeterHistoryRaw(newHistoryRes.history);
+        const mapped = newHistoryRes.history.map((h, idx) => {
+          const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+          const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+          return {
+            period: h.period,
+            date: h.date,
+            oldElec: elec?.oldReading ?? 0,
+            newElec: elec?.newReading ?? 0,
+            oldWater: water?.oldReading ?? 0,
+            newWater: water?.newReading ?? 0,
+            isOpen: idx === 0,
+            editReason: h.editReason,
+            editedAt: h.editedAt,
+          };
+        });
+        setMeterHistory(mapped);
+      }
+    } catch (err: any) {
+      console.error("Failed to update meter reading:", err);
+      showToast(err.message || "Lỗi khi cập nhật chỉ số điện nước", "error");
+    } finally {
+      setIsSubmittingCorrection(false);
+    }
   };
 
   // Simulate AI OCR scanning
@@ -553,33 +684,98 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     setIsOcrScanning(true);
     setOcrSuccessMsg("");
     setTimeout(() => {
-      setFormElec("1530");
-      setFormWater("49");
+      const elecService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'));
+      const waterService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'));
+      const baseElec = elecService?.lastReading?.readingValue ?? (meterHistory[0]?.newElec || 1400);
+      const baseWater = waterService?.lastReading?.readingValue ?? (meterHistory[0]?.newWater || 40);
+      const scannedElec = baseElec + Math.floor(Math.random() * 40) + 60;
+      const scannedWater = baseWater + Math.floor(Math.random() * 4) + 3;
+      setFormElec(scannedElec.toString());
+      setFormWater(scannedWater.toString());
       setIsOcrScanning(false);
-      setOcrSuccessMsg("✓ AI đã quét số điện nước: Điện 1530 kWh, Nước 49 m³");
+      setOcrSuccessMsg(`✓ AI đã quét số điện nước: Điện ${scannedElec} kWh, Nước ${scannedWater} m³`);
     }, 800);
   };
 
-  // Save new meter reading from main modal
-  const handleSaveNewMeterReading = () => {
-    const periodFull = `Tháng ${selectedMonth.replace('Tháng ', '').padStart(2, '0')}/${selectedYear}`;
-    const nowStr = new Date().toLocaleString('vi-VN');
+  // Save new meter reading from main modal (UC-L-09)
+  const handleSaveNewMeterReading = async () => {
+    if (!formElec && !formWater) {
+      showToast("Vui lòng nhập ít nhất chỉ số điện hoặc nước!", "error");
+      return;
+    }
 
-    const lastRecord = meterHistory[0] || { newElec: 1428, newWater: 45 };
+    if (!activeBuilding?.id || !resolvedParams.id) {
+      showToast("Không xác định được phòng hoặc nhà trọ!", "error");
+      return;
+    }
 
-    const newRecord: MeterHistoryRecord = {
-      period: periodFull,
-      date: nowStr,
-      oldElec: lastRecord.newElec,
-      newElec: parseInt(formElec) || lastRecord.newElec,
-      oldWater: lastRecord.newWater,
-      newWater: parseInt(formWater) || lastRecord.newWater,
-      isOpen: true
-    };
+    const elecService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'));
+    const waterService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'));
 
-    setMeterHistory(prev => [newRecord, ...prev.filter(p => p.period !== periodFull)]);
-    setIsMeterModalOpen(false);
-    showToast(`Đã chốt chỉ số cho ${periodFull}!`, "success");
+    const readings: Array<{ serviceId: string; readingValue: number; imageUrl?: string }> = [];
+    if (elecService && formElec.trim() !== '') {
+      readings.push({
+        serviceId: elecService.serviceId,
+        readingValue: parseFloat(formElec),
+      });
+    }
+    if (waterService && formWater.trim() !== '') {
+      readings.push({
+        serviceId: waterService.serviceId,
+        readingValue: parseFloat(formWater),
+      });
+    }
+
+    if (readings.length === 0) {
+      showToast("Chưa tìm thấy dịch vụ điện/nước đo lường cho nhà trọ này!", "error");
+      return;
+    }
+
+    try {
+      setIsSubmittingMeter(true);
+      await meterReadingService.recordLandlordMeterReading(activeBuilding.id, {
+        roomId: resolvedParams.id,
+        readings,
+      });
+
+      const periodFull = `Tháng ${selectedMonth.replace('Tháng ', '').padStart(2, '0')}/${selectedYear}`;
+      showToast(`Đã chốt chỉ số cho ${periodFull} thành công!`, "success");
+      setIsMeterModalOpen(false);
+
+      // Refresh meter services & history
+      const [newServicesRes, newHistoryRes] = await Promise.all([
+        meterReadingService.getLandlordRoomMeteredServices(activeBuilding.id, resolvedParams.id),
+        meterReadingService.getLandlordRoomMeterHistory(activeBuilding.id, resolvedParams.id),
+      ]);
+
+      if (newServicesRes?.services) {
+        setRoomMeteredServices(newServicesRes.services);
+      }
+      if (newHistoryRes?.history) {
+        setMeterHistoryRaw(newHistoryRes.history);
+        const mapped = newHistoryRes.history.map((h, idx) => {
+          const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+          const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+          return {
+            period: h.period,
+            date: h.date,
+            oldElec: elec?.oldReading ?? 0,
+            newElec: elec?.newReading ?? 0,
+            oldWater: water?.oldReading ?? 0,
+            newWater: water?.newReading ?? 0,
+            isOpen: idx === 0,
+            editReason: h.editReason,
+            editedAt: h.editedAt,
+          };
+        });
+        setMeterHistory(mapped);
+      }
+    } catch (err: any) {
+      console.error("Failed to record meter readings:", err);
+      showToast(err.message || "Lỗi khi lưu chỉ số điện nước", "error");
+    } finally {
+      setIsSubmittingMeter(false);
+    }
   };
 
   if (!isMounted || isLoading) {
@@ -623,8 +819,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   // Base constants for financial calculations
   const roomRentNum = parseInt((room.price || "3000000").replace(/\D/g, '')) || 3000000;
   const fixedServicesTotal = 210000;
-  const elecUnitPrice = 3500;
-  const waterUnitPrice = 25000;
+  const elecService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'));
+  const waterService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'));
+  const elecUnitPrice = elecService?.unitPrice ?? 3500;
+  const waterUnitPrice = waterService?.unitPrice ?? 25000;
 
   const computeRecordFinancials = (m: MeterHistoryRecord) => {
     const elecUse = Math.max(0, m.newElec - m.oldElec);
@@ -1120,7 +1318,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="space-y-3">
-              {filteredMeterHistory.length === 0 ? (
+              {meterHistory.length === 0 ? (
+                <div className="p-8 text-center bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-zinc-200/70 text-zinc-400 flex items-center justify-center mx-auto">
+                    <Gauge className="w-5 h-5" />
+                  </div>
+                  <p className="font-bold text-sm text-zinc-700">Chưa có dữ liệu chốt số điện nước</p>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto font-medium">
+                    Phòng này chưa được ghi nhận chỉ số điện nước nào. Bấm nút &quot;Chốt Số / Quét AI OCR&quot; bên trên để nhập chỉ số đầu tiên.
+                  </p>
+                </div>
+              ) : filteredMeterHistory.length === 0 ? (
                 <div className="p-6 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
                   Không có lịch sử chốt số điện nước nào trong kỳ lọc.
                 </div>
@@ -1177,7 +1385,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div className="p-3 sm:p-4 bg-white border-t border-zinc-100 space-y-2.5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
                         <div className="flex items-center justify-between sm:justify-start gap-2">
-                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ ĐIỆN (3.500 ₫/kWh)</div>
+                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ ĐIỆN ({elecUnitPrice.toLocaleString('vi-VN')} ₫/kWh)</div>
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.elecCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
@@ -1188,7 +1396,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                         <div className="flex items-center justify-between sm:justify-start gap-2">
-                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 NƯỚC (25.000 ₫/m³)</div>
+                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 NƯỚC ({waterUnitPrice.toLocaleString('vi-VN')} ₫/m³)</div>
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.waterCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
@@ -1612,25 +1820,27 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
               <button
-                onClick={() => setCorrectModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+                onClick={handleCloseCorrectionModal}
+                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 onClick={handleSaveCorrection}
-                className="px-6 py-2 text-xs font-black text-white bg-amber-600 rounded-xl hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all cursor-pointer"
+                disabled={isSubmittingCorrection}
+                className="px-6 py-2 text-xs font-black text-white bg-amber-600 rounded-xl hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
               >
-                Lưu Thay Đổi & Update Hóa Đơn
+                {isSubmittingCorrection && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                {isSubmittingCorrection ? "Đang lưu..." : "Lưu Thay Đổi & Update Hóa Đơn"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI */}
+      {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI (UC-L-09) */}
       {isMeterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsMeterModalOpen(false); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseMeterModal(); }}>
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-zinc-100">
               <div className="flex items-center gap-3">
@@ -1642,7 +1852,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs text-zinc-500 font-medium">Ghi lại chỉ số điện nước hàng tháng cho Phòng {room.roomNumber}</p>
                 </div>
               </div>
-              <button onClick={() => setIsMeterModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
+              <button onClick={handleCloseMeterModal} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1694,19 +1904,35 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="grid grid-cols-2 gap-4 pt-1">
                 <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-1.5">
-                  <label className="block text-xs font-black text-zinc-900">⚡ Chỉ số ĐIỆN mới (kWh)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black text-zinc-900">⚡ Chỉ số ĐIỆN mới (kWh)</label>
+                    {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))?.lastReading && (
+                      <span className="text-[10px] text-zinc-400 font-bold">
+                        Cũ: {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))?.lastReading?.readingValue}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
                     value={formElec}
+                    placeholder="Nhập chỉ số điện..."
                     onChange={(e) => setFormElec(e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
                 <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20 space-y-1.5">
-                  <label className="block text-xs font-black text-zinc-900">💧 Chỉ số NƯỚC mới (m³)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black text-zinc-900">💧 Chỉ số NƯỚC mới (m³)</label>
+                    {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))?.lastReading && (
+                      <span className="text-[10px] text-zinc-400 font-bold">
+                        Cũ: {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))?.lastReading?.readingValue}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
                     value={formWater}
+                    placeholder="Nhập chỉ số nước..."
                     onChange={(e) => setFormWater(e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
@@ -1715,14 +1941,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button onClick={() => setIsMeterModalOpen(false)} className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
+              <button onClick={handleCloseMeterModal} className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer">
                 Hủy
               </button>
               <button
                 onClick={handleSaveNewMeterReading}
-                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+                disabled={isSubmittingMeter}
+                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
               >
-                Lưu & Chốt Chỉ Số
+                {isSubmittingMeter && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                {isSubmittingMeter ? "Đang lưu..." : "Lưu & Chốt Chỉ Số"}
               </button>
             </div>
           </div>

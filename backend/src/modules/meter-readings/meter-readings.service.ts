@@ -16,6 +16,15 @@ import {
   ConfirmReadingsResponseDto,
   InvoiceItemResponseDto,
 } from './dto/confirm-readings-response.dto';
+import { RecordLandlordMeterReadingDto } from './dto/record-landlord-meter-reading.dto';
+import { UpdateLandlordMeterReadingDto } from './dto/update-landlord-meter-reading.dto';
+import {
+  LandlordRoomMeteredServicesResponseDto,
+  LandlordActiveMeteredServiceItemDto,
+  LandlordRoomMeterHistoryResponseDto,
+  LandlordMeterPeriodHistoryDto,
+  LandlordMeterReadingServiceItemDto,
+} from './dto/landlord-meter-readings-response.dto';
 
 @Injectable()
 export class MeterReadingsService {
@@ -505,6 +514,378 @@ export class MeterReadingsService {
       contractId: contract.id,
       items: result.items,
       vietQrPayload,
+    };
+  }
+
+  // ─── Landlord Meter Readings (UC-L-09) ──────────────────────────────────────
+
+  /**
+   * UC-L-09: Get active metered services for a room along with last recorded readings
+   */
+  async getRoomMeteredServices(
+    boardingHouseId: string,
+    roomId: string,
+  ): Promise<LandlordRoomMeteredServicesResponseDto> {
+    this.logger.log(`Landlord fetching metered services for room ${roomId}`);
+
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+      select: { id: true, roomNumber: true },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Phòng không tồn tại trong nhà trọ này');
+    }
+
+    // Find services specifically linked to room or all metered services in this boarding house
+    let meteredServices = await this.prisma.service.findMany({
+      where: {
+        boardingHouseId,
+        isMetered: true,
+        status: 'active',
+        roomServices: {
+          some: { roomId },
+        },
+      },
+    });
+
+    if (meteredServices.length === 0) {
+      // Fallback: active metered services defined for the entire boarding house
+      meteredServices = await this.prisma.service.findMany({
+        where: {
+          boardingHouseId,
+          isMetered: true,
+          status: 'active',
+        },
+      });
+    }
+
+    const services: LandlordActiveMeteredServiceItemDto[] = [];
+
+    for (const service of meteredServices) {
+      // Latest unbilled reading for this service
+      const unbilled = await this.prisma.meterReading.findFirst({
+        where: {
+          roomId,
+          serviceId: service.id,
+          invoiceId: null,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Latest billed (or historical) reading prior to current unbilled
+      const last = await this.prisma.meterReading.findFirst({
+        where: {
+          roomId,
+          serviceId: service.id,
+          ...(unbilled ? { id: { not: unbilled.id } } : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      services.push({
+        serviceId: service.id,
+        serviceName: service.name,
+        unitPrice: Number(service.price),
+        unit: service.unit,
+        lastReading: last
+          ? {
+              id: last.id,
+              readingValue: Number(last.readingValue || 0),
+              imageUrl: last.imageUrl,
+              createdAt: last.createdAt.toISOString(),
+            }
+          : null,
+        unbilledReading: unbilled
+          ? {
+              id: unbilled.id,
+              readingValue: Number(unbilled.readingValue || 0),
+              imageUrl: unbilled.imageUrl,
+              createdAt: unbilled.createdAt.toISOString(),
+            }
+          : null,
+      });
+    }
+
+    return {
+      roomId: room.id,
+      roomNumber: room.roomNumber,
+      services,
+    };
+  }
+
+  /**
+   * UC-L-09: Get chronological meter reading history for a room grouped by cycle
+   */
+  async getRoomMeterHistory(
+    boardingHouseId: string,
+    roomId: string,
+  ): Promise<LandlordRoomMeterHistoryResponseDto> {
+    this.logger.log(`Landlord fetching meter history for room ${roomId}`);
+
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+      select: { id: true, roomNumber: true },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Phòng không tồn tại trong nhà trọ này');
+    }
+
+    const readings = await this.prisma.meterReading.findMany({
+      where: { roomId },
+      include: {
+        service: true,
+        invoice: {
+          select: {
+            id: true,
+            status: true,
+            totalAmount: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (readings.length === 0) {
+      return {
+        roomId: room.id,
+        roomNumber: room.roomNumber,
+        history: [],
+      };
+    }
+
+    // Group readings into periods: either by invoiceId or by (year-month)
+    const periodMap = new Map<string, typeof readings>();
+
+    for (const r of readings) {
+      const year = r.createdAt.getFullYear();
+      const month = r.createdAt.getMonth() + 1;
+      const key = r.invoiceId ? `inv_${r.invoiceId}` : `cycle_${year}_${month}`;
+
+      const group = periodMap.get(key) || [];
+      group.push(r);
+      periodMap.set(key, group);
+    }
+
+    const history: LandlordMeterPeriodHistoryDto[] = [];
+
+    for (const [, group] of periodMap.entries()) {
+      const latestInGroup = group[0];
+      const d = latestInGroup.createdAt;
+      const monthStr = (d.getMonth() + 1).toString().padStart(2, '0');
+      const yearStr = d.getFullYear().toString();
+      const periodLabel = `Tháng ${monthStr}/${yearStr}`;
+
+      const dateStr = `${d.getDate().toString().padStart(2, '0')}/${monthStr}/${yearStr} ${d
+        .getHours()
+        .toString()
+        .padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+
+      const serviceItems: LandlordMeterReadingServiceItemDto[] = [];
+      let groupTotalMeterCost = 0;
+
+      for (const r of group) {
+        // Find previous reading for this service before this reading's createdAt
+        const prev = await this.prisma.meterReading.findFirst({
+          where: {
+            roomId,
+            serviceId: r.serviceId,
+            createdAt: { lt: r.createdAt },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const newReading = Number(r.readingValue || 0);
+        const oldReading = prev?.readingValue ? Number(prev.readingValue) : newReading;
+        const consumption = Math.max(0, newReading - oldReading);
+        const unitPrice = Number(r.service?.price || 0);
+        const cost = Math.round(consumption * unitPrice);
+        groupTotalMeterCost += cost;
+
+        serviceItems.push({
+          id: r.id,
+          serviceId: r.serviceId,
+          serviceName: r.service?.name || 'Dịch vụ',
+          unit: r.service?.unit || '',
+          unitPrice,
+          oldReading,
+          newReading,
+          consumption,
+          cost,
+          imageUrl: r.imageUrl,
+          createdAt: r.createdAt.toISOString(),
+        });
+      }
+
+      const invoice = latestInGroup.invoice;
+      const isPaid = invoice?.status === 'paid';
+      const invoiceStatus = invoice?.status ?? 'unbilled';
+
+      history.push({
+        period: periodLabel,
+        date: dateStr,
+        createdAt: d.toISOString(),
+        services: serviceItems,
+        totalMeterCost: groupTotalMeterCost,
+        invoiceId: invoice?.id ?? null,
+        invoiceStatus,
+        isPaid,
+        canEdit: !isPaid,
+      });
+    }
+
+    return {
+      roomId: room.id,
+      roomNumber: room.roomNumber,
+      history,
+    };
+  }
+
+  /**
+   * UC-L-09: Record utility meter readings directly by landlord
+   * Skips tenant-side OCR/confirm loop and counts as final immediately.
+   */
+  async recordLandlordMeterReading(
+    landlordId: string,
+    boardingHouseId: string,
+    dto: RecordLandlordMeterReadingDto,
+  ) {
+    this.logger.log(
+      `Landlord ${landlordId} manually recording utility readings for room ${dto.roomId} in house ${boardingHouseId}`,
+    );
+
+    const room = await this.prisma.room.findFirst({
+      where: { id: dto.roomId, boardingHouseId },
+      include: { boardingHouse: true },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Phòng không tồn tại trong nhà trọ này');
+    }
+
+    const recordedDate = dto.recordedAt ? new Date(dto.recordedAt) : new Date();
+    const createdReadings = [];
+
+    for (const item of dto.readings) {
+      const service = await this.prisma.service.findFirst({
+        where: { id: item.serviceId, boardingHouseId },
+      });
+
+      if (!service) {
+        throw new BadRequestException(
+          `Dịch vụ với ID ${item.serviceId} không thuộc nhà trọ này`,
+        );
+      }
+
+      // Check if unbilled reading exists for this room & service
+      const existingDraft = await this.prisma.meterReading.findFirst({
+        where: {
+          roomId: dto.roomId,
+          serviceId: item.serviceId,
+          invoiceId: null,
+        },
+      });
+
+      if (existingDraft) {
+        const updated = await this.prisma.meterReading.update({
+          where: { id: existingDraft.id },
+          data: {
+            readingValue: item.readingValue,
+            imageUrl: item.imageUrl ?? existingDraft.imageUrl,
+            createdAt: recordedDate,
+          },
+          include: { service: true },
+        });
+        createdReadings.push(updated);
+      } else {
+        const created = await this.prisma.meterReading.create({
+          data: {
+            roomId: dto.roomId,
+            serviceId: item.serviceId,
+            readingValue: item.readingValue,
+            imageUrl: item.imageUrl || null,
+            createdAt: recordedDate,
+          },
+          include: { service: true },
+        });
+        createdReadings.push(created);
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Đã lưu chỉ số điện nước thành công',
+      count: createdReadings.length,
+      data: createdReadings.map((r) => ({
+        id: r.id,
+        serviceId: r.serviceId,
+        serviceName: r.service.name,
+        readingValue: r.readingValue !== null ? Number(r.readingValue) : 0,
+        imageUrl: r.imageUrl,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  /**
+   * UC-L-09: Update / correct a recorded meter reading with reason
+   */
+  async updateLandlordMeterReading(
+    landlordId: string,
+    boardingHouseId: string,
+    readingId: string,
+    dto: UpdateLandlordMeterReadingDto,
+  ) {
+    this.logger.log(
+      `Landlord ${landlordId} updating meter reading ${readingId} in house ${boardingHouseId}`,
+    );
+
+    const reading = await this.prisma.meterReading.findUnique({
+      where: { id: readingId },
+      include: {
+        room: true,
+        service: true,
+        invoice: true,
+      },
+    });
+
+    if (!reading) {
+      throw new NotFoundException('Không tìm thấy bản ghi chỉ số điện nước');
+    }
+
+    if (reading.room.boardingHouseId !== boardingHouseId) {
+      throw new NotFoundException('Bản ghi không thuộc nhà trọ này');
+    }
+
+    if (reading.invoice?.status === 'paid') {
+      throw new BadRequestException(
+        'Không thể chỉnh sửa chỉ số điện nước của hóa đơn đã thanh toán',
+      );
+    }
+
+    const updated = await this.prisma.meterReading.update({
+      where: { id: readingId },
+      data: {
+        readingValue: dto.readingValue,
+        imageUrl: dto.imageUrl ?? reading.imageUrl,
+      },
+      include: { service: true },
+    });
+
+    return {
+      success: true,
+      message: 'Đã cập nhật chỉ số điện nước thành công',
+      data: {
+        id: updated.id,
+        serviceId: updated.serviceId,
+        serviceName: updated.service.name,
+        readingValue:
+          updated.readingValue !== null ? Number(updated.readingValue) : 0,
+        imageUrl: updated.imageUrl,
+        createdAt: updated.createdAt.toISOString(),
+        reason: dto.reason,
+      },
     };
   }
 

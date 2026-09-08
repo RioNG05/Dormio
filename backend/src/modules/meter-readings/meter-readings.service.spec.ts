@@ -12,6 +12,13 @@ describe('MeterReadingsService', () => {
     tenantContract: {
       findFirst: jest.fn(),
     },
+    room: {
+      findFirst: jest.fn(),
+    },
+    service: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+    },
     roomService: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
@@ -447,6 +454,204 @@ describe('MeterReadingsService', () => {
       expect(result.status).toBe('unpaid');
       expect(result.totalAmount).toBe(3950000);
       expect(result.vietQrPayload).toContain('DORMIO_INV_');
+    });
+  });
+
+  describe('getRoomMeteredServices (UC-L-09)', () => {
+    it('should throw NotFoundException if room does not belong to boarding house', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.getRoomMeteredServices('house-1', 'room-not-found'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should return active metered services for room', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({
+        id: 'room-1',
+        roomNumber: '101',
+      });
+      mockPrisma.service.findMany.mockResolvedValue([
+        {
+          id: 's-elec',
+          name: 'Điện',
+          price: 3500,
+          unit: 'kWh',
+          isMetered: true,
+          status: 'active',
+        },
+      ]);
+      mockPrisma.meterReading.findFirst
+        .mockResolvedValueOnce({
+          id: 'mr-unbilled',
+          readingValue: 1530,
+          imageUrl: null,
+          createdAt: new Date('2026-09-01'),
+        })
+        .mockResolvedValueOnce({
+          id: 'mr-last',
+          readingValue: 1428,
+          imageUrl: null,
+          createdAt: new Date('2026-08-01'),
+        });
+
+      const result = await service.getRoomMeteredServices('house-1', 'room-1');
+
+      expect(result.roomNumber).toBe('101');
+      expect(result.services).toHaveLength(1);
+      expect(result.services[0].serviceName).toBe('Điện');
+      expect(result.services[0].lastReading?.readingValue).toBe(1428);
+      expect(result.services[0].unbilledReading?.readingValue).toBe(1530);
+    });
+  });
+
+  describe('getRoomMeterHistory (UC-L-09)', () => {
+    it('should return empty history if no readings exist', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({
+        id: 'room-1',
+        roomNumber: '101',
+      });
+      mockPrisma.meterReading.findMany.mockResolvedValue([]);
+
+      const result = await service.getRoomMeterHistory('house-1', 'room-1');
+
+      expect(result.history).toEqual([]);
+    });
+
+    it('should group readings by period and compute consumption and costs', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({
+        id: 'room-1',
+        roomNumber: '101',
+      });
+      const readingDate = new Date('2026-09-01T08:00:00.000Z');
+      mockPrisma.meterReading.findMany.mockResolvedValue([
+        {
+          id: 'mr-1',
+          roomId: 'room-1',
+          serviceId: 's-elec',
+          readingValue: 1530,
+          imageUrl: 'https://proof.png',
+          createdAt: readingDate,
+          invoiceId: 'inv-1',
+          service: { id: 's-elec', name: 'Điện', unit: 'kWh', price: 3500 },
+          invoice: { id: 'inv-1', status: 'paid', totalAmount: 500000 },
+        },
+      ]);
+      mockPrisma.meterReading.findFirst.mockResolvedValue({
+        id: 'mr-prev',
+        readingValue: 1428,
+      });
+
+      const result = await service.getRoomMeterHistory('house-1', 'room-1');
+
+      expect(result.history).toHaveLength(1);
+      expect(result.history[0].period).toBe('Tháng 09/2026');
+      expect(result.history[0].isPaid).toBe(true);
+      expect(result.history[0].canEdit).toBe(false);
+      expect(result.history[0].services[0].consumption).toBe(102);
+      expect(result.history[0].services[0].cost).toBe(102 * 3500);
+    });
+  });
+
+  describe('recordLandlordMeterReading (UC-L-09)', () => {
+    it('should throw NotFoundException if room does not exist in house', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.recordLandlordMeterReading('landlord-1', 'house-1', {
+          roomId: 'room-1',
+          readings: [{ serviceId: 's-elec', readingValue: 1530 }],
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should insert directly without tenant OCR confirm loop', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({
+        id: 'room-1',
+        boardingHouseId: 'house-1',
+      });
+      mockPrisma.service.findFirst.mockResolvedValue({
+        id: 's-elec',
+        boardingHouseId: 'house-1',
+        name: 'Điện',
+      });
+      mockPrisma.meterReading.findFirst.mockResolvedValue(null); // No existing draft
+      mockPrisma.meterReading.create.mockResolvedValue({
+        id: 'mr-new',
+        serviceId: 's-elec',
+        readingValue: 1530,
+        imageUrl: null,
+        createdAt: new Date('2026-09-01'),
+        service: { name: 'Điện' },
+      });
+
+      const result = await service.recordLandlordMeterReading(
+        'landlord-1',
+        'house-1',
+        {
+          roomId: 'room-1',
+          readings: [{ serviceId: 's-elec', readingValue: 1530 }],
+        },
+      );
+
+      expect(mockPrisma.meterReading.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          roomId: 'room-1',
+          serviceId: 's-elec',
+          readingValue: 1530,
+        }),
+        include: { service: true },
+      });
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+    });
+  });
+
+  describe('updateLandlordMeterReading (UC-L-09)', () => {
+    it('should throw BadRequestException if invoice is already paid', async () => {
+      mockPrisma.meterReading.findUnique.mockResolvedValue({
+        id: 'mr-1',
+        room: { boardingHouseId: 'house-1' },
+        invoice: { status: 'paid' },
+      });
+
+      await expect(
+        service.updateLandlordMeterReading('landlord-1', 'house-1', 'mr-1', {
+          readingValue: 1540,
+          reason: 'Correction',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update reading value when unpaid', async () => {
+      mockPrisma.meterReading.findUnique.mockResolvedValue({
+        id: 'mr-1',
+        room: { boardingHouseId: 'house-1' },
+        invoice: { status: 'unpaid' },
+      });
+      mockPrisma.meterReading.update.mockResolvedValue({
+        id: 'mr-1',
+        serviceId: 's-elec',
+        readingValue: 1540,
+        imageUrl: null,
+        createdAt: new Date('2026-09-01'),
+        service: { name: 'Điện' },
+      });
+
+      const result = await service.updateLandlordMeterReading(
+        'landlord-1',
+        'house-1',
+        'mr-1',
+        { readingValue: 1540, reason: 'Corrected blur' },
+      );
+
+      expect(mockPrisma.meterReading.update).toHaveBeenCalledWith({
+        where: { id: 'mr-1' },
+        data: expect.objectContaining({ readingValue: 1540 }),
+        include: { service: true },
+      });
+      expect(result.success).toBe(true);
+      expect(result.data.readingValue).toBe(1540);
     });
   });
 });
