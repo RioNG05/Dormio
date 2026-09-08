@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BillingCronService } from './billing-cron.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { InvoicesService } from '../invoices/invoices.service';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,10 @@ const mockNotificationsService = {
   createBillingDueNotification: jest.fn(),
 };
 
+const mockInvoicesService = {
+  generateFlatRateInvoice: jest.fn().mockResolvedValue({ id: 'inv-flat-1' }),
+};
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('BillingCronService', () => {
@@ -63,6 +68,7 @@ describe('BillingCronService', () => {
         BillingCronService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: InvoicesService, useValue: mockInvoicesService },
       ],
     }).compile();
 
@@ -156,6 +162,10 @@ describe('BillingCronService', () => {
 
       expect(mockNotificationsService.createBillingDueNotification).toHaveBeenCalledWith(
         expect.objectContaining({ hasMeteredServices: false }),
+      );
+      expect(mockInvoicesService.generateFlatRateInvoice).toHaveBeenCalledWith(
+        'c-1',
+        expect.any(Date),
       );
     });
 
