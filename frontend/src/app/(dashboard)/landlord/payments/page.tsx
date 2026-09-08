@@ -2,9 +2,7 @@ import React from "react";
 import { Plus, Search, Filter, CreditCard, ArrowDownLeft, MoreHorizontal } from "lucide-react";
 
 export default function PaymentsPage() {
-  const payments = [
-    { id: "PT-001", invoice: "INV-202307-102", room: "102", date: "20/07/2023", amount: "3.450.000 ₫", method: "Chuyển khoản", status: "Thành công" },
-  ];
+  const payments: any[] = [];
 
   return (
     <div className="space-y-6">
@@ -21,11 +19,11 @@ export default function PaymentsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 bg-white border border-zinc-200 rounded-xl shadow-sm border-l-4 border-l-green-500">
           <div className="text-sm text-zinc-500 font-medium">Tổng thu (tháng này)</div>
-          <div className="text-2xl font-bold text-zinc-900 mt-1">3.450.000 ₫</div>
+          <div className="text-2xl font-bold text-zinc-900 mt-1">0 ₫</div>
         </div>
         <div className="p-4 bg-white border border-zinc-200 rounded-xl shadow-sm border-l-4 border-l-orange-500">
           <div className="text-sm text-zinc-500 font-medium">Tổng công nợ</div>
-          <div className="text-2xl font-bold text-orange-600 mt-1">3.500.000 ₫</div>
+          <div className="text-2xl font-bold text-orange-600 mt-1">0 ₫</div>
         </div>
       </div>
 
@@ -69,24 +67,34 @@ export default function PaymentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
-              {payments.map((p) => (
-                <tr key={p.id} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-zinc-900 flex items-center gap-2">
-                    <ArrowDownLeft className="w-4 h-4 text-green-500" />
-                    {p.id}
-                  </td>
-                  <td className="px-6 py-4 font-bold text-primary">{p.room}</td>
-                  <td className="px-6 py-4 text-blue-600 underline cursor-pointer">{p.invoice}</td>
-                  <td className="px-6 py-4 text-zinc-600">{p.date}</td>
-                  <td className="px-6 py-4 font-bold text-green-600">+{p.amount}</td>
-                  <td className="px-6 py-4 text-zinc-600">{p.method}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-1 text-zinc-400 hover:text-primary transition-colors">
-                      <MoreHorizontal className="w-5 h-5" />
-                    </button>
+              {payments.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-zinc-400">
+                    <CreditCard className="w-10 h-10 text-zinc-300 mx-auto mb-2 stroke-1" />
+                    <p className="text-sm font-bold text-zinc-700">Chưa có dữ liệu thanh toán nào</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">Lịch sử các giao dịch thanh toán VietQR và tiền mặt sẽ hiển thị tại đây.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                payments.map((p) => (
+                  <tr key={p.id} className="hover:bg-zinc-50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-zinc-900 flex items-center gap-2">
+                      <ArrowDownLeft className="w-4 h-4 text-green-500" />
+                      {p.id}
+                    </td>
+                    <td className="px-6 py-4 font-bold text-primary">{p.room}</td>
+                    <td className="px-6 py-4 text-blue-600 underline cursor-pointer">{p.invoice}</td>
+                    <td className="px-6 py-4 text-zinc-600">{p.date}</td>
+                    <td className="px-6 py-4 font-bold text-green-600">+{p.amount}</td>
+                    <td className="px-6 py-4 text-zinc-600">{p.method}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="p-1 text-zinc-400 hover:text-primary transition-colors">
+                        <MoreHorizontal className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

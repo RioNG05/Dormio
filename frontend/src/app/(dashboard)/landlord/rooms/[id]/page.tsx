@@ -154,15 +154,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     { period: "Tháng 04/2026", date: "01/04/2026 09:00", oldElec: 880, newElec: 990, oldWater: 26, newWater: 30, isOpen: false }
   ]);
 
-  // Invoices History List
-  const [invoicesHistory, setInvoicesHistory] = useState<InvoiceRecord[]>([
-    { id: "INV-202609", period: "Tháng 09/2026", monthSeq: "09/26", deadline: "10/09/2026 (Quá hạn 5 ngày)", status: "Chưa thanh toán", method: "Chưa thu", isOverdue: true },
-    { id: "INV-202608", period: "Tháng 08/2026", monthSeq: "08/26", deadline: "10/08/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202607", period: "Tháng 07/2026", monthSeq: "07/26", deadline: "10/07/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202606", period: "Tháng 06/2026", monthSeq: "06/26", deadline: "10/06/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202605", period: "Tháng 05/2026", monthSeq: "05/26", deadline: "10/05/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202604", period: "Tháng 04/2026", monthSeq: "04/26", deadline: "10/04/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false }
-  ]);
+  // Invoices History List (initialized empty; loaded from API)
+  const [invoicesHistory, setInvoicesHistory] = useState<InvoiceRecord[]>([]);
 
   // Maintenance History List & Pagination
   const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([
@@ -894,7 +887,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="space-y-3">
-              {filteredInvoices.length === 0 ? (
+              {invoicesHistory.length === 0 ? (
+                <div className="p-8 text-center bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
+                  <Receipt className="w-8 h-8 text-zinc-300 mx-auto" />
+                  <p className="text-xs text-zinc-600 font-bold">Chưa có dữ liệu hóa đơn nào cho phòng này</p>
+                  <p className="text-[11px] text-zinc-400">Dữ liệu hóa đơn sẽ tự động xuất hiện khi chốt chỉ số điện nước hoặc lập hóa đơn mới.</p>
+                </div>
+              ) : filteredInvoices.length === 0 ? (
                 <div className="p-6 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
                   Không tìm thấy hóa đơn nào trong kỳ lọc đã chọn.
                 </div>

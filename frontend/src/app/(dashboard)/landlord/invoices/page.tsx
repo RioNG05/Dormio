@@ -92,164 +92,8 @@ function InvoicesContent() {
   const [ocrMeterValue, setOcrMeterValue] = useState("1428");
   const [isOcrFormDirty, setIsOcrFormDirty] = useState(false);
 
-  // Mock Invoices Dataset
-  const [invoices, setInvoices] = useState<InvoiceItem[]>([
-    {
-      id: "INV-202608-101",
-      roomId: "101",
-      roomName: "Phòng 101",
-      buildingName: activeBuilding.name,
-      tenantName: "Nguyễn Văn Tuấn",
-      tenantPhone: "0988 123 456",
-      period: "08/2026",
-      rentAmount: 3500000,
-      elecOld: 1318,
-      elecNew: 1418,
-      elecRate: 3500,
-      waterOld: 240,
-      waterNew: 252,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet / Wifi tốc độ cao", amount: 100000 },
-        { name: "Rác & Vệ sinh môi trường", amount: 50000 },
-      ],
-      discount: 0,
-      totalAmount: 3500000 + (100 * 3500) + (12 * 15000) + 150000, // 4.180.000 ₫
-      deadline: "20/08/2026",
-      status: "Chưa thu",
-      createdAt: "01/08/2026",
-    },
-    {
-      id: "INV-202608-205",
-      roomId: "205",
-      roomName: "Phòng 205",
-      buildingName: activeBuilding.name,
-      tenantName: "Trần Thị Mai",
-      tenantPhone: "0912 345 678",
-      period: "08/2026",
-      rentAmount: 4200000,
-      elecOld: 2100,
-      elecNew: 2210,
-      elecRate: 3500,
-      waterOld: 310,
-      waterNew: 325,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet / Wifi", amount: 100000 },
-        { name: "Vệ sinh tòa nhà", amount: 50000 },
-        { name: "Thang máy", amount: 50000 },
-      ],
-      discount: 100000,
-      totalAmount: 4200000 + (110 * 3500) + (15 * 15000) + 200000 - 100000, // 4.710.000 ₫
-      deadline: "15/08/2026",
-      status: "Quá hạn",
-      createdAt: "01/08/2026",
-    },
-    {
-      id: "INV-202608-105",
-      roomId: "105",
-      roomName: "Phòng 105",
-      buildingName: activeBuilding.name,
-      tenantName: "Hoàng Minh Trí",
-      tenantPhone: "0933 555 777",
-      period: "08/2026",
-      rentAmount: 3200000,
-      elecOld: 980,
-      elecNew: 1060,
-      elecRate: 3500,
-      waterOld: 180,
-      waterNew: 190,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Wifi & Rác", amount: 120000 },
-      ],
-      discount: 0,
-      totalAmount: 3200000 + (80 * 3500) + (10 * 15000) + 120000, // 3.750.000 ₫
-      deadline: "20/08/2026",
-      status: "Đã thu",
-      createdAt: "01/08/2026",
-      paidAt: "12/08/2026 14:00",
-      paymentMethod: "VietQR Chuyển khoản",
-    },
-    {
-      id: "INV-202608-302",
-      roomId: "302",
-      roomName: "Phòng 302",
-      buildingName: activeBuilding.name,
-      tenantName: "Lê Văn Hùng",
-      tenantPhone: "0977 111 222",
-      period: "08/2026",
-      rentAmount: 3800000,
-      elecOld: 1450,
-      elecNew: 1560,
-      elecRate: 3500,
-      waterOld: 210,
-      waterNew: 222,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet + Vệ sinh", amount: 150000 },
-      ],
-      discount: 0,
-      totalAmount: 3800000 + (110 * 3500) + (12 * 15000) + 150000, // 4.515.000 ₫
-      deadline: "20/08/2026",
-      status: "Đã thu",
-      createdAt: "01/08/2026",
-      paidAt: "05/08/2026 09:30",
-      paymentMethod: "VietQR Chuyển khoản",
-    },
-    {
-      id: "INV-202607-101",
-      roomId: "101",
-      roomName: "Phòng 101",
-      buildingName: activeBuilding.name,
-      tenantName: "Nguyễn Văn Tuấn",
-      tenantPhone: "0988 123 456",
-      period: "07/2026",
-      rentAmount: 3500000,
-      elecOld: 1220,
-      elecNew: 1318,
-      elecRate: 3500,
-      waterOld: 228,
-      waterNew: 240,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet + Rác", amount: 150000 },
-      ],
-      discount: 0,
-      totalAmount: 3500000 + (98 * 3500) + (12 * 15000) + 150000, // 4.173.000 ₫
-      deadline: "20/07/2026",
-      status: "Đã thu",
-      createdAt: "01/07/2026",
-      paidAt: "10/07/2026 16:45",
-      paymentMethod: "Tiền mặt",
-    },
-    {
-      id: "INV-202607-205",
-      roomId: "205",
-      roomName: "Phòng 205",
-      buildingName: activeBuilding.name,
-      tenantName: "Trần Thị Mai",
-      tenantPhone: "0912 345 678",
-      period: "07/2026",
-      rentAmount: 4200000,
-      elecOld: 1980,
-      elecNew: 2100,
-      elecRate: 3500,
-      waterOld: 295,
-      waterNew: 310,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Dịch vụ tòa nhà", amount: 200000 },
-      ],
-      discount: 0,
-      totalAmount: 4200000 + (120 * 3500) + (15 * 15000) + 200000, // 5.045.000 ₫
-      deadline: "20/07/2026",
-      status: "Đã thu",
-      createdAt: "01/07/2026",
-      paidAt: "18/07/2026 11:20",
-      paymentMethod: "VietQR Chuyển khoản",
-    },
-  ]);
+  // Invoices Dataset (initialized empty; populated via real records or create form)
+  const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -637,7 +481,26 @@ function InvoicesContent() {
       </div>
 
       {/* Main Content Display (Grid or Table View) */}
-      {paginatedInvoices.length === 0 ? (
+      {invoices.length === 0 ? (
+        <div className="py-16 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
+          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+            <Receipt className="w-8 h-8" />
+          </div>
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <h3 className="font-black text-base text-zinc-900">Chưa có dữ liệu hóa đơn nào</h3>
+            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+              Tòa nhà hiện chưa có dữ liệu hóa đơn hoặc thanh toán nào. Hóa đơn sẽ được tạo tự động khi chốt chỉ số điện nước (UC-L-06) hoặc khi bạn lập hóa đơn mới.
+            </p>
+          </div>
+          <button
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25aca7] text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer hover:scale-105"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Lập Hóa Đơn Mới</span>
+          </button>
+        </div>
+      ) : paginatedInvoices.length === 0 ? (
         <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
           <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
           <h3 className="font-extrabold text-sm text-zinc-800">Không tìm thấy hóa đơn nào</h3>
@@ -796,58 +659,60 @@ function InvoicesContent() {
       )}
 
       {/* Pagination Bar (Standard Dormio Rule #9) */}
-      <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
-        <div className="flex items-center gap-2 text-zinc-600">
-          <span>Hiển thị</span>
-          <input
-            type="number"
-            min={1}
-            max={50}
-            value={pageSize}
-            onChange={(e) => {
-              const val = parseInt(e.target.value) || 1;
-              setPageSize(val);
-              setCurrentPage(1);
-            }}
-            className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
-          />
-          <span>/ trang</span>
-          <span className="text-zinc-400">|</span>
-          <span>
-            {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} trên {totalItems} mục
-          </span>
-        </div>
+      {totalItems > 0 && (
+        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
+          <div className="flex items-center gap-2 text-zinc-600">
+            <span>Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={pageSize}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 1;
+                setPageSize(val);
+                setCurrentPage(1);
+              }}
+              className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
+            />
+            <span>/ trang</span>
+            <span className="text-zinc-400">|</span>
+            <span>
+              {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} trên {totalItems} mục
+            </span>
+          </div>
 
-        {/* Page Jumping Controls */}
-        <div className="flex items-center gap-1">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4 text-zinc-600" />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          {/* Page Jumping Controls */}
+          <div className="flex items-center gap-1">
             <button
-              key={p}
-              onClick={() => setCurrentPage(p)}
-              className={`w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer transition-all ${currentPage === p ? "bg-[#2AC1BC] text-white shadow-2xs" : "hover:bg-zinc-100 text-zinc-700"
-                }`}
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
             >
-              {p}
+              <ChevronLeft className="w-4 h-4 text-zinc-600" />
             </button>
-          ))}
 
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4 text-zinc-600" />
-          </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                className={`w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer transition-all ${currentPage === p ? "bg-[#2AC1BC] text-white shadow-2xs" : "hover:bg-zinc-100 text-zinc-700"
+                  }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4 text-zinc-600" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 📄 DETAILED INVOICE LIGHTBOX MODAL / DRAWER */}
       {selectedInvoice && (
