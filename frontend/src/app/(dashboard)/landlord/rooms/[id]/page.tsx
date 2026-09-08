@@ -224,13 +224,18 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       setIsLoading(true);
       if (isRealUuid && activeBuilding?.id && UUID_REGEX.test(activeBuilding.id)) {
         try {
-          const res = await getRoomDashboard(activeBuilding.id, resolvedParams.id);
+          const rawRes = await getRoomDashboard(activeBuilding.id, resolvedParams.id);
+          const res = (rawRes as any)?.data?.room ? (rawRes as any).data : rawRes;
           setDashboardData(res);
 
-          const r = res.room;
+          const r = res?.room;
+          if (!r) {
+            console.error("Room data is missing from dashboard response:", res);
+            return;
+          }
           const activeContract = res.currentContract;
           const primaryTenant =
-            activeContract?.tenants?.find((t) => t.isPrimary) ||
+            activeContract?.tenants?.find((t: any) => t.isPrimary) ||
             activeContract?.tenants?.[0];
 
           const formattedPrice = activeContract?.rentPrice
@@ -249,7 +254,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             area: r.area ? String(r.area) : "25",
             status: mapStatusToDisplay(r.status),
             contract: activeContract ? "active" : "none",
-            invoice: res.invoices.some((i) => i.status?.toLowerCase() !== 'paid') ? "debt" : "paid",
+            invoice: (res.invoices || []).some((i: any) => i.status?.toLowerCase() !== 'paid') ? "debt" : "paid",
             tenant: primaryTenant?.fullName || undefined,
             tenantPhone: primaryTenant?.phoneNumber || undefined,
             tenantCccd: primaryTenant?.identityNumber || undefined,
@@ -272,7 +277,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           // Populate live services if attached
           if (res.services && res.services.length > 0) {
             setEditServices(
-              res.services.map((s) => ({
+              res.services.map((s: any) => ({
                 id: s.id,
                 name: s.name,
                 defaultPrice: parseInt(s.price).toLocaleString('vi-VN'),
@@ -287,7 +292,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           // Populate live invoices if available
           if (res.invoices && res.invoices.length > 0) {
             setInvoicesHistory(
-              res.invoices.map((inv) => {
+              res.invoices.map((inv: any) => {
                 const due = new Date(inv.dueDate);
                 const month = (due.getMonth() + 1).toString().padStart(2, '0');
                 const year = due.getFullYear();
@@ -690,7 +695,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-zinc-200/80 truncate max-w-[170px] sm:max-w-none">
               {activeBuilding?.name || (room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1')}
             </span>
-            {dashboardData?.room.roomType && (
+            {dashboardData?.room?.roomType?.name && (
               <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
                 {dashboardData.room.roomType.name}
               </span>
@@ -723,7 +728,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </Link>
           ) : (
             <Link
-              href={`/landlord/contracts/create?roomId=${dashboardData?.room.id || room?.id || resolvedParams.id}`}
+              href={`/landlord/contracts/create?roomId=${dashboardData?.room?.id || room?.id || resolvedParams.id}`}
               className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
             >
               <FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" /> Tạo Hợp Đồng

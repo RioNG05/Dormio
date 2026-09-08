@@ -64,6 +64,63 @@ export interface BoardingHouseListItem extends BoardingHouse {
   totalRooms: number;
 }
 
+export interface SetupServicePayload {
+  name: string;
+  price: string;
+  unit: string;
+  isMetered: boolean;
+  autoApplied: boolean;
+}
+
+export interface SetupRoomTypePayload {
+  name: string;
+  description?: string;
+}
+
+export interface SetupRoomsPayload {
+  floorCount: number;
+  roomsPerFloor: number;
+  nameFormat: string;
+  area?: string;
+  maxOccupants?: number;
+  roomTypeIndex: number;
+  serviceIndices?: number[];
+}
+
+export interface SetupBoardingHousePayload {
+  name: string;
+  description?: string;
+  houseNumber: string;
+  street: string;
+  ward: string;
+  district: string;
+  province: string;
+  city?: string;
+  country: string;
+  totalFloor?: number;
+  builtAt: string;
+  thumbnail?: string;
+  services?: SetupServicePayload[];
+  roomTypes: SetupRoomTypePayload[];
+  rooms: SetupRoomsPayload;
+}
+
+export interface SetupBoardingHouseResponse {
+  success: boolean;
+  boardingHouse: BoardingHouse;
+  roomsCreated: number;
+}
+
+export async function setupBoardingHouse(
+  payload: SetupBoardingHousePayload,
+): Promise<SetupBoardingHouseResponse> {
+  const response = await api.post<SetupBoardingHouseResponse>(
+    '/v1/boarding-houses/setup',
+    payload,
+  );
+  return response;
+}
+
 export async function createBoardingHouse(
   payload: CreateBoardingHousePayload,
 ): Promise<BoardingHouse> {
@@ -84,3 +141,73 @@ export async function getMyBoardingHouses(): Promise<BoardingHouseListItem[]> {
   );
   return response.data;
 }
+
+export interface OverviewRooms {
+  totalRooms: number;
+  occupiedRooms: number;
+  vacantRooms: number;
+  depositRooms: number;
+  maintenanceRooms: number;
+  occupancyRate: string;
+}
+
+export interface OverviewFinancial {
+  currentMonthRevenue: string;
+  unpaidDebt: string;
+  unpaidInvoicesCount: number;
+  paidInvoicesCount: number;
+}
+
+export interface OverviewRevenueMonth {
+  month: string;
+  val: number;
+  fullAmount: string;
+}
+
+export interface OverviewDepositItem {
+  id: string;
+  room: string;
+  tenant: string;
+  amount: number;
+  date: string;
+  type: string;
+  status: string;
+}
+
+export interface OverviewMaintenanceItem {
+  id: string;
+  room: string;
+  issue: string;
+  priority: string;
+  reporter: string;
+  date: string;
+  status: string;
+}
+
+export interface OverviewExpiringContract {
+  id: string;
+  room: string;
+  tenant: string;
+  phone: string;
+  daysLeft: number;
+  endDate: string;
+}
+
+export interface BoardingHouseOverview {
+  rooms: OverviewRooms;
+  financial: OverviewFinancial;
+  revenueChart: OverviewRevenueMonth[];
+  depositNotifications: OverviewDepositItem[];
+  maintenanceRequests: OverviewMaintenanceItem[];
+  expiringContracts: OverviewExpiringContract[];
+}
+
+export async function getBoardingHouseOverview(
+  boardingHouseId: string,
+): Promise<BoardingHouseOverview> {
+  const response = await api.get<{ success: boolean; data: BoardingHouseOverview }>(
+    `/v1/boarding-houses/${boardingHouseId}/overview`,
+  );
+  return response.data || (response as unknown as BoardingHouseOverview);
+}
+

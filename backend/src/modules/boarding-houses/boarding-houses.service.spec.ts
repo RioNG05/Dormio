@@ -145,4 +145,219 @@ describe('BoardingHousesService', () => {
 
     expect(transactionClient.user.update).not.toHaveBeenCalled();
   });
+
+  describe('setupBoardingHouse (UC-L-01 3-step wizard)', () => {
+    const setupDto = {
+      name: 'Ánh Dương Setup',
+      description: 'Nhà trọ sinh viên',
+      houseNumber: '12',
+      street: 'Nguyễn Văn Tăng',
+      ward: 'Long Thạnh Mỹ',
+      district: 'Quận 9',
+      province: 'TP. Hồ Chí Minh',
+      country: 'Việt Nam',
+      totalFloor: 2,
+      builtAt: '2022-05-10',
+      services: [
+        { name: 'Điện', price: '3500.00', unit: 'kWh', isMetered: true, autoApplied: true },
+        { name: 'Nước', price: '25000.00', unit: 'm³', isMetered: true, autoApplied: true },
+      ],
+      roomTypes: [
+        { name: 'Studio', description: 'Gác lửng' },
+      ],
+      rooms: {
+        floorCount: 2,
+        roomsPerFloor: 3,
+        nameFormat: 'P{floor}0{index}',
+        area: '25.00',
+        maxOccupants: 2,
+        roomTypeIndex: 0,
+        serviceIndices: [0, 1],
+      },
+    };
+
+    const txClient = {
+      boardingHouse: {
+        create: jest.fn(),
+      },
+      service: {
+        create: jest.fn(),
+      },
+      roomType: {
+        create: jest.fn(),
+      },
+      room: {
+        create: jest.fn(),
+      },
+      roomService: {
+        createMany: jest.fn(),
+      },
+      user: {
+        update: jest.fn(),
+      },
+    };
+
+    beforeEach(() => {
+      mockPrisma.userSubscription = {
+        findFirst: jest.fn().mockResolvedValue(null), // free tier default (10)
+      };
+      mockPrisma.$transaction.mockImplementation(async (callback) =>
+        callback(txClient),
+      );
+    });
+
+    it('successfully executes atomic setup: house, services, roomTypes, rooms, roomServices and user promotion', async () => {
+      txClient.boardingHouse.create.mockResolvedValue({
+        id: 'bh-uuid',
+        name: 'Ánh Dương Setup',
+        description: 'Nhà trọ sinh viên',
+        houseNumber: '12',
+        street: 'Nguyễn Văn Tăng',
+        ward: 'Long Thạnh Mỹ',
+        district: 'Quận 9',
+        province: 'TP. Hồ Chí Minh',
+        city: 'TP. Hồ Chí Minh',
+        country: 'Việt Nam',
+        totalFloor: 2,
+        builtAt: new Date('2022-05-10'),
+        status: 'active',
+        thumbnail: null,
+      });
+
+      txClient.service.create
+        .mockResolvedValueOnce({
+          id: 'svc-1',
+          name: 'Điện',
+          price: new Prisma.Decimal('3500.00'),
+          unit: 'kWh',
+          isMetered: true,
+          autoApplied: true,
+        })
+        .mockResolvedValueOnce({
+          id: 'svc-2',
+          name: 'Nước',
+          price: new Prisma.Decimal('25000.00'),
+          unit: 'm³',
+          isMetered: true,
+          autoApplied: true,
+        });
+
+      txClient.roomType.create.mockResolvedValue({
+        id: 'rt-1',
+        name: 'Studio',
+        description: 'Gác lửng',
+      });
+
+      let roomCounter = 1;
+      txClient.room.create.mockImplementation(() =>
+        Promise.resolve({ id: `room-${roomCounter++}` }),
+      );
+      txClient.roomService.createMany.mockResolvedValue({ count: 2 });
+      txClient.user.update.mockResolvedValue({ id: 'user-1', role: UserRole.landlord });
+
+      const res = await service.setupBoardingHouse('user-1', setupDto);
+
+      expect(res.success).toBe(true);
+      expect(res.roomsCreated).toBe(6); // 2 floors * 3 rooms
+      expect(txClient.boardingHouse.create).toHaveBeenCalled();
+      expect(txClient.service.create).toHaveBeenCalledTimes(2);
+      expect(txClient.roomType.create).toHaveBeenCalledTimes(1);
+      expect(txClient.room.create).toHaveBeenCalledTimes(6);
+      expect(txClient.roomService.createMany).toHaveBeenCalledTimes(6);
+      expect(txClient.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { role: UserRole.landlord },
+      });
+    });
+
+    it('rejects with 422 if room count exceeds free tier limit', async () => {
+      const overLimitDto = {
+        ...setupDto,
+        rooms: {
+          ...setupDto.rooms,
+          floorCount: 3,
+          roomsPerFloor: 4, // 12 rooms > 10
+        },
+      };
+
+      await expect(
+        service.setupBoardingHouse('user-1', overLimitDto),
+      ).rejects.toThrow('Gói đăng ký hiện tại chỉ cho phép tối đa 10 phòng');
+
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('rejects with 400 if roomTypeIndex is out of bounds', async () => {
+      const badIndexDto = {
+        ...setupDto,
+        rooms: {
+          ...setupDto.rooms,
+          roomTypeIndex: 5, // only 1 room type provided
+        },
+      };
+
+      await expect(
+        service.setupBoardingHouse('user-1', badIndexDto),
+      ).rejects.toThrow('roomTypeIndex 5 is out of bounds');
+
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getDashboardOverview', () => {
+    it('throws NotFoundException when boarding house does not belong to user', async () => {
+      mockPrisma.boardingHouse = {
+        findFirst: jest.fn().mockResolvedValue(null),
+      };
+
+      await expect(
+        service.getDashboardOverview('user-1', 'bh-non-existent'),
+      ).rejects.toThrow('Boarding house not found or unauthorized');
+    });
+
+    it('returns aggregated metrics for a valid boarding house', async () => {
+      mockPrisma.boardingHouse = {
+        findFirst: jest.fn().mockResolvedValue({ id: 'bh-1', ownerId: 'user-1' }),
+      };
+      mockPrisma.room = {
+        count: jest.fn()
+          .mockResolvedValueOnce(10) // total
+          .mockResolvedValueOnce(6)  // occupied
+          .mockResolvedValueOnce(3)  // available
+          .mockResolvedValueOnce(1)  // deposited
+          .mockResolvedValueOnce(0), // maintainace
+      };
+      mockPrisma.payment = {
+        aggregate: jest.fn().mockResolvedValue({ _sum: { amount: new Prisma.Decimal('15000000.00') } }),
+      };
+      mockPrisma.invoice = {
+        aggregate: jest.fn().mockResolvedValue({
+          _sum: { totalAmount: new Prisma.Decimal('2000000.00') },
+          _count: { id: 1 },
+        }),
+        count: jest.fn().mockResolvedValue(5),
+      };
+      mockPrisma.contract = {
+        findMany: jest.fn().mockResolvedValue([]),
+      };
+      mockPrisma.deposit = {
+        findMany: jest.fn().mockResolvedValue([]),
+      };
+      mockPrisma.grievance = {
+        findMany: jest.fn().mockResolvedValue([]),
+      };
+
+      const result = await service.getDashboardOverview('user-1', 'bh-1');
+
+      expect(result.rooms.totalRooms).toBe(10);
+      expect(result.rooms.occupiedRooms).toBe(6);
+      expect(result.rooms.occupancyRate).toBe('60%');
+      expect(result.financial.unpaidDebt).toBe('2000000.00');
+      expect(result.financial.unpaidInvoicesCount).toBe(1);
+      expect(result.financial.paidInvoicesCount).toBe(5);
+      expect(result.depositNotifications).toEqual([]);
+      expect(result.maintenanceRequests).toEqual([]);
+      expect(result.expiringContracts).toEqual([]);
+    });
+  });
 });

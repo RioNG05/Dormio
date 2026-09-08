@@ -77,22 +77,24 @@ export async function bulkGenerateRooms(
   boardingHouseId: string,
   payload: BulkGeneratePayload,
 ): Promise<BulkGenerateResult> {
-  return api.post<BulkGenerateResult>('/v1/rooms/bulk-generate', payload, {
+  const res = await api.post<any>('/v1/rooms/bulk-generate', payload, {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },
   });
+  return res?.data?.count !== undefined ? res.data : res;
 }
 
 /**
  * Fetch room metadata (room types, services, plan quota)
  */
 export async function getRoomMetadata(boardingHouseId: string): Promise<RoomMetadata> {
-  return api.get<RoomMetadata>('/v1/rooms/metadata', {
+  const res = await api.get<any>('/v1/rooms/metadata', {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },
   });
+  return res?.data?.roomTypes ? res.data : res?.roomTypes ? res : (res?.data ?? res);
 }
 
 /**
@@ -109,12 +111,28 @@ export async function getRooms(
   if (query?.status) params.status = query.status;
   if (query?.floor !== undefined) params.floor = String(query.floor);
 
-  return api.get<RoomListResult>('/v1/rooms', {
+  const res = await api.get<any>('/v1/rooms', {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },
     params,
   });
+
+  // TransformInterceptor wraps response in { success: true, data: { data: RoomItem[], meta: ... } }
+  const payload = res?.data ?? res;
+  return {
+    data: Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload)
+      ? payload
+      : [],
+    meta: payload?.meta ?? {
+      page: Number(query?.page || 1),
+      limit: Number(query?.limit || 10),
+      total: Array.isArray(payload?.data) ? payload.data.length : 0,
+      totalPages: 1,
+    },
+  };
 }
 
 export interface CreateRoomPayload {
@@ -146,11 +164,12 @@ export async function createRoom(
   boardingHouseId: string,
   payload: CreateRoomPayload,
 ): Promise<RoomItem> {
-  return api.post<RoomItem>('/v1/rooms', payload, {
+  const res = await api.post<any>('/v1/rooms', payload, {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },
   });
+  return res?.data ?? res;
 }
 
 /**
@@ -160,11 +179,12 @@ export async function getRoom(
   boardingHouseId: string,
   roomId: string,
 ): Promise<RoomItem> {
-  return api.get<RoomItem>(`/v1/rooms/${roomId}`, {
+  const res = await api.get<any>(`/v1/rooms/${roomId}`, {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },
   });
+  return res?.data ?? res;
 }
 
 /**
@@ -175,11 +195,12 @@ export async function updateRoom(
   roomId: string,
   payload: UpdateRoomPayload,
 ): Promise<RoomItem> {
-  return api.patch<RoomItem>(`/v1/rooms/${roomId}`, payload, {
+  const res = await api.patch<any>(`/v1/rooms/${roomId}`, payload, {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },
   });
+  return res?.data ?? res;
 }
 
 export interface RoomDashboardTenant {
@@ -267,10 +288,11 @@ export async function getRoomDashboard(
   boardingHouseId: string,
   roomId: string,
 ): Promise<RoomDashboardResponse> {
-  return api.get<RoomDashboardResponse>(`/v1/rooms/${roomId}/dashboard`, {
+  const res = await api.get<any>(`/v1/rooms/${roomId}/dashboard`, {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },
   });
+  return res?.data?.room ? res.data : res?.room ? res : (res?.data ?? res);
 }
 

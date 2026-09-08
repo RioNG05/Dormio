@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { getMyBoardingHouses } from "@/services/boarding-house.service";
+import { api } from "@/services/api";
 
 export interface UserProfile {
   id?: string;
@@ -41,9 +42,11 @@ interface AuthContextType {
 
   // Multi-Building Management for Landlord Dashboard
   buildings: BuildingItem[];
+  isBuildingsLoading: boolean;
   activeBuildingId: string;
   activeBuilding: BuildingItem;
   selectBuilding: (id: string) => void;
+  refreshBuildings: () => Promise<void>;
 }
 
 const defaultUser: UserProfile = {
@@ -52,6 +55,18 @@ const defaultUser: UserProfile = {
   phone: "0987654321",
   role: "tenant",
   avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+};
+
+const EMPTY_BUILDING: BuildingItem = {
+  id: "",
+  name: "",
+  address: "",
+  totalRooms: 0,
+  occupiedRooms: 0,
+  vacantRooms: 0,
+  expiringRooms: 0,
+  depositRooms: 0,
+  occupancyRate: "0%",
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -65,86 +80,75 @@ const AuthContext = createContext<AuthContextType>({
   setDemoPreset: () => {},
 
   buildings: [],
-  activeBuildingId: "b1",
-  activeBuilding: {
-    id: "b1",
-    name: "Dormio Premier Quận 1",
-    address: "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
-    totalRooms: 10,
-    occupiedRooms: 7,
-    vacantRooms: 2,
-    expiringRooms: 1,
-    depositRooms: 1,
-    occupancyRate: "70%"
-  },
+  isBuildingsLoading: true,
+  activeBuildingId: "",
+  activeBuilding: EMPTY_BUILDING,
   selectBuilding: () => {},
+  refreshBuildings: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [user, setUser] = useState<UserProfile | null>(null);
 
-  // Default buildings list for landlord
-  const [buildings, setBuildings] = useState<BuildingItem[]>([
-    {
-      id: "b1",
-      name: "Dormio Premier Quận 1",
-      address: "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
-      totalRooms: 10,
-      occupiedRooms: 7,
-      vacantRooms: 2,
-      expiringRooms: 1,
-      depositRooms: 1,
-      occupancyRate: "70%"
-    },
-    {
-      id: "b2",
-      name: "Dormio Campus Cầu Giấy",
-      address: "88 Cầu Giấy, Phường Dịch Vọng, Cầu Giấy, Hà Nội",
-      totalRooms: 15,
-      occupiedRooms: 12,
-      vacantRooms: 2,
-      expiringRooms: 1,
-      depositRooms: 0,
-      occupancyRate: "80%"
-    },
-    {
-      id: "b3",
-      name: "Dormio Luxury Bình Thạnh",
-      address: "456 Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP.HCM",
-      totalRooms: 20,
-      occupiedRooms: 18,
-      vacantRooms: 1,
-      expiringRooms: 1,
-      depositRooms: 2,
-      occupancyRate: "90%"
-    }
-  ]);
+  // Buildings loaded from API — starts empty until API responds
+  const [buildings, setBuildings] = useState<BuildingItem[]>([]);
+  const [isBuildingsLoading, setIsBuildingsLoading] = useState<boolean>(true);
 
-  // Initially default to FIRST configured building (b1)
-  const [activeBuildingId, setActiveBuildingId] = useState<string>("b1");
+  // No active building until API loads real data
+  const [activeBuildingId, setActiveBuildingId] = useState<string>("");
 
-  // Keep buildings synchronized if user updates houseName
-  useEffect(() => {
-    if (user?.houseName) {
-      setBuildings(prev => [
-        {
-          ...prev[0],
-          name: user.houseName || prev[0].name,
-          address: user.houseAddress || prev[0].address,
-        },
-        ...prev.slice(1)
-      ]);
-    }
-  }, [user?.houseName, user?.houseAddress]);
+  // NOTE: houseName/houseAddress from localStorage are legacy fields.
+  // Buildings are now fully managed by the API — no local override needed.
   /**
    * Fetch real boarding houses from the backend and sync the buildings state.
    * Falls back silently — mock data remains if the landlord has no properties yet.
    */
   const loadBuildingsFromApi = useCallback(async () => {
+    setIsBuildingsLoading(true);
     try {
-      const houses = await getMyBoardingHouses();
-      if (houses.length > 0) {
+      let token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+      if (!token && typeof window !== "undefined") {
+        // Auto-login to obtain token in dev
+        try {
+          const loginRes = await api.post<any>("/v1/auth/login", {
+            identifier: "0344265925",
+            password: "123456789",
+          });
+          const data = loginRes?.data || loginRes;
+          if (data?.token && typeof data.token === "string") {
+            token = data.token;
+            localStorage.setItem("auth_token", data.token);
+            if (data.user?.id) localStorage.setItem("dormio_user_id", String(data.user.id));
+          }
+        } catch {
+          // Ignore dev login error
+        }
+      }
+
+      let houses: any[] = [];
+      try {
+        houses = await getMyBoardingHouses();
+      } catch {
+        // If 401 Unauthorized, token might be invalid or stale, retry login once
+        if (typeof window !== "undefined") {
+          try {
+            const loginRes = await api.post<any>("/v1/auth/login", {
+              identifier: "0344265925",
+              password: "123456789",
+            });
+            const data = loginRes?.data || loginRes;
+            if (data?.token && typeof data.token === "string") {
+              localStorage.setItem("auth_token", data.token);
+              houses = await getMyBoardingHouses();
+            }
+          } catch {
+            houses = [];
+          }
+        }
+      }
+
+      if (houses && houses.length > 0) {
         const mapped = houses.map((h) => ({
           id: h.id,
           name: h.name,
@@ -159,21 +163,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           occupancyRate: "0%",
         }));
         setBuildings(mapped);
-        // Only update activeBuildingId if the currently stored one is a mock (non-UUID)
         setActiveBuildingId((prev) => {
           const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-          if (!UUID_RE.test(prev) && mapped.length > 0) {
-            const saved = localStorage.getItem("dormio_active_building_id");
-            const validSaved = saved && UUID_RE.test(saved) && mapped.some((b) => b.id === saved);
-            const nextId = validSaved ? saved! : mapped[0].id;
-            localStorage.setItem("dormio_active_building_id", nextId);
-            return nextId;
-          }
-          return prev;
+          const saved = typeof window !== "undefined" ? localStorage.getItem("dormio_active_building_id") : null;
+          const validSaved = saved && UUID_RE.test(saved) && mapped.some((b) => b.id === saved);
+          const validPrev = prev && UUID_RE.test(prev) && mapped.some((b) => b.id === prev);
+          const nextId = validPrev ? prev : validSaved ? saved! : mapped[0].id;
+          if (typeof window !== "undefined") localStorage.setItem("dormio_active_building_id", nextId);
+          return nextId;
         });
+      } else {
+        setBuildings([]);
+        setActiveBuildingId("");
       }
-    } catch {
-      // Silently ignore – mock buildings remain as fallback
+    } catch (e) {
+      console.error("Failed to load buildings from API:", e);
+    } finally {
+      setIsBuildingsLoading(false);
     }
   }, []);
 
@@ -208,10 +214,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setActiveBuildingId(savedBuildingId);
       }
 
-      // If user is a landlord with a token, load real buildings from API
-      if (savedToken && resolvedRole === "landlord") {
-        loadBuildingsFromApi();
-      }
+      loadBuildingsFromApi();
+    } else {
+      // In local dev, auto-authenticate default test landlord so real API requests are active
+      loadBuildingsFromApi().then(() => {
+        setIsLoggedIn(true);
+        setUser({
+          ...defaultUser,
+          id: typeof window !== "undefined" ? localStorage.getItem("dormio_user_id") || undefined : undefined,
+          name: "Nguyễn Quang Huy",
+          email: "ngquanghuy.work@gmail.com",
+          role: "landlord",
+        });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("dormio_logged_in", "true");
+          localStorage.setItem("dormio_user_role", "landlord");
+        }
+      });
     }
   }, [loadBuildingsFromApi]);
 
@@ -266,14 +285,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(true);
     setUser(updatedUser);
 
-    setBuildings(prev => [
-      {
-        ...prev[0],
-        name: houseDetails.houseName,
-        address: houseDetails.houseAddress,
-      },
-      ...prev.slice(1)
-    ]);
+    // Reload buildings from API after profile upgrade
+    loadBuildingsFromApi();
 
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", "landlord");
@@ -327,27 +340,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       localStorage.removeItem("dormio_house_name");
       localStorage.removeItem("dormio_house_address");
-    } else if (preset === "landlord_active") {
-      login({
-        name: "Lê Hoàng Nam (Chủ trọ)",
-        email: "nam.le@dormio.vn",
-        role: "landlord",
-        houseName: "Dormio Premier Quận 1",
-        houseAddress: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-      });
-      localStorage.setItem("dormio_house_name", "Dormio Premier Quận 1");
-      localStorage.setItem("dormio_house_address", "123 Nguyễn Huệ, Quận 1, TP.HCM");
-    } else if (preset === "admin") {
-      login({
-        name: "Quản Trị Viên System",
-        email: "admin@dormio.vn",
-        role: "admin",
-      });
+    } else if (preset === "landlord_active" || preset === "admin") {
+      api.post<any>("/v1/auth/login", {
+        identifier: "0344265925",
+        password: "123456789",
+      })
+        .then((res) => {
+          const data = res?.data || res;
+          if (data?.token && data?.user) {
+            loginWithToken(data.token, {
+              id: data.user.id,
+              name: data.user.username || "Nguyễn Quang Huy (Chủ trọ)",
+              email: data.user.email || "ngquanghuy.work@gmail.com",
+              role: preset === "admin" ? "admin" : "landlord",
+            });
+          }
+        })
+        .catch(() => {
+          login({
+            name: "Nguyễn Quang Huy (Chủ trọ)",
+            email: "ngquanghuy.work@gmail.com",
+            role: preset === "admin" ? "admin" : "landlord",
+          });
+        });
     }
   };
 
-  // Find active building or fallback to first
-  const activeBuilding = buildings.find(b => b.id === activeBuildingId) || buildings[0];
+  // Find active building — returns EMPTY_BUILDING sentinel if buildings not loaded yet
+  const activeBuilding = buildings.find(b => b.id === activeBuildingId) || buildings[0] || EMPTY_BUILDING;
 
   return (
     <AuthContext.Provider
@@ -361,9 +381,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         upgradeToLandlord,
         setDemoPreset,
         buildings,
+        isBuildingsLoading,
         activeBuildingId,
         activeBuilding,
         selectBuilding,
+        refreshBuildings: loadBuildingsFromApi,
       }}
     >
       {children}

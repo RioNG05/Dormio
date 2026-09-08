@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -17,6 +17,7 @@ import {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
@@ -186,7 +187,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   };
 
-  const { buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
+  const { buildings, isBuildingsLoading, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
+
+  const isLandlordRoute = pathname?.startsWith('/landlord');
+  const isSetupRoute = pathname === '/landlord/setup';
+
+  // UC-L-01 GATING: Access to /landlord dashboard area requires owning at least 1 property.
+  // If user owns 0 properties and navigates to any landlord route other than /landlord/setup,
+  // redirect immediately to the dedicated 3-step setup page.
+  React.useEffect(() => {
+    if (isLandlordRoute && !isSetupRoute && !isBuildingsLoading && buildings.length === 0) {
+      router.replace("/landlord/setup");
+    }
+  }, [isLandlordRoute, isSetupRoute, isBuildingsLoading, buildings.length, router]);
 
   // DYNAMICALLY UPDATE BROWSER DOCUMENT TITLE BASED ON ACTIVE BUILDING & ROUTE
   React.useEffect(() => {
@@ -214,25 +227,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [activeBuilding?.name, pathname]);
 
-  const BuildingSelector = () => (
-    <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
-      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
-        TÒA NHÀ ĐANG QUẢN LÝ:
-      </span>
-      <div className="relative">
-        <select
-          value={activeBuildingId}
-          onChange={(e) => selectBuilding(e.target.value)}
-          className="w-full bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-xs appearance-none pr-7"
-        >
-          {buildings.map(b => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
-        <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+  const BuildingSelector = () => {
+    if (buildings.length === 0) {
+      return (
+        <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
+          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
+            TÒA NHÀ ĐANG QUẢN LÝ:
+          </span>
+          <div className="w-full bg-zinc-100 border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs text-zinc-400 italic animate-pulse">
+            Đang tải dữ liệu...
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
+        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
+          TÒA NHÀ ĐANG QUẢN LÝ:
+        </span>
+        <div className="relative">
+          <select
+            value={activeBuildingId}
+            onChange={(e) => selectBuilding(e.target.value)}
+            className="w-full bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-xs appearance-none pr-7"
+          >
+            {buildings.map((b: any) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+          <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const Logo = () => (
     <Link href="/" className="flex items-center gap-2.5">
@@ -263,6 +291,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </Link>
     </div>
   );
+
+  // Gating view for /landlord routes when properties haven't loaded or user owns 0 properties
+  if (isLandlordRoute && !isSetupRoute) {
+    if (isBuildingsLoading) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+          <div className="text-center space-y-3">
+            <div className="w-10 h-10 border-4 border-[#2AC1BC]/20 border-t-[#2AC1BC] rounded-full animate-spin mx-auto" />
+            <p className="text-xs font-bold text-zinc-500">Đang kiểm tra dữ liệu nhà trọ...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (buildings.length === 0) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+          <div className="text-center space-y-3">
+            <div className="w-10 h-10 border-4 border-[#2AC1BC]/20 border-t-[#2AC1BC] rounded-full animate-spin mx-auto" />
+            <p className="text-xs font-bold text-zinc-500">Đang chuyển hướng tới trang thiết lập nhà trọ...</p>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // DEDICATED SETUP PAGE LAYOUT: Clean full-page experience without operational dashboard sidebar
+  if (isSetupRoute) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex flex-col">
+        <header className="h-16 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
+          <Logo />
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-zinc-500 hidden sm:inline">
+              Quy trình thiết lập nhà trọ 3 bước
+            </span>
+          </div>
+        </header>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-zinc-50">
@@ -320,18 +390,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Building Selector Dropdown on Mobile Topbar for Landlord */}
-          {!isTenant && (
+          {!isTenant && buildings.length > 0 && (
             <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
               <select
                 value={activeBuildingId}
                 onChange={(e) => selectBuilding(e.target.value)}
                 className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none pr-6 truncate"
               >
-                {buildings.map(b => (
+                {buildings.map((b: any) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
               <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          )}
+          {!isTenant && buildings.length === 0 && (
+            <div className="px-2.5 py-1 bg-zinc-100 border border-zinc-200/80 rounded-xl text-[11px] text-zinc-400 italic animate-pulse max-w-[140px] truncate">
+              Đang tải...
             </div>
           )}
 

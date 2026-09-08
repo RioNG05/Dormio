@@ -15,6 +15,9 @@ export class BoardingHouseServiceResponseDto {
 
   @ApiProperty({ example: true })
   isMetered: boolean;
+
+  @ApiProperty({ example: true, description: 'Whether this service is automatically applied to new contracts' })
+  autoApplied: boolean;
 }
 
 export class BoardingHouseRoomTypeResponseDto {
@@ -37,6 +40,9 @@ export class BoardingHouseResponseDto {
 
   @ApiPropertyOptional({ example: 'Near the university campus', nullable: true })
   description: string | null;
+
+  @ApiPropertyOptional({ example: 'https://res.cloudinary.com/...', nullable: true })
+  thumbnail?: string | null;
 
   @ApiProperty({ example: 'Vietnam' })
   country: string;
@@ -94,4 +100,15 @@ export class BoardingHouseListResponseDto {
 
   @ApiProperty({ type: [BoardingHouseListItemResponseDto] })
   data: BoardingHouseListItemResponseDto[];
+}
+
+export class SetupBoardingHouseResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean;
+
+  @ApiProperty({ type: BoardingHouseResponseDto })
+  boardingHouse: BoardingHouseResponseDto;
+
+  @ApiProperty({ example: 15, description: 'Number of rooms created in step 3' })
+  roomsCreated: number;
 }

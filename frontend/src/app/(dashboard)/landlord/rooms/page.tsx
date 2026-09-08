@@ -24,7 +24,7 @@ import {
 } from "@/services/room.service";
 
 export default function RoomsPage() {
-  const { activeBuilding, buildings } = useAuth();
+  const { activeBuilding, buildings, refreshBuildings, selectBuilding } = useAuth();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -100,67 +100,7 @@ export default function RoomsPage() {
   const [bulkRoomTypeId, setBulkRoomTypeId] = useState<string>("");
   const [bulkServiceIds, setBulkServiceIds] = useState<string[]>([]);
 
-  // Room Services for single room modal
-  const [roomServices, setRoomServices] = useState([
-    { id: 'bao_ve', name: 'Bảo vệ', defaultPrice: '50.000', customPrice: '60.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-    { id: 'dien', name: 'Điện', defaultPrice: '3.500', customPrice: '3.500', unit: 'đ/kWh', isCustom: true, isRemovable: false },
-    { id: 'nuoc', name: 'Nước', defaultPrice: '25.000', customPrice: '25.000', unit: 'đ/m³', isCustom: true, isRemovable: false },
-    { id: 'rac', name: 'Rác', defaultPrice: '20.000', customPrice: '20.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-    { id: 've_sinh', name: 'Vệ sinh', defaultPrice: '30.000', customPrice: '30.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-    { id: 'wifi', name: 'Wifi', defaultPrice: '100.000', customPrice: '100.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
-  ]);
-
-  // Initial mock room generator fallback
-  const generateMockRooms = () => {
-    const data: any[] = [];
-    const ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương"];
-    const dem = ["Văn", "Thị", "Hữu", "Minh", "Đức", "Ngọc", "Xuân", "Thu", "Thanh", "Hải", "Thành", "Công", "Quốc", "Khánh", "Gia"];
-    const ten = ["An", "Bình", "Cường", "Dũng", "Giang", "Hà", "Khang", "Linh", "Mai", "Nam", "Oanh", "Phong", "Quang", "Sơn", "Tuấn", "Uyên", "Vinh", "Vy", "Yến", "Tâm", "Thảo", "Trang", "Trung", "Tú", "Anh", "Bảo", "Châu", "Diệp", "Hân", "Khoa"];
-
-    const buildRooms = (buildingId: string, buildingSeq: number, floors: number, roomsPerFloor: number) => {
-      for (let f = 1; f <= floors; f++) {
-        for (let r = 1; r <= roomsPerFloor; r++) {
-          const roomStr = `${f}${r.toString().padStart(2, '0')}`;
-          const seed = f * 100 + r;
-          const isTrang = seed % 5 === 0;
-          const isBaoTri = seed % 17 === 0;
-
-          let status = "Đang thuê";
-          if (isTrang) status = "Trống";
-          else if (isBaoTri) status = "Bảo trì";
-          else if (seed % 11 === 0) status = "Đặt cọc";
-
-          const hash = parseInt(roomStr) * buildingSeq * 137 + 19;
-          const isRented = status === 'Đang thuê' || status === 'Đặt cọc';
-          const fullRoomId = `${buildingSeq}${roomStr}`;
-
-          data.push({
-            id: roomStr,
-            fullRoomId: fullRoomId,
-            floor: f.toString(),
-            status: status,
-            building: buildingId,
-            buildingSeq: buildingSeq,
-            contract: isRented ? (seed % 7 === 0 ? "expired" : "active") : "none",
-            invoice: isRented ? (seed % 8 === 0 ? "debt" : "paid") : "none",
-            tenant: isRented ? `${ho[hash % ho.length]} ${dem[(hash * 3) % dem.length]} ${ten[(hash * 7) % ten.length]}` : undefined,
-            tenantId: isRented ? `KH${roomStr}-${buildingSeq}` : undefined,
-            amenities: ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng'],
-            area: "25",
-            price: "3.500.000",
-            roomType: "Studio",
-            services: ["Điện", "Nước", "WiFi"],
-          });
-        }
-      }
-    };
-
-    buildRooms('b1', 1, 4, 6);
-    buildRooms('b2', 2, 3, 4);
-    return data;
-  };
-
-  const [rooms, setRooms] = useState(generateMockRooms());
+  const [rooms, setRooms] = useState<any[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -175,60 +115,82 @@ export default function RoomsPage() {
     setSelectedRoomIds([]);
   };
 
+  // Ensure buildings are loaded from backend on mount
+  useEffect(() => {
+    if (buildings.length === 0) {
+      refreshBuildings();
+    }
+  }, [buildings.length, refreshBuildings]);
+
   // Load real room metadata & backend rooms whenever activeBuilding changes
   const fetchBuildingData = useCallback(async (buildingId: string) => {
     if (!buildingId) return;
-    // Skip API call if the ID is still a mock (non-UUID) value — AuthContext may not have
-    // loaded real building IDs yet. The effect re-fires once real IDs are available.
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!UUID_RE.test(buildingId)) return;
     try {
       setIsLoadingMetadata(true);
-      const meta = await getRoomMetadata(buildingId);
-      setMetadata(meta);
+      const [meta, realRoomsRes] = await Promise.all([
+        getRoomMetadata(buildingId),
+        getRooms(buildingId, { limit: 100 }),
+      ]);
+      const safeMeta: RoomMetadata = (meta as any)?.data?.roomTypes ? (meta as any).data : meta;
+      setMetadata(safeMeta);
 
-      if (meta.roomTypes.length > 0 && !bulkRoomTypeId) {
-        setBulkRoomTypeId(meta.roomTypes[0].id);
+      if (safeMeta?.roomTypes && safeMeta.roomTypes.length > 0) {
+        setBulkRoomTypeId((prev) => prev || safeMeta.roomTypes[0].id);
       }
-      if (meta.services.length > 0 && bulkServiceIds.length === 0) {
-        setBulkServiceIds(meta.services.map((s) => s.id));
+      if (safeMeta?.services && safeMeta.services.length > 0) {
+        setBulkServiceIds((prev) => (prev.length === 0 ? safeMeta.services.map((s) => s.id) : prev));
       }
 
-      // Try fetching real rooms for this building
-      const realRoomsRes = await getRooms(buildingId, { limit: 100 });
-      if (realRoomsRes && realRoomsRes.data.length > 0) {
-        const mapped = realRoomsRes.data.map((r: RoomItem) => ({
-          id: r.roomNumber,
-          fullRoomId: r.id,
-          floor: r.floor.toString(),
-          status: r.status === 'available' ? 'Trống' :
-            r.status === 'occupied' ? 'Đang thuê' :
-              r.status === 'maintainace' ? 'Bảo trì' :
-                r.status === 'deposited' ? 'Đặt cọc' : r.status,
-          building: buildingId,
-          buildingSeq: 1,
-          contract: r.status === 'occupied' ? 'active' : 'none',
-          invoice: 'paid',
-          area: r.area || '25',
-          price: '3.500.000',
-          roomType: r.roomType?.name || 'Studio',
-          services: r.services.map((s) => s.name),
-          amenities: ['WiFi', 'Điều hòa', 'WC riêng'],
-        }));
-        setRooms(mapped);
-      }
-    } catch {
-      // If building ID lookup fails, keep mock rooms seamlessly
+      // Map real rooms from backend safely
+      const rawRooms: any[] = Array.isArray(realRoomsRes?.data)
+        ? realRoomsRes.data
+        : Array.isArray((realRoomsRes as any)?.data?.data)
+        ? (realRoomsRes as any).data.data
+        : Array.isArray(realRoomsRes)
+        ? (realRoomsRes as any)
+        : [];
+
+      const mapped = rawRooms.map((r: any) => ({
+        id: r.roomNumber,
+        fullRoomId: r.id,
+        floor: (r.floor !== undefined && r.floor !== null ? r.floor : 1).toString(),
+        status:
+          r.status === 'available'
+            ? 'Trống'
+            : r.status === 'occupied'
+            ? 'Đang thuê'
+            : r.status === 'maintainace'
+            ? 'Bảo trì'
+            : r.status === 'deposited'
+            ? 'Đặt cọc'
+            : (r.status || 'Trống'),
+        building: buildingId,
+        buildingSeq: 1,
+        contract: r.status === 'occupied' ? 'active' : 'none',
+        invoice: 'paid',
+        area: r.area || '25',
+        price: '3.500.000',
+        roomType: r.roomType?.name || 'Studio',
+        services: (r.services || []).map((s: any) => s.name || s),
+        amenities: ['WiFi', 'Điều hòa', 'WC riêng'],
+      }));
+      setRooms(mapped);
+    } catch (err) {
+      console.error("Failed to fetch building data:", err);
+      setRooms([]);
     } finally {
       setIsLoadingMetadata(false);
     }
-  }, [bulkRoomTypeId, bulkServiceIds.length]);
+  }, []);
 
   useEffect(() => {
-    if (activeBuilding?.id) {
-      fetchBuildingData(activeBuilding.id);
+    const targetBuildingId = activeBuilding?.id || (buildings.length > 0 ? buildings[0].id : "");
+    if (targetBuildingId) {
+      fetchBuildingData(targetBuildingId);
     }
-  }, [activeBuilding?.id, fetchBuildingData]);
+  }, [activeBuilding?.id, buildings, fetchBuildingData]);
 
   // Reset single room form drafts (Rule 10)
   const resetSingleForm = useCallback(() => {
@@ -360,114 +322,61 @@ export default function RoomsPage() {
       return;
     }
 
-    const buildingId = activeBuilding?.id || "b1";
+    if (!formRoomTypeId) {
+      setSingleError("Vui lòng chọn loại phòng.");
+      return;
+    }
+
+    const buildingId = activeBuilding?.id;
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!buildingId || !UUID_RE.test(buildingId)) {
+      setSingleError("Không tìm thấy thông tin tòa nhà. Vui lòng chọn lại tòa nhà và thử lại.");
+      return;
+    }
 
     setIsSingleSubmitting(true);
     try {
-      if (UUID_RE.test(buildingId) && formRoomTypeId) {
-        if (selectedRoomId && UUID_RE.test(selectedRoomId)) {
-          // UC-L-03: Update Room
-          await updateRoom(buildingId, selectedRoomId, {
-            roomNumber: formRoomNumber.trim(),
-            floor: floorNum,
-            area: formArea ? parseFloat(formArea) : undefined,
-            maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : undefined,
-            roomTypeId: formRoomTypeId,
-            status: formStatus,
-            imageUrl: formImageUrl.trim() || undefined,
-            serviceIds: selectedServiceIds,
-          });
-
-          setToastMessage({
-            type: "success",
-            text: `Đã cập nhật phòng ${formRoomNumber.trim()} thành công!`,
-          });
-        } else {
-          // UC-L-03: Create Room
-          await createRoom(buildingId, {
-            roomNumber: formRoomNumber.trim(),
-            floor: floorNum,
-            area: formArea ? parseFloat(formArea) : undefined,
-            maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : undefined,
-            roomTypeId: formRoomTypeId,
-            status: formStatus,
-            imageUrl: formImageUrl.trim() || undefined,
-            serviceIds: selectedServiceIds,
-          });
-
-          setToastMessage({
-            type: "success",
-            text: `Đã tạo mới phòng ${formRoomNumber.trim()} thành công!`,
-          });
-        }
-
-        await fetchBuildingData(buildingId);
+      if (selectedRoomId && UUID_RE.test(selectedRoomId)) {
+        // UC-L-03: Update Room
+        await updateRoom(buildingId, selectedRoomId, {
+          roomNumber: formRoomNumber.trim(),
+          floor: floorNum,
+          area: formArea ? parseFloat(formArea) : undefined,
+          maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : undefined,
+          roomTypeId: formRoomTypeId,
+          status: formStatus,
+          imageUrl: formImageUrl.trim() || undefined,
+          serviceIds: selectedServiceIds,
+        });
+        setToastMessage({
+          type: "success",
+          text: `Đã cập nhật phòng ${formRoomNumber.trim()} thành công!`,
+        });
       } else {
-        // Fallback for mock mode
-        const selectedTypeName = metadata?.roomTypes.find((rt) => rt.id === formRoomTypeId)?.name || "Studio";
-        const selectedServiceNames = metadata?.services
-          .filter((s) => selectedServiceIds.includes(s.id))
-          .map((s) => s.name) || ["Điện", "Nước", "WiFi"];
-
-        const statusLabel =
-          formStatus === 'available' ? 'Trống' :
-          formStatus === 'occupied' ? 'Đang thuê' :
-          formStatus === 'maintainace' ? 'Bảo trì' : 'Đặt cọc';
-
-        if (selectedRoomId) {
-          setRooms((prev) =>
-            prev.map((r) =>
-              (r.fullRoomId === selectedRoomId || r.id === selectedRoomId)
-                ? {
-                    ...r,
-                    id: formRoomNumber.trim(),
-                    floor: String(floorNum),
-                    area: formArea || "25",
-                    maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : 2,
-                    status: statusLabel,
-                    roomType: selectedTypeName,
-                    price: formPrice || "3.500.000",
-                    notes: formNotes,
-                    services: selectedServiceNames,
-                    amenities: [...selectedAmenities],
-                  }
-                : r,
-            ),
-          );
-          setToastMessage({
-            type: "success",
-            text: `Đã cập nhật phòng ${formRoomNumber.trim()} thành công!`,
-          });
-        } else {
-          const newRoom = {
-            id: formRoomNumber.trim(),
-            fullRoomId: `room-${formRoomNumber.trim()}`,
-            floor: String(floorNum),
-            status: statusLabel,
-            building: buildingId,
-            buildingSeq: 1,
-            contract: "none",
-            invoice: "none",
-            area: formArea || "25",
-            price: formPrice || "3.500.000",
-            roomType: selectedTypeName,
-            notes: formNotes,
-            amenities: [...selectedAmenities],
-            services: selectedServiceNames,
-          };
-          setRooms((prev) => [newRoom, ...prev]);
-          setToastMessage({
-            type: "success",
-            text: `Đã thêm phòng ${formRoomNumber.trim()} thành công!`,
-          });
-        }
+        // UC-L-03: Create Room
+        await createRoom(buildingId, {
+          roomNumber: formRoomNumber.trim(),
+          floor: floorNum,
+          area: formArea ? parseFloat(formArea) : undefined,
+          maxOccupants: formMaxOccupants ? parseInt(formMaxOccupants, 10) : undefined,
+          roomTypeId: formRoomTypeId,
+          status: formStatus,
+          imageUrl: formImageUrl.trim() || undefined,
+          serviceIds: selectedServiceIds,
+        });
+        setToastMessage({
+          type: "success",
+          text: `Đã tạo mới phòng ${formRoomNumber.trim()} thành công!`,
+        });
       }
 
+      // Refresh room list from server
+      await fetchBuildingData(buildingId);
       setIsSingleModalOpen(false);
       setIsSingleDirty(false);
     } catch (err: any) {
-      const msg = err?.message || "Không thể lưu thông tin phòng. Vui lòng thử lại.";
+      const msg = err?.response?.data?.message || err?.message || "Không thể lưu thông tin phòng. Vui lòng thử lại.";
       setSingleError(msg);
     } finally {
       setIsSingleSubmitting(false);
@@ -554,6 +463,19 @@ export default function RoomsPage() {
       return;
     }
 
+    if (!bulkRoomTypeId) {
+      setBulkError("Vui lòng chọn loại phòng trước khi tạo hàng loạt.");
+      return;
+    }
+
+    const buildingId = activeBuilding?.id;
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!buildingId || !UUID_RE.test(buildingId)) {
+      setBulkError("Không tìm thấy thông tin tòa nhà. Vui lòng chọn lại tòa nhà và thử lại.");
+      return;
+    }
+
     // Check duplicate room numbers within generated list
     const uniqueSet = new Set(previewRoomNumbers);
     if (uniqueSet.size !== previewRoomNumbers.length) {
@@ -563,70 +485,27 @@ export default function RoomsPage() {
 
     setIsBulkSubmitting(true);
     try {
-      const buildingId = activeBuilding?.id || "b1";
+      const response = await bulkGenerateRooms(buildingId, {
+        floorCount: bulkFloorCount,
+        roomsPerFloor: bulkRoomsPerFloor,
+        nameFormat: bulkNameFormat.trim(),
+        area: bulkArea ? parseFloat(bulkArea) : undefined,
+        maxOccupants: bulkMaxOccupants ? parseInt(bulkMaxOccupants, 10) : undefined,
+        roomTypeId: bulkRoomTypeId,
+        serviceIds: bulkServiceIds,
+      });
 
-      // If valid UUID, send to backend API
-      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(buildingId) && bulkRoomTypeId) {
-        const response = await bulkGenerateRooms(buildingId, {
-          floorCount: bulkFloorCount,
-          roomsPerFloor: bulkRoomsPerFloor,
-          nameFormat: bulkNameFormat.trim(),
-          area: bulkArea ? parseFloat(bulkArea) : undefined,
-          maxOccupants: bulkMaxOccupants ? parseInt(bulkMaxOccupants, 10) : undefined,
-          roomTypeId: bulkRoomTypeId,
-          serviceIds: bulkServiceIds,
-        });
+      setToastMessage({
+        type: "success",
+        text: `Đã tạo tự động thành công ${response.count} phòng mới vào hệ thống!`,
+      });
 
-        if (response.success) {
-          setToastMessage({
-            type: "success",
-            text: `Đã tạo tự động thành công ${response.count} phòng mới vào hệ thống!`,
-          });
-          await fetchBuildingData(buildingId);
-        }
-      } else {
-        // Fallback local update for preview/demo
-        const newLocalRooms: any[] = [];
-        const selectedTypeName = metadata?.roomTypes.find((rt) => rt.id === bulkRoomTypeId)?.name || "Studio";
-
-        for (let f = 1; f <= bulkFloorCount; f++) {
-          for (let i = 1; i <= bulkRoomsPerFloor; i++) {
-            const roomCode = bulkNameFormat
-              .replace(/\{floor:0?2\}/g, String(f).padStart(2, "0"))
-              .replace(/\{floor\}/g, String(f))
-              .replace(/\{index:0?2\}/g, String(i).padStart(2, "0"))
-              .replace(/\{index\}/g, String(i))
-              .trim();
-
-            newLocalRooms.push({
-              id: roomCode,
-              fullRoomId: `gen-${roomCode}`,
-              floor: f.toString(),
-              status: "Trống",
-              building: buildingId,
-              buildingSeq: 1,
-              contract: "none",
-              invoice: "none",
-              area: bulkArea || "25",
-              price: "3.500.000",
-              roomType: selectedTypeName,
-              services: ["Điện", "Nước", "WiFi"],
-              amenities: ["WiFi", "Điều hòa", "WC riêng"],
-            });
-          }
-        }
-
-        setRooms((prev) => [...newLocalRooms, ...prev]);
-        setToastMessage({
-          type: "success",
-          text: `Đã tạo tự động thành công ${newLocalRooms.length} phòng mới!`,
-        });
-      }
-
+      // Refresh room list from server
+      await fetchBuildingData(buildingId);
       setIsBulkModalOpen(false);
       resetBulkForm();
     } catch (err: any) {
-      const msg = err?.message || "Không thể tạo phòng tự động. Vui lòng thử lại.";
+      const msg = err?.response?.data?.message || err?.message || "Không thể tạo phòng tự động. Vui lòng thử lại.";
       setBulkError(msg);
     } finally {
       setIsBulkSubmitting(false);
@@ -965,7 +844,13 @@ export default function RoomsPage() {
 
         {/* Content Section: Grid View vs Table View */}
         <div className="p-5">
-          {paginatedRooms.length === 0 ? (
+          {isLoadingMetadata ? (
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+              <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
+              <p className="text-sm font-bold text-zinc-700">Đang tải dữ liệu phòng từ máy chủ...</p>
+              <p className="text-xs text-zinc-400 mt-1">Đang đồng bộ thông tin phòng và dịch vụ</p>
+            </div>
+          ) : paginatedRooms.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-50/50 rounded-2xl border border-zinc-200 border-dashed text-center">
               <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-zinc-100 flex items-center justify-center mb-4 text-zinc-400">
                 <Search className="w-8 h-8" />

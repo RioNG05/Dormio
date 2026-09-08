@@ -61,9 +61,11 @@ See UC-P-01 in `04-bhrp-poster.md` for the full implementation of this split, an
 ## UC-AUTH-02 — Become a Landlord
 **Models:** `BoardingHouse`, `Room`, `RoomType`, `User`
 
-1. Any authenticated user (any `role`) clicks "Tạo nhà trọ".
-2. Full property + initial room creation form, same data as UC-L-01/UC-L-02 combined into one onboarding flow (`BoardingHouse` fields, `RoomType[]`, initial `Room[]`).
-3. **Only on successful creation** of the `BoardingHouse` row does the role bump happen (`role = 'landlord'` per the rule above) — if room/type creation fails partway through, the whole onboarding transaction should roll back (including the role bump) so the user isn't left in an inconsistent "labeled landlord but no property" state.
+1. Any authenticated user (any `role`) clicks "Tạo nhà trọ" (Create rental property).
+2. The user is directed to a dedicated property creation page to complete the 3-step setup (UC-L-01: general property info, services & room types, room generation). Direct access to the landlord dashboard area (`URL: /landlord`) is blocked for users without existing properties.
+3. The user inputs property information across all 3 steps and confirms creation on Step 3.
+4. **Only on successful completion and confirmation** of the `BoardingHouse` row (and associated initial services, room types, and rooms via atomic transaction) does the role bump happen (`role = 'landlord'` per the rule above) and access to the landlord dashboard area (`URL: /landlord`) is granted.
+5. If property creation is canceled, abandoned, or fails partway through, the entire transaction rolls back (including any role bump), and access to `/landlord` remains strictly gated.
 
 ---
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -12,10 +12,13 @@ import { ApiAuth } from '../../common/swagger';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { BoardingHousesService } from './boarding-houses.service';
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
+import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto';
+import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto';
 import {
   BoardingHouseListResponseDto,
   BoardingHouseResponseDto,
   CreateBoardingHouseResponseDto,
+  SetupBoardingHouseResponseDto,
 } from './dto/boarding-house-response.dto';
 
 @ApiTags('Boarding Houses')
@@ -26,6 +29,48 @@ export class BoardingHousesController {
   constructor(
     private readonly boardingHousesService: BoardingHousesService,
   ) {}
+
+  @Post('setup')
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Setup a boarding house via 3-step wizard (UC-L-01)',
+    description:
+      'Creates a boarding house with services, room types, generates rooms in bulk, and promotes user role to landlord in a single atomic transaction.',
+  })
+  @ApiCreatedResponse({
+    description: 'Boarding house setup completed successfully',
+    type: SetupBoardingHouseResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input payload' })
+  @ApiResponse({ status: 422, description: 'Room count exceeds subscription quota' })
+  async setupBoardingHouse(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: SetupBoardingHouseDto,
+  ): Promise<SetupBoardingHouseResponseDto> {
+    this.logger.log(`POST /boarding-houses/setup called by user ${user.id}`);
+    return this.boardingHousesService.setupBoardingHouse(user.id, dto);
+  }
+
+  @Get(':id/overview')
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Get landlord dashboard overview metrics for a boarding house (UC-L-01)',
+    description:
+      'Returns aggregated metrics including room statistics, financial summary, monthly cashflow, pending deposits, maintenance requests, and expiring contracts.',
+  })
+  @ApiOkResponse({
+    description: 'Dashboard overview retrieved successfully',
+    type: BoardingHouseOverviewResponseDto,
+  })
+  async getDashboardOverview(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) boardingHouseId: string,
+  ): Promise<BoardingHouseOverviewResponseDto> {
+    this.logger.log(`GET /boarding-houses/${boardingHouseId}/overview called by user ${user.id}`);
+    return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId);
+  }
 
   @Get()
   @ApiAuth()
