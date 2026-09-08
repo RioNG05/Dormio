@@ -111,6 +111,46 @@ export class OverviewExpiringContractDto {
   endDate: string;
 }
 
+export class OverviewCollectionStatusDto {
+  @ApiProperty({ example: 8, description: 'Số hóa đơn đã thu' })
+  paidCount: number;
+
+  @ApiProperty({ example: '35000000.00', description: 'Tổng tiền đã thu' })
+  paidAmount: string;
+
+  @ApiProperty({ example: 2, description: 'Số hóa đơn chưa thu' })
+  unpaidCount: number;
+
+  @ApiProperty({ example: '7000000.00', description: 'Tổng tiền chưa thu' })
+  unpaidAmount: string;
+
+  @ApiProperty({ example: 1, description: 'Số hóa đơn quá hạn' })
+  overdueCount: number;
+
+  @ApiProperty({ example: '3500000.00', description: 'Tổng tiền quá hạn' })
+  overdueAmount: string;
+
+  @ApiProperty({ example: '45500000.00', description: 'Tổng giá trị hóa đơn trong kỳ' })
+  totalBilledAmount: string;
+
+  @ApiProperty({ example: '76.9%', description: 'Tỷ lệ thu tiền' })
+  collectionRate: string;
+}
+
+export class OverviewOccupancyMonthDto {
+  @ApiProperty({ example: '08/26' })
+  month: string;
+
+  @ApiProperty({ example: 85, description: 'Tỷ lệ lấp đầy (%)' })
+  occupied: number;
+
+  @ApiProperty({ example: 10, description: 'Tổng số phòng' })
+  total: number;
+
+  @ApiProperty({ example: 8, description: 'Số phòng đang có khách thuê' })
+  count: number;
+}
+
 export class BoardingHouseOverviewResponseDto {
   @ApiProperty({ type: OverviewRoomsDto })
   rooms: OverviewRoomsDto;
@@ -118,8 +158,14 @@ export class BoardingHouseOverviewResponseDto {
   @ApiProperty({ type: OverviewFinancialDto })
   financial: OverviewFinancialDto;
 
+  @ApiProperty({ type: OverviewCollectionStatusDto })
+  collectionStatus: OverviewCollectionStatusDto;
+
   @ApiProperty({ type: [OverviewRevenueMonthDto] })
   revenueChart: OverviewRevenueMonthDto[];
+
+  @ApiProperty({ type: [OverviewOccupancyMonthDto] })
+  occupancyChart: OverviewOccupancyMonthDto[];
 
   @ApiProperty({ type: [OverviewDepositItemDto] })
   depositNotifications: OverviewDepositItemDto[];

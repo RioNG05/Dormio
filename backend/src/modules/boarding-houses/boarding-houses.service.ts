@@ -318,15 +318,41 @@ export class BoardingHousesService {
     };
   }
 
-  // ─── UC-L-01: Returning Landlord Overview Dashboard ───────────────────────
+  // ─── UC-L-08: In-Memory Cache (Periodic Caching per Spec) ────────────────
+  private readonly overviewCache = new Map<
+    string,
+    { data: BoardingHouseOverviewResponseDto; expiresAt: number }
+  >();
+  private readonly CACHE_TTL_MS = 60 * 1000; // 60s TTL per UC-L-08
+
+  /** Invalidate overview cache for a specific boarding house or all */
+  public invalidateOverviewCache(boardingHouseId?: string): void {
+    if (boardingHouseId) {
+      this.overviewCache.delete(boardingHouseId);
+    } else {
+      this.overviewCache.clear();
+    }
+  }
+
+  // ─── UC-L-01 & UC-L-08: Returning Landlord Overview & Analytics Dashboard ───
 
   async getDashboardOverview(
     userId: string,
     boardingHouseId: string,
+    forceRefresh = false,
   ): Promise<BoardingHouseOverviewResponseDto> {
     this.logger.log(
-      `Fetching dashboard overview for user ${userId} and house ${boardingHouseId}`,
+      `Fetching dashboard overview for user ${userId} and house ${boardingHouseId} (forceRefresh=${forceRefresh})`,
     );
+
+    // Check in-memory periodic cache (UC-L-08 spec requirement)
+    if (!forceRefresh) {
+      const cached = this.overviewCache.get(boardingHouseId);
+      if (cached && cached.expiresAt > Date.now()) {
+        this.logger.log(`Returning cached overview for house ${boardingHouseId}`);
+        return cached.data;
+      }
+    }
 
     const house = await this.prisma.boardingHouse.findFirst({
       where: { id: boardingHouseId, ownerId: userId },
@@ -336,7 +362,7 @@ export class BoardingHousesService {
       throw new NotFoundException('Boarding house not found or unauthorized');
     }
 
-    // 1. Room statistics
+    // 1. Room statistics (UC-L-08: Occupancy = COUNT(Room occupied) / COUNT(Room))
     const [totalRooms, occupiedRooms, vacantRooms, depositRooms, maintenanceRooms] =
       await Promise.all([
         this.prisma.room.count({ where: { boardingHouseId } }),
@@ -351,7 +377,7 @@ export class BoardingHousesService {
         ? `${Math.round((occupiedRooms / totalRooms) * 100)}%`
         : '0%';
 
-    // 2. Financial metrics
+    // 2. Financial metrics & Revenue (UC-L-08: Revenue = SUM(Payment.amount) WHERE type='charge' AND status='success')
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(
@@ -364,15 +390,16 @@ export class BoardingHousesService {
       999,
     );
 
-    const [currentMonthPayments, unpaidInvoices, paidInvoicesCount] =
+    const [currentMonthPayments, unpaidInvoices, paidInvoicesCount, currentPeriodInvoices] =
       await Promise.all([
         this.prisma.payment.aggregate({
           where: {
             invoice: {
               room: { boardingHouseId },
             },
+            type: 'charge',
             status: 'success',
-            createdAt: { gte: startOfMonth, lte: endOfMonth },
+            paidAt: { gte: startOfMonth, lte: endOfMonth },
           },
           _sum: { amount: true },
         }),
@@ -390,15 +417,59 @@ export class BoardingHousesService {
             status: 'paid',
           },
         }),
+        this.prisma.invoice.findMany({
+          where: {
+            room: { boardingHouseId },
+            createdAt: { gte: startOfMonth, lte: endOfMonth },
+          },
+          select: {
+            id: true,
+            status: true,
+            totalAmount: true,
+            dueDate: true,
+          },
+        }),
       ]);
 
-    // 3. Expiring contracts within next 30 days
+    // 3. Collection status: Invoice grouped by status for current period (UC-L-08)
+    let paidCount = 0;
+    let paidAmount = 0;
+    let unpaidCount = 0;
+    let unpaidAmount = 0;
+    let overdueCount = 0;
+    let overdueAmount = 0;
+
+    for (const inv of currentPeriodInvoices) {
+      const amt = Number(inv.totalAmount);
+      const isOverdue =
+        inv.status === 'overdue' ||
+        (inv.status === 'unpaid' && new Date(inv.dueDate) < now);
+
+      if (inv.status === 'paid') {
+        paidCount++;
+        paidAmount += amt;
+      } else if (isOverdue) {
+        overdueCount++;
+        overdueAmount += amt;
+      } else {
+        unpaidCount++;
+        unpaidAmount += amt;
+      }
+    }
+
+    const totalBilled = paidAmount + unpaidAmount + overdueAmount;
+    const collectionRate =
+      totalBilled > 0
+        ? `${Math.round((paidAmount / totalBilled) * 1000) / 10}%`
+        : '0%';
+
+    // 4. Expiring contracts within next 30 days (UC-L-08: endDate BETWEEN NOW() AND NOW() + 30 days)
     const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const expiringContractsRaw = await this.prisma.contract.findMany({
       where: {
         room: { boardingHouseId },
         status: 'active',
-        endDate: { lte: in30Days },
+        endDate: { gte: now, lte: in30Days },
       },
       include: {
         room: true,
@@ -426,7 +497,7 @@ export class BoardingHousesService {
       };
     });
 
-    // 4. Deposits
+    // 5. Deposits
     const depositsRaw = await this.prisma.deposit.findMany({
       where: {
         boardingHouseId,
@@ -458,7 +529,7 @@ export class BoardingHousesService {
       };
     });
 
-    // 5. Maintenance requests (Grievances)
+    // 6. Maintenance requests (Grievances)
     const grievancesRaw = await this.prisma.grievance.findMany({
       where: {
         boardingHouseId,
@@ -482,7 +553,7 @@ export class BoardingHousesService {
       status: g.status,
     }));
 
-    // 6. Monthly revenue history (past 6 months)
+    // 7. Monthly revenue history (past 6 months) with type='charge' & status='success'
     const monthlyRevenue: Array<{ month: string; val: number; fullAmount: string }> = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -493,8 +564,9 @@ export class BoardingHousesService {
       const mPayments = await this.prisma.payment.aggregate({
         where: {
           invoice: { room: { boardingHouseId } },
+          type: 'charge',
           status: 'success',
-          createdAt: { gte: mStart, lte: mEnd },
+          paidAt: { gte: mStart, lte: mEnd },
         },
         _sum: { amount: true },
       });
@@ -510,7 +582,32 @@ export class BoardingHousesService {
     const hasAnyRevenue = monthlyRevenue.some((m) => m.val > 0);
     const revenueChart = hasAnyRevenue ? monthlyRevenue : [];
 
-    return {
+    // 8. Monthly occupancy history (past 6 months)
+    const occupancyChart: Array<{ month: string; occupied: number; total: number; count: number }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`;
+
+      const activeContracts = await this.prisma.contract.count({
+        where: {
+          room: { boardingHouseId },
+          status: 'active',
+          startDate: { lte: mEnd },
+          endDate: { gte: d },
+        },
+      });
+
+      const occRateNum = totalRooms > 0 ? Math.min(100, Math.round((activeContracts / totalRooms) * 100)) : 0;
+      occupancyChart.push({
+        month: monthLabel,
+        occupied: occRateNum,
+        total: totalRooms,
+        count: activeContracts,
+      });
+    }
+
+    const result: BoardingHouseOverviewResponseDto = {
       rooms: {
         totalRooms,
         occupiedRooms,
@@ -525,11 +622,30 @@ export class BoardingHousesService {
         unpaidInvoicesCount: unpaidInvoices._count.id ?? 0,
         paidInvoicesCount,
       },
+      collectionStatus: {
+        paidCount,
+        paidAmount: this.formatMoney(paidAmount),
+        unpaidCount,
+        unpaidAmount: this.formatMoney(unpaidAmount),
+        overdueCount,
+        overdueAmount: this.formatMoney(overdueAmount),
+        totalBilledAmount: this.formatMoney(totalBilled),
+        collectionRate,
+      },
       revenueChart,
+      occupancyChart,
       depositNotifications,
       maintenanceRequests,
       expiringContracts,
     };
+
+    // Save in cache (60s TTL)
+    this.overviewCache.set(boardingHouseId, {
+      data: result,
+      expiresAt: Date.now() + this.CACHE_TTL_MS,
+    });
+
+    return result;
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────

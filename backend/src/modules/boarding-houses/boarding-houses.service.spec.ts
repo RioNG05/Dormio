@@ -336,9 +336,24 @@ describe('BoardingHousesService', () => {
           _count: { id: 1 },
         }),
         count: jest.fn().mockResolvedValue(5),
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'inv-1',
+            status: 'paid',
+            totalAmount: new Prisma.Decimal('15000000.00'),
+            dueDate: new Date(),
+          },
+          {
+            id: 'inv-2',
+            status: 'unpaid',
+            totalAmount: new Prisma.Decimal('2000000.00'),
+            dueDate: new Date(Date.now() + 86400000 * 5),
+          },
+        ]),
       };
       mockPrisma.contract = {
         findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(6),
       };
       mockPrisma.deposit = {
         findMany: jest.fn().mockResolvedValue([]),
@@ -347,7 +362,7 @@ describe('BoardingHousesService', () => {
         findMany: jest.fn().mockResolvedValue([]),
       };
 
-      const result = await service.getDashboardOverview('user-1', 'bh-1');
+      const result = await service.getDashboardOverview('user-1', 'bh-1', true);
 
       expect(result.rooms.totalRooms).toBe(10);
       expect(result.rooms.occupiedRooms).toBe(6);
@@ -355,6 +370,11 @@ describe('BoardingHousesService', () => {
       expect(result.financial.unpaidDebt).toBe('2000000.00');
       expect(result.financial.unpaidInvoicesCount).toBe(1);
       expect(result.financial.paidInvoicesCount).toBe(5);
+      expect(result.collectionStatus).toBeDefined();
+      expect(result.collectionStatus.paidCount).toBe(1);
+      expect(result.collectionStatus.unpaidCount).toBe(1);
+      expect(result.occupancyChart).toBeDefined();
+      expect(result.occupancyChart).toHaveLength(6);
       expect(result.depositNotifications).toEqual([]);
       expect(result.maintenanceRequests).toEqual([]);
       expect(result.expiringContracts).toEqual([]);

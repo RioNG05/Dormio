@@ -126,6 +126,17 @@ export default function LandlordDashboardPage() {
     paidInvoicesCount: 0,
   };
 
+  const collection = overview?.collectionStatus ?? {
+    paidCount: 0,
+    paidAmount: "0.00",
+    unpaidCount: 0,
+    unpaidAmount: "0.00",
+    overdueCount: 0,
+    overdueAmount: "0.00",
+    totalBilledAmount: "0.00",
+    collectionRate: "0%",
+  };
+
   const depositNotifications = overview?.depositNotifications ?? [];
   const maintenanceRequests = overview?.maintenanceRequests ?? [];
   const expiringContracts = overview?.expiringContracts ?? [];
@@ -389,7 +400,7 @@ export default function LandlordDashboardPage() {
                     <BarChart2 className="w-4 h-4 text-[#2AC1BC]" /> Tổng Quan Dòng Tiền
                   </span>
                   <span className="px-2 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full text-[10px] font-black">
-                    VietQR 24/7
+                    Thu hồi: {collection.collectionRate}
                   </span>
                 </div>
 

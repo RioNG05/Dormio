@@ -193,10 +193,30 @@ export interface OverviewExpiringContract {
   endDate: string;
 }
 
+export interface OverviewCollectionStatus {
+  paidCount: number;
+  paidAmount: string;
+  unpaidCount: number;
+  unpaidAmount: string;
+  overdueCount: number;
+  overdueAmount: string;
+  totalBilledAmount: string;
+  collectionRate: string;
+}
+
+export interface OverviewOccupancyMonth {
+  month: string;
+  occupied: number;
+  total: number;
+  count: number;
+}
+
 export interface BoardingHouseOverview {
   rooms: OverviewRooms;
   financial: OverviewFinancial;
+  collectionStatus?: OverviewCollectionStatus;
   revenueChart: OverviewRevenueMonth[];
+  occupancyChart?: OverviewOccupancyMonth[];
   depositNotifications: OverviewDepositItem[];
   maintenanceRequests: OverviewMaintenanceItem[];
   expiringContracts: OverviewExpiringContract[];
@@ -210,4 +230,14 @@ export async function getBoardingHouseOverview(
   );
   return response.data || (response as unknown as BoardingHouseOverview);
 }
+
+export async function getPropertyAnalytics(
+  boardingHouseId: string,
+): Promise<BoardingHouseOverview> {
+  const response = await api.get<{ success: boolean; data: BoardingHouseOverview }>(
+    `/v1/boarding-houses/${boardingHouseId}/analytics`,
+  );
+  return response.data || (response as unknown as BoardingHouseOverview);
+}
+
 

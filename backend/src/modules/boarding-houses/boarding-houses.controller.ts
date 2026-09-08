@@ -56,12 +56,12 @@ export class BoardingHousesController {
   @ApiAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary: 'Get landlord dashboard overview metrics for a boarding house (UC-L-01)',
+    summary: 'Lấy dữ liệu tổng quan & phân tích kinh doanh nhà trọ (UC-L-01 & UC-L-08)',
     description:
-      'Returns aggregated metrics including room statistics, financial summary, monthly cashflow, pending deposits, maintenance requests, and expiring contracts.',
+      'Trả về số liệu tổng quan bao gồm thống kê phòng, doanh thu thực tế, công nợ, trạng thái thu tiền (collectionStatus), hợp đồng sắp hết hạn và dòng tiền 6 tháng.',
   })
   @ApiOkResponse({
-    description: 'Dashboard overview retrieved successfully',
+    description: 'Dữ liệu tổng quan được truy xuất thành công',
     type: BoardingHouseOverviewResponseDto,
   })
   async getDashboardOverview(
@@ -69,6 +69,26 @@ export class BoardingHousesController {
     @Param('id', ParseUUIDPipe) boardingHouseId: string,
   ): Promise<BoardingHouseOverviewResponseDto> {
     this.logger.log(`GET /boarding-houses/${boardingHouseId}/overview called by user ${user.id}`);
+    return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId);
+  }
+
+  @Get(':id/analytics')
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Báo cáo & Phân tích chuyên sâu nhà trọ (UC-L-08)',
+    description:
+      'Truy xuất báo cáo chi tiết về doanh thu, tỷ lệ lấp đầy, tiến độ thu tiền và xu hướng dòng tiền phục vụ trang Báo cáo & Thống kê.',
+  })
+  @ApiOkResponse({
+    description: 'Dữ liệu báo cáo và phân tích được truy xuất thành công',
+    type: BoardingHouseOverviewResponseDto,
+  })
+  async getPropertyAnalytics(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) boardingHouseId: string,
+  ): Promise<BoardingHouseOverviewResponseDto> {
+    this.logger.log(`GET /boarding-houses/${boardingHouseId}/analytics called by user ${user.id}`);
     return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId);
   }
 
