@@ -58,6 +58,9 @@ describe('PaymentsService', () => {
   };
 
   const mockPrisma = {
+    boardingHouse: {
+      findUnique: jest.fn(),
+    },
     invoice: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -65,6 +68,8 @@ describe('PaymentsService', () => {
     },
     payment: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
     },
     auditLog: {
@@ -189,6 +194,150 @@ describe('PaymentsService', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('already processed');
+    });
+  });
+
+  describe('getLandlordPayments (UC-L-07)', () => {
+    const mockLandlordId = 'landlord-uuid-1';
+
+    it('should throw ForbiddenException if boarding house does not belong to landlord', async () => {
+      mockPrisma.boardingHouse.findUnique.mockResolvedValue({
+        id: mockBoardingHouseId,
+        landlordId: 'other-landlord-uuid',
+      });
+
+      await expect(
+        service.getLandlordPayments(
+          mockBoardingHouseId,
+          { page: 1, limit: 10 },
+          mockLandlordId,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should query payments with joined invoice, invoiceItem, and meter readings', async () => {
+      mockPrisma.boardingHouse.findUnique.mockResolvedValue({
+        id: mockBoardingHouseId,
+        landlordId: mockLandlordId,
+      });
+
+      const fullPayment = {
+        ...mockPayment,
+        payer: {
+          id: mockUserId,
+          username: 'nguyenvana',
+          phoneNumber: '0988123456',
+          userIdentification: {
+            fullName: 'Nguyễn Văn A',
+          },
+        },
+        invoice: {
+          ...mockInvoice,
+          room: {
+            id: mockRoomId,
+            roomNumber: '101',
+            roomType: { name: 'Studio' },
+          },
+          invoiceItems: [
+            {
+              id: 'item-1',
+              serviceId: null,
+              service: null,
+              quantity: 1,
+              unitPrice: 3500000,
+              amount: 3500000,
+            },
+          ],
+          meterReadings: [
+            {
+              id: 'mr-1',
+              serviceId: 'srv-elec',
+              service: { name: 'Điện' },
+              readingValue: 125,
+              imageUrl: 'https://cloudinary.com/meter1.jpg',
+              createdAt: new Date('2026-09-01'),
+            },
+          ],
+        },
+      };
+
+      mockPrisma.payment.findMany
+        .mockResolvedValueOnce([
+          { amount: 5200000, method: 'banking' },
+          { amount: 1500000, method: 'cash' },
+        ])
+        .mockResolvedValueOnce([fullPayment]);
+
+      const result = await service.getLandlordPayments(
+        mockBoardingHouseId,
+        { page: 1, limit: 10, method: 'all' },
+        mockLandlordId,
+      );
+
+      expect(result.summary.totalRevenue).toBe(6700000);
+      expect(result.summary.totalTransactions).toBe(2);
+      expect(result.summary.bankingRevenue).toBe(5200000);
+      expect(result.summary.cashRevenue).toBe(1500000);
+      expect(result.payments).toHaveLength(1);
+      expect(result.payments[0].payerName).toBe('Nguyễn Văn A');
+      expect(result.payments[0].meterReadings).toHaveLength(1);
+      expect(result.payments[0].meterReadings[0].imageUrl).toBe(
+        'https://cloudinary.com/meter1.jpg',
+      );
+    });
+  });
+
+  describe('getLandlordPaymentDetail (UC-L-07)', () => {
+    const mockLandlordId = 'landlord-uuid-1';
+
+    it('should throw NotFoundException if payment does not exist or house does not match', async () => {
+      mockPrisma.payment.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.getLandlordPaymentDetail(mockBoardingHouseId, 'non-existent-pay'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should return detailed payment item with receipt and items', async () => {
+      const fullPayment = {
+        ...mockPayment,
+        payer: {
+          id: mockUserId,
+          username: 'nguyenvana',
+          phoneNumber: '0988123456',
+          userIdentification: {
+            fullName: 'Nguyễn Văn A',
+          },
+        },
+        invoice: {
+          ...mockInvoice,
+          room: {
+            id: mockRoomId,
+            roomNumber: '101',
+            boardingHouseId: mockBoardingHouseId,
+            roomType: { name: 'Studio' },
+            boardingHouse: {
+              id: mockBoardingHouseId,
+              landlordId: mockLandlordId,
+            },
+          },
+          invoiceItems: [],
+          meterReadings: [],
+        },
+      };
+
+      mockPrisma.payment.findUnique.mockResolvedValue(fullPayment);
+
+      const result = await service.getLandlordPaymentDetail(
+        mockBoardingHouseId,
+        'pay-uuid-1',
+        mockLandlordId,
+      );
+
+      expect(result.id).toBe('pay-uuid-1');
+      expect(result.roomNumber).toBe('101');
+      expect(result.amount).toBe(5200000);
+      expect(result.receiptNumber).toBe('REC-202609-1234');
     });
   });
 });
