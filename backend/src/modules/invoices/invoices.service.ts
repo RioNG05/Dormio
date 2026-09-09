@@ -567,7 +567,7 @@ export class InvoicesService {
       const term = query.search.trim();
       searchWhere = {
         OR: [
-          { id: { contains: term, mode: 'insensitive' } },
+          ...(term.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) ? [{ id: term }] : []),
           { room: { roomNumber: { contains: term, mode: 'insensitive' } } },
           {
             contract: {

@@ -765,7 +765,7 @@ export class MeterReadingsService {
     }
 
     const recordedDate = dto.recordedAt ? new Date(dto.recordedAt) : new Date();
-    const createdReadings = [];
+    const createdReadings: any[] = [];
 
     for (const item of dto.readings) {
       const service = await this.prisma.service.findFirst({

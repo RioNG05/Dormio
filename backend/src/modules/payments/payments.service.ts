@@ -460,7 +460,7 @@ export class PaymentsService {
     const boardingHouse = await this.prisma.boardingHouse.findUnique({
       where: { id: boardingHouseId },
     });
-    if (!boardingHouse || boardingHouse.landlordId !== landlordId) {
+    if (!boardingHouse || boardingHouse.ownerId !== landlordId) {
       throw new ForbiddenException(
         'Bạn không có quyền truy cập dữ liệu thanh toán của nhà trọ này.',
       );
@@ -719,7 +719,7 @@ export class PaymentsService {
 
     if (
       landlordId &&
-      payment.invoice.room.boardingHouse.landlordId !== landlordId
+      payment.invoice.room.boardingHouse.ownerId !== landlordId
     ) {
       throw new ForbiddenException(
         'Bạn không có quyền truy cập thanh toán này.',
