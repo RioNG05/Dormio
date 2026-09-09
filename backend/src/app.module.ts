@@ -19,6 +19,7 @@ import { PostsModule } from './modules/posts/posts.module';
 import { BoardingHousesModule } from './modules/boarding-houses/boarding-houses.module';
 import { RoomsModule } from './modules/rooms/rooms.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
+import { MessagesModule } from './modules/messages/messages.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -76,6 +77,7 @@ import { AppService } from './app.service';
     BoardingHousesModule,
     RoomsModule,
     DepositsModule,
+    MessagesModule,
   ],
 
   controllers: [AppController],
