@@ -239,7 +239,22 @@ export interface LandlordMeterServiceItem {
   createdAt: string;
 }
 
+export interface LandlordMeterEditActionChange {
+  serviceName: string;
+  oldValue: number | null;
+  newValue: number;
+  unit?: string;
+}
+
+export interface LandlordMeterEditAction {
+  id: string;
+  reason: string | null;
+  createdAt: string;
+  changes: LandlordMeterEditActionChange[];
+}
+
 export interface LandlordMeterPeriodHistory {
+  id?: string;
   period: string;
   date: string;
   createdAt: string;
@@ -251,6 +266,15 @@ export interface LandlordMeterPeriodHistory {
   canEdit: boolean;
   editReason?: string;
   editedAt?: string;
+  editHistory?: Array<{
+    id: string;
+    serviceName: string;
+    oldValue: number | null;
+    newValue: number;
+    reason: string | null;
+    createdAt: string;
+  }>;
+  editActions?: LandlordMeterEditAction[];
 }
 
 export interface LandlordRoomMeterHistoryResponse {
@@ -266,6 +290,8 @@ export interface RecordLandlordMeterReadingPayload {
     readingValue: number;
     imageUrl?: string;
   }>;
+  month?: number;
+  year?: number;
   recordedAt?: string;
   note?: string;
 }
@@ -274,5 +300,6 @@ export interface UpdateLandlordMeterReadingPayload {
   readingValue: number;
   imageUrl?: string;
   reason: string;
+  actionId?: string;
 }
 

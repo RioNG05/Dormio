@@ -9,6 +9,8 @@ import {
   IsOptional,
   IsString,
   IsDateString,
+  IsInt,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -63,6 +65,24 @@ export class RecordLandlordMeterReadingDto {
   @IsOptional()
   @IsDateString()
   recordedAt?: string;
+
+  @ApiPropertyOptional({
+    description: 'Billing month (1 to 12)',
+    example: 9,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month?: number;
+
+  @ApiPropertyOptional({
+    description: 'Billing year',
+    example: 2026,
+  })
+  @IsOptional()
+  @IsInt()
+  year?: number;
 
   @ApiPropertyOptional({
     description: 'Optional note or reason for recording/adjusting meter readings',

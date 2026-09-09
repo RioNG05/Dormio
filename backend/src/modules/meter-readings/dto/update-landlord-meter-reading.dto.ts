@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, Min, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, Min, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UpdateLandlordMeterReadingDto {
   @ApiProperty({
@@ -26,4 +26,12 @@ export class UpdateLandlordMeterReadingDto {
   @IsString()
   @IsNotEmpty()
   reason: string;
+
+  @ApiPropertyOptional({
+    description: 'Shared action UUID to group batch corrections in a single edit action',
+    example: 'd9b2d63d-a233-4123-847e-2972986422b4',
+  })
+  @IsOptional()
+  @IsUUID()
+  actionId?: string;
 }

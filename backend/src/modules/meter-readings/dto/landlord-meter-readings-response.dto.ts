@@ -91,7 +91,61 @@ export class LandlordMeterReadingServiceItemDto {
   createdAt: string;
 }
 
+export class LandlordMeterReadingHistoryItemDto {
+  @ApiProperty({ description: 'History record UUID' })
+  id: string;
+
+  @ApiProperty({ description: 'Service name (e.g. Điện, Nước)' })
+  serviceName: string;
+
+  @ApiPropertyOptional({ description: 'Old reading value', nullable: true })
+  oldValue: number | null;
+
+  @ApiProperty({ description: 'New reading value' })
+  newValue: number;
+
+  @ApiPropertyOptional({ description: 'Reason for adjustment', nullable: true })
+  reason: string | null;
+
+  @ApiProperty({ description: 'Modified at timestamp' })
+  createdAt: string;
+}
+
+export class LandlordMeterEditActionChangeDto {
+  @ApiProperty({ description: 'Service name (e.g. Điện, Nước)' })
+  serviceName: string;
+
+  @ApiPropertyOptional({ description: 'Old reading value', nullable: true })
+  oldValue: number | null;
+
+  @ApiProperty({ description: 'New reading value' })
+  newValue: number;
+
+  @ApiPropertyOptional({ description: 'Unit measurement', example: 'kWh' })
+  unit?: string;
+}
+
+export class LandlordMeterEditActionDto {
+  @ApiProperty({ description: 'Unique action UUID' })
+  id: string;
+
+  @ApiPropertyOptional({ description: 'Reason for this edit action', nullable: true })
+  reason: string | null;
+
+  @ApiProperty({ description: 'Timestamp of the edit action' })
+  createdAt: string;
+
+  @ApiProperty({
+    description: 'List of service meter changes performed together in this action',
+    type: [LandlordMeterEditActionChangeDto],
+  })
+  changes: LandlordMeterEditActionChangeDto[];
+}
+
 export class LandlordMeterPeriodHistoryDto {
+  @ApiProperty({ description: 'Unique identifier for this period/cycle (e.g. cycle_2026_9)', example: 'cycle_2026_9' })
+  id: string;
+
   @ApiProperty({ description: 'Period label (e.g. Tháng 09/2026)', example: 'Tháng 09/2026' })
   period: string;
 
@@ -130,6 +184,18 @@ export class LandlordMeterPeriodHistoryDto {
 
   @ApiPropertyOptional({ description: 'Timestamp when edited', nullable: true })
   editedAt?: string;
+
+  @ApiPropertyOptional({
+    description: 'Detailed list of individual service adjustments made to readings in this period',
+    type: [LandlordMeterReadingHistoryItemDto],
+  })
+  editHistory?: LandlordMeterReadingHistoryItemDto[];
+
+  @ApiPropertyOptional({
+    description: 'Grouped list of edit actions made in this period',
+    type: [LandlordMeterEditActionDto],
+  })
+  editActions?: LandlordMeterEditActionDto[];
 }
 
 export class LandlordRoomMeterHistoryResponseDto {

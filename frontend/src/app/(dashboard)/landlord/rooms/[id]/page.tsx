@@ -21,10 +21,12 @@ import {
   meterReadingService,
   LandlordActiveMeteredService,
   LandlordMeterPeriodHistory,
+  LandlordMeterEditAction,
 } from "@/services/meter-reading.service";
 import { getRoomById, defaultRoomServices, Room } from "../data";
 
 interface MeterHistoryRecord {
+  id?: string;
   period: string;       // "Tháng 09/2026"
   date: string;         // "01/09/2026 08:00"
   oldElec: number;
@@ -33,6 +35,15 @@ interface MeterHistoryRecord {
   newWater: number;
   editReason?: string;
   editedAt?: string;
+  editHistory?: Array<{
+    id: string;
+    serviceName: string;
+    oldValue: number | null;
+    newValue: number;
+    reason: string | null;
+    createdAt: string;
+  }>;
+  editActions?: LandlordMeterEditAction[];
   isOpen?: boolean;
 }
 
@@ -327,6 +338,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
                 const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
                 return {
+                  id: h.id || `cycle_${h.period}_${idx}`,
                   period: h.period,
                   date: h.date,
                   oldElec: elec?.oldReading ?? 0,
@@ -336,6 +348,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   isOpen: idx === 0,
                   editReason: h.editReason,
                   editedAt: h.editedAt,
+                  editHistory: h.editHistory,
+                  editActions: h.editActions,
                 };
               });
               setMeterHistory(mapped);
@@ -605,12 +619,26 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     if (!rawPeriod) {
       setMeterHistory(prev => prev.map(item => {
         if (item.period === correctModal.period) {
+          const changes = [];
+          if (Number(correctModal.newElec) !== item.newElec) {
+            changes.push({ serviceName: 'Điện', oldValue: item.newElec, newValue: Number(correctModal.newElec), unit: 'kWh' });
+          }
+          if (Number(correctModal.newWater) !== item.newWater) {
+            changes.push({ serviceName: 'Nước', oldValue: item.newWater, newValue: Number(correctModal.newWater), unit: 'm³' });
+          }
+          const newAction: LandlordMeterEditAction = {
+            id: `mock_act_${Date.now()}`,
+            reason: correctModal.reason,
+            createdAt: new Date().toISOString(),
+            changes,
+          };
           return {
             ...item,
             newElec: Number(correctModal.newElec),
             newWater: Number(correctModal.newWater),
             editReason: correctModal.reason,
-            editedAt: new Date().toLocaleString('vi-VN')
+            editedAt: new Date().toLocaleString('vi-VN'),
+            editActions: changes.length > 0 ? [newAction, ...(item.editActions || [])] : item.editActions,
           };
         }
         return item;
@@ -625,12 +653,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       const elecItem = rawPeriod.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
       const waterItem = rawPeriod.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
 
+      const sharedActionId = crypto.randomUUID();
       const updatePromises = [];
       if (elecItem && Number(correctModal.newElec) !== elecItem.newReading) {
         updatePromises.push(
           meterReadingService.updateLandlordMeterReading(activeBuilding.id, elecItem.id, {
             readingValue: Number(correctModal.newElec),
             reason: correctModal.reason,
+            actionId: sharedActionId,
           })
         );
       }
@@ -639,6 +669,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           meterReadingService.updateLandlordMeterReading(activeBuilding.id, waterItem.id, {
             readingValue: Number(correctModal.newWater),
             reason: correctModal.reason,
+            actionId: sharedActionId,
           })
         );
       }
@@ -658,6 +689,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
           const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
           return {
+            id: h.id || `cycle_${h.period}_${idx}`,
             period: h.period,
             date: h.date,
             oldElec: elec?.oldReading ?? 0,
@@ -667,6 +699,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             isOpen: idx === 0,
             editReason: h.editReason,
             editedAt: h.editedAt,
+            editHistory: h.editHistory,
+            editActions: h.editActions,
           };
         });
         setMeterHistory(mapped);
@@ -733,8 +767,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
     try {
       setIsSubmittingMeter(true);
+      const parsedMonth = parseInt(selectedMonth.replace('Tháng ', '').trim(), 10);
+      const parsedYear = parseInt(selectedYear.trim(), 10);
+
       await meterReadingService.recordLandlordMeterReading(activeBuilding.id, {
         roomId: resolvedParams.id,
+        month: isNaN(parsedMonth) ? undefined : parsedMonth,
+        year: isNaN(parsedYear) ? undefined : parsedYear,
         readings,
       });
 
@@ -757,6 +796,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
           const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
           return {
+            id: h.id || `cycle_${h.period}_${idx}`,
             period: h.period,
             date: h.date,
             oldElec: elec?.oldReading ?? 0,
@@ -766,6 +806,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             isOpen: idx === 0,
             editReason: h.editReason,
             editedAt: h.editedAt,
+            editHistory: h.editHistory,
+            editActions: h.editActions,
           };
         });
         setMeterHistory(mapped);
@@ -1332,13 +1374,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="p-6 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
                   Không có lịch sử chốt số điện nước nào trong kỳ lọc.
                 </div>
-              ) : paginatedMeterHistory.map((item) => {
+              ) : paginatedMeterHistory.map((item, itemIdx) => {
                 const fin = computeRecordFinancials(item);
                 const matchingInvoice = invoicesHistory.find(inv => inv.period === item.period);
                 const isPaid = matchingInvoice?.status === "Đã thu";
 
                 return (
-                  <details key={item.period} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
+                  <details key={item.id || `${item.period}-${itemIdx}`} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
                     <summary className="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 sm:p-3.5 bg-zinc-50/80 hover:bg-zinc-100/80 cursor-pointer select-none outline-none transition-colors gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
@@ -1389,7 +1431,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.elecCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
-                          <span className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldElec} ➔ Mới: {item.newElec} (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.elecUse} kWh</strong>)</span>
+                          <span className="text-[10px] text-zinc-500 font-medium">Chỉ số: <strong className="text-zinc-900 font-bold">{item.newElec} kWh</strong> (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.elecUse} kWh</strong>)</span>
                           <span className="hidden sm:inline font-black text-[#2AC1BC]">{fin.elecCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                       </div>
@@ -1400,17 +1442,62 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.waterCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
-                          <span className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldWater} ➔ Mới: {item.newWater} (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.waterUse} m³</strong>)</span>
+                          <span className="text-[10px] text-zinc-500 font-medium">Chỉ số: <strong className="text-zinc-900 font-bold">{item.newWater} m³</strong> (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.waterUse} m³</strong>)</span>
                           <span className="hidden sm:inline font-black text-[#2AC1BC]">{fin.waterCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                       </div>
 
-                      {item.editReason && (
+                      {item.editActions && item.editActions.length > 0 ? (
+                        <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-2">
+                          <div className="font-bold text-amber-800 text-[11px] flex items-center gap-1.5">
+                            <History className="w-3.5 h-3.5 text-amber-700" /> Lịch sử chỉnh sửa ({item.editActions.length} lần):
+                          </div>
+                          <div className="space-y-1.5">
+                            {item.editActions.map((act, actIdx) => (
+                              <div key={act.id || actIdx} className="p-2 bg-white/90 border border-amber-200/70 rounded-lg text-[11px] text-amber-900 space-y-1 shadow-2xs">
+                                <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-zinc-500 border-b border-amber-100 pb-1">
+                                  <span className="font-bold text-amber-800">Lần {item.editActions!.length - actIdx}</span>
+                                  <span>{new Date(act.createdAt).toLocaleString('vi-VN')}</span>
+                                </div>
+                                <div className="space-y-0.5">
+                                  {act.changes.map((ch, chIdx) => (
+                                    <div key={chIdx} className="text-[11px]">
+                                      <strong>{ch.serviceName}</strong>: {ch.oldValue !== null ? ch.oldValue : 'Chưa có'} ➔ <strong className="text-zinc-900">{ch.newValue}</strong> {ch.unit || ''}
+                                    </div>
+                                  ))}
+                                </div>
+                                {act.reason && (
+                                  <div className="text-[10px] text-zinc-600 italic pt-0.5">
+                                    Lý do: &ldquo;{act.reason}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : item.editHistory && item.editHistory.length > 0 ? (
+                        <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-1.5">
+                          <div className="font-bold text-amber-800 text-[11px] flex items-center gap-1.5">
+                            <History className="w-3.5 h-3.5 text-amber-700" /> Lịch sử chỉnh sửa:
+                          </div>
+                          <div className="space-y-1">
+                            {item.editHistory.map((eh, ehIdx) => (
+                              <div key={eh.id || ehIdx} className="text-[11px] text-amber-900 border-b border-amber-200/50 last:border-0 pb-1 last:pb-0 flex flex-wrap justify-between gap-1">
+                                <span>
+                                  <strong>{eh.serviceName}</strong>: {eh.oldValue !== null ? eh.oldValue : 'Chưa có'} ➔ <strong className="text-zinc-900">{eh.newValue}</strong>
+                                  {eh.reason && <span className="italic text-zinc-600"> &mdash; "{eh.reason}"</span>}
+                                </span>
+                                <span className="text-[10px] text-zinc-500">{new Date(eh.createdAt).toLocaleString('vi-VN')}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : item.editReason ? (
                         <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-0.5">
                           <div className="font-bold text-amber-800 text-[11px]">📝 Nhật ký chỉnh sửa ({item.editedAt}):</div>
                           <p className="text-[11px] text-amber-900 italic font-semibold">"{item.editReason}"</p>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </details>
                 );

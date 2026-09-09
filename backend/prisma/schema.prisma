@@ -243,6 +243,7 @@ model User {
   otpCodes              OtpCode[]
   grievanceSends        Grievance[]           @relation("GrievanceSender")
   grievanceResolves     Grievance[]           @relation("GrievanceResolver")
+  modifiedMeterReadings MeterReadingHistory[] @relation("MeterReadingModifier")
 
   @@map("users")
 }
@@ -356,11 +357,35 @@ model MeterReading {
   imageUrl     String?  @map("image_url")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  billingMonth Int?      @map("billing_month")
+  billingYear  Int?      @map("billing_year")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+
   invoiceId String?  @map("invoice_id") @db.Uuid
   invoice   Invoice? @relation(fields: [invoiceId], references: [id])
 
+  histories MeterReadingHistory[]
+
   @@index([roomId, invoiceId])
+  @@index([roomId, serviceId, billingMonth, billingYear])
   @@map("meter_readings")
+}
+
+model MeterReadingHistory {
+  id             String       @id @default(uuid()) @db.Uuid
+  actionId       String?      @map("action_id") @db.Uuid
+  meterReadingId String       @map("meter_reading_id") @db.Uuid
+  meterReading   MeterReading @relation(fields: [meterReadingId], references: [id], onDelete: Cascade)
+  oldValue       Decimal?     @map("old_value")
+  newValue       Decimal      @map("new_value")
+  reason         String?      @map("reason")
+  modifiedBy     String?      @map("modified_by") @db.Uuid
+  modifiedByUser User?        @relation("MeterReadingModifier", fields: [modifiedBy], references: [id], onDelete: SetNull)
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([meterReadingId])
+  @@index([actionId])
+  @@map("meter_reading_histories")
 }
 
 model RoomService {
