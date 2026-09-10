@@ -102,7 +102,7 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
 
 // ─── Main page component ──────────────────────────────────────────────────────
 export default function RoomsPage() {
-  const t = useTranslations("roomsPage");
+  const t = useTranslations("guest");
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -151,12 +151,12 @@ export default function RoomsPage() {
       setTotal(res.meta.total);
       setTotalPages(res.meta.totalPages);
     } catch {
-      setError("Không thể tải danh sách phòng trọ. Vui lòng thử lại.");
+      setError(t("guestRoomsErrorFetch"));
       setListings([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Initial load and whenever applied filters / page change
   useEffect(() => {
@@ -216,18 +216,18 @@ export default function RoomsPage() {
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 shadow-[0_0_20px_rgba(42,193,188,0.2)] backdrop-blur-xl">
             <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>{t("heroBadge")}</span>
+            <span>{t("guestRoomsBadge")}</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">{t("heroTitle1")}</span> <br />
+            <span className="inline-block whitespace-nowrap">{t("guestRoomsTitle1")}</span> <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              {t("heroTitle2")}
+              {t("guestRoomsTitle2")}
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed mt-3 max-w-xl mx-auto text-balance">
-            {t("heroSubtitle")}
+            {t("guestRoomsSubtitle")}
           </p>
         </div>
       </section>
@@ -240,25 +240,25 @@ export default function RoomsPage() {
           <div className="lg:col-span-4 bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs space-y-5">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3.5">
               <h2 className="font-extrabold text-zinc-900 text-sm flex items-center gap-2">
-                <Filter className="w-4 h-4 text-[#2AC1BC]" /> {t("filterTitle")}
+                <Filter className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsFilterTitle")}
               </h2>
               <button
                 onClick={handleResetFilter}
                 className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" /> {t("filterReset")}
+                <RotateCcw className="w-3.5 h-3.5" /> {t("guestRoomsResetFilter")}
               </button>
             </div>
 
             {/* Keyword */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">{t("filterKeywordLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsKeywordLabel")}</label>
               <div className="relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
                   id="filter-keyword"
                   type="text"
-                  placeholder={t("filterKeywordPlaceholder")}
+                  placeholder={t("guestRoomsKeywordPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
@@ -269,11 +269,11 @@ export default function RoomsPage() {
 
             {/* Province */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">{t("filterProvinceLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsProvinceLabel")}</label>
               <input
                 id="filter-province"
                 type="text"
-                placeholder={t("filterProvincePlaceholder")}
+                placeholder={t("guestRoomsProvincePlaceholder")}
                 value={province}
                 onChange={(e) => setProvince(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -282,11 +282,11 @@ export default function RoomsPage() {
 
             {/* District */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">{t("filterDistrictLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsDistrictLabel")}</label>
               <input
                 id="filter-district"
                 type="text"
-                placeholder={t("filterDistrictPlaceholder")}
+                placeholder={t("guestRoomsDistrictPlaceholder")}
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -295,11 +295,11 @@ export default function RoomsPage() {
 
             {/* Ward */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">{t("filterWardLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsWardLabel")}</label>
               <input
                 id="filter-ward"
                 type="text"
-                placeholder={t("filterWardPlaceholder")}
+                placeholder={t("guestRoomsWardPlaceholder")}
                 value={ward}
                 onChange={(e) => setWard(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -308,20 +308,20 @@ export default function RoomsPage() {
 
             {/* Price range */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-700">{t("filterMinPriceLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMinPriceLabel")}</label>
               <input
                 id="filter-min-price"
                 type="number"
-                placeholder={t("filterMinPricePlaceholder")}
+                placeholder={t("guestRoomsMinPricePlaceholder")}
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
-              <label className="text-xs font-bold text-zinc-700">{t("filterMaxPriceLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMaxPriceLabel")}</label>
               <input
                 id="filter-max-price"
                 type="number"
-                placeholder={t("filterMaxPricePlaceholder")}
+                placeholder={t("guestRoomsMaxPricePlaceholder")}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -330,20 +330,20 @@ export default function RoomsPage() {
 
             {/* Area range */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-700">{t("filterMinAreaLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMinAreaLabel")}</label>
               <input
                 id="filter-min-area"
                 type="number"
-                placeholder={t("filterMinAreaPlaceholder")}
+                placeholder={t("guestRoomsMinAreaPlaceholder")}
                 value={minArea}
                 onChange={(e) => setMinArea(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
-              <label className="text-xs font-bold text-zinc-700">{t("filterMaxAreaLabel")}</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMaxAreaLabel")}</label>
               <input
                 id="filter-max-area"
                 type="number"
-                placeholder={t("filterMaxAreaPlaceholder")}
+                placeholder={t("guestRoomsMaxAreaPlaceholder")}
                 value={maxArea}
                 onChange={(e) => setMaxArea(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -356,7 +356,7 @@ export default function RoomsPage() {
               onClick={handleApplyFilters}
               className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-2xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <Search className="w-3.5 h-3.5" /> {t("filterTitle")}
+              <Search className="w-3.5 h-3.5" /> {t("guestRoomsFilterTitle")}
             </button>
           </div>
 
@@ -366,9 +366,9 @@ export default function RoomsPage() {
             <div className="flex items-center justify-between">
               <div className="text-xs text-zinc-500 font-bold">
                 {isLoading ? (
-                  <span className="text-zinc-400">{t("loading")}</span>
+                  <span className="text-zinc-400">{t("guestRoomsLoading")}</span>
                 ) : (
-                  t("resultCount").replace("{count}", String(total))
+                  t("guestRoomsFoundCount", { count: total })
                 )}
               </div>
 
@@ -380,7 +380,7 @@ export default function RoomsPage() {
                     viewMode === "list" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
                   }`}
                 >
-                  <Filter className="w-3.5 h-3.5" /> {t("viewList")}
+                  <Filter className="w-3.5 h-3.5" /> {t("guestRoomsListView")}
                 </button>
                 <button
                   id="view-map-btn"
@@ -389,7 +389,7 @@ export default function RoomsPage() {
                     viewMode === "map" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
                   }`}
                 >
-                  <MapPin className="w-3.5 h-3.5" /> {t("viewMap")}
+                  <MapPin className="w-3.5 h-3.5" /> {t("guestRoomsMapView")}
                 </button>
               </div>
             </div>
@@ -422,9 +422,9 @@ export default function RoomsPage() {
                 ))}
 
                 <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-2xl text-xs font-bold text-zinc-900 flex justify-between items-center">
-                  <span>📍 {t("mapHint")}</span>
+                  <span>📍 {t("guestRoomsMapInfo")}</span>
                   <span className="text-[#2AC1BC] font-extrabold">
-                    {t("mapPinCount").replace("{count}", String(listings.length))}
+                    {t("guestRoomsMapPinTitle", { count: listings.length })}
                   </span>
                 </div>
               </div>
@@ -442,7 +442,7 @@ export default function RoomsPage() {
                       onClick={() => fetchListings(appliedFilters, currentPage)}
                       className="px-4 py-2 bg-zinc-900 text-white text-xs font-bold rounded-xl cursor-pointer"
                     >
-                      Thử lại
+                      {t("guestRoomsRetry")}
                     </button>
                   </div>
                 )}
@@ -453,13 +453,13 @@ export default function RoomsPage() {
                     <div className="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center mx-auto">
                       <Search className="w-7 h-7 text-zinc-400" />
                     </div>
-                    <h3 className="font-extrabold text-zinc-900 text-base">{t("emptyTitle")}</h3>
-                    <p className="text-sm text-zinc-400 font-medium">{t("emptyDesc")}</p>
+                    <h3 className="font-extrabold text-zinc-900 text-base">{t("guestRoomsEmptyTitle")}</h3>
+                    <p className="text-sm text-zinc-400 font-medium">{t("guestRoomsEmptyDesc")}</p>
                     <button
                       onClick={handleResetFilter}
                       className="px-5 py-2.5 bg-[#2AC1BC] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
                     >
-                      {t("emptyReset")}
+                      {t("guestRoomsEmptyReset")}
                     </button>
                   </div>
                 )}
@@ -485,7 +485,7 @@ export default function RoomsPage() {
                         />
 
                         <span className="absolute top-3 left-3 px-3 py-1 bg-[#2AC1BC] text-white text-[11px] font-extrabold rounded-full shadow-md">
-                          {t("cardVerified")}
+                          {t("guestRoomsVerifiedLandlord")}
                         </span>
 
                         <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
@@ -494,14 +494,14 @@ export default function RoomsPage() {
                             className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-md ${
                               isSaved ? "bg-rose-500 text-white" : "bg-zinc-900/70 text-white hover:bg-rose-500"
                             }`}
-                            title={isSaved ? t("cardSaved") : t("cardSave")}
+                            title={isSaved ? t("guestRoomsSaved") : t("guestRoomsSave")}
                           >
                             <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
                           </button>
                           <button
                             onClick={() => setShareModalRoom(listing)}
                             className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-[#2AC1BC] backdrop-blur-md transition-all cursor-pointer shadow-md"
-                            title={t("cardShare")}
+                            title={t("guestRoomsShareTitle")}
                           >
                             <Share2 className="w-3.5 h-3.5" />
                           </button>
@@ -511,7 +511,7 @@ export default function RoomsPage() {
                           onClick={() => setQuickViewRoom(listing)}
                           className="absolute bottom-3 left-3 right-3 py-2 bg-zinc-900/80 hover:bg-zinc-900 backdrop-blur-md text-white text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md cursor-pointer"
                         >
-                          <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("cardQuickView")}
+                          <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsQuickView")}
                         </button>
                       </div>
 
@@ -556,7 +556,7 @@ export default function RoomsPage() {
                               </div>
                             )}
                             <span className="text-xs text-zinc-500 font-semibold">
-                              {listing.poster.username ?? "Chủ nhà"}
+                              {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
                             </span>
                           </div>
                         )}
@@ -568,7 +568,7 @@ export default function RoomsPage() {
                               {formatVND(listing.depositAmount)}
                             </span>
                             <span className="text-[11px] font-bold text-zinc-500 block">
-                              {t("cardDepositLabel")} {listing.depositAmount > 0 ? formatVND(listing.depositAmount) : t("cardDepositFree")}
+                              {t("guestRoomsDepositLabel")} {listing.depositAmount > 0 ? formatVND(listing.depositAmount) : t("guestRoomsFreeDeposit")}
                             </span>
                           </div>
 
@@ -584,12 +584,12 @@ export default function RoomsPage() {
                               onClick={() => { setDepositRoom(listing); setDepositStep("form"); }}
                               className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-bold rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
                             >
-                              <Sparkles className="w-3.5 h-3.5" /> {t("cardDeposit")}
+                              <Sparkles className="w-3.5 h-3.5" /> {t("guestRoomsDepositBtn")}
                             </button>
 
                             <Link href={`/rooms/${listing.id}`}>
                               <button className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0">
-                                {t("cardDetail")}
+                                {t("guestRoomsDetailBtn")}
                               </button>
                             </Link>
                           </div>
@@ -605,8 +605,8 @@ export default function RoomsPage() {
                     page={currentPage}
                     totalPages={totalPages}
                     onPageChange={handlePageChange}
-                    prevLabel={t("paginationPrev")}
-                    nextLabel={t("paginationNext")}
+                    prevLabel={t("guestRoomsPrev")}
+                    nextLabel={t("guestRoomsNext")}
                   />
                 )}
               </div>
@@ -631,7 +631,7 @@ export default function RoomsPage() {
             </button>
 
             <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {t("shareTitle")}
+              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsShareTitle")}
             </h3>
             <p className="text-xs text-zinc-500 font-medium line-clamp-1">{shareModalRoom.title}</p>
 
@@ -647,7 +647,7 @@ export default function RoomsPage() {
                 className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
               >
                 {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedLink ? t("shareCopied") : t("shareCopy")}
+                {copiedLink ? t("guestRoomsCopied") : t("guestRoomsCopy")}
               </button>
             </div>
           </div>
@@ -679,7 +679,7 @@ export default function RoomsPage() {
 
               <div className="md:w-1/2 space-y-4">
                 <span className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-extrabold rounded-full inline-block">
-                  {t("cardVerified")}
+                  {t("guestRoomsVerifiedLandlord")}
                 </span>
                 <h3 className="text-xl font-black text-zinc-900 leading-snug">{quickViewRoom.title}</h3>
                 <div className="text-xs font-semibold text-zinc-400 flex items-center gap-1">
@@ -687,7 +687,7 @@ export default function RoomsPage() {
                 </div>
                 <div className="text-2xl font-black text-rose-500">
                   {formatVND(quickViewRoom.depositAmount)}
-                  <span className="text-xs text-zinc-400 font-normal"> {t("cardDepositLabel")}</span>
+                  <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsDepositLabel")}</span>
                 </div>
 
                 <div className="flex gap-2 pt-3">
@@ -695,11 +695,11 @@ export default function RoomsPage() {
                     onClick={() => { setDepositRoom(quickViewRoom); setQuickViewRoom(null); setDepositStep("form"); }}
                     className="flex-1 py-3 bg-[#FF6B35] text-white rounded-xl font-extrabold text-xs shadow-md shadow-[#FF6B35]/20 hover:bg-[#ff5518] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <Sparkles className="w-4 h-4" /> {t("quickViewDeposit")}
+                    <Sparkles className="w-4 h-4" /> {t("guestRoomsDepositBtn")}
                   </button>
                   <Link href={`/rooms/${quickViewRoom.id}`} className="flex-1">
                     <button className="w-full py-3 bg-zinc-900 text-white rounded-xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                      <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("cardDetail")}
+                      <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsDetailBtn")}
                     </button>
                   </Link>
                 </div>
@@ -718,7 +718,7 @@ export default function RoomsPage() {
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-zinc-100 max-h-[90vh] overflow-y-auto cursor-default">
             <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
               <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-[#2AC1BC]" /> {t("depositTitle")}
+                <Lock className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsEscrowModalTitle")}
               </h3>
               <button onClick={() => setDepositRoom(null)} className="p-1 hover:bg-zinc-100 rounded-xl text-zinc-400 cursor-pointer">
                 <X className="w-5 h-5" />
@@ -727,54 +727,54 @@ export default function RoomsPage() {
 
             {/* Escrow process banner */}
             <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-4 rounded-2xl text-white space-y-3 border border-zinc-800">
-              <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">{t("depositEscrowBadge")}</span>
+              <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">{t("guestRoomsEscrowTitle")}</span>
               <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
                   <span className="w-5 h-5 rounded-full bg-[#2AC1BC] text-white font-black inline-flex items-center justify-center">1</span>
-                  <p className="font-bold text-zinc-200">{t("depositStep1")}</p>
+                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep1")}</p>
                 </div>
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
                   <span className="w-5 h-5 rounded-full bg-amber-400 text-zinc-900 font-black inline-flex items-center justify-center">2</span>
-                  <p className="font-bold text-zinc-200">{t("depositStep2")}</p>
+                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep2")}</p>
                 </div>
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
                   <span className="w-5 h-5 rounded-full bg-emerald-400 text-zinc-900 font-black inline-flex items-center justify-center">3</span>
-                  <p className="font-bold text-zinc-200">{t("depositStep3")}</p>
+                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep3")}</p>
                 </div>
               </div>
-              <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-center">{t("depositEscrowNote")}</p>
+              <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-center">{t("guestRoomsEscrowNote")}</p>
             </div>
 
             {depositStep === "form" && (
               <div className="space-y-4">
                 <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1.5">
-                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">{t("depositRoomLabel")}</span>
+                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">{t("guestRoomsSelectedRoom")}</span>
                   <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">{depositRoom.title}</h4>
                   {depositRoom.depositAmount > 0 ? (
                     <div className="text-xs font-black text-rose-500">
-                      {t("depositAmountLabel")} {formatVND(depositRoom.depositAmount)}
+                      {t("guestRoomsQrAmountLabel")} {formatVND(depositRoom.depositAmount)}
                     </div>
                   ) : (
-                    <div className="text-xs font-black text-emerald-600">{t("depositFreeNote")}</div>
+                    <div className="text-xs font-black text-emerald-600">{t("guestRoomsFreeDepositNote")}</div>
                   )}
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("depositTenantName")}</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("guestRoomsTenantNameLabel")}</label>
                     <input
                       type="text"
-                      placeholder={t("depositTenantNamePlaceholder")}
+                      placeholder={t("guestRoomsTenantNamePlaceholder")}
                       value={tenantName}
                       onChange={(e) => setTenantName(e.target.value)}
                       className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("depositTenantPhone")}</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("guestRoomsTenantPhoneLabel")}</label>
                     <input
                       type="text"
-                      placeholder={t("depositTenantPhonePlaceholder")}
+                      placeholder={t("guestRoomsTenantPhonePlaceholder")}
                       value={tenantPhone}
                       onChange={(e) => setTenantPhone(e.target.value)}
                       className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
@@ -787,7 +787,7 @@ export default function RoomsPage() {
                   disabled={!tenantName || !tenantPhone}
                   className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
                 >
-                  {t("depositConfirmBtn")}
+                  {t("guestRoomsConfirmQrBtn")}
                 </button>
               </div>
             )}
@@ -798,19 +798,19 @@ export default function RoomsPage() {
                   <QrCode className="w-44 h-44 mx-auto text-zinc-900" />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500 font-semibold block">{t("depositQrAmount")}</span>
+                  <span className="text-xs text-zinc-500 font-semibold block">{t("guestRoomsQrAmountLabel")}</span>
                   <span className="text-2xl font-black text-rose-600">
-                    {depositRoom.depositAmount > 0 ? formatVND(depositRoom.depositAmount) : t("depositQrFree")}
+                    {depositRoom.depositAmount > 0 ? formatVND(depositRoom.depositAmount) : t("guestRoomsFreeDeposit")}
                   </span>
                   <p className="text-[11px] text-zinc-400 font-medium">
-                    {t("depositQrContent")} <span className="font-extrabold text-zinc-800">COC {tenantPhone} #{depositRoom.id.slice(0, 8)}</span>
+                    {t("guestRoomsQrContentLabel")} <span className="font-extrabold text-zinc-800">COC {tenantPhone} #{depositRoom.id.slice(0, 8)}</span>
                   </p>
                 </div>
                 <button
                   onClick={() => setDepositStep("success")}
                   className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer"
                 >
-                  {t("depositQrDone")}
+                  {t("guestRoomsConfirmTransferBtn")}
                 </button>
               </div>
             )}
@@ -821,16 +821,16 @@ export default function RoomsPage() {
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-zinc-900">{t("depositSuccessTitle")}</h4>
+                  <h4 className="text-base font-black text-zinc-900">{t("guestRoomsSuccessTitle")}</h4>
                   <p className="text-xs text-zinc-500 mt-1">
-                    {t("depositSuccessDesc").replace("{landlord}", depositRoom.poster?.username ?? "chủ nhà")}
+                    {t("guestRoomsSuccessDesc", { name: depositRoom.poster?.username ?? t("guestRoomsDefaultLandlord") })}
                   </p>
                 </div>
                 <button
                   onClick={() => setDepositRoom(null)}
                   className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
                 >
-                  {t("depositSuccessClose")}
+                  {t("guestRoomsCloseModal")}
                 </button>
               </div>
             )}
