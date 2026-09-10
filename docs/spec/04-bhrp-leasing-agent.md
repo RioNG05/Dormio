@@ -9,7 +9,7 @@
 ### UC-P-01 — Publish Rental Listing
 **Tier:** Free (with paid add-on credits) · **Models:** `Post`, `PostImage`, `PostPurchase`, `SubscriptionPlan`, `UserSubscription`, `BoardingHouse`, `Room`
 
-**Step 1 — determine landlord-or-not (drives both the room-linking rule and the quota formula):**
+**Step 1 — determine landlord-or-not (drives both the room-link ingrule and the quota formula):**
 ```sql
 SELECT EXISTS(SELECT 1 FROM boarding_houses WHERE owner_id = :userId) AS is_landlord;
 ```
