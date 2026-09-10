@@ -24,9 +24,11 @@ import {
   UserCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "@/context/LanguageContext";
 import { postService, PostQuotaStatus } from "@/services/post.service";
 
 export default function PublicCreatePostPage() {
+  const t = useTranslations("guest");
   const router = useRouter();
 
   // Quota & loading state
@@ -119,17 +121,17 @@ export default function PublicCreatePostPage() {
     setErrorMessage(null);
 
     if (!title.trim() || title.trim().length < 5) {
-      setErrorMessage("Tiêu đề tin đăng phải có ít nhất 5 ký tự.");
+      setErrorMessage(t("guestPostsCreateValidationTitle"));
       return;
     }
     if (!content.trim() || content.trim().length < 10) {
-      setErrorMessage("Nội dung mô tả chi tiết phải có ít nhất 10 ký tự.");
+      setErrorMessage(t("guestPostsCreateValidationContent"));
       return;
     }
 
     const parsedDeposit = Number(depositAmount);
     if (isNaN(parsedDeposit) || parsedDeposit < 0) {
-      setErrorMessage("Số tiền cọc giữ chỗ phải là số và không được nhỏ hơn 0.");
+      setErrorMessage(t("guestPostsCreateValidationDeposit"));
       return;
     }
 
@@ -145,8 +147,8 @@ export default function PublicCreatePostPage() {
 
       setSuccessToast(
         status === "posted"
-          ? "Đăng tin cho thuê thành công lên nền tảng BHRP!"
-          : "Đã lưu bản nháp tin đăng thành công!"
+          ? t("guestPostsCreateSuccessPublish")
+          : t("guestPostsCreateSuccessDraft")
       );
 
       setIsDirty(false);
@@ -155,7 +157,7 @@ export default function PublicCreatePostPage() {
       }, 1200);
     } catch (err: any) {
       setErrorMessage(
-        err.message || "Đã xảy ra lỗi khi tạo tin đăng. Vui lòng kiểm tra lại lượt đăng tin."
+        err.message || t("guestPostsCreateErrorFallback")
       );
     } finally {
       setIsSubmitting(false);
@@ -171,19 +173,19 @@ export default function PublicCreatePostPage() {
             type="button"
             onClick={handleCancelClick}
             className="p-2.5 text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer shrink-0"
-            title="Quay lại trang chủ"
+            title={t("guestPostsCreateBackHome")}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Đăng tin tìm khách thuê (BHRP)</h1>
+              <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{t("guestPostsCreateTitle")}</h1>
               <span className="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-[#FF6B35]/10 text-[#FF6B35]">
                 UC-P-01
               </span>
             </div>
             <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-              Đăng tin cho thuê phòng trực tiếp lên sàn giao dịch BHRP Dormio
+              {t("guestPostsCreateSubtitle")}
             </p>
           </div>
         </div>
@@ -194,19 +196,26 @@ export default function PublicCreatePostPage() {
             <Coins className="w-5 h-5 text-[#FF6B35]" />
             <div className="text-right">
               <div className="text-[10px] font-bold uppercase text-zinc-500 tracking-wider">
-                {quota.isLandlord ? `Hạn mức Chủ trọ (${quota.planName})` : "Hạn mức Môi giới (3 tin/ngày)"}
+                {quota.isLandlord
+                  ? t("guestPostsCreateQuotaLandlord", { plan: quota.planName })
+                  : t("guestPostsCreateQuotaAgent")}
               </div>
               <div className="text-xs font-black text-zinc-900">
                 {quota.freePostsRemainingToday > 0 ? (
                   <span className="text-[#2ac1bc]">
-                    Còn {quota.freePostsRemainingToday}/{quota.dailyPostQuota} tin miễn phí hôm nay
+                    {t("guestPostsCreateRemainingFree", {
+                      remaining: quota.freePostsRemainingToday,
+                      total: quota.dailyPostQuota,
+                    })}
                   </span>
                 ) : quota.purchasedCreditsAvailable > 0 ? (
                   <span className="text-[#FF6B35]">
-                    {quota.purchasedCreditsAvailable} lượt trả phí khả dụng
+                    {t("guestPostsCreatePaidAvailable", {
+                      count: quota.purchasedCreditsAvailable,
+                    })}
                   </span>
                 ) : (
-                  <span className="text-rose-500">Hết lượt đăng hôm nay</span>
+                  <span className="text-rose-500">{t("guestPostsCreateQuotaExhausted")}</span>
                 )}
               </div>
             </div>
@@ -221,10 +230,10 @@ export default function PublicCreatePostPage() {
         </div>
         <div className="space-y-1">
           <h3 className="text-sm font-bold text-blue-900">
-            Đăng tin cho thuê dành cho Nhà môi giới & Chủ trọ
+            {t("guestPostsCreateBannerTitle")}
           </h3>
           <p className="text-xs text-blue-700 leading-relaxed">
-            Mỗi tài khoản được cấp <strong className="font-bold">3 lượt đăng tin miễn phí mỗi ngày</strong>. Tin đăng của bạn sẽ hiển thị công khai trên cổng tìm phòng BHRP cho hàng nghìn người có nhu cầu thuê tại khu vực.
+            {t("guestPostsCreateBannerDesc")}
           </p>
         </div>
       </div>
@@ -246,30 +255,30 @@ export default function PublicCreatePostPage() {
               <FileText className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900">Thông tin cơ bản bài đăng</h2>
-              <p className="text-xs text-zinc-400">Tiêu đề hấp dẫn, giá cọc giữ chỗ và thông số phòng</p>
+              <h2 className="text-base font-bold text-zinc-900">{t("guestPostsCreateSectionBasic")}</h2>
+              <p className="text-xs text-zinc-400">{t("guestPostsCreateSectionBasicSub")}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-bold text-zinc-700">
-                Tiêu đề tin đăng <span className="text-rose-500">*</span>
+                {t("guestPostsCreateTitleLabel")} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => handleFieldChange(setTitle, e.target.value)}
-                placeholder="VD: Cho thuê phòng Studio cao cấp, Full nội thất, Ban công thoáng Quận 1..."
+                placeholder={t("guestPostsCreateTitlePlaceholder")}
                 className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
               />
-              <span className="text-xs text-zinc-400">Tối thiểu 5 ký tự</span>
+              <span className="text-xs text-zinc-400">{t("guestPostsCreateTitleMinLength")}</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-zinc-700">
-                  Số tiền cọc giữ chỗ trực tuyến (VND) <span className="text-rose-500">*</span>
+                  {t("guestPostsCreateDepositLabel")} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -281,19 +290,19 @@ export default function PublicCreatePostPage() {
                   className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
                 />
                 <span className="text-xs text-zinc-400">
-                  Số tiền cọc hiển thị cho khách thuê đặt cọc trực tuyến trên BHRP (UC-PU-04).
+                  {t("guestPostsCreateDepositHint")}
                 </span>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-zinc-700">
-                  Loại hình bài đăng
+                  {t("guestPostsCreatePostType")}
                 </label>
                 <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center gap-3">
                   <Building2 className="w-5 h-5 text-zinc-400 shrink-0" />
                   <div>
-                    <span className="text-xs font-bold text-zinc-700">Tin đăng Sàn giao dịch BHRP</span>
-                    <p className="text-[11px] text-zinc-500">Tin đăng trực tuyến mở cho tất cả khách thuê.</p>
+                    <span className="text-xs font-bold text-zinc-700">{t("guestPostsCreatePostTypeMarketplace")}</span>
+                    <p className="text-[11px] text-zinc-500">{t("guestPostsCreatePostTypeMarketplaceDesc")}</p>
                   </div>
                 </div>
               </div>
@@ -308,23 +317,23 @@ export default function PublicCreatePostPage() {
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900">Mô tả chi tiết phòng trọ</h2>
-              <p className="text-xs text-zinc-400">Mô tả tiện nghi, vị trí, giờ giấc và các dịch vụ đi kèm</p>
+              <h2 className="text-base font-bold text-zinc-900">{t("guestPostsCreateSectionDesc")}</h2>
+              <p className="text-xs text-zinc-400">{t("guestPostsCreateSectionDescSub")}</p>
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-zinc-700">
-              Nội dung mô tả <span className="text-rose-500">*</span>
+              {t("guestPostsCreateDescLabel")} <span className="text-rose-500">*</span>
             </label>
             <textarea
               rows={6}
               value={content}
               onChange={(e) => handleFieldChange(setContent, e.target.value)}
-              placeholder="Nhập chi tiết: Phòng mới xây 100%, máy lạnh inverter, tủ lạnh, bếp riêng, máy giặt, thang máy, khoá vân tay an ninh 24/7, giờ giấc tự do không chung chủ..."
+              placeholder={t("guestPostsCreateDescPlaceholder")}
               className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors leading-relaxed"
             />
-            <span className="text-xs text-zinc-400">Tối thiểu 10 ký tự.</span>
+            <span className="text-xs text-zinc-400">{t("guestPostsCreateDescMinLength")}</span>
           </div>
         </div>
 
@@ -335,8 +344,8 @@ export default function PublicCreatePostPage() {
               <ImageIcon className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900">Hình ảnh phòng trọ</h2>
-              <p className="text-xs text-zinc-400">Đăng tải tối đa các góc phòng sáng đẹp để tăng lượt xem</p>
+              <h2 className="text-base font-bold text-zinc-900">{t("guestPostsCreateSectionImages")}</h2>
+              <p className="text-xs text-zinc-400">{t("guestPostsCreateSectionImagesSub")}</p>
             </div>
           </div>
 
@@ -346,7 +355,7 @@ export default function PublicCreatePostPage() {
                 type="url"
                 value={newImageUrl}
                 onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="Dán link ảnh (VD: https://images.unsplash.com/...)"
+                placeholder={t("guestPostsCreateImagePlaceholder")}
                 className="flex-1 px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
               />
               <button
@@ -354,7 +363,7 @@ export default function PublicCreatePostPage() {
                 onClick={handleAddImage}
                 className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <Plus className="w-4 h-4" /> Thêm ảnh
+                <Plus className="w-4 h-4" /> {t("guestPostsCreateAddImageBtn")}
               </button>
             </div>
 
@@ -367,7 +376,7 @@ export default function PublicCreatePostPage() {
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
                       className="absolute top-2 right-2 p-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
-                      title="Xóa ảnh này"
+                      title={t("guestPostsCreateDeleteImageTooltip")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -383,7 +392,7 @@ export default function PublicCreatePostPage() {
           <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-3 text-rose-700 animate-in fade-in duration-200">
             <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-xs font-bold">Không thể đăng tin</h4>
+              <h4 className="text-xs font-bold">{t("guestPostsCreateErrorTitle")}</h4>
               <p className="text-xs mt-0.5">{errorMessage}</p>
             </div>
           </div>
@@ -396,7 +405,7 @@ export default function PublicCreatePostPage() {
             onClick={handleCancelClick}
             className="px-6 py-3 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-2xl transition-colors cursor-pointer"
           >
-            Hủy bỏ
+            {t("guestPostsCreateBtnCancel")}
           </button>
 
           <div className="flex items-center gap-3">
@@ -406,7 +415,7 @@ export default function PublicCreatePostPage() {
               onClick={(e) => handleSubmit(e, "draft")}
               className="px-5 py-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-2xl transition-colors cursor-pointer disabled:opacity-50"
             >
-              Lưu bản nháp
+              {t("guestPostsCreateBtnDraft")}
             </button>
             <button
               type="submit"
@@ -415,11 +424,11 @@ export default function PublicCreatePostPage() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Đang xử lý...
+                  <Loader2 className="w-4 h-4 animate-spin" /> {t("guestPostsCreateBtnProcessing")}
                 </>
               ) : (
                 <>
-                  <Sparkle className="w-4 h-4" /> Đăng tin ngay
+                  <Sparkle className="w-4 h-4" /> {t("guestPostsCreateBtnPublish")}
                 </>
               )}
             </button>
@@ -436,9 +445,9 @@ export default function PublicCreatePostPage() {
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-black text-zinc-900">Xác nhận rời khỏi trang</h3>
+                <h3 className="text-base font-black text-zinc-900">{t("guestPostsCreateConfirmTitle")}</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed">
-                  Bạn có các thông tin tin đăng chưa được lưu. Nếu rời đi bây giờ, các thay đổi sẽ bị mất.
+                  {t("guestPostsCreateConfirmDesc")}
                 </p>
               </div>
             </div>
@@ -449,14 +458,14 @@ export default function PublicCreatePostPage() {
                 onClick={() => setShowConfirmModal(false)}
                 className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("guestPostsCreateConfirmContinue")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmLeave}
                 className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer"
               >
-                Hủy thay đổi & Đóng
+                {t("guestPostsCreateConfirmLeave")}
               </button>
             </div>
           </div>

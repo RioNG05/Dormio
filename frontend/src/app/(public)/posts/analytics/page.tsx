@@ -21,6 +21,8 @@ import {
   Plus,
 } from "lucide-react";
 import Link from "next/link";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
+import { formatCurrency } from "@/utils";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -40,6 +42,10 @@ import {
 } from "@/services/post.service";
 
 export default function PublicPostAnalyticsPage() {
+  const t = useTranslations("guest");
+  const { currentLocale } = useLanguage();
+  const isEn = currentLocale === "en";
+
   const [mounted, setMounted] = useState(false);
   const [timeRange, setTimeRange] = useState<number>(14); // 7, 14, 30 days
   const [overview, setOverview] = useState<PosterAnalyticsOverview | null>(null);
@@ -83,7 +89,9 @@ export default function PublicPostAnalyticsPage() {
         topPosts: [
           {
             id: "demo-1",
-            title: "Cho thuê phòng Studio cao cấp Quận 1 - Full nội thất",
+            title: isEn
+              ? "Luxury Studio for Rent District 1 - Fully Furnished"
+              : "Cho thuê phòng Studio cao cấp Quận 1 - Full nội thất",
             status: "posted",
             depositAmount: 3500000,
             roomNumber: "101",
@@ -96,7 +104,9 @@ export default function PublicPostAnalyticsPage() {
           },
           {
             id: "demo-2",
-            title: "Phòng trọ sinh viên tiện nghi gần ĐH Quốc Gia Cầu Giấy",
+            title: isEn
+              ? "Convenient Student Room near National University Cau Giay"
+              : "Phòng trọ sinh viên tiện nghi gần ĐH Quốc Gia Cầu Giấy",
             status: "posted",
             depositAmount: 2000000,
             roomNumber: null,
@@ -145,14 +155,6 @@ export default function PublicPostAnalyticsPage() {
     setSinglePostAnalytics(null);
   };
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
-
   const formatDate = (d: string) => {
     if (!d) return "";
     const parts = d.split("-");
@@ -162,6 +164,12 @@ export default function PublicPostAnalyticsPage() {
     return d;
   };
 
+  const timeRangeTabs = [
+    { label: t("guestPostsAnalyticsDays7"), val: 7 },
+    { label: t("guestPostsAnalyticsDays14"), val: 14 },
+    { label: t("guestPostsAnalyticsDays30"), val: 30 },
+  ];
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20 pt-6 px-4 sm:px-6 animate-in fade-in duration-300">
       {/* Top Header */}
@@ -170,21 +178,21 @@ export default function PublicPostAnalyticsPage() {
           <Link
             href="/"
             className="p-2.5 text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-            title="Quay lại trang chủ"
+            title={t("guestPostsAnalyticsBackHome")}
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
-                Thống kê hiệu quả tin đăng (BHRP)
+                {t("guestPostsAnalyticsTitle")}
               </h1>
               <span className="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-[#2ac1bc]/10 text-[#2ac1bc]">
                 UC-P-02
               </span>
             </div>
             <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-              Theo dõi lượt tiếp cận, tương tác và khách thuê quan tâm bài đăng cho thuê
+              {t("guestPostsAnalyticsSubtitle")}
             </p>
           </div>
         </div>
@@ -192,11 +200,7 @@ export default function PublicPostAnalyticsPage() {
         {/* Action Controls & Time Range Filter */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center bg-zinc-100 p-1 rounded-2xl border border-zinc-200">
-            {[
-              { label: "7 ngày", val: 7 },
-              { label: "14 ngày", val: 14 },
-              { label: "30 ngày", val: 30 },
-            ].map((tab) => (
+            {timeRangeTabs.map((tab) => (
               <button
                 key={tab.val}
                 type="button"
@@ -216,7 +220,7 @@ export default function PublicPostAnalyticsPage() {
             href="/posts/create"
             className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Đăng tin mới
+            <Plus className="w-4 h-4" /> {t("guestPostsAnalyticsCreateNew")}
           </Link>
         </div>
       </div>
@@ -227,7 +231,7 @@ export default function PublicPostAnalyticsPage() {
         <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
             <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-              Lượt xem tin (Post Reach)
+              {t("guestPostsAnalyticsCardReach")}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600">
               <Eye className="w-4 h-4" />
@@ -238,7 +242,7 @@ export default function PublicPostAnalyticsPage() {
               {isLoading ? "..." : (overview?.totalViews ?? 0).toLocaleString()}
             </span>
             <p className="text-[11px] text-zinc-400">
-              Tổng lượt xem trực tuyến trên sàn BHRP
+              {t("guestPostsAnalyticsCardReachSub")}
             </p>
           </div>
         </div>
@@ -247,7 +251,7 @@ export default function PublicPostAnalyticsPage() {
         <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
             <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-              Lượt lưu tin (Bookmarks)
+              {t("guestPostsAnalyticsCardBookmarks")}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
               <Bookmark className="w-4 h-4" />
@@ -258,7 +262,7 @@ export default function PublicPostAnalyticsPage() {
               {isLoading ? "..." : (overview?.totalSaved ?? 0).toLocaleString()}
             </span>
             <p className="text-[11px] text-zinc-400">
-              Khách thuê đã lưu vào danh sách quan tâm
+              {t("guestPostsAnalyticsCardBookmarksSub")}
             </p>
           </div>
         </div>
@@ -267,7 +271,7 @@ export default function PublicPostAnalyticsPage() {
         <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
             <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-              Tin đang hiển thị
+              {t("guestPostsAnalyticsCardActive")}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
               <CheckCircle2 className="w-4 h-4" />
@@ -278,7 +282,7 @@ export default function PublicPostAnalyticsPage() {
               {isLoading ? "..." : `${overview?.activePosts ?? 0} / ${overview?.totalPosts ?? 0}`}
             </span>
             <p className="text-[11px] text-zinc-400">
-              Số bài đang ở trạng thái công khai
+              {t("guestPostsAnalyticsCardActiveSub")}
             </p>
           </div>
         </div>
@@ -287,7 +291,7 @@ export default function PublicPostAnalyticsPage() {
         <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
             <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-              Hiệu suất trung bình
+              {t("guestPostsAnalyticsCardAvg")}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
               <TrendingUp className="w-4 h-4" />
@@ -298,7 +302,7 @@ export default function PublicPostAnalyticsPage() {
               {isLoading ? "..." : `${overview?.averageViewsPerPost ?? 0}`}
             </span>
             <p className="text-[11px] text-zinc-400">
-              Lượt xem bình quân trên mỗi bài đăng
+              {t("guestPostsAnalyticsCardAvgSub")}
             </p>
           </div>
         </div>
@@ -311,22 +315,22 @@ export default function PublicPostAnalyticsPage() {
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2ac1bc]" />
               <h2 className="text-lg font-black text-zinc-900 tracking-tight">
-                Biểu đồ xu hướng tiếp cận theo ngày
+                {t("guestPostsAnalyticsChartTitle")}
               </h2>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Thống kê tổng lượt xem và lượng khách thuê duy nhất (Unique Viewers) trong {timeRange} ngày qua
+              {t("guestPostsAnalyticsChartSub", { timeRange })}
             </p>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-bold">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#2ac1bc]" />
-              <span className="text-zinc-600">Lượt xem (Views)</span>
+              <span className="text-zinc-600">{t("guestPostsAnalyticsLegendViews")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#FF6B35]" />
-              <span className="text-zinc-600">Người xem duy nhất (Unique)</span>
+              <span className="text-zinc-600">{t("guestPostsAnalyticsLegendUnique")}</span>
             </div>
           </div>
         </div>
@@ -336,7 +340,7 @@ export default function PublicPostAnalyticsPage() {
           {isLoading ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-[#2ac1bc]" />
-              <span className="text-xs font-bold">Đang tải dữ liệu biểu đồ...</span>
+              <span className="text-xs font-bold">{t("guestPostsAnalyticsChartLoading")}</span>
             </div>
           ) : overview && overview.dailyTrends.length > 0 ? (
             mounted && (
@@ -379,12 +383,12 @@ export default function PublicPostAnalyticsPage() {
                       boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
                       padding: "10px 14px",
                     }}
-                    labelFormatter={(label) => `Ngày: ${label}`}
+                    labelFormatter={(label) => t("guestPostsAnalyticsDateLabel", { date: label })}
                   />
                   <Area
                     type="monotone"
                     dataKey="views"
-                    name="Lượt xem"
+                    name={t("guestPostsAnalyticsTooltipViews")}
                     stroke="#2ac1bc"
                     strokeWidth={3}
                     fillOpacity={1}
@@ -393,7 +397,7 @@ export default function PublicPostAnalyticsPage() {
                   <Area
                     type="monotone"
                     dataKey="uniqueViewers"
-                    name="Người xem duy nhất"
+                    name={t("guestPostsAnalyticsTooltipUnique")}
                     stroke="#FF6B35"
                     strokeWidth={2.5}
                     strokeDasharray="4 4"
@@ -406,7 +410,7 @@ export default function PublicPostAnalyticsPage() {
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-2 border border-dashed border-zinc-200 rounded-2xl">
               <BarChart3 className="w-8 h-8 text-zinc-300" />
-              <span className="text-xs font-bold text-zinc-500">Chưa có lượt tiếp cận nào trong khoảng thời gian này</span>
+              <span className="text-xs font-bold text-zinc-500">{t("guestPostsAnalyticsChartEmpty")}</span>
             </div>
           )}
         </div>
@@ -417,10 +421,10 @@ export default function PublicPostAnalyticsPage() {
         <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
           <div>
             <h2 className="text-base font-black text-zinc-900 tracking-tight">
-              Bảng xếp hạng tin đăng hiệu quả nhất
+              {t("guestPostsAnalyticsTableTitle")}
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Chi tiết hiệu suất từng bài đăng và tỷ lệ chuyển đổi khách quan tâm
+              {t("guestPostsAnalyticsTableSub")}
             </p>
           </div>
         </div>
@@ -428,19 +432,19 @@ export default function PublicPostAnalyticsPage() {
         {isLoading ? (
           <div className="p-8 text-center text-zinc-400">
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2ac1bc] mb-2" />
-            <span className="text-xs font-bold">Đang tải danh sách bài đăng...</span>
+            <span className="text-xs font-bold">{t("guestPostsAnalyticsTableLoading")}</span>
           </div>
         ) : overview && overview.topPosts.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-zinc-100 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-4">Bài đăng</th>
-                  <th className="py-3 px-4">Giá cọc</th>
-                  <th className="py-3 px-4 text-center">Trạng thái</th>
-                  <th className="py-3 px-4 text-center">Lượt xem</th>
-                  <th className="py-3 px-4 text-center">Lượt lưu</th>
-                  <th className="py-3 px-4 text-right">Chi tiết</th>
+                  <th className="py-3 px-4">{t("guestPostsAnalyticsColPost")}</th>
+                  <th className="py-3 px-4">{t("guestPostsAnalyticsColDeposit")}</th>
+                  <th className="py-3 px-4 text-center">{t("guestPostsAnalyticsColStatus")}</th>
+                  <th className="py-3 px-4 text-center">{t("guestPostsAnalyticsColViews")}</th>
+                  <th className="py-3 px-4 text-center">{t("guestPostsAnalyticsColSaved")}</th>
+                  <th className="py-3 px-4 text-right">{t("guestPostsAnalyticsColAction")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50 font-medium">
@@ -460,13 +464,15 @@ export default function PublicPostAnalyticsPage() {
                         <div className="max-w-md">
                           <p className="font-bold text-zinc-900 text-xs truncate">{post.title}</p>
                           <p className="text-[11px] text-zinc-400 mt-0.5">
-                            {post.boardingHouseName ? `${post.roomNumber || "Phòng"} · ${post.boardingHouseName}` : "Tin tự do BHRP"}
+                            {post.boardingHouseName
+                              ? `${post.roomNumber || t("guestPostsAnalyticsRoomPrefix")} · ${post.boardingHouseName}`
+                              : t("guestPostsAnalyticsFreePostBadge")}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4 font-bold text-zinc-900">
-                      {formatCurrency(post.depositAmount)}
+                      {formatCurrency(post.depositAmount, currentLocale)}
                     </td>
                     <td className="py-4 px-4 text-center">
                       <span
@@ -478,7 +484,11 @@ export default function PublicPostAnalyticsPage() {
                             : "bg-zinc-100 text-zinc-500 border border-zinc-200"
                         }`}
                       >
-                        {post.status === "posted" ? "Hiển thị" : post.status === "draft" ? "Bản nháp" : "Tạm ẩn"}
+                        {post.status === "posted"
+                          ? t("guestPostsAnalyticsStatusPosted")
+                          : post.status === "draft"
+                          ? t("guestPostsAnalyticsStatusDraft")
+                          : t("guestPostsAnalyticsStatusHidden")}
                       </span>
                     </td>
                     <td className="py-4 px-4 text-center font-black text-zinc-900">
@@ -493,7 +503,7 @@ export default function PublicPostAnalyticsPage() {
                         onClick={() => handleOpenDrilldown(post.id)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-[11px] font-bold transition-all shadow-xs cursor-pointer"
                       >
-                        <BarChart3 className="w-3.5 h-3.5" /> Xem chi tiết
+                        <BarChart3 className="w-3.5 h-3.5" /> {t("guestPostsAnalyticsBtnViewDetail")}
                       </button>
                     </td>
                   </tr>
@@ -503,12 +513,12 @@ export default function PublicPostAnalyticsPage() {
           </div>
         ) : (
           <div className="p-8 text-center text-zinc-400 border border-dashed border-zinc-200 rounded-2xl">
-            <p className="text-xs font-bold text-zinc-500">Bạn chưa có bài đăng nào trên hệ thống</p>
+            <p className="text-xs font-bold text-zinc-500">{t("guestPostsAnalyticsEmptyPosts")}</p>
             <Link
               href="/posts/create"
               className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-[#FF6B35] text-white rounded-xl text-xs font-bold"
             >
-              <Plus className="w-4 h-4" /> Đăng tin đầu tiên ngay
+              <Plus className="w-4 h-4" /> {t("guestPostsAnalyticsCreateFirstPost")}
             </Link>
           </div>
         )}
@@ -524,9 +534,9 @@ export default function PublicPostAnalyticsPage() {
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-zinc-900">Chi tiết phân tích bài đăng</h3>
+                  <h3 className="text-base font-black text-zinc-900">{t("guestPostsAnalyticsModalTitle")}</h3>
                   <p className="text-xs text-zinc-400">
-                    {singlePostAnalytics?.post.title || "Đang tải dữ liệu..."}
+                    {singlePostAnalytics?.post.title || t("guestPostsAnalyticsModalLoading")}
                   </p>
                 </div>
               </div>
@@ -543,7 +553,7 @@ export default function PublicPostAnalyticsPage() {
             {isLoadingDrilldown ? (
               <div className="py-16 text-center text-zinc-400">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2ac1bc] mb-2" />
-                <span className="text-xs font-bold">Đang tải biểu đồ chi tiết...</span>
+                <span className="text-xs font-bold">{t("guestPostsAnalyticsModalChartLoading")}</span>
               </div>
             ) : singlePostAnalytics ? (
               <div className="space-y-6">
@@ -551,7 +561,7 @@ export default function PublicPostAnalyticsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                      Tổng lượt xem
+                      {t("guestPostsAnalyticsModalTotalViews")}
                     </span>
                     <p className="text-2xl font-black text-zinc-900 mt-1">
                       {singlePostAnalytics.totalViews.toLocaleString()}
@@ -559,7 +569,7 @@ export default function PublicPostAnalyticsPage() {
                   </div>
                   <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                      Khách xem duy nhất
+                      {t("guestPostsAnalyticsModalUniqueViewers")}
                     </span>
                     <p className="text-2xl font-black text-[#FF6B35] mt-1">
                       {singlePostAnalytics.totalUniqueViewers.toLocaleString()}
@@ -569,7 +579,7 @@ export default function PublicPostAnalyticsPage() {
 
                 {/* Day-by-Day Reach Bar Chart */}
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-zinc-700">Lượt tiếp cận theo ngày</span>
+                  <span className="text-xs font-bold text-zinc-700">{t("guestPostsAnalyticsModalDailyReach")}</span>
                   <div className="w-full h-56 pt-2">
                     {mounted && (
                       <ResponsiveContainer width="100%" height="100%">
@@ -599,8 +609,18 @@ export default function PublicPostAnalyticsPage() {
                               fontSize: "11px",
                             }}
                           />
-                          <Bar dataKey="views" name="Lượt xem" fill="#2ac1bc" radius={[6, 6, 0, 0]} />
-                          <Bar dataKey="uniqueViewers" name="Khách duy nhất" fill="#FF6B35" radius={[6, 6, 0, 0]} />
+                          <Bar
+                            dataKey="views"
+                            name={t("guestPostsAnalyticsTooltipViews")}
+                            fill="#2ac1bc"
+                            radius={[6, 6, 0, 0]}
+                          />
+                          <Bar
+                            dataKey="uniqueViewers"
+                            name={t("guestPostsAnalyticsTooltipUnique")}
+                            fill="#FF6B35"
+                            radius={[6, 6, 0, 0]}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     )}
@@ -615,7 +635,7 @@ export default function PublicPostAnalyticsPage() {
                 onClick={handleCloseDrilldown}
                 className="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl text-xs font-bold cursor-pointer"
               >
-                Đóng
+                {t("guestPostsAnalyticsModalBtnClose")}
               </button>
             </div>
           </div>

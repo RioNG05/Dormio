@@ -9,6 +9,7 @@ export type { SupportedLocale };
 
 interface LanguageContextType {
   locale: SupportedLocale;
+  currentLocale: SupportedLocale;
   setLocale: (lang: SupportedLocale) => void;
   t: (namespace?: string) => (key: string, values?: Record<string, any>) => string;
 }
@@ -148,7 +149,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, t }}>
+    <LanguageContext.Provider value={{ locale, currentLocale: locale, setLocale, t }}>
       {children}
     </LanguageContext.Provider>
   );
@@ -159,6 +160,7 @@ export function useLanguage() {
   if (!context) {
     return {
       locale: "vi" as SupportedLocale,
+      currentLocale: "vi" as SupportedLocale,
       setLocale: () => {},
       t: (namespace?: string) => (key: string, values?: Record<string, any>) => {
         const resolved = namespace ? legacyNamespaceMap[namespace] || namespace : undefined;

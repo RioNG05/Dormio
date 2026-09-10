@@ -80,11 +80,39 @@ export default function PublicLayout({
   };
 
   const searchResults = [
-    { type: "room", title: "Phòng Studio Ban Công Nguyễn Huệ Quận 1", href: "/rooms/1", price: "4.5 Tr/tháng", location: "Quận 1, TP. HCM" },
-    { type: "room", title: "Phòng Đơn Cao Cấp Full Nội Thất", href: "/rooms/2", price: "4.0 Tr/tháng", location: "Bến Nghé, Quận 1" },
-    { type: "room", title: "Phòng Đôi Sinh Viên Cầu Giấy Gần FTU", href: "/rooms/3", price: "3.2 Tr/tháng", location: "Đống Đa, Hà Nội" },
-    { type: "blog", title: "5 Bí Quyết Quản Lý Dãy Trọ Tiết Kiệm 80% Thời Gian", href: "/blog", category: "Kinh nghiệm" },
-    { type: "blog", title: "Kinh Nghiệm Thuê Phòng Sinh Viên Tránh Bẫy Cọc", href: "/blog", category: "Mẹo tìm phòng" },
+    {
+      type: "room",
+      title: locale === "en" ? "Studio Apartment with Balcony Nguyen Hue D1" : "Phòng Studio Ban Công Nguyễn Huệ Quận 1",
+      href: "/rooms/1",
+      price: locale === "en" ? "4.5M/mo" : "4.5 Tr/tháng",
+      location: locale === "en" ? "District 1, Ho Chi Minh City" : "Quận 1, TP. HCM",
+    },
+    {
+      type: "room",
+      title: locale === "en" ? "Premium Single Room Full Furnished" : "Phòng Đơn Cao Cấp Full Nội Thất",
+      href: "/rooms/2",
+      price: locale === "en" ? "4.0M/mo" : "4.0 Tr/tháng",
+      location: locale === "en" ? "Ben Nghe, District 1" : "Bến Nghé, Quận 1",
+    },
+    {
+      type: "room",
+      title: locale === "en" ? "Student Twin Room Cau Giay Near FTU" : "Phòng Đôi Sinh Viên Cầu Giấy Gần FTU",
+      href: "/rooms/3",
+      price: locale === "en" ? "3.2M/mo" : "3.2 Tr/tháng",
+      location: locale === "en" ? "Dong Da, Hanoi" : "Đống Đa, Hà Nội",
+    },
+    {
+      type: "blog",
+      title: locale === "en" ? "5 Secrets to Save 80% Time on Rent Collection" : "5 Bí Quyết Quản Lý Dãy Trọ Tiết Kiệm 80% Thời Gian",
+      href: "/blog",
+      category: locale === "en" ? "Management" : "Kinh nghiệm",
+    },
+    {
+      type: "blog",
+      title: locale === "en" ? "Student Rental Guide: Avoiding Deposit Traps" : "Kinh Nghiệm Thuê Phòng Sinh Viên Tránh Bẫy Cọc",
+      href: "/blog",
+      category: locale === "en" ? "Tips" : "Mẹo tìm phòng",
+    },
   ].filter(
     (item) =>
       commandQuery === "" ||
@@ -183,7 +211,7 @@ export default function PublicLayout({
                     <div className="hidden sm:block text-left">
                       <span className="text-xs font-black text-zinc-900 block leading-tight truncate max-w-[100px]">{user.name}</span>
                       <span className="text-[9px] font-bold text-zinc-400 block">
-                        {user.role === "landlord" ? tNav("landlordRole") : user.role === "employee" ? "Nhân viên" : tNav("tenantRole")}
+                        {user.role === "landlord" ? tNav("landlordRole") : user.role === "employee" ? tNav("staffRole") : tNav("tenantRole")}
                       </span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
@@ -205,7 +233,7 @@ export default function PublicLayout({
                           className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-xl transition-all"
                         >
                           <Clock className="w-4 h-4 text-[#2AC1BC]" />
-                          <span>Cổng ca làm Nhân viên</span>
+                          <span>{tNav("staffPortalLink")}</span>
                         </Link>
                       )}
 
@@ -226,7 +254,7 @@ export default function PublicLayout({
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <Building className="w-4 h-4 text-blue-500" />
-                        <span>{user.role === "landlord" ? "Quản lý nhà trọ" : user.role === "employee" ? "Ca làm việc" : tNav("myRentedRooms")}</span>
+                        <span>{user.role === "landlord" ? tNav("manageHouses") : user.role === "employee" ? tNav("myShifts") : tNav("myRentedRooms")}</span>
                       </Link>
 
                       {/* 3. Phòng trọ đã lưu */}
@@ -247,7 +275,7 @@ export default function PublicLayout({
                           className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                         >
                           <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                          <span>Đăng tin tìm khách</span>
+                          <span>{tNav("postListing")}</span>
                         </Link>
 
                         {/* 5. Thống kê hiệu quả tin đăng (UC-P-02) */}
@@ -257,7 +285,7 @@ export default function PublicLayout({
                           className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                         >
                           <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                          <span>Thống kê hiệu quả tin đăng</span>
+                          <span>{tNav("postAnalytics")}</span>
                         </Link>
                       </div>
 
@@ -348,12 +376,12 @@ export default function PublicLayout({
                       className="w-full py-3 bg-[#FF6B35] text-white font-black text-xs rounded-2xl shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Building2 className="w-4 h-4" />
-                      <span>{locale === "en" ? "Register as Landlord" : "Đăng ký trở thành chủ trọ"}</span>
+                      <span>{tNav("becomeLandlord")}</span>
                     </button>
                   ) : (
                     <Link href="/landlord" className="block w-full" onClick={() => setIsMobileMenuOpen(false)}>
                       <button className="w-full py-3 bg-[#2AC1BC] text-white font-black text-xs rounded-2xl shadow-md text-center">
-                        {locale === "en" ? "Enter Landlord Dashboard →" : "Vào Bảng Điều Khiển Chủ Trọ →"}
+                        {tNav("dashboard")} &rarr;
                       </button>
                     </Link>
                   )}
@@ -407,7 +435,7 @@ export default function PublicLayout({
                     >
                       <div className="flex items-center gap-2.5">
                         <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                        <span>Đăng tin tìm khách</span>
+                        <span>{tNav("postListing")}</span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -420,7 +448,7 @@ export default function PublicLayout({
                     >
                       <div className="flex items-center gap-2.5">
                         <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                        <span>Thống kê hiệu quả tin đăng</span>
+                        <span>{tNav("postAnalytics")}</span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -435,7 +463,7 @@ export default function PublicLayout({
                     >
                       <div className="flex items-center gap-2.5">
                         <LogOut className="w-4 h-4 text-rose-500" />
-                        <span>Đăng xuất tài khoản</span>
+                        <span>{tNav("logout")}</span>
                       </div>
                     </button>
                   </div>
@@ -584,9 +612,7 @@ export default function PublicLayout({
 
               {searchResults.length === 0 ? (
                 <div className="p-8 text-center text-xs font-semibold text-zinc-400">
-                  {locale === "en"
-                    ? `No results found for "${commandQuery}"`
-                    : `Không tìm thấy kết quả phù hợp cho "${commandQuery}"`}
+                  {tNav("noSearchResults", { query: commandQuery })}
                 </div>
               ) : (
                 searchResults.map((item, idx) => (

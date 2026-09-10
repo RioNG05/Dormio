@@ -3,13 +3,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Search, MapPin, Filter, RotateCcw, ShieldCheck, Sparkles,
-  ChevronDown, CheckCircle2, Eye, QrCode, X, Lock, Phone, MessageSquare,
-  ArrowRight, User, Heart, Share2, Copy, Check, ShieldAlert, ArrowDownUp
+  Search, MapPin, Filter, RotateCcw, Sparkles,
+  ChevronDown, CheckCircle2, Eye, QrCode, X, Lock, Phone,
+  Heart, Share2, Copy, Check
 } from "lucide-react";
-import { formatVND } from "@/utils";
+import { formatCurrency } from "@/utils";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function RoomsPage() {
+  const { currentLocale } = useLanguage();
+  const t = useTranslations("guest");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [cityFilter, setCityFilter] = useState("all");
   const [maxPrice, setMaxPrice] = useState("");
@@ -28,13 +32,13 @@ export default function RoomsPage() {
   const roomsData = [
     {
       id: "1",
-      badge: "Hot Rent",
-      title: "Phòng Studio Ban Công Nguyễn Huệ Quận 1 - View Đẹp",
-      address: "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. HCM",
-      description: "Căn hộ Studio thiết kế sang trọng, ban công thoáng mát, đầy đủ tiện nghi điều hòa, tủ lạnh, bếp nấu ăn, máy giặt. An ninh 24/7.",
+      badge: t("guestRoomsBadgeHot"),
+      title: t("guestRoomsRoom1Title"),
+      address: t("guestRoomsRoom1Address"),
+      description: t("guestRoomsRoom1Desc"),
       amenities: ["Ban công", "Máy lạnh Inverter", "Tủ lạnh", "Bếp riêng", "Wifi free", "Khóa vân tay"],
       price: 4500000,
-      depositAmount: 1000000, // Cài đặt bởi chủ trọ
+      depositAmount: 1000000,
       area: 25,
       image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
       city: "hcm",
@@ -42,13 +46,13 @@ export default function RoomsPage() {
     },
     {
       id: "2",
-      badge: "Mới trống",
-      title: "Phòng Đơn Cao Cấp Tầng 1 Full Nội Thất Trung Tâm Q1",
-      address: "125 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. HCM",
-      description: "Phòng trọ cao cấp khép kín, thiết kế tối giản hiện đại. Giờ giấc tự do, khóa cửa vân tay bảo mật.",
+      badge: t("guestRoomsBadgeAvailable"),
+      title: t("guestRoomsRoom2Title"),
+      address: t("guestRoomsRoom2Address"),
+      description: t("guestRoomsRoom2Desc"),
       amenities: ["Máy lạnh", "Tủ lạnh", "Nóng lạnh", "Giờ tự do", "Bảo vệ 24/7"],
       price: 4000000,
-      depositAmount: 500000, // Cài đặt bởi chủ trọ
+      depositAmount: 500000,
       area: 22,
       image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
       city: "hcm",
@@ -56,13 +60,13 @@ export default function RoomsPage() {
     },
     {
       id: "3",
-      badge: "Giá tốt",
-      title: "Phòng Đôi Sinh Viên Cầu Giấy Gần Đại Học Ngoại Thương",
-      address: "45 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội",
-      description: "Phòng trọ sinh viên thoáng mát có ban công, gần FTU, DAV, UTC. Khép kín, giường tầng hoặc giường đôi tùy chọn.",
+      badge: t("guestRoomsBadgeGoodPrice"),
+      title: t("guestRoomsRoom3Title"),
+      address: t("guestRoomsRoom3Address"),
+      description: t("guestRoomsRoom3Desc"),
       amenities: ["Wifi tốc độ cao", "Nóng lạnh", "Ban công", "Chỗ để xe"],
       price: 3200000,
-      depositAmount: 0, // Chủ trọ cài đặt miễn phí cọc xem phòng
+      depositAmount: 0,
       area: 24,
       image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
       city: "hanoi",
@@ -70,19 +74,40 @@ export default function RoomsPage() {
     },
     {
       id: "4",
-      badge: "Hot Rent",
-      title: "Chung Cư Mini Studio Cầu Giấy Full Đồ Mới Kính Koong",
-      address: "12 Cầu Giấy, Quan Hoa, Cầu Giấy, Hà Nội",
-      description: "Căn hộ chung cư mini thiết kế hiện đại, thang máy tốc độ cao, khóa vân tay, có ban công phơi đồ riêng.",
+      badge: t("guestRoomsBadgeHot"),
+      title: t("guestRoomsRoom4Title"),
+      address: t("guestRoomsRoom4Address"),
+      description: t("guestRoomsRoom4Desc"),
       amenities: ["Thang máy", "Khóa vân tay", "Máy giặt chung", "Ban công"],
       price: 5500000,
-      depositAmount: 1500000, // Cài đặt bởi chủ trọ
+      depositAmount: 1500000,
       area: 32,
       image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80",
       city: "hanoi",
       landlord: { name: "Phạm Văn Đức", phone: "0934.567.890" }
     }
   ];
+
+  const translateAmenity = (name: string) => {
+    if (currentLocale === "vi") return name;
+    const enMap: Record<string, string> = {
+      "Ban công": "Balcony",
+      "Máy lạnh Inverter": "Inverter Air Conditioner",
+      "Máy lạnh": "Air Conditioner",
+      "Tủ lạnh": "Refrigerator",
+      "Bếp riêng": "Private Kitchen",
+      "Wifi free": "Free Wifi",
+      "Khóa vân tay": "Fingerprint Lock",
+      "Nóng lạnh": "Water Heater",
+      "Giờ tự do": "No Curfew",
+      "Bảo vệ 24/7": "24/7 Security",
+      "Wifi tốc độ cao": "High-speed Wifi",
+      "Chỗ để xe": "Parking Space",
+      "Thang máy": "Elevator",
+      "Máy giặt chung": "Shared Washing Machine",
+    };
+    return enMap[name] || name;
+  };
 
   const toggleSaveRoom = (id: string) => {
     setSavedRoomIds((prev) =>
@@ -91,9 +116,11 @@ export default function RoomsPage() {
   };
 
   const handleCopyShareLink = (room: any) => {
-    navigator.clipboard.writeText(window.location.origin + `/rooms/${room.id}`);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.origin + `/rooms/${room.id}`);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
   };
 
   const handleResetFilter = () => {
@@ -122,18 +149,18 @@ export default function RoomsPage() {
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 shadow-[0_0_20px_rgba(42,193,188,0.2)] backdrop-blur-xl">
             <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>SÀN TÌM PHÒNG TRỌ BHRP • CẬP NHẬT 24/7</span>
+            <span>{t("guestRoomsBadge")}</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">Khám phá phòng trọ</span> <br />
+            <span className="inline-block whitespace-nowrap">{t("guestRoomsTitle1")}</span> <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              chính chủ, giá tốt
+              {t("guestRoomsTitle2")}
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed mt-3 max-w-xl mx-auto text-balance">
-            Hơn 500+ căn hộ studio & phòng trọ uy tín, đã xác thực thông tin chính chủ bởi Dormio.
+            {t("guestRoomsSubtitle")}
           </p>
         </div>
       </section>
@@ -146,24 +173,24 @@ export default function RoomsPage() {
           <div className="lg:col-span-4 bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs space-y-6">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3.5">
               <h2 className="font-extrabold text-zinc-900 text-sm flex items-center gap-2">
-                <Filter className="w-4 h-4 text-[#2AC1BC]" /> Bộ lọc tìm kiếm
+                <Filter className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsFilterTitle")}
               </h2>
               <button
                 onClick={handleResetFilter}
                 className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" /> Đặt lại
+                <RotateCcw className="w-3.5 h-3.5" /> {t("guestRoomsResetFilter")}
               </button>
             </div>
 
-            {/* Filter 1: Từ khóa */}
+            {/* Filter 1: Keyword */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">Từ khóa</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsKeywordLabel")}</label>
               <div className="relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
                   type="text"
-                  placeholder="Tên đường, quận, từ khóa.."
+                  placeholder={t("guestRoomsKeywordPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -171,29 +198,29 @@ export default function RoomsPage() {
               </div>
             </div>
 
-            {/* Filter 2: Thành phố */}
+            {/* Filter 2: City */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">Thành phố</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsCityLabel")}</label>
               <div className="relative">
                 <select
                   value={cityFilter}
                   onChange={(e) => setCityFilter(e.target.value)}
                   className="w-full pl-3.5 pr-8 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer"
                 >
-                  <option value="all">Tất cả thành phố</option>
-                  <option value="hcm">TP. Hồ Chí Minh</option>
-                  <option value="hanoi">Hà Nội</option>
+                  <option value="all">{t("guestRoomsAllCities")}</option>
+                  <option value="hcm">{t("guestRoomsHcm")}</option>
+                  <option value="hanoi">{t("guestRoomsHanoi")}</option>
                 </select>
                 <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
               </div>
             </div>
 
-            {/* Filter 3: Giá tối đa */}
+            {/* Filter 3: Max Price */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">Giá tối đa (VNĐ)</label>
+              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMaxPriceLabel")}</label>
               <input
                 type="number"
-                placeholder="VD: 5000000"
+                placeholder={t("guestRoomsMaxPricePlaceholder")}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -205,7 +232,7 @@ export default function RoomsPage() {
           <div className="lg:col-span-8 space-y-6">
             <div className="flex items-center justify-between">
               <div className="text-xs text-zinc-500 font-bold">
-                Tìm thấy <strong className="text-zinc-900">{filteredRooms.length}</strong> phòng trọ khả dụng
+                {t("guestRoomsFoundCount", { count: filteredRooms.length })}
               </div>
 
               {/* List / Map View Mode Toggle Buttons */}
@@ -217,7 +244,7 @@ export default function RoomsPage() {
                       : "text-zinc-500 hover:text-zinc-900"
                     }`}
                 >
-                  <Filter className="w-3.5 h-3.5" /> Danh sách
+                  <Filter className="w-3.5 h-3.5" /> {t("guestRoomsListView")}
                 </button>
                 <button
                   onClick={() => setViewMode("map")}
@@ -226,7 +253,7 @@ export default function RoomsPage() {
                       : "text-zinc-500 hover:text-zinc-900"
                     }`}
                 >
-                  <MapPin className="w-3.5 h-3.5" /> Bản đồ
+                  <MapPin className="w-3.5 h-3.5" /> {t("guestRoomsMapView")}
                 </button>
               </div>
             </div>
@@ -250,14 +277,14 @@ export default function RoomsPage() {
                       }`}
                   >
                     <div className="px-3 py-1.5 bg-[#FF6B35] text-white text-xs font-black rounded-full shadow-2xl flex items-center gap-1 group-hover:scale-110 transition-transform">
-                      <MapPin className="w-3.5 h-3.5" /> {formatVND(room.price)}
+                      <MapPin className="w-3.5 h-3.5" /> {formatCurrency(room.price, currentLocale)}
                     </div>
                   </div>
                 ))}
 
                 <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-2xl text-xs font-bold text-zinc-900 flex justify-between items-center">
-                  <span>📍 Nhấp vào ghim bản đồ màu cam để xem nhanh phòng trọ khu vực</span>
-                  <span className="text-[#2AC1BC] font-extrabold">{filteredRooms.length} Vị Trí Vệ Tinh</span>
+                  <span>📍 {t("guestRoomsMapInfo")}</span>
+                  <span className="text-[#2AC1BC] font-extrabold">{t("guestRoomsMapPinTitle", { count: filteredRooms.length })}</span>
                 </div>
               </div>
             ) : (
@@ -290,7 +317,7 @@ export default function RoomsPage() {
                                 ? "bg-rose-500 text-white"
                                 : "bg-zinc-900/70 text-white hover:bg-rose-500"
                               }`}
-                            title={isSaved ? "Đã lưu vào danh sách yêu thích" : "Lưu bài đăng"}
+                            title={isSaved ? t("guestRoomDetailSaved") : t("guestRoomDetailSave")}
                           >
                             <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
                           </button>
@@ -298,7 +325,7 @@ export default function RoomsPage() {
                           <button
                             onClick={() => setShareModalRoom(room)}
                             className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-[#2AC1BC] backdrop-blur-md transition-all cursor-pointer shadow-md"
-                            title="Chia sẻ bài đăng"
+                            title={t("guestRoomDetailShare")}
                           >
                             <Share2 className="w-3.5 h-3.5" />
                           </button>
@@ -309,7 +336,7 @@ export default function RoomsPage() {
                           onClick={() => setQuickViewRoom(room)}
                           className="absolute bottom-3 left-3 right-3 py-2 bg-zinc-900/80 hover:bg-zinc-900 backdrop-blur-md text-white text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md cursor-pointer"
                         >
-                          <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" /> Xem Nhanh
+                          <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsQuickView")}
                         </button>
                       </div>
 
@@ -329,7 +356,7 @@ export default function RoomsPage() {
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
-                            title="Mở Google Maps xem vị trí chính xác"
+                            title={t("guestContactMaps")}
                           >
                             <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
                             <span className="truncate">{room.address}</span>
@@ -347,7 +374,7 @@ export default function RoomsPage() {
                               key={idx}
                               className="px-3 py-1 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-bold flex items-center gap-1"
                             >
-                              <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> {amenity}
+                              <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> {translateAmenity(amenity)}
                             </span>
                           ))}
                         </div>
@@ -356,11 +383,11 @@ export default function RoomsPage() {
                         <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="whitespace-nowrap">
                             <span className="text-2xl font-black text-rose-500">
-                              {formatVND(room.price)}
+                              {formatCurrency(room.price, currentLocale)}
                             </span>
-                            <span className="text-xs text-zinc-400 font-normal"> /tháng</span>
+                            <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsMonth")}</span>
                             <span className="text-[11px] font-bold text-zinc-500 block">
-                              Tiền cọc: {room.depositAmount > 0 ? formatVND(room.depositAmount) : "Miễn phí cọc"}
+                              {t("guestRoomsDepositLabel")} {room.depositAmount > 0 ? formatCurrency(room.depositAmount, currentLocale) : t("guestRoomsFreeDeposit")}
                             </span>
                           </div>
 
@@ -369,17 +396,17 @@ export default function RoomsPage() {
                               {room.area} m²
                             </span>
 
-                            {/* Renamed Button "Đặt Cọc" */}
+                            {/* Deposit Button */}
                             <button
                               onClick={() => { setDepositRoom(room); setDepositStep("form"); }}
                               className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-bold rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
                             >
-                              <Sparkles className="w-3.5 h-3.5" /> Đặt Cọc
+                              <Sparkles className="w-3.5 h-3.5" /> {t("guestRoomsDepositBtn")}
                             </button>
 
                             <Link href={`/rooms/${room.id}`}>
                               <button className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0">
-                                Chi tiết →
+                                {t("guestRoomsDetailBtn")}
                               </button>
                             </Link>
                           </div>
@@ -410,7 +437,7 @@ export default function RoomsPage() {
             </button>
 
             <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> Chia sẻ bài đăng phòng trọ
+              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsShareTitle")}
             </h3>
             <p className="text-xs text-zinc-500 font-medium line-clamp-1">{shareModalRoom.title}</p>
 
@@ -426,7 +453,7 @@ export default function RoomsPage() {
                 className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
               >
                 {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedLink ? "Đã chép" : "Sao chép"}
+                {copiedLink ? t("guestRoomsCopied") : t("guestRoomsCopy")}
               </button>
             </div>
           </div>
@@ -454,20 +481,24 @@ export default function RoomsPage() {
 
               <div className="md:w-1/2 space-y-4">
                 <span className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-extrabold rounded-full inline-block">
-                  {quickViewRoom.badge} • Chủ nhà xác thực
+                  {quickViewRoom.badge} • {t("guestRoomsVerifiedLandlord")}
                 </span>
                 <h3 className="text-xl font-black text-zinc-900 leading-snug">{quickViewRoom.title}</h3>
                 <div className="text-xs font-semibold text-zinc-400 flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-[#2AC1BC]" /> {quickViewRoom.address}
                 </div>
-                <div className="text-2xl font-black text-rose-500">{formatVND(quickViewRoom.price)} <span className="text-xs text-zinc-400 font-normal">/tháng</span></div>
+                <div className="text-2xl font-black text-rose-500">
+                  {formatCurrency(quickViewRoom.price, currentLocale)} <span className="text-xs text-zinc-400 font-normal">{t("guestRoomsMonth")}</span>
+                </div>
 
                 <div className="space-y-2 pt-2 border-t border-zinc-100">
-                  <span className="text-xs font-bold text-zinc-700 block">Tiện ích nổi bật:</span>
+                  <span className="text-xs font-bold text-zinc-700 block">
+                    {t("guestRoomsFeaturedAmenities")}
+                  </span>
                   <div className="flex flex-wrap gap-1.5">
                     {quickViewRoom.amenities.map((item: string, idx: number) => (
                       <span key={idx} className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold">
-                        {item}
+                        {translateAmenity(item)}
                       </span>
                     ))}
                   </div>
@@ -478,11 +509,11 @@ export default function RoomsPage() {
                     onClick={() => { setDepositRoom(quickViewRoom); setQuickViewRoom(null); setDepositStep("form"); }}
                     className="flex-1 py-3 bg-[#FF6B35] text-white rounded-xl font-extrabold text-xs shadow-md shadow-[#FF6B35]/20 hover:bg-[#ff5518] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <Sparkles className="w-4 h-4" /> Đặt Cọc
+                    <Sparkles className="w-4 h-4" /> {t("guestRoomsDepositBtn")}
                   </button>
                   <a href={`tel:${quickViewRoom.landlord.phone}`} className="flex-1">
                     <button className="w-full py-3 bg-zinc-900 text-white rounded-xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                      <Phone className="w-3.5 h-3.5 text-[#2AC1BC]" /> Gọi Chủ Nhà
+                      <Phone className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsCallLandlord")}
                     </button>
                   </a>
                 </div>
@@ -492,7 +523,7 @@ export default function RoomsPage() {
         </div>
       )}
 
-      {/* 2. Fast VietQR Deposit Modal Popup with Clear 3-Step Escrow Explanation & Configured Amount */}
+      {/* 2. Fast VietQR Deposit Modal Popup with Clear 3-Step Escrow Explanation */}
       {depositRoom && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) setDepositRoom(null); }}
@@ -501,7 +532,7 @@ export default function RoomsPage() {
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-zinc-100 max-h-[90vh] overflow-y-auto cursor-default">
             <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
               <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-[#2AC1BC]" /> Đặt Cọc Xem/Giữ Phòng Trực Tuyến
+                <Lock className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsEscrowModalTitle")}
               </h3>
               <button onClick={() => setDepositRoom(null)} className="p-1 hover:bg-zinc-100 rounded-xl text-zinc-400 cursor-pointer">
                 <X className="w-5 h-5" />
@@ -510,49 +541,51 @@ export default function RoomsPage() {
 
             {/* Clear 3-Step Escrow Guarantee Process Banner */}
             <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-4 rounded-2xl text-white space-y-3 border border-zinc-800">
-              <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">QUY TRÌNH BẢO VỆ TIỀN CỌC DORMIO ESCROW</span>
+              <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">
+                {t("guestRoomsEscrowTitle")}
+              </span>
               <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
                   <span className="w-5 h-5 rounded-full bg-[#2AC1BC] text-white font-black inline-flex items-center justify-center">1</span>
-                  <p className="font-bold text-zinc-200">Khách cọc VietQR</p>
+                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep1")}</p>
                 </div>
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
                   <span className="w-5 h-5 rounded-full bg-amber-400 text-zinc-900 font-black inline-flex items-center justify-center">2</span>
-                  <p className="font-bold text-zinc-200">Dormio tạm giữ</p>
+                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep2")}</p>
                 </div>
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
                   <span className="w-5 h-5 rounded-full bg-emerald-400 text-zinc-900 font-black inline-flex items-center justify-center">3</span>
-                  <p className="font-bold text-zinc-200">Giải ngân cho chủ</p>
+                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep3")}</p>
                 </div>
               </div>
               <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-center">
-                * Tiền cọc được Dormio giữ an toàn. Khi 2 bên đồng ý thỏa thuận thuê phòng, hệ thống tự động thanh toán cho chủ nhà.
+                {t("guestRoomsEscrowNote")}
               </p>
             </div>
 
             {depositStep === "form" && (
               <div className="space-y-4">
                 <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1.5">
-                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">Phòng trọ chọn cọc:</span>
+                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">{t("guestRoomsSelectedRoom")}</span>
                   <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">{depositRoom.title}</h4>
 
                   {depositRoom.depositAmount > 0 ? (
                     <div className="text-xs font-black text-rose-500">
-                      Tiền cọc: {formatVND(depositRoom.depositAmount)}
+                      {t("guestRoomsDepositLabel")} {formatCurrency(depositRoom.depositAmount, currentLocale)}
                     </div>
                   ) : (
                     <div className="text-xs font-black text-emerald-600">
-                      Chủ nhà không yêu cầu tiền cọc • Đặt lịch xem phòng hoàn toàn miễn phí!
+                      {t("guestRoomsFreeDepositNote")}
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">Họ và tên người thuê *</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("guestRoomsTenantNameLabel")}</label>
                     <input
                       type="text"
-                      placeholder="Nhập họ và tên..."
+                      placeholder={t("guestRoomsTenantNamePlaceholder")}
                       value={tenantName}
                       onChange={(e) => setTenantName(e.target.value)}
                       className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
@@ -560,10 +593,10 @@ export default function RoomsPage() {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">Số điện thoại *</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("guestRoomsTenantPhoneLabel")}</label>
                     <input
                       type="text"
-                      placeholder="Nhập số điện thoại..."
+                      placeholder={t("guestRoomsTenantPhonePlaceholder")}
                       value={tenantPhone}
                       onChange={(e) => setTenantPhone(e.target.value)}
                       className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
@@ -576,7 +609,7 @@ export default function RoomsPage() {
                   disabled={!tenantName || !tenantPhone}
                   className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
                 >
-                  Xác nhận & Chuyển sang quét mã VietQR →
+                  {t("guestRoomsConfirmQrBtn")} →
                 </button>
               </div>
             )}
@@ -588,18 +621,20 @@ export default function RoomsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500 font-semibold block">Số tiền chuyển khoản cọc:</span>
+                  <span className="text-xs text-zinc-500 font-semibold block">{t("guestRoomsQrAmountLabel")}</span>
                   <span className="text-2xl font-black text-rose-600">
-                    {depositRoom.depositAmount > 0 ? formatVND(depositRoom.depositAmount) : "0 ₫ (Miễn phí)"}
+                    {depositRoom.depositAmount > 0 ? formatCurrency(depositRoom.depositAmount, currentLocale) : t("guestRoomsFreeQrAmount")}
                   </span>
-                  <p className="text-[11px] text-zinc-400 font-medium">Nội dung CK: <span className="font-extrabold text-zinc-800">COC {tenantPhone} #{depositRoom.id}</span></p>
+                  <p className="text-[11px] text-zinc-400 font-medium">
+                    {t("guestRoomsQrContentLabel")} <span className="font-extrabold text-zinc-800">COC {tenantPhone} #{depositRoom.id}</span>
+                  </p>
                 </div>
 
                 <button
                   onClick={() => setDepositStep("success")}
                   className="w-full py-3 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer"
                 >
-                  Tôi đã hoàn tất chuyển khoản VietQR
+                  {t("guestRoomsConfirmTransferBtn")}
                 </button>
               </div>
             )}
@@ -610,16 +645,16 @@ export default function RoomsPage() {
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-zinc-900">Ghi nhận cọc giữ phòng thành công!</h4>
+                  <h4 className="text-base font-black text-zinc-900">{t("guestRoomsSuccessTitle")}</h4>
                   <p className="text-xs text-zinc-500 mt-1">
-                    Hệ thống Dormio đã tạm giữ tiền cọc an toàn và thông báo tới chủ nhà <span className="font-bold text-zinc-800">{depositRoom.landlord.name}</span>. Tiền chỉ giải ngân cho chủ nhà khi 2 bên đồng ý thuê.
+                    {t("guestRoomsSuccessDesc", { name: depositRoom.landlord.name })}
                   </p>
                 </div>
                 <button
                   onClick={() => setDepositRoom(null)}
                   className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
                 >
-                  Đóng cửa sổ
+                  {t("guestRoomsCloseModal")}
                 </button>
               </div>
             )}
