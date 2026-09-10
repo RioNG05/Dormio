@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   Search, Command, X, MapPin, Building, ArrowRight, Menu, 
   Building2, UserCheck, Sparkles, CheckCircle2, LogOut, ShieldCheck, Heart, ChevronDown,
-  PlusCircle, BarChart3
+  PlusCircle, BarChart3, Clock
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
@@ -183,7 +183,7 @@ export default function PublicLayout({
                     <div className="hidden sm:block text-left">
                       <span className="text-xs font-black text-zinc-900 block leading-tight truncate max-w-[100px]">{user.name}</span>
                       <span className="text-[9px] font-bold text-zinc-400 block">
-                        {user.role === "landlord" ? tNav("landlordRole") : user.role === "staff" ? "Nhân viên" : tNav("tenantRole")}
+                        {user.role === "landlord" ? tNav("landlordRole") : user.role === "employee" ? "Nhân viên" : tNav("tenantRole")}
                       </span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
@@ -198,7 +198,7 @@ export default function PublicLayout({
                       </div>
 
                       {/* Staff Portal Link */}
-                      {user.role === "staff" && (
+                      {user.role === "employee" && (
                         <Link
                           href="/staff"
                           onClick={() => setIsUserMenuOpen(false)}
@@ -221,12 +221,12 @@ export default function PublicLayout({
 
                       {/* 2. Phòng trọ đã thuê / Quản lý trọ */}
                       <Link
-                        href={user.role === "landlord" ? "/landlord/rooms" : user.role === "staff" ? "/staff" : "/tenant"}
+                        href={user.role === "landlord" ? "/landlord/rooms" : user.role === "employee" ? "/staff" : "/tenant"}
                         onClick={() => setIsUserMenuOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <Building className="w-4 h-4 text-blue-500" />
-                        <span>{user.role === "landlord" ? "Quản lý nhà trọ" : user.role === "staff" ? "Ca làm việc" : tNav("myRentedRooms")}</span>
+                        <span>{user.role === "landlord" ? "Quản lý nhà trọ" : user.role === "employee" ? "Ca làm việc" : tNav("myRentedRooms")}</span>
                       </Link>
 
                       {/* 3. Phòng trọ đã lưu */}

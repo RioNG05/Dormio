@@ -35,7 +35,7 @@ import {
 } from "./data";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
-export function getDutyTitle(duty: DutyTaskItem, isEn = false): string {
+function getDutyTitle(duty: DutyTaskItem, isEn = false): string {
   if (!isEn) return duty.title;
   if (duty.id.includes("sec-1") || duty.title.includes("Kiểm soát an ninh")) {
     return "Control main gate security and organize student parking area tidily";
@@ -52,7 +52,7 @@ export function getDutyTitle(duty: DutyTaskItem, isEn = false): string {
   return duty.title;
 }
 
-export function getDutyNote(note?: string, isEn = false): string {
+function getDutyNote(note?: string, isEn = false): string {
   if (!note) return "";
   if (!isEn) return note;
   if (note.includes("45 xe") || note.includes("thoát hiểm")) {
