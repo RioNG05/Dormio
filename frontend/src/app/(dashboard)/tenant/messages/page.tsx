@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Send,
@@ -20,6 +21,7 @@ import {
   Loader2,
   File,
   ArrowLeft,
+  ArrowRight,
   ChevronRight,
   ExternalLink,
   Copy,
@@ -28,9 +30,12 @@ import {
   DoorOpen,
   Receipt,
   AlertTriangle,
+  MapPin,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
   ConversationItem,
   MessageItem,
@@ -117,6 +122,8 @@ function appendOrUpdateMessage(list: MessageItem[], newMsg: MessageItem): Messag
 }
 
 export default function TenantMessagesPage() {
+  const t = useTranslations("tenantPortal");
+  const { locale } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -131,6 +138,7 @@ export default function TenantMessagesPage() {
   const [isSending, setIsSending] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"all" | "landlord" | "employee" | "unread">("all");
   const [showRightDrawer, setShowRightDrawer] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -186,9 +194,16 @@ export default function TenantMessagesPage() {
           } catch (createErr) {
             console.error("Auto-open conversation failed:", createErr);
           }
+        } else {
+          setConversations([]);
+          setActiveChat(null);
+          setMessages([]);
         }
       } catch (error) {
-        console.error("Failed to load conversations:", error);
+        console.warn("Could not load conversations from backend:", error);
+        setConversations([]);
+        setActiveChat(null);
+        setMessages([]);
       } finally {
         setIsLoadingConversations(false);
       }
@@ -310,13 +325,19 @@ export default function TenantMessagesPage() {
     return conversations.filter((c) => {
       const p = c.participant;
       const matchSearch =
-        (p.fullName && p.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.roomName && p.roomName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.boardingHouseName && p.boardingHouseName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.phoneNumber && p.phoneNumber.includes(searchTerm));
-      return matchSearch;
+        (p?.fullName && p.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p?.roomName && p.roomName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p?.boardingHouseName && p.boardingHouseName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p?.phoneNumber && p.phoneNumber.includes(searchTerm));
+      
+      if (!matchSearch) return false;
+
+      if (activeFilter === "landlord") return p?.role === "landlord";
+      if (activeFilter === "employee") return p?.role === "employee";
+      if (activeFilter === "unread") return c.unreadCount > 0;
+      return true;
     });
-  }, [conversations, searchTerm]);
+  }, [conversations, searchTerm, activeFilter]);
 
   // Extracted media files from active chat
   const activeChatMedia = useMemo(() => {
@@ -423,644 +444,614 @@ export default function TenantMessagesPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-6.5rem)] flex flex-col bg-white rounded-2xl border border-zinc-200 shadow-xs overflow-hidden">
-      <div className="flex-1 flex overflow-hidden">
-        {/* ─── Left Sidebar: Conversations & Landlord Contacts ────────────── */}
-        <div
-          className={`w-full md:w-80 lg:w-96 flex-col border-r border-zinc-200/80 bg-white shrink-0 ${
-            mobileShowChat ? "hidden md:flex" : "flex"
-          }`}
-        >
-          {/* Header */}
-          <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-bold text-zinc-900">Tin nhắn</h1>
-              <p className="text-xs text-zinc-500">Trao đổi với Chủ trọ & Ban quản lý</p>
-            </div>
-            {contacts.length > 0 && contacts[0].boardingHouseName && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-bold">
-                <Building2 className="w-3 h-3" />
-                {contacts[0].boardingHouseName}
-              </span>
+    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] bg-white border-y border-zinc-200/80 overflow-hidden flex relative animate-in fade-in duration-300">
+      {/* PANE 1: Left Conversation List */}
+      <div
+        className={`w-full md:w-80 lg:w-88 border-r border-zinc-200/80 flex flex-col bg-zinc-50/50 shrink-0 ${
+          mobileShowChat ? "hidden md:flex" : "flex"
+        }`}
+      >
+        {/* Header & Search */}
+        <div className="p-3.5 sm:p-4 border-b border-zinc-200/80 space-y-2.5 bg-white shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
+              {t("messagesTitle")}
+            </h2>
+            <span className="px-2 py-0.5 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-black uppercase">
+              {conversations.length} {locale === "en" ? "contacts" : "kênh"}
+            </span>
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t("searchChatPlaceholder")}
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
 
-          {/* Search Box */}
-          <div className="p-3 border-b border-zinc-100">
-            <div className="relative">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Tìm cuộc trò chuyện..."
-                className="w-full pl-9 pr-4 py-2 bg-zinc-100 border-none rounded-xl text-xs font-medium text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2AC1BC]/30"
-              />
-            </div>
-          </div>
-
-          {/* Conversations List */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-zinc-50">
-            {isLoadingConversations ? (
-              <div className="p-8 text-center text-xs font-semibold text-zinc-400 flex flex-col items-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-                <span>Đang tải danh sách...</span>
-              </div>
-            ) : filteredConversations.length === 0 ? (
-              <div className="p-6 text-center text-xs text-zinc-400 space-y-2">
-                <MessageSquare className="w-8 h-8 mx-auto text-zinc-300" />
-                <p className="font-semibold text-zinc-600">Chưa có cuộc trò chuyện nào</p>
-                {contacts.length > 0 ? (
-                  <button
-                    onClick={async () => {
-                      try {
-                        const newConv = await getOrCreateConversation(contacts[0].id);
-                        setConversations([newConv]);
-                        setActiveChat(newConv);
-                      } catch (err) {
-                        console.error(err);
-                      }
-                    }}
-                    className="mt-2 px-3 py-1.5 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#23a8a3] transition-colors"
-                  >
-                    Bắt đầu nhắn tin với {formatDisplayName(contacts[0].fullName)}
-                  </button>
-                ) : (
-                  <p className="text-[11px]">Vui lòng kiểm tra lại hợp đồng thuê trọ của bạn.</p>
-                )}
-              </div>
-            ) : (
-              filteredConversations.map((conv) => {
-                const isActive = activeChat?.id === conv.id;
-                const p = conv.participant;
-                const displayName = formatDisplayName(p.fullName);
-                const avatarInitial = displayName.charAt(0).toUpperCase() || "C";
-                const isSystemLast =
-                  conv.lastMessage?.content?.startsWith("📌 THÔNG BÁO") ||
-                  conv.lastMessage?.content?.startsWith("💳 THÔNG BÁO");
-
-                return (
-                  <div
-                    key={conv.id}
-                    onClick={() => {
-                      setActiveChat(conv);
-                      setMobileShowChat(true);
-                    }}
-                    className={`p-3.5 flex items-start gap-3 cursor-pointer transition-colors ${
-                      isActive ? "bg-[#2AC1BC]/10" : "hover:bg-zinc-50/80"
-                    }`}
-                  >
-                    {/* Avatar */}
-                    <div className="relative shrink-0">
-                      <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-xs ${getAvatarBg(
-                          displayName
-                        )}`}
-                      >
-                        {avatarInitial}
-                      </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
-                    </div>
-
-                    {/* Meta info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between mb-0.5">
-                        <h2 className="text-xs font-bold text-zinc-900 truncate">
-                          {displayName}
-                        </h2>
-                        {conv.updatedAt && (
-                          <span className="text-[10px] text-zinc-400 font-semibold shrink-0 ml-1">
-                            {formatConversationTime(conv.updatedAt)}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Property context badge */}
-                      {(p.roomName || p.boardingHouseName) && (
-                        <div className="flex items-center gap-1 text-[11px] font-semibold text-[#2AC1BC] mb-1 truncate">
-                          <Building2 className="w-3 h-3 shrink-0" />
-                          <span className="truncate">
-                            {p.roomName ? `${p.roomName}` : ""}
-                            {p.roomName && p.boardingHouseName ? " • " : ""}
-                            {p.boardingHouseName || ""}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Last message snippet */}
-                      <div className="flex items-center justify-between gap-1">
-                        <p className="text-[11px] text-zinc-500 truncate">
-                          {isSystemLast ? (
-                            <span className="text-amber-600 font-bold">
-                              [Thông báo hệ thống]
-                            </span>
-                          ) : (
-                            conv.lastMessage?.content || "Nhấp để trò chuyện..."
-                          )}
-                        </p>
-                        {conv.unreadCount > 0 && (
-                          <span className="min-w-4.5 h-4.5 px-1 bg-[#2AC1BC] text-white text-[10px] font-extrabold rounded-full flex items-center justify-center shrink-0">
-                            {conv.unreadCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            {[
+              { id: "all", label: t("tabAll") },
+              { id: "landlord", label: t("tabLandlord") },
+              { id: "employee", label: t("tabStaff") },
+              { id: "unread", label: t("tabUnread") },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id as any)}
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                  activeFilter === tab.id
+                    ? "bg-[#2AC1BC] text-white shadow-xs"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* ─── Center Main Chat Pane ───────────────────────────────────────── */}
-        <div
-          className={`flex-1 flex-col bg-zinc-50/50 ${
-            mobileShowChat ? "flex" : "hidden md:flex"
-          }`}
-        >
-          {activeChat ? (
-            <>
-              {/* Chat Top Header */}
-              <div className="px-4 sm:px-6 py-3.5 bg-white border-b border-zinc-200/80 flex items-center justify-between shadow-2xs">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Mobile Back Button */}
-                  <button
-                    onClick={() => setMobileShowChat(false)}
-                    className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-500 md:hidden cursor-pointer"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
+        {/* Conversation Contacts List */}
+        <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 custom-scrollbar">
+          {isLoadingConversations ? (
+            <div className="p-8 text-center text-xs font-semibold text-zinc-400 flex flex-col items-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+              <span>Đang tải danh sách...</span>
+            </div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="p-6 text-center text-xs text-zinc-400 space-y-2">
+              <MessageSquare className="w-8 h-8 mx-auto text-zinc-300" />
+              <p className="font-semibold text-zinc-600">Chưa có cuộc trò chuyện nào</p>
+              {contacts.length > 0 ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      const newConv = await getOrCreateConversation(contacts[0].id);
+                      setConversations([newConv]);
+                      setActiveChat(newConv);
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  className="mt-2 px-3 py-1.5 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#23a8a3] transition-colors"
+                >
+                  Bắt đầu nhắn tin với {formatDisplayName(contacts[0].fullName)}
+                </button>
+              ) : (
+                <p className="text-[11px]">Vui lòng kiểm tra lại hợp đồng thuê trọ của bạn.</p>
+              )}
+            </div>
+          ) : (
+            filteredConversations.map((conv) => {
+              const isSelected = activeChat?.id === conv.id;
+              const isLandlordRole = conv.participant?.role === "landlord";
 
-                  {/* Landlord Avatar */}
+              return (
+                <div
+                  key={conv.id}
+                  onClick={() => {
+                    setActiveChat(conv);
+                    setMobileShowChat(true);
+                  }}
+                  className={`p-3.5 flex items-start gap-3 transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]"
+                      : "hover:bg-zinc-100/70"
+                  }`}
+                >
                   <div className="relative shrink-0">
                     <div
-                      className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-xs ${getAvatarBg(
-                        activeChat.participant.fullName
-                      )}`}
+                      className={`w-10 h-10 rounded-2xl ${
+                        isLandlordRole ? "bg-emerald-600" : "bg-teal-600"
+                      } text-white font-black text-sm flex items-center justify-center shadow-xs`}
                     >
-                      {formatDisplayName(activeChat.participant.fullName).charAt(0)}
-                    </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-                  </div>
-
-                  {/* Landlord Name & Context */}
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm sm:text-base font-bold text-zinc-900 truncate">
-                        {formatDisplayName(activeChat.participant.fullName)}
-                      </h2>
-                      <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 text-[10px] font-extrabold shrink-0">
-                        Chủ trọ
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[11px] text-zinc-500 truncate">
-                      {activeChat.participant.roomName && (
-                        <span className="font-semibold text-[#2AC1BC] truncate">
-                          {activeChat.participant.roomName}
-                          {activeChat.participant.boardingHouseName &&
-                            ` • ${activeChat.participant.boardingHouseName}`}
-                        </span>
+                      {isLandlordRole ? (
+                        <Building2 className="w-5 h-5" />
+                      ) : (
+                        <DoorOpen className="w-5 h-5" />
                       )}
-                      <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold text-[10px]">
-                        <Circle className="w-1.5 h-1.5 fill-current" /> Đang hoạt động
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <h3 className="text-xs sm:text-sm font-black text-zinc-900 truncate">
+                        {formatDisplayName(conv.participant?.fullName)}
+                      </h3>
+                      <span className="text-[10px] text-zinc-400 shrink-0 font-medium">
+                        {formatConversationTime(conv.updatedAt)}
                       </span>
                     </div>
+
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/60 shrink-0">
+                        {conv.participant?.role === "landlord"
+                          ? (locale === "en" ? "Landlord" : "Chủ Nhà Trọ")
+                          : conv.participant?.role === "admin"
+                          ? (locale === "en" ? "Landlord / Admin" : "Chủ Trọ / Quản Trị")
+                          : conv.participant?.role === "employee"
+                          ? (locale === "en" ? "Staff / Manager" : "Quản Lý / Nhân Viên")
+                          : (locale === "en" ? "Resident" : "Cư Dân")}
+                      </span>
+                      <span className="text-[10px] text-zinc-400 truncate">
+                        {formatPhoneDisplay(conv.participant?.phoneNumber)}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-zinc-500 truncate font-normal">
+                      {conv.lastMessage?.content || "Chưa có tin nhắn mới"}
+                    </p>
                   </div>
+
+                  {conv.unreadCount > 0 && (
+                    <span className="w-5 h-5 rounded-full bg-[#FF6B35] text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                      {conv.unreadCount}
+                    </span>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* PANE 2: Center Main Chat Box */}
+      <div
+        className={`flex-1 flex flex-col min-w-0 bg-white h-full overflow-hidden ${
+          !mobileShowChat ? "hidden md:flex" : "flex"
+        }`}
+      >
+        {activeChat ? (
+          <>
+            {/* Chat Header */}
+            <div className="p-3 sm:px-5 sm:py-3.5 border-b border-zinc-200/80 flex items-center justify-between gap-2 bg-white shrink-0 z-10 shadow-2xs">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                {/* Back to list on mobile */}
+                <button
+                  onClick={() => setMobileShowChat(false)}
+                  className="md:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
+                  title="Quay lại danh sách"
+                >
+                  <ArrowLeft className="w-5 h-5 text-zinc-700" />
+                </button>
+
+                <div className="relative shrink-0">
+                  <div
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${
+                      activeChat.participant?.role === "landlord" ? "bg-emerald-600" : "bg-teal-600"
+                    } text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-2xs`}
+                  >
+                    {activeChat.participant?.role === "landlord" ? (
+                      <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    ) : (
+                      <DoorOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
                 </div>
 
-                {/* Right Header Actions */}
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  {activeChat.participant.phoneNumber && (
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <h3 className="text-xs sm:text-sm font-black text-zinc-900 truncate shrink-0">
+                      {formatDisplayName(activeChat.participant?.fullName)}
+                    </h3>
+                    <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-600 text-[10px] font-bold truncate">
+                      {activeChat.participant?.role === "landlord"
+                        ? (locale === "en" ? "Landlord" : "Chủ Nhà Trọ")
+                        : activeChat.participant?.role === "admin"
+                        ? (locale === "en" ? "Landlord / Admin" : "Chủ Trọ / Quản Trị")
+                        : activeChat.participant?.role === "employee"
+                        ? (locale === "en" ? "Staff / Manager" : "Quản Lý / Nhân Viên")
+                        : (locale === "en" ? "Resident" : "Cư Dân")}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-zinc-400 font-medium truncate mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-emerald-500" />
+                    <span className="truncate">{t("onlineNow")}</span>
+                    <span className="hidden sm:inline text-zinc-300">•</span>
                     <a
-                      href={`tel:${activeChat.participant.phoneNumber}`}
-                      className="p-2 rounded-xl bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 transition-colors cursor-pointer"
-                      title={`Gọi điện: ${activeChat.participant.phoneNumber}`}
+                      href={`tel:${activeChat.participant?.phoneNumber}`}
+                      className="hidden sm:inline text-[#2AC1BC] hover:underline font-bold truncate"
                     >
-                      <Phone className="w-4 h-4" />
+                      {formatPhoneDisplay(activeChat.participant?.phoneNumber)}
                     </a>
-                  )}
-
-                  <button
-                    onClick={() => setShowRightDrawer(!showRightDrawer)}
-                    className={`p-2 rounded-xl transition-all cursor-pointer ${
-                      showRightDrawer
-                        ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
-                        : "hover:bg-zinc-100 text-zinc-600"
-                    }`}
-                    title="Thông tin chủ trọ & phòng trọ"
-                  >
-                    <Info className="w-4 h-4" />
-                  </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Messages Scroll Area */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 space-y-4 bg-zinc-50/70">
-                {isLoadingMessages ? (
-                  <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-                    <span>Đang tải tin nhắn...</span>
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-2">
-                    <MessageSquare className="w-10 h-10 mx-auto text-zinc-300 stroke-1" />
-                    <p className="text-zinc-600 font-bold">Chưa có tin nhắn nào trong cuộc trò chuyện này.</p>
-                    <p className="text-[11px] font-semibold text-zinc-400">
-                      Hãy gửi tin nhắn đầu tiên để bắt đầu trao đổi với chủ trọ!
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((msg, idx) => {
-                    const isLandlord = msg.senderId === activeChat.participant.id;
-                    const isMe = !isLandlord;
-                    const isSystemAlert =
-                      msg.content.startsWith("📌 THÔNG BÁO") ||
-                      msg.content.startsWith("💳 THÔNG BÁO");
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                <a
+                  href={`tel:${activeChat.participant?.phoneNumber}`}
+                  className="p-1.5 sm:p-2 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-700 hover:bg-[#2AC1BC] hover:text-white hover:border-[#2AC1BC] transition-all cursor-pointer shadow-2xs"
+                  title="Gọi điện"
+                >
+                  <Phone className="w-4 h-4" />
+                </a>
+                <button
+                  onClick={() => setShowRightDrawer(!showRightDrawer)}
+                  className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                    showRightDrawer
+                      ? "bg-[#2AC1BC] text-white border-[#2AC1BC]"
+                      : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                  }`}
+                  title="Thông tin phòng"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
 
-                    if (isSystemAlert) {
-                      return (
+            {/* Messages Feed */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 bg-zinc-50/40 custom-scrollbar">
+              {isLoadingMessages ? (
+                <div className="flex items-center justify-center h-full text-zinc-400 text-xs gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+                  <span>Đang tải tin nhắn...</span>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-zinc-400 text-xs space-y-2">
+                  <MessageSquare className="w-10 h-10 text-zinc-300" />
+                  <p>Bắt đầu cuộc trò chuyện với {formatDisplayName(activeChat.participant?.fullName)}</p>
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isMe = msg.senderId === user?.id || msg.senderId === "my-user-id";
+                  const isInvoiceMsg =
+                    msg.content.includes("hóa đơn") ||
+                    msg.content.includes("tiền phòng") ||
+                    msg.content.includes("INV-") ||
+                    msg.content.includes("💳");
+
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex items-end gap-2.5 ${
+                        isMe ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {!isMe && (
                         <div
-                          key={`sys-${msg.id}-${idx}`}
-                          className="max-w-md mx-auto my-3 p-3.5 bg-white border border-[#2AC1BC]/30 rounded-2xl shadow-2xs text-center space-y-2"
+                          className={`w-8 h-8 rounded-xl ${
+                            activeChat.participant?.role === "landlord" ? "bg-emerald-600" : "bg-teal-600"
+                          } text-white flex items-center justify-center font-bold text-xs shrink-0`}
                         >
-                          <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#2AC1BC]">
-                            <Sparkles className="w-4 h-4" /> Thông báo từ hệ thống Dormio
-                          </div>
-                          <p className="text-xs text-zinc-700 font-semibold leading-relaxed">
-                            {msg.content}
-                          </p>
-                          <div className="text-[10px] font-bold text-zinc-400">
-                            {formatMessageTime(msg.sentAt)}
-                          </div>
+                          {activeChat.participant?.fullName?.charAt(0) || "C"}
                         </div>
-                      );
-                    }
+                      )}
 
-                    return (
                       <div
-                        key={`msg-${msg.id}-${idx}`}
-                        className={`flex flex-col ${isMe ? "items-end" : "items-start"} space-y-1`}
+                        className={`max-w-xs sm:max-w-md p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                          isMe
+                            ? "bg-[#2AC1BC] text-white rounded-br-xs shadow-xs"
+                            : "bg-white text-zinc-800 border border-zinc-200/80 rounded-bl-xs shadow-2xs"
+                        }`}
                       >
-                        <div
-                          className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${
-                            isMe
-                              ? "bg-[#2AC1BC] text-white rounded-br-xs font-medium"
-                              : "bg-white border border-zinc-200 text-zinc-900 rounded-bl-xs font-medium"
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                        <p className="whitespace-pre-line">{msg.content}</p>
 
-                          {/* Attachments */}
-                          {msg.attachments && msg.attachments.length > 0 && (
-                            <div className="mt-2 space-y-1.5">
-                              {msg.attachments.map((att, attIdx) => {
-                                if (att.type === "image") {
-                                  return (
-                                    <div
-                                      key={`att-img-${att.id || att.url}-${attIdx}`}
-                                      onClick={() => setPreviewImage(att.url)}
-                                      className="cursor-pointer rounded-xl overflow-hidden border border-black/10 max-w-xs hover:opacity-95 transition-opacity"
-                                    >
-                                      <img
-                                        src={att.url}
-                                        alt="Hình ảnh đính kèm"
-                                        className="w-full max-h-60 object-cover"
-                                      />
-                                    </div>
-                                  );
-                                }
-                                return (
-                                  <a
-                                    key={`att-file-${att.id || att.url}-${attIdx}`}
-                                    href={att.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold transition-colors ${
-                                      isMe
-                                        ? "bg-white/20 text-white hover:bg-white/30"
-                                        : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200"
-                                    }`}
-                                  >
-                                    <File className="w-4 h-4 shrink-0" />
-                                    <span className="truncate">Tệp tin đính kèm</span>
-                                  </a>
-                                );
-                              })}
+                        {/* Interactive Invoice Card shortcut inside Chat bubble */}
+                        {isInvoiceMsg && !isMe && (
+                          <div className="mt-2.5 p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 space-y-2 text-zinc-800 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black uppercase text-amber-900 flex items-center gap-1">
+                                <Receipt className="w-3.5 h-3.5 text-[#FF6B35]" />
+                                Hóa Đơn Tiền Phòng Kỳ Này
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded bg-amber-200/60 text-amber-900 text-[9px] font-bold">
+                                Chờ thanh toán
+                              </span>
                             </div>
-                          )}
-                        </div>
+                            <p className="text-[11px] text-zinc-600">
+                              Bấm xem chi tiết các khoản chi phí và thanh toán nhanh qua VietQR.
+                            </p>
+                            <Link
+                              href="/tenant/invoices"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold transition-all shadow-xs"
+                            >
+                              <span>Xem & Thanh toán</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                        )}
 
-                        {/* Timestamp & Read receipts */}
+                        {/* Attachments */}
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="mt-2 space-y-1.5">
+                            {msg.attachments.map((att, attIdx) => {
+                              if (att.type === "image") {
+                                return (
+                                  <div
+                                    key={attIdx}
+                                    className="rounded-xl overflow-hidden border border-zinc-200/80 max-w-[240px] cursor-pointer"
+                                    onClick={() => setPreviewImage(att.url)}
+                                  >
+                                    <img
+                                      src={att.url}
+                                      alt="Attachment"
+                                      className="w-full h-auto object-cover hover:scale-105 transition-transform"
+                                    />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <a
+                                  key={attIdx}
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 p-2 rounded-xl text-xs font-medium ${
+                                    isMe
+                                      ? "bg-teal-700/50 text-white"
+                                      : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                                  }`}
+                                >
+                                  <File className="w-4 h-4 shrink-0" />
+                                  <span className="truncate">Tệp đính kèm ({Math.round(att.sizeBytes / 1024)} KB)</span>
+                                </a>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         <div
-                          className={`flex items-center gap-1 text-[10px] font-bold text-zinc-400 px-1 ${
-                            isMe ? "justify-end" : "justify-start"
+                          className={`flex items-center justify-end gap-1 text-[10px] mt-1.5 ${
+                            isMe ? "text-teal-100" : "text-zinc-400"
                           }`}
                         >
                           <span>{formatMessageTime(msg.sentAt)}</span>
-                          {isMe && (
-                            <span title={msg.readAt ? "Đã xem" : "Đã gửi"}>
-                              <CheckCheck
-                                className={`w-3.5 h-3.5 ${
-                                  msg.readAt ? "text-[#2AC1BC]" : "text-zinc-300"
-                                }`}
-                              />
-                            </span>
-                          )}
+                          {isMe && <CheckCheck className="w-3.5 h-3.5" />}
                         </div>
                       </div>
-                    );
-                  })
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
-              {/* Quick Reply Chips for Tenants */}
-              <div className="px-4 py-2 bg-white border-t border-zinc-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                <span className="text-[11px] font-extrabold text-zinc-400 shrink-0 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" /> Gợi ý nhanh:
-                </span>
-                {quickReplies.map((reply, rIdx) => (
-                  <button
-                    key={rIdx}
-                    onClick={() => handleSendMessage(reply)}
-                    className="px-3 py-1 bg-zinc-100 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC] text-zinc-600 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0"
+            {/* Quick Prompt Pills */}
+            <div className="px-3.5 py-1.5 border-t border-zinc-100 bg-white flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+              <span className="text-[10px] font-black uppercase text-zinc-400 flex items-center gap-1 shrink-0">
+                <Sparkles className="w-3.5 h-3.5 text-[#FF6B35]" />
+                {t("quickPillsTitle")}:
+              </span>
+              {quickReplies.map((pill, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendMessage(pill)}
+                  className="px-2.5 py-1 rounded-xl bg-zinc-50 border border-zinc-200/80 text-[11px] font-semibold text-zinc-600 hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC] hover:text-[#2AC1BC] transition-all shrink-0 cursor-pointer"
+                >
+                  {pill}
+                </button>
+              ))}
+            </div>
+
+            {/* Pending Attachments Bar */}
+            {pendingAttachments.length > 0 && (
+              <div className="px-4 py-2 border-t border-zinc-100 bg-zinc-50 flex items-center gap-2 overflow-x-auto shrink-0">
+                {pendingAttachments.map((att, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 shrink-0"
                   >
-                    {reply}
-                  </button>
+                    <span>{att.name}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))
+                      }
+                      className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
+            )}
 
-              {/* Pending Attachments Preview */}
-              {pendingAttachments.length > 0 && (
-                <div className="px-4 py-2 bg-zinc-50 border-t border-zinc-200/80 flex items-center gap-2 overflow-x-auto">
-                  {pendingAttachments.map((att, idx) => (
-                    <div
-                      key={idx}
-                      className="relative flex items-center gap-2 p-1.5 bg-white rounded-xl border border-zinc-200 text-xs font-semibold"
-                    >
-                      {att.type === "image" ? (
-                        <img
-                          src={att.url}
-                          alt="preview"
-                          className="w-8 h-8 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <File className="w-5 h-5 text-zinc-500" />
-                      )}
-                      <span className="max-w-[120px] truncate text-zinc-700">{att.name}</span>
-                      <button
-                        onClick={() =>
-                          setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))
-                        }
-                        className="p-1 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-600 cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            {/* Chat Input Bar */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="p-2.5 sm:p-3.5 border-t border-zinc-200/80 bg-white flex items-center gap-2 shrink-0"
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={(e) => handleFileUpload(e, "file")}
+              />
+              <input
+                type="file"
+                ref={imageInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFileUpload(e, "image")}
+              />
 
-              {/* Chat Input Box */}
-              <div className="p-3 sm:p-4 bg-white border-t border-zinc-200/80">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }}
-                  className="flex items-center gap-2 sm:gap-3"
+              <div className="flex items-center gap-1 text-zinc-400">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                  title="Đính kèm tệp"
                 >
-                  <input
-                    type="file"
-                    ref={imageInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleFileUpload(e, "image")}
-                  />
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={(e) => handleFileUpload(e, "file")}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    className="p-2 rounded-xl text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
-                    title="Gửi hình ảnh"
-                  >
-                    <ImageIcon className="w-5 h-5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2 rounded-xl text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
-                    title="Đính kèm tệp tin"
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </button>
-
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Nhập tin nhắn gửi cho chủ trọ..."
-                    className="flex-1 px-4 py-2.5 bg-zinc-100 border-none rounded-xl text-xs sm:text-sm font-medium text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2AC1BC]/30"
-                  />
-
-                  <button
-                    type="submit"
-                    disabled={(!inputMessage.trim() && pendingAttachments.length === 0) || isSending}
-                    className="p-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white shadow-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
-                  >
-                    {isSending ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Send className="w-5 h-5" />
-                    )}
-                  </button>
-                </form>
+                  <Paperclip className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="p-2 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                  title="Gửi hình ảnh"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </button>
               </div>
-            </>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
-              <MessageSquare className="w-12 h-12 text-zinc-300 stroke-1" />
-              <h2 className="text-base font-bold text-zinc-700">Chưa chọn cuộc trò chuyện</h2>
-              <p className="text-xs text-zinc-400 max-w-sm">
-                Hãy chọn một cuộc trò chuyện từ danh sách bên trái để bắt đầu trao đổi với chủ trọ.
-              </p>
-            </div>
-          )}
-        </div>
 
-        {/* ─── Right Sidebar: Landlord & Property Info Drawer ──────────────── */}
-        {showRightDrawer && activeChat && (
-          <div className="w-80 border-l border-zinc-200/80 bg-white p-5 flex flex-col gap-5 shrink-0 overflow-y-auto custom-scrollbar">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-zinc-900">Thông tin chi tiết</h2>
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder={t("typeMessagePlaceholder")}
+                className="flex-1 px-3.5 py-2 sm:py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              />
+
+              <Button
+                type="submit"
+                disabled={isSending || (!inputMessage.trim() && pendingAttachments.length === 0)}
+                className="px-4 py-2 sm:py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold cursor-pointer transition-all shadow-xs shadow-[#2AC1BC]/20 disabled:opacity-40 shrink-0"
+              >
+                {isSending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </form>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 text-xs p-6 space-y-3">
+            <MessageSquare className="w-12 h-12 text-zinc-300" />
+            <p className="font-semibold text-zinc-600 text-sm">Chọn một cuộc trò chuyện để bắt đầu</p>
+          </div>
+        )}
+      </div>
+
+      {/* PANE 3: Room & Tenancy Context Panel (Desktop inline + Mobile/Tablet Drawer) */}
+      {showRightDrawer && activeChat && (
+        <>
+          {/* Mobile/Tablet Backdrop */}
+          <div
+            className="lg:hidden fixed inset-0 z-40 bg-zinc-950/40 backdrop-blur-2xs"
+            onClick={() => setShowRightDrawer(false)}
+          />
+
+          {/* Side Panel Content */}
+          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-88 lg:static lg:z-auto lg:w-80 xl:w-88 border-l border-zinc-200/80 bg-zinc-50 flex flex-col overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
+            {/* Header on mobile */}
+            <div className="flex lg:hidden items-center justify-between pb-3 border-b border-zinc-200">
+              <span className="text-xs font-black text-zinc-900 uppercase">
+                {t("roomInfoTitle")}
+              </span>
               <button
                 onClick={() => setShowRightDrawer(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-zinc-200 text-zinc-600 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Landlord Profile Card */}
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 flex flex-col items-center text-center space-y-3">
-              <div
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-xs ${getAvatarBg(
-                  activeChat.participant.fullName
-                )}`}
-              >
-                {formatDisplayName(activeChat.participant.fullName).charAt(0)}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-zinc-900">
-                  {formatDisplayName(activeChat.participant.fullName)}
-                </h3>
-                <span className="inline-block mt-1 px-2.5 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-extrabold rounded-full">
-                  Chủ trọ phụ trách
-                </span>
-              </div>
-
-              {activeChat.participant.phoneNumber && (
-                <div className="w-full flex items-center justify-between p-2.5 bg-white rounded-xl border border-zinc-200/80 text-xs">
-                  <span className="font-bold text-zinc-700">
-                    {formatPhoneDisplay(activeChat.participant.phoneNumber)}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => copyPhoneNumber(activeChat.participant.phoneNumber)}
-                      className="p-1 text-zinc-400 hover:text-[#2AC1BC] cursor-pointer"
-                      title="Sao chép số"
-                    >
-                      {copiedPhone ? (
-                        <Check className="w-4 h-4 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
-                    <a
-                      href={`tel:${activeChat.participant.phoneNumber}`}
-                      className="p-1 text-[#2AC1BC] hover:text-[#23a8a3] cursor-pointer"
-                      title="Gọi điện"
-                    >
-                      <Phone className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Property Context */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">
-                Nơi bạn đang thuê
-              </h4>
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-2 text-xs">
-                {activeChat.participant.boardingHouseName && (
-                  <div className="flex items-center gap-2 text-zinc-700">
-                    <Building2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                    <span className="font-bold">{activeChat.participant.boardingHouseName}</span>
-                  </div>
-                )}
-                {activeChat.participant.roomName && (
-                  <div className="flex items-center gap-2 text-zinc-700">
-                    <DoorOpen className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-semibold">{activeChat.participant.roomName}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Actions for Tenant */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">
-                Lối tắt tiện ích
-              </h4>
-              <div className="space-y-1.5">
-                <button
-                  onClick={() => router.push("/tenant/invoices")}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-[#2AC1BC]" />
-                    <span>Hóa đơn tiền phòng</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-zinc-400" />
-                </button>
-
-                <button
-                  onClick={() => router.push("/tenant/complaints")}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 hover:bg-rose-50 hover:text-rose-600 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-rose-500" />
-                    <span>Gửi khiếu nại / phản ánh</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-zinc-400" />
-                </button>
-              </div>
-            </div>
-
-            {/* Shared Media */}
-            <div className="space-y-2">
+            {/* Room Overview Card */}
+            <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">
-                  Tệp & Hình ảnh đã chia sẻ
-                </h4>
-                <span className="text-[11px] font-bold text-zinc-500">
-                  {activeChatMedia.total}
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                  {t("roomInfoTitle")}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                  {t("roomStatusActive")}
                 </span>
               </div>
 
-              {activeChatMedia.images.length > 0 && (
-                <div className="grid grid-cols-3 gap-1.5">
-                  {activeChatMedia.images.slice(0, 6).map((img, i) => (
+              <div>
+                <h4 className="text-base font-black text-zinc-900">
+                  {activeChat.participant?.roomName || "Phòng 101"} &bull; Studio
+                </h4>
+                <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                  <span>{activeChat.participant?.boardingHouseName || "Dormio Premier"}</span>
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-xs">
+                <span className="text-zinc-500">{t("rentPrice")}</span>
+                <span className="font-bold text-[#2AC1BC]">4.500.000 ₫/tháng</span>
+              </div>
+            </div>
+
+            {/* Current Bill Due Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200/80 shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-orange-900">
+                  {t("paymentDue")}
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase">
+                  {t("unpaid")}
+                </span>
+              </div>
+
+              <div>
+                <div className="text-lg font-black text-zinc-900">4.120.000 ₫</div>
+                <div className="text-[11px] text-zinc-500 font-medium">
+                  {t("dueDate")}: 05/08/2026
+                </div>
+              </div>
+
+              <Link href="/tenant/invoices">
+                <Button className="w-full h-8 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1">
+                  <span>{t("btnViewInvoice")}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
+            </div>
+
+            {/* Shared Attachments & Photos */}
+            <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block">
+                {t("sharedMedia")} ({activeChatMedia.total})
+              </span>
+
+              {activeChatMedia.total === 0 ? (
+                <p className="text-xs text-zinc-400 text-center py-2">Chưa có tệp chia sẻ</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {activeChatMedia.images.slice(0, 3).map((img, i) => (
                     <div
                       key={i}
                       onClick={() => setPreviewImage(img.url)}
-                      className="aspect-square rounded-lg overflow-hidden border border-zinc-200 cursor-pointer hover:opacity-90 transition-opacity"
+                      className="h-16 rounded-xl overflow-hidden border border-zinc-200 group relative cursor-pointer"
                     >
-                      <img src={img.url} alt="shared" className="w-full h-full object-cover" />
+                      <img
+                        src={img.url}
+                        alt={img.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                      />
                     </div>
                   ))}
-                </div>
-              )}
-
-              {activeChatMedia.files.length > 0 && (
-                <div className="space-y-1.5">
                   {activeChatMedia.files.slice(0, 3).map((f, i) => (
                     <a
                       key={i}
                       href={f.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 bg-zinc-50 hover:bg-zinc-100 rounded-xl border border-zinc-100 text-xs transition-colors"
+                      className="h-16 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-100 flex flex-col items-center justify-center text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer p-1"
                     >
-                      <File className="w-4 h-4 text-zinc-500 shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold text-zinc-800">{f.name}</p>
-                        <p className="text-[10px] text-zinc-400">{f.size}</p>
-                      </div>
+                      <FileText className="w-5 h-5 mb-0.5" />
+                      <span className="text-[9px] font-bold truncate max-w-full">{f.name}</span>
                     </a>
                   ))}
                 </div>
               )}
-
-              {activeChatMedia.total === 0 && (
-                <p className="text-xs text-zinc-400 italic text-center py-2">
-                  Chưa có ảnh hay tệp nào được trao đổi.
-                </p>
-              )}
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+
 
       {/* ─── Image Lightbox Preview Modal ──────────────────────────────────── */}
       {previewImage && (

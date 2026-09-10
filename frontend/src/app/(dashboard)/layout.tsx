@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
 import { useAuth } from "@/context/AuthContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, Home, Users, FileText, Bell,
   Wallet, CreditCard,
@@ -12,88 +13,165 @@ import {
   UserCircle, Calendar, Clock,
   Settings, HelpCircle,
   LogOut, Menu, X, ChevronDown, ChevronRight,
-  AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2
+  AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2,
+  Megaphone, Newspaper, ShieldCheck, CheckSquare
 } from "lucide-react";
 
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { locale } = useLanguage();
+  const tNav = useTranslations("nav");
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     'van-hanh': true,
     'so-thu-chi': true,
-    'co-so-vat-chat': false,
-    'kinh-doanh': false,
-    'nhan-su': false,
-    'khac': false
+    'bao-cao': true,
   });
 
   const toggleGroup = (key: string) => setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
 
   const isTenant = pathname?.startsWith('/tenant');
+  const isAdmin = pathname?.startsWith('/admin');
+  const isStaff = pathname?.startsWith('/staff');
+
+  const staffMenus = [
+    { name: locale === "en" ? "Overview" : "Tổng quan", href: "/staff", icon: LayoutDashboard },
+    { name: locale === "en" ? "Shifts & Attendance" : "Ca làm & Chấm công", href: "/staff/schedule", icon: Calendar },
+    { name: locale === "en" ? "Tasks" : "Nhiệm vụ", href: "/staff/tasks", icon: CheckSquare },
+  ];
+
+  const adminMenus = [
+    { name: tNav("adminOverview"), href: "/admin", icon: LayoutDashboard },
+    { name: tNav("adminModeration"), href: "/admin/moderation", icon: ShieldCheck },
+    { name: tNav("adminGrievances"), href: "/admin/grievances", icon: AlertTriangle },
+    { name: tNav("adminNotifications"), href: "/admin/notifications", icon: Megaphone },
+    { name: tNav("adminBlogs"), href: "/admin/blogs", icon: Newspaper },
+    { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
+  ];
 
   const landlordMenus = [
-    { name: "Tổng quan", href: "/landlord", icon: LayoutDashboard },
+    { name: tNav("dashboard"), href: "/landlord", icon: LayoutDashboard },
     {
-      group: "Vận hành",
+      group: tNav("operations"),
       key: "van-hanh",
       items: [
-        { name: "Phòng", href: "/landlord/rooms", icon: DoorOpen },
-        { name: "Khách thuê", href: "/landlord/customers", icon: Users },
-        { name: "Hợp đồng", href: "/landlord/contracts", icon: FileText },
-        { name: "Tài sản", href: "/landlord/assets", icon: Package },
-        { name: "Dịch vụ", href: "/landlord/services", icon: Wrench },
-        { name: "Thông báo & Nhắc nhở", href: "/landlord/reminders", icon: Bell },
-        { name: "Tin nhắn", href: "/landlord/messages", icon: MessageCircle },
+        { name: tNav("rooms"), href: "/landlord/rooms", icon: DoorOpen },
+        { name: tNav("customers"), href: "/landlord/customers", icon: Users },
+        { name: tNav("contracts"), href: "/landlord/contracts", icon: FileText },
+        { name: tNav("assets"), href: "/landlord/assets", icon: Package },
+        { name: tNav("services"), href: "/landlord/services", icon: Wrench },
+        { name: tNav("reminders"), href: "/landlord/reminders", icon: Bell },
+        { name: tNav("messages"), href: "/landlord/messages", icon: MessageCircle },
       ]
     },
     {
-      group: "Sổ thu chi",
+      group: tNav("accounting"),
       key: "so-thu-chi",
       items: [
-        { name: "Hoá đơn", href: "/landlord/invoices", icon: Receipt },
-        { name: "Công nợ", href: "/landlord/debts", icon: AlertTriangle },
-        { name: "Đặt cọc", href: "/landlord/deposits", icon: Shield },
-        { name: "Chi phí", href: "/landlord/expenses", icon: Wallet },
+        { name: tNav("invoices"), href: "/landlord/invoices", icon: Receipt },
+        { name: tNav("debts"), href: "/landlord/debts", icon: AlertTriangle },
+        { name: tNav("deposits"), href: "/landlord/deposits", icon: Shield },
+        { name: tNav("expenses"), href: "/landlord/expenses", icon: Wallet },
       ]
     },
     {
-      group: "Kinh doanh",
+      group: tNav("business"),
       key: "kinh-doanh",
       items: [
-        { name: "Đăng tin", href: "/landlord/listings", icon: Globe },
-        { name: "Báo cáo", href: "/landlord/reports", icon: BarChart2 },
+        { name: tNav("listings"), href: "/landlord/listings", icon: Globe },
+        { name: tNav("reports"), href: "/landlord/reports", icon: BarChart2 },
       ]
     },
     {
-      group: "Nhân sự",
+      group: tNav("workforce"),
       key: "nhan-su",
       items: [
-        { name: "Nhân viên", href: "/landlord/workforce", icon: UserCircle },
-        { name: "Lịch làm", href: "/landlord/workforce/schedule", icon: Calendar },
-        { name: "Chấm công", href: "/landlord/workforce/attendance", icon: Clock },
+        { name: tNav("staff"), href: "/landlord/workforce", icon: UserCircle },
+        { name: tNav("schedule"), href: "/landlord/workforce/schedule", icon: Calendar },
+        { name: tNav("attendance"), href: "/landlord/workforce/attendance", icon: Clock },
       ]
     },
     {
-      group: "Khác",
+      group: tNav("other"),
       key: "khac",
       items: [
-        { name: "Cài đặt", href: "/landlord/settings", icon: Settings },
-        { name: "Trợ giúp", href: "/landlord/guide", icon: HelpCircle },
+        { name: tNav("settings"), href: "/landlord/settings", icon: Settings },
+        { name: tNav("guide"), href: "/landlord/guide", icon: HelpCircle },
       ]
     }
   ];
 
   const tenantMenus = [
-    { name: "Thông tin trọ", href: "/tenant", icon: Building },
-    { name: "Chỉ số điện nước", href: "/tenant/meter-readings", icon: Gauge },
-    { name: "Thống kê & Hóa đơn", href: "/tenant/invoices", icon: Receipt },
-    { name: "Tin nhắn", href: "/tenant/messages", icon: MessageCircle },
-    { name: "Yêu cầu hỗ trợ", href: "/tenant/complaints", icon: MessageSquare },
+    { name: tNav("home"), href: "/tenant", icon: Building },
+    { name: tNav("invoices"), href: "/tenant/invoices", icon: Receipt },
+    { name: tNav("messages"), href: "/tenant/messages", icon: MessageCircle },
+    { name: tNav("complaints"), href: "/tenant/complaints", icon: MessageSquare },
   ];
 
   const NavContent = () => {
+    if (isAdmin) {
+      return (
+        <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1">
+          <div className="px-3 pb-2 text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5">
+            <Shield className="w-3 h-3" />
+            {tNav("adminTag")}
+          </div>
+          {adminMenus.map((item, idx) => {
+            const isActive = item.href === '/admin'
+              ? pathname === '/admin'
+              : (pathname === item.href || pathname?.startsWith(item.href + '/'));
+            return (
+              <Link
+                key={idx}
+                href={item.href}
+                className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${isActive
+                  ? "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 font-bold shadow-2xs"
+                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+              >
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-orange-500 rounded-r-full" />}
+                <item.icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? "text-orange-600 dark:text-orange-400" : "text-zinc-400"}`} strokeWidth={isActive ? 2.2 : 1.75} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      );
+    }
+
+    if (isStaff) {
+      return (
+        <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1">
+          <div className="px-3 pb-2 text-[10px] font-black text-[#2AC1BC] uppercase tracking-widest flex items-center gap-1.5">
+            <UserCircle className="w-3.5 h-3.5" />
+            <span>{locale === "en" ? "OPERATIONS STAFF" : "NHÂN VIÊN VẬN HÀNH"}</span>
+          </div>
+          {staffMenus.map((item, idx) => {
+            const isActive = item.href === '/staff'
+              ? pathname === '/staff'
+              : (pathname === item.href || pathname?.startsWith(item.href + '/'));
+            return (
+              <Link
+                key={idx}
+                href={item.href}
+                className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${isActive
+                  ? "bg-[#2AC1BC]/10 text-[#2AC1BC] font-bold shadow-2xs"
+                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+              >
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-[#2AC1BC] rounded-r-full" />}
+                <item.icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? "text-[#2AC1BC]" : "text-zinc-400"}`} strokeWidth={isActive ? 2.2 : 1.75} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      );
+    }
+
     if (isTenant) {
       return (
         <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-0.5">
@@ -187,80 +265,113 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   };
 
-  const { buildings, isBuildingsLoading, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
-
-  const isLandlordRoute = pathname?.startsWith('/landlord');
-  const isSetupRoute = pathname === '/landlord/setup';
-
-  // UC-L-01 GATING: Access to /landlord dashboard area requires owning at least 1 property.
-  // If user owns 0 properties and navigates to any landlord route other than /landlord/setup,
-  // redirect immediately to the dedicated 3-step setup page.
-  React.useEffect(() => {
-    if (isLandlordRoute && !isSetupRoute && !isBuildingsLoading && buildings.length === 0) {
-      router.replace("/landlord/setup");
-    }
-  }, [isLandlordRoute, isSetupRoute, isBuildingsLoading, buildings.length, router]);
+  const { user, buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
 
   // DYNAMICALLY UPDATE BROWSER DOCUMENT TITLE BASED ON ACTIVE BUILDING & ROUTE
   React.useEffect(() => {
-    if (typeof window !== "undefined" && activeBuilding?.name) {
-      let pageTitle = "Dormio BHMS";
-      if (pathname === "/landlord") {
-        pageTitle = `Tổng Quan — ${activeBuilding.name}`;
-      } else if (pathname?.startsWith("/landlord/rooms")) {
-        pageTitle = `Sơ Đồ Phòng — ${activeBuilding.name}`;
-      } else if (pathname?.startsWith("/landlord/contracts")) {
-        pageTitle = `Hợp Đồng Thuê — ${activeBuilding.name}`;
-      } else if (pathname?.startsWith("/landlord/invoices")) {
-        pageTitle = `Hóa Đơn & Thu Tiền — ${activeBuilding.name}`;
-      } else if (pathname?.startsWith("/landlord/customers") || pathname?.startsWith("/landlord/tenants")) {
-        pageTitle = `Khách Thuê — ${activeBuilding.name}`;
-      } else if (pathname?.startsWith("/landlord/services")) {
-        pageTitle = `Bảng Dịch Vụ — ${activeBuilding.name}`;
-      } else if (pathname?.startsWith("/landlord/reports")) {
-        pageTitle = `Báo Cáo Doanh Thu — ${activeBuilding.name}`;
-      } else {
-        pageTitle = `${activeBuilding.name} | Dormio BHMS`;
+    if (typeof window !== "undefined") {
+      let pageTitle = "Dormio";
+      if (isStaff) {
+        if (pathname === "/staff") {
+          pageTitle = locale === "en" ? "Today's Shift Overview — Dormio Staff" : "Tổng Quan Ca Làm — Dormio Staff";
+        } else if (pathname?.startsWith("/staff/schedule") || pathname?.startsWith("/staff/attendance")) {
+          pageTitle = locale === "en" ? "Shifts & Attendance — Dormio Staff" : "Ca Làm & Chấm Công — Dormio Staff";
+        } else if (pathname?.startsWith("/staff/tasks")) {
+          pageTitle = locale === "en" ? "Tasks & Responsibilities — Dormio Staff" : "Nhiệm Vụ & Trách Nhiệm — Dormio Staff";
+        } else {
+          pageTitle = locale === "en" ? "Staff Operations Portal — Dormio Staff" : "Cổng Nhân Viên — Dormio Staff";
+        }
+      } else if (isAdmin) {
+        if (pathname === "/admin") {
+          pageTitle = "Tổng Quan Quản Trị Hệ Thống — Dormio Admin";
+        } else if (pathname?.startsWith("/admin/moderation")) {
+          pageTitle = "Kiểm Duyệt Tin Đăng & Nhà Trọ — Dormio Admin";
+        } else if (pathname?.startsWith("/admin/grievances")) {
+          pageTitle = "Xử Lý Khiếu Nại Khách Thuê — Dormio Admin";
+        } else if (pathname?.startsWith("/admin/notifications")) {
+          pageTitle = "Gửi Thông Báo Hàng Loạt — Dormio Admin";
+        } else if (pathname?.startsWith("/admin/blogs")) {
+          pageTitle = "Quản Lý Bài Viết Blog — Dormio Admin";
+        } else if (pathname?.startsWith("/admin/analytics")) {
+          pageTitle = "Báo Cáo Thống Kê Nền Tảng — Dormio Admin";
+        } else {
+          pageTitle = "Cổng Quản Trị Viên — Dormio Admin";
+        }
+      } else if (activeBuilding?.name) {
+        if (pathname === "/landlord") {
+          pageTitle = `Tổng Quan — ${activeBuilding.name}`;
+        } else if (pathname?.startsWith("/landlord/rooms")) {
+          pageTitle = `Sơ Đồ Phòng — ${activeBuilding.name}`;
+        } else if (pathname?.startsWith("/landlord/contracts")) {
+          pageTitle = `Hợp Đồng Thuê — ${activeBuilding.name}`;
+        } else if (pathname?.startsWith("/landlord/invoices")) {
+          pageTitle = `Hóa Đơn & Thu Tiền — ${activeBuilding.name}`;
+        } else if (pathname?.startsWith("/landlord/customers") || pathname?.startsWith("/landlord/tenants")) {
+          pageTitle = `Khách Thuê — ${activeBuilding.name}`;
+        } else if (pathname?.startsWith("/landlord/services")) {
+          pageTitle = `Bảng Dịch Vụ — ${activeBuilding.name}`;
+        } else if (pathname?.startsWith("/landlord/reports")) {
+          pageTitle = `Báo Cáo Doanh Thu — ${activeBuilding.name}`;
+        } else {
+          pageTitle = `${activeBuilding.name} | Dormio BHMS`;
+        }
       }
 
       document.title = pageTitle;
     }
-  }, [activeBuilding?.name, pathname]);
+  }, [activeBuilding?.name, pathname, isAdmin, isStaff]);
 
-  const BuildingSelector = () => {
-    if (buildings.length === 0) {
-      return (
-        <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
-          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
-            TÒA NHÀ ĐANG QUẢN LÝ:
-          </span>
-          <div className="w-full bg-zinc-100 border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs text-zinc-400 italic animate-pulse">
-            Đang tải dữ liệu...
-          </div>
+  const StaffHeaderBadge = () => (
+    <div className="px-3.5 py-3 border-b border-[#2AC1BC]/20 bg-linear-to-r from-[#2AC1BC]/10 to-teal-50/40">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center font-black text-xs shrink-0">
+          <UserCircle className="w-5 h-5" />
         </div>
-      );
-    }
-
-    return (
-      <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
-        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
-          TÒA NHÀ ĐANG QUẢN LÝ:
-        </span>
-        <div className="relative">
-          <select
-            value={activeBuildingId}
-            onChange={(e) => selectBuilding(e.target.value)}
-            className="w-full bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-xs appearance-none pr-7"
-          >
-            {buildings.map((b: any) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
+              {locale === "en" ? "OPERATIONS STAFF" : "NHÂN VIÊN VẬN HÀNH"}
+            </span>
+          </div>
+          <p className="text-xs font-bold text-zinc-900 truncate">KTX HOLA • Khu A</p>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+
+  const AdminHeaderBadge = () => (
+    <div className="px-3.5 py-3 border-b border-orange-100 bg-linear-to-r from-orange-50/80 to-amber-50/40">
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black bg-orange-600 text-white tracking-wider shadow-2xs uppercase">
+          <Shield className="w-3 h-3" />
+          {tNav("adminTag")}
+        </span>
+      </div>
+      <p className="text-[11px] font-medium text-zinc-500 mt-1.5 leading-tight">
+        Trung tâm giám sát & điều hành nền tảng
+      </p>
+    </div>
+  );
+
+  const BuildingSelector = () => (
+    <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
+      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
+        {tNav("managingBuilding")}
+      </span>
+      <div className="relative">
+        <select
+          value={activeBuildingId}
+          onChange={(e) => selectBuilding(e.target.value)}
+          className="w-full bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-xs appearance-none pr-7"
+        >
+          {buildings.map(b => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+    </div>
+  );
 
   const Logo = () => (
     <Link href="/" className="flex items-center gap-2.5">
@@ -273,66 +384,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const UserFooter = ({ compact = false }: { compact?: boolean }) => (
     <div className={`border-t border-zinc-100 ${compact ? "p-3" : "p-3"}`}>
-      <div className="flex items-center gap-3 px-2 py-2 mb-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold shrink-0">
-          R
-        </div>
-        <div className="overflow-hidden">
-          <div className="text-sm font-semibold text-zinc-900 truncate">Nguyễn Văn Rio</div>
-          <div className="text-xs text-zinc-400 truncate">{isTenant ? "Người thuê" : "Chủ nhà trọ"}</div>
-        </div>
+      <div className="flex items-center justify-between px-2 mb-2">
+        <span className="text-xs font-semibold text-zinc-500">{tNav("langLabel")}</span>
+        <LanguageSwitcher />
       </div>
+
+      {/* Clickable Profile Card */}
+      <Link
+        href={isTenant ? "/tenant/profile" : "/profile"}
+        className="group flex items-center gap-3 px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+        title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
+      >
+        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${
+          isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
+        }`}>
+          {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
+        </div>
+        <div className="overflow-hidden flex-1 min-w-0">
+          <div className="text-sm font-semibold text-zinc-900 truncate group-hover:text-primary transition-colors">
+            {user?.name || (isAdmin ? "Admin Quản Trị" : isStaff ? "Nguyễn Văn Tuấn" : "Nguyễn Văn Rio")}
+          </div>
+          <div className="text-xs text-zinc-400 truncate">
+            {isAdmin ? tNav("adminRole") : isTenant ? tNav("tenantRole") : isStaff ? (locale === "en" ? "Operations Staff" : "Nhân viên vận hành") : tNav("landlordRole")}
+          </div>
+        </div>
+      </Link>
       <Link
         href="/login"
         className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg hover:bg-orange-100 transition-colors"
       >
         <LogOut className="h-4 w-4 shrink-0" />
-        Đăng xuất
+        {tNav("logout")}
       </Link>
     </div>
   );
-
-  // Gating view for /landlord routes when properties haven't loaded or user owns 0 properties
-  if (isLandlordRoute && !isSetupRoute) {
-    if (isBuildingsLoading) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-          <div className="text-center space-y-3">
-            <div className="w-10 h-10 border-4 border-[#2AC1BC]/20 border-t-[#2AC1BC] rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-zinc-500">Đang kiểm tra dữ liệu nhà trọ...</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (buildings.length === 0) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-          <div className="text-center space-y-3">
-            <div className="w-10 h-10 border-4 border-[#2AC1BC]/20 border-t-[#2AC1BC] rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-zinc-500">Đang chuyển hướng tới trang thiết lập nhà trọ...</p>
-          </div>
-        </div>
-      );
-    }
-  }
-
-  // DEDICATED SETUP PAGE LAYOUT: Clean full-page experience without operational dashboard sidebar
-  if (isSetupRoute) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex flex-col">
-        <header className="h-16 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
-          <Logo />
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-zinc-500 hidden sm:inline">
-              Quy trình thiết lập nhà trọ 3 bước
-            </span>
-          </div>
-        </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen bg-zinc-50">
@@ -343,8 +428,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Logo />
           </div>
 
-          {/* Global Landlord Building Selector */}
-          {!isTenant && <BuildingSelector />}
+          {/* Admin Badge or Staff Badge or Global Landlord Building Selector */}
+          {isAdmin ? <AdminHeaderBadge /> : isStaff ? <StaffHeaderBadge /> : !isTenant && <BuildingSelector />}
 
           <NavContent />
           <UserFooter />
@@ -366,8 +451,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
             </div>
 
-            {/* Global Landlord Building Selector on Mobile Drawer */}
-            {!isTenant && <BuildingSelector />}
+            {/* Admin Badge or Staff Badge or Global Landlord Building Selector on Mobile Drawer */}
+            {isAdmin ? <AdminHeaderBadge /> : isStaff ? <StaffHeaderBadge /> : !isTenant && <BuildingSelector />}
 
             <NavContent />
             <UserFooter />
@@ -389,57 +474,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Logo />
           </div>
 
-          {/* Building Selector Dropdown on Mobile Topbar for Landlord */}
-          {!isTenant && buildings.length > 0 && (
+          {/* Admin badge or Staff Badge or Building Selector Dropdown on Mobile Topbar */}
+          {isAdmin ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200/80 text-[10px] font-black text-orange-600 uppercase tracking-wide">
+              <Shield className="w-3.5 h-3.5" />
+              <span>SYSTEM ADMIN</span>
+            </div>
+          ) : isStaff ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
+              <UserCircle className="w-3.5 h-3.5" />
+              <span>NHÂN VIÊN</span>
+            </div>
+          ) : !isTenant && (
             <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
               <select
                 value={activeBuildingId}
                 onChange={(e) => selectBuilding(e.target.value)}
                 className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none pr-6 truncate"
               >
-                {buildings.map((b: any) => (
+                {buildings.map(b => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
               <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           )}
-          {!isTenant && buildings.length === 0 && (
-            <div className="px-2.5 py-1 bg-zinc-100 border border-zinc-200/80 rounded-xl text-[11px] text-zinc-400 italic animate-pulse max-w-[140px] truncate">
-              Đang tải...
-            </div>
-          )}
 
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-            R
-          </div>
+          <Link
+            href={isTenant ? "/tenant/profile" : "/profile"}
+            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
+              isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
+            }`}
+            title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
+          >
+            {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
+          </Link>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar for Tenants */}
-      {isTenant && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-2 py-1.5 flex justify-around items-center shadow-lg">
-          {tenantMenus.map((item, idx) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={idx}
-                href={item.href}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${isActive ? "text-[#2AC1BC] font-black" : "text-zinc-400 hover:text-zinc-700 font-bold"
-                  }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? "text-[#2AC1BC]" : "text-zinc-400"}`} />
-                <span className="text-[10px] tracking-tight">{item.name}</span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
-      {!isTenant && <AIChatBot />}
+      {!isTenant && !isAdmin && !isStaff && <AIChatBot />}
     </div>
   );
 }

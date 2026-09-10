@@ -111,10 +111,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token && typeof window !== "undefined") {
         // Auto-login to obtain token in dev
         try {
-          const loginRes = await api.post<any>("/v1/auth/login", {
-            identifier: "0344265925",
-            password: "123456789",
-          });
+          const loginRes = await api.post<any>(
+            "/v1/auth/login",
+            {
+              identifier: "0344265925",
+              password: "123456789",
+            },
+            { silent: true }
+          );
           const data = loginRes?.data || loginRes;
           if (data?.token && typeof data.token === "string") {
             token = data.token;
@@ -128,19 +132,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       let houses: any[] = [];
       try {
-        houses = await getMyBoardingHouses();
+        houses = await getMyBoardingHouses({ silent: true });
       } catch {
         // If 401 Unauthorized, token might be invalid or stale, retry login once
         if (typeof window !== "undefined") {
           try {
-            const loginRes = await api.post<any>("/v1/auth/login", {
-              identifier: "0344265925",
-              password: "123456789",
-            });
+            const loginRes = await api.post<any>(
+              "/v1/auth/login",
+              {
+                identifier: "0344265925",
+                password: "123456789",
+              },
+              { silent: true }
+            );
             const data = loginRes?.data || loginRes;
             if (data?.token && typeof data.token === "string") {
               localStorage.setItem("auth_token", data.token);
-              houses = await getMyBoardingHouses();
+              houses = await getMyBoardingHouses({ silent: true });
             }
           } catch {
             houses = [];
@@ -321,13 +329,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (preset === "guest") {
       logout();
     } else if (preset === "tenant") {
-      login({
-        name: "Nguyễn Văn A (Khách thuê)",
-        email: "nguyenvana@gmail.com",
-        role: "tenant",
-        houseName: undefined,
-        houseAddress: undefined,
-      });
+      api.post<any>("/v1/auth/login", {
+        identifier: "0912345678",
+        password: "Secret@123",
+      })
+        .then((res) => {
+          const data = res?.data || res;
+          if (data?.token && data?.user) {
+            loginWithToken(data.token, {
+              id: data.user.id,
+              name: data.user.username || "Trần Thị Thuỳ Dung (Khách thuê)",
+              email: data.user.email || "dung.tran@gmail.com",
+              role: "tenant",
+            });
+          }
+        })
+        .catch(() => {
+          login({
+            name: "Trần Thị Thuỳ Dung (Khách thuê)",
+            email: "dung.tran@gmail.com",
+            role: "tenant",
+            houseName: undefined,
+            houseAddress: undefined,
+          });
+        });
       localStorage.removeItem("dormio_house_name");
       localStorage.removeItem("dormio_house_address");
     } else if (preset === "landlord_empty") {

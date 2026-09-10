@@ -252,6 +252,24 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               setMethod("phone");
+              setAccountIdentifier("0912345678");
+              setPassword("Secret@123");
+              setError(null);
+            }}
+            className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
+              <span>🏠 Khách thuê (Trần Thị Thuỳ Dung - Có HĐ & HĐơn)</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              0912345678 • Secret@123
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("phone");
               setAccountIdentifier("0987654321");
               setPassword("Secret@123");
               setError(null);
@@ -259,7 +277,7 @@ export default function LoginPage() {
             className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
           >
             <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
-              <span>🏠 Khách thuê (Lê Hoàng Nam)</span>
+              <span>🏠 Khách thuê (Lê Hoàng Nam - Phòng 301)</span>
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               0987654321 • Secret@123

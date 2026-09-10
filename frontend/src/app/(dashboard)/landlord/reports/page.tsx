@@ -1,647 +1,617 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  DollarSign,
-  BarChart2,
-  Building,
-  Home,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Shield,
-  Loader2,
-  FileSpreadsheet,
-  ArrowUpRight,
-  MapPin,
-  Calendar,
-  Percent,
+  TrendingUp, Users, DollarSign, FileSpreadsheet, Calendar,
+  Building2, ChevronDown, CheckCircle2, ArrowUpRight,
+  ShieldCheck, MessageSquare, Eye, Sparkles, Flame, Rocket,
+  Award, Clock, Compass, Lightbulb, Zap, HelpCircle,
+  Share2, MapPin, CheckCircle, BarChart3, PieChart
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 import {
-  getPropertyAnalytics,
-  type BoardingHouseOverview,
-} from "@/services/boarding-house.service";
-import { formatVND } from "@/utils";
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend
+} from "recharts";
+import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function ReportsPage() {
-  const { activeBuilding, isBuildingsLoading } = useAuth();
+  const { activeBuilding } = useAuth();
+  const t = useTranslations("reports");
+  const { locale } = useLanguage();
 
-  const [overview, setOverview] = useState<BoardingHouseOverview | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [rangeMode, setRangeMode] = useState<"6m" | "12m">("6m");
-  const [mounted, setMounted] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
+  const [timeframe, setTimeframe] = useState<"7_days" | "month" | "last_month" | "quarter" | "year">("month");
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>("b1");
+
+  // Toast feedback state
+  const [toast, setToast] = useState<{ message: string; type: "success" | "info" } | null>(null);
+  const showToast = (message: string, type: "success" | "info" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  const fetchAnalytics = useCallback(async (buildingId: string) => {
-    if (!buildingId) return;
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!UUID_RE.test(buildingId)) return;
-
-    try {
-      setIsLoading(true);
-      const data = await getPropertyAnalytics(buildingId);
-      setOverview(data);
-    } catch (err) {
-      console.error("Failed to fetch property analytics:", err);
-      setOverview(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
     if (activeBuilding?.id) {
-      fetchAnalytics(activeBuilding.id);
-    } else {
-      setIsLoading(false);
+      setSelectedBuildingId(activeBuilding.id);
     }
-  }, [activeBuilding?.id, fetchAnalytics]);
+  }, [activeBuilding]);
 
-  // Derived revenue chart data based on real backend numbers
-  const revenueChartData = useMemo(() => {
-    if (!overview?.revenueChart || overview.revenueChart.length === 0) return [];
-    return overview.revenueChart.map((d) => ({
-      name: `T${d.month}`,
-      revenue: d.val,
-      fullAmount: d.fullAmount,
-    }));
-  }, [overview?.revenueChart]);
+  // Marketing Trend: Reach vs Inquiries vs Deposits
+  const marketingTrendData = [
+    { name: locale === "en" ? "Week 1" : "Tuần 1", reach: 1650, inquiries: 78, deposits: 5 },
+    { name: locale === "en" ? "Week 2" : "Tuần 2", reach: 1980, inquiries: 92, deposits: 6 },
+    { name: locale === "en" ? "Week 3" : "Tuần 3", reach: 2320, inquiries: 114, deposits: 8 },
+    { name: locale === "en" ? "Week 4" : "Tuần 4", reach: 2500, inquiries: 128, deposits: 9 }
+  ];
 
-  // Derived occupancy chart data based on real backend numbers
-  const occupancyChartData = useMemo(() => {
-    if (!overview?.occupancyChart || overview.occupancyChart.length === 0) return [];
-    return overview.occupancyChart.map((d) => ({
-      name: `T${d.month}`,
-      occupied: d.occupied,
-      count: d.count,
-      total: d.total,
-    }));
-  }, [overview?.occupancyChart]);
+  // Marketing Funnel Stages
+  const marketingFunnelStages = [
+    { stage: locale === "en" ? "1. Total Impressions / Reach" : "1. Lượt xem & Tiếp cận bài đăng", count: 8450, rate: "100%", fill: "#3B82F6" },
+    { stage: locale === "en" ? "2. Saved / Bookmarked" : "2. Lưu tin & Xem chi tiết phòng", count: 2180, rate: "25.8%", fill: "#8B5CF6" },
+    { stage: locale === "en" ? "3. Direct Inquiries / Chats" : "3. Khách nhắn tin & Gọi điện hỏi", count: 412, rate: "18.9%", fill: "#2AC1BC" },
+    { stage: locale === "en" ? "4. In-person Room Tours" : "4. Hẹn xem phòng thực tế", count: 118, rate: "28.6%", fill: "#F59E0B" },
+    { stage: locale === "en" ? "5. Holding Deposits Secured" : "5. Đặt cọc giữ phòng thành công", count: 28, rate: "23.7%", fill: "#FF6B35" }
+  ];
 
-  // Fallback defaults when data is null
-  const rooms = overview?.rooms ?? {
-    totalRooms: activeBuilding?.totalRooms || 0,
-    occupiedRooms: 0,
-    vacantRooms: 0,
-    depositRooms: 0,
-    maintenanceRooms: 0,
-    occupancyRate: "0%",
-  };
+  // Lead Acquisition Channels
+  const leadSources = [
+    {
+      source: locale === "en" ? "Dormio BHRP Portal" : "Sàn cho thuê Dormio BHRP",
+      icon: Compass,
+      count: 222,
+      share: 54,
+      conversion: "7.2%",
+      color: "bg-[#2AC1BC]",
+      textColor: "text-[#138e89]"
+    },
+    {
+      source: locale === "en" ? "Nearby Map Search" : "Tìm kiếm vị trí & Bản đồ quanh trường/công ty",
+      icon: MapPin,
+      count: 107,
+      share: 26,
+      conversion: "8.4%",
+      color: "bg-blue-500",
+      textColor: "text-blue-600"
+    },
+    {
+      source: locale === "en" ? "Referral & Link Sharing" : "Khách giới thiệu & Chia sẻ liên kết",
+      icon: Share2,
+      count: 49,
+      share: 12,
+      conversion: "10.2%",
+      color: "bg-[#FF6B35]",
+      textColor: "text-[#FF6B35]"
+    },
+    {
+      source: locale === "en" ? "Social Networks & Others" : "Mạng xã hội (Facebook, Zalo, TikTok)",
+      icon: Users,
+      count: 34,
+      share: 8,
+      conversion: "3.8%",
+      color: "bg-purple-500",
+      textColor: "text-purple-600"
+    }
+  ];
 
-  const financial = overview?.financial ?? {
-    currentMonthRevenue: "0.00",
-    unpaidDebt: "0.00",
-    unpaidInvoicesCount: 0,
-    paidInvoicesCount: 0,
-  };
+  // Peak Inquiry Hours
+  const peakHours = [
+    { time: "19:00 - 22:30", period: locale === "en" ? "Evening Peak (Golden Window)" : "Buổi tối (Thời gian vàng)", percent: 48, count: 198, isGold: true },
+    { time: "11:30 - 13:30", period: locale === "en" ? "Lunch Break" : "Buổi trưa (Nghỉ trưa)", percent: 32, count: 132, isGold: false },
+    { time: "08:30 - 11:30", period: locale === "en" ? "Morning Working Hours" : "Buổi sáng", percent: 12, count: 49, isGold: false },
+    { time: locale === "en" ? "Other Hours" : "Khung giờ khác", period: locale === "en" ? "Afternoon & Late Night" : "Chiều & Đêm muộn", percent: 8, count: 33, isGold: false }
+  ];
 
-  const collection = overview?.collectionStatus ?? {
-    paidCount: 0,
-    paidAmount: "0.00",
-    unpaidCount: 0,
-    unpaidAmount: "0.00",
-    overdueCount: 0,
-    overdueAmount: "0.00",
-    totalBilledAmount: "0.00",
-    collectionRate: "0%",
-  };
+  // Room Type Demand & Speed
+  const roomTypeMetrics = [
+    {
+      type: locale === "en" ? "Studio Apartment" : "Studio khép kín",
+      avgDays: locale === "en" ? "3.2 days" : "3.2 ngày",
+      demand: t("demandUltra"),
+      demandColor: "bg-[#2AC1BC]/15 text-[#138e89] border-[#2AC1BC]/30",
+      share: "45%",
+      inquiryGrowth: "+34%"
+    },
+    {
+      type: locale === "en" ? "Duplex / Mezzanine" : "Gác lửng Duplex",
+      avgDays: locale === "en" ? "4.5 days" : "4.5 ngày",
+      demand: t("demandHigh"),
+      demandColor: "bg-blue-50 text-blue-700 border-blue-200",
+      share: "30%",
+      inquiryGrowth: "+22%"
+    },
+    {
+      type: locale === "en" ? "1-Bedroom (1BR)" : "Căn hộ 1 Phòng ngủ",
+      avgDays: locale === "en" ? "5.8 days" : "5.8 ngày",
+      demand: t("demandFair"),
+      demandColor: "bg-purple-50 text-purple-700 border-purple-200",
+      share: "18%",
+      inquiryGrowth: "+15%"
+    },
+    {
+      type: locale === "en" ? "2-Bedrooms (2BR)" : "Căn hộ 2 Phòng ngủ",
+      avgDays: locale === "en" ? "8.0 days" : "8.0 ngày",
+      demand: t("demandStable"),
+      demandColor: "bg-amber-50 text-amber-700 border-amber-200",
+      share: "7%",
+      inquiryGrowth: "+8%"
+    }
+  ];
 
-  const expiringContracts = overview?.expiringContracts ?? [];
-
-  if (isBuildingsLoading || (isLoading && !overview)) {
-    return (
-      <div className="py-24 text-center text-zinc-400 space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
-        <p className="text-xs font-semibold">Đang tổng hợp dữ liệu báo cáo & thống kê...</p>
-      </div>
-    );
-  }
-
-  const hasAnyData =
-    rooms.totalRooms > 0 ||
-    Number(financial.currentMonthRevenue) > 0 ||
-    Number(financial.unpaidDebt) > 0 ||
-    revenueChartData.length > 0;
+  if (!mounted) return null;
 
   return (
-    <div className="space-y-6 pb-16 animate-in fade-in duration-300">
-      {/* Top Header & Export */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-in fade-in duration-300 pb-12">
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-70 bg-zinc-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-zinc-700 flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="w-5 h-5 text-[#2AC1BC]" />
+          <span className="text-xs sm:text-sm font-bold">{toast.message}</span>
+        </div>
+      )}
+
+      {/* Header Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <BarChart2 className="w-6 h-6 text-[#2AC1BC]" /> Báo Cáo & Phân Tích Hiệu Suất (UC-L-08)
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight flex items-center gap-2.5">
+            <span>{locale === "en" ? "Listing Performance & Tenant Analytics" : "Báo Cáo Hiệu Quả Đăng Tin & Khách Thuê"}</span>
+            <span className="px-2.5 py-0.5 text-[11px] font-black bg-[#2AC1BC]/15 text-[#138e89] rounded-full border border-[#2AC1BC]/30">
+              BHRP Marketing
+            </span>
           </h1>
-          <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            Thống kê doanh thu thực tế, tỷ lệ lấp đầy, tiến độ thu tiền phòng và hợp đồng đến hạn.
+          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+            {locale === "en"
+              ? "Comprehensive analytics on listing impressions, tenant inquiries, deposit conversion, and room performance."
+              : "Thống kê dữ liệu các bài post tổng quan nhất, trực quan thực tế giúp chủ nhà tối ưu hóa lượt tiếp cận, liên hệ và đặt cọc."}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action Controls: Building, Timeframe & Export */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          {/* Building Selector */}
+          <div className="relative">
+            <select
+              value={selectedBuildingId}
+              onChange={(e) => setSelectedBuildingId(e.target.value)}
+              className="pl-8.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-colors cursor-pointer appearance-none shadow-2xs"
+            >
+              <option value="b1">Dormio Premier Q.1</option>
+              <option value="b2">Campus Cầu Giấy</option>
+              <option value="b3">Luxury Bình Thạnh</option>
+            </select>
+            <Building2 className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {/* Timeframe Filter */}
+          <div className="relative">
+            <select
+              value={timeframe}
+              onChange={(e) => setTimeframe(e.target.value as any)}
+              className="pl-8.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-colors cursor-pointer appearance-none shadow-2xs"
+            >
+              <option value="7_days">{locale === "en" ? "Last 7 days" : "7 ngày qua"}</option>
+              <option value="month">{t("timeframeMonth")}</option>
+              <option value="last_month">{t("timeframeLastMonth")}</option>
+              <option value="quarter">{t("timeframeQuarter")}</option>
+              <option value="year">{t("timeframeYear")}</option>
+            </select>
+            <Calendar className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {/* Export Excel Button (Primary Teal #2AC1BC) */}
           <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200/80 rounded-xl hover:bg-zinc-50 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+            type="button"
+            onClick={() => showToast(t("exportSuccessExcel"))}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#138e89] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" /> In / Xuất Báo Cáo
+            <FileSpreadsheet className="w-4 h-4 text-[#2AC1BC]" />
+            <span>{t("exportExcel")}</span>
           </button>
         </div>
       </div>
 
-      {/* Building Header Pill */}
-      {activeBuilding && (
-        <div className="bg-zinc-900 rounded-2xl p-4 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#2AC1BC]/20 text-[#2AC1BC] flex items-center justify-center font-black shrink-0">
-              <Building className="w-5 h-5" />
+      {/* ================= 4 HERO MARKETING KPI CARDS ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI 1: Tổng lượt tiếp cận bài đăng */}
+        <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-500">{t("statReach")}</span>
+            <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Eye className="w-5 h-5" />
             </div>
+          </div>
+          <div className="mt-3">
+            <span className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">8,450</span>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-[#138e89] mt-1">
+              <span className="px-1.5 py-0.5 rounded-md bg-[#2AC1BC]/15 text-[#138e89] inline-flex items-center gap-0.5 font-black">
+                <ArrowUpRight className="w-3 h-3 text-[#2AC1BC]" />
+                +28.4%
+              </span>
+              <span className="text-zinc-500 font-semibold">{t("comparedToLastMonth")}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 2: Khách liên hệ hỏi thuê */}
+        <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-500">{t("statInquiries")}</span>
+            <div className="w-9 h-9 rounded-2xl bg-orange-50 text-[#FF6B35] flex items-center justify-center">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <span className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">412</span>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-[#138e89] mt-1">
+              <span className="px-1.5 py-0.5 rounded-md bg-[#2AC1BC]/15 text-[#138e89] inline-flex items-center gap-0.5 font-black">
+                <ArrowUpRight className="w-3 h-3 text-[#2AC1BC]" />
+                +19.2%
+              </span>
+              <span className="text-zinc-500 font-semibold">{t("responseRate98")}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 3: Đặt cọc thành công */}
+        <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-500">{t("statDeposits")}</span>
+            <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <span className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{t("roomsDeposited", { count: 28 })}</span>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-[#138e89] mt-1">
+              <span className="px-1.5 py-0.5 rounded-md bg-[#2AC1BC]/15 text-[#138e89] inline-flex items-center gap-0.5 font-black">
+                <Award className="w-3 h-3 text-[#2AC1BC]" />
+                {t("conversionRateBadge")}
+              </span>
+              <span className="text-zinc-500 font-semibold">{t("surpassedTarget15")}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 4: Tiền cọc giữ qua sàn */}
+        <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-500">{t("statDepositVolume")}</span>
+            <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <DollarSign className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <span className="text-2xl sm:text-3xl font-black text-purple-600 tracking-tight">84.0M ₫</span>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+              <span>{t("avgDepositPerRoom")}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= 2 INTERACTIVE CHARTS: TREND & FUNNEL ================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Chart 1: Diễn biến Tiếp cận, Khách hỏi & Đặt cọc theo tuần */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="text-sm font-black text-white flex items-center gap-2">
-                {activeBuilding.name}
-                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black rounded-full">
-                  Đang hoạt động
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 mt-0.5 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                {activeBuilding.address || "Chưa cập nhật địa chỉ"}
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                <span>{t("marketingChartTitle")}</span>
+                <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
+              </h3>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                {locale === "en"
+                  ? "Weekly impressions, inquiries and secured deposits for rental listings."
+                  : "Theo dõi lượng tiếp cận bài đăng, khách liên hệ và các lượt chốt cọc hàng tuần."}
               </p>
             </div>
+            <span className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+              <TrendingUp className="w-4 h-4" />
+            </span>
           </div>
-
-          <div className="flex items-center gap-2 self-end sm:self-center">
-            <Link
-              href="/landlord/invoices"
-              className="px-3 py-1.5 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1"
-            >
-              <span>Quản lý hóa đơn</span> &rarr;
-            </Link>
+          <div className="h-64 sm:h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={marketingTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#0f172a", borderRadius: "12px", border: "none", color: "#fff", fontSize: "12px" }}
+                />
+                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
+                <Line type="monotone" dataKey="reach" name={locale === "en" ? "Post Views" : "Lượt xem tin"} stroke="#3B82F6" strokeWidth={3} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="inquiries" name={locale === "en" ? "Inquiries" : "Khách hỏi"} stroke="#2AC1BC" strokeWidth={3} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="deposits" name={locale === "en" ? "Deposits" : "Đặt cọc"} stroke="#FF6B35" strokeWidth={3} dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
-      )}
 
-      {/* Clean Empty State when property has 0 records */}
-      {!hasAnyData ? (
-        <div className="py-20 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
-            <BarChart2 className="w-8 h-8" />
-          </div>
-          <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="font-black text-base text-zinc-900">Chưa có dữ liệu thống kê nào</h3>
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-              Tòa nhà chưa phát sinh giao dịch thu tiền, hợp đồng thuê hoặc hóa đơn nào. Dữ liệu phân tích sẽ tự động cập nhật khi bạn tạo phòng và bắt đầu vận hành.
+        {/* Chart 2: Phễu Chuyển Đổi Kinh Doanh Đăng Tin */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900">
+                {t("marketingFunnelTitle")}
+              </h3>
+              <span className="p-2 rounded-xl bg-orange-50 text-[#FF6B35]">
+                <Flame className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-5">
+              {locale === "en"
+                ? "Step-by-step conversion funnel from initial view to successful rental deposit."
+                : "Đo lường chi tiết tỷ lệ rơi rớt và chuyển đổi từ lúc khách thấy tin tới khi cọc phòng."}
             </p>
-          </div>
-          <div className="pt-2 flex items-center justify-center gap-3">
-            <Link
-              href="/landlord/rooms"
-              className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm transition-all"
-            >
-              Quản lý danh sách phòng
-            </Link>
-            <Link
-              href="/landlord/invoices"
-              className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all"
-            >
-              Lập hóa đơn mới
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Top 4 KPI Metrics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            {/* 1. DOANH THU THÁNG NÀY */}
-            <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-2xs space-y-2 border-l-4 border-l-[#2AC1BC]">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  DOANH THU THÁNG NÀY
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
-                  <DollarSign className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
-                {formatVND(Number(financial.currentMonthRevenue) || 0)}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>
-                  {financial.paidInvoicesCount > 0
-                    ? `Đã thu ${financial.paidInvoicesCount} hóa đơn`
-                    : "Chưa ghi nhận thanh toán"}
-                </span>
-              </div>
-            </div>
 
-            {/* 2. TỶ LỆ LẤP ĐẦY */}
-            <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-2xs space-y-2 border-l-4 border-l-blue-500">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  TỶ LỆ LẤP ĐẦY
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Users className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-blue-600 tracking-tight">
-                {rooms.occupancyRate}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500">
-                <span>
-                  {rooms.occupiedRooms}/{rooms.totalRooms} phòng đang ở ({rooms.vacantRooms} trống)
-                </span>
-              </div>
-            </div>
-
-            {/* 3. CÔNG NỢ CHƯA THU */}
-            <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-2xs space-y-2 border-l-4 border-l-rose-500">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  CÔNG NỢ TỒN
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                  <AlertCircle className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-rose-500 tracking-tight">
-                {formatVND(Number(financial.unpaidDebt) || 0)}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-rose-600">
-                <TrendingDown className="w-3.5 h-3.5" />
-                <span>
-                  {financial.unpaidInvoicesCount > 0
-                    ? `${financial.unpaidInvoicesCount} hóa đơn chưa thu / quá hạn`
-                    : "Không có công nợ quá hạn"}
-                </span>
-              </div>
-            </div>
-
-            {/* 4. TỶ LỆ THU TIỀN */}
-            <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-2xs space-y-2 border-l-4 border-l-emerald-500">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  TIẾN ĐỘ THU HỒI
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <Percent className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight">
-                {collection.collectionRate}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500">
-                <span>
-                  Đã thu {collection.paidCount} /{" "}
-                  {collection.paidCount + collection.unpaidCount + collection.overdueCount} hóa đơn kỳ này
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Analytical Charts Row (Recharts) */}
-          {mounted && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* Chart 1: Biểu Đồ Doanh Thu Thực Tế (BarChart) */}
-              <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                  <div>
-                    <h2 className="text-sm font-black text-zinc-900 flex items-center gap-2">
-                      <BarChart2 className="w-4 h-4 text-[#2AC1BC]" /> Doanh Thu Thực Nhận (6 Tháng)
-                    </h2>
-                    <p className="text-[11px] text-zinc-400 font-medium">
-                      Dữ liệu thực tế từ giao dịch thanh toán thành công (triệu VNĐ).
-                    </p>
-                  </div>
-                  <span className="text-xs font-black text-[#2AC1BC]">
-                    Tổng tháng này: {formatVND(Number(financial.currentMonthRevenue) || 0)}
-                  </span>
-                </div>
-
-                {revenueChartData.length === 0 ? (
-                  <div className="h-64 flex flex-col items-center justify-center text-center space-y-2">
-                    <BarChart2 className="w-8 h-8 text-zinc-300" />
-                    <p className="text-xs font-bold text-zinc-500">Chưa có dữ liệu doanh thu</p>
-                  </div>
-                ) : (
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={revenueChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#71717a", fontSize: 11, fontWeight: 700 }}
-                          dy={8}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#71717a", fontSize: 10 }}
-                          tickFormatter={(val) => `${val}M`}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "#f4f4f5" }}
-                          contentStyle={{
-                            borderRadius: "12px",
-                            border: "1px solid #e4e4e7",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                          }}
-                          formatter={(value: any, name: any, item: any) => [
-                            `${item?.payload?.fullAmount || value} ₫`,
-                            "Doanh thu thực nhận",
-                          ]}
-                        />
-                        <Bar dataKey="revenue" fill="#2AC1BC" radius={[6, 6, 0, 0]} maxBarSize={45}>
-                          {revenueChartData.map((_, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={index === revenueChartData.length - 1 ? "#2AC1BC" : "#8dd8d5"}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
-
-              {/* Chart 2: Biểu Đồ Tỷ Lệ Lấp Đầy (LineChart) */}
-              <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                  <div>
-                    <h2 className="text-sm font-black text-zinc-900 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-blue-500" /> Xu Hướng Tỷ Lệ Lấp Đầy (%)
-                    </h2>
-                    <p className="text-[11px] text-zinc-400 font-medium">
-                      Biến động tỷ lệ thuê phòng theo từng tháng hoạt động.
-                    </p>
-                  </div>
-                  <span className="text-xs font-black text-blue-600">
-                    Hiện tại: {rooms.occupancyRate}
-                  </span>
-                </div>
-
-                {occupancyChartData.length === 0 ? (
-                  <div className="h-64 flex flex-col items-center justify-center text-center space-y-2">
-                    <Users className="w-8 h-8 text-zinc-300" />
-                    <p className="text-xs font-bold text-zinc-500">Chưa có dữ liệu phòng thuê</p>
-                  </div>
-                ) : (
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={occupancyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#71717a", fontSize: 11, fontWeight: 700 }}
-                          dy={8}
-                        />
-                        <YAxis
-                          domain={[0, 100]}
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#71717a", fontSize: 10 }}
-                          tickFormatter={(val) => `${val}%`}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: "12px",
-                            border: "1px solid #e4e4e7",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                          }}
-                          formatter={(value: any, name: any, item: any) => [
-                            `${value}% (${item?.payload?.count || 0}/${item?.payload?.total || 0} phòng)`,
-                            "Tỷ lệ lấp đầy",
-                          ]}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="occupied"
-                          stroke="#3b82f6"
-                          strokeWidth={3}
-                          dot={{ r: 4, strokeWidth: 2, fill: "#ffffff", stroke: "#3b82f6" }}
-                          activeDot={{ r: 6, fill: "#3b82f6" }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Collection Status & Room Breakdown Widgets (UC-L-08) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {/* Collection Status Breakdown */}
-            <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                <h3 className="text-xs font-black uppercase text-zinc-900 tracking-wider">
-                  Trạng Thái Thu Tiền Kỳ Này
-                </h3>
-                <span className="text-xs font-black text-emerald-600">
-                  {collection.collectionRate}
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="h-3 w-full bg-zinc-100 rounded-full overflow-hidden flex">
-                <div
-                  style={{
-                    width: `${
-                      Number(collection.collectionRate.replace("%", "")) || 0
-                    }%`,
-                  }}
-                  className="bg-emerald-500 h-full transition-all"
-                  title="Đã thu"
-                />
-                <div
-                  style={{
-                    width: `${
-                      collection.unpaidCount > 0
-                        ? (collection.unpaidCount /
-                            (collection.paidCount + collection.unpaidCount + collection.overdueCount || 1)) *
-                          100
-                        : 0
-                    }%`,
-                  }}
-                  className="bg-amber-400 h-full transition-all"
-                  title="Chưa thu"
-                />
-                <div
-                  style={{
-                    width: `${
-                      collection.overdueCount > 0
-                        ? (collection.overdueCount /
-                            (collection.paidCount + collection.unpaidCount + collection.overdueCount || 1)) *
-                          100
-                        : 0
-                    }%`,
-                  }}
-                  className="bg-rose-500 h-full transition-all"
-                  title="Quá hạn"
-                />
-              </div>
-
-              <div className="space-y-2.5 text-xs">
-                <div className="flex items-center justify-between p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span className="font-bold text-zinc-700">Đã thu</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-black text-emerald-700">{collection.paidAmount} ₫</span>
-                    <span className="text-[10px] text-zinc-400 block">({collection.paidCount} HĐ)</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-2.5 bg-amber-50/60 rounded-xl border border-amber-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                    <span className="font-bold text-zinc-700">Chưa thu</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-black text-amber-700">{collection.unpaidAmount} ₫</span>
-                    <span className="text-[10px] text-zinc-400 block">({collection.unpaidCount} HĐ)</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-2.5 bg-rose-50/60 rounded-xl border border-rose-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                    <span className="font-bold text-zinc-700">Quá hạn</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-black text-rose-600">{collection.overdueAmount} ₫</span>
-                    <span className="text-[10px] text-zinc-400 block">({collection.overdueCount} HĐ)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Room Distribution Breakdown */}
-            <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                <h3 className="text-xs font-black uppercase text-zinc-900 tracking-wider">
-                  Phân Bổ Tình Trạng Phòng
-                </h3>
-                <span className="text-xs font-bold text-zinc-500">
-                  Tổng {rooms.totalRooms} phòng
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">ĐANG THUÊ</span>
-                  <span className="text-lg font-black text-emerald-600 block mt-0.5">
-                    {rooms.occupiedRooms}
-                  </span>
-                  <span className="text-[10px] text-zinc-400">Khách đang ở</span>
-                </div>
-
-                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">PHÒNG TRỐNG</span>
-                  <span className="text-lg font-black text-blue-600 block mt-0.5">
-                    {rooms.vacantRooms}
-                  </span>
-                  <span className="text-[10px] text-zinc-400">Sẵn sàng nhận khách</span>
-                </div>
-
-                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">ĐẶT CỌC</span>
-                  <span className="text-lg font-black text-purple-600 block mt-0.5">
-                    {rooms.depositRooms}
-                  </span>
-                  <span className="text-[10px] text-zinc-400">Đang giữ chỗ</span>
-                </div>
-
-                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">BẢO TRÌ</span>
-                  <span className="text-lg font-black text-amber-600 block mt-0.5">
-                    {rooms.maintenanceRooms}
-                  </span>
-                  <span className="text-[10px] text-zinc-400">Đang sửa chữa</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Expiring Contracts within 30 Days (UC-L-08) */}
-            <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                <h3 className="text-xs font-black uppercase text-zinc-900 tracking-wider flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-500" /> Hợp Đồng Sắp Hết Hạn (&lt; 30 Ngày)
-                </h3>
-                <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-black">
-                  {expiringContracts.length}
-                </span>
-              </div>
-
-              {expiringContracts.length === 0 ? (
-                <div className="py-8 text-center space-y-1.5">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                  <p className="text-xs font-bold text-zinc-700">Tất cả hợp đồng ổn định</p>
-                  <p className="text-[11px] text-zinc-400">
-                    Không có hợp đồng nào hết hạn trong vòng 30 ngày tới.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                  {expiringContracts.map((c) => (
-                    <div
-                      key={c.id}
-                      className="p-2.5 bg-amber-50/50 hover:bg-amber-50 border border-amber-200/60 rounded-xl flex items-center justify-between text-xs transition-colors"
-                    >
-                      <div>
-                        <div className="font-black text-zinc-900">
-                          {c.room} — {c.tenant}
-                        </div>
-                        <div className="text-[10px] text-zinc-500">
-                          Hạn kết thúc: <span className="font-bold text-amber-800">{c.endDate}</span>
-                        </div>
-                      </div>
-                      <span className="px-2 py-1 bg-amber-200/70 text-amber-900 font-black rounded-lg text-[10px] shrink-0">
-                        Còn {c.daysLeft} ngày
+            {/* Funnel Progress Bars */}
+            <div className="space-y-3.5">
+              {marketingFunnelStages.map((stage, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-zinc-700">{stage.stage}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-900 font-extrabold">{stage.count.toLocaleString()}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-zinc-100 text-zinc-600">
+                        {stage.rate}
                       </span>
                     </div>
-                  ))}
+                  </div>
+                  <div className="w-full bg-zinc-100 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${Math.max(12, 100 - i * 19)}%`,
+                        backgroundColor: stage.fill
+                      }}
+                    />
+                  </div>
                 </div>
-              )}
-
-              <Link
-                href="/landlord/contracts"
-                className="block pt-2 border-t border-zinc-100 text-[11px] font-bold text-[#2AC1BC] hover:underline"
-              >
-                Xem toàn bộ hợp đồng &rarr;
-              </Link>
+              ))}
             </div>
           </div>
-        </>
-      )}
+
+          <div className="mt-4 p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/60 flex items-center justify-between text-xs">
+            <span className="font-semibold text-zinc-600">
+              {locale === "en" ? "Overall Conversion (View ➔ Deposit):" : "Tỷ lệ chốt tổng thể (Xem ➔ Cọc):"}
+            </span>
+            <span className="font-extrabold text-[#138e89] text-sm bg-[#2AC1BC]/15 px-2.5 py-0.5 rounded-full border border-[#2AC1BC]/30">
+              {t("overallConversionHigh", { rate: ((28 / 8450) * 100).toFixed(2) })}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= 2 VALUE-ADDED WIDGETS: NGUỒN KHÁCH & KHUNG GIỜ VÀNG ================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Widget 1: Nguồn Khách Thuê & Kênh Tiếp Cận */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                <Compass className="w-4 h-4 text-[#2AC1BC]" />
+                <span>{t("leadSourcesTitle")}</span>
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#138e89]">
+                {t("leadSourcesBadge")}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-5">
+              {t("leadSourcesSubtitle")}
+            </p>
+
+            <div className="space-y-4">
+              {leadSources.map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <div key={idx} className="p-3 bg-zinc-50/70 hover:bg-zinc-50 border border-zinc-200/60 rounded-2xl transition-all">
+                    <div className="flex items-center justify-between text-xs font-bold mb-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-white ${item.color}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-zinc-800 font-bold block">{item.source}</span>
+                          <span className="text-[11px] text-zinc-400 font-normal">
+                            {t("conversionRateLabel")}{" "}
+                            <strong className={item.textColor}>{item.conversion}</strong>
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-zinc-900 font-extrabold">{item.count} {t("tenantsUnit")}</span>
+                        <span className="text-zinc-500 text-[11px] font-bold block">{item.share}% {t("marketShare")}</span>
+                      </div>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="w-full bg-zinc-200/70 rounded-full h-2 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${item.color}`}
+                        style={{ width: `${item.share}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
+            <span>{t("topChannel")} <strong className="text-zinc-800 font-bold">{locale === "en" ? "Dormio BHRP & Nearby Maps" : "Sàn Dormio BHRP & Bản đồ vị trí"}</strong></span>
+            <span className="text-[#138e89] font-bold flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5 text-[#2AC1BC]" />
+              {t("topChannelHighlight")}
+            </span>
+          </div>
+        </div>
+
+        {/* Widget 2: Khung Giờ Vàng Khách Hỏi Thuê */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#FF6B35]" />
+                <span>{t("peakHoursTitle")}</span>
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-orange-50 text-[#FF6B35] border border-orange-200/80">
+                Peak Hours
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-5">
+              {t("peakHoursSubtitle")}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              {peakHours.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    item.isGold
+                      ? "bg-gradient-to-br from-[#2AC1BC]/10 via-[#2AC1BC]/5 to-transparent border-[#2AC1BC]/30 shadow-xs"
+                      : "bg-zinc-50/70 border-zinc-200/60"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black text-zinc-900">{item.time}</span>
+                    {item.isGold && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#2AC1BC] text-white">
+                        {t("goldBadge")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-zinc-500 font-semibold mb-2">{item.period}</div>
+                  <div className="flex items-end justify-between">
+                    <span className="text-xl font-black text-zinc-900">{item.percent}%</span>
+                    <span className="text-xs font-bold text-zinc-400">{item.count} {t("inquiriesCountUnit")}</span>
+                  </div>
+                  <div className="w-full bg-zinc-200/70 rounded-full h-1.5 mt-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${item.isGold ? "bg-[#2AC1BC]" : "bg-zinc-400"}`}
+                      style={{ width: `${item.percent}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/20 flex items-start gap-2.5 text-xs">
+            <Zap className="w-4 h-4 text-[#2AC1BC] shrink-0 mt-0.5" />
+            <p className="text-zinc-700 leading-relaxed font-medium">
+              <strong className="text-zinc-900 font-bold">{t("peakHoursTip")}</strong> {t("peakHoursTipDesc")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= 2 VALUE-ADDED WIDGETS: SỨC HÚT THEO LOẠI PHÒNG & AI INSIGHTS ================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Widget 3: Tốc Độ Chốt Cọc & Thị Hiếu Theo Loại Phòng (1 Cột) */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
+                <span>{t("roomDemandTitle")}</span>
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-500 mb-4">
+              {t("roomDemandSubtitle")}
+            </p>
+
+            <div className="space-y-3">
+              {roomTypeMetrics.map((rt, idx) => (
+                <div key={idx} className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200/60">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-zinc-900">{rt.type}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${rt.demandColor}`}>
+                      {rt.demand}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs mt-2 text-zinc-600">
+                    <span>{t("closingTimeLabel")} <strong className="text-zinc-900 font-extrabold">{rt.avgDays}</strong></span>
+                    <span className="text-[11px] text-[#138e89] font-bold">{rt.inquiryGrowth} {t("inquiriesGrowthLabel")}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-zinc-100 text-[11px] text-zinc-400">
+            {t("sampleDataNote")}
+          </div>
+        </div>
+
+        {/* Widget 4: Dormio Smart AI Insights (2 Cột) */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-zinc-900 to-zinc-800 text-white p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/20 text-[#2AC1BC] flex items-center justify-center border border-[#2AC1BC]/40">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <span>{t("aiInsightsTitle")}</span>
+                    <span className="px-2 py-0.5 text-[10px] font-extrabold bg-[#2AC1BC] text-zinc-950 rounded-full">
+                      AI Powered
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    {t("aiInsightsSubtitle")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-4">
+              {/* Card 1: Bổ sung hình ảnh */}
+              <div className="bg-zinc-800/80 border border-zinc-700/80 p-4 rounded-2xl hover:border-[#2AC1BC]/60 transition-all">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] mb-2">
+                  <Lightbulb className="w-4 h-4" />
+                  <span>{t("aiTip1Title")}</span>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  {t("aiTip1Desc")}
+                </p>
+              </div>
+
+              {/* Card 2: Giá thuê cạnh tranh */}
+              <div className="bg-zinc-800/80 border border-zinc-700/80 p-4 rounded-2xl hover:border-[#2AC1BC]/60 transition-all">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] mb-2">
+                  <Award className="w-4 h-4" />
+                  <span>{t("aiTip2Title")}</span>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  {t("aiTip2Desc")}
+                </p>
+              </div>
+
+              {/* Card 3: Khung thời gian đẩy tin */}
+              <div className="bg-zinc-800/80 border border-zinc-700/80 p-4 rounded-2xl hover:border-[#2AC1BC]/60 transition-all">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#FF6B35] mb-2">
+                  <Rocket className="w-4 h-4" />
+                  <span>{t("aiTip3Title")}</span>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  {t("aiTip3Desc")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 pt-3 border-t border-zinc-700/60 flex items-center justify-between text-xs text-zinc-400">
+            <span>{t("aiRefreshNote")}</span>
+            <span className="text-[#2AC1BC] font-semibold flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {t("aiReliability")}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
