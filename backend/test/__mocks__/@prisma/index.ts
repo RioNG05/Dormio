@@ -121,6 +121,19 @@ export enum PaymentStatus {
   failed = 'failed',
 }
 
+export enum AuditLogAction {
+  create = 'create',
+  update = 'update',
+  delete = 'delete',
+  login = 'login',
+  payment = 'payment',
+}
+
+export enum MessageAttachmentType {
+  image = 'image',
+  file = 'file',
+}
+
 export class Decimal {
   private val: number;
   constructor(value: number | string) {

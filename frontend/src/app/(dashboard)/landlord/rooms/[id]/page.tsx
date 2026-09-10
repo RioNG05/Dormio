@@ -1,16 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, use, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Edit, Trash2, Home, User, FileSignature, Receipt,
   Gauge, Banknote, Sparkles, Wrench, X, ChevronDown,
-  AlertTriangle, Eye, History, Wallet, Plus, Upload, RefreshCw, Filter, Building2, AlertCircle
+  AlertTriangle, Eye, History, Wallet, Plus, Upload, RefreshCw, Filter,
+  Building2, AlertCircle, Users, CheckCircle2, ShieldCheck, Phone, FileText
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  getRoomDashboard,
+  updateRoom,
+  RoomDashboardResponse,
+  RoomDashboardContract,
+  RoomDashboardTenant,
+} from "@/services/room.service";
+import {
+  meterReadingService,
+  LandlordActiveMeteredService,
+  LandlordMeterPeriodHistory,
+  LandlordMeterEditAction,
+} from "@/services/meter-reading.service";
 import { getRoomById, defaultRoomServices, Room } from "../data";
 
 interface MeterHistoryRecord {
+  id?: string;
   period: string;       // "Tháng 09/2026"
   date: string;         // "01/09/2026 08:00"
   oldElec: number;
@@ -19,6 +35,15 @@ interface MeterHistoryRecord {
   newWater: number;
   editReason?: string;
   editedAt?: string;
+  editHistory?: Array<{
+    id: string;
+    serviceName: string;
+    oldValue: number | null;
+    newValue: number;
+    reason: string | null;
+    createdAt: string;
+  }>;
+  editActions?: LandlordMeterEditAction[];
   isOpen?: boolean;
 }
 
@@ -34,18 +59,71 @@ interface InvoiceRecord {
   editedAt?: string;
 }
 
+interface MaintenanceRecord {
+  id: string;
+  title: string;
+  description?: string;
+  reportDate: string;
+  status: "Đang xử lý" | "Đã xong";
+  priority: "Mức độ cao" | "Mức độ trung bình" | "Mức độ nhẹ";
+  completedDate?: string;
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const mapStatusToDisplay = (status?: string): 'Đang thuê' | 'Trống' | 'Bảo trì' | 'Đặt cọc' => {
+  switch (status?.toLowerCase()) {
+    case 'occupied':
+    case 'đang thuê':
+      return 'Đang thuê';
+    case 'maintainace':
+    case 'maintenance':
+    case 'bảo trì':
+      return 'Bảo trì';
+    case 'deposited':
+    case 'đặt cọc':
+      return 'Đặt cọc';
+    case 'available':
+    case 'trống':
+    default:
+      return 'Trống';
+  }
+};
+
+const mapDisplayToBackendStatus = (status: string): string => {
+  switch (status) {
+    case 'Đang thuê':
+      return 'occupied';
+    case 'Bảo trì':
+      return 'maintainace';
+    case 'Đặt cọc':
+      return 'deposited';
+    case 'Trống':
+    default:
+      return 'available';
+  }
+};
+
 export default function RoomDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const { activeBuilding } = useAuth();
+
   const [room, setRoom] = useState<Room | null>(null);
+  const [dashboardData, setDashboardData] = useState<RoomDashboardResponse | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Modals & form state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMeterModalOpen, setIsMeterModalOpen] = useState(false);
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
-  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+  const [discardConfirmModal, setDiscardConfirmModal] = useState<{ isOpen: boolean; onConfirm: () => void }>({
+    isOpen: false,
+    onConfirm: () => { },
+  });
+
   const [isOcrScanning, setIsOcrScanning] = useState(false);
   const [ocrSuccessMsg, setOcrSuccessMsg] = useState("");
 
@@ -68,56 +146,371 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     { id: 'wifi', name: 'Wifi', defaultPrice: '100.000', customPrice: '100.000', unit: 'đ/phòng', isCustom: true, isRemovable: false },
   ]);
 
+  // Initial snapshot to detect unsaved changes
+  const [initialEditValues, setInitialEditValues] = useState({
+    roomNumber: "",
+    price: "",
+    area: "",
+    floor: "",
+  });
+
+  // Current date for default picker
+  const currentMonthNum = new Date().getMonth() + 1;
+  const currentYearNum = new Date().getFullYear();
+
   // Meter modal input states
-  const [selectedMonth, setSelectedMonth] = useState("Tháng 8");
-  const [selectedYear, setSelectedYear] = useState("2026");
-  const [formElec, setFormElec] = useState("1428");
-  const [formWater, setFormWater] = useState("45");
+  const [selectedMonth, setSelectedMonth] = useState(`Tháng ${currentMonthNum}`);
+  const [selectedYear, setSelectedYear] = useState(currentYearNum.toString());
+  const [formElec, setFormElec] = useState("");
+  const [formWater, setFormWater] = useState("");
+  const [isSubmittingMeter, setIsSubmittingMeter] = useState(false);
 
-  // Meter Readings History Data
-  const [meterHistory, setMeterHistory] = useState<MeterHistoryRecord[]>([
-    { period: "Tháng 09/2026", date: "01/09/2026 08:00", oldElec: 1428, newElec: 1530, oldWater: 45, newWater: 49, isOpen: true },
-    { period: "Tháng 08/2026", date: "01/08/2026 08:30", oldElec: 1318, newElec: 1428, oldWater: 42, newWater: 45, isOpen: false },
-    { period: "Tháng 07/2026", date: "01/07/2026 09:15", oldElec: 1210, newElec: 1318, oldWater: 38, newWater: 42, isOpen: false },
-    { period: "Tháng 06/2026", date: "01/06/2026 08:10", oldElec: 1100, newElec: 1210, oldWater: 34, newWater: 38, isOpen: false },
-    { period: "Tháng 05/2026", date: "01/05/2026 08:45", oldElec: 990, newElec: 1100, oldWater: 30, newWater: 34, isOpen: false },
-    { period: "Tháng 04/2026", date: "01/04/2026 09:00", oldElec: 880, newElec: 990, oldWater: 26, newWater: 30, isOpen: false }
-  ]);
+  // Meter Readings History & Active Services Data (UC-L-09)
+  const [meterHistory, setMeterHistory] = useState<MeterHistoryRecord[]>([]);
+  const [meterHistoryRaw, setMeterHistoryRaw] = useState<LandlordMeterPeriodHistory[]>([]);
+  const [roomMeteredServices, setRoomMeteredServices] = useState<LandlordActiveMeteredService[]>([]);
 
-  // Invoices History List
-  const [invoicesHistory, setInvoicesHistory] = useState<InvoiceRecord[]>([
-    { id: "INV-202609", period: "Tháng 09/2026", monthSeq: "09/26", deadline: "10/09/2026 (Quá hạn 5 ngày)", status: "Chưa thanh toán", method: "Chưa thu", isOverdue: true },
-    { id: "INV-202608", period: "Tháng 08/2026", monthSeq: "08/26", deadline: "10/08/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202607", period: "Tháng 07/2026", monthSeq: "07/26", deadline: "10/07/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202606", period: "Tháng 06/2026", monthSeq: "06/26", deadline: "10/06/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202605", period: "Tháng 05/2026", monthSeq: "05/26", deadline: "10/05/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false },
-    { id: "INV-202604", period: "Tháng 04/2026", monthSeq: "04/26", deadline: "10/04/2026", status: "Đã thu", method: "VietQR Auto", isOverdue: false }
-  ]);
+  // Invoices History List (initialized empty; loaded from API)
+  const [invoicesHistory, setInvoicesHistory] = useState<InvoiceRecord[]>([]);
 
-  // Maintenance History List & Pagination
-  interface MaintenanceRecord {
-    id: string;
-    title: string;
-    description?: string;
-    reportDate: string;
-    status: "Đang xử lý" | "Đã xong";
-    priority: "Mức độ cao" | "Mức độ trung bình" | "Mức độ nhẹ";
-    completedDate?: string;
-  }
-
-  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([
-    { id: "M1", title: "Hỏng máy lạnh (Chảy nước)", description: "Máy lạnh tầng 4 chảy tràn nước ra sàn phòng ngủ", reportDate: "25/08/2026", status: "Đang xử lý", priority: "Mức độ cao" },
-    { id: "M2", title: "Thay bóng đèn nhà vệ sinh", description: "Bóng đèn led 12W bị cháy cần thay mới", reportDate: "10/07/2026", completedDate: "12/07/2026", status: "Đã xong", priority: "Mức độ nhẹ" },
-    { id: "M3", title: "Sửa vòi nước bồn rửa chén rỉ nước", reportDate: "05/05/2026", completedDate: "06/05/2026", status: "Đã xong", priority: "Mức độ trung bình" },
-    { id: "M4", title: "Bảo dưỡng máy giặt định kỳ", reportDate: "15/03/2026", completedDate: "15/03/2026", status: "Đã xong", priority: "Mức độ nhẹ" },
-    { id: "M5", title: "Sửa khoá cửa vân tay phòng", reportDate: "10/01/2026", completedDate: "11/01/2026", status: "Đã xong", priority: "Mức độ cao" }
-  ]);
+  // Maintenance History List & Pagination (initialized empty; no mockup data)
+  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([]);
   const [maintPage, setMaintPage] = useState(1);
   const MAINT_PER_PAGE = 2;
 
   const [incidentTitleInput, setIncidentTitleInput] = useState("");
   const [incidentDescInput, setIncidentDescInput] = useState("");
   const [incidentPriorityInput, setIncidentPriorityInput] = useState<"Mức độ cao" | "Mức độ trung bình" | "Mức độ nhẹ">("Mức độ trung bình");
+
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Pagination states
+  const ITEMS_PER_PAGE = 2;
+  const [invoicePage, setInvoicePage] = useState(1);
+  const [meterPage, setMeterPage] = useState(1);
+
+  // Meter Correction Modal State
+  const [correctModal, setCorrectModal] = useState<{
+    isOpen: boolean;
+    period: string;
+    oldElec: number;
+    newElec: number;
+    oldWater: number;
+    newWater: number;
+    reason: string;
+    error: string;
+  }>({
+    isOpen: false,
+    period: "",
+    oldElec: 0,
+    newElec: 0,
+    oldWater: 0,
+    newWater: 0,
+    reason: "",
+    error: ""
+  });
+
+  const isRealUuid = Boolean(
+    resolvedParams.id && UUID_REGEX.test(resolvedParams.id)
+  );
+
+  // Load Dashboard Data (Aggregated query UC-L-05) or fallback to mock
+  useEffect(() => {
+    setIsMounted(true);
+
+    async function loadDashboard() {
+      setIsLoading(true);
+      if (isRealUuid && activeBuilding?.id && UUID_REGEX.test(activeBuilding.id)) {
+        try {
+          const rawRes = await getRoomDashboard(activeBuilding.id, resolvedParams.id);
+          const res = (rawRes as any)?.data?.room ? (rawRes as any).data : rawRes;
+          setDashboardData(res);
+
+          const r = res?.room;
+          if (!r) {
+            console.error("Room data is missing from dashboard response:", res);
+            return;
+          }
+          const activeContract = res.currentContract;
+          const primaryTenant =
+            activeContract?.tenants?.find((t: any) => t.isPrimary) ||
+            activeContract?.tenants?.[0];
+
+          const formattedPrice = activeContract?.rentPrice
+            ? `${parseInt(activeContract.rentPrice).toLocaleString('vi-VN')} ₫`
+            : r.roomType?.name
+            ? `3.000.000 ₫`
+            : '3.000.000 ₫';
+
+          const mappedRoom: Room = {
+            id: r.id,
+            roomNumber: r.roomNumber,
+            building: activeBuilding.id,
+            buildingSeq: 1,
+            floor: String(r.floor),
+            price: formattedPrice,
+            area: r.area ? String(r.area) : "25",
+            status: mapStatusToDisplay(r.status),
+            contract: activeContract ? "active" : "none",
+            invoice: (res.invoices || []).some((i: any) => i.status?.toLowerCase() !== 'paid') ? "debt" : "paid",
+            tenant: primaryTenant?.fullName || undefined,
+            tenantPhone: primaryTenant?.phoneNumber || undefined,
+            tenantCccd: primaryTenant?.identityNumber || undefined,
+            amenities: ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng'],
+            notes: activeContract?.note || "",
+          };
+
+          setRoom(mappedRoom);
+          setEditRoomNumber(r.roomNumber);
+          setEditPrice(formattedPrice);
+          setEditArea(mappedRoom.area || "25");
+          setEditFloor(mappedRoom.floor || "1");
+          setInitialEditValues({
+            roomNumber: r.roomNumber,
+            price: formattedPrice,
+            area: mappedRoom.area || "25",
+            floor: mappedRoom.floor || "1",
+          });
+
+          // Populate live services if attached
+          if (res.services && res.services.length > 0) {
+            setEditServices(
+              res.services.map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                defaultPrice: parseInt(s.price).toLocaleString('vi-VN'),
+                customPrice: parseInt(s.price).toLocaleString('vi-VN'),
+                unit: s.unit ? `đ/${s.unit}` : 'đ/tháng',
+                isCustom: false,
+                isRemovable: false,
+              }))
+            );
+          }
+
+          // Populate live invoices if available
+          if (res.invoices && res.invoices.length > 0) {
+            setInvoicesHistory(
+              res.invoices.map((inv: any) => {
+                const due = new Date(inv.dueDate);
+                const month = (due.getMonth() + 1).toString().padStart(2, '0');
+                const year = due.getFullYear();
+                const isPaid = inv.status?.toLowerCase() === 'paid';
+                return {
+                  id: inv.id.slice(0, 8).toUpperCase(),
+                  period: `Tháng ${month}/${year}`,
+                  monthSeq: `${month}/${String(year).slice(-2)}`,
+                  deadline: due.toLocaleDateString('vi-VN'),
+                  status: isPaid ? 'Đã thu' : 'Chưa thanh toán',
+                  method: inv.paymentMethod || 'VietQR Auto',
+                  isOverdue: !isPaid && new Date() > due,
+                };
+              })
+            );
+          }
+
+          // Load active metered services & meter history (UC-L-09)
+          try {
+            const [meterServicesRes, meterHistoryRes] = await Promise.all([
+              meterReadingService.getLandlordRoomMeteredServices(activeBuilding.id, resolvedParams.id),
+              meterReadingService.getLandlordRoomMeterHistory(activeBuilding.id, resolvedParams.id),
+            ]);
+
+            if (meterServicesRes?.services) {
+              setRoomMeteredServices(meterServicesRes.services);
+              const elec = meterServicesRes.services.find(s => s.serviceName.toLowerCase().includes('điện'));
+              const water = meterServicesRes.services.find(s => s.serviceName.toLowerCase().includes('nước'));
+              if (elec?.unbilledReading?.readingValue != null) {
+                setFormElec(elec.unbilledReading.readingValue.toString());
+              }
+              if (water?.unbilledReading?.readingValue != null) {
+                setFormWater(water.unbilledReading.readingValue.toString());
+              }
+            }
+
+            if (meterHistoryRes?.history) {
+              setMeterHistoryRaw(meterHistoryRes.history);
+              const mapped = meterHistoryRes.history.map((h, idx) => {
+                const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+                const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+                return {
+                  id: h.id || `cycle_${h.period}_${idx}`,
+                  period: h.period,
+                  date: h.date,
+                  oldElec: elec?.oldReading ?? 0,
+                  newElec: elec?.newReading ?? 0,
+                  oldWater: water?.oldReading ?? 0,
+                  newWater: water?.newReading ?? 0,
+                  isOpen: idx === 0,
+                  editReason: h.editReason,
+                  editedAt: h.editedAt,
+                  editHistory: h.editHistory,
+                  editActions: h.editActions,
+                };
+              });
+              setMeterHistory(mapped);
+            }
+          } catch (mErr) {
+            console.warn("Could not load landlord meter readings:", mErr);
+            setMeterHistory([]);
+          }
+        } catch (err: any) {
+          console.error("Failed to load room dashboard from API:", err);
+          setMeterHistory([]);
+          setMaintenanceHistory([]);
+          // Fallback to local mock data
+          const found = getRoomById(resolvedParams.id);
+          setRoom(found);
+          if (found) {
+            setEditRoomNumber(found.roomNumber);
+            setEditPrice(found.price || "3.000.000 ₫");
+            setEditArea(found.area || "25");
+            setEditFloor(found.floor || "1");
+            setInitialEditValues({
+              roomNumber: found.roomNumber,
+              price: found.price || "3.000.000 ₫",
+              area: found.area || "25",
+              floor: found.floor || "1",
+            });
+          }
+        }
+      } else {
+        // Fallback to local mock data
+        const found = getRoomById(resolvedParams.id);
+        setRoom(found);
+        if (found) {
+          setEditRoomNumber(found.roomNumber);
+          setEditPrice(found.price || "3.000.000 ₫");
+          setEditArea(found.area || "25");
+          setEditFloor(found.floor || "1");
+          setEditAmenities(found.amenities || ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
+          setEditNotes(found.notes || "");
+          setInitialEditValues({
+            roomNumber: found.roomNumber,
+            price: found.price || "3.000.000 ₫",
+            area: found.area || "25",
+            floor: found.floor || "1",
+          });
+        }
+      }
+      setIsLoading(false);
+    }
+
+    loadDashboard();
+  }, [resolvedParams.id, activeBuilding?.id, isRealUuid]);
+
+  useEffect(() => {
+    setInvoicePage(1);
+    setMeterPage(1);
+  }, [selectedFilterPeriod]);
+
+  // Modal reset behavior with confirmation for unsaved changes (Rule 10)
+  const handleCloseEditModal = () => {
+    const hasChanges =
+      editRoomNumber !== initialEditValues.roomNumber ||
+      editPrice !== initialEditValues.price ||
+      editArea !== initialEditValues.area ||
+      editFloor !== initialEditValues.floor;
+
+    if (hasChanges) {
+      setDiscardConfirmModal({
+        isOpen: true,
+        onConfirm: () => {
+          setEditRoomNumber(initialEditValues.roomNumber);
+          setEditPrice(initialEditValues.price);
+          setEditArea(initialEditValues.area);
+          setEditFloor(initialEditValues.floor);
+          setIsEditModalOpen(false);
+          setDiscardConfirmModal({ isOpen: false, onConfirm: () => { } });
+        },
+      });
+    } else {
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleSaveRoomDetails = async () => {
+    if (isRealUuid && activeBuilding?.id && UUID_REGEX.test(activeBuilding.id)) {
+      try {
+        const cleanArea = parseFloat(editArea) || undefined;
+        const cleanFloor = parseInt(editFloor) || undefined;
+
+        await updateRoom(activeBuilding.id, resolvedParams.id, {
+          roomNumber: editRoomNumber.trim(),
+          floor: cleanFloor,
+          area: cleanArea,
+        });
+
+        setRoom((prev) =>
+          prev
+            ? {
+                ...prev,
+                roomNumber: editRoomNumber || prev.roomNumber,
+                price: editPrice.includes('₫') ? editPrice : `${editPrice} ₫`,
+                area: editArea || prev.area,
+                floor: editFloor || prev.floor,
+                amenities: editAmenities,
+                notes: editNotes,
+              }
+            : null
+        );
+        setInitialEditValues({
+          roomNumber: editRoomNumber,
+          price: editPrice,
+          area: editArea,
+          floor: editFloor,
+        });
+        setIsEditModalOpen(false);
+        showToast("Đã cập nhật thông tin phòng thành công!", "success");
+      } catch (err: any) {
+        console.error("Failed to update room:", err);
+        showToast(err.message || "Lỗi khi lưu thông tin phòng", "error");
+      }
+    } else {
+      setRoom((prev) =>
+        prev
+          ? {
+              ...prev,
+              roomNumber: editRoomNumber || prev.roomNumber,
+              price: editPrice.includes('₫') ? editPrice : `${editPrice} ₫`,
+              area: editArea || prev.area,
+              floor: editFloor || prev.floor,
+              amenities: editAmenities,
+              notes: editNotes,
+            }
+          : null
+      );
+      setInitialEditValues({
+        roomNumber: editRoomNumber,
+        price: editPrice,
+        area: editArea,
+        floor: editFloor,
+      });
+      setIsEditModalOpen(false);
+      showToast("Đã cập nhật thông tin phòng!", "success");
+    }
+  };
+
+  const handleUpdateStatus = async (newDisplayStatus: 'Trống' | 'Đang thuê' | 'Bảo trì' | 'Đặt cọc') => {
+    const newBackendStatus = mapDisplayToBackendStatus(newDisplayStatus);
+    setRoom((prev) => (prev ? { ...prev, status: newDisplayStatus } : null));
+
+    if (isRealUuid && activeBuilding?.id && UUID_REGEX.test(activeBuilding.id)) {
+      try {
+        await updateRoom(activeBuilding.id, resolvedParams.id, { status: newBackendStatus });
+        showToast(`Đã chuyển trạng thái sang: ${newDisplayStatus}`, "success");
+      } catch (err: any) {
+        console.error("Failed to update status:", err);
+        showToast(err.message || "Lỗi cập nhật trạng thái", "error");
+      }
+    } else {
+      showToast(`Đã chuyển trạng thái sang: ${newDisplayStatus}`, "success");
+    }
+  };
 
   const handleCreateIncidentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,65 +555,292 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     return { monthOptions, yearOptions };
   };
 
-  // Toast notification state
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-  const showToast = (message: string, type: "success" | "error") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  // Open correction modal for a specific period
+  const handleOpenCorrectionModal = (record: MeterHistoryRecord) => {
+    setCorrectModal({
+      isOpen: true,
+      period: record.period,
+      oldElec: record.oldElec,
+      newElec: record.newElec,
+      oldWater: record.oldWater,
+      newWater: record.newWater,
+      reason: "",
+      error: ""
+    });
   };
 
-  // Pagination states
-  const ITEMS_PER_PAGE = 2;
-  const [invoicePage, setInvoicePage] = useState(1);
-  const [meterPage, setMeterPage] = useState(1);
+  const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false);
 
-  // Meter Correction Modal State
-  const [correctModal, setCorrectModal] = useState<{
-    isOpen: boolean;
-    period: string;
-    oldElec: number;
-    newElec: number;
-    oldWater: number;
-    newWater: number;
-    reason: string;
-    error: string;
-  }>({
-    isOpen: false,
-    period: "",
-    oldElec: 0,
-    newElec: 0,
-    oldWater: 0,
-    newWater: 0,
-    reason: "",
-    error: ""
-  });
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (resolvedParams.id) {
-      const found = getRoomById(resolvedParams.id);
-      setRoom(found);
-      if (found) {
-        setEditRoomNumber(found.roomNumber);
-        setEditPrice(found.price || "3.000.000 ₫");
-        setEditArea(found.area || "25");
-        setEditFloor(found.floor || "1");
-        setEditAmenities(found.amenities || ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
-        setEditNotes(found.notes || "");
-      }
+  // Close meter modal with unsaved confirmation check (Rule 10)
+  const handleCloseMeterModal = () => {
+    if (formElec.trim() !== "" || formWater.trim() !== "") {
+      setDiscardConfirmModal({
+        isOpen: true,
+        onConfirm: () => {
+          setFormElec("");
+          setFormWater("");
+          setIsMeterModalOpen(false);
+          setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      });
+    } else {
+      setIsMeterModalOpen(false);
     }
-  }, [resolvedParams.id]);
+  };
 
-  useEffect(() => {
-    setInvoicePage(1);
-    setMeterPage(1);
-  }, [selectedFilterPeriod]);
+  // Close correction modal with unsaved confirmation check (Rule 10)
+  const handleCloseCorrectionModal = () => {
+    if (correctModal.reason.trim() !== "") {
+      setDiscardConfirmModal({
+        isOpen: true,
+        onConfirm: () => {
+          setCorrectModal(prev => ({ ...prev, isOpen: false }));
+          setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      });
+    } else {
+      setCorrectModal(prev => ({ ...prev, isOpen: false }));
+    }
+  };
 
-  if (!isMounted) return null;
+  // Save correction action with mandatory reason check (UC-L-09)
+  const handleSaveCorrection = async () => {
+    if (!correctModal.reason.trim()) {
+      setCorrectModal(prev => ({ ...prev, error: "Vui lòng điền lý do điều chỉnh chỉ số (Bắt buộc)" }));
+      return;
+    }
+
+    if (!activeBuilding?.id || !resolvedParams.id) {
+      showToast("Không xác định được phòng hoặc nhà trọ!", "error");
+      return;
+    }
+
+    const rawPeriod = meterHistoryRaw.find(h => h.period === correctModal.period);
+    if (!rawPeriod) {
+      setMeterHistory(prev => prev.map(item => {
+        if (item.period === correctModal.period) {
+          const changes = [];
+          if (Number(correctModal.newElec) !== item.newElec) {
+            changes.push({ serviceName: 'Điện', oldValue: item.newElec, newValue: Number(correctModal.newElec), unit: 'kWh' });
+          }
+          if (Number(correctModal.newWater) !== item.newWater) {
+            changes.push({ serviceName: 'Nước', oldValue: item.newWater, newValue: Number(correctModal.newWater), unit: 'm³' });
+          }
+          const newAction: LandlordMeterEditAction = {
+            id: `mock_act_${Date.now()}`,
+            reason: correctModal.reason,
+            createdAt: new Date().toISOString(),
+            changes,
+          };
+          return {
+            ...item,
+            newElec: Number(correctModal.newElec),
+            newWater: Number(correctModal.newWater),
+            editReason: correctModal.reason,
+            editedAt: new Date().toLocaleString('vi-VN'),
+            editActions: changes.length > 0 ? [newAction, ...(item.editActions || [])] : item.editActions,
+          };
+        }
+        return item;
+      }));
+      setCorrectModal(prev => ({ ...prev, isOpen: false }));
+      showToast("Đã điều chỉnh chỉ số điện nước!", "success");
+      return;
+    }
+
+    try {
+      setIsSubmittingCorrection(true);
+      const elecItem = rawPeriod.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+      const waterItem = rawPeriod.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+
+      const sharedActionId = crypto.randomUUID();
+      const updatePromises = [];
+      if (elecItem && Number(correctModal.newElec) !== elecItem.newReading) {
+        updatePromises.push(
+          meterReadingService.updateLandlordMeterReading(activeBuilding.id, elecItem.id, {
+            readingValue: Number(correctModal.newElec),
+            reason: correctModal.reason,
+            actionId: sharedActionId,
+          })
+        );
+      }
+      if (waterItem && Number(correctModal.newWater) !== waterItem.newReading) {
+        updatePromises.push(
+          meterReadingService.updateLandlordMeterReading(activeBuilding.id, waterItem.id, {
+            readingValue: Number(correctModal.newWater),
+            reason: correctModal.reason,
+            actionId: sharedActionId,
+          })
+        );
+      }
+
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
+      }
+
+      setCorrectModal(prev => ({ ...prev, isOpen: false }));
+      showToast("Đã điều chỉnh chỉ số điện nước và ghi nhật ký thành công!", "success");
+
+      // Reload meter history
+      const newHistoryRes = await meterReadingService.getLandlordRoomMeterHistory(activeBuilding.id, resolvedParams.id);
+      if (newHistoryRes?.history) {
+        setMeterHistoryRaw(newHistoryRes.history);
+        const mapped = newHistoryRes.history.map((h, idx) => {
+          const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+          const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+          return {
+            id: h.id || `cycle_${h.period}_${idx}`,
+            period: h.period,
+            date: h.date,
+            oldElec: elec?.oldReading ?? 0,
+            newElec: elec?.newReading ?? 0,
+            oldWater: water?.oldReading ?? 0,
+            newWater: water?.newReading ?? 0,
+            isOpen: idx === 0,
+            editReason: h.editReason,
+            editedAt: h.editedAt,
+            editHistory: h.editHistory,
+            editActions: h.editActions,
+          };
+        });
+        setMeterHistory(mapped);
+      }
+    } catch (err: any) {
+      console.error("Failed to update meter reading:", err);
+      showToast(err.message || "Lỗi khi cập nhật chỉ số điện nước", "error");
+    } finally {
+      setIsSubmittingCorrection(false);
+    }
+  };
+
+  // Simulate AI OCR scanning
+  const handleSimulateAiOcr = () => {
+    setIsOcrScanning(true);
+    setOcrSuccessMsg("");
+    setTimeout(() => {
+      const elecService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'));
+      const waterService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'));
+      const baseElec = elecService?.lastReading?.readingValue ?? (meterHistory[0]?.newElec || 1400);
+      const baseWater = waterService?.lastReading?.readingValue ?? (meterHistory[0]?.newWater || 40);
+      const scannedElec = baseElec + Math.floor(Math.random() * 40) + 60;
+      const scannedWater = baseWater + Math.floor(Math.random() * 4) + 3;
+      setFormElec(scannedElec.toString());
+      setFormWater(scannedWater.toString());
+      setIsOcrScanning(false);
+      setOcrSuccessMsg(`✓ AI đã quét số điện nước: Điện ${scannedElec} kWh, Nước ${scannedWater} m³`);
+    }, 800);
+  };
+
+  // Save new meter reading from main modal (UC-L-09)
+  const handleSaveNewMeterReading = async () => {
+    if (!formElec && !formWater) {
+      showToast("Vui lòng nhập ít nhất chỉ số điện hoặc nước!", "error");
+      return;
+    }
+
+    if (!activeBuilding?.id || !resolvedParams.id) {
+      showToast("Không xác định được phòng hoặc nhà trọ!", "error");
+      return;
+    }
+
+    const elecService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'));
+    const waterService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'));
+
+    const readings: Array<{ serviceId: string; readingValue: number; imageUrl?: string }> = [];
+    if (elecService && formElec.trim() !== '') {
+      readings.push({
+        serviceId: elecService.serviceId,
+        readingValue: parseFloat(formElec),
+      });
+    }
+    if (waterService && formWater.trim() !== '') {
+      readings.push({
+        serviceId: waterService.serviceId,
+        readingValue: parseFloat(formWater),
+      });
+    }
+
+    if (readings.length === 0) {
+      showToast("Chưa tìm thấy dịch vụ điện/nước đo lường cho nhà trọ này!", "error");
+      return;
+    }
+
+    try {
+      setIsSubmittingMeter(true);
+      const parsedMonth = parseInt(selectedMonth.replace('Tháng ', '').trim(), 10);
+      const parsedYear = parseInt(selectedYear.trim(), 10);
+
+      await meterReadingService.recordLandlordMeterReading(activeBuilding.id, {
+        roomId: resolvedParams.id,
+        month: isNaN(parsedMonth) ? undefined : parsedMonth,
+        year: isNaN(parsedYear) ? undefined : parsedYear,
+        readings,
+      });
+
+      const periodFull = `Tháng ${selectedMonth.replace('Tháng ', '').padStart(2, '0')}/${selectedYear}`;
+      showToast(`Đã chốt chỉ số cho ${periodFull} thành công!`, "success");
+      setIsMeterModalOpen(false);
+
+      // Refresh meter services & history
+      const [newServicesRes, newHistoryRes] = await Promise.all([
+        meterReadingService.getLandlordRoomMeteredServices(activeBuilding.id, resolvedParams.id),
+        meterReadingService.getLandlordRoomMeterHistory(activeBuilding.id, resolvedParams.id),
+      ]);
+
+      if (newServicesRes?.services) {
+        setRoomMeteredServices(newServicesRes.services);
+      }
+      if (newHistoryRes?.history) {
+        setMeterHistoryRaw(newHistoryRes.history);
+        const mapped = newHistoryRes.history.map((h, idx) => {
+          const elec = h.services.find(s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh');
+          const water = h.services.find(s => s.serviceName.toLowerCase().includes('nước') || s.unit.toLowerCase().includes('m3') || s.unit.toLowerCase().includes('m³'));
+          return {
+            id: h.id || `cycle_${h.period}_${idx}`,
+            period: h.period,
+            date: h.date,
+            oldElec: elec?.oldReading ?? 0,
+            newElec: elec?.newReading ?? 0,
+            oldWater: water?.oldReading ?? 0,
+            newWater: water?.newReading ?? 0,
+            isOpen: idx === 0,
+            editReason: h.editReason,
+            editedAt: h.editedAt,
+            editHistory: h.editHistory,
+            editActions: h.editActions,
+          };
+        });
+        setMeterHistory(mapped);
+      }
+    } catch (err: any) {
+      console.error("Failed to record meter readings:", err);
+      showToast(err.message || "Lỗi khi lưu chỉ số điện nước", "error");
+    } finally {
+      setIsSubmittingMeter(false);
+    }
+  };
+
+  if (!isMounted || isLoading) {
+    return (
+      <div className="space-y-6 animate-pulse p-4">
+        <div className="h-16 bg-zinc-200 rounded-2xl w-full"></div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 space-y-6">
+            <div className="h-44 bg-zinc-100 rounded-2xl"></div>
+            <div className="h-64 bg-zinc-100 rounded-2xl"></div>
+          </div>
+          <div className="space-y-6">
+            <div className="h-40 bg-zinc-100 rounded-2xl"></div>
+            <div className="h-60 bg-zinc-100 rounded-2xl"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!room) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 my-6">
+      <div className="p-8 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 my-6 shadow-xs">
         <p className="font-bold text-lg mb-2 text-zinc-800">Không tìm thấy thông tin phòng</p>
         <p className="text-xs text-zinc-500 mb-4">Mã phòng: {resolvedParams.id}</p>
         <Link
@@ -238,14 +858,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const isMaintenance = room.status === 'Bảo trì';
   const isReserved = room.status === 'Đặt cọc';
 
-  // Base constants for financial logic
+  // Base constants for financial calculations
   const roomRentNum = parseInt((room.price || "3000000").replace(/\D/g, '')) || 3000000;
-  // Fixed services sum: Bảo vệ (60k) + Wifi (100k) + Rác (20k) + Vệ sinh (30k) = 210.000 ₫
   const fixedServicesTotal = 210000;
-  const elecUnitPrice = 3500;
-  const waterUnitPrice = 25000;
+  const elecService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'));
+  const waterService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'));
+  const elecUnitPrice = elecService?.unitPrice ?? 3500;
+  const waterUnitPrice = waterService?.unitPrice ?? 25000;
 
-  // Compute calculated values for any meter record
   const computeRecordFinancials = (m: MeterHistoryRecord) => {
     const elecUse = Math.max(0, m.newElec - m.oldElec);
     const elecCost = elecUse * elecUnitPrice;
@@ -264,91 +884,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     };
   };
 
-  // Open correction modal for a specific period
-  const handleOpenCorrectionModal = (record: MeterHistoryRecord) => {
-    setCorrectModal({
-      isOpen: true,
-      period: record.period,
-      oldElec: record.oldElec,
-      newElec: record.newElec,
-      oldWater: record.oldWater,
-      newWater: record.newWater,
-      reason: "",
-      error: ""
-    });
-  };
-
-  // Save correction action with mandatory reason check
-  const handleSaveCorrection = () => {
-    if (!correctModal.reason.trim()) {
-      setCorrectModal(prev => ({ ...prev, error: "Vui lòng điền lý do điều chỉnh chỉ số (Bắt buộc)" }));
-      return;
-    }
-
-    const nowStr = new Date().toLocaleString('vi-VN');
-
-    // Update meter history
-    setMeterHistory(prev => prev.map(item => {
-      if (item.period === correctModal.period) {
-        return {
-          ...item,
-          newElec: Number(correctModal.newElec),
-          newWater: Number(correctModal.newWater),
-          editReason: correctModal.reason,
-          editedAt: nowStr
-        };
-      }
-      return item;
-    }));
-
-    // Update invoice record with editReason tag
-    setInvoicesHistory(prev => prev.map(inv => {
-      if (inv.period === correctModal.period) {
-        return {
-          ...inv,
-          editReason: correctModal.reason,
-          editedAt: nowStr
-        };
-      }
-      return inv;
-    }));
-
-    setCorrectModal(prev => ({ ...prev, isOpen: false }));
-  };
-
-  // Simulate AI OCR scanning
-  const handleSimulateAiOcr = () => {
-    setIsOcrScanning(true);
-    setOcrSuccessMsg("");
-    setTimeout(() => {
-      setFormElec("1530");
-      setFormWater("49");
-      setIsOcrScanning(false);
-      setOcrSuccessMsg("✓ AI đã quét số điện nước: Điện 1530 kWh, Nước 49 m³");
-    }, 800);
-  };
-
-  // Save new meter reading from main modal
-  const handleSaveNewMeterReading = () => {
-    const periodFull = `Tháng ${selectedMonth.replace('Tháng ', '').padStart(2, '0')}/${selectedYear}`;
-    const nowStr = new Date().toLocaleString('vi-VN');
-
-    const lastRecord = meterHistory[0] || { newElec: 1428, newWater: 45 };
-
-    const newRecord: MeterHistoryRecord = {
-      period: periodFull,
-      date: nowStr,
-      oldElec: lastRecord.newElec,
-      newElec: parseInt(formElec) || lastRecord.newElec,
-      oldWater: lastRecord.newWater,
-      newWater: parseInt(formWater) || lastRecord.newWater,
-      isOpen: true
-    };
-
-    setMeterHistory(prev => [newRecord, ...prev.filter(p => p.period !== periodFull)]);
-    setIsMeterModalOpen(false);
-  };
-
   // Filtered meter records and invoices based on selected Filter Period
   const filteredMeterHistory = meterHistory.filter(m => selectedFilterPeriod === "all" || m.period === selectedFilterPeriod);
   const filteredInvoices = invoicesHistory.filter(inv => selectedFilterPeriod === "all" || inv.period === selectedFilterPeriod);
@@ -359,10 +894,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const totalMeterPages = Math.ceil(filteredMeterHistory.length / ITEMS_PER_PAGE) || 1;
   const paginatedMeterHistory = filteredMeterHistory.slice((meterPage - 1) * ITEMS_PER_PAGE, meterPage * ITEMS_PER_PAGE);
 
-  // Get current unpaid invoice if available
   const unpaidInvoice = invoicesHistory.find(i => i.status === "Chưa thanh toán");
   const unpaidRecord = unpaidInvoice ? meterHistory.find(m => m.period === unpaidInvoice.period) : null;
   const unpaidFinancials = unpaidRecord ? computeRecordFinancials(unpaidRecord) : null;
+
+  const currentContract = dashboardData?.currentContract;
+  const primaryTenant = currentContract?.tenants?.find((t) => t.isPrimary) || currentContract?.tenants?.[0];
+  const otherTenants = currentContract?.tenants?.filter((t) => t.id !== primaryTenant?.id) || [];
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
@@ -378,18 +916,24 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </Link>
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
             <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">Phòng {room.roomNumber}</h1>
-            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 ${isOccupied ? 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30' :
+            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 ${
+              isOccupied ? 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30' :
               isMaintenance ? 'text-[#FF6B35] bg-[#FF6B35]/10 border-[#FF6B35]/30' :
-                isReserved ? 'text-purple-600 bg-purple-500/10 border-purple-500/30' :
-                  isVacant ? 'text-blue-600 bg-blue-500/10 border-blue-500/30' :
-                    'text-zinc-500 bg-zinc-100 border-zinc-200'
-              }`}>
+              isReserved ? 'text-purple-600 bg-purple-500/10 border-purple-500/30' :
+              isVacant ? 'text-blue-600 bg-blue-500/10 border-blue-500/30' :
+              'text-zinc-500 bg-zinc-100 border-zinc-200'
+            }`}>
               {room.status}
             </span>
             <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-zinc-200/80 truncate max-w-[170px] sm:max-w-none">
-              {room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1'}
+              {activeBuilding?.name || (room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1')}
             </span>
-            <span className="text-[11px] font-bold text-zinc-400">Mã ID: {room.id}</span>
+            {dashboardData?.room?.roomType?.name && (
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
+                {dashboardData.room.roomType.name}
+              </span>
+            )}
+            <span className="text-[11px] font-bold text-zinc-400">ID: {room.id.slice(0, 8)}</span>
           </div>
         </div>
 
@@ -406,18 +950,22 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
           {isOccupied ? (
             <Link
-              href={`/landlord/contracts/HD-01012026-${room.building === 'b2' ? 2 : 1}-${room.roomNumber}`}
+              href={
+                currentContract?.id
+                  ? `/landlord/contracts/${currentContract.id}`
+                  : `/landlord/contracts/HD-01012026-${room.building === 'b2' ? 2 : 1}-${room.roomNumber}`
+              }
               className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
             >
               <Eye className="w-3.5 h-3.5 text-purple-600" /> Hợp Đồng
             </Link>
           ) : (
-            <button
-              onClick={() => setIsContractModalOpen(true)}
+            <Link
+              href={`/landlord/contracts/create?roomId=${dashboardData?.room?.id || room?.id || resolvedParams.id}`}
               className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
             >
               <FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" /> Tạo Hợp Đồng
-            </button>
+            </Link>
           )}
 
           <button
@@ -456,53 +1004,85 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <h2 className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
                 <User className="w-4 h-4 text-[#2AC1BC]" /> Khách Thuê Hiện Tại
               </h2>
-              {isOccupied && (
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="px-2.5 py-1 text-[11px] font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+              {isOccupied && currentContract && (
+                <Link
+                  href={`/landlord/contracts/${currentContract.id}`}
+                  className="px-2.5 py-1 text-[11px] font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                 >
-                  <Edit className="w-3.5 h-3.5" /> Sửa thông tin
-                </button>
+                  <FileText className="w-3.5 h-3.5" /> Chi tiết hợp đồng
+                </Link>
               )}
             </div>
 
             <div className="p-3.5 sm:p-5">
-              {room.tenant ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 sm:p-4 bg-[#2AC1BC]/5 rounded-2xl border border-[#2AC1BC]/20">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#2AC1BC] text-white font-black text-base sm:text-lg flex items-center justify-center shadow-md shrink-0">
-                      {room.tenant.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="text-sm sm:text-base font-black text-zinc-900">{room.tenant}</h3>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-bold text-zinc-500 mt-0.5">
-                        <span>SDT: {room.tenantPhone || '0977815704'}</span>
-                        <span className="hidden sm:inline">•</span>
-                        <span>CCCD: {room.tenantCccd || '00109313040168'}</span>
+              {room.tenant || primaryTenant ? (
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 sm:p-4 bg-[#2AC1BC]/5 rounded-2xl border border-[#2AC1BC]/20">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#2AC1BC] text-white font-black text-base sm:text-lg flex items-center justify-center shadow-md shrink-0">
+                        {(primaryTenant?.fullName || room.tenant || "K").charAt(0)}
                       </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm sm:text-base font-black text-zinc-900">
+                            {primaryTenant?.fullName || room.tenant}
+                          </h3>
+                          {primaryTenant?.hasIdentification && (
+                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
+                              <ShieldCheck className="w-3 h-3" /> Đã có CCCD
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-bold text-zinc-500 mt-0.5">
+                          <span>SĐT: {primaryTenant?.phoneNumber || room.tenantPhone || '0977815704'}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span>CCCD: {primaryTenant?.identityNumber || room.tenantCccd || 'Chưa cập nhật'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                      <a
+                        href={`tel:${primaryTenant?.phoneNumber || room.tenantPhone || '0977815704'}`}
+                        className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Phone className="w-3 h-3" /> Gọi ngay
+                      </a>
+                      <Link
+                        href={`/landlord/customers/${primaryTenant?.identityNumber || room.tenantCccd || '00109313040168'}`}
+                        className="px-3.5 py-1.5 bg-[#2AC1BC] text-white rounded-xl text-xs font-bold hover:bg-[#25ad87] transition-all shadow-xs text-center flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        Hồ sơ
+                      </Link>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                    <a
-                      href={`tel:${room.tenantPhone || '0977815704'}`}
-                      className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      Gọi ngay
-                    </a>
-                    <Link
-                      href={`/landlord/customers/${room.tenantCccd || '00109313040168'}`}
-                      className="px-3.5 py-1.5 bg-[#2AC1BC] text-white rounded-xl text-xs font-bold hover:bg-[#25ad87] transition-all shadow-xs text-center flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      Hồ sơ
-                    </Link>
-                  </div>
+                  {/* Co-occupants list if present */}
+                  {otherTenants.length > 0 && (
+                    <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-200/60 text-xs">
+                      <span className="text-[11px] font-bold text-zinc-500 block mb-1.5">
+                        Thành viên cùng phòng ({otherTenants.length}):
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {otherTenants.map((ot) => (
+                          <div
+                            key={ot.id}
+                            className="px-2.5 py-1 bg-white border border-zinc-200 rounded-lg text-[11px] font-bold text-zinc-800 flex items-center gap-1.5 shadow-2xs"
+                          >
+                            <Users className="w-3 h-3 text-zinc-400" />
+                            <span>{ot.fullName}</span>
+                            <span className="text-zinc-400 font-normal">({ot.phoneNumber})</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="p-6 text-center bg-zinc-50 rounded-2xl border border-dashed border-zinc-200 space-y-2">
                   <p className="text-xs text-zinc-500 font-bold">Phòng hiện tại đang trống, chưa có người ở.</p>
                   <button
-                    onClick={() => setIsContractModalOpen(true)}
+                    onClick={() => router.push(`/landlord/contracts/create?roomId=${dashboardData?.room.id || room?.id || resolvedParams.id}`)}
                     className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-xs"
                   >
                     + Lập Hợp Đồng Nhận Khách Mới
@@ -533,7 +1113,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
 
-          {/* SECTION 1: HÓA ĐƠN & CÔNG NỢ (Tự động tính tiền = Phòng + Dịch Vụ + Điện + Nước) */}
+          {/* SECTION 1: HÓA ĐƠN & CÔNG NỢ */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
               <h2 className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
@@ -547,7 +1127,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="space-y-3">
-              {filteredInvoices.length === 0 ? (
+              {invoicesHistory.length === 0 ? (
+                <div className="p-8 text-center bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
+                  <Receipt className="w-8 h-8 text-zinc-300 mx-auto" />
+                  <p className="text-xs text-zinc-600 font-bold">Chưa có dữ liệu hóa đơn nào cho phòng này</p>
+                  <p className="text-[11px] text-zinc-400">Dữ liệu hóa đơn sẽ tự động xuất hiện khi chốt chỉ số điện nước hoặc lập hóa đơn mới.</p>
+                </div>
+              ) : filteredInvoices.length === 0 ? (
                 <div className="p-6 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
                   Không tìm thấy hóa đơn nào trong kỳ lọc đã chọn.
                 </div>
@@ -566,8 +1152,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 return (
                   <div
                     key={inv.id}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 ${isUnpaid ? 'bg-rose-500/5 border-rose-500/30' : 'bg-zinc-50 border-zinc-200/80 hover:bg-zinc-100/60'
-                      }`}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 ${
+                      isUnpaid ? 'bg-rose-500/5 border-rose-500/30' : 'bg-zinc-50 border-zinc-200/80 hover:bg-zinc-100/60'
+                    }`}
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
@@ -612,7 +1199,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </div>
                     </div>
 
-                    {/* Breakdown details accordion/toggle */}
                     <div className="p-3 bg-white rounded-xl border border-zinc-200/60 text-xs space-y-1.5">
                       <div className="text-[11px] font-extrabold text-zinc-700 flex justify-between border-b border-zinc-100 pb-1">
                         <span>CHI TIẾT TIỀN HÓA ĐƠN THÁNG:</span>
@@ -637,7 +1223,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         </div>
                       </div>
 
-                      {/* Log tag if edited */}
                       {inv.editReason && (
                         <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-[10px] font-bold text-amber-800 flex items-start gap-1.5">
                           <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
@@ -672,10 +1257,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         key={idx}
                         type="button"
                         onClick={() => setInvoicePage(idx + 1)}
-                        className={`w-7 h-7 text-xs font-black rounded-lg transition-colors cursor-pointer ${invoicePage === idx + 1
-                          ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                          : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                          }`}
+                        className={`w-7 h-7 text-xs font-black rounded-lg transition-colors cursor-pointer ${
+                          invoicePage === idx + 1 ? 'bg-[#2AC1BC] text-white shadow-2xs' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                        }`}
                       >
                         {idx + 1}
                       </button>
@@ -694,7 +1278,70 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
 
-          {/* SECTION 2: LỊCH SỬ CHỐT ĐIỆN NƯỚC (Cho phép chỉnh sửa khi sai sót) */}
+          {/* SECTION: LỊCH SỬ THUÊ PHÒNG (RENTAL HISTORY - UC-L-05) */}
+          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <h2 className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
+                <History className="w-4 h-4 text-[#2AC1BC]" /> Lịch Sử Hợp Đồng Thuê ({dashboardData?.rentalHistory?.length || (room?.tenant ? 1 : 0)})
+              </h2>
+              <span className="text-[10px] font-bold text-zinc-500">Tất cả các kỳ hợp đồng</span>
+            </div>
+
+            <div className="space-y-3">
+              {dashboardData && dashboardData.rentalHistory.length > 0 ? (
+                dashboardData.rentalHistory.map((hist) => {
+                  const isActive = hist.status === 'active';
+                  return (
+                    <div
+                      key={hist.id}
+                      className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        isActive ? 'bg-[#2AC1BC]/5 border-[#2AC1BC]/30' : 'bg-zinc-50 border-zinc-200/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                          isActive ? 'bg-[#2AC1BC] text-white' : 'bg-zinc-200 text-zinc-700'
+                        }`}>
+                          {hist.primaryTenantName.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-zinc-900">{hist.primaryTenantName}</span>
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                              isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-200 text-zinc-600'
+                            }`}>
+                              {isActive ? 'Đang hiệu lực' : 'Đã kết thúc'}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-zinc-500 font-medium mt-0.5">
+                            <span>{new Date(hist.startDate).toLocaleDateString('vi-VN')} - {new Date(hist.endDate).toLocaleDateString('vi-VN')}</span>
+                            {hist.primaryTenantPhone && <span className="ml-2">• {hist.primaryTenantPhone}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-200/60">
+                        <span className="text-xs font-black text-[#2AC1BC]">
+                          {parseInt(hist.rentPrice).toLocaleString('vi-VN')} ₫/tháng
+                        </span>
+                        <Link
+                          href={`/landlord/contracts/${hist.id}`}
+                          className="px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer"
+                        >
+                          Xem HĐ
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-4 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
+                  Chưa có lịch sử hợp đồng nào trước đây.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SECTION 2: LỊCH SỬ CHỐT ĐIỆN NƯỚC */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-zinc-100 pb-3">
               <div>
@@ -713,17 +1360,27 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="space-y-3">
-              {filteredMeterHistory.length === 0 ? (
+              {meterHistory.length === 0 ? (
+                <div className="p-8 text-center bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-zinc-200/70 text-zinc-400 flex items-center justify-center mx-auto">
+                    <Gauge className="w-5 h-5" />
+                  </div>
+                  <p className="font-bold text-sm text-zinc-700">Chưa có dữ liệu chốt số điện nước</p>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto font-medium">
+                    Phòng này chưa được ghi nhận chỉ số điện nước nào. Bấm nút &quot;Chốt Số / Quét AI OCR&quot; bên trên để nhập chỉ số đầu tiên.
+                  </p>
+                </div>
+              ) : filteredMeterHistory.length === 0 ? (
                 <div className="p-6 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl">
                   Không có lịch sử chốt số điện nước nào trong kỳ lọc.
                 </div>
-              ) : paginatedMeterHistory.map((item) => {
+              ) : paginatedMeterHistory.map((item, itemIdx) => {
                 const fin = computeRecordFinancials(item);
                 const matchingInvoice = invoicesHistory.find(inv => inv.period === item.period);
                 const isPaid = matchingInvoice?.status === "Đã thu";
 
                 return (
-                  <details key={item.period} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
+                  <details key={item.id || `${item.period}-${itemIdx}`} className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs" open={item.isOpen}>
                     <summary className="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 sm:p-3.5 bg-zinc-50/80 hover:bg-zinc-100/80 cursor-pointer select-none outline-none transition-colors gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
@@ -770,33 +1427,77 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div className="p-3 sm:p-4 bg-white border-t border-zinc-100 space-y-2.5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
                         <div className="flex items-center justify-between sm:justify-start gap-2">
-                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ ĐIỆN (3.500 ₫/kWh)</div>
+                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">⚡ ĐIỆN ({elecUnitPrice.toLocaleString('vi-VN')} ₫/kWh)</div>
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.elecCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
-                          <span className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldElec} ➔ Mới: {item.newElec} (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.elecUse} kWh</strong>)</span>
+                          <span className="text-[10px] text-zinc-500 font-medium">Chỉ số: <strong className="text-zinc-900 font-bold">{item.newElec} kWh</strong> (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.elecUse} kWh</strong>)</span>
                           <span className="hidden sm:inline font-black text-[#2AC1BC]">{fin.elecCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                       </div>
 
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                         <div className="flex items-center justify-between sm:justify-start gap-2">
-                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 NƯỚC (25.000 ₫/m³)</div>
+                          <div className="font-black text-xs text-zinc-900 flex items-center gap-1">💧 NƯỚC ({waterUnitPrice.toLocaleString('vi-VN')} ₫/m³)</div>
                           <span className="text-xs font-black text-zinc-900 sm:hidden">{fin.waterCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
-                          <span className="text-[10px] text-zinc-500 font-medium">Cũ: {item.oldWater} ➔ Mới: {item.newWater} (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.waterUse} m³</strong>)</span>
+                          <span className="text-[10px] text-zinc-500 font-medium">Chỉ số: <strong className="text-zinc-900 font-bold">{item.newWater} m³</strong> (Tiêu thụ: <strong className="text-zinc-900 font-bold">{fin.waterUse} m³</strong>)</span>
                           <span className="hidden sm:inline font-black text-[#2AC1BC]">{fin.waterCost.toLocaleString('vi-VN')} ₫</span>
                         </div>
                       </div>
 
-                      {/* Display edit reason log if present */}
-                      {item.editReason && (
+                      {item.editActions && item.editActions.length > 0 ? (
+                        <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-2">
+                          <div className="font-bold text-amber-800 text-[11px] flex items-center gap-1.5">
+                            <History className="w-3.5 h-3.5 text-amber-700" /> Lịch sử chỉnh sửa ({item.editActions.length} lần):
+                          </div>
+                          <div className="space-y-1.5">
+                            {item.editActions.map((act, actIdx) => (
+                              <div key={act.id || actIdx} className="p-2 bg-white/90 border border-amber-200/70 rounded-lg text-[11px] text-amber-900 space-y-1 shadow-2xs">
+                                <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-zinc-500 border-b border-amber-100 pb-1">
+                                  <span className="font-bold text-amber-800">Lần {item.editActions!.length - actIdx}</span>
+                                  <span>{new Date(act.createdAt).toLocaleString('vi-VN')}</span>
+                                </div>
+                                <div className="space-y-0.5">
+                                  {act.changes.map((ch, chIdx) => (
+                                    <div key={chIdx} className="text-[11px]">
+                                      <strong>{ch.serviceName}</strong>: {ch.oldValue !== null ? ch.oldValue : 'Chưa có'} ➔ <strong className="text-zinc-900">{ch.newValue}</strong> {ch.unit || ''}
+                                    </div>
+                                  ))}
+                                </div>
+                                {act.reason && (
+                                  <div className="text-[10px] text-zinc-600 italic pt-0.5">
+                                    Lý do: &ldquo;{act.reason}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : item.editHistory && item.editHistory.length > 0 ? (
+                        <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-1.5">
+                          <div className="font-bold text-amber-800 text-[11px] flex items-center gap-1.5">
+                            <History className="w-3.5 h-3.5 text-amber-700" /> Lịch sử chỉnh sửa:
+                          </div>
+                          <div className="space-y-1">
+                            {item.editHistory.map((eh, ehIdx) => (
+                              <div key={eh.id || ehIdx} className="text-[11px] text-amber-900 border-b border-amber-200/50 last:border-0 pb-1 last:pb-0 flex flex-wrap justify-between gap-1">
+                                <span>
+                                  <strong>{eh.serviceName}</strong>: {eh.oldValue !== null ? eh.oldValue : 'Chưa có'} ➔ <strong className="text-zinc-900">{eh.newValue}</strong>
+                                  {eh.reason && <span className="italic text-zinc-600"> &mdash; "{eh.reason}"</span>}
+                                </span>
+                                <span className="text-[10px] text-zinc-500">{new Date(eh.createdAt).toLocaleString('vi-VN')}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : item.editReason ? (
                         <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-0.5">
                           <div className="font-bold text-amber-800 text-[11px]">📝 Nhật ký chỉnh sửa ({item.editedAt}):</div>
                           <p className="text-[11px] text-amber-900 italic font-semibold">"{item.editReason}"</p>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </details>
                 );
@@ -822,10 +1523,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         key={idx}
                         type="button"
                         onClick={() => setMeterPage(idx + 1)}
-                        className={`w-7 h-7 text-xs font-black rounded-lg transition-colors cursor-pointer ${meterPage === idx + 1
-                          ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                          : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                          }`}
+                        className={`w-7 h-7 text-xs font-black rounded-lg transition-colors cursor-pointer ${
+                          meterPage === idx + 1 ? 'bg-[#2AC1BC] text-white shadow-2xs' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                        }`}
                       >
                         {idx + 1}
                       </button>
@@ -873,17 +1573,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       .map((item) => (
                         <div
                           key={item.id}
-                          className={`p-3 rounded-xl border min-h-[86px] flex flex-col justify-between ${item.status === 'Đang xử lý'
-                            ? 'bg-amber-500/5 border-amber-500/20'
-                            : 'bg-zinc-50 border-zinc-100'
-                            }`}
+                          className={`p-3 rounded-xl border min-h-[86px] flex flex-col justify-between ${
+                            item.status === 'Đang xử lý' ? 'bg-amber-500/5 border-amber-500/20' : 'bg-zinc-50 border-zinc-100'
+                          }`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs font-black text-zinc-900 line-clamp-1">{item.title}</span>
-                            <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full shrink-0 ${item.status === 'Đang xử lý'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-emerald-700'
-                              }`}>
+                            <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full shrink-0 ${
+                              item.status === 'Đang xử lý' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700'
+                            }`}>
                               {item.status === 'Đang xử lý' ? 'Đang xử lý' : '✓ Đã xong'}
                             </span>
                           </div>
@@ -946,40 +1644,49 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </span>
                 </div>
 
-                {/* Hero Deposit Amount Banner */}
                 <div className="mt-3 p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-indigo-500/10 rounded-2xl border border-purple-200/80 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-extrabold text-purple-800 uppercase tracking-wider">
                       CỌC GIỮ AN TOÀN
                     </span>
                     <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full border border-emerald-200">
-                      Đã khóa cọc
+                      {currentContract?.deposit?.status === 'active' ? 'Đã khóa cọc' : 'Tiền cọc'}
                     </span>
                   </div>
 
                   <div className="flex items-baseline justify-between">
                     <div className="text-2xl font-black text-purple-700 tracking-tight">
-                      3.000.000 <span className="text-xs">₫</span>
+                      {currentContract?.deposit?.amount
+                        ? parseInt(currentContract.deposit.amount).toLocaleString('vi-VN')
+                        : "3.000.000"}{" "}
+                      <span className="text-xs">₫</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 border-t border-purple-200/50 pt-2.5 text-[10px]">
                     <div className="space-y-0.5">
-                      <span className="text-zinc-400 font-medium block">Ngày nhận cọc:</span>
-                      <span className="font-extrabold text-zinc-800">01/01/2026</span>
+                      <span className="text-zinc-400 font-medium block">Ngày bắt đầu HĐ:</span>
+                      <span className="font-extrabold text-zinc-800">
+                        {currentContract?.startDate
+                          ? new Date(currentContract.startDate).toLocaleDateString('vi-VN')
+                          : '01/01/2026'}
+                      </span>
                     </div>
                     <div className="space-y-0.5 text-right">
                       <span className="text-zinc-400 font-medium block">Thời hạn HĐ:</span>
-                      <span className="font-extrabold text-zinc-800">01/01/2027</span>
+                      <span className="font-extrabold text-zinc-800">
+                        {currentContract?.endDate
+                          ? new Date(currentContract.endDate).toLocaleDateString('vi-VN')
+                          : '01/01/2027'}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Action Button & Security Note */}
               <div className="space-y-2 pt-1">
                 <button
-                  onClick={() => showToast("Đã ghi nhận yêu cầu hoàn 3.000.000 ₫ cọc qua VietQR/Ví Escrow!", "success")}
+                  onClick={() => showToast("Đã ghi nhận yêu cầu hoàn cọc qua VietQR / Escrow!", "success")}
                   className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Wallet className="w-4 h-4" /> Hoàn Cọc Cho Khách Thuê
@@ -1003,12 +1710,18 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
                 <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">GIÁ THUÊ</span>
                 <div className="text-sm font-black text-[#2AC1BC]">{room.price || '3.000.000 ₫'}</div>
-                <span className="text-[9px] text-zinc-500">Đầu tháng</span>
+                <span className="text-[9px] text-zinc-500">
+                  {currentContract ? `Ngày ${currentContract.monthlyPaymentDate} hàng tháng` : 'Đầu tháng'}
+                </span>
               </div>
 
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
                 <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">TIỀN CỌC</span>
-                <div className="text-sm font-black text-purple-600">3.000.000 ₫</div>
+                <div className="text-sm font-black text-purple-600">
+                  {currentContract?.deposit?.amount
+                    ? `${parseInt(currentContract.deposit.amount).toLocaleString('vi-VN')} ₫`
+                    : '3.000.000 ₫'}
+                </div>
                 <span className="text-[9px] text-emerald-600 font-bold">Khóa cọc</span>
               </div>
 
@@ -1023,7 +1736,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
                 <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">DIỆN TÍCH</span>
                 <div className="text-xs font-black text-zinc-900">{room.area || '25'} m² • T{room.floor}</div>
-                <span className="text-[9px] text-zinc-500">Ban công</span>
+                <span className="text-[9px] text-zinc-500">
+                  {dashboardData?.room.maxOccupants ? `Tối đa ${dashboardData.room.maxOccupants} người` : 'Ban công'}
+                </span>
               </div>
             </div>
           </div>
@@ -1031,7 +1746,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* Giá dịch vụ định kỳ với Badge màu sắc */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
             <h2 className="font-black text-zinc-900 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Banknote className="w-4 h-4 text-[#2AC1BC]" /> Giá Dịch Vụ
+              <Banknote className="w-4 h-4 text-[#2AC1BC]" /> Giá Dịch Vụ Áp Dụng
             </h2>
             <div className="space-y-2.5">
               {(editServices && editServices.length > 0 ? editServices : defaultRoomServices).map((service) => (
@@ -1085,29 +1800,37 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider block">CHUYỂN TRẠNG THÁI NHANH:</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Trống' } : null)}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isVacant ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                  onClick={() => handleUpdateStatus('Trống')}
+                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    isVacant ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  }`}
                 >
                   Trống
                 </button>
 
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Đang thuê' } : null)}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isOccupied ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                  onClick={() => handleUpdateStatus('Đang thuê')}
+                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    isOccupied ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  }`}
                 >
                   Đang Thuê
                 </button>
 
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Bảo trì' } : null)}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isMaintenance ? 'bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                  onClick={() => handleUpdateStatus('Bảo trì')}
+                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    isMaintenance ? 'bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  }`}
                 >
                   Bảo Trì
                 </button>
 
                 <button
-                  onClick={() => setRoom(prev => prev ? { ...prev, status: 'Đặt cọc' } : null)}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${isReserved ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                  onClick={() => handleUpdateStatus('Đặt cọc')}
+                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    isReserved ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  }`}
                 >
                   Đặt Cọc
                 </button>
@@ -1184,25 +1907,27 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
               <button
-                onClick={() => setCorrectModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+                onClick={handleCloseCorrectionModal}
+                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 onClick={handleSaveCorrection}
-                className="px-6 py-2 text-xs font-black text-white bg-amber-600 rounded-xl hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all cursor-pointer"
+                disabled={isSubmittingCorrection}
+                className="px-6 py-2 text-xs font-black text-white bg-amber-600 rounded-xl hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
               >
-                Lưu Thay Đổi & Update Hóa Đơn
+                {isSubmittingCorrection && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                {isSubmittingCorrection ? "Đang lưu..." : "Lưu Thay Đổi & Update Hóa Đơn"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI */}
+      {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI (UC-L-09) */}
       {isMeterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsMeterModalOpen(false); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseMeterModal(); }}>
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-zinc-100">
               <div className="flex items-center gap-3">
@@ -1214,7 +1939,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs text-zinc-500 font-medium">Ghi lại chỉ số điện nước hàng tháng cho Phòng {room.roomNumber}</p>
                 </div>
               </div>
-              <button onClick={() => setIsMeterModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
+              <button onClick={handleCloseMeterModal} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1266,19 +1991,35 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="grid grid-cols-2 gap-4 pt-1">
                 <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-1.5">
-                  <label className="block text-xs font-black text-zinc-900">⚡ Chỉ số ĐIỆN mới (kWh)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black text-zinc-900">⚡ Chỉ số ĐIỆN mới (kWh)</label>
+                    {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))?.lastReading && (
+                      <span className="text-[10px] text-zinc-400 font-bold">
+                        Cũ: {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))?.lastReading?.readingValue}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
                     value={formElec}
+                    placeholder="Nhập chỉ số điện..."
                     onChange={(e) => setFormElec(e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
                 <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20 space-y-1.5">
-                  <label className="block text-xs font-black text-zinc-900">💧 Chỉ số NƯỚC mới (m³)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black text-zinc-900">💧 Chỉ số NƯỚC mới (m³)</label>
+                    {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))?.lastReading && (
+                      <span className="text-[10px] text-zinc-400 font-bold">
+                        Cũ: {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))?.lastReading?.readingValue}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
                     value={formWater}
+                    placeholder="Nhập chỉ số nước..."
                     onChange={(e) => setFormWater(e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
@@ -1287,14 +2028,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button onClick={() => setIsMeterModalOpen(false)} className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
+              <button onClick={handleCloseMeterModal} className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer">
                 Hủy
               </button>
               <button
                 onClick={handleSaveNewMeterReading}
-                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+                disabled={isSubmittingMeter}
+                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
               >
-                Lưu & Chốt Chỉ Số
+                {isSubmittingMeter && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                {isSubmittingMeter ? "Đang lưu..." : "Lưu & Chốt Chỉ Số"}
               </button>
             </div>
           </div>
@@ -1303,7 +2046,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* MODAL 3: EDIT ROOM INFO MODAL */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseEditModal(); }}>
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-zinc-100">
               <div className="flex items-center gap-3">
@@ -1315,7 +2058,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs text-zinc-500 font-medium">Cập nhật thông tin chi tiết phòng, giá thuê và tiện nghi.</p>
                 </div>
               </div>
-              <button onClick={() => setIsEditModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
+              <button onClick={handleCloseEditModal} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1368,10 +2111,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       key={item}
                       type="button"
                       onClick={() => setEditAmenities(prev => prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item])}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${editAmenities.includes(item)
-                        ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/40 shadow-xs'
-                        : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
-                        }`}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        editAmenities.includes(item)
+                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/40 shadow-xs'
+                          : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
+                      }`}
                     >
                       {item}
                     </button>
@@ -1464,22 +2208,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
+              <button onClick={handleCloseEditModal} className="px-5 py-2 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
                 Hủy
               </button>
               <button
-                onClick={() => {
-                  setRoom(prev => prev ? {
-                    ...prev,
-                    roomNumber: editRoomNumber || prev.roomNumber,
-                    price: editPrice.includes('₫') ? editPrice : `${editPrice} ₫`,
-                    area: editArea || prev.area,
-                    floor: editFloor || prev.floor,
-                    amenities: editAmenities,
-                    notes: editNotes
-                  } : null);
-                  setIsEditModalOpen(false);
-                }}
+                onClick={handleSaveRoomDetails}
                 className="px-6 py-2 text-sm font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
                 Lưu Thay Đổi
@@ -1561,7 +2294,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {/* CONFIRM MODAL */}
+      {/* CONFIRM DELETE MODAL */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmModal(prev => ({ ...prev, isOpen: false })); }}>
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
@@ -1584,10 +2317,44 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
+      {/* UNSAVED CHANGES CONFIRMATION MODAL (RULE 10) */}
+      {discardConfirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setDiscardConfirmModal(prev => ({ ...prev, isOpen: false })); }}>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4 border border-zinc-200">
+            <div className="flex items-center gap-3 text-amber-600">
+              <div className="p-3 bg-amber-100 rounded-full shrink-0">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-zinc-900">Xác nhận đóng form</h3>
+                <p className="text-xs text-zinc-500 font-medium">Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn hủy thay đổi và đóng form?</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-zinc-100">
+              <button
+                type="button"
+                onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
+              >
+                Tiếp tục chỉnh sửa
+              </button>
+              <button
+                type="button"
+                onClick={discardConfirmModal.onConfirm}
+                className="px-4 py-2 text-xs font-black text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer shadow-xs"
+              >
+                Hủy thay đổi & Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TOAST NOTIFICATION */}
       {toast && (
-        <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2 text-xs font-black animate-in fade-in slide-in-from-bottom-5 ${toast.type === "success" ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/20" : "bg-rose-600 text-white border-rose-500 shadow-rose-600/20"
-          }`}>
+        <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2 text-xs font-black animate-in fade-in slide-in-from-bottom-5 ${
+          toast.type === "success" ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/20" : "bg-rose-600 text-white border-rose-500 shadow-rose-600/20"
+        }`}>
           <span>{toast.type === "success" ? "✓" : "⚠️"}</span>
           <span>{toast.message}</span>
         </div>

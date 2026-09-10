@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { getLandlordContracts } from "@/services/contract.service";
 
 export default function ContractsPage() {
   const { activeBuilding } = useAuth();
@@ -17,6 +18,40 @@ export default function ContractsPage() {
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Fetch real contracts if activeBuilding is a real UUID
+  React.useEffect(() => {
+    async function fetchContracts() {
+      if (!activeBuilding?.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeBuilding.id)) return;
+      try {
+        const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
+        if (res?.data && res.data.length > 0) {
+          const mapped = res.data.map((c) => ({
+            id: c.id,
+            building: activeBuilding.id,
+            room: c.room.roomNumber,
+            roomType: c.room.roomTypeName || "Studio",
+            tenant: c.tenant?.fullName || "Khách thuê",
+            tenantId: c.tenant?.id || "KH-1",
+            startDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
+            endDate: new Date(c.endDate).toLocaleDateString("vi-VN"),
+            isOverdue: new Date(c.endDate) < new Date(),
+            price: `${c.rentPrice.toLocaleString("vi-VN")} ₫`,
+            deposit: `${c.depositAmount.toLocaleString("vi-VN")} ₫`,
+            paymentDate: `${c.monthlyPaymentDate}`,
+            paymentStatus: "Đã thu đủ",
+            status: c.status === "active" ? "Đang hiệu lực" : c.status === "draft" ? "Chờ xác nhận" : c.status,
+            history: [],
+            members: [],
+          }));
+          setContracts(mapped);
+        }
+      } catch (err) {
+        console.warn("Could not load contracts from backend, using fallback data:", err);
+      }
+    }
+    fetchContracts();
+  }, [activeBuilding?.id]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -790,7 +825,7 @@ export default function ContractsPage() {
                 <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
               </button>
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => router.push("/landlord/contracts/create")}
                 className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Lập hợp đồng mới

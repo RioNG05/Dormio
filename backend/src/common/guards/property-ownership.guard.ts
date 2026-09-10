@@ -8,6 +8,10 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtPayload } from '../../modules/auth/types/jwt-payload.type';
 
+/** UUID v4 regex used to validate boarding house IDs before hitting the DB */
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Guard that verifies the authenticated landlord actually owns the boarding house
  * specified in the `X-Boarding-House-Id` request header.
@@ -34,6 +38,13 @@ export class PropertyOwnershipGuard implements CanActivate {
 
     if (!boardingHouseId) {
       throw new BadRequestException('X-Boarding-House-Id header is required');
+    }
+
+    // Reject non-UUID values early to avoid PostgreSQL cast errors (500)
+    if (!UUID_REGEX.test(boardingHouseId)) {
+      throw new BadRequestException(
+        'X-Boarding-House-Id must be a valid UUID',
+      );
     }
 
     if (!userId) {

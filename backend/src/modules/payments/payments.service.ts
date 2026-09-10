@@ -14,6 +14,14 @@ import {
   PaymentExecutionResultDto,
   VietQrWebhookDto,
 } from './dto/confirm-payment.dto';
+import { Prisma } from '@prisma/client';
+import { QueryLandlordPaymentsDto } from './dto/query-landlord-payments.dto';
+import {
+  LandlordPaymentsResponseDto,
+  LandlordPaymentItemDto,
+  PaymentInvoiceItemDto,
+  PaymentMeterReadingDto,
+} from './dto/landlord-payments-response.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -369,4 +377,358 @@ export class PaymentsService {
       message: `Hóa đơn ${matchedInvoice.id} đã được quyết toán tự động qua VietQR.`,
     };
   }
+
+  /**
+   * Helper to map Prisma Payment entity to LandlordPaymentItemDto (UC-L-07)
+   */
+  private mapPaymentToDto(payment: any): LandlordPaymentItemDto {
+    const primaryTenant =
+      payment.invoice?.contract?.tenantContracts?.find((tc: any) => tc.isPrimary) ||
+      payment.invoice?.contract?.tenantContracts?.[0];
+
+    const payerName =
+      payment.payer?.userIdentification?.fullName ||
+      payment.payer?.username ||
+      primaryTenant?.tenant?.userIdentification?.fullName ||
+      primaryTenant?.tenant?.username ||
+      'Khách thuê';
+
+    const payerPhone =
+      payment.payer?.phoneNumber ||
+      primaryTenant?.tenant?.phoneNumber ||
+      null;
+
+    const period = payment.invoice?.dueDate
+      ? this.formatPeriod(payment.invoice.dueDate)
+      : 'N/A';
+
+    return {
+      id: payment.id,
+      receiptNumber:
+        payment.receiptNumber || `REC-${payment.id.substring(0, 8).toUpperCase()}`,
+      transactionRef: payment.transactionRef || null,
+      amount: Number(payment.amount),
+      method: payment.method,
+      status: payment.status,
+      paidAt: payment.paidAt
+        ? payment.paidAt.toISOString()
+        : payment.createdAt.toISOString(),
+      payerId: payment.payerId || primaryTenant?.tenantId || null,
+      payerName,
+      payerPhone,
+      invoiceId: payment.invoiceId || '',
+      period,
+      invoiceTotal: payment.invoice
+        ? Number(payment.invoice.totalAmount)
+        : Number(payment.amount),
+      roomId: payment.invoice?.roomId || '',
+      roomNumber: payment.invoice?.room?.roomNumber || 'P.---',
+      roomTypeName: payment.invoice?.room?.roomType?.name || null,
+      items: (payment.invoice?.invoiceItems || []).map((item: any) => ({
+        id: item.id,
+        serviceId: item.serviceId || null,
+        serviceName:
+          item.service?.name || (item.serviceId ? 'Dịch vụ' : 'Tiền phòng'),
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        amount: item.amount,
+      })),
+      meterReadings: (payment.invoice?.meterReadings || []).map((mr: any) => ({
+        id: mr.id,
+        serviceId: mr.serviceId,
+        serviceName: mr.service?.name || 'Đồng hồ',
+        readingValue: Number(mr.readingValue ?? 0),
+        imageUrl: mr.imageUrl || null,
+        createdAt: mr.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  /**
+   * UC-L-07: Query payment history joined with Invoice, InvoiceItem, and MeterReading
+   */
+  async getLandlordPayments(
+    boardingHouseId: string,
+    query: QueryLandlordPaymentsDto,
+    landlordId: string,
+  ): Promise<LandlordPaymentsResponseDto> {
+    this.logger.log(
+      `Landlord ${landlordId} querying payment history for house ${boardingHouseId}`,
+    );
+
+    // 1. Verify landlord ownership
+    const boardingHouse = await this.prisma.boardingHouse.findUnique({
+      where: { id: boardingHouseId },
+    });
+    const isOwner = boardingHouse && (boardingHouse.ownerId === landlordId || (boardingHouse as any).landlordId === landlordId);
+    if (!isOwner) {
+      throw new ForbiddenException(
+        'Bạn không có quyền truy cập dữ liệu thanh toán của nhà trọ này.',
+      );
+    }
+
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.max(1, Number(query.limit) || 10);
+    const skip = (page - 1) * limit;
+
+    // 2. Date filtering
+    let dateFilter: Prisma.DateTimeFilter | undefined;
+    const selectedYear =
+      query.year && query.year !== 'all' ? Number(query.year) : null;
+    const selectedMonth =
+      query.month && query.month !== 'all' ? Number(query.month) : null;
+
+    if (selectedYear && selectedMonth) {
+      const start = new Date(selectedYear, selectedMonth - 1, 1);
+      const end = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999);
+      dateFilter = { gte: start, lte: end };
+    } else if (selectedYear) {
+      const start = new Date(selectedYear, 0, 1);
+      const end = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
+      dateFilter = { gte: start, lte: end };
+    }
+
+    // 3. Search filter
+    const isUuid = (val: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        val,
+      );
+
+    let searchConditions: Prisma.PaymentWhereInput[] | undefined = undefined;
+    if (query.search && query.search.trim()) {
+      const term = query.search.trim();
+      searchConditions = [
+        { receiptNumber: { contains: term, mode: 'insensitive' } },
+        { transactionRef: { contains: term, mode: 'insensitive' } },
+        {
+          invoice: {
+            room: {
+              roomNumber: { contains: term, mode: 'insensitive' },
+            },
+          },
+        },
+        {
+          payer: {
+            OR: [
+              { username: { contains: term, mode: 'insensitive' } },
+              { phoneNumber: { contains: term } },
+              {
+                userIdentification: {
+                  fullName: { contains: term, mode: 'insensitive' },
+                },
+              },
+            ],
+          },
+        },
+        {
+          invoice: {
+            contract: {
+              tenantContracts: {
+                some: {
+                  tenant: {
+                    OR: [
+                      { username: { contains: term, mode: 'insensitive' } },
+                      { phoneNumber: { contains: term } },
+                      {
+                        userIdentification: {
+                          fullName: { contains: term, mode: 'insensitive' },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      if (isUuid(term)) {
+        searchConditions.push({ id: term });
+      }
+    }
+
+    // 4. Construct Where Clause
+    const whereInput: Prisma.PaymentWhereInput = {
+      type: 'charge',
+      status: 'success',
+      invoice: {
+        room: {
+          boardingHouseId,
+          ...(query.roomId && query.roomId !== 'all'
+            ? { id: query.roomId }
+            : {}),
+        },
+      },
+      ...(query.method && query.method !== 'all'
+        ? { method: query.method as any }
+        : {}),
+      ...(dateFilter ? { paidAt: dateFilter } : {}),
+      ...(searchConditions ? { OR: searchConditions } : {}),
+    };
+
+    // 5. Aggregate metrics
+    const allFilteredPayments = await this.prisma.payment.findMany({
+      where: whereInput,
+      select: {
+        amount: true,
+        method: true,
+      },
+    });
+
+    const totalRevenue = allFilteredPayments.reduce(
+      (acc, p) => acc + Number(p.amount),
+      0,
+    );
+    const totalTransactions = allFilteredPayments.length;
+    const bankingRevenue = allFilteredPayments
+      .filter((p) => p.method === 'banking')
+      .reduce((acc, p) => acc + Number(p.amount), 0);
+    const cashRevenue = allFilteredPayments
+      .filter((p) => p.method === 'cash')
+      .reduce((acc, p) => acc + Number(p.amount), 0);
+
+    const totalPages = Math.ceil(totalTransactions / limit) || 1;
+
+    // 6. Fetch paginated payments with all joins
+    const payments = await this.prisma.payment.findMany({
+      where: whereInput,
+      include: {
+        payer: {
+          include: {
+            userIdentification: true,
+          },
+        },
+        invoice: {
+          include: {
+            room: {
+              include: {
+                roomType: true,
+              },
+            },
+            contract: {
+              include: {
+                tenantContracts: {
+                  include: {
+                    tenant: {
+                      include: {
+                        userIdentification: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            invoiceItems: {
+              include: {
+                service: true,
+              },
+            },
+            meterReadings: {
+              include: {
+                service: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { paidAt: 'desc' },
+      skip,
+      take: limit,
+    });
+
+    return {
+      summary: {
+        totalRevenue,
+        totalTransactions,
+        bankingRevenue,
+        cashRevenue,
+      },
+      pagination: {
+        total: totalTransactions,
+        page,
+        limit,
+        totalPages,
+      },
+      payments: payments.map((p) => this.mapPaymentToDto(p)),
+    };
+  }
+
+  /**
+   * UC-L-07: Get detailed receipt & supporting evidence for a single payment
+   */
+  async getLandlordPaymentDetail(
+    boardingHouseId: string,
+    paymentId: string,
+    landlordId?: string,
+  ): Promise<LandlordPaymentItemDto> {
+    this.logger.log(
+      `Querying payment detail for ${paymentId} in house ${boardingHouseId}`,
+    );
+
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: {
+        payer: {
+          include: {
+            userIdentification: true,
+          },
+        },
+        invoice: {
+          include: {
+            room: {
+              include: {
+                roomType: true,
+                boardingHouse: true,
+              },
+            },
+            contract: {
+              include: {
+                tenantContracts: {
+                  include: {
+                    tenant: {
+                      include: {
+                        userIdentification: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            invoiceItems: {
+              include: {
+                service: true,
+              },
+            },
+            meterReadings: {
+              include: {
+                service: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (
+      !payment ||
+      !payment.invoice ||
+      payment.invoice.room.boardingHouseId !== boardingHouseId
+    ) {
+      throw new NotFoundException('Không tìm thấy bản ghi thanh toán.');
+    }
+
+    if (
+      landlordId &&
+      payment.invoice.room.boardingHouse.ownerId !== landlordId &&
+      (payment.invoice.room.boardingHouse as any).landlordId !== landlordId
+    ) {
+      throw new ForbiddenException(
+        'Bạn không có quyền truy cập thanh toán này.',
+      );
+    }
+
+    return this.mapPaymentToDto(payment);
+  }
 }
+

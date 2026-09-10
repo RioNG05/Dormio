@@ -4,15 +4,154 @@
 
 ---
 
-### UC-L-01 — Initialize Property Profile
-**Tier:** Free · **Models:** `BoardingHouse`, `Service`, `RoomType`
+### UC-L-01 — Create Boarding House (3-Step Wizard)
+**Tier:** Free · **Models:** `BoardingHouse`, `Service`, `RoomType`, `Room`, `RoomService`
 
-1. Landlord submits `name`, structured address fields (`country`, `province`, `city`, `district`, `ward`, `street`, `houseNumber`), `description`, `totalFloor`, `builtAt`, plus arrays of `{ name, unit, price, isMetered }` for services and `{ name, description }` for room types.
-2. Create `BoardingHouse(ownerId = current_user.id, status = 'active')`.
-3. Bulk-insert `Service` rows with `boardingHouseId` set to this property. System-default services (if any convention for "global" services is added later) are a separate concern — do not clone rows, `RoomService` is what attaches a service to a specific room (UC-L-02/03).
-4. Bulk-insert `RoomType` rows scoped to this `boardingHouseId`.
+> **Access Control & Dashboard Entry Flow:**
+> Direct access to the landlord dashboard area (`URL: /landlord` and its child management routes) is strictly gated by property ownership:
+> `COUNT(BoardingHouse WHERE ownerId = current_user.id) ≥ 1`.
+>
+> - **New Landlord / User with 0 properties:** The user is **not allowed immediate access** to the landlord dashboard (`URL: /landlord`). If a user attempts to navigate directly to `/landlord` while having no properties, the system intercepts the request and redirects them to the dedicated property creation page.
+> - **Dedicated Property Creation Page:** When the user clicks the "Create rental property" button (e.g. "Tạo nhà trọ" / "Tạo nhà trọ đầu tiên"), they must be directed to a **dedicated page** (e.g., `/landlord/setup`) to enter property details across three steps, rather than being granted direct entry into the dashboard workspace.
+> - **Granting Dashboard Access:** Only after successfully completing all 3 setup steps and confirming creation on Step 3 (or if the user already has an existing property) will the user be granted access to the landlord dashboard area (`URL: /landlord`).
+> - **Returning Landlord (already has ≥1 property):** Already possesses access to `/landlord`. When clicking "**+ Tạo nhà trọ mới**" (from the building selector or dashboard header), they are similarly routed to the dedicated 3-step creation page to add the new property.
 
-**Validation:** `name` and full address block required.
+---
+
+#### §Dashboard — Landlord Overview (Active Only When Property Exists)
+
+Displayed only when `COUNT(BoardingHouse WHERE ownerId = current_user.id) ≥ 1`. The active property is determined by the user's building selector (sidebar dropdown). Metrics fetched in a single aggregated query:
+
+| Card / Widget | Data source | Display |
+|---|---|---|
+| **Tổng phòng** | `COUNT(Room WHERE boardingHouseId)` | Number + floor breakdown |
+| **Đang thuê** | `COUNT(Room WHERE status = 'occupied')` | Number + % occupancy rate |
+| **Phòng trống** | `COUNT(Room WHERE status = 'available')` | Number (clickable → rooms list filtered) |
+| **Đặt cọc** | `COUNT(Room WHERE status = 'deposited')` | Number |
+| **Bảo trì** | `COUNT(Room WHERE status = 'maintainace')` | Number |
+| **Khách thuê hiện tại** | `COUNT(TenantContract JOIN Contract WHERE status = 'active')` | Number of active tenants |
+| **HĐ sắp hết hạn (30 ngày)** | `Contract WHERE status='active' AND endDate ≤ NOW()+30d` | List (room number, tenant name, expiry date) |
+| **Tổng dư nợ** | `SUM(Invoice.totalAmount WHERE status IN ('unpaid','overdue'))` | VNĐ formatted (Decimal) |
+| **Hoá đơn chưa thu** | `COUNT(Invoice WHERE status IN ('unpaid','overdue'))` | Count + total amount |
+| **Thu nhập tháng này** | `SUM(Payment.amount WHERE createdAt IN current month AND status='success')` | VNĐ |
+| **Dịch vụ đang hoạt động** | `COUNT(Service WHERE boardingHouseId AND status='active')` | List of service names |
+| **Cọc đang giữ** | `SUM(Deposit.amount WHERE status='held')` | VNĐ |
+
+> **+ Tạo nhà trọ mới** button → navigates to the dedicated 3-step property creation page for a brand-new `BoardingHouse` setup.
+
+---
+
+#### §Wizard — Step 1: General Property Information
+
+**Collected fields (maps to `BoardingHouse` model):**
+
+| Field | DB column | Required | Notes |
+|---|---|---|---|
+| Tên nhà trọ | `name` VARCHAR(255) | ✅ | Displayed in building selector |
+| Mô tả | `description` TEXT | — | Optional free text |
+| Số nhà | `houseNumber` VARCHAR(255) | ✅ | |
+| Đường / Phố | `street` VARCHAR(255) | ✅ | |
+| Phường / Xã | `ward` VARCHAR(255) | ✅ | |
+| Quận / Huyện | `district` VARCHAR(255) | ✅ | |
+| Tỉnh / Thành phố | `province` VARCHAR(255) | ✅ | |
+| Quốc gia | `country` VARCHAR(255) | ✅ | Default `"Việt Nam"` |
+| Tổng số tầng | `totalFloor` INT | — | Used for bulk generate preview |
+| Năm xây dựng | `builtAt` DATETIME | ✅ | Date picker (year only acceptable) |
+| Ảnh đại diện | `thumbnail` STRING (URL) | — | Cloudinary upload |
+
+**Validation:** `name`, `houseNumber`, `street`, `ward`, `district`, `province`, `country`, `builtAt` are all required. No API call is made yet — data is held in wizard state.
+
+---
+
+#### §Wizard — Step 2: Services & Room Types
+
+**2a — Services (maps to `Service` model, 1:N per `BoardingHouse`):**
+
+| Field | DB column | Required | Notes |
+|---|---|---|---|
+| Tên dịch vụ | `name` VARCHAR(255) | ✅ | e.g. "Điện", "Nước", "WiFi" |
+| Đơn giá | `price` DECIMAL(12,2) | ✅ | VNĐ |
+| Đơn vị | `unit` VARCHAR(255) | ✅ | e.g. "kWh", "m³", "tháng" |
+| Tính theo đồng hồ | `isMetered` BOOLEAN | ✅ | Toggle |
+| Tự động áp dụng | `autoApplied` BOOLEAN | ✅ | Default `true` |
+
+Landlord can add multiple services via "**+ Thêm dịch vụ**" rows. At least one service is recommended but not enforced. System suggests defaults: Điện (kWh, isMetered=true), Nước (m³, isMetered=true), WiFi (tháng, isMetered=false).
+
+**2b — Room Types (maps to `RoomType` model, 1:N per `BoardingHouse`):**
+
+| Field | DB column | Required | Notes |
+|---|---|---|---|
+| Tên loại phòng | `name` VARCHAR(255) | ✅ | e.g. "Studio", "1 phòng ngủ" |
+| Mô tả | `description` TEXT | — | Features / amenities note |
+
+Landlord can add multiple room types via "**+ Thêm loại phòng**" rows. At least one `RoomType` is required — bulk generate in Step 3 requires a `roomTypeId`.
+
+No API call is made yet — data is still held in wizard state.
+
+---
+
+#### §Wizard — Step 3: Bulk Generate Rooms
+
+Executes the logic of UC-L-02 as the final step of setup. UI displays the room generation form pre-populated with `totalFloor` from Step 1.
+
+**Collected fields (maps to `Room` + `RoomService` models):**
+
+| Field | DB column | Required | Notes |
+|---|---|---|---|
+| Số tầng | `floorCount` (input) | ✅ | Max from `totalFloor` |
+| Phòng mỗi tầng | `roomsPerFloor` (input) | ✅ | |
+| Mẫu số phòng | `nameFormat` (template string) | ✅ | e.g. `P{floor}0{index}` |
+| Diện tích (m²) | `area` DECIMAL | — | Applied to all generated rooms |
+| Sức chứa tối đa | `maxOccupants` INT | — | |
+| Loại phòng | `roomTypeId` FK → `RoomType.id` | ✅ | Dropdown from Step 2 room types |
+| Dịch vụ đi kèm | `serviceIds[]` → `RoomService` | — | Multi-select from Step 2 services |
+
+A real-time **preview panel** renders all room numbers before submission (same template engine as UC-L-02). Landlord sees `floorCount × roomsPerFloor` room codes and can adjust the format.
+
+---
+
+#### §API Submission — Single Transaction on Step 3 "Hoàn thành"
+
+All data accumulated across Steps 1–3 is submitted in **one atomic request** when the landlord clicks "Hoàn thành" on Step 3. The backend executes a single `$transaction`:
+
+```
+POST /v1/boarding-houses/setup
+Body: {
+  // Step 1
+  name, description, houseNumber, street, ward, district, province, country, totalFloor, builtAt, thumbnail?,
+  // Step 2
+  services: [{ name, price, unit, isMetered, autoApplied }],
+  roomTypes: [{ name, description? }],
+  // Step 3
+  rooms: { floorCount, roomsPerFloor, nameFormat, area?, maxOccupants?, roomTypeIndex, serviceIndices[] }
+}
+```
+
+Transaction steps (all-or-nothing):
+1. `INSERT BoardingHouse` → get `boardingHouseId`.
+2. `INSERT Service[]` → get `serviceId[]` map (index → real UUID).
+3. `INSERT RoomType[]` → get `roomTypeId[]` map (index → real UUID).
+4. Validate quota: `roomsToCreate ≤ SubscriptionPlan.maxRoom` (free tier default = 10).
+5. Resolve `roomTypeIndex` → real `roomTypeId`; resolve `serviceIndices[]` → real `serviceId[]`.
+6. Loop and `INSERT Room[]` with `status = 'available'`.
+7. `INSERT RoomService[]` for each (room, service) pair.
+8. Return the new `BoardingHouse` with summary counts.
+
+On success:
+1. Role bump: If the user does not have the `landlord` role, it is updated to `role = 'landlord'`.
+2. Dashboard access granted: The user now satisfies `COUNT(BoardingHouse WHERE ownerId = current_user.id) ≥ 1` and is unlocked to access the landlord dashboard area (`URL: /landlord`).
+3. Sidebar building selector adds the new property and automatically selects it as the active property.
+4. Redirection: The user is navigated to the landlord dashboard (`URL: /landlord`).
+
+On any failure or cancellation: full rollback, user remains on the dedicated creation page with an error message, and access to the landlord dashboard area (`URL: /landlord`) remains strictly blocked (if the user has 0 properties).
+
+---
+
+**Validation summary:**
+- Steps 1–2 validate locally (client-side) before allowing "Tiếp theo".
+- Step 3 re-validates room quota client-side (preview count vs. plan limit shown inline).
+- Server enforces all constraints: required fields, `@@unique([boardingHouseId, roomNumber])`, quota cap, valid FK references.
+- If landlord navigates back to a previous step and modifies data, the wizard state updates accordingly — no partial saves occur.
 
 ---
 

@@ -1,4 +1,26 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+function getApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const port = process.env.NEXT_PUBLIC_API_PORT?.trim() || "3001";
+
+  if (!envUrl) {
+    return `http://localhost:${port}/api`;
+  }
+
+  // If already ends with /api
+  if (envUrl.endsWith("/api")) {
+    return envUrl;
+  }
+
+  // If already has a port specified (e.g. http://localhost:3001)
+  if (/(:\d+)/.test(envUrl)) {
+    return `${envUrl.replace(/\/$/, "")}/api`;
+  }
+
+  // If has protocol but no port (e.g. http://localhost)
+  return `${envUrl.replace(/\/$/, "")}:${port}/api`;
+}
+
+const API_URL = getApiBaseUrl();
 
 
 type FetchOptions = RequestInit & {

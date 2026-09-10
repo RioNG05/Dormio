@@ -43,7 +43,7 @@ export default function LoginPage() {
 
     try {
       const response = await api.post<any>("/v1/auth/login", {
-        identifier: accountIdentifier,
+        identifier: accountIdentifier.trim(),
         password,
       });
 
@@ -205,6 +205,87 @@ export default function LoginPage() {
 
       </form>
 
+      {/* Demo Accounts Quick-Fill Helper */}
+      <div className="p-3.5 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
+        <div className="flex items-center justify-between text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider">
+          <span>Tài khoản mẫu thử nghiệm</span>
+          <span className="text-[10px] text-zinc-400 font-semibold">(Nhấn để điền)</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("phone");
+              setAccountIdentifier("0933445566");
+              setPassword("Secret@123");
+              setError(null);
+            }}
+            className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
+              <span>🏢 Chủ trọ (Võ Minh Trí)</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              0933445566 • Secret@123
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("phone");
+              setAccountIdentifier("0877719399");
+              setPassword("Secret@123");
+              setError(null);
+            }}
+            className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
+              <span>🏢 Chủ trọ (Nguyễn Phương Hà)</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              0877719399 • Secret@123
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("phone");
+              setAccountIdentifier("0987654321");
+              setPassword("Secret@123");
+              setError(null);
+            }}
+            className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
+              <span>🏠 Khách thuê (Lê Hoàng Nam)</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              0987654321 • Secret@123
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("phone");
+              setAccountIdentifier("0344265925");
+              setPassword("88888888");
+              setError(null);
+            }}
+            className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
+              <span>🛡️ Quản trị viên (Admin)</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              0344265925 • 88888888
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* Bottom Auth Navigation Link */}
       <div className="text-center text-xs text-zinc-500 font-medium pt-2">
         Chưa có tài khoản?{" "}
@@ -212,6 +293,7 @@ export default function LoginPage() {
           Đăng ký ngay
         </Link>
       </div>
+
 
     </div>
   );

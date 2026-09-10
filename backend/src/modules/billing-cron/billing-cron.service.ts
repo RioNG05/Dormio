@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { InvoicesService } from '../invoices/invoices.service';
 
 /**
  * BillingCronService — UC-L-06 Part 1 / UC-T-02
@@ -10,6 +11,8 @@ import { NotificationsService } from '../notifications/notifications.service';
  *
  *  1. billing_reminder — for contracts where (monthlyPaymentDate - today) = 5 days
  *  2. billing_due      — for contracts where monthlyPaymentDate = today
+ *     - If room has metered services: notifies tenant to submit meter readings (Part 1 Step 3).
+ *     - If room has NO metered services: automatically generates flat-rate invoice immediately (Part 3).
  *
  * Each notification is written to the DB and enqueued in BullMQ individually
  * (no wrapping $transaction) so a single failure doesn't block the entire batch.
@@ -24,6 +27,7 @@ export class BillingCronService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly invoicesService: InvoicesService,
   ) {}
 
   // ─── Cron: daily at 06:00 ────────────────────────────────────────────────────
@@ -126,6 +130,15 @@ export class BillingCronService {
           contractId: contract.id,
           hasMeteredServices,
         });
+
+        // UC-L-06 Part 1 Step 3 / Part 3:
+        // If room has NO metered services, generate flat-rate invoice immediately
+        if (!hasMeteredServices) {
+          await this.invoicesService.generateFlatRateInvoice(
+            contract.id,
+            new Date(),
+          );
+        }
       } catch (err) {
         this.logger.error(
           `[BillingCron] Failed billing_due for contract ${contract.id}: ${(err as Error).message}`,

@@ -69,7 +69,7 @@ export default function PublicLayout({
     setTimeout(() => {
       setUpgradeSuccess(false);
       setIsLandlordModalOpen(false);
-      router.push("/landlord");
+      router.push("/landlord/setup");
     }, 1500);
   };
 
@@ -154,8 +154,7 @@ export default function PublicLayout({
                 {user.role === "tenant" ? (
                   <button
                     onClick={() => {
-                      upgradeToLandlord({ houseName: "", houseAddress: "" });
-                      router.push("/landlord");
+                      router.push("/landlord/setup");
                     }}
                     className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-black rounded-full shadow-md shadow-[#FF6B35]/25 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
                   >
@@ -344,8 +343,7 @@ export default function PublicLayout({
                     <button
                       onClick={() => {
                         setIsMobileMenuOpen(false);
-                        upgradeToLandlord({ houseName: "", houseAddress: "" });
-                        router.push("/landlord");
+                        router.push("/landlord/setup");
                       }}
                       className="w-full py-3 bg-[#FF6B35] text-white font-black text-xs rounded-2xl shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
                     >

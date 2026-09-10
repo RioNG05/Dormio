@@ -1,43 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Receipt, Building2,
   ChevronDown, Sparkles, MapPin, FileSpreadsheet, Eye, Calendar, DollarSign,
   CheckCircle2, Clock, AlertTriangle, ChevronLeft, ChevronRight, Copy, QrCode,
   Printer, X, Check, LayoutGrid, List, Zap, Droplets, Wifi, ShieldCheck,
-  Send, Smartphone, ArrowUpRight, User, RefreshCw
+  Send, Smartphone, ArrowUpRight, User, RefreshCw, Loader2
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import {
+  landlordInvoiceService,
+  LandlordInvoiceItem,
+  LandlordInvoicesSummary,
+} from "@/services/landlord-invoice.service";
+import { getRooms, RoomItem } from "@/services/room.service";
 
-// Invoice Item Interface
-interface InvoiceItem {
-  id: string;
-  roomId: string;
-  roomName: string;
-  buildingName: string;
-  tenantName: string;
-  tenantPhone: string;
-  period: string;
-  rentAmount: number;
-  elecOld: number;
-  elecNew: number;
-  elecRate: number;
-  waterOld: number;
-  waterNew: number;
-  waterRate: number;
-  serviceFees: { name: string; amount: number }[];
-  discount: number;
-  totalAmount: number;
-  deadline: string;
-  status: "Đã thu" | "Chưa thu" | "Quá hạn";
-  createdAt: string;
-  paidAt?: string;
-  paymentMethod?: string;
-  ocrMeterImage?: string;
-}
+type InvoiceItem = LandlordInvoiceItem;
 
 function InvoicesContent() {
   const { activeBuilding } = useAuth();
@@ -52,15 +33,27 @@ function InvoicesContent() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [activeTab, setActiveTab] = useState<"all" | "unpaid" | "paid" | "overdue">("all");
   const [searchTerm, setSearchTerm] = useState(urlSearch);
-  const [selectedBuilding, setSelectedBuilding] = useState("all");
-  const [selectedMonth, setSelectedMonth] = useState("08");
+  const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedYear, setSelectedYear] = useState("2026");
 
-  // Pagination State
+  // Pagination State (Rule #9: Grid=6, Table=10, 5-page window jumping)
   const [pageSize, setPageSize] = useState<number>(viewMode === "grid" ? 6 : 10);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [windowStart, setWindowStart] = useState<number>(1);
-  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+
+  // Loading & Data States
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableRooms, setAvailableRooms] = useState<RoomItem[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
+  const [serverSummary, setServerSummary] = useState<LandlordInvoicesSummary>({
+    totalInvoicesCount: 0,
+    paidCount: 0,
+    unpaidCount: 0,
+    overdueCount: 0,
+    totalPaidAmount: 0,
+    totalUnpaidAmount: 0,
+  });
 
   // Modals & Drawer States
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceItem | null>(null);
@@ -71,8 +64,9 @@ function InvoicesContent() {
 
   // Form State for Create Invoice
   const [createForm, setCreateForm] = useState({
-    roomName: "Phòng 101",
-    tenantName: "Nguyễn Văn Tuấn",
+    roomId: "",
+    roomName: "",
+    tenantName: "",
     period: "08/2026",
     rentAmount: 3500000,
     elecOld: 1318,
@@ -84,7 +78,7 @@ function InvoicesContent() {
     wifiFee: 100000,
     trashFee: 50000,
     discount: 0,
-    deadline: "20/08/2026",
+    deadline: "2026-08-20",
   });
   const [isCreateFormDirty, setIsCreateFormDirty] = useState(false);
 
@@ -92,231 +86,125 @@ function InvoicesContent() {
   const [ocrMeterValue, setOcrMeterValue] = useState("1428");
   const [isOcrFormDirty, setIsOcrFormDirty] = useState(false);
 
-  // Mock Invoices Dataset
-  const [invoices, setInvoices] = useState<InvoiceItem[]>([
-    {
-      id: "INV-202608-101",
-      roomId: "101",
-      roomName: "Phòng 101",
-      buildingName: activeBuilding.name,
-      tenantName: "Nguyễn Văn Tuấn",
-      tenantPhone: "0988 123 456",
-      period: "08/2026",
-      rentAmount: 3500000,
-      elecOld: 1318,
-      elecNew: 1418,
-      elecRate: 3500,
-      waterOld: 240,
-      waterNew: 252,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet / Wifi tốc độ cao", amount: 100000 },
-        { name: "Rác & Vệ sinh môi trường", amount: 50000 },
-      ],
-      discount: 0,
-      totalAmount: 3500000 + (100 * 3500) + (12 * 15000) + 150000, // 4.180.000 ₫
-      deadline: "20/08/2026",
-      status: "Chưa thu",
-      createdAt: "01/08/2026",
-    },
-    {
-      id: "INV-202608-205",
-      roomId: "205",
-      roomName: "Phòng 205",
-      buildingName: activeBuilding.name,
-      tenantName: "Trần Thị Mai",
-      tenantPhone: "0912 345 678",
-      period: "08/2026",
-      rentAmount: 4200000,
-      elecOld: 2100,
-      elecNew: 2210,
-      elecRate: 3500,
-      waterOld: 310,
-      waterNew: 325,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet / Wifi", amount: 100000 },
-        { name: "Vệ sinh tòa nhà", amount: 50000 },
-        { name: "Thang máy", amount: 50000 },
-      ],
-      discount: 100000,
-      totalAmount: 4200000 + (110 * 3500) + (15 * 15000) + 200000 - 100000, // 4.710.000 ₫
-      deadline: "15/08/2026",
-      status: "Quá hạn",
-      createdAt: "01/08/2026",
-    },
-    {
-      id: "INV-202608-105",
-      roomId: "105",
-      roomName: "Phòng 105",
-      buildingName: activeBuilding.name,
-      tenantName: "Hoàng Minh Trí",
-      tenantPhone: "0933 555 777",
-      period: "08/2026",
-      rentAmount: 3200000,
-      elecOld: 980,
-      elecNew: 1060,
-      elecRate: 3500,
-      waterOld: 180,
-      waterNew: 190,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Wifi & Rác", amount: 120000 },
-      ],
-      discount: 0,
-      totalAmount: 3200000 + (80 * 3500) + (10 * 15000) + 120000, // 3.750.000 ₫
-      deadline: "20/08/2026",
-      status: "Đã thu",
-      createdAt: "01/08/2026",
-      paidAt: "12/08/2026 14:00",
-      paymentMethod: "VietQR Chuyển khoản",
-    },
-    {
-      id: "INV-202608-302",
-      roomId: "302",
-      roomName: "Phòng 302",
-      buildingName: activeBuilding.name,
-      tenantName: "Lê Văn Hùng",
-      tenantPhone: "0977 111 222",
-      period: "08/2026",
-      rentAmount: 3800000,
-      elecOld: 1450,
-      elecNew: 1560,
-      elecRate: 3500,
-      waterOld: 210,
-      waterNew: 222,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet + Vệ sinh", amount: 150000 },
-      ],
-      discount: 0,
-      totalAmount: 3800000 + (110 * 3500) + (12 * 15000) + 150000, // 4.515.000 ₫
-      deadline: "20/08/2026",
-      status: "Đã thu",
-      createdAt: "01/08/2026",
-      paidAt: "05/08/2026 09:30",
-      paymentMethod: "VietQR Chuyển khoản",
-    },
-    {
-      id: "INV-202607-101",
-      roomId: "101",
-      roomName: "Phòng 101",
-      buildingName: activeBuilding.name,
-      tenantName: "Nguyễn Văn Tuấn",
-      tenantPhone: "0988 123 456",
-      period: "07/2026",
-      rentAmount: 3500000,
-      elecOld: 1220,
-      elecNew: 1318,
-      elecRate: 3500,
-      waterOld: 228,
-      waterNew: 240,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Internet + Rác", amount: 150000 },
-      ],
-      discount: 0,
-      totalAmount: 3500000 + (98 * 3500) + (12 * 15000) + 150000, // 4.173.000 ₫
-      deadline: "20/07/2026",
-      status: "Đã thu",
-      createdAt: "01/07/2026",
-      paidAt: "10/07/2026 16:45",
-      paymentMethod: "Tiền mặt",
-    },
-    {
-      id: "INV-202607-205",
-      roomId: "205",
-      roomName: "Phòng 205",
-      buildingName: activeBuilding.name,
-      tenantName: "Trần Thị Mai",
-      tenantPhone: "0912 345 678",
-      period: "07/2026",
-      rentAmount: 4200000,
-      elecOld: 1980,
-      elecNew: 2100,
-      elecRate: 3500,
-      waterOld: 295,
-      waterNew: 310,
-      waterRate: 15000,
-      serviceFees: [
-        { name: "Dịch vụ tòa nhà", amount: 200000 },
-      ],
-      discount: 0,
-      totalAmount: 4200000 + (120 * 3500) + (15 * 15000) + 200000, // 5.045.000 ₫
-      deadline: "20/07/2026",
-      status: "Đã thu",
-      createdAt: "01/07/2026",
-      paidAt: "18/07/2026 11:20",
-      paymentMethod: "VietQR Chuyển khoản",
-    },
-  ]);
-
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Update default pageSize on viewMode change
+  // Update default pageSize on viewMode change (Rule #9)
   useEffect(() => {
     setPageSize(viewMode === "grid" ? 6 : 10);
     setCurrentPage(1);
   }, [viewMode]);
 
+  // Fetch available rooms for active building
+  useEffect(() => {
+    if (!activeBuilding?.id) return;
+    getRooms(activeBuilding.id)
+      .then((res) => {
+        if (res?.data) {
+          setAvailableRooms(res.data);
+          if (res.data.length > 0) {
+            const first = res.data[0];
+            setCreateForm((prev) => ({
+              ...prev,
+              roomId: prev.roomId || first.id,
+              roomName: prev.roomName || `Phòng ${first.roomNumber}`,
+            }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load rooms:", err);
+      });
+  }, [activeBuilding?.id]);
+
+  // Fetch invoices from backend (UC-L-06)
+  const fetchInvoices = useCallback(async () => {
+    if (!activeBuilding?.id) return;
+    try {
+      setIsLoading(true);
+      const res = await landlordInvoiceService.getLandlordInvoices(
+        activeBuilding.id,
+        {
+          search: searchTerm,
+          status: activeTab,
+          month: selectedMonth,
+          year: selectedYear,
+          page: currentPage,
+          limit: pageSize,
+        },
+      );
+      if (res && res.success) {
+        setInvoices(res.data || []);
+        setServerSummary(res.summary);
+        setTotalRecords(res.meta.total || 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch landlord invoices:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    activeBuilding?.id,
+    searchTerm,
+    activeTab,
+    selectedMonth,
+    selectedYear,
+    currentPage,
+    pageSize,
+  ]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
   // Handle URL deep-linking: ?id=INV-... or ?search=... or ?room=101
   useEffect(() => {
     if (urlId) {
-      const matchInv = invoices.find(i => i.id.toLowerCase() === urlId.toLowerCase() || i.roomId === urlSearch);
+      const matchInv = invoices.find(
+        (i) =>
+          i.id.toLowerCase() === urlId.toLowerCase() ||
+          i.roomId.toLowerCase() === urlId.toLowerCase(),
+      );
       if (matchInv) {
         setSelectedInvoice(matchInv);
       }
     } else if (urlSearch) {
-      const matchInv = invoices.find(i => i.roomId === urlSearch || i.roomName.toLowerCase().includes(urlSearch.toLowerCase()));
+      const matchInv = invoices.find(
+        (i) =>
+          i.roomId === urlSearch ||
+          i.roomName.toLowerCase().includes(urlSearch.toLowerCase()),
+      );
       if (matchInv) {
         setSelectedInvoice(matchInv);
       }
     }
-  }, [urlId, urlSearch]);
+  }, [urlId, urlSearch, invoices]);
 
   if (!isMounted) return null;
 
-  // Invoices filtered by separate selected Month & Year
-  const periodInvoices = invoices.filter((inv) => {
-    const [invMonth, invYear] = inv.period.split('/');
-    const matchMonth = selectedMonth === "all" || invMonth === selectedMonth;
-    const matchYear = selectedYear === "all" || invYear === selectedYear;
-    return matchMonth && matchYear;
-  });
+  // Calculate Metrics from serverSummary
+  const totalInvoicesCount = serverSummary.totalInvoicesCount;
+  const paidCount = serverSummary.paidCount;
+  const unpaidCount = serverSummary.unpaidCount;
+  const overdueCount = serverSummary.overdueCount;
+  const totalPaidAmount = serverSummary.totalPaidAmount;
+  const totalUnpaidAmount = serverSummary.totalUnpaidAmount;
 
-  // Calculate Metrics Dynamically based on selected Period
-  const totalInvoicesCount = periodInvoices.length;
-  const paidCount = periodInvoices.filter(i => i.status === "Đã thu").length;
-  const unpaidCount = periodInvoices.filter(i => i.status === "Chưa thu").length;
-  const overdueCount = periodInvoices.filter(i => i.status === "Quá hạn").length;
-
-  const totalPaidAmount = periodInvoices.filter(i => i.status === "Đã thu").reduce((acc, curr) => acc + curr.totalAmount, 0);
-  const totalUnpaidAmount = periodInvoices.filter(i => i.status !== "Đã thu").reduce((acc, curr) => acc + curr.totalAmount, 0);
-
-  // Filtered List Logic (Period + Search + Tab)
-  const filteredInvoices = periodInvoices.filter((inv) => {
-    const matchSearch =
-      inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inv.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inv.tenantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inv.tenantPhone.includes(searchTerm);
-
-    if (!matchSearch) return false;
-
-    if (activeTab === "unpaid") return inv.status === "Chưa thu";
-    if (activeTab === "paid") return inv.status === "Đã thu";
-    if (activeTab === "overdue") return inv.status === "Quá hạn";
-    return true;
-  });
-
-  // Pagination Logic
-  const totalItems = filteredInvoices.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  // Pagination Logic with 5-page window jumping (Rule #9)
+  const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+  const windowSize = 5;
+  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
+  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+  const visiblePages = Array.from(
+    { length: windowEnd - windowStart + 1 },
+    (_, i) => windowStart + i,
+  );
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalItems);
-  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + pageSize, totalRecords);
+
+  const paginatedInvoices = invoices;
+  const totalItems = totalRecords;
 
   // Format large money amounts cleanly without wrapping
   const formatLargeMoney = (amount: number) => {
@@ -367,22 +255,66 @@ function InvoicesContent() {
     setConfirmCloseTarget(null);
   };
 
-  // Mark Paid Handler with custom payment method
-  const handleMarkAsPaid = (invId: string, method = "Giao dịch ngoài (Tiền mặt / Chuyển khoản thủ công)") => {
-    const nowStr = new Date().toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
-    setInvoices(prev => prev.map(inv => inv.id === invId ? {
-      ...inv,
-      status: "Đã thu",
-      paidAt: nowStr,
-      paymentMethod: method
-    } : inv));
-    if (selectedInvoice && selectedInvoice.id === invId) {
-      setSelectedInvoice(prev => prev ? {
-        ...prev,
-        status: "Đã thu",
-        paidAt: nowStr,
-        paymentMethod: method
-      } : null);
+  // Mark Paid Handler with real backend recording (UC-L-06 Part 3)
+  const handleMarkAsPaid = async (
+    invId: string,
+    method = "Giao dịch ngoài (Tiền mặt / Chuyển khoản thủ công)",
+  ) => {
+    if (!activeBuilding?.id) return;
+    try {
+      const isCash = method.toLowerCase().includes("tiền mặt");
+      await landlordInvoiceService.recordManualPayment(activeBuilding.id, invId, {
+        method: isCash ? "cash" : "banking",
+        note: method,
+      });
+      await fetchInvoices();
+      if (selectedInvoice && selectedInvoice.id === invId) {
+        const detail = await landlordInvoiceService.getLandlordInvoiceDetail(
+          activeBuilding.id,
+          invId,
+        );
+        if (detail?.data) setSelectedInvoice(detail.data);
+      }
+    } catch (err: any) {
+      console.error("Lỗi cập nhật thanh toán:", err);
+      alert(err?.message || "Không thể cập nhật trạng thái thanh toán");
+    }
+  };
+
+  // Create Manual Invoice Handler (UC-L-06 / UC-L-09)
+  const handleCreateInvoiceSubmit = async () => {
+    if (!activeBuilding?.id) return;
+    if (!createForm.roomId) {
+      alert("Vui lòng chọn phòng cần lập hóa đơn");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      await landlordInvoiceService.createManualInvoice(activeBuilding.id, {
+        roomId: createForm.roomId,
+        period: createForm.period,
+        dueDate: createForm.deadline ? new Date(createForm.deadline).toISOString() : new Date().toISOString(),
+        rentAmount: createForm.rentAmount,
+        elecOld: createForm.elecOld,
+        elecNew: createForm.elecNew,
+        elecRate: createForm.elecRate,
+        waterOld: createForm.waterOld,
+        waterNew: createForm.waterNew,
+        waterRate: createForm.waterRate,
+        serviceFees: [
+          { name: "Internet / Wifi", amount: createForm.wifiFee },
+          { name: "Rác & Vệ sinh", amount: createForm.trashFee },
+        ],
+        discount: createForm.discount,
+      });
+      setIsCreateModalOpen(false);
+      setIsCreateFormDirty(false);
+      await fetchInvoices();
+    } catch (err: any) {
+      console.error("Lỗi tạo hóa đơn:", err);
+      alert(err?.message || "Không thể tạo hóa đơn");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -607,7 +539,7 @@ function InvoicesContent() {
             className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "all" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
           >
-            Tất cả ({periodInvoices.length})
+            Tất cả ({totalInvoicesCount})
           </button>
 
           <button
@@ -637,7 +569,26 @@ function InvoicesContent() {
       </div>
 
       {/* Main Content Display (Grid or Table View) */}
-      {paginatedInvoices.length === 0 ? (
+      {invoices.length === 0 ? (
+        <div className="py-16 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
+          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+            <Receipt className="w-8 h-8" />
+          </div>
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <h3 className="font-black text-base text-zinc-900">Chưa có dữ liệu hóa đơn nào</h3>
+            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+              Tòa nhà hiện chưa có dữ liệu hóa đơn hoặc thanh toán nào. Hóa đơn sẽ được tạo tự động khi chốt chỉ số điện nước (UC-L-06) hoặc khi bạn lập hóa đơn mới.
+            </p>
+          </div>
+          <button
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25aca7] text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer hover:scale-105"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Lập Hóa Đơn Mới</span>
+          </button>
+        </div>
+      ) : paginatedInvoices.length === 0 ? (
         <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
           <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
           <h3 className="font-extrabold text-sm text-zinc-800">Không tìm thấy hóa đơn nào</h3>
@@ -796,58 +747,80 @@ function InvoicesContent() {
       )}
 
       {/* Pagination Bar (Standard Dormio Rule #9) */}
-      <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
-        <div className="flex items-center gap-2 text-zinc-600">
-          <span>Hiển thị</span>
-          <input
-            type="number"
-            min={1}
-            max={50}
-            value={pageSize}
-            onChange={(e) => {
-              const val = parseInt(e.target.value) || 1;
-              setPageSize(val);
-              setCurrentPage(1);
-            }}
-            className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
-          />
-          <span>/ trang</span>
-          <span className="text-zinc-400">|</span>
-          <span>
-            {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} trên {totalItems} mục
-          </span>
-        </div>
+      {totalItems > 0 && (
+        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
+          <div className="flex items-center gap-2 text-zinc-600">
+            <span>Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={pageSize}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 1;
+                setPageSize(val);
+                setCurrentPage(1);
+              }}
+              className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
+            />
+            <span>/ trang</span>
+            <span className="text-zinc-400">|</span>
+            <span>
+              {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} trên {totalItems} mục
+            </span>
+          </div>
 
-        {/* Page Jumping Controls */}
-        <div className="flex items-center gap-1">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4 text-zinc-600" />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          {/* Page Jumping Controls */}
+          <div className="flex items-center gap-1">
             <button
-              key={p}
-              onClick={() => setCurrentPage(p)}
-              className={`w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer transition-all ${currentPage === p ? "bg-[#2AC1BC] text-white shadow-2xs" : "hover:bg-zinc-100 text-zinc-700"
-                }`}
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
             >
-              {p}
+              <ChevronLeft className="w-4 h-4 text-zinc-600" />
             </button>
-          ))}
 
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4 text-zinc-600" />
-          </button>
+            {windowStart > 1 && (
+              <button
+                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
+                title="5 trang trước"
+              >
+                &laquo;
+              </button>
+            )}
+
+            {visiblePages.map((p) => (
+              <button
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                className={`w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer transition-all ${currentPage === p ? "bg-[#2AC1BC] text-white shadow-2xs" : "hover:bg-zinc-100 text-zinc-700"
+                  }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            {windowStart + windowSize <= totalPages && (
+              <button
+                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
+                className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
+                title="5 trang sau"
+              >
+                &raquo;
+              </button>
+            )}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4 text-zinc-600" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 📄 DETAILED INVOICE LIGHTBOX MODAL / DRAWER */}
       {selectedInvoice && (
@@ -1084,17 +1057,39 @@ function InvoicesContent() {
                 <div className="space-y-1">
                   <label className="font-bold text-zinc-700">Chọn Phòng *</label>
                   <select
-                    value={createForm.roomName}
+                    value={createForm.roomId}
                     onChange={(e) => {
-                      setCreateForm({ ...createForm, roomName: e.target.value });
+                      const selectedId = e.target.value;
+                      const r = availableRooms.find((rm) => rm.id === selectedId);
+                      let elecRate = createForm.elecRate;
+                      let waterRate = createForm.waterRate;
+                      if (r?.services) {
+                        const elec = r.services.find(
+                          (s) => s.isMetered && s.name.toLowerCase().includes("điện"),
+                        );
+                        if (elec) elecRate = Number(elec.price) || elecRate;
+                        const water = r.services.find(
+                          (s) => s.isMetered && s.name.toLowerCase().includes("nước"),
+                        );
+                        if (water) waterRate = Number(water.price) || waterRate;
+                      }
+                      setCreateForm({
+                        ...createForm,
+                        roomId: selectedId,
+                        roomName: r ? `Phòng ${r.roomNumber}` : "",
+                        elecRate,
+                        waterRate,
+                      });
                       setIsCreateFormDirty(true);
                     }}
                     className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
                   >
-                    <option value="Phòng 101">Phòng 101 (Nguyễn Văn Tuấn)</option>
-                    <option value="Phòng 205">Phòng 205 (Trần Thị Mai)</option>
-                    <option value="Phòng 105">Phòng 105 (Hoàng Minh Trí)</option>
-                    <option value="Phòng 302">Phòng 302 (Lê Văn Hùng)</option>
+                    <option value="">-- Chọn phòng --</option>
+                    {availableRooms.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        Phòng {r.roomNumber} (Tầng {r.floor} — {r.roomType?.name || "Tiêu chuẩn"})
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -1198,45 +1193,12 @@ function InvoicesContent() {
                 Hủy bỏ
               </button>
               <button
-                onClick={() => {
-                  const newInv: InvoiceItem = {
-                    id: `INV-202608-${createForm.roomName.replace('Phòng ', '')}`,
-                    roomId: createForm.roomName.replace('Phòng ', ''),
-                    roomName: createForm.roomName,
-                    buildingName: activeBuilding.name,
-                    tenantName: createForm.tenantName,
-                    tenantPhone: "0988 123 456",
-                    period: createForm.period,
-                    rentAmount: createForm.rentAmount,
-                    elecOld: createForm.elecOld,
-                    elecNew: createForm.elecNew,
-                    elecRate: createForm.elecRate,
-                    waterOld: createForm.waterOld,
-                    waterNew: createForm.waterNew,
-                    waterRate: createForm.waterRate,
-                    serviceFees: [
-                      { name: "Internet / Wifi", amount: createForm.wifiFee },
-                      { name: "Rác & Vệ sinh", amount: createForm.trashFee },
-                    ],
-                    discount: createForm.discount,
-                    totalAmount: (
-                      createForm.rentAmount +
-                      Math.max(0, (createForm.elecNew - createForm.elecOld)) * createForm.elecRate +
-                      Math.max(0, (createForm.waterNew - createForm.waterOld)) * createForm.waterRate +
-                      createForm.wifiFee + createForm.trashFee - createForm.discount
-                    ),
-                    deadline: createForm.deadline,
-                    status: "Chưa thu",
-                    createdAt: new Date().toLocaleDateString("vi-VN"),
-                  };
-
-                  setInvoices([newInv, ...invoices]);
-                  setIsCreateModalOpen(false);
-                  setIsCreateFormDirty(false);
-                }}
-                className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+                disabled={isSubmitting}
+                onClick={handleCreateInvoiceSubmit}
+                className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
               >
-                Lập & Phát Hành Hóa Đơn
+                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{isSubmitting ? "Đang xử lý..." : "Lập & Phát Hành Hóa Đơn"}</span>
               </button>
             </div>
           </div>

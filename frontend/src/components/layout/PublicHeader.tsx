@@ -81,12 +81,22 @@ export function PublicHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           {isLoggedIn ? (
             <>
-              {/* Prominent "Đăng ký trở thành chủ trọ" Button next to Avatar */}
-              <Link href="/landlord">
-                <Button className="rounded-xl px-3 sm:px-4 py-2 bg-[#FF6B35] hover:bg-[#d55e23] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#FF6B35]/25 flex items-center gap-1.5 transition-all hover:scale-105">
+              {/* Prominent "Đăng ký trở thành chủ trọ" or "Bảng điều khiển" Button next to Avatar */}
+              <Link href={user?.role === "landlord" ? "/landlord" : "/landlord/setup"}>
+                <Button
+                  className={`rounded-xl px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-bold shadow-md flex items-center gap-1.5 transition-all hover:scale-105 ${
+                    user?.role === "landlord"
+                      ? "bg-[#2AC1BC] hover:bg-[#25aca7] shadow-[#2AC1BC]/25"
+                      : "bg-[#FF6B35] hover:bg-[#d55e23] shadow-[#FF6B35]/25"
+                  }`}
+                >
                   <Building2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Đăng ký trở thành chủ trọ</span>
-                  <span className="sm:hidden">Làm Chủ trọ</span>
+                  <span className="hidden sm:inline">
+                    {user?.role === "landlord" ? "Bảng điều khiển Chủ trọ" : "Đăng ký trở thành chủ trọ"}
+                  </span>
+                  <span className="sm:hidden">
+                    {user?.role === "landlord" ? "Chủ trọ" : "Làm Chủ trọ"}
+                  </span>
                 </Button>
               </Link>
 
@@ -122,12 +132,20 @@ export function PublicHeader() {
 
                     {/* Quick Landlord Action */}
                     <Link
-                      href="/landlord"
+                      href={user?.role === "landlord" ? "/landlord" : "/landlord/setup"}
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#FF6B35]/10 text-[#FF6B35] font-bold hover:bg-[#FF6B35]/20 transition-colors"
+                      className={`flex items-center gap-2.5 p-2.5 rounded-xl font-bold transition-colors ${
+                        user?.role === "landlord"
+                          ? "bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20"
+                          : "bg-[#FF6B35]/10 text-[#FF6B35] hover:bg-[#FF6B35]/20"
+                      }`}
                     >
                       <Building2 className="w-4 h-4 shrink-0" />
-                      <span>Đăng ký trở thành chủ trọ &rarr;</span>
+                      <span>
+                        {user?.role === "landlord"
+                          ? "Bảng điều khiển Chủ trọ →"
+                          : "Đăng ký trở thành chủ trọ →"}
+                      </span>
                     </Link>
 
                     {/* Menu links */}
@@ -224,11 +242,16 @@ export function PublicHeader() {
 
           <div className="pt-3 border-t border-zinc-100 flex flex-col gap-2">
             <Link
-              href="/landlord"
+              href={user?.role === "landlord" ? "/landlord" : "/landlord/setup"}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#FF6B35] text-white text-sm font-bold shadow-md"
+              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-sm font-bold shadow-md ${
+                user?.role === "landlord" ? "bg-[#2AC1BC]" : "bg-[#FF6B35]"
+              }`}
             >
-              <Building2 className="w-4 h-4" /> Đăng ký trở thành chủ trọ
+              <Building2 className="w-4 h-4" />{" "}
+              {user?.role === "landlord"
+                ? "Bảng điều khiển Chủ trọ"
+                : "Đăng ký trở thành chủ trọ"}
             </Link>
 
             {isLoggedIn ? (
