@@ -7,11 +7,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { PostQueryDto } from './dto/post-query.dto';
+import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
+  PaginatedPublicPostsResponseDto,
   PostQuotaDto,
   PostResponseDto,
+  PublicAddressDto,
+  PublicPostResponseDto,
 } from './dto/post-response.dto';
 import {
   DailyReachPointDto,
@@ -666,6 +669,176 @@ export class PostsService {
     }
 
     return result;
+  }
+
+  /**
+   * UC-PU-01: Browse & Filter Listings (public, no auth required)
+   *
+   * Filters: status=posted, keyword (title|content), province, district, ward,
+   * minPrice/maxPrice (depositAmount), minArea/maxArea (room.area).
+   * Location filters use structured BoardingHouse address fields — NOT free-text.
+   */
+  async browsePosts(
+    query: BrowsePostsQueryDto,
+  ): Promise<PaginatedPublicPostsResponseDto> {
+    const {
+      page = 1,
+      limit = 12,
+      search,
+      province,
+      district,
+      ward,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+    } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.PostWhereInput = {
+      status: PostStatus.posted,
+    };
+
+    // Keyword filter: title or content (case-insensitive)
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Build room+boardingHouse filter for location & area
+    const roomFilter: Prisma.RoomWhereInput = {};
+    const boardingHouseFilter: Prisma.BoardingHouseWhereInput = {};
+    let hasLocationFilter = false;
+    let hasAreaFilter = false;
+
+    if (province) {
+      boardingHouseFilter.province = { equals: province, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
+    if (district) {
+      boardingHouseFilter.district = { equals: district, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
+    if (ward) {
+      boardingHouseFilter.ward = { equals: ward, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
+    if (hasLocationFilter) {
+      roomFilter.boardingHouse = boardingHouseFilter;
+    }
+
+    if (minArea !== undefined || maxArea !== undefined) {
+      const areaFilter: { gte?: string; lte?: string } = {};
+      if (minArea !== undefined) areaFilter.gte = String(minArea);
+      if (maxArea !== undefined) areaFilter.lte = String(maxArea);
+      roomFilter.area = areaFilter as Prisma.RoomWhereInput['area'];
+      hasAreaFilter = true;
+    }
+
+    if (hasLocationFilter || hasAreaFilter) {
+      // Posts without a linked room are excluded when area/location filters are active
+      where.room = roomFilter;
+    }
+
+    // Price filter on depositAmount (Decimal field — use string values for Prisma Decimal comparison)
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const priceFilter: { gte?: string; lte?: string } = {};
+      if (minPrice !== undefined) priceFilter.gte = String(minPrice);
+      if (maxPrice !== undefined) priceFilter.lte = String(maxPrice);
+      where.depositAmount = priceFilter as Prisma.PostWhereInput['depositAmount'];
+    }
+
+    const [total, posts] = await Promise.all([
+      this.prisma.post.count({ where }),
+      this.prisma.post.findMany({
+        where,
+        include: {
+          postImages: true,
+          room: {
+            include: {
+              roomType: true,
+              boardingHouse: true,
+            },
+          },
+          postedByUser: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+              // IMPORTANT: never select phoneNumber/email in public response (UC-PU-02 rule)
+            },
+          },
+          _count: {
+            select: {
+              postReaches: true,
+              savedPosts: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data: posts.map((post) => this.mapToPublicResponseDto(post)),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  private mapToPublicResponseDto(post: any): PublicPostResponseDto {
+    const bh = post.room?.boardingHouse;
+    const address: PublicAddressDto | null = bh
+      ? {
+          province: bh.province,
+          district: bh.district,
+          ward: bh.ward,
+          street: bh.street,
+          houseNumber: bh.houseNumber,
+        }
+      : null;
+
+    return {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      depositAmount: Number(post.depositAmount),
+      status: post.status,
+      createdAt: post.createdAt,
+      images: (post.postImages || []).map((img: any) => ({
+        id: img.id,
+        url: img.url,
+      })),
+      room: post.room
+        ? {
+            id: post.room.id,
+            roomNumber: post.room.roomNumber,
+            floor: post.room.floor,
+            area: post.room.area ? Number(post.room.area) : undefined,
+            roomTypeName: post.room.roomType?.name,
+            boardingHouseName: post.room.boardingHouse?.name,
+            boardingHouseId: post.room.boardingHouseId,
+          }
+        : null,
+      address,
+      poster: post.postedByUser
+        ? {
+            id: post.postedByUser.id,
+            username: post.postedByUser.username,
+            avatarUrl: post.postedByUser.avatarUrl,
+          }
+        : null,
+      viewsCount: post._count?.postReaches ?? 0,
+      savedCount: post._count?.savedPosts ?? 0,
+    };
   }
 
   private mapToResponseDto(post: any): PostResponseDto {

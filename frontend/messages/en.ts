@@ -2427,7 +2427,102 @@ const en = {
     dayFri: "Fri",
     daySat: "Sat",
     daySun: "Sun"
+  },
+
+  roomsPage: {
+    // Hero section
+    heroBadge: "BHRP RENTAL PLATFORM • UPDATED 24/7",
+    heroTitle1: "Explore rental rooms",
+    heroTitle2: "verified & affordable",
+    heroSubtitle: "500+ studio apartments & boarding rooms verified by Dormio.",
+
+    // Filter panel
+    filterTitle: "Search filters",
+    filterReset: "Reset",
+    filterKeywordLabel: "Keyword",
+    filterKeywordPlaceholder: "Street, district, keyword...",
+    filterProvinceLabel: "Province / City",
+    filterProvincePlaceholder: "All provinces / cities",
+    filterDistrictLabel: "District",
+    filterDistrictPlaceholder: "Enter district...",
+    filterWardLabel: "Ward",
+    filterWardPlaceholder: "Enter ward...",
+    filterMinPriceLabel: "Deposit from (VND)",
+    filterMinPricePlaceholder: "e.g. 500000",
+    filterMaxPriceLabel: "Deposit up to (VND)",
+    filterMaxPricePlaceholder: "e.g. 5000000",
+    filterMinAreaLabel: "Area from (m²)",
+    filterMinAreaPlaceholder: "e.g. 15",
+    filterMaxAreaLabel: "Area up to (m²)",
+    filterMaxAreaPlaceholder: "e.g. 50",
+
+    // Results bar
+    resultCount: "Found {count} available rooms",
+    viewList: "List",
+    viewMap: "Map",
+
+    // Card
+    cardQuickView: "Quick View",
+    cardSave: "Save listing",
+    cardSaved: "Saved to wishlist",
+    cardShare: "Share listing",
+    cardDeposit: "Deposit",
+    cardDetail: "Details →",
+    cardPerMonth: "/month",
+    cardDepositLabel: "Deposit:",
+    cardDepositFree: "No deposit required",
+    cardVerified: "Landlord verified",
+    cardAmenities: "Highlights:",
+
+    // Pagination
+    paginationPrev: "Prev",
+    paginationNext: "Next",
+
+    // Empty state
+    emptyTitle: "No rooms found",
+    emptyDesc: "Try adjusting your filters or searching with different keywords.",
+    emptyReset: "Clear all filters",
+
+    // Loading
+    loading: "Loading listings...",
+
+    // Share modal
+    shareTitle: "Share this room listing",
+    shareCopy: "Copy",
+    shareCopied: "Copied",
+
+    // Quick view modal
+    quickViewDeposit: "Deposit",
+    quickViewCall: "Call Landlord",
+
+    // Deposit modal
+    depositTitle: "Online Room Deposit",
+    depositEscrowBadge: "DORMIO ESCROW PROTECTION PROCESS",
+    depositStep1: "Tenant pays via VietQR",
+    depositStep2: "Dormio holds safely",
+    depositStep3: "Released to landlord",
+    depositEscrowNote: "* Dormio holds the deposit securely. Funds are only released to the landlord when both parties agree.",
+    depositRoomLabel: "Selected room:",
+    depositAmountLabel: "Deposit amount:",
+    depositFreeNote: "No deposit required • Schedule a room viewing for free!",
+    depositTenantName: "Full name *",
+    depositTenantNamePlaceholder: "Enter your full name...",
+    depositTenantPhone: "Phone number *",
+    depositTenantPhonePlaceholder: "Enter your phone number...",
+    depositConfirmBtn: "Confirm & proceed to VietQR →",
+    depositQrAmount: "Transfer amount:",
+    depositQrFree: "0 ₫ (Free)",
+    depositQrContent: "Transfer note:",
+    depositQrDone: "I have completed the VietQR transfer",
+    depositSuccessTitle: "Room deposit recorded successfully!",
+    depositSuccessDesc: "Dormio has securely held your deposit and notified landlord {landlord}. Funds will only be released when both parties agree.",
+    depositSuccessClose: "Close",
+
+    // Map view
+    mapHint: "Click the orange pin to quickly preview rooms in that area",
+    mapPinCount: "{count} Locations"
   }
 };
 
 export default en;
+

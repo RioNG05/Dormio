@@ -18,9 +18,10 @@ import {
 } from '@nestjs/swagger';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { PostQueryDto } from './dto/post-query.dto';
+import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
+  PaginatedPublicPostsResponseDto,
   PostQuotaDto,
   PostResponseDto,
 } from './dto/post-response.dto';
@@ -29,6 +30,7 @@ import {
   SinglePostAnalyticsDto,
 } from './dto/post-analytics.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { PostStatus } from '@prisma';
 
@@ -107,6 +109,35 @@ export class PostsController {
       `GET /posts/my-listings called by user ${user.id} with page=${query.page}, limit=${query.limit}`,
     );
     return this.postsService.getMyPosts(user.id, query);
+  }
+
+  // ─── UC-PU-01: Public Browse & Filter Listings ────────────────────────────
+
+  @Public()
+  @Get('browse')
+  @ApiOperation({
+    summary: 'UC-PU-01: Browse & filter public rental listings',
+    description:
+      'Returns paginated rental listings with status=posted. No authentication required. ' +
+      'Location filters target structured address fields (province, district, ward) on BoardingHouse, ' +
+      'not free-text address search. Price filter applies to depositAmount.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated public listing results',
+    type: PaginatedPublicPostsResponseDto,
+  })
+  async browsePosts(
+    @Query() query: BrowsePostsQueryDto,
+  ): Promise<PaginatedPublicPostsResponseDto> {
+    this.logger.log(
+      `GET /posts/browse called (public) — search="${query.search ?? ''}", province="${query.province ?? ''}", ` +
+      `district="${query.district ?? ''}", ward="${query.ward ?? ''}", ` +
+      `price=[${query.minPrice ?? '-'}, ${query.maxPrice ?? '-'}], ` +
+      `area=[${query.minArea ?? '-'}, ${query.maxArea ?? '-'}], ` +
+      `page=${query.page ?? 1}, limit=${query.limit ?? 12}`,
+    );
+    return this.postsService.browsePosts(query);
   }
 
   @Get('analytics/overview')

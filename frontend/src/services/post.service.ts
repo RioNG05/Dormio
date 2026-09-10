@@ -33,6 +33,61 @@ export interface PostListing {
   viewsCount: number;
 }
 
+/** Public address derived from BoardingHouse (UC-PU-01) */
+export interface PublicAddress {
+  province?: string | null;
+  district?: string | null;
+  ward?: string | null;
+  street?: string | null;
+  houseNumber?: string | null;
+}
+
+/** Public poster subset — phone/email never exposed (UC-PU-02 rule) */
+export interface PublicPoster {
+  id: string;
+  username?: string | null;
+  avatarUrl?: string | null;
+}
+
+/** Public listing item for UC-PU-01 browse endpoint */
+export interface PublicPostListing {
+  id: string;
+  title: string;
+  content: string;
+  depositAmount: number;
+  status: string;
+  createdAt: string;
+  images: PostImage[];
+  room?: PostRoom | null;
+  address?: PublicAddress | null;
+  poster?: PublicPoster | null;
+  viewsCount: number;
+  savedCount: number;
+}
+
+export interface BrowsePostsParams {
+  search?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minArea?: number;
+  maxArea?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedPublicPostsResponse {
+  data: PublicPostListing[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export interface PostQuotaStatus {
   isLandlord: boolean;
   planName: string;
@@ -102,6 +157,34 @@ export interface SinglePostAnalytics {
 
 export const postService = {
   /**
+   * UC-PU-01: Browse & filter public rental listings (no auth required)
+   * Location filters use structured BoardingHouse address fields — NOT free-text.
+   */
+  async browsePosts(
+    params?: BrowsePostsParams
+  ): Promise<PaginatedPublicPostsResponse> {
+    const queryParams: Record<string, string> = {};
+    if (params?.search) queryParams.search = params.search;
+    if (params?.province) queryParams.province = params.province;
+    if (params?.district) queryParams.district = params.district;
+    if (params?.ward) queryParams.ward = params.ward;
+    if (params?.minPrice !== undefined) queryParams.minPrice = String(params.minPrice);
+    if (params?.maxPrice !== undefined) queryParams.maxPrice = String(params.maxPrice);
+    if (params?.minArea !== undefined) queryParams.minArea = String(params.minArea);
+    if (params?.maxArea !== undefined) queryParams.maxArea = String(params.maxArea);
+    if (params?.page) queryParams.page = String(params.page);
+    if (params?.limit) queryParams.limit = String(params.limit);
+
+    const res = await api.get<
+      { success: boolean; data: PaginatedPublicPostsResponse } | PaginatedPublicPostsResponse
+    >("/v1/posts/browse", { params: queryParams });
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PaginatedPublicPostsResponse }).data;
+    }
+    return res as PaginatedPublicPostsResponse;
+  },
+
+  /**
    * Check remaining posting quota for today and available purchased credits
    */
   async getQuota(): Promise<PostQuotaStatus> {
@@ -113,6 +196,7 @@ export const postService = {
     }
     return res as PostQuotaStatus;
   },
+
 
   /**
    * UC-P-01: Publish a new rental listing

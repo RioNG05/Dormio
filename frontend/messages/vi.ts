@@ -2430,7 +2430,101 @@ const vi = {
     dayFri: "Thứ 6",
     daySat: "Thứ 7",
     daySun: "Chủ Nhật"
+  },
+
+  roomsPage: {
+    // Hero section
+    heroBadge: "SÀN TÌM PHÒNG TRỌ BHRP • CẬP NHẬT 24/7",
+    heroTitle1: "Khám phá phòng trọ",
+    heroTitle2: "chính chủ, giá tốt",
+    heroSubtitle: "Hơn 500+ căn hộ studio & phòng trọ uy tín, đã xác thực thông tin chính chủ bởi Dormio.",
+
+    // Filter panel
+    filterTitle: "Bộ lọc tìm kiếm",
+    filterReset: "Đặt lại",
+    filterKeywordLabel: "Từ khóa",
+    filterKeywordPlaceholder: "Tên đường, quận, từ khóa...",
+    filterProvinceLabel: "Tỉnh / Thành phố",
+    filterProvincePlaceholder: "Tất cả tỉnh / thành phố",
+    filterDistrictLabel: "Quận / Huyện",
+    filterDistrictPlaceholder: "Nhập quận / huyện...",
+    filterWardLabel: "Phường / Xã",
+    filterWardPlaceholder: "Nhập phường / xã...",
+    filterMinPriceLabel: "Tiền cọc từ (VNĐ)",
+    filterMinPricePlaceholder: "VD: 500000",
+    filterMaxPriceLabel: "Tiền cọc đến (VNĐ)",
+    filterMaxPricePlaceholder: "VD: 5000000",
+    filterMinAreaLabel: "Diện tích từ (m²)",
+    filterMinAreaPlaceholder: "VD: 15",
+    filterMaxAreaLabel: "Diện tích đến (m²)",
+    filterMaxAreaPlaceholder: "VD: 50",
+
+    // Results bar
+    resultCount: "Tìm thấy {count} phòng trọ khả dụng",
+    viewList: "Danh sách",
+    viewMap: "Bản đồ",
+
+    // Card
+    cardQuickView: "Xem Nhanh",
+    cardSave: "Lưu bài đăng",
+    cardSaved: "Đã lưu vào danh sách yêu thích",
+    cardShare: "Chia sẻ bài đăng",
+    cardDeposit: "Đặt Cọc",
+    cardDetail: "Chi tiết →",
+    cardPerMonth: "/tháng",
+    cardDepositLabel: "Tiền cọc:",
+    cardDepositFree: "Miễn phí cọc",
+    cardVerified: "Chủ nhà xác thực",
+    cardAmenities: "Tiện ích nổi bật:",
+
+    // Pagination
+    paginationPrev: "Trước",
+    paginationNext: "Sau",
+
+    // Empty state
+    emptyTitle: "Không tìm thấy phòng trọ",
+    emptyDesc: "Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác.",
+    emptyReset: "Xóa tất cả bộ lọc",
+
+    // Loading
+    loading: "Đang tải danh sách phòng trọ...",
+
+    // Share modal
+    shareTitle: "Chia sẻ bài đăng phòng trọ",
+    shareCopy: "Sao chép",
+    shareCopied: "Đã chép",
+
+    // Quick view modal
+    quickViewDeposit: "Đặt Cọc",
+    quickViewCall: "Gọi Chủ Nhà",
+
+    // Deposit modal
+    depositTitle: "Đặt Cọc Xem/Giữ Phòng Trực Tuyến",
+    depositEscrowBadge: "QUY TRÌNH BẢO VỆ TIỀN CỌC DORMIO ESCROW",
+    depositStep1: "Khách cọc VietQR",
+    depositStep2: "Dormio tạm giữ",
+    depositStep3: "Giải ngân cho chủ",
+    depositEscrowNote: "* Tiền cọc được Dormio giữ an toàn. Khi 2 bên đồng ý thỏa thuận thuê phòng, hệ thống tự động thanh toán cho chủ nhà.",
+    depositRoomLabel: "Phòng trọ chọn cọc:",
+    depositAmountLabel: "Tiền cọc:",
+    depositFreeNote: "Chủ nhà không yêu cầu tiền cọc • Đặt lịch xem phòng hoàn toàn miễn phí!",
+    depositTenantName: "Họ và tên người thuê *",
+    depositTenantNamePlaceholder: "Nhập họ và tên...",
+    depositTenantPhone: "Số điện thoại *",
+    depositTenantPhonePlaceholder: "Nhập số điện thoại...",
+    depositConfirmBtn: "Xác nhận & Chuyển sang quét mã VietQR →",
+    depositQrAmount: "Số tiền chuyển khoản cọc:",
+    depositQrFree: "0 ₫ (Miễn phí)",
+    depositQrContent: "Nội dung CK:",
+    depositQrDone: "Tôi đã hoàn tất chuyển khoản VietQR",
+    depositSuccessTitle: "Ghi nhận cọc giữ phòng thành công!",
+    depositSuccessDesc: "Hệ thống Dormio đã tạm giữ tiền cọc an toàn và thông báo tới chủ nhà {landlord}. Tiền chỉ giải ngân cho chủ nhà khi 2 bên đồng ý thuê.",
+    depositSuccessClose: "Đóng cửa sổ",
+
+    // Map view
+    mapHint: "Nhấp vào ghim bản đồ màu cam để xem nhanh phòng trọ khu vực",
+    mapPinCount: "{count} Vị Trí Vệ Tinh"
   }
 };
 
-export default vi;
+export default vi;

@@ -128,3 +128,95 @@ export class PaginatedPostsResponseDto {
     totalPages: number;
   };
 }
+
+/**
+ * Poster subset for the public browse listing endpoint (UC-PU-02 rule: never expose phone/email here).
+ */
+export class PublicPosterDto {
+  @ApiProperty({ description: 'User ID of the poster' })
+  id: string;
+
+  @ApiPropertyOptional({ description: 'Poster username' })
+  username?: string | null;
+
+  @ApiPropertyOptional({ description: 'Poster avatar URL' })
+  avatarUrl?: string | null;
+}
+
+/**
+ * Address subset derived from BoardingHouse for public listing display.
+ */
+export class PublicAddressDto {
+  @ApiPropertyOptional({ description: 'Province / city' })
+  province?: string | null;
+
+  @ApiPropertyOptional({ description: 'District' })
+  district?: string | null;
+
+  @ApiPropertyOptional({ description: 'Ward' })
+  ward?: string | null;
+
+  @ApiPropertyOptional({ description: 'Street' })
+  street?: string | null;
+
+  @ApiPropertyOptional({ description: 'House number' })
+  houseNumber?: string | null;
+}
+
+/**
+ * UC-PU-01: Public listing response DTO. Strips internal/poster-only fields.
+ */
+export class PublicPostResponseDto {
+  @ApiProperty({ description: 'Post ID' })
+  id: string;
+
+  @ApiProperty({ description: 'Post title' })
+  title: string;
+
+  @ApiProperty({ description: 'Post content / description' })
+  content: string;
+
+  @ApiProperty({ description: 'Deposit amount configured by landlord (VND)' })
+  depositAmount: number;
+
+  @ApiProperty({ enum: ['posted'], description: 'Post status (always posted for browse)' })
+  status: string;
+
+  @ApiProperty({ description: 'Post creation date' })
+  createdAt: Date;
+
+  @ApiProperty({ type: [PostImageDto], description: 'Post images' })
+  images: PostImageDto[];
+
+  @ApiPropertyOptional({ type: PostRoomDto, description: 'Linked room details' })
+  room?: PostRoomDto | null;
+
+  @ApiPropertyOptional({ type: PublicAddressDto, description: 'Structured boarding house address' })
+  address?: PublicAddressDto | null;
+
+  @ApiPropertyOptional({ type: PublicPosterDto, description: 'Poster public profile (no phone/email)' })
+  poster?: PublicPosterDto | null;
+
+  @ApiProperty({ description: 'Total view count' })
+  viewsCount: number;
+
+  @ApiProperty({ description: 'Total saved/bookmarked count' })
+  savedCount: number;
+}
+
+export class PaginatedPublicPostsResponseDto {
+  @ApiProperty({ type: [PublicPostResponseDto], description: 'Public listing results' })
+  data: PublicPostResponseDto[];
+
+  @ApiProperty({
+    description: 'Pagination metadata',
+    example: { total: 100, page: 1, limit: 12, totalPages: 9 },
+  })
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
