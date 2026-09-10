@@ -176,14 +176,32 @@ Whenever writing or modifying any backend endpoint in NestJS:
   - Exiting any unsubmitted modal (via Hủy bỏ / Cancel, X icon, or backdrop click) MUST completely reset all form draft input fields.
   - If form has unsaved input changes, ALWAYS display a custom **Pop-up Confirmation Modal** ("Xác nhận đóng form" with `[Tiếp tục chỉnh sửa]` and `[Hủy thay đổi & Đóng]`) instead of browser native `alert` / `confirm`.
 
+### Internationalization (i18n) — Frontend (MANDATORY)
+
+Whenever creating or modifying **any frontend page, component, or layout**:
+
+1. **Use `next-intl`** as the i18n library (`next-intl` package). Do NOT use any other i18n library.
+2. **Locale routing**: All routes must be nested under a `[locale]` dynamic segment (e.g. `src/app/[locale]/...`). The `middleware.ts` must use `createMiddleware` from `next-intl/middleware` to negotiate locale from `Accept-Language` and redirect accordingly.
+3. **Supported locales**: `vi` (Vietnamese, default) and `en` (English). The default locale is **`vi`**.
+4. **Message files**: Store translation strings in `frontend/messages/<locale>.json` (e.g. `vi.json`, `en.json`). Mirror the same key structure across all locale files.
+5. **No hardcoded user-facing strings**: Every user-visible string (labels, buttons, placeholders, headings, toast/error messages, aria-labels) **MUST** use `useTranslations()` hook (client) or `getTranslations()` (server). Hardcoded Vietnamese or English UI strings are **NOT allowed**.
+6. **Translation key naming**: Use dot-notation namespacing matching the feature module (e.g. `rooms.createModal.title`, `common.actions.save`).
+7. **Setup checklist** — when i18n is not yet configured in the project, set it up first:
+   - Install: `pnpm add next-intl`
+   - Create `frontend/messages/vi.json` and `frontend/messages/en.json`
+   - Create `frontend/src/i18n/request.ts` (server-side locale config)
+   - Wrap layout with `NextIntlClientProvider`
+   - Configure `middleware.ts` with `createMiddleware`
+
 ---
 
 ## Language Rules
 
 - **Backend (NestJS)**: All code, comments, log messages, error codes, DTO field names, Swagger `@ApiOperation` summaries/descriptions, `@ApiProperty` descriptions, and `@ApiResponse` descriptions MUST be written in **English**.
-- **Frontend (Next.js)**: UI-visible text (labels, buttons, headings, placeholder text, error messages shown to users) MUST be in **Vietnamese** (the target user language). Code comments, variable names, and non-user-facing strings should be in English.
+- **Frontend (Next.js)**: All source code (variables, functions, components, hooks, types) MUST be in **English**. User-visible strings MUST be served via `next-intl` translation keys — **never hardcoded in source**. The only place translated text lives is in `frontend/messages/<locale>.json` files.
 - **Spec documents** (`docs/spec/*.md`): Vietnamese is acceptable since they target internal stakeholders.
 - **This rules file and AGENTS.md files**: English.
+
 
 ---
 
@@ -198,3 +216,5 @@ Whenever writing or modifying any backend endpoint in NestJS:
 - Do NOT insert a new `DEPOSIT` when converting platform deposit to contract — update the existing row.
 - Do NOT generate `POST` when landlord uses AI draft — create only on explicit publish action.
 - Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `backend/`.
+- Do NOT hardcode user-facing strings in frontend source code — all UI text must live in `frontend/messages/<locale>.json` and be accessed via `next-intl`.
+- Do NOT skip `next-intl` setup when working on any frontend page or component — check and configure it if not already present.
