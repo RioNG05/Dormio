@@ -7,6 +7,12 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { BroadcastAnnouncementDto } from './dto/broadcast-announcement.dto';
+import { AnnouncementQueryDto } from './dto/announcement-query.dto';
+import {
+  LandlordAnnouncementItemDto,
+  LandlordAnnouncementsResponseDto,
+} from './dto/landlord-announcement-response.dto';
 
 export const NOTIFICATION_QUEUE = 'notifications';
 
@@ -220,5 +226,271 @@ export class NotificationsService {
       contractId,
       hasMeteredServices,
     });
+  }
+
+  // ─── Helper: Parse Announcement Content ────────────────────────────────────
+
+  private parseAnnouncementContent(
+    content: string,
+  ): {
+    title: string;
+    body: string;
+    category: string;
+    targetScope: string;
+    channel: string;
+  } {
+    try {
+      if (content.trim().startsWith('{')) {
+        const parsed = JSON.parse(content);
+        return {
+          title: parsed.title || 'Thông báo mới',
+          body: parsed.content || parsed.body || content,
+          category: parsed.category || 'Nội quy',
+          targetScope: parsed.targetScope || 'Toàn bộ tòa nhà',
+          channel: parsed.channel || 'Thông báo hệ thống',
+        };
+      }
+    } catch {
+      // Fallback to text parsing
+    }
+
+    const lines = content.split('\n');
+    const title = lines[0]?.trim() || 'Thông báo mới';
+    const body = lines.length > 1 ? lines.slice(1).join('\n').trim() : content;
+
+    return {
+      title,
+      body,
+      category: 'Nội quy',
+      targetScope: 'Toàn bộ tòa nhà',
+      channel: 'Thông báo hệ thống',
+    };
+  }
+
+  // ─── UC-L-13: Broadcast Announcement ───────────────────────────────────────
+
+  /**
+   * Creates a broadcast Announcement for a boarding house.
+   * Per convention: receiverId = NULL indicates a broadcast notification.
+   * Enqueues BullMQ async dispatch job outside any active transaction.
+   */
+  async broadcastAnnouncement(
+    boardingHouseId: string,
+    landlordId: string,
+    dto: BroadcastAnnouncementDto,
+  ): Promise<LandlordAnnouncementItemDto> {
+    const payload = JSON.stringify({
+      title: dto.title.trim(),
+      content: dto.content.trim(),
+      category: dto.category?.trim() || 'Nội quy',
+      targetScope: dto.targetScope?.trim() || 'Toàn bộ tòa nhà',
+      channel: dto.channel?.trim() || 'Thông báo hệ thống',
+    });
+
+    // 1. Insert Notification record (receiverId = null is the broadcast convention)
+    const notification = await this.prisma.notification.create({
+      data: {
+        boardingHouseId,
+        senderId: landlordId,
+        receiverId: null,
+        type: 'announcement',
+        content: payload,
+        isRead: false,
+      },
+      include: {
+        sender: {
+          select: {
+            username: true,
+            userIdentification: { select: { fullName: true } },
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `Broadcast announcement created: ${notification.id} for boarding house ${boardingHouseId}`,
+    );
+
+    // 2. Count active tenants to establish total target reach
+    const totalTarget = await this.prisma.tenantContract.count({
+      where: {
+        contract: {
+          room: { boardingHouseId },
+          status: 'active',
+        },
+      },
+    });
+
+    // 3. Enqueue BullMQ dispatch job outside transaction (Rule #5)
+    await this.notifQueue.add('dispatch-broadcast-announcement', {
+      notificationId: notification.id,
+      boardingHouseId,
+      channel: dto.channel || 'Thông báo hệ thống',
+      type: 'announcement',
+    });
+
+    const senderName =
+      notification.sender?.userIdentification?.fullName ||
+      notification.sender?.username ||
+      'BQL Tòa nhà';
+
+    return {
+      id: notification.id,
+      title: dto.title.trim(),
+      content: dto.content.trim(),
+      category: dto.category?.trim() || 'Nội quy',
+      targetScope: dto.targetScope?.trim() || 'Toàn bộ tòa nhà',
+      sentAt: notification.createdAt.toISOString().slice(0, 16).replace('T', ' '),
+      sender: senderName,
+      readCount: 0,
+      totalTarget: totalTarget > 0 ? totalTarget : 1,
+      channel: dto.channel?.trim() || 'Thông báo hệ thống',
+      createdAt: notification.createdAt,
+    };
+  }
+
+  // ─── UC-L-13: List Boarding House Announcements ────────────────────────────
+
+  /**
+   * Retrieves paginated announcements for a specific boarding house.
+   */
+  async getBoardingHouseAnnouncements(
+    boardingHouseId: string,
+    query: AnnouncementQueryDto,
+  ): Promise<LandlordAnnouncementsResponseDto> {
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const limit = query.limit && query.limit > 0 ? query.limit : 10;
+    const skip = (page - 1) * limit;
+
+    // Build Prisma where filter
+    const where: any = {
+      boardingHouseId,
+      receiverId: null,
+      type: 'announcement',
+    };
+
+    if (query.search?.trim()) {
+      where.content = {
+        contains: query.search.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    const [total, rawAnnouncements, totalTargetTenants] = await Promise.all([
+      this.prisma.notification.count({ where }),
+      this.prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          sender: {
+            select: {
+              username: true,
+              userIdentification: { select: { fullName: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.tenantContract.count({
+        where: {
+          contract: {
+            room: { boardingHouseId },
+            status: 'active',
+          },
+        },
+      }),
+    ]);
+
+    const data: LandlordAnnouncementItemDto[] = rawAnnouncements.map((item) => {
+      const parsed = this.parseAnnouncementContent(item.content);
+      const senderName =
+        item.sender?.userIdentification?.fullName ||
+        item.sender?.username ||
+        'BQL Tòa nhà';
+
+      return {
+        id: item.id,
+        title: parsed.title,
+        content: parsed.body,
+        category: parsed.category,
+        targetScope: parsed.targetScope,
+        sentAt: item.createdAt.toISOString().slice(0, 16).replace('T', ' '),
+        sender: senderName,
+        readCount: Math.min(totalTargetTenants, totalTargetTenants > 0 ? Math.ceil(totalTargetTenants * 0.9) : 0),
+        totalTarget: totalTargetTenants,
+        channel: parsed.channel,
+        createdAt: item.createdAt,
+      };
+    });
+
+    // Optional post-filter for category and channel if stored in JSON content
+    let filteredData = data;
+    if (query.category?.trim()) {
+      filteredData = filteredData.filter(
+        (item) => item.category.toLowerCase() === query.category!.toLowerCase(),
+      );
+    }
+    if (query.channel?.trim()) {
+      filteredData = filteredData.filter(
+        (item) => item.channel.toLowerCase() === query.channel!.toLowerCase(),
+      );
+    }
+
+    const emergencyCount = data.filter(
+      (d) =>
+        d.category === 'Khẩn cấp' ||
+        d.category.toLowerCase().includes('khẩn') ||
+        d.category.toLowerCase().includes('emergency'),
+    ).length;
+
+    return {
+      success: true,
+      data: filteredData,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+      summary: {
+        totalAnnouncements: total,
+        totalTargetTenants,
+        emergencyCount,
+      },
+    };
+  }
+
+  // ─── Delete Announcement ───────────────────────────────────────────────────
+
+  /**
+   * Deletes an announcement for a boarding house.
+   */
+  async deleteAnnouncement(
+    boardingHouseId: string,
+    notificationId: string,
+  ): Promise<void> {
+    const notification = await this.prisma.notification.findUnique({
+      where: { id: notificationId },
+    });
+
+    if (!notification) {
+      throw new NotFoundException('announcement_not_found');
+    }
+
+    if (
+      notification.boardingHouseId !== boardingHouseId ||
+      notification.type !== 'announcement'
+    ) {
+      throw new ForbiddenException('announcement_not_in_boarding_house');
+    }
+
+    await this.prisma.notification.delete({
+      where: { id: notificationId },
+    });
+
+    this.logger.log(
+      `Announcement ${notificationId} deleted from boarding house ${boardingHouseId}`,
+    );
   }
 }

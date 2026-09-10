@@ -14,6 +14,11 @@ const mockPrisma = {
     findMany: jest.fn(),
     findUnique: jest.fn(),
     update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
+  },
+  tenantContract: {
+    count: jest.fn(),
   },
 };
 
@@ -172,6 +177,147 @@ describe('NotificationsService', () => {
         service.markAsRead('notif-1', 'requesting-user'),
       ).rejects.toThrow(ForbiddenException);
       expect(mockPrisma.notification.update).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── UC-L-13: broadcastAnnouncement ───────────────────────────────────────
+
+  describe('broadcastAnnouncement', () => {
+    const dto = {
+      title: 'Thông báo cắt nước bảo trì',
+      content: 'Bảo trì đường ống nước từ 9h đến 11h.',
+      category: 'Điện nước',
+      targetScope: 'Toàn bộ tòa nhà',
+      channel: 'Thông báo hệ thống',
+    };
+
+    it('should create a broadcast Notification with receiverId = null and enqueue job', async () => {
+      const mockCreated = {
+        id: 'announcement-1',
+        boardingHouseId: 'house-1',
+        senderId: 'landlord-1',
+        receiverId: null,
+        type: 'announcement',
+        content: JSON.stringify(dto),
+        isRead: false,
+        createdAt: new Date('2026-08-28T09:00:00.000Z'),
+        sender: {
+          username: 'landlord_john',
+          userIdentification: { fullName: 'John Landlord' },
+        },
+      };
+
+      mockPrisma.notification.create.mockResolvedValue(mockCreated);
+      mockPrisma.tenantContract.count.mockResolvedValue(15);
+      mockQueue.add.mockResolvedValue({ id: 'job-announcement' });
+
+      const result = await service.broadcastAnnouncement('house-1', 'landlord-1', dto);
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith({
+        data: {
+          boardingHouseId: 'house-1',
+          senderId: 'landlord-1',
+          receiverId: null,
+          type: 'announcement',
+          content: expect.any(String),
+          isRead: false,
+        },
+        include: expect.any(Object),
+      });
+
+      expect(mockQueue.add).toHaveBeenCalledWith('dispatch-broadcast-announcement', {
+        notificationId: 'announcement-1',
+        boardingHouseId: 'house-1',
+        channel: 'Thông báo hệ thống',
+        type: 'announcement',
+      });
+
+      expect(result.id).toBe('announcement-1');
+      expect(result.title).toBe(dto.title);
+      expect(result.totalTarget).toBe(15);
+      expect(result.sender).toBe('John Landlord');
+    });
+  });
+
+  // ─── UC-L-13: getBoardingHouseAnnouncements ────────────────────────────────
+
+  describe('getBoardingHouseAnnouncements', () => {
+    it('should return paginated announcements for the boarding house', async () => {
+      const mockItem = {
+        id: 'ann-1',
+        boardingHouseId: 'house-1',
+        senderId: 'landlord-1',
+        receiverId: null,
+        type: 'announcement',
+        content: JSON.stringify({
+          title: 'Họp cư dân',
+          content: 'Họp định kỳ tối chủ nhật.',
+          category: 'Nội quy',
+          targetScope: 'Toàn bộ tòa nhà',
+          channel: 'Thông báo hệ thống',
+        }),
+        isRead: false,
+        createdAt: new Date('2026-08-28T09:00:00.000Z'),
+        sender: {
+          username: 'manager',
+          userIdentification: null,
+        },
+      };
+
+      mockPrisma.notification.count.mockResolvedValue(1);
+      mockPrisma.notification.findMany.mockResolvedValue([mockItem]);
+      mockPrisma.tenantContract.count.mockResolvedValue(20);
+
+      const res = await service.getBoardingHouseAnnouncements('house-1', {
+        page: 1,
+        limit: 10,
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.data.length).toBe(1);
+      expect(res.data[0].title).toBe('Họp cư dân');
+      expect(res.meta.total).toBe(1);
+      expect(res.summary.totalTargetTenants).toBe(20);
+    });
+  });
+
+  // ─── deleteAnnouncement ───────────────────────────────────────────────────
+
+  describe('deleteAnnouncement', () => {
+    it('should delete the announcement when it exists and belongs to the house', async () => {
+      const mockNotif = {
+        id: 'ann-1',
+        boardingHouseId: 'house-1',
+        type: 'announcement',
+      };
+      mockPrisma.notification.findUnique.mockResolvedValue(mockNotif);
+      mockPrisma.notification.delete.mockResolvedValue(mockNotif);
+
+      await service.deleteAnnouncement('house-1', 'ann-1');
+
+      expect(mockPrisma.notification.delete).toHaveBeenCalledWith({
+        where: { id: 'ann-1' },
+      });
+    });
+
+    it('should throw NotFoundException if announcement does not exist', async () => {
+      mockPrisma.notification.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.deleteAnnouncement('house-1', 'missing-id'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if announcement belongs to another boarding house', async () => {
+      mockPrisma.notification.findUnique.mockResolvedValue({
+        id: 'ann-1',
+        boardingHouseId: 'other-house',
+        type: 'announcement',
+      });
+
+      await expect(
+        service.deleteAnnouncement('house-1', 'ann-1'),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

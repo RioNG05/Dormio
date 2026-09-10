@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationsController } from './notifications.controller';
+import { LandlordNotificationsController } from './landlord-notifications.controller';
 import { NotificationsService, NOTIFICATION_QUEUE } from './notifications.service';
 import { NotificationProcessor } from './notifications.processor';
 
@@ -10,7 +11,7 @@ import { NotificationProcessor } from './notifications.processor';
       name: NOTIFICATION_QUEUE,
     }),
   ],
-  controllers: [NotificationsController],
+  controllers: [NotificationsController, LandlordNotificationsController],
   providers: [NotificationsService, NotificationProcessor],
   exports: [NotificationsService],
 })

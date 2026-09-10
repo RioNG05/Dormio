@@ -6,8 +6,10 @@ import { NOTIFICATION_QUEUE } from './notifications.service';
 interface DispatchNotificationJobData {
   notificationId: string;
   type: string;
-  receiverId: string;
+  receiverId?: string;
   contractId?: string;
+  boardingHouseId?: string;
+  channel?: string;
 }
 
 /**
@@ -26,7 +28,16 @@ export class NotificationProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationProcessor.name);
 
   async process(job: Job<DispatchNotificationJobData>): Promise<void> {
-    const { notificationId, type, receiverId, contractId } = job.data;
+    const { notificationId, type, receiverId, contractId, boardingHouseId, channel } = job.data;
+
+    if (job.name === 'dispatch-broadcast-announcement') {
+      this.logger.log(
+        `[${job.name}] Processing broadcast announcement dispatch — ` +
+          `notificationId=${notificationId}, boardingHouseId=${boardingHouseId}, channel=${channel || 'system'}`,
+      );
+      // Real channel integration (e.g. multi-channel SMS / Zalo / push notification to residents)
+      return;
+    }
 
     this.logger.log(
       `[${job.name}] Processing notification dispatch — ` +

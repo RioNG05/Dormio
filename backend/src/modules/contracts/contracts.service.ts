@@ -892,13 +892,32 @@ export class ContractsService {
         unit: rs.service.unit,
         isMetered: rs.service.isMetered,
       })),
-      announcements: announcements.map((item) => ({
-        id: item.id,
-        title: item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content,
-        content: item.content,
-        createdAt: item.createdAt,
-        isNew: item.createdAt >= threeDaysAgo,
-      })),
+      announcements: announcements.map((item) => {
+        let title = item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content;
+        let content = item.content;
+
+        try {
+          if (item.content.trim().startsWith('{')) {
+            const parsed = JSON.parse(item.content);
+            if (parsed.title) title = parsed.title;
+            if (parsed.content) content = parsed.content;
+          } else if (item.content.includes('\n')) {
+            const lines = item.content.split('\n');
+            title = lines[0]?.trim() || title;
+            content = lines.slice(1).join('\n').trim() || content;
+          }
+        } catch {
+          // Fallback to raw content
+        }
+
+        return {
+          id: item.id,
+          title,
+          content,
+          createdAt: item.createdAt,
+          isNew: item.createdAt >= threeDaysAgo,
+        };
+      }),
     };
   }
 
