@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   createManualDeposit,
   getDeposits,
@@ -22,18 +23,22 @@ import {
 import { getRooms, RoomItem } from "@/services/room.service";
 
 // Large Money Formatter Helper (Prevents digit wrapping)
-const formatLargeMoney = (amount: number): string => {
+const formatLargeMoney = (amount: number, isEn = false): string => {
   if (amount >= 1000000000) {
-    return `${(amount / 1000000000).toFixed(2).replace(/\.00$/, "")} Tỷ ₫`;
+    return isEn
+      ? `${(amount / 1000000000).toFixed(2).replace(/\.00$/, "")}B ₫`
+      : `${(amount / 1000000000).toFixed(2).replace(/\.00$/, "")} Tỷ ₫`;
   }
   if (amount >= 1000000) {
     return `${(amount / 1000000).toFixed(2).replace(/\.00$/, "")}M ₫`;
   }
-  return `${amount.toLocaleString("vi-VN")} ₫`;
+  return `${amount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫`;
 };
 
 function DepositsContent() {
   const { activeBuilding } = useAuth();
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -61,8 +66,8 @@ function DepositsContent() {
   // View mode state (Rule #9: Grid is default)
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
-  // Top Segment Switcher for 2 Deposit Types (Cọc giữ chỗ vs Cọc hợp đồng)
-  const [selectedDepositTypeTab, setSelectedDepositTypeTab] = useState<"Cọc giữ chỗ" | "Cọc hợp đồng">("Cọc giữ chỗ");
+  // Top Segment Switcher for 2 Deposit Types ("hold" vs "contract")
+  const [selectedDepositTypeTab, setSelectedDepositTypeTab] = useState<"hold" | "contract">("hold");
 
   // Status Filter Tab per active Deposit Type (all | holding | refunded | deducted)
   const [activeStatusTab, setActiveStatusTab] = useState<"all" | "holding" | "refunded" | "deducted">("all");
@@ -95,26 +100,23 @@ function DepositsContent() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // New Manual Deposit Form State (UC-L-10)
+  // New Manual Deposit Form State (UC-L-10 - clean empty defaults, no mockups)
   const [newDepositForm, setNewDepositForm] = useState({
     roomId: "",
     tenantName: "",
     tenantPhone: "",
-    depositType: "Cọc giữ chỗ" as "Cọc giữ chỗ" | "Cọc hợp đồng",
-    amount: "1000000",
+    depositType: "hold" as "hold" | "contract",
+    amount: "",
     expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     note: "",
   });
 
   // Upgrade Form State (Hold Deposit -> Contract Deposit)
   const [upgradeForm, setUpgradeForm] = useState({
-    targetContractAmount: "3500000",
-    additionalAmount: 2500000,
+    targetContractAmount: "",
+    additionalAmount: 0,
     note: "",
   });
-  const [upgradeCollectionMethod, setUpgradeCollectionMethod] = useState<"vietqr" | "zalo_sms" | "cash">("vietqr");
-  const [showZaloModal, setShowZaloModal] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
 
   // Rule #9 Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -154,14 +156,12 @@ function DepositsContent() {
           ? "forfeited"
           : undefined;
 
-      const categoryParam = selectedDepositTypeTab === "Cọc giữ chỗ" ? "hold" : "contract";
-
       const res = await getDeposits(activeBuilding.id, {
         page: currentPage,
         limit: pageSize,
         search: searchTerm.trim() || undefined,
         status: statusParam,
-        depositCategory: categoryParam,
+        depositCategory: selectedDepositTypeTab,
       });
 
       setDepositsList(res.data);
@@ -169,11 +169,14 @@ function DepositsContent() {
       setTotalItems(res.meta.total);
     } catch (err: any) {
       console.error("Error fetching deposits:", err);
-      showToast(err.message || "Lỗi khi tải danh sách tiền đặt cọc", "error");
+      showToast(
+        err.message || (isEn ? "Failed to load deposit records" : "Lỗi khi tải danh sách tiền đặt cọc"),
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [activeBuilding?.id, selectedDepositTypeTab, activeStatusTab, searchTerm, currentPage, pageSize]);
+  }, [activeBuilding?.id, selectedDepositTypeTab, activeStatusTab, searchTerm, currentPage, pageSize, isEn]);
 
   useEffect(() => {
     fetchDeposits();
@@ -202,28 +205,43 @@ function DepositsContent() {
 
   const handleCreateDeposit = async () => {
     if (!activeBuilding?.id) {
-      showToast("Vui lòng chọn nhà trọ đang quản lý", "error");
+      showToast(
+        isEn ? "Please select a boarding house first" : "Vui lòng chọn nhà trọ đang quản lý",
+        "error"
+      );
       return;
     }
 
     if (!newDepositForm.roomId) {
-      showToast("Vui lòng chọn phòng cần lập phiếu cọc giữ chỗ!", "error");
+      showToast(
+        isEn ? "Please select a room for deposit!" : "Vui lòng chọn phòng cần lập phiếu cọc giữ chỗ!",
+        "error"
+      );
       return;
     }
 
     if (!newDepositForm.tenantName.trim()) {
-      showToast("Vui lòng nhập họ tên người đặt cọc!", "error");
+      showToast(
+        isEn ? "Please enter the depositor's name!" : "Vui lòng nhập họ tên người đặt cọc!",
+        "error"
+      );
       return;
     }
 
     if (!newDepositForm.tenantPhone.trim()) {
-      showToast("Vui lòng nhập số điện thoại người đặt cọc!", "error");
+      showToast(
+        isEn ? "Please enter the depositor's phone number!" : "Vui lòng nhập số điện thoại người đặt cọc!",
+        "error"
+      );
       return;
     }
 
     const amt = Number(newDepositForm.amount);
     if (!amt || amt <= 0) {
-      showToast("Số tiền đặt cọc phải lớn hơn 0 ₫!", "error");
+      showToast(
+        isEn ? "Deposit amount must be greater than 0 ₫!" : "Số tiền đặt cọc phải lớn hơn 0 ₫!",
+        "error"
+      );
       return;
     }
 
@@ -238,7 +256,10 @@ function DepositsContent() {
         note: newDepositForm.note.trim() || undefined,
       });
 
-      showToast("Lập phiếu đặt cọc giữ chỗ thành công!", "success");
+      showToast(
+        isEn ? "Deposit slip created successfully!" : "Lập phiếu đặt cọc thành công!",
+        "success"
+      );
       setShowCreateModal(false);
       setIsFormDirty(false);
 
@@ -247,20 +268,23 @@ function DepositsContent() {
         roomId: "",
         tenantName: "",
         tenantPhone: "",
-        depositType: "Cọc giữ chỗ",
-        amount: "1000000",
+        depositType: "hold",
+        amount: "",
         expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
         note: "",
       });
 
       // Switch view to hold deposits tab and refresh
-      setSelectedDepositTypeTab("Cọc giữ chỗ");
+      setSelectedDepositTypeTab("hold");
       setActiveStatusTab("holding");
       await fetchDeposits();
       await fetchAvailableRooms();
     } catch (err: any) {
       console.error("Error creating manual deposit:", err);
-      showToast(err.message || "Lỗi khi lập phiếu đặt cọc", "error");
+      showToast(
+        err.message || (isEn ? "Failed to create deposit entry" : "Lỗi khi lập phiếu đặt cọc"),
+        "error"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -277,18 +301,24 @@ function DepositsContent() {
 
       await refundDeposit(activeBuilding.id, showRefundModal.id, {
         deductedAmount: deductAmt,
-        deductionReason: refundForm.deductionReason || (deductAmt > 0 ? "Khấu trừ tiền cọc" : undefined),
+        deductionReason: refundForm.deductionReason || (deductAmt > 0 ? (isEn ? "Deposit deduction" : "Khấu trừ tiền cọc") : undefined),
         note: refundForm.note || undefined,
       });
 
-      showToast("Đã xử lý hoàn/khấu trừ tiền cọc thành công!", "success");
+      showToast(
+        isEn ? "Refund / deduction processed successfully!" : "Đã xử lý hoàn/khấu trừ tiền cọc thành công!",
+        "success"
+      );
       setShowRefundModal(null);
       setIsFormDirty(false);
       await fetchDeposits();
       await fetchAvailableRooms();
     } catch (err: any) {
       console.error("Error processing refund:", err);
-      showToast(err.message || "Lỗi khi xử lý hoàn cọc", "error");
+      showToast(
+        err.message || (isEn ? "Failed to process refund/deduction" : "Lỗi khi xử lý hoàn cọc"),
+        "error"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -298,7 +328,7 @@ function DepositsContent() {
 
   const handleConfirmUpgradeToContract = () => {
     if (!showUpgradeModal) return;
-    // Redirect to Contract Generation Flow A with preselected room & deposit
+    // Redirect to Contract Generation Flow with preselected room & deposit
     router.push(
       `/landlord/contracts?action=create&roomId=${encodeURIComponent(showUpgradeModal.roomId)}&depositId=${encodeURIComponent(showUpgradeModal.id)}`
     );
@@ -325,8 +355,8 @@ function DepositsContent() {
         roomId: "",
         tenantName: "",
         tenantPhone: "",
-        depositType: "Cọc giữ chỗ",
-        amount: "1000000",
+        depositType: "hold",
+        amount: "",
         expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
         note: "",
       });
@@ -342,7 +372,7 @@ function DepositsContent() {
     if (dep.status === "paid") {
       return (
         <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-[#2AC1BC]/15 text-[#0d6e6b] border border-[#2AC1BC]/30">
-          Đang giữ
+          {isEn ? "Held" : "Đang giữ"}
         </span>
       );
     }
@@ -352,14 +382,14 @@ function DepositsContent() {
       return (
         <div className="flex flex-wrap items-center gap-1 justify-end sm:justify-start">
           <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-            Đã hoàn
+            {isEn ? "Refunded" : "Đã hoàn"}
           </span>
           {hasDeduction && (
             <span
               className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200"
-              title={`Đã khấu trừ ${dep.deductedAmount?.toLocaleString("vi-VN")} ₫`}
+              title={isEn ? `Deducted ${dep.deductedAmount?.toLocaleString("en-US")} ₫` : `Đã khấu trừ ${dep.deductedAmount?.toLocaleString("vi-VN")} ₫`}
             >
-              Đã khấu trừ
+              {isEn ? "Deducted" : "Đã khấu trừ"}
             </span>
           )}
         </div>
@@ -369,7 +399,7 @@ function DepositsContent() {
     // 100% Deduction / Forfeited status
     return (
       <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-        Đã khấu trừ
+        {isEn ? "Forfeited / Deducted" : "Đã khấu trừ"}
       </span>
     );
   };
@@ -407,10 +437,12 @@ function DepositsContent() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <PiggyBank className="w-6 h-6 text-[#2AC1BC]" /> Quản Lý Tiền Đặt Cọc
+            <PiggyBank className="w-6 h-6 text-[#2AC1BC]" /> {isEn ? "Deposit Management" : "Quản Lý Tiền Đặt Cọc"}
           </h1>
           <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            Theo dõi cọc giữ chỗ và cọc hợp đồng bảo đảm thuê phòng.
+            {isEn
+              ? "Track room holding deposits and contract security deposits."
+              : "Theo dõi cọc giữ chỗ và cọc hợp đồng bảo đảm thuê phòng."}
           </p>
         </div>
 
@@ -423,7 +455,7 @@ function DepositsContent() {
             }}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
           >
-            <Plus className="w-4 h-4 shrink-0" /> Thêm Khoản Đặt Cọc Mới
+            <Plus className="w-4 h-4 shrink-0" /> {isEn ? "New Deposit Entry" : "Thêm Khoản Đặt Cọc Mới"}
           </button>
         </div>
       </div>
@@ -438,7 +470,7 @@ function DepositsContent() {
           {/* Left Title, Address Pill with Map button, and Description */}
           <div className="space-y-3 max-w-xl">
             <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding?.name || "Đang tải nhà trọ..."}
+              {activeBuilding?.name || (isEn ? "Loading property..." : "Đang tải nhà trọ...")}
             </h2>
 
             {/* Address Pill with Integrated Map Link */}
@@ -454,13 +486,15 @@ function DepositsContent() {
                   rel="noreferrer"
                   className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
                 >
-                  <span>Xem Bản Đồ</span> &rarr;
+                  <span>{isEn ? "View Map" : "Xem Bản Đồ"}</span> &rarr;
                 </a>
               </div>
             )}
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Theo dõi tiền cọc phòng, nâng cấp cọc giữ chỗ thành cọc hợp đồng khi ký kết và xử lý hoàn trả/khấu trừ minh bạch.
+              {isEn
+                ? "Track deposits, convert holding deposits into formal contract deposits, and process transparent refunds or deductions."
+                : "Theo dõi tiền cọc phòng, nâng cấp cọc giữ chỗ thành cọc hợp đồng khi ký kết và xử lý hoàn trả/khấu trừ minh bạch."}
             </p>
           </div>
 
@@ -472,10 +506,10 @@ function DepositsContent() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] uppercase font-extrabold text-[#2AC1BC] tracking-wider whitespace-nowrap">
-                    ĐANG GIỮ ({stats.holdingCountTotal})
+                    {isEn ? `HELD (${stats.holdingCountTotal})` : `ĐANG GIỮ (${stats.holdingCountTotal})`}
                   </span>
                   <span className="font-black text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(stats.totalHoldingAmount)}
+                    {formatLargeMoney(stats.totalHoldingAmount, isEn)}
                   </span>
                 </div>
               </div>
@@ -485,10 +519,10 @@ function DepositsContent() {
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">
-                    CỌC GIỮ CHỖ ({stats.holdTypeHoldingCountTotal})
+                    {isEn ? `HOLDING (${stats.holdTypeHoldingCountTotal})` : `CỌC GIỮ CHỖ (${stats.holdTypeHoldingCountTotal})`}
                   </span>
                   <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(stats.totalHoldTypeAmount)}
+                    {formatLargeMoney(stats.totalHoldTypeAmount, isEn)}
                   </span>
                 </div>
               </div>
@@ -498,10 +532,10 @@ function DepositsContent() {
                 <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] uppercase font-extrabold text-purple-400 tracking-wider whitespace-nowrap">
-                    ĐÃ HOÀN ({stats.refundedCountTotal})
+                    {isEn ? `REFUNDED (${stats.refundedCountTotal})` : `ĐÃ HOÀN (${stats.refundedCountTotal})`}
                   </span>
                   <span className="font-black text-purple-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(stats.totalRefundedAmount)}
+                    {formatLargeMoney(stats.totalRefundedAmount, isEn)}
                   </span>
                 </div>
               </div>
@@ -511,10 +545,10 @@ function DepositsContent() {
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">
-                    ĐÃ KHẤU TRỪ ({stats.deductedCountTotal})
+                    {isEn ? `DEDUCTED (${stats.deductedCountTotal})` : `ĐÃ KHẤU TRỪ (${stats.deductedCountTotal})`}
                   </span>
                   <span className="font-black text-rose-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(stats.totalDeductedAmount)}
+                    {formatLargeMoney(stats.totalDeductedAmount, isEn)}
                   </span>
                 </div>
               </div>
@@ -531,21 +565,21 @@ function DepositsContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-zinc-100 p-1 rounded-2xl sm:rounded-full border border-zinc-200/80 w-full md:w-auto">
             <button
               onClick={() => {
-                setSelectedDepositTypeTab("Cọc giữ chỗ");
+                setSelectedDepositTypeTab("hold");
                 setActiveStatusTab("all");
                 setCurrentPage(1);
               }}
               className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                selectedDepositTypeTab === "Cọc giữ chỗ"
+                selectedDepositTypeTab === "hold"
                   ? "bg-amber-500 text-white shadow-xs"
                   : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
               }`}
             >
               <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span className="whitespace-nowrap">Cọc Giữ Chỗ Xem Phòng</span>
+              <span className="whitespace-nowrap">{isEn ? "Room Hold Deposits" : "Cọc Giữ Chỗ Xem Phòng"}</span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  selectedDepositTypeTab === "Cọc giữ chỗ" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
+                  selectedDepositTypeTab === "hold" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
                 }`}
               >
                 {stats.holdTypeCountTotal}
@@ -554,21 +588,21 @@ function DepositsContent() {
 
             <button
               onClick={() => {
-                setSelectedDepositTypeTab("Cọc hợp đồng");
+                setSelectedDepositTypeTab("contract");
                 setActiveStatusTab("all");
                 setCurrentPage(1);
               }}
               className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                selectedDepositTypeTab === "Cọc hợp đồng"
+                selectedDepositTypeTab === "contract"
                   ? "bg-[#2AC1BC] text-white shadow-xs"
                   : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
               }`}
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />
-              <span className="whitespace-nowrap">Cọc Hợp Đồng Thuê</span>
+              <span className="whitespace-nowrap">{isEn ? "Rental Contract Deposits" : "Cọc Hợp Đồng Thuê"}</span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  selectedDepositTypeTab === "Cọc hợp đồng" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
+                  selectedDepositTypeTab === "contract" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
                 }`}
               >
                 {stats.contractTypeCountTotal}
@@ -583,7 +617,7 @@ function DepositsContent() {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm phòng, tên khách, SĐT, mã..."
+                placeholder={isEn ? "Search room, tenant name, phone, ID..." : "Tìm phòng, tên khách, SĐT, mã..."}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -600,7 +634,7 @@ function DepositsContent() {
                 className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
                 }`}
-                title="Dạng Lưới (Grid)"
+                title={isEn ? "Grid View" : "Dạng Lưới (Grid)"}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
@@ -609,7 +643,7 @@ function DepositsContent() {
                 className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === "table" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
                 }`}
-                title="Dạng Bảng (Table)"
+                title={isEn ? "Table View" : "Dạng Bảng (Table)"}
               >
                 <List className="w-3.5 h-3.5" />
               </button>
@@ -620,7 +654,9 @@ function DepositsContent() {
         {/* Status Filter Tabs */}
         <div className="overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 flex items-center justify-between gap-2 shrink-0 text-xs font-bold">
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline">Trạng thái:</span>
+            <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline">
+              {isEn ? "Status:" : "Trạng thái:"}
+            </span>
 
             <button
               onClick={() => {
@@ -633,7 +669,7 @@ function DepositsContent() {
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
             >
-              Tất cả
+              {isEn ? "All" : "Tất cả"}
             </button>
 
             <button
@@ -647,7 +683,7 @@ function DepositsContent() {
                   : "bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20"
               }`}
             >
-              Đang giữ ({selectedDepositTypeTab === "Cọc giữ chỗ" ? stats.holdTypeHoldingCountTotal : stats.holdingCountTotal - stats.holdTypeHoldingCountTotal})
+              {isEn ? "Held" : "Đang giữ"} ({selectedDepositTypeTab === "hold" ? stats.holdTypeHoldingCountTotal : stats.holdingCountTotal - stats.holdTypeHoldingCountTotal})
             </button>
 
             <button
@@ -661,7 +697,7 @@ function DepositsContent() {
                   : "bg-purple-50 text-purple-700 hover:bg-purple-100"
               }`}
             >
-              Đã hoàn ({stats.refundedCountTotal})
+              {isEn ? "Refunded" : "Đã hoàn"} ({stats.refundedCountTotal})
             </button>
 
             <button
@@ -675,12 +711,17 @@ function DepositsContent() {
                   : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
               }`}
             >
-              Đã khấu trừ ({stats.deductedCountTotal})
+              {isEn ? "Forfeited / Deducted" : "Đã khấu trừ"} ({stats.deductedCountTotal})
             </button>
           </div>
 
           <span className="text-[11px] font-bold text-zinc-400 shrink-0 hidden sm:inline">
-            Đang xem: <strong className="text-zinc-800">{selectedDepositTypeTab}</strong>
+            {isEn ? "Viewing: " : "Đang xem: "}
+            <strong className="text-zinc-800">
+              {selectedDepositTypeTab === "hold"
+                ? (isEn ? "Hold Deposits" : "Cọc Giữ Chỗ")
+                : (isEn ? "Contract Deposits" : "Cọc Hợp Đồng")}
+            </strong>
           </span>
         </div>
       </div>
@@ -689,7 +730,9 @@ function DepositsContent() {
       {isLoading ? (
         <div className="p-16 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-3xl space-y-3">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs font-bold text-zinc-500">Đang tải dữ liệu tiền đặt cọc...</p>
+          <p className="text-xs font-bold text-zinc-500">
+            {isEn ? "Loading deposit data..." : "Đang tải dữ liệu tiền đặt cọc..."}
+          </p>
         </div>
       ) : depositsList.length === 0 ? (
         <div className="p-16 text-center bg-white border border-zinc-200 rounded-3xl space-y-4">
@@ -698,10 +741,14 @@ function DepositsContent() {
           </div>
           <div className="space-y-1">
             <h3 className="font-black text-base text-zinc-800">
-              Không tìm thấy khoản đặt cọc nào trong danh mục {selectedDepositTypeTab}
+              {isEn
+                ? `No deposit slips found in ${selectedDepositTypeTab === "hold" ? "Hold Deposits" : "Contract Deposits"}`
+                : `Không tìm thấy khoản đặt cọc nào trong danh mục ${selectedDepositTypeTab === "hold" ? "Cọc giữ chỗ" : "Cọc hợp đồng"}`}
             </h3>
             <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-              Chưa có phiếu cọc nào khớp với bộ lọc hiện tại. Bạn có thể thêm phiếu đặt cọc mới ngay bên dưới.
+              {isEn
+                ? "No deposit slips match the current filter. You can add a new deposit slip below."
+                : "Chưa có phiếu cọc nào khớp với bộ lọc hiện tại. Bạn có thể thêm phiếu đặt cọc mới ngay bên dưới."}
             </p>
           </div>
           <button
@@ -712,7 +759,7 @@ function DepositsContent() {
             }}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md cursor-pointer transition-all"
           >
-            <Plus className="w-4 h-4" /> Lập Phiếu Đặt Cọc Mới
+            <Plus className="w-4 h-4" /> {isEn ? "Create New Deposit" : "Lập Phiếu Đặt Cọc Mới"}
           </button>
         </div>
       ) : viewMode === "grid" ? (
@@ -741,7 +788,9 @@ function DepositsContent() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100">
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-zinc-900">Phòng {dep.roomNumber}</span>
+                      <span className="font-extrabold text-sm text-zinc-900">
+                        {isEn ? `Room ${dep.roomNumber}` : `Phòng ${dep.roomNumber}`}
+                      </span>
                       <span
                         className={`px-2 py-0.5 text-[10px] font-black rounded-md border ${
                           isHoldType
@@ -749,7 +798,9 @@ function DepositsContent() {
                             : "bg-emerald-50 text-emerald-700 border-emerald-200"
                         }`}
                       >
-                        {isHoldType ? "Cọc giữ chỗ" : "Cọc hợp đồng"}
+                        {isHoldType
+                          ? (isEn ? "Hold" : "Cọc giữ chỗ")
+                          : (isEn ? "Contract" : "Cọc hợp đồng")}
                       </span>
                     </div>
 
@@ -759,27 +810,29 @@ function DepositsContent() {
                   {/* Tenant Details */}
                   <div className="space-y-1 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 font-medium">Người cọc:</span>
+                      <span className="text-zinc-500 font-medium">{isEn ? "Tenant:" : "Người cọc:"}</span>
                       <span className="font-bold text-zinc-900">{dep.tenantName}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 font-medium">Số điện thoại:</span>
-                      <span className="font-bold text-zinc-700">{dep.tenantPhone || "Chưa có"}</span>
+                      <span className="text-zinc-500 font-medium">{isEn ? "Phone:" : "Số điện thoại:"}</span>
+                      <span className="font-bold text-zinc-700">{dep.tenantPhone || (isEn ? "None" : "Chưa có")}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 font-medium">Ngày đặt cọc:</span>
+                      <span className="text-zinc-500 font-medium">{isEn ? "Deposit date:" : "Ngày đặt cọc:"}</span>
                       <span className="font-semibold text-zinc-600">{dep.depositDate}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-500 font-medium">
-                        {isHoldType ? "Hạn chốt HĐ:" : "Thời hạn cọc:"}
+                        {isHoldType
+                          ? (isEn ? "Contract deadline:" : "Hạn chốt HĐ:")
+                          : (isEn ? "Deposit expiry:" : "Thời hạn cọc:")}
                       </span>
                       <span
                         className={`font-bold ${
                           isHoldType && isHolding ? "text-amber-600" : "text-zinc-600"
                         }`}
                       >
-                        {dep.expiryDate || "Không thời hạn"}
+                        {dep.expiryDate || (isEn ? "No expiration" : "Không thời hạn")}
                       </span>
                     </div>
                   </div>
@@ -790,16 +843,16 @@ function DepositsContent() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">
-                        Tiền cọc hiện giữ
+                        {isEn ? "Currently held" : "Tiền cọc hiện giữ"}
                       </span>
                       <span className="font-black text-base text-[#2AC1BC]">
-                        {dep.amount.toLocaleString("vi-VN")} ₫
+                        {dep.amount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                       </span>
                     </div>
 
                     {isHoldType && isHolding && (
                       <span className="text-[10px] font-extrabold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-md">
-                        Cọc Giữ Chỗ
+                        {isEn ? "Holding Deposit" : "Cọc Giữ Chỗ"}
                       </span>
                     )}
                   </div>
@@ -809,19 +862,24 @@ function DepositsContent() {
                       onClick={() => setSelectedDeposit(dep)}
                       className="flex-1 py-2 px-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      <Eye className="w-3.5 h-3.5 text-zinc-500" /> Xem Chi Tiết
+                      <Eye className="w-3.5 h-3.5 text-zinc-500" /> {isEn ? "View Details" : "Xem Chi Tiết"}
                     </button>
 
                     {isHoldType && isHolding && (
                       <button
                         onClick={() => {
                           setShowUpgradeModal(dep);
+                          setUpgradeForm({
+                            targetContractAmount: "",
+                            additionalAmount: 0,
+                            note: "",
+                          });
                           setIsFormDirty(false);
                         }}
                         className="py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1"
-                        title="Nâng Cọc HĐ khi thu đủ tiền"
+                        title={isEn ? "Upgrade to contract deposit" : "Nâng Cọc HĐ khi thu đủ tiền"}
                       >
-                        <Sparkles className="w-3.5 h-3.5" /> Nâng Cọc
+                        <Sparkles className="w-3.5 h-3.5" /> {isEn ? "Upgrade" : "Nâng Cọc"}
                       </button>
                     )}
 
@@ -833,9 +891,9 @@ function DepositsContent() {
                           setIsFormDirty(false);
                         }}
                         className="py-2 px-3 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1"
-                        title="Hoàn trả hoặc khấu trừ tiền cọc"
+                        title={isEn ? "Refund or deduct deposit" : "Hoàn trả hoặc khấu trừ tiền cọc"}
                       >
-                        <RotateCcw className="w-3.5 h-3.5" /> Hoàn/Khấu Trừ
+                        <RotateCcw className="w-3.5 h-3.5" /> {isEn ? "Refund/Deduct" : "Hoàn/Khấu Trừ"}
                       </button>
                     )}
                   </div>
@@ -851,15 +909,15 @@ function DepositsContent() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
-                  <th className="py-3 px-4">Mã Phiếu</th>
-                  <th className="py-3 px-4">Phòng</th>
-                  <th className="py-3 px-4">Người Đặt Cọc</th>
-                  <th className="py-3 px-4">Loại Cọc</th>
-                  <th className="py-3 px-4 text-right">Tiền Cọc</th>
-                  <th className="py-3 px-4">Ngày Cọc</th>
-                  <th className="py-3 px-4">Hạn Giữ / HĐ</th>
-                  <th className="py-3 px-4 text-center">Trạng Thái</th>
-                  <th className="py-3 px-4 text-right">Thao Tác</th>
+                  <th className="py-3 px-4">{isEn ? "Slip ID" : "Mã Phiếu"}</th>
+                  <th className="py-3 px-4">{isEn ? "Room" : "Phòng"}</th>
+                  <th className="py-3 px-4">{isEn ? "Depositor" : "Người Đặt Cọc"}</th>
+                  <th className="py-3 px-4">{isEn ? "Deposit Type" : "Loại Cọc"}</th>
+                  <th className="py-3 px-4 text-right">{isEn ? "Amount" : "Tiền Cọc"}</th>
+                  <th className="py-3 px-4">{isEn ? "Date" : "Ngày Cọc"}</th>
+                  <th className="py-3 px-4">{isEn ? "Deadline" : "Hạn Giữ / HĐ"}</th>
+                  <th className="py-3 px-4 text-center">{isEn ? "Status" : "Trạng Thái"}</th>
+                  <th className="py-3 px-4 text-right">{isEn ? "Actions" : "Thao Tác"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-medium">
@@ -873,11 +931,11 @@ function DepositsContent() {
                         {dep.id.slice(0, 8)}...
                       </td>
                       <td className="py-3.5 px-4 font-extrabold text-zinc-900">
-                        Phòng {dep.roomNumber}
+                        {isEn ? `Room ${dep.roomNumber}` : `Phòng ${dep.roomNumber}`}
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-zinc-900">{dep.tenantName}</div>
-                        <div className="text-[10px] text-zinc-400">{dep.tenantPhone || "Chưa có SĐT"}</div>
+                        <div className="text-[10px] text-zinc-400">{dep.tenantPhone || (isEn ? "No phone" : "Chưa có SĐT")}</div>
                       </td>
                       <td className="py-3.5 px-4">
                         <span
@@ -887,11 +945,13 @@ function DepositsContent() {
                               : "bg-emerald-50 text-emerald-700 border-emerald-200"
                           }`}
                         >
-                          {isHoldType ? "Cọc giữ chỗ" : "Cọc hợp đồng"}
+                          {isHoldType
+                            ? (isEn ? "Hold" : "Cọc giữ chỗ")
+                            : (isEn ? "Contract" : "Cọc hợp đồng")}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right font-black text-sm text-[#2AC1BC]">
-                        {dep.amount.toLocaleString("vi-VN")} ₫
+                        {dep.amount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                       </td>
                       <td className="py-3.5 px-4 text-zinc-600 font-semibold">{dep.depositDate}</td>
                       <td className="py-3.5 px-4">
@@ -905,7 +965,7 @@ function DepositsContent() {
                           <button
                             onClick={() => setSelectedDeposit(dep)}
                             className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                            title="Xem chi tiết"
+                            title={isEn ? "View details" : "Xem chi tiết"}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -914,10 +974,15 @@ function DepositsContent() {
                             <button
                               onClick={() => {
                                 setShowUpgradeModal(dep);
+                                setUpgradeForm({
+                                  targetContractAmount: "",
+                                  additionalAmount: 0,
+                                  note: "",
+                                });
                                 setIsFormDirty(false);
                               }}
                               className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
-                              title="Nâng cọc hợp đồng"
+                              title={isEn ? "Upgrade to contract deposit" : "Nâng cọc hợp đồng"}
                             >
                               <Sparkles className="w-4 h-4" />
                             </button>
@@ -931,7 +996,7 @@ function DepositsContent() {
                                 setIsFormDirty(false);
                               }}
                               className="p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
-                              title="Hoàn & Khấu trừ cọc"
+                              title={isEn ? "Refund & deduct deposit" : "Hoàn & Khấu trừ cọc"}
                             >
                               <RotateCcw className="w-4 h-4" />
                             </button>
@@ -951,7 +1016,7 @@ function DepositsContent() {
       {totalItems > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs text-zinc-600">
           <div className="flex items-center gap-2">
-            <span>Hiển thị</span>
+            <span>{isEn ? "Showing" : "Hiển thị"}</span>
             <input
               type="number"
               min={1}
@@ -964,10 +1029,10 @@ function DepositsContent() {
               }}
               className="w-14 px-2 py-1 bg-white border border-zinc-200 rounded-lg font-bold text-center text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
             />
-            <span>/ trang</span>
+            <span>{isEn ? "/ page" : "/ trang"}</span>
             <span className="text-zinc-300">|</span>
             <span>
-              {startIndex + 1}-{endIndex} trên {totalItems} mục
+              {startIndex + 1}-{endIndex} {isEn ? "of" : "trên"} {totalItems} {isEn ? "items" : "mục"}
             </span>
           </div>
 
@@ -976,7 +1041,7 @@ function DepositsContent() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="p-1.5 border border-zinc-200 rounded-lg bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-              title="Trang trước"
+              title={isEn ? "Previous page" : "Trang trước"}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -999,7 +1064,7 @@ function DepositsContent() {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
               className="p-1.5 border border-zinc-200 rounded-lg bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-              title="Trang tiếp theo"
+              title={isEn ? "Next page" : "Trang tiếp theo"}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -1025,7 +1090,9 @@ function DepositsContent() {
                   <PiggyBank className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Chi Tiết Phiếu Đặt Cọc</h3>
+                  <h3 className="font-black text-base text-zinc-900">
+                    {isEn ? "Deposit Details" : "Chi Tiết Phiếu Đặt Cọc"}
+                  </h3>
                   <p className="text-xs text-zinc-500 font-semibold font-mono">{selectedDeposit.id}</p>
                 </div>
               </div>
@@ -1042,71 +1109,81 @@ function DepositsContent() {
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
               <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Phòng:</span>
-                  <span className="font-black text-zinc-900 text-sm">Phòng {selectedDeposit.roomNumber}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Nhà trọ:</span>
-                  <span className="font-bold text-zinc-800">{selectedDeposit.boardingHouseName}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Loại đặt cọc:</span>
-                  <span className="font-bold text-zinc-900">
-                    {selectedDeposit.depositCategory === "hold" ? "Cọc giữ chỗ xem phòng" : "Cọc hợp đồng chính thức"}
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Room:" : "Phòng:"}</span>
+                  <span className="font-black text-zinc-900 text-sm">
+                    {isEn ? `Room ${selectedDeposit.roomNumber}` : `Phòng ${selectedDeposit.roomNumber}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Trạng thái:</span>
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Property:" : "Nhà trọ:"}</span>
+                  <span className="font-bold text-zinc-800">{selectedDeposit.boardingHouseName}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Deposit type:" : "Loại đặt cọc:"}</span>
+                  <span className="font-bold text-zinc-900">
+                    {selectedDeposit.depositCategory === "hold"
+                      ? (isEn ? "Room hold deposit" : "Cọc giữ chỗ xem phòng")
+                      : (isEn ? "Formal lease contract deposit" : "Cọc hợp đồng chính thức")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Status:" : "Trạng thái:"}</span>
                   {renderStatusBadge(selectedDeposit)}
                 </div>
               </div>
 
               <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Người đặt cọc:</span>
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Depositor:" : "Người đặt cọc:"}</span>
                   <span className="font-bold text-zinc-900">{selectedDeposit.tenantName}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Số điện thoại:</span>
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Phone number:" : "Số điện thoại:"}</span>
                   <span className="font-bold text-zinc-900">{selectedDeposit.tenantPhone || "—"}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Ngày tạo phiếu:</span>
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Creation date:" : "Ngày tạo phiếu:"}</span>
                   <span className="font-bold text-zinc-800">{selectedDeposit.depositDate}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-semibold">Hạn giữ / Chốt HĐ:</span>
-                  <span className="font-bold text-amber-600">{selectedDeposit.expiryDate || "Không giới hạn"}</span>
+                  <span className="text-zinc-500 font-semibold">{isEn ? "Hold deadline:" : "Hạn giữ / Chốt HĐ:"}</span>
+                  <span className="font-bold text-amber-600">
+                    {selectedDeposit.expiryDate || (isEn ? "Unlimited" : "Không giới hạn")}
+                  </span>
                 </div>
               </div>
 
               {/* Financial Breakdown */}
               <div className="p-4 bg-gradient-to-br from-[#2AC1BC]/10 to-teal-500/5 border border-[#2AC1BC]/30 rounded-2xl space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#0d6e6b] font-bold">Số tiền cọc ban đầu:</span>
+                  <span className="text-[#0d6e6b] font-bold">
+                    {isEn ? "Initial deposit amount:" : "Số tiền cọc ban đầu:"}
+                  </span>
                   <span className="font-black text-zinc-900">
-                    {selectedDeposit.originalAmount.toLocaleString("vi-VN")} ₫
+                    {selectedDeposit.originalAmount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                   </span>
                 </div>
 
                 {(selectedDeposit.deductedAmount ?? 0) > 0 && (
                   <div className="flex justify-between items-center text-xs text-rose-700">
-                    <span className="font-bold">Đã khấu trừ:</span>
-                    <span className="font-black">-{selectedDeposit.deductedAmount?.toLocaleString("vi-VN")} ₫</span>
+                    <span className="font-bold">{isEn ? "Deducted:" : "Đã khấu trừ:"}</span>
+                    <span className="font-black">-{selectedDeposit.deductedAmount?.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫</span>
                   </div>
                 )}
 
                 {(selectedDeposit.refundAmount ?? 0) > 0 && (
                   <div className="flex justify-between items-center text-xs text-purple-700">
-                    <span className="font-bold">Đã hoàn trả:</span>
-                    <span className="font-black">{selectedDeposit.refundAmount?.toLocaleString("vi-VN")} ₫</span>
+                    <span className="font-bold">{isEn ? "Refunded:" : "Đã hoàn trả:"}</span>
+                    <span className="font-black">{selectedDeposit.refundAmount?.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫</span>
                   </div>
                 )}
 
                 <div className="pt-2 border-t border-[#2AC1BC]/20 flex justify-between items-center text-sm">
-                  <span className="text-[#0d6e6b] font-black">Số tiền hiện giữ:</span>
+                  <span className="text-[#0d6e6b] font-black">
+                    {isEn ? "Currently held amount:" : "Số tiền hiện giữ:"}
+                  </span>
                   <span className="font-black text-[#2AC1BC] text-base">
-                    {selectedDeposit.amount.toLocaleString("vi-VN")} ₫
+                    {selectedDeposit.amount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                   </span>
                 </div>
               </div>
@@ -1114,7 +1191,9 @@ function DepositsContent() {
               {/* Notes */}
               {selectedDeposit.note && (
                 <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Ghi chú:</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+                    {isEn ? "Notes:" : "Ghi chú:"}
+                  </span>
                   <p className="text-xs text-zinc-700 leading-relaxed font-medium">{selectedDeposit.note}</p>
                 </div>
               )}
@@ -1131,7 +1210,7 @@ function DepositsContent() {
                 }}
                 className="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> Chat Với Khách
+                <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> {isEn ? "Chat with Tenant" : "Chat Với Khách"}
               </button>
 
               <div className="flex items-center gap-2">
@@ -1139,12 +1218,17 @@ function DepositsContent() {
                   <button
                     onClick={() => {
                       setShowUpgradeModal(selectedDeposit);
+                      setUpgradeForm({
+                        targetContractAmount: "",
+                        additionalAmount: 0,
+                        note: "",
+                      });
                       setSelectedDeposit(null);
                       setIsFormDirty(false);
                     }}
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <Sparkles className="w-4 h-4" /> Nâng Cọc HĐ
+                    <Sparkles className="w-4 h-4" /> {isEn ? "Upgrade to Contract" : "Nâng Cọc HĐ"}
                   </button>
                 )}
 
@@ -1158,7 +1242,7 @@ function DepositsContent() {
                     }}
                     className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <RotateCcw className="w-4 h-4" /> Hoàn & Khấu Trừ
+                    <RotateCcw className="w-4 h-4" /> {isEn ? "Refund & Deduct" : "Hoàn & Khấu Trừ"}
                   </button>
                 )}
               </div>
@@ -1182,8 +1266,14 @@ function DepositsContent() {
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Thêm Khoản Đặt Cọc Mới (UC-L-10)</h3>
-                  <p className="text-xs text-zinc-500 font-semibold">Lập phiếu cọc giữ chỗ xem phòng hoặc cọc hợp đồng</p>
+                  <h3 className="font-black text-base text-zinc-900">
+                    {isEn ? "New Deposit Entry (UC-L-10)" : "Thêm Khoản Đặt Cọc Mới (UC-L-10)"}
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-semibold">
+                    {isEn
+                      ? "Record a room holding deposit or formal contract deposit"
+                      : "Lập phiếu cọc giữ chỗ xem phòng hoặc cọc hợp đồng"}
+                  </p>
                 </div>
               </div>
 
@@ -1200,11 +1290,11 @@ function DepositsContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Chọn Phòng Đặt Cọc *
+                    {isEn ? "Select Room *" : "Chọn Phòng Đặt Cọc *"}
                   </label>
                   {isLoadingRooms ? (
                     <div className="flex items-center gap-2 py-2 text-zinc-400">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang tải danh sách phòng...
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isEn ? "Loading rooms list..." : "Đang tải danh sách phòng..."}
                     </div>
                   ) : (
                     <select
@@ -1215,13 +1305,17 @@ function DepositsContent() {
                       }}
                       className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                     >
-                      <option value="">-- Chọn phòng --</option>
+                      <option value="">{isEn ? "-- Select room --" : "-- Chọn phòng --"}</option>
                       {availableRooms.map((room) => {
                         const isAvail = room.status === "available";
+                        const roomStatusLabel = isAvail
+                          ? (isEn ? "Available - Can deposit" : "Trống - Có thể cọc")
+                          : room.status === "deposited"
+                          ? (isEn ? "Deposited" : "Đã cọc")
+                          : (isEn ? "Rented" : "Đang thuê");
                         return (
                           <option key={room.id} value={room.id} disabled={!isAvail}>
-                            Phòng {room.roomNumber} - {room.roomType?.name || "Phòng"} (
-                            {isAvail ? "Trống - Có thể cọc" : room.status === "deposited" ? "Đã cọc" : "Đang thuê"})
+                            {isEn ? `Room ${room.roomNumber}` : `Phòng ${room.roomNumber}`} - {room.roomType?.name || (isEn ? "Room" : "Phòng")} ({roomStatusLabel})
                           </option>
                         );
                       })}
@@ -1231,7 +1325,7 @@ function DepositsContent() {
 
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Loại Đặt Cọc *
+                    {isEn ? "Deposit Type *" : "Loại Đặt Cọc *"}
                   </label>
                   <select
                     value={newDepositForm.depositType}
@@ -1241,8 +1335,12 @@ function DepositsContent() {
                     }}
                     className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   >
-                    <option value="Cọc giữ chỗ">Cọc giữ chỗ (Chờ hẹn lịch chốt HĐ)</option>
-                    <option value="Cọc hợp đồng">Cọc hợp đồng (Bảo đảm hợp đồng thuê)</option>
+                    <option value="hold">
+                      {isEn ? "Holding deposit (Awaiting contract signing)" : "Cọc giữ chỗ (Chờ hẹn lịch chốt HĐ)"}
+                    </option>
+                    <option value="contract">
+                      {isEn ? "Contract deposit (Lease agreement security)" : "Cọc hợp đồng (Bảo đảm hợp đồng thuê)"}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -1251,7 +1349,7 @@ function DepositsContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Họ Và Tên Người Đặt Cọc *
+                    {isEn ? "Depositor Full Name *" : "Họ Và Tên Người Đặt Cọc *"}
                   </label>
                   <input
                     type="text"
@@ -1260,14 +1358,14 @@ function DepositsContent() {
                       setNewDepositForm({ ...newDepositForm, tenantName: e.target.value });
                       setIsFormDirty(true);
                     }}
-                    placeholder="Ví dụ: Trần Thị Mai"
+                    placeholder={isEn ? "e.g. John Doe" : "Ví dụ: Trần Thị Mai"}
                     className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Số Điện Thoại *
+                    {isEn ? "Phone Number *" : "Số Điện Thoại *"}
                   </label>
                   <input
                     type="tel"
@@ -1286,7 +1384,7 @@ function DepositsContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Số Tiền Đặt Cọc (VNĐ) *
+                    {isEn ? "Deposit Amount (VND) *" : "Số Tiền Đặt Cọc (VNĐ) *"}
                   </label>
                   <input
                     type="number"
@@ -1297,13 +1395,14 @@ function DepositsContent() {
                       setNewDepositForm({ ...newDepositForm, amount: e.target.value });
                       setIsFormDirty(true);
                     }}
+                    placeholder={isEn ? "e.g. 1000000" : "Ví dụ: 1000000"}
                     className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Hạn Giữ Chỗ / Hẹn Ký Hợp Đồng
+                    {isEn ? "Hold Deadline / Contract Date" : "Hạn Giữ Chỗ / Hẹn Ký Hợp Đồng"}
                   </label>
                   <input
                     type="date"
@@ -1319,7 +1418,9 @@ function DepositsContent() {
 
               {/* Notes */}
               <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Ghi Chú Ban Đầu</label>
+                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
+                  {isEn ? "Initial Notes" : "Ghi Chú Ban Đầu"}
+                </label>
                 <textarea
                   rows={3}
                   value={newDepositForm.note}
@@ -1327,7 +1428,11 @@ function DepositsContent() {
                     setNewDepositForm({ ...newDepositForm, note: e.target.value });
                     setIsFormDirty(true);
                   }}
-                  placeholder="Ghi chú điều kiện giữ phòng hoặc cam kết thu bổ sung..."
+                  placeholder={
+                    isEn
+                      ? "Notes regarding holding conditions or additional collection commitments..."
+                      : "Ghi chú điều kiện giữ phòng hoặc cam kết thu bổ sung..."
+                  }
                   className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                 />
               </div>
@@ -1340,7 +1445,7 @@ function DepositsContent() {
                 disabled={isSubmitting}
                 className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer disabled:opacity-50"
               >
-                Hủy
+                {isEn ? "Cancel" : "Hủy"}
               </button>
               <button
                 type="button"
@@ -1350,10 +1455,10 @@ function DepositsContent() {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang lưu...
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isEn ? "Saving..." : "Đang lưu..."}
                   </>
                 ) : (
-                  "Lưu Khoản Đặt Cọc"
+                  isEn ? "Save Deposit Slip" : "Lưu Khoản Đặt Cọc"
                 )}
               </button>
             </div>
@@ -1377,9 +1482,11 @@ function DepositsContent() {
                   <RotateCcw className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Hoàn & Khấu Trừ Tiền Cọc</h3>
+                  <h3 className="font-black text-base text-zinc-900">
+                    {isEn ? "Refund & Deduct Deposit" : "Hoàn & Khấu Trừ Tiền Cọc"}
+                  </h3>
                   <p className="text-xs text-zinc-500 font-semibold">
-                    Phòng {showRefundModal.roomNumber} • {showRefundModal.tenantName}
+                    {isEn ? `Room ${showRefundModal.roomNumber}` : `Phòng ${showRefundModal.roomNumber}`} • {showRefundModal.tenantName}
                   </p>
                 </div>
               </div>
@@ -1396,9 +1503,11 @@ function DepositsContent() {
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
               {/* Held Amount Banner */}
               <div className="p-4 bg-gradient-to-r from-purple-500/10 via-zinc-50 to-purple-500/10 border border-purple-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
-                <span className="text-zinc-600 font-semibold truncate">Số tiền cọc hiện giữ:</span>
+                <span className="text-zinc-600 font-semibold truncate">
+                  {isEn ? "Currently held deposit:" : "Số tiền cọc hiện giữ:"}
+                </span>
                 <span className="font-black text-purple-900 text-sm sm:text-base whitespace-nowrap">
-                  {showRefundModal.amount.toLocaleString("vi-VN")} ₫
+                  {showRefundModal.amount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                 </span>
               </div>
 
@@ -1406,7 +1515,7 @@ function DepositsContent() {
               <div className="space-y-2">
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700">
-                    Số Tiền Khấu Trừ (VNĐ)
+                    {isEn ? "Deduction Amount (VND)" : "Số Tiền Khấu Trừ (VNĐ)"}
                   </label>
                 </div>
 
@@ -1437,7 +1546,9 @@ function DepositsContent() {
                         : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
                     }`}
                   >
-                    <span className="text-[11px] sm:text-xs whitespace-nowrap">Hoàn 100%</span>
+                    <span className="text-[11px] sm:text-xs whitespace-nowrap">
+                      {isEn ? "Refund 100%" : "Hoàn 100%"}
+                    </span>
                     <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">(0 ₫)</span>
                   </button>
 
@@ -1454,9 +1565,11 @@ function DepositsContent() {
                         : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
                     }`}
                   >
-                    <span className="text-[11px] sm:text-xs whitespace-nowrap">Trừ 50%</span>
+                    <span className="text-[11px] sm:text-xs whitespace-nowrap">
+                      {isEn ? "Deduct 50%" : "Trừ 50%"}
+                    </span>
                     <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">
-                      ({Math.round(showRefundModal.amount / 2).toLocaleString("vi-VN")} ₫)
+                      ({Math.round(showRefundModal.amount / 2).toLocaleString(isEn ? "en-US" : "vi-VN")} ₫)
                     </span>
                   </button>
 
@@ -1472,8 +1585,12 @@ function DepositsContent() {
                         : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
                     }`}
                   >
-                    <span className="text-[11px] sm:text-xs whitespace-nowrap">Khấu Trừ 100%</span>
-                    <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">(Tịch thu cọc)</span>
+                    <span className="text-[11px] sm:text-xs whitespace-nowrap">
+                      {isEn ? "Forfeit 100%" : "Khấu Trừ 100%"}
+                    </span>
+                    <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">
+                      {isEn ? "(Forfeit deposit)" : "(Tịch thu cọc)"}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1481,7 +1598,7 @@ function DepositsContent() {
               {/* Deduction Reason */}
               <div>
                 <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  Lý Do Khấu Trừ
+                  {isEn ? "Deduction Reason" : "Lý Do Khấu Trừ"}
                 </label>
                 <input
                   type="text"
@@ -1490,14 +1607,20 @@ function DepositsContent() {
                     setRefundForm({ ...refundForm, deductionReason: e.target.value });
                     setIsFormDirty(true);
                   }}
-                  placeholder="Ví dụ: Khách bỏ cọc quá hạn 10 ngày không đến ký HĐ"
+                  placeholder={
+                    isEn
+                      ? "e.g. Tenant canceled room hold after 10-day deadline"
+                      : "Ví dụ: Khách bỏ cọc quá hạn 10 ngày không đến ký HĐ"
+                  }
                   className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-purple-500"
                 />
               </div>
 
               {/* Note */}
               <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">Ghi Chú Bổ Sung</label>
+                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
+                  {isEn ? "Additional Notes" : "Ghi Chú Bổ Sung"}
+                </label>
                 <textarea
                   rows={2}
                   value={refundForm.note}
@@ -1505,7 +1628,7 @@ function DepositsContent() {
                     setRefundForm({ ...refundForm, note: e.target.value });
                     setIsFormDirty(true);
                   }}
-                  placeholder="Ghi chú chi tiết thêm..."
+                  placeholder={isEn ? "Additional details..." : "Ghi chú chi tiết thêm..."}
                   className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-purple-500"
                 />
               </div>
@@ -1518,7 +1641,7 @@ function DepositsContent() {
                 disabled={isSubmitting}
                 className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer disabled:opacity-50"
               >
-                Hủy
+                {isEn ? "Cancel" : "Hủy"}
               </button>
               <button
                 type="button"
@@ -1528,10 +1651,10 @@ function DepositsContent() {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang xử lý...
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isEn ? "Processing..." : "Đang xử lý..."}
                   </>
                 ) : (
-                  "Xác Nhận Hoàn / Khấu Trừ"
+                  isEn ? "Confirm Refund / Deduction" : "Xác Nhận Hoàn / Khấu Trừ"
                 )}
               </button>
             </div>
@@ -1555,9 +1678,11 @@ function DepositsContent() {
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Thu Bổ Sung & Nâng Cọc Hợp Đồng</h3>
+                  <h3 className="font-black text-base text-zinc-900">
+                    {isEn ? "Collect Additional & Upgrade to Contract" : "Thu Bổ Sung & Nâng Cọc Hợp Đồng"}
+                  </h3>
                   <p className="text-xs text-zinc-500 font-semibold">
-                    Phòng {showUpgradeModal.roomNumber} • {showUpgradeModal.tenantName}
+                    {isEn ? `Room ${showUpgradeModal.roomNumber}` : `Phòng ${showUpgradeModal.roomNumber}`} • {showUpgradeModal.tenantName}
                   </p>
                 </div>
               </div>
@@ -1575,21 +1700,26 @@ function DepositsContent() {
               <div className="p-3 bg-gradient-to-r from-amber-500/10 via-teal-500/10 to-emerald-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-zinc-700 font-medium leading-relaxed">
-                  <strong className="text-zinc-900 font-black">Tiện ích thông minh Dormio:</strong> Chuyển phiếu cọc giữ chỗ thành cọc hợp đồng bảo đảm thuê phòng khi khách chốt thuê.
+                  <strong className="text-zinc-900 font-black">
+                    {isEn ? "Dormio Smart Feature:" : "Tiện ích thông minh Dormio:"}
+                  </strong>{" "}
+                  {isEn
+                    ? "Convert room holding deposit into formal contract deposit when tenant finalizes lease."
+                    : "Chuyển phiếu cọc giữ chỗ thành cọc hợp đồng bảo đảm thuê phòng khi khách chốt thuê."}
                 </p>
               </div>
 
               <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-zinc-600 text-xs">
-                  <span>Tiền cọc giữ chỗ đã thu:</span>
+                  <span>{isEn ? "Holding deposit collected:" : "Tiền cọc giữ chỗ đã thu:"}</span>
                   <span className="font-black text-zinc-900 whitespace-nowrap">
-                    {showUpgradeModal.amount.toLocaleString("vi-VN")} ₫
+                    {showUpgradeModal.amount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                   </span>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Tiền Cọc Hợp Đồng Mục Tiêu (VNĐ) *
+                    {isEn ? "Target Contract Deposit (VND) *" : "Tiền Cọc Hợp Đồng Mục Tiêu (VNĐ) *"}
                   </label>
                   <input
                     type="number"
@@ -1598,6 +1728,7 @@ function DepositsContent() {
                       setUpgradeForm({ ...upgradeForm, targetContractAmount: e.target.value });
                       setIsFormDirty(true);
                     }}
+                    placeholder={isEn ? "Enter target contract deposit amount..." : "Nhập số tiền cọc hợp đồng..."}
                     className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-amber-500 text-sm"
                   />
                 </div>
@@ -1605,10 +1736,10 @@ function DepositsContent() {
                 <div className="p-3.5 bg-amber-500/10 border border-amber-300/80 rounded-xl flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <span className="text-[10px] uppercase font-black text-amber-700 tracking-wider block truncate">
-                      Số Tiền Cần Thu Bổ Sung
+                      {isEn ? "Additional Amount Required" : "Số Tiền Cần Thu Bổ Sung"}
                     </span>
                     <span className="text-lg sm:text-xl font-black text-amber-900 leading-none mt-1 block whitespace-nowrap">
-                      +{upgradeForm.additionalAmount.toLocaleString("vi-VN")} ₫
+                      +{upgradeForm.additionalAmount.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                     </span>
                   </div>
                   <ArrowRight className="w-5 h-5 text-amber-600 shrink-0" />
@@ -1622,14 +1753,14 @@ function DepositsContent() {
                 onClick={() => requestCloseModal("upgrade")}
                 className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer"
               >
-                Hủy
+                {isEn ? "Cancel" : "Hủy"}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmUpgradeToContract}
                 className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
               >
-                <FileText className="w-4 h-4" /> Ký Hợp Đồng & Chuyển Cọc
+                <FileText className="w-4 h-4" /> {isEn ? "Sign Contract & Transfer Deposit" : "Ký Hợp Đồng & Chuyển Cọc"}
               </button>
             </div>
           </div>
@@ -1645,9 +1776,13 @@ function DepositsContent() {
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-black text-zinc-900">Xác nhận đóng form</h4>
+              <h4 className="text-base font-black text-zinc-900">
+                {isEn ? "Confirm Discard Changes" : "Xác nhận đóng form"}
+              </h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Bạn có các thay đổi chưa được lưu. Dữ liệu nháp sẽ bị hủy bỏ nếu bạn đóng form ngay bây giờ.
+                {isEn
+                  ? "You have unsaved changes. Draft data will be lost if you close the form now."
+                  : "Bạn có các thay đổi chưa được lưu. Dữ liệu nháp sẽ bị hủy bỏ nếu bạn đóng form ngay bây giờ."}
               </p>
             </div>
 
@@ -1657,14 +1792,14 @@ function DepositsContent() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="flex-1 py-2.5 px-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {isEn ? "Continue Editing" : "Tiếp tục chỉnh sửa"}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmCloseModal}
                 className="flex-1 py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-colors cursor-pointer shadow-xs"
               >
-                Hủy thay đổi & Đóng
+                {isEn ? "Discard & Close" : "Hủy thay đổi & Đóng"}
               </button>
             </div>
           </div>
