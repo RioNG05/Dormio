@@ -445,70 +445,97 @@ const en = {
     viewAndDeposit: "View & Deposit"
   },
   roomsPage: {
-    badge: "BHRP RENTAL LISTINGS • UPDATED 24/7",
-    title1: "Explore verified rooms,",
-    title2: "best prices guaranteed",
-    subtitle: "Over 500+ studio apartments & boarding rooms, 100% verified by Dormio.",
-    filterTitle: "Search Filters",
-    resetFilter: "Reset",
-    keywordLabel: "Keywords",
-    keywordPlaceholder: "Street, district, keyword..",
-    cityLabel: "City",
-    allCities: "All Cities",
-    hcm: "Ho Chi Minh City",
-    hanoi: "Hanoi",
-    maxPriceLabel: "Max Price (VND)",
-    maxPricePlaceholder: "e.g. 5000000",
-    foundCount: "Found {count} available rooms",
-    listView: "List",
-    mapView: "Map",
-    mapInfo: "Click orange map pins for quick room preview in area",
-    mapPinTitle: "{count} Satellite Locations",
-    quickView: "Quick View",
-    month: "/month",
-    depositLabel: "Deposit:",
-    freeDeposit: "Free deposit",
-    depositBtn: "Deposit Room",
-    detailBtn: "Details",
-    shareTitle: "Share Room Listing",
-    copied: "Copied",
-    copy: "Copy Link",
-    verifiedLandlord: "Verified Landlord",
-    callLandlord: "Call Landlord",
-    escrowModalTitle: "Online Room Viewing & Holding Deposit",
-    escrowTitle: "DORMIO ESCROW DEPOSIT PROTECTION PROCESS",
-    escrowStep1: "Tenant VietQR Deposit",
-    escrowStep2: "Dormio Safekeeping",
-    escrowStep3: "Payout to Landlord",
-    escrowNote: "* Deposit is held securely by Dormio. When both parties agree on lease terms, system automatically pays out to landlord.",
-    selectedRoom: "Selected Room:",
-    freeDepositNote: "Landlord requires no deposit • Book viewing 100% free!",
-    tenantNameLabel: "Tenant Full Name *",
-    tenantNamePlaceholder: "Enter full name...",
-    tenantPhoneLabel: "Phone Number *",
-    tenantPhonePlaceholder: "Enter phone number...",
-    confirmQrBtn: "Confirm & Proceed to VietQR Code",
-    qrAmountLabel: "Deposit transfer amount:",
-    qrContentLabel: "Transfer Note:",
-    confirmTransferBtn: "I have completed VietQR transfer",
-    successTitle: "Holding Deposit Recorded Successfully!",
-    successDesc: "Dormio system has held the deposit safely and notified landlord {name}. Funds will only be released when both parties agree to rent.",
-    closeModal: "Close Window",
-    room1Title: "Nguyen Hue District 1 Studio with Balcony - Great View",
-    room1Address: "123 Nguyen Hue, Ben Nghe, District 1, HCMC",
-    room1Desc: "Luxurious Studio apartment with airy balcony, full AC, fridge, private kitchen, washing machine. 24/7 security.",
-    room2Title: "High-end Ground Floor Single Room Fully Furnished in D1",
-    room2Address: "125 Nguyen Hue, Ben Nghe, District 1, HCMC",
-    room2Desc: "High-end en-suite room with modern minimalist design. 24/7 free access, security fingerprint lock.",
-    room3Title: "Student Double Room in Cau Giay near Foreign Trade Univ",
-    room3Address: "45 Chua Lang, Lang Thuong, Dong Da, Hanoi",
-    room3Desc: "Airy student room with balcony near FTU, DAV, UTC. En-suite bathroom, bunk or double bed options.",
-    room4Title: "1-Bedroom Serviced Apartment in Cau Giay 100% Brand New",
-    room4Address: "88 Cau Giay, Quan Hoa, Cau Giay, Hanoi",
-    room4Desc: "Airy 1-bedroom serviced apartment with elevator, fingerprint lock, private washing machine, 24/7 access, no curfew.",
-    badgeHot: "Hot Rent",
-    badgeAvailable: "Newly Available",
-    badgeGoodPrice: "Good Price"
+    // Hero section
+    heroBadge: "BHRP RENTAL PLATFORM • UPDATED 24/7",
+    heroTitle1: "Explore rental rooms",
+    heroTitle2: "verified & affordable",
+    heroSubtitle: "500+ studio apartments & boarding rooms verified by Dormio.",
+
+    // Filter panel
+    filterTitle: "Search filters",
+    filterReset: "Reset",
+    filterKeywordLabel: "Keyword",
+    filterKeywordPlaceholder: "Street, district, keyword...",
+    filterProvinceLabel: "Province / City",
+    filterProvincePlaceholder: "All provinces / cities",
+    filterDistrictLabel: "District",
+    filterDistrictPlaceholder: "Enter district...",
+    filterWardLabel: "Ward",
+    filterWardPlaceholder: "Enter ward...",
+    filterMinPriceLabel: "Deposit from (VND)",
+    filterMinPricePlaceholder: "e.g. 500000",
+    filterMaxPriceLabel: "Deposit up to (VND)",
+    filterMaxPricePlaceholder: "e.g. 5000000",
+    filterMinAreaLabel: "Area from (m²)",
+    filterMinAreaPlaceholder: "e.g. 15",
+    filterMaxAreaLabel: "Area up to (m²)",
+    filterMaxAreaPlaceholder: "e.g. 50",
+
+    // Results bar
+    resultCount: "Found {count} available rooms",
+    viewList: "List",
+    viewMap: "Map",
+
+    // Card
+    cardQuickView: "Quick View",
+    cardSave: "Save listing",
+    cardSaved: "Saved to wishlist",
+    cardShare: "Share listing",
+    cardDeposit: "Deposit",
+    cardDetail: "Details →",
+    cardPerMonth: "/month",
+    cardDepositLabel: "Deposit:",
+    cardDepositFree: "No deposit required",
+    cardVerified: "Landlord verified",
+    cardAmenities: "Highlights:",
+
+    // Pagination
+    paginationPrev: "Prev",
+    paginationNext: "Next",
+
+    // Empty state
+    emptyTitle: "No rooms found",
+    emptyDesc: "Try adjusting your filters or searching with different keywords.",
+    emptyReset: "Clear all filters",
+
+    // Loading
+    loading: "Loading listings...",
+
+    // Share modal
+    shareTitle: "Share this room listing",
+    shareCopy: "Copy",
+    shareCopied: "Copied",
+
+    // Quick view modal
+    quickViewDeposit: "Deposit",
+    quickViewCall: "Call Landlord",
+
+    // Deposit modal
+    depositTitle: "Online Room Deposit",
+    depositEscrowBadge: "DORMIO ESCROW PROTECTION PROCESS",
+    depositStep1: "Tenant pays via VietQR",
+    depositStep2: "Dormio holds safely",
+    depositStep3: "Released to landlord",
+    depositEscrowNote: "* Dormio holds the deposit securely. Funds are only released to the landlord when both parties agree.",
+    depositRoomLabel: "Selected room:",
+    depositAmountLabel: "Deposit amount:",
+    depositFreeNote: "No deposit required • Schedule a room viewing for free!",
+    depositTenantName: "Full name *",
+    depositTenantNamePlaceholder: "Enter your full name...",
+    depositTenantPhone: "Phone number *",
+    depositTenantPhonePlaceholder: "Enter your phone number...",
+    depositConfirmBtn: "Confirm & proceed to VietQR →",
+    depositQrAmount: "Transfer amount:",
+    depositQrFree: "0 ₫ (Free)",
+    depositQrContent: "Transfer note:",
+    depositQrDone: "I have completed the VietQR transfer",
+    depositSuccessTitle: "Room deposit recorded successfully!",
+    depositSuccessDesc: "Dormio has securely held your deposit and notified landlord {landlord}. Funds will only be released when both parties agree.",
+    depositSuccessClose: "Close",
+
+    // Map view
+    mapHint: "Click the orange pin to quickly preview rooms in that area",
+    mapPinCount: "{count} Locations"
   },
   roomDetailPage: {
     backToList: "Back to room listings",
@@ -2428,100 +2455,6 @@ const en = {
     daySat: "Sat",
     daySun: "Sun"
   },
-
-  roomsPage: {
-    // Hero section
-    heroBadge: "BHRP RENTAL PLATFORM • UPDATED 24/7",
-    heroTitle1: "Explore rental rooms",
-    heroTitle2: "verified & affordable",
-    heroSubtitle: "500+ studio apartments & boarding rooms verified by Dormio.",
-
-    // Filter panel
-    filterTitle: "Search filters",
-    filterReset: "Reset",
-    filterKeywordLabel: "Keyword",
-    filterKeywordPlaceholder: "Street, district, keyword...",
-    filterProvinceLabel: "Province / City",
-    filterProvincePlaceholder: "All provinces / cities",
-    filterDistrictLabel: "District",
-    filterDistrictPlaceholder: "Enter district...",
-    filterWardLabel: "Ward",
-    filterWardPlaceholder: "Enter ward...",
-    filterMinPriceLabel: "Deposit from (VND)",
-    filterMinPricePlaceholder: "e.g. 500000",
-    filterMaxPriceLabel: "Deposit up to (VND)",
-    filterMaxPricePlaceholder: "e.g. 5000000",
-    filterMinAreaLabel: "Area from (m²)",
-    filterMinAreaPlaceholder: "e.g. 15",
-    filterMaxAreaLabel: "Area up to (m²)",
-    filterMaxAreaPlaceholder: "e.g. 50",
-
-    // Results bar
-    resultCount: "Found {count} available rooms",
-    viewList: "List",
-    viewMap: "Map",
-
-    // Card
-    cardQuickView: "Quick View",
-    cardSave: "Save listing",
-    cardSaved: "Saved to wishlist",
-    cardShare: "Share listing",
-    cardDeposit: "Deposit",
-    cardDetail: "Details →",
-    cardPerMonth: "/month",
-    cardDepositLabel: "Deposit:",
-    cardDepositFree: "No deposit required",
-    cardVerified: "Landlord verified",
-    cardAmenities: "Highlights:",
-
-    // Pagination
-    paginationPrev: "Prev",
-    paginationNext: "Next",
-
-    // Empty state
-    emptyTitle: "No rooms found",
-    emptyDesc: "Try adjusting your filters or searching with different keywords.",
-    emptyReset: "Clear all filters",
-
-    // Loading
-    loading: "Loading listings...",
-
-    // Share modal
-    shareTitle: "Share this room listing",
-    shareCopy: "Copy",
-    shareCopied: "Copied",
-
-    // Quick view modal
-    quickViewDeposit: "Deposit",
-    quickViewCall: "Call Landlord",
-
-    // Deposit modal
-    depositTitle: "Online Room Deposit",
-    depositEscrowBadge: "DORMIO ESCROW PROTECTION PROCESS",
-    depositStep1: "Tenant pays via VietQR",
-    depositStep2: "Dormio holds safely",
-    depositStep3: "Released to landlord",
-    depositEscrowNote: "* Dormio holds the deposit securely. Funds are only released to the landlord when both parties agree.",
-    depositRoomLabel: "Selected room:",
-    depositAmountLabel: "Deposit amount:",
-    depositFreeNote: "No deposit required • Schedule a room viewing for free!",
-    depositTenantName: "Full name *",
-    depositTenantNamePlaceholder: "Enter your full name...",
-    depositTenantPhone: "Phone number *",
-    depositTenantPhonePlaceholder: "Enter your phone number...",
-    depositConfirmBtn: "Confirm & proceed to VietQR →",
-    depositQrAmount: "Transfer amount:",
-    depositQrFree: "0 ₫ (Free)",
-    depositQrContent: "Transfer note:",
-    depositQrDone: "I have completed the VietQR transfer",
-    depositSuccessTitle: "Room deposit recorded successfully!",
-    depositSuccessDesc: "Dormio has securely held your deposit and notified landlord {landlord}. Funds will only be released when both parties agree.",
-    depositSuccessClose: "Close",
-
-    // Map view
-    mapHint: "Click the orange pin to quickly preview rooms in that area",
-    mapPinCount: "{count} Locations"
-  }
 };
 
 export default en;
