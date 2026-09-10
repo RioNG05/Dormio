@@ -25,11 +25,12 @@ const API_URL = getApiBaseUrl();
 
 type FetchOptions = RequestInit & {
   params?: Record<string, string>;
+  silent?: boolean;
 };
 
 class ApiClient {
   private async request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-    const { params, headers, ...customOptions } = options;
+    const { params, headers, silent, ...customOptions } = options;
 
     // 1. Tạo query params nếu có
     let url = `${API_URL}${endpoint}`;
@@ -85,7 +86,9 @@ class ApiClient {
       }
       return await response.json() as T;
     } catch (error) {
-      console.error(`Request to ${url} failed:`, error);
+      if (!silent) {
+        console.error(`Request to ${url} failed:`, error);
+      }
       throw error;
     }
   }

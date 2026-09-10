@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import DemoControlBar from "@/components/DemoControlBar";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -26,10 +27,12 @@ export default function RootLayout({
       className={`${beVietnamPro.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <AuthProvider>
-          <DemoControlBar />
-          {children}
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <DemoControlBar />
+            {children}
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

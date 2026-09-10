@@ -703,7 +703,7 @@ export class MeterReadingsService {
       const allHistories: any[] = [];
       const actionMap = new Map<string, {
         id: string;
-        createdAt: Date;
+        createdAt: Date | string;
         reason: string | null;
         changes: Array<{
           serviceName: string;
@@ -738,7 +738,7 @@ export class MeterReadingsService {
             if (!act) {
               act = {
                 id: (h as any).actionId || h.id,
-                createdAt: hCreatedAt.toISOString(),
+                createdAt: hCreatedAt,
                 reason: h.reason,
                 changes: [],
               };

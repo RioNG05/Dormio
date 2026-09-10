@@ -135,9 +135,10 @@ export async function createBoardingHouse(
  * Fetch all boarding houses owned by the authenticated landlord.
  * Used to populate the building selector in AuthContext with real UUIDs.
  */
-export async function getMyBoardingHouses(): Promise<BoardingHouseListItem[]> {
+export async function getMyBoardingHouses(options?: { silent?: boolean }): Promise<BoardingHouseListItem[]> {
   const response = await api.get<{ success: boolean; data: BoardingHouseListItem[] }>(
     '/v1/boarding-houses',
+    options
   );
   return response.data;
 }
