@@ -265,7 +265,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   };
 
-  const { buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
+  const { user, buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
 
   // DYNAMICALLY UPDATE BROWSER DOCUMENT TITLE BASED ON ACTIVE BUILDING & ROUTE
   React.useEffect(() => {
@@ -389,21 +389,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <LanguageSwitcher />
       </div>
 
-      <div className="flex items-center gap-3 px-2 py-2 mb-2">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 ${
+      {/* Clickable Profile Card */}
+      <Link
+        href={isTenant ? "/tenant/profile" : "/profile"}
+        className="group flex items-center gap-3 px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+        title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
+      >
+        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${
           isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
         }`}>
-          {isAdmin ? "A" : isStaff ? "T" : "R"}
+          {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
         </div>
-        <div className="overflow-hidden">
-          <div className="text-sm font-semibold text-zinc-900 truncate">
-            {isAdmin ? "Admin Quản Trị" : isStaff ? "Nguyễn Văn Tuấn" : "Nguyễn Văn Rio"}
+        <div className="overflow-hidden flex-1 min-w-0">
+          <div className="text-sm font-semibold text-zinc-900 truncate group-hover:text-primary transition-colors">
+            {user?.name || (isAdmin ? "Admin Quản Trị" : isStaff ? "Nguyễn Văn Tuấn" : "Nguyễn Văn Rio")}
           </div>
           <div className="text-xs text-zinc-400 truncate">
             {isAdmin ? tNav("adminRole") : isTenant ? tNav("tenantRole") : isStaff ? (locale === "en" ? "Operations Staff" : "Nhân viên vận hành") : tNav("landlordRole")}
           </div>
         </div>
-      </div>
+      </Link>
       <Link
         href="/login"
         className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg hover:bg-orange-100 transition-colors"
@@ -495,11 +500,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
 
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-            isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
-          }`}>
-            {isAdmin ? "A" : isStaff ? "T" : "R"}
-          </div>
+          <Link
+            href={isTenant ? "/tenant/profile" : "/profile"}
+            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
+              isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
+            }`}
+            title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
+          >
+            {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
+          </Link>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>

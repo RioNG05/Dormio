@@ -101,43 +101,62 @@ export default function TenantRoomDetailPage() {
     };
   }, [roomId]);
 
-  // Fallback room data if backend is offline or empty
-  const room = tenancyData?.room || {
-    id: roomId || "room-302",
-    roomNumber: "P.302",
-    floor: 3,
-    area: 28,
-    maxOccupants: 2,
-    roomTypeName: "Studio Cao Cấp Ban Công",
-  };
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
+        <div className="w-8 h-8 border-2 border-[#2AC1BC] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-zinc-500 font-medium">Đang tải thông tin phòng...</span>
+      </div>
+    );
+  }
 
-  const house = tenancyData?.boardingHouse || {
-    id: "bh-01",
-    name: "Dormio Premier Cầu Giấy",
-    address: "Số 12 Ngõ 86 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
+  if (!tenancyData || !tenancyData.room) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto py-16 text-center animate-in fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400 mb-4">
+          <Home className="w-8 h-8" />
+        </div>
+        <h2 className="text-lg sm:text-xl font-black text-zinc-900">
+          {locale === "en" ? "Room tenancy not found" : "Không tìm thấy thông tin phòng thuê"}
+        </h2>
+        <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto">
+          {locale === "en"
+            ? "You currently do not have an active room contract or the room ID is invalid."
+            : "Tài khoản của bạn hiện chưa được liên kết với hợp đồng phòng thuê nào có hiệu lực trên hệ thống."}
+        </p>
+        <div className="pt-4">
+          <Link
+            href="/tenant"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold transition-all shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>{locale === "en" ? "Back to Dashboard" : "Quay lại Trang Người Thuê"}</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const room = tenancyData.room;
+  const house = tenancyData.boardingHouse || {
+    id: "bh-unknown",
+    name: "Tòa nhà trọ",
+    address: "Địa chỉ phòng",
     landlord: {
-      name: "Nguyễn Văn Chủ Trọ",
-      phoneNumber: "0912345678",
-      email: "chutro@dormio.vn",
+      name: "Chủ nhà trọ",
+      phoneNumber: "Chưa cập nhật",
     },
   };
-
-  const contract = tenancyData?.contract || {
-    id: "HD-2026-003",
-    startDate: "2026-01-01",
-    endDate: "2026-12-31",
-    rentPrice: 4500000,
+  const contract = tenancyData.contract || {
+    id: "HD-PENDING",
+    startDate: "",
+    endDate: "",
+    rentPrice: 0,
     monthlyPaymentDate: 5,
-    depositAmount: 4500000,
-    note: "Hợp đồng thuê căn hộ studio đầy đủ nội thất",
+    depositAmount: 0,
+    note: "",
   };
-
-  const services = tenancyData?.services || [
-    { id: "s1", name: "Điện sinh hoạt", price: 3500, unit: "kWh", isMetered: true },
-    { id: "s2", name: "Nước sạch", price: 25000, unit: "m³", isMetered: true },
-    { id: "s3", name: "Internet Wifi 300Mbps", price: 100000, unit: "phòng/tháng", isMetered: false },
-    { id: "s4", name: "Vệ sinh & Rác", price: 50000, unit: "người/tháng", isMetered: false },
-  ];
+  const services = tenancyData.services || [];
 
   const getServiceIcon = (name: string) => {
     const lower = name.toLowerCase();
@@ -286,11 +305,11 @@ export default function TenantRoomDetailPage() {
             </h3>
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#2AC1BC] to-teal-400 text-white font-black text-base flex items-center justify-center shadow-md shadow-[#2AC1BC]/20">
-                {house.landlord.name.charAt(0)}
+                {(house.landlord?.name || "C").charAt(0)}
               </div>
               <div className="space-y-0.5">
-                <h4 className="text-sm font-black text-zinc-900">{house.landlord.name}</h4>
-                <p className="text-xs text-zinc-500 font-medium">{house.landlord.phoneNumber}</p>
+                <h4 className="text-sm font-black text-zinc-900">{house.landlord?.name || "Chủ nhà trọ"}</h4>
+                <p className="text-xs text-zinc-500 font-medium">{house.landlord?.phoneNumber || "Chưa cập nhật"}</p>
               </div>
             </div>
 

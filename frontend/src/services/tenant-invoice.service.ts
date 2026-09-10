@@ -104,29 +104,44 @@ export const tenantInvoiceService = {
    * Fetch all invoices for current tenant's active room (UC-T-05)
    */
   async getTenantInvoices(): Promise<TenantInvoice[]> {
-    const res = await api.get<{ success: boolean; data: TenantInvoice[] }>(
-      '/v1/tenant/invoices',
-    );
-    return res.data || [];
+    try {
+      const res = await api.get<{ success: boolean; data: TenantInvoice[] }>(
+        '/v1/tenant/invoices',
+        { silent: true },
+      );
+      return res.data || [];
+    } catch {
+      return [];
+    }
   },
 
   /**
    * Fetch utility consumption analytics and MoM trends (UC-T-05)
    */
-  async getUsageAnalytics(): Promise<TenantUsageAnalyticsResponse> {
-    const res = await api.get<TenantUsageAnalyticsResponse>(
-      '/v1/tenant/analytics/usage',
-    );
-    return res;
+  async getUsageAnalytics(): Promise<TenantUsageAnalyticsResponse | null> {
+    try {
+      const res = await api.get<TenantUsageAnalyticsResponse>(
+        '/v1/tenant/analytics/usage',
+        { silent: true },
+      );
+      return res;
+    } catch {
+      return null;
+    }
   },
 
   /**
    * Fetch lifetime payment history across all contracts (UC-T-08)
    */
-  async getPaymentHistory(): Promise<PaymentHistoryResponse> {
-    const res = await api.get<PaymentHistoryResponse>(
-      '/v1/tenant/payments/history',
-    );
-    return res;
+  async getPaymentHistory(): Promise<PaymentHistoryResponse | null> {
+    try {
+      const res = await api.get<PaymentHistoryResponse>(
+        '/v1/tenant/payments/history',
+        { silent: true },
+      );
+      return res;
+    } catch {
+      return null;
+    }
   },
 };

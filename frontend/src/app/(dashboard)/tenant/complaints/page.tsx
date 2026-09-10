@@ -80,68 +80,11 @@ export default function TenantAdminComplaintsPage() {
       try {
         const data = await grievanceService.getTenantGrievances();
         if (!isMounted) return;
-        setComplaints(data);
+        setComplaints(data || []);
       } catch (err: unknown) {
-        console.warn("Could not load complaints from backend, using fallback:", err);
+        console.warn("Could not load complaints from backend:", err);
         if (!isMounted) return;
-        // Smart fallback dataset for demo/test mode
-        setComplaints([
-          {
-            id: "REP-2026-001",
-            title: "Chủ trọ tự ý giữ tiền cọc khi đề nghị gia hạn hợp đồng",
-            description:
-              "Chủ nhà trọ yêu cầu đóng thêm 1 tháng tiền cọc trái với điều khoản 4.2 trong hợp đồng điện tử Dormio đã ký kết.",
-            priority: "high",
-            status: "resolved",
-            boardingHouseName: "Dormio Tân Bình",
-            roomNumber: "101",
-            resolutionNote:
-              "Ban Quản Trị đã làm việc trực tiếp với chủ trọ. Chủ trọ đã đồng ý gia hạn theo giá cọc ban đầu và không thu thêm bất kỳ khoản phí nào khác.",
-            resolvedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-            resolvedByName: "Ban Quản Trị Dormio",
-            images: [
-              {
-                id: "img-demo-1",
-                url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
-                createdAt: new Date().toISOString(),
-              },
-            ],
-            createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-            updatedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-          },
-          {
-            id: "REP-2026-002",
-            title: "Cửa khóa vân tay tầng trệt bị hỏng nhiều ngày",
-            description:
-              "Hệ thống khóa vân tay cổng chính bị chập mạch, cửa mở tự do khiến an ninh tòa nhà không đảm bảo.",
-            priority: "medium",
-            status: "in_progress",
-            boardingHouseName: "Dormio Tân Bình",
-            roomNumber: "101",
-            resolutionNote: "Kỹ thuật viên đang đặt linh kiện thay thế bo mạch khóa vân tay.",
-            resolvedAt: null,
-            resolvedByName: null,
-            images: [],
-            createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-            updatedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
-          },
-          {
-            id: "REP-2026-003",
-            title: "Tiếng ồn giờ khuya từ phòng bên cạnh không được xử lý",
-            description:
-              "Phòng 102 thường xuyên hát karaoke và mở nhạc lớn sau 23:00 dù đã nhắc nhở nhiều lần.",
-            priority: "low",
-            status: "pending",
-            boardingHouseName: "Dormio Tân Bình",
-            roomNumber: "101",
-            resolutionNote: null,
-            resolvedAt: null,
-            resolvedByName: null,
-            images: [],
-            createdAt: new Date(Date.now() - 12 * 3600000).toISOString(),
-            updatedAt: new Date(Date.now() - 12 * 3600000).toISOString(),
-          },
-        ]);
+        setComplaints([]);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -260,29 +203,9 @@ export default function TenantAdminComplaintsPage() {
       setIsModalOpen(false);
       resetForm();
     } catch (err: unknown) {
-      console.warn("API create error, using fallback state:", err);
-      const mockItem: Grievance = {
-        id: `REP-${Math.floor(100 + Math.random() * 900)}`,
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        status: "pending",
-        boardingHouseName: "Dormio Tân Bình",
-        roomNumber: "101",
-        resolutionNote: null,
-        resolvedAt: null,
-        resolvedByName: null,
-        images: uploadedImages.map((url, i) => ({
-          id: `img-${i}`,
-          url,
-          createdAt: new Date().toISOString(),
-        })),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setComplaints((prev) => [mockItem, ...prev]);
-      setIsModalOpen(false);
-      resetForm();
+      console.error("API create error:", err);
+      const errorMsg = err instanceof Error ? err.message : "Gửi khiếu nại không thành công. Vui lòng kiểm tra lại.";
+      setFormError(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

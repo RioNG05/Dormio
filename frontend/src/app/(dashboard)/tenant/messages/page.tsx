@@ -138,6 +138,7 @@ export default function TenantMessagesPage() {
   const [isSending, setIsSending] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"all" | "landlord" | "employee" | "unread">("all");
   const [showRightDrawer, setShowRightDrawer] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -194,132 +195,15 @@ export default function TenantMessagesPage() {
             console.error("Auto-open conversation failed:", createErr);
           }
         } else {
-          // Fallback demo conversation so UI is interactive
-          const demoConv: ConversationItem = {
-            id: "demo-landlord-conv",
-            name: "Nguyễn Văn Rio",
-            createdAt: new Date().toISOString(),
-            participant: {
-              id: "landlord-demo-1",
-              username: "landlord_rio",
-              fullName: "Nguyễn Văn Rio",
-              phoneNumber: "0901234567",
-              avatarUrl: null,
-              role: "landlord",
-              roomName: "Phòng 101",
-              boardingHouseName: "Dormio Premier Quận 1",
-            },
-            lastMessage: {
-              id: "msg-demo-3",
-              conversationId: "demo-landlord-conv",
-              senderId: "landlord-demo-1",
-              content: "Chào bạn, thông báo hóa đơn tiền phòng tháng này đã sẵn sàng nhé! 💳",
-              isReacted: false,
-              sentAt: new Date().toISOString(),
-              readAt: null,
-              attachments: [],
-            },
-            unreadCount: 1,
-            updatedAt: new Date().toISOString(),
-          };
-          setConversations([demoConv]);
-          setActiveChat(demoConv);
-          setMessages([
-            {
-              id: "msg-demo-1",
-              conversationId: "demo-landlord-conv",
-              senderId: "landlord-demo-1",
-              content: "Chào bạn, chúc bạn một ngày tốt lành! Nếu có bất kỳ sự cố điện nước hay cần hỗ trợ gì bạn cứ nhắn cho Ban quản lý nhé.",
-              isReacted: false,
-              sentAt: new Date(Date.now() - 7200000).toISOString(),
-              readAt: new Date().toISOString(),
-              attachments: [],
-            },
-            {
-              id: "msg-demo-2",
-              conversationId: "demo-landlord-conv",
-              senderId: user?.id || "my-user-id",
-              content: "Dạ em cảm ơn anh Rio nhiều ạ! Phòng ở rất thoải mái.",
-              isReacted: false,
-              sentAt: new Date(Date.now() - 3600000).toISOString(),
-              readAt: new Date().toISOString(),
-              attachments: [],
-            },
-            {
-              id: "msg-demo-3",
-              conversationId: "demo-landlord-conv",
-              senderId: "landlord-demo-1",
-              content: "Thông báo hóa đơn tiền phòng kỳ này đã có, bạn kiểm tra tại mục Hóa đơn nhé! 💳",
-              isReacted: false,
-              sentAt: new Date().toISOString(),
-              readAt: null,
-              attachments: [],
-            },
-          ]);
+          setConversations([]);
+          setActiveChat(null);
+          setMessages([]);
         }
       } catch (error) {
-        console.warn("Could not load conversations, activating fallback:", error);
-        const demoConv: ConversationItem = {
-          id: "demo-landlord-conv",
-          name: "Nguyễn Văn Rio",
-          createdAt: new Date().toISOString(),
-          participant: {
-            id: "landlord-demo-1",
-            username: "landlord_rio",
-            fullName: "Nguyễn Văn Rio",
-            phoneNumber: "0901234567",
-            avatarUrl: null,
-            role: "landlord",
-            roomName: "Phòng 101",
-            boardingHouseName: "Dormio Premier Quận 1",
-          },
-          lastMessage: {
-            id: "msg-demo-3",
-            conversationId: "demo-landlord-conv",
-            senderId: "landlord-demo-1",
-            content: "Chào bạn, thông báo hóa đơn tiền phòng tháng này đã sẵn sàng nhé! 💳",
-            isReacted: false,
-            sentAt: new Date().toISOString(),
-            readAt: null,
-            attachments: [],
-          },
-          unreadCount: 1,
-          updatedAt: new Date().toISOString(),
-        };
-        setConversations([demoConv]);
-        setActiveChat(demoConv);
-        setMessages([
-          {
-            id: "msg-demo-1",
-            conversationId: "demo-landlord-conv",
-            senderId: "landlord-demo-1",
-            content: "Chào bạn, chúc bạn một ngày tốt lành! Nếu có bất kỳ sự cố điện nước hay cần hỗ trợ gì bạn cứ nhắn cho Ban quản lý nhé.",
-            isReacted: false,
-            sentAt: new Date(Date.now() - 7200000).toISOString(),
-            readAt: new Date().toISOString(),
-            attachments: [],
-          },
-          {
-            id: "msg-demo-2",
-            conversationId: "demo-landlord-conv",
-            senderId: user?.id || "my-user-id",
-            content: "Dạ em cảm ơn anh Rio nhiều ạ! Phòng ở rất thoải mái.",
-            isReacted: false,
-            sentAt: new Date(Date.now() - 3600000).toISOString(),
-            readAt: new Date().toISOString(),
-            attachments: [],
-          },
-          {
-            id: "msg-demo-3",
-            conversationId: "demo-landlord-conv",
-            senderId: "landlord-demo-1",
-            content: "Thông báo hóa đơn tiền phòng kỳ này đã có, bạn kiểm tra tại mục Hóa đơn nhé! 💳",
-            isReacted: false,
-            sentAt: new Date().toISOString(),
-            readAt: null,
-            attachments: [],
-          },
-        ]);
+        console.warn("Could not load conversations from backend:", error);
+        setConversations([]);
+        setActiveChat(null);
+        setMessages([]);
       } finally {
         setIsLoadingConversations(false);
       }
@@ -441,13 +325,19 @@ export default function TenantMessagesPage() {
     return conversations.filter((c) => {
       const p = c.participant;
       const matchSearch =
-        (p.fullName && p.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.roomName && p.roomName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.boardingHouseName && p.boardingHouseName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.phoneNumber && p.phoneNumber.includes(searchTerm));
-      return matchSearch;
+        (p?.fullName && p.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p?.roomName && p.roomName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p?.boardingHouseName && p.boardingHouseName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p?.phoneNumber && p.phoneNumber.includes(searchTerm));
+      
+      if (!matchSearch) return false;
+
+      if (activeFilter === "landlord") return p?.role === "landlord";
+      if (activeFilter === "employee") return p?.role === "employee";
+      if (activeFilter === "unread") return c.unreadCount > 0;
+      return true;
     });
-  }, [conversations, searchTerm]);
+  }, [conversations, searchTerm, activeFilter]);
 
   // Extracted media files from active chat
   const activeChatMedia = useMemo(() => {
@@ -601,11 +491,9 @@ export default function TenantMessagesPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => {
-                  // Filter behavior handled in UI
-                }}
+                onClick={() => setActiveFilter(tab.id as any)}
                 className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                  tab.id === "all"
+                  activeFilter === tab.id
                     ? "bg-[#2AC1BC] text-white shadow-xs"
                     : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                 }`}
@@ -691,7 +579,13 @@ export default function TenantMessagesPage() {
 
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/60 shrink-0">
-                        {isLandlordRole ? (locale === "en" ? "Landlord" : "Chủ Nhà Trọ") : (locale === "en" ? "House Manager" : "Quản Lý Trọ")}
+                        {conv.participant?.role === "landlord"
+                          ? (locale === "en" ? "Landlord" : "Chủ Nhà Trọ")
+                          : conv.participant?.role === "admin"
+                          ? (locale === "en" ? "Landlord / Admin" : "Chủ Trọ / Quản Trị")
+                          : conv.participant?.role === "employee"
+                          ? (locale === "en" ? "Staff / Manager" : "Quản Lý / Nhân Viên")
+                          : (locale === "en" ? "Resident" : "Cư Dân")}
                       </span>
                       <span className="text-[10px] text-zinc-400 truncate">
                         {formatPhoneDisplay(conv.participant?.phoneNumber)}
@@ -757,8 +651,12 @@ export default function TenantMessagesPage() {
                     </h3>
                     <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-600 text-[10px] font-bold truncate">
                       {activeChat.participant?.role === "landlord"
-                        ? locale === "en" ? "Landlord" : "Chủ Nhà Trọ"
-                        : locale === "en" ? "House Manager" : "Quản Lý Trọ"}
+                        ? (locale === "en" ? "Landlord" : "Chủ Nhà Trọ")
+                        : activeChat.participant?.role === "admin"
+                        ? (locale === "en" ? "Landlord / Admin" : "Chủ Trọ / Quản Trị")
+                        : activeChat.participant?.role === "employee"
+                        ? (locale === "en" ? "Staff / Manager" : "Quản Lý / Nhân Viên")
+                        : (locale === "en" ? "Resident" : "Cư Dân")}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-zinc-400 font-medium truncate mt-0.5">

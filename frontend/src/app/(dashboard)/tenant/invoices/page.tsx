@@ -138,55 +138,7 @@ export default function TenantInvoicesPage() {
     };
   }, []);
 
-  // Fallback initial invoices dataset if backend has no records yet
-  const fallbackInvoices: TenantInvoice[] = useMemo(() => {
-    return Array.from({ length: 12 }).map((_, i) => {
-      const month = 7 - (i % 12);
-      const year = 2026 - Math.floor(i / 12);
-      const mStr = month <= 0 ? 12 + month : month;
-      const yStr = month <= 0 ? year - 1 : year;
-      const pStr = `${mStr.toString().padStart(2, "0")}/${yStr}`;
-      const dienAmount = 350000 + ((i * 37) % 20) * 12000;
-      const nuocAmount = 120000 + ((i * 19) % 10) * 10000;
-      const amount = 3500000 + dienAmount + nuocAmount + 150000;
-
-      return {
-        id: `INV-${pStr.replace("/", "")}`,
-        period: pStr,
-        amount: amount,
-        status: i === 0 ? "unpaid" : "paid",
-        dueDate: `05/${pStr}`,
-        createdDate: `01/${pStr}`,
-        paidDate: i === 0 ? null : `04/${pStr}`,
-        details: [
-          { name: t("roomRent"), value: 3500000, quantity: 1, unit: "tháng", unitPrice: 3500000, isMetered: false },
-          { name: t("electricityFee"), value: dienAmount, quantity: 100, unit: "kWh", unitPrice: 3500, isMetered: true },
-          { name: t("waterFee"), value: nuocAmount, quantity: 6, unit: "m³", unitPrice: 20000, isMetered: true },
-          { name: t("otherServices"), value: 150000, quantity: 1, unit: "tháng", unitPrice: 150000, isMetered: false },
-        ],
-        meterReadings: [
-          {
-            serviceId: "elec-1",
-            serviceName: "Điện",
-            unit: "kWh",
-            readingValue: 1342,
-            imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400&q=80",
-            recordedAt: `01/${pStr}`,
-          },
-          {
-            serviceId: "water-1",
-            serviceName: "Nước",
-            unit: "m³",
-            readingValue: 93,
-            imageUrl: "https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=400&q=80",
-            recordedAt: `01/${pStr}`,
-          },
-        ],
-      };
-    });
-  }, [t]);
-
-  const activeInvoices = allInvoices.length > 0 ? allInvoices : fallbackInvoices;
+  const activeInvoices = allInvoices;
 
   // Current unpaid invoice and month-over-month calculation
   const currentUnpaid = activeInvoices.find((inv) => inv.status === "unpaid" || inv.status === "overdue");
@@ -195,7 +147,7 @@ export default function TenantInvoicesPage() {
   const percentDiff = prevInvoice ? ((Math.abs(diff) / Math.max(1, prevInvoice.amount)) * 100).toFixed(1) : "0";
   const isUp = diff > 0;
 
-  // Real or fallback Cost Chart Data
+  // Real Cost Chart Data
   const costChartData = useMemo(() => {
     if (analytics?.chartData && analytics.chartData.length > 0) {
       return analytics.chartData.map((d) => ({
@@ -208,17 +160,21 @@ export default function TenantInvoicesPage() {
       }));
     }
 
-    return [...activeInvoices].reverse().map((inv) => ({
-      name: inv.period,
-      [t("roomRent")]: inv.details.find((d) => d.name.toLowerCase().includes("phòng") || d.name === t("roomRent"))?.value || 3500000,
-      [t("electricityFee")]: inv.details.find((d) => d.name.toLowerCase().includes("điện") || d.name === t("electricityFee"))?.value || 0,
-      [t("waterFee")]: inv.details.find((d) => d.name.toLowerCase().includes("nước") || d.name === t("waterFee"))?.value || 0,
-      [t("otherServices")]: inv.details.find((d) => d.name.toLowerCase().includes("dịch vụ") || d.name === t("otherServices"))?.value || 150000,
-      total: inv.amount,
-    }));
+    if (activeInvoices.length > 0) {
+      return [...activeInvoices].reverse().map((inv) => ({
+        name: inv.period,
+        [t("roomRent")]: inv.details.find((d) => d.name.toLowerCase().includes("phòng") || d.name === t("roomRent"))?.value || 0,
+        [t("electricityFee")]: inv.details.find((d) => d.name.toLowerCase().includes("điện") || d.name === t("electricityFee"))?.value || 0,
+        [t("waterFee")]: inv.details.find((d) => d.name.toLowerCase().includes("nước") || d.name === t("waterFee"))?.value || 0,
+        [t("otherServices")]: inv.details.find((d) => d.name.toLowerCase().includes("dịch vụ") || d.name === t("otherServices"))?.value || 0,
+        total: inv.amount,
+      }));
+    }
+
+    return [];
   }, [analytics, activeInvoices, t]);
 
-  // Real or fallback Consumption Chart Data (kWh & m3)
+  // Real Consumption Chart Data (kWh & m3)
   const consumptionChartData = useMemo(() => {
     if (analytics?.chartData && analytics.chartData.length > 0) {
       return analytics.chartData.map((d) => ({
@@ -228,15 +184,19 @@ export default function TenantInvoicesPage() {
       }));
     }
 
-    return [...activeInvoices].reverse().map((inv) => {
-      const elec = inv.details.find((d) => d.name.toLowerCase().includes("điện"))?.quantity || 110;
-      const water = inv.details.find((d) => d.name.toLowerCase().includes("nước"))?.quantity || 7;
-      return {
-        name: inv.period,
-        "Điện (kWh)": elec,
-        "Nước (m³)": water,
-      };
-    });
+    if (activeInvoices.length > 0) {
+      return [...activeInvoices].reverse().map((inv) => {
+        const elec = inv.details.find((d) => d.name.toLowerCase().includes("điện"))?.quantity || 0;
+        const water = inv.details.find((d) => d.name.toLowerCase().includes("nước"))?.quantity || 0;
+        return {
+          name: inv.period,
+          "Điện (kWh)": elec,
+          "Nước (m³)": water,
+        };
+      });
+    }
+
+    return [];
   }, [analytics, activeInvoices]);
 
   // Filtering Logic
@@ -490,6 +450,13 @@ export default function TenantInvoicesPage() {
         </div>
 
         <div className="w-full h-64 sm:h-72">
+          {(activeChartTab === "cost" && costChartData.length === 0) ||
+          (activeChartTab === "consumption" && consumptionChartData.length === 0) ? (
+            <div className="w-full h-full rounded-2xl bg-zinc-50 border border-zinc-100 flex flex-col items-center justify-center text-zinc-400 text-xs gap-2">
+              <Receipt className="w-8 h-8 text-zinc-300" />
+              <span className="font-semibold">{locale === "en" ? "No billing history to display chart" : "Chưa có lịch sử hóa đơn để hiển thị biểu đồ"}</span>
+            </div>
+          ) : (
           <ResponsiveContainer width="100%" height="100%">
             {activeChartTab === "cost" ? (
               <LineChart data={costChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -544,6 +511,7 @@ export default function TenantInvoicesPage() {
               </BarChart>
             )}
           </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -638,7 +606,21 @@ export default function TenantInvoicesPage() {
         </div>
 
         {/* Content: Grid or Table */}
-        {viewMode === "grid" ? (
+        {filteredInvoices.length === 0 ? (
+          <div className="py-16 px-4 text-center space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400">
+              <Receipt className="w-7 h-7" />
+            </div>
+            <h3 className="text-sm font-bold text-zinc-800">
+              {locale === "en" ? "No invoices found" : "Chưa có hóa đơn nào"}
+            </h3>
+            <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+              {locale === "en"
+                ? "Your monthly room and utility invoices will appear here once generated by the landlord."
+                : "Hóa đơn tiền phòng và dịch vụ sẽ xuất hiện tại đây khi chủ nhà trọ lập hóa đơn cho kỳ thanh toán."}
+            </p>
+          </div>
+        ) : viewMode === "grid" ? (
           /* Invoices Grid View */
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {paginatedInvoices.map((inv) => (
@@ -877,55 +859,57 @@ export default function TenantInvoicesPage() {
         )}
 
         {/* Standard Pagination Bar (Rule #9) */}
-        <div className="p-4 sm:p-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-50/50">
-          <div className="text-xs font-medium text-zinc-500">
-            {locale === "en"
-              ? `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                  currentPage * itemsPerPage,
-                  filteredInvoices.length
-                )} of ${filteredInvoices.length} invoices`
-              : `Hiển thị ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                  currentPage * itemsPerPage,
-                  filteredInvoices.length
-                )} trên ${filteredInvoices.length} hóa đơn`}
-          </div>
+        {filteredInvoices.length > 0 && (
+          <div className="p-4 sm:p-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-50/50">
+            <div className="text-xs font-medium text-zinc-500">
+              {locale === "en"
+                ? `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
+                    currentPage * itemsPerPage,
+                    filteredInvoices.length
+                  )} of ${filteredInvoices.length} invoices`
+                : `Hiển thị ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
+                    currentPage * itemsPerPage,
+                    filteredInvoices.length
+                  )} trên ${filteredInvoices.length} hóa đơn`}
+            </div>
 
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  currentPage === i + 1
-                    ? "bg-[#2AC1BC] text-white shadow-xs"
-                    : "text-zinc-600 hover:bg-zinc-100"
-                }`}
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
               >
-                {i + 1}
-              </button>
-            ))}
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    currentPage === i + 1
+                      ? "bg-[#2AC1BC] text-white shadow-xs"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Modal 1: Dynamic VietQR Payment */}

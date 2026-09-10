@@ -3,7 +3,6 @@ import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
-import DemoControlBar from "@/components/DemoControlBar";
 
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
@@ -29,7 +28,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         <LanguageProvider>
           <AuthProvider>
-            <DemoControlBar />
             {children}
           </AuthProvider>
         </LanguageProvider>

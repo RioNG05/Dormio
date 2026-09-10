@@ -37,10 +37,15 @@ export const grievanceService = {
    * Get all grievances submitted by current tenant
    */
   async getTenantGrievances(): Promise<Grievance[]> {
-    const res = await api.get<{ success: boolean; data: Grievance[] }>(
-      '/v1/tenant/grievances',
-    );
-    return res.data || [];
+    try {
+      const res = await api.get<{ success: boolean; data: Grievance[] }>(
+        '/v1/tenant/grievances',
+        { silent: true },
+      );
+      return res.data || [];
+    } catch {
+      return [];
+    }
   },
 
   /**

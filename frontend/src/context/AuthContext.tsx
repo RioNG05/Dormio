@@ -329,13 +329,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (preset === "guest") {
       logout();
     } else if (preset === "tenant") {
-      login({
-        name: "Nguyễn Văn A (Khách thuê)",
-        email: "nguyenvana@gmail.com",
-        role: "tenant",
-        houseName: undefined,
-        houseAddress: undefined,
-      });
+      api.post<any>("/v1/auth/login", {
+        identifier: "0912345678",
+        password: "Secret@123",
+      })
+        .then((res) => {
+          const data = res?.data || res;
+          if (data?.token && data?.user) {
+            loginWithToken(data.token, {
+              id: data.user.id,
+              name: data.user.username || "Trần Thị Thuỳ Dung (Khách thuê)",
+              email: data.user.email || "dung.tran@gmail.com",
+              role: "tenant",
+            });
+          }
+        })
+        .catch(() => {
+          login({
+            name: "Trần Thị Thuỳ Dung (Khách thuê)",
+            email: "dung.tran@gmail.com",
+            role: "tenant",
+            houseName: undefined,
+            houseAddress: undefined,
+          });
+        });
       localStorage.removeItem("dormio_house_name");
       localStorage.removeItem("dormio_house_address");
     } else if (preset === "landlord_empty") {

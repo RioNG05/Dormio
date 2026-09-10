@@ -31,11 +31,13 @@ import {
   FileText,
   Download,
   ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { formatCurrency } from "@/utils";
 import { api } from "@/services/api";
+import { tenantInvoiceService, TenantInvoice } from "@/services/tenant-invoice.service";
 
 interface TenancyApiResponse {
   success: boolean;
@@ -91,6 +93,7 @@ export default function TenantOverviewPage() {
 
   const [loading, setLoading] = useState(true);
   const [tenancyData, setTenancyData] = useState<TenancyApiResponse["data"] | null>(null);
+  const [latestInvoice, setLatestInvoice] = useState<TenantInvoice | null>(null);
 
   // States for modals and UI
   const [isContractOpen, setIsContractOpen] = useState(false);
@@ -98,18 +101,31 @@ export default function TenantOverviewPage() {
   const [copiedBank, setCopiedBank] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 1. Fetch real tenancy details from backend
+  // 1. Fetch real tenancy details & real invoices from backend
   useEffect(() => {
     let isMounted = true;
 
-    async function fetchTenancyDetails() {
+    async function fetchDashboardData() {
       try {
-        const response = await api.get<TenancyApiResponse>("/v1/tenant/tenancy", { silent: true });
-        if (isMounted && response?.data) {
+        const [response, invoices] = await Promise.all([
+          api.get<TenancyApiResponse>("/v1/tenant/tenancy", { silent: true }).catch(() => null),
+          tenantInvoiceService.getTenantInvoices().catch(() => []),
+        ]);
+
+        if (!isMounted) return;
+
+        if (response?.data) {
           setTenancyData(response.data);
         }
+
+        if (invoices && invoices.length > 0) {
+          const unpaid = invoices.find(
+            (inv) => inv.status === "unpaid" || inv.status === "overdue"
+          );
+          setLatestInvoice(unpaid || invoices[0] || null);
+        }
       } catch (err) {
-        // Silent catch for dev/mock mode
+        // Silent catch for dev mode
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -117,7 +133,7 @@ export default function TenantOverviewPage() {
       }
     }
 
-    fetchTenancyDetails();
+    fetchDashboardData();
 
     return () => {
       isMounted = false;
@@ -148,7 +164,7 @@ export default function TenantOverviewPage() {
     }
   };
 
-  // Resolve room & contract info (combining real backend data with smart fallback)
+  // Resolve room & contract info (real backend data only)
   const roomInfo = useMemo(() => {
     if (tenancyData && tenancyData.contract && tenancyData.room) {
       const { contract, room, boardingHouse } = tenancyData;
@@ -165,21 +181,21 @@ export default function TenantOverviewPage() {
       return {
         roomNumber: room.roomNumber,
         roomType: room.roomTypeName || "Studio",
-        buildingName: boardingHouse?.name || "Dormio Premier",
-        address: boardingHouse?.address || "Việt Nam",
+        buildingName: boardingHouse?.name || "Tòa nhà trọ",
+        address: boardingHouse?.address || "Chưa cập nhật địa chỉ",
         landlord: boardingHouse?.landlord?.name || "Chủ nhà trọ",
-        landlordIdCard: "079098001234",
-        landlordBank: "Vietcombank - 0123456789 (CHỦ TRỌ)",
+        landlordIdCard: "Chưa cập nhật",
+        landlordBank: "Chưa cập nhật",
         tenantName: "Khách thuê",
-        tenantIdCard: "079199005678",
-        phone: boardingHouse?.landlord?.phoneNumber || "0901234567",
-        phoneDisplay: formatPhoneDisplay(boardingHouse?.landlord?.phoneNumber || "0901234567"),
+        tenantIdCard: "Chưa cập nhật",
+        phone: boardingHouse?.landlord?.phoneNumber || "",
+        phoneDisplay: formatPhoneDisplay(boardingHouse?.landlord?.phoneNumber || ""),
         hotline: "1900 8899",
         contractCode: `HĐ-${contract.id.slice(-6).toUpperCase()}`,
-        contractStart: formatDateStr(contract.startDate) || "01/01/2026",
-        contractEnd: formatDateStr(contract.endDate) || "31/12/2026",
-        rentPrice: Number(contract.rentPrice) || 4500000,
-        deposit: Number(contract.depositAmount) || 4500000,
+        contractStart: formatDateStr(contract.startDate),
+        contractEnd: formatDateStr(contract.endDate),
+        rentPrice: Number(contract.rentPrice) || 0,
+        deposit: Number(contract.depositAmount) || 0,
         daysElapsed,
         totalDays,
         daysRemaining,
@@ -188,7 +204,7 @@ export default function TenantOverviewPage() {
           "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
         amenities: [
           locale === "en" ? "Inverter AC" : "Máy lạnh Inverter",
-          locale === "en" ? "180L Refrigerator" : "Tủ lạnh 180L",
+          locale === "en" ? "180L Refrigerator" : "Tủ lạnh",
           locale === "en" ? "Hot Water Shower" : "Bình nóng lạnh",
           locale === "en" ? "Private Balcony" : "Ban công thoáng mát",
           locale === "en" ? "Smart Fingerprint Lock" : "Khóa từ vân tay",
@@ -197,50 +213,8 @@ export default function TenantOverviewPage() {
       };
     }
 
-    // Default mock data when no active backend contract is found
-    return {
-      roomNumber: "101",
-      roomType: "Studio",
-      buildingName: "Dormio Premier Quận 1",
-      address: "123 Đường An Bình, Phường 4, Quận 5, TP.HCM",
-      landlord: "Nguyễn Văn Rio",
-      landlordIdCard: "079098001234",
-      landlordBank: "Vietcombank - 0123456789 (NGUYEN VAN RIO)",
-      tenantName: "Nguyễn Văn A",
-      tenantIdCard: "079199005678",
-      phone: "0901234567",
-      phoneDisplay: "0901.234.567",
-      hotline: "1900 8899",
-      contractCode: "HĐ-AB-101-2026",
-      contractStart: "01/01/2026",
-      contractEnd: "31/12/2026",
-      rentPrice: 4500000,
-      deposit: 4500000,
-      daysElapsed: 67,
-      totalDays: 365,
-      daysRemaining: 298,
-      documentUrl: null,
-      roomImage:
-        "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-      amenities: [
-        locale === "en" ? "Inverter AC" : "Máy lạnh Inverter",
-        locale === "en" ? "180L Refrigerator" : "Tủ lạnh 180L",
-        locale === "en" ? "Hot Water Shower" : "Bình nóng lạnh",
-        locale === "en" ? "Private Balcony" : "Ban công thoáng mát",
-        locale === "en" ? "Smart Fingerprint Lock" : "Khóa từ vân tay",
-        locale === "en" ? "Kitchen Counter" : "Kệ bếp nấu ăn riêng",
-      ],
-    };
+    return null;
   }, [tenancyData, locale]);
-
-  // Mock / Live latest invoice widget
-  const latestInvoice = useMemo(() => ({
-    id: "INV-2026-07",
-    period: locale === "en" ? "July 2026" : "Tháng 07/2026",
-    amount: 4850000,
-    dueDate: "05/08/2026",
-    status: "unpaid",
-  }), [locale]);
 
   // Service helper
   const getServiceIconAndColor = (name: string) => {
@@ -263,7 +237,7 @@ export default function TenantOverviewPage() {
     return { icon: Building, color: "text-indigo-500", bg: "bg-indigo-50 border-indigo-100" };
   };
 
-  // Services list (from backend or fallback mock)
+  // Services list (from backend only)
   const services = useMemo(() => {
     if (tenancyData?.services && tenancyData.services.length > 0) {
       return tenancyData.services.map((svc) => {
@@ -281,51 +255,10 @@ export default function TenantOverviewPage() {
       });
     }
 
-    return [
-      {
-        name: t("serviceElectricity"),
-        price: "3.500 ₫ / kWh",
-        type: locale === "en" ? "Metered reading" : "Theo chỉ số công tơ",
-        icon: Zap,
-        color: "text-amber-500",
-        bg: "bg-amber-50 border-amber-100",
-      },
-      {
-        name: t("serviceWater"),
-        price: "20.000 ₫ / m³",
-        type: locale === "en" ? "Metered reading" : "Theo đồng hồ nước",
-        icon: Droplets,
-        color: "text-sky-500",
-        bg: "bg-sky-50 border-sky-100",
-      },
-      {
-        name: t("serviceTrash"),
-        price: `50.000 ₫ ${t("monthUnit")}`,
-        type: locale === "en" ? "Fixed monthly" : "Cố định hàng tháng",
-        icon: Trash2,
-        color: "text-emerald-500",
-        bg: "bg-emerald-50 border-emerald-100",
-      },
-      {
-        name: t("serviceWifi"),
-        price: `100.000 ₫ ${t("monthUnit")}`,
-        type: locale === "en" ? "High-speed optical" : "Cố định tốc độ cao",
-        icon: Wifi,
-        color: "text-purple-500",
-        bg: "bg-purple-50 border-purple-100",
-      },
-      {
-        name: locale === "en" ? "Motorbike Parking" : "Giữ xe máy",
-        price: `100.000 ₫ ${t("monthUnit")}`,
-        type: locale === "en" ? "Per registered bike" : "Theo đầu xe đăng ký",
-        icon: Bike,
-        color: "text-teal-500",
-        bg: "bg-teal-50 border-teal-100",
-      },
-    ];
-  }, [tenancyData, locale, t]);
+    return [];
+  }, [tenancyData, locale]);
 
-  // Announcements list (from backend or fallback mock)
+  // Announcements list (from backend only)
   const allAnnouncements = useMemo(() => {
     if (tenancyData?.announcements && tenancyData.announcements.length > 0) {
       return tenancyData.announcements.map((item, idx) => ({
@@ -339,83 +272,7 @@ export default function TenantOverviewPage() {
       }));
     }
 
-    return [
-      {
-        id: "1",
-        title:
-          locale === "en"
-            ? "Scheduled Power Outage Notice for Maintenance"
-            : "Thông báo lịch cắt điện bảo trì lưới điện",
-        date: "16/07/2026",
-        tag: locale === "en" ? "Urgent" : "Khẩn",
-        color: "bg-rose-100 text-rose-700 border-rose-200",
-        content:
-          locale === "en"
-            ? "District 5 Power Company announces grid maintenance from 08:00 - 11:30 AM this Sunday. Elevator will operate on backup generator."
-            : "Điện lực Quận 5 thông báo bảo trì lưới điện từ 08:00 - 11:30 sáng Chủ nhật này. Thang máy sẽ chạy máy phát điện dự phòng.",
-        isNew: true,
-      },
-      {
-        id: "2",
-        title:
-          locale === "en"
-            ? "Monthly Routine Pest Control & Disinfection"
-            : "Lịch phun khử trùng & diệt côn trùng định kỳ",
-        date: "12/07/2026",
-        tag: locale === "en" ? "Building" : "Tòa nhà",
-        color: "bg-teal-100 text-teal-700 border-teal-200",
-        content:
-          locale === "en"
-            ? "Scheduled pest control for common hallways and bike basement at 02:00 PM Saturday. Please keep windows and room doors closed."
-            : "Ban quản lý sẽ tiến hành phun thuốc diệt muỗi khu vực hành lang và hầm xe vào 14:00 thứ Bảy. Quý khách vui lòng đóng cửa sổ.",
-        isNew: true,
-      },
-      {
-        id: "3",
-        title:
-          locale === "en"
-            ? "Utility Meter Reading Window Opens (July 2026)"
-            : "Mở cổng chụp ảnh chốt chỉ số điện nước T7/2026",
-        date: "10/07/2026",
-        tag: locale === "en" ? "Billing" : "Hóa đơn",
-        color: "bg-amber-100 text-amber-700 border-amber-200",
-        content:
-          locale === "en"
-            ? "Please take a clear photo of your room's electric and water meters via the Invoices tab before July 12 to generate accurate billing."
-            : "Vui lòng chụp ảnh đồng hồ điện nước phòng mình tại tab Hóa đơn trước ngày 12/07 để hệ thống tính toán chi phí chính xác.",
-        isNew: false,
-      },
-      {
-        id: "4",
-        title:
-          locale === "en"
-            ? "Reminder: Fire Safety & Quiet Hours Regulations"
-            : "Nhắc nhở nội quy phòng cháy chữa cháy & giờ giấc",
-        date: "05/07/2026",
-        tag: locale === "en" ? "Rules" : "Nội quy",
-        color: "bg-purple-100 text-purple-700 border-purple-200",
-        content:
-          locale === "en"
-            ? "Please do not block hallway fire exits and observe quiet hours strictly from 11:00 PM to 06:00 AM."
-            : "Vui lòng không để vật dụng cản trở lối thoát hiểm hành lang và giữ yên tĩnh chung sau 23:00 đêm.",
-        isNew: false,
-      },
-      {
-        id: "5",
-        title:
-          locale === "en"
-            ? "Water Tank Cleaning & Filter Replacement"
-            : "Vệ sinh bể nước ngầm & thay mới lõi lọc thô",
-        date: "28/06/2026",
-        tag: locale === "en" ? "Maintenance" : "Bảo trì",
-        color: "bg-blue-100 text-blue-700 border-blue-200",
-        content:
-          locale === "en"
-            ? "Annual rooftop and underground water reservoir deep clean completed successfully. Water quality tested safe."
-            : "Đã hoàn thành thau rửa bể nước và thay mới toàn bộ lõi lọc thô. Nguồn nước sinh hoạt đảm bảo tiêu chuẩn an toàn.",
-        isNew: false,
-      },
-    ];
+    return [];
   }, [tenancyData, locale]);
 
   // Pagination for announcements (4 items per page)
@@ -427,7 +284,7 @@ export default function TenantOverviewPage() {
   );
 
   const handleCopyBank = () => {
-    if (typeof navigator !== "undefined") {
+    if (typeof navigator !== "undefined" && roomInfo?.landlordBank) {
       navigator.clipboard.writeText(roomInfo.landlordBank);
       setCopiedBank(true);
       setTimeout(() => setCopiedBank(false), 2000);
@@ -439,10 +296,17 @@ export default function TenantOverviewPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold mb-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{t("roomStatusActive")}</span>
-          </div>
+          {roomInfo ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold mb-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>{t("roomStatusActive")}</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-xs font-bold mb-2">
+              <span className="w-2 h-2 rounded-full bg-zinc-400" />
+              <span>{locale === "en" ? "No Active Room" : "Chưa có hợp đồng phòng"}</span>
+            </div>
+          )}
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
             {t("title")}
           </h1>
@@ -452,13 +316,15 @@ export default function TenantOverviewPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            onClick={() => setIsContractOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all"
-          >
-            <FileSignature className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t("viewContract")}</span>
-          </Button>
+          {roomInfo && (
+            <Button
+              onClick={() => setIsContractOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all"
+            >
+              <FileSignature className="w-4 h-4 text-[#2AC1BC]" />
+              <span>{t("viewContract")}</span>
+            </Button>
+          )}
 
           <Link href="/tenant/messages">
             <Button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
@@ -469,49 +335,52 @@ export default function TenantOverviewPage() {
         </div>
       </div>
 
-      {/* Quick Billing Alert Banner */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-orange-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-[#FF6B35] text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#FF6B35]/30">
-            <CreditCard className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-orange-900">
-                {t("currentInvoiceReady")}
-              </span>
-              <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase">
-                {t("unpaid")}
-              </span>
+      {/* Quick Billing Alert Banner (Only when unpaid invoice exists) */}
+      {latestInvoice && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-orange-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-[#FF6B35] text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#FF6B35]/30">
+              <CreditCard className="w-5 h-5" />
             </div>
-            <div className="text-sm sm:text-base font-black text-zinc-900 mt-0.5">
-              {latestInvoice.period} &bull; {formatCurrency(latestInvoice.amount, locale)}
-              <span className="text-xs font-normal text-zinc-500 ml-2">
-                ({t("dueDate")}: {latestInvoice.dueDate})
-              </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-orange-900">
+                  {t("currentInvoiceReady")}
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase">
+                  {t("unpaid")}
+                </span>
+              </div>
+              <div className="text-sm sm:text-base font-black text-zinc-900 mt-0.5">
+                {latestInvoice.period} &bull; {formatCurrency(latestInvoice.amount, locale)}
+                <span className="text-xs font-normal text-zinc-500 ml-2">
+                  ({t("dueDate")}: {latestInvoice.dueDate})
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <Link href="/tenant/invoices" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs cursor-pointer transition-all">
-            <span>{t("payNow")}</span>
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </Link>
-      </div>
+          <Link href="/tenant/invoices" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs cursor-pointer transition-all">
+              <span>{t("payNow")}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Hero Room Details Card */}
-          <div className="rounded-3xl border border-zinc-200/80 bg-white shadow-xs overflow-hidden">
-            <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-zinc-100 bg-gradient-to-r from-zinc-50/80 via-white to-teal-50/20">
-              <div className="flex items-center gap-4 sm:gap-5">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-zinc-200 shrink-0 shadow-xs">
-                  <img
-                    src={roomInfo.roomImage}
+          {/* Hero Room Details Card or Empty Tenancy State */}
+          {roomInfo ? (
+            <div className="rounded-3xl border border-zinc-200/80 bg-white shadow-xs overflow-hidden">
+              <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-zinc-100 bg-gradient-to-r from-zinc-50/80 via-white to-teal-50/20">
+                <div className="flex items-center gap-4 sm:gap-5">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-zinc-200 shrink-0 shadow-xs">
+                    <img
+                      src={roomInfo.roomImage}
                     alt={roomInfo.roomNumber}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
@@ -675,23 +544,51 @@ export default function TenantOverviewPage() {
               </div>
             </div>
           </div>
-
-          {/* Card: Services & Utility Rates */}
-          <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-black text-zinc-900 tracking-tight">
-                  {t("servicesTitle")}
-                </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  {t("servicesSubtitle")}
-                </p>
-              </div>
-              <span className="text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-3 py-1 rounded-full">
-                {t("activeServices", { count: services.length })}
-              </span>
+        ) : (
+          <div className="rounded-3xl border border-zinc-200/80 bg-white p-8 shadow-xs text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400">
+              <Building className="w-8 h-8" />
             </div>
+            <h3 className="text-base font-black text-zinc-900">
+              {locale === "en" ? "No Active Tenancy Contract" : "Chưa có hợp đồng thuê phòng hiệu lực"}
+            </h3>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto">
+              {locale === "en"
+                ? "Your account is not linked to any active room contract on the Dormio platform. Please contact your landlord to activate your contract."
+                : "Tài khoản của bạn chưa được liên kết với phòng trọ hoặc hợp đồng nào đang có hiệu lực trên hệ thống Dormio. Vui lòng liên hệ chủ trọ để kích hoạt hợp đồng."}
+            </p>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Link href="/rooms">
+                <Button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer">
+                  {locale === "en" ? "Explore Boarding Houses" : "Tìm phòng trọ trên Dormio"}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
+        {/* Card: Services & Utility Rates */}
+        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-black text-zinc-900 tracking-tight">
+                {t("servicesTitle")}
+              </h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                {t("servicesSubtitle")}
+              </p>
+            </div>
+            <span className="text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-3 py-1 rounded-full">
+              {t("activeServices", { count: services.length })}
+            </span>
+          </div>
+
+          {services.length === 0 ? (
+            <div className="py-8 text-center text-xs text-zinc-400 space-y-1">
+              <Sparkles className="w-8 h-8 mx-auto text-zinc-300 mb-2" />
+              <p className="font-semibold">{locale === "en" ? "No utility services registered" : "Chưa có dịch vụ nào được thiết lập"}</p>
+            </div>
+          ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {services.map((svc, idx) => (
                 <div
@@ -717,8 +614,9 @@ export default function TenantOverviewPage() {
                 </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
+      </div>
 
         {/* Right Column: Announcements (Compact, 4 per page) */}
         <div className="lg:col-span-1 flex flex-col gap-6">
@@ -737,86 +635,100 @@ export default function TenantOverviewPage() {
               </span>
             </div>
 
-            {/* List of 4 announcements */}
-            <div className="p-4 space-y-2.5">
-              {currentAnnouncements.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedNotice(item)}
-                  className="p-3 rounded-2xl bg-zinc-50/70 border border-zinc-100 hover:border-[#2AC1BC]/50 hover:bg-white hover:shadow-xs transition-all cursor-pointer space-y-1.5 group"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] sm:text-[11px] font-bold text-zinc-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {item.date}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider border ${item.color}`}
+            {/* List of 4 announcements or empty */}
+            {allAnnouncements.length === 0 ? (
+              <div className="p-8 text-center text-xs text-zinc-400 space-y-2">
+                <Speaker className="w-8 h-8 mx-auto text-zinc-300" />
+                <p className="font-semibold text-zinc-600">{locale === "en" ? "No announcements yet" : "Chưa có thông báo mới"}</p>
+                <p className="text-[11px] text-zinc-400">
+                  {locale === "en"
+                    ? "Notices from building management will appear here."
+                    : "Các thông báo từ ban quản lý tòa nhà sẽ xuất hiện tại đây."}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="p-4 space-y-2.5">
+                  {currentAnnouncements.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedNotice(item)}
+                      className="p-3 rounded-2xl bg-zinc-50/70 border border-zinc-100 hover:border-[#2AC1BC]/50 hover:bg-white hover:shadow-xs transition-all cursor-pointer space-y-1.5 group"
                     >
-                      {item.tag}
-                    </span>
-                  </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-zinc-900 leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
-                    {item.title}
-                  </h4>
-                  <p className="text-[11px] sm:text-xs text-zinc-500 leading-relaxed line-clamp-1">
-                    {item.content}
-                  </p>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] sm:text-[11px] font-bold text-zinc-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {item.date}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider border ${item.color}`}
+                        >
+                          {item.tag}
+                        </span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-zinc-900 leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                        {item.title}
+                      </h4>
+                      <p className="text-[11px] sm:text-xs text-zinc-500 leading-relaxed line-clamp-1">
+                        {item.content}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {/* Pagination Controls - 4 items per page */}
-            <div className="px-4 py-2.5 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50 rounded-b-3xl">
-              <div className="text-[11px] font-semibold text-zinc-400">
-                {locale === "en"
-                  ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                      currentPage * itemsPerPage,
-                      allAnnouncements.length
-                    )} of ${allAnnouncements.length}`
-                  : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                      currentPage * itemsPerPage,
-                      allAnnouncements.length
-                    )} trên ${allAnnouncements.length}`}
-              </div>
+                {/* Pagination Controls - 4 items per page */}
+                <div className="px-4 py-2.5 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50 rounded-b-3xl">
+                  <div className="text-[11px] font-semibold text-zinc-400">
+                    {locale === "en"
+                      ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
+                          currentPage * itemsPerPage,
+                          allAnnouncements.length
+                        )} of ${allAnnouncements.length}`
+                      : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
+                          currentPage * itemsPerPage,
+                          allAnnouncements.length
+                        )} trên ${allAnnouncements.length}`}
+                  </div>
 
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
 
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      currentPage === i + 1
-                        ? "bg-[#2AC1BC] text-white shadow-xs"
-                        : "text-zinc-600 hover:bg-zinc-100"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          currentPage === i + 1
+                            ? "bg-[#2AC1BC] text-white shadow-xs"
+                            : "text-zinc-600 hover:bg-zinc-100"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -870,7 +782,7 @@ export default function TenantOverviewPage() {
       )}
 
       {/* Modal: Electronic Tenancy Agreement */}
-      {isContractOpen && (
+      {isContractOpen && roomInfo && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-xs animate-in fade-in duration-200"
           onMouseDown={(e) => {
