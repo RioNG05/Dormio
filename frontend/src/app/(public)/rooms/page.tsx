@@ -3,9 +3,23 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  Search, MapPin, Filter, RotateCcw, Sparkles,
-  ChevronDown, CheckCircle2, Eye, QrCode, X, Lock, Phone,
-  ArrowRight, Heart, Share2, Copy, Check, User
+  Search,
+  MapPin,
+  Filter,
+  RotateCcw,
+  Sparkles,
+  ChevronDown,
+  CheckCircle2,
+  Eye,
+  QrCode,
+  X,
+  Lock,
+  ArrowRight,
+  Heart,
+  Share2,
+  Copy,
+  Check,
+  User,
 } from "lucide-react";
 import { formatVND } from "@/utils";
 import { useTranslations } from "@/context/LanguageContext";
@@ -196,19 +210,21 @@ export default function RoomsPage() {
   };
 
   const toggleSave = (id: string) => {
-    setSavedIds((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
+    setSavedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
   const handleCopyShareLink = (room: PublicPostListing) => {
-    navigator.clipboard.writeText(window.location.origin + `/rooms/${room.id}`);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.origin + `/rooms/${room.id}`);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
 
-      {/* Hero Banner */}
+      {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center text-white shadow-2xl overflow-hidden bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-[#2AC1BC]/15 rounded-full blur-[120px] pointer-events-none z-0" />
@@ -232,11 +248,11 @@ export default function RoomsPage() {
         </div>
       </section>
 
-      {/* Main Content */}
+      {/* Main Content Layout Grid Container */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-          {/* ─── Left Sidebar Filter ─────────────────────────────────────────── */}
+          {/* Left Sidebar Filter Card */}
           <div className="lg:col-span-4 bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs space-y-5">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3.5">
               <h2 className="font-extrabold text-zinc-900 text-sm flex items-center gap-2">
@@ -250,13 +266,13 @@ export default function RoomsPage() {
               </button>
             </div>
 
-            {/* Keyword */}
+            {/* Filter 1: Keyword */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsKeywordLabel")}</label>
               <div className="relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
-                  id="filter-keyword"
+                  id="filter-search"
                   type="text"
                   placeholder={t("guestRoomsKeywordPlaceholder")}
                   value={search}
@@ -267,7 +283,7 @@ export default function RoomsPage() {
               </div>
             </div>
 
-            {/* Province */}
+            {/* Filter 2: Province */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsProvinceLabel")}</label>
               <input
@@ -280,7 +296,7 @@ export default function RoomsPage() {
               />
             </div>
 
-            {/* District */}
+            {/* Filter 3: District */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsDistrictLabel")}</label>
               <input
@@ -293,7 +309,7 @@ export default function RoomsPage() {
               />
             </div>
 
-            {/* Ward */}
+            {/* Filter 4: Ward */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsWardLabel")}</label>
               <input
@@ -306,7 +322,7 @@ export default function RoomsPage() {
               />
             </div>
 
-            {/* Price range */}
+            {/* Filter 5: Price range */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMinPriceLabel")}</label>
               <input
@@ -328,7 +344,7 @@ export default function RoomsPage() {
               />
             </div>
 
-            {/* Area range */}
+            {/* Filter 6: Area range */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMinAreaLabel")}</label>
               <input
@@ -356,11 +372,11 @@ export default function RoomsPage() {
               onClick={handleApplyFilters}
               className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-2xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <Search className="w-3.5 h-3.5" /> {t("guestRoomsFilterTitle")}
+              <Search className="w-3.5 h-3.5" /> {t("guestRoomsApplyFilter")}
             </button>
           </div>
 
-          {/* ─── Right Results Area ───────────────────────────────────────────── */}
+          {/* Right Main Room Cards / Map Area */}
           <div className="lg:col-span-8 space-y-6">
             {/* Results count + view toggle */}
             <div className="flex items-center justify-between">
@@ -372,6 +388,7 @@ export default function RoomsPage() {
                 )}
               </div>
 
+              {/* List / Map View Mode Toggle Buttons */}
               <div className="flex items-center p-1 bg-zinc-100 rounded-2xl border border-zinc-200/80">
                 <button
                   id="view-list-btn"
@@ -409,10 +426,13 @@ export default function RoomsPage() {
                     key={listing.id}
                     onClick={() => setQuickViewRoom(listing)}
                     className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group animate-bounce ${
-                      idx === 0 ? "top-1/3 left-1/3"
-                      : idx === 1 ? "top-1/2 left-2/3"
-                      : idx === 2 ? "top-2/3 left-1/2"
-                      : "top-1/4 left-3/4"
+                      idx === 0
+                        ? "top-1/3 left-1/3"
+                        : idx === 1
+                        ? "top-1/2 left-2/3"
+                        : idx === 2
+                        ? "top-2/3 left-1/2"
+                        : "top-1/4 left-3/4"
                     }`}
                   >
                     <div className="px-3 py-1.5 bg-[#FF6B35] text-white text-xs font-black rounded-full shadow-2xl flex items-center gap-1 group-hover:scale-110 transition-transform">
@@ -465,139 +485,161 @@ export default function RoomsPage() {
                 )}
 
                 {/* Listing cards */}
-                {!isLoading && !error && listings.map((listing) => {
-                  const isSaved = savedIds.includes(listing.id);
-                  const imageUrl = listing.images[0]?.url ??
-                    "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
-                  const address = buildAddressString(listing);
+                {!isLoading &&
+                  !error &&
+                  listings.map((listing) => {
+                    const isSaved = savedIds.includes(listing.id);
+                    const imageUrl =
+                      listing.images[0]?.url ??
+                      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
+                    const address = buildAddressString(listing);
 
-                  return (
-                    <div
-                      key={listing.id}
-                      className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col md:flex-row group"
-                    >
-                      {/* Image column */}
-                      <div className="relative md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 overflow-hidden bg-zinc-100">
-                        <img
-                          src={imageUrl}
-                          alt={listing.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                    return (
+                      <div
+                        key={listing.id}
+                        className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col md:flex-row group"
+                      >
+                        {/* Left Image Column with Action Badges */}
+                        <div className="relative md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 overflow-hidden bg-zinc-100">
+                          <img
+                            src={imageUrl}
+                            alt={listing.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
 
-                        <span className="absolute top-3 left-3 px-3 py-1 bg-[#2AC1BC] text-white text-[11px] font-extrabold rounded-full shadow-md">
-                          {t("guestRoomsVerifiedLandlord")}
-                        </span>
+                          <span className="absolute top-3 left-3 px-3 py-1 bg-zinc-950/80 backdrop-blur-md text-white font-extrabold text-[11px] rounded-full shadow-md">
+                            {listing.room?.roomTypeName ?? t("guestRoomsBadgeAvailable")}
+                          </span>
 
-                        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-                          <button
-                            onClick={() => toggleSave(listing.id)}
-                            className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-md ${
-                              isSaved ? "bg-rose-500 text-white" : "bg-zinc-900/70 text-white hover:bg-rose-500"
-                            }`}
-                            title={isSaved ? t("guestRoomsSaved") : t("guestRoomsSave")}
-                          >
-                            <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
-                          </button>
-                          <button
-                            onClick={() => setShareModalRoom(listing)}
-                            className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-[#2AC1BC] backdrop-blur-md transition-all cursor-pointer shadow-md"
-                            title={t("guestRoomsShareTitle")}
-                          >
-                            <Share2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => setQuickViewRoom(listing)}
-                          className="absolute bottom-3 left-3 right-3 py-2 bg-zinc-900/80 hover:bg-zinc-900 backdrop-blur-md text-white text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsQuickView")}
-                        </button>
-                      </div>
-
-                      {/* Details column */}
-                      <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                        <div className="space-y-2">
-                          <Link href={`/rooms/${listing.id}`}>
-                            <h3 className="font-extrabold text-zinc-900 text-lg leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
-                              {listing.title}
-                            </h3>
-                          </Link>
-
-                          {address && (
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
-                            >
-                              <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                              <span className="truncate">{address}</span>
-                            </a>
-                          )}
-
-                          <p className="text-xs text-zinc-500 font-medium leading-relaxed line-clamp-2 pt-1">
-                            {listing.content}
-                          </p>
-                        </div>
-
-                        {/* Poster info */}
-                        {listing.poster && (
-                          <div className="flex items-center gap-2">
-                            {listing.poster.avatarUrl ? (
-                              <img
-                                src={listing.poster.avatarUrl}
-                                alt={listing.poster.username ?? ""}
-                                className="w-6 h-6 rounded-full object-cover border border-zinc-200"
-                              />
-                            ) : (
-                              <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200">
-                                <User className="w-3.5 h-3.5 text-zinc-400" />
-                              </div>
-                            )}
-                            <span className="text-xs text-zinc-500 font-semibold">
-                              {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Price + actions */}
-                        <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="whitespace-nowrap">
-                            <span className="text-2xl font-black text-rose-500">
-                              {formatVND(listing.depositAmount)}
-                            </span>
-                            <span className="text-[11px] font-bold text-zinc-500 block">
-                              {t("guestRoomsDepositLabel")} {listing.depositAmount > 0 ? formatVND(listing.depositAmount) : t("guestRoomsFreeDeposit")}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0">
-                            {listing.room?.area && (
-                              <span className="text-xs text-zinc-700 font-bold hidden sm:inline mr-2 whitespace-nowrap">
-                                {listing.room.area} m²
-                              </span>
-                            )}
-
+                          {/* Save Wishlist Button & Share Button */}
+                          <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
                             <button
-                              id={`deposit-btn-${listing.id}`}
-                              onClick={() => { setDepositRoom(listing); setDepositStep("form"); }}
-                              className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-bold rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                              onClick={() => toggleSave(listing.id)}
+                              className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-md ${
+                                isSaved
+                                  ? "bg-rose-500 text-white"
+                                  : "bg-zinc-900/70 text-white hover:bg-rose-500"
+                              }`}
+                              title={isSaved ? t("guestRoomsSaved") : t("guestRoomsSave")}
                             >
-                              <Sparkles className="w-3.5 h-3.5" /> {t("guestRoomsDepositBtn")}
+                              <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
                             </button>
+                            <button
+                              onClick={() => setShareModalRoom(listing)}
+                              className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-[#2AC1BC] backdrop-blur-md transition-all cursor-pointer shadow-md"
+                              title={t("guestRoomsShareTitle")}
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Quick View Button overlay */}
+                          <button
+                            onClick={() => setQuickViewRoom(listing)}
+                            className="absolute bottom-3 left-3 right-3 py-2 bg-white/95 hover:bg-white text-zinc-900 backdrop-blur-md text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsQuickView")}
+                          </button>
+                        </div>
+
+                        {/* Details column */}
+                        <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-[#2AC1BC] font-bold uppercase tracking-wider">
+                                {listing.poster?.username ??
+                                  listing.room?.boardingHouseName ??
+                                  t("guestRoomsDefaultLandlord")}
+                              </span>
+                              {listing.room?.area && (
+                                <span className="text-xs text-zinc-400 font-medium">
+                                  {listing.room.area} m²
+                                </span>
+                              )}
+                            </div>
 
                             <Link href={`/rooms/${listing.id}`}>
-                              <button className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0">
-                                {t("guestRoomsDetailBtn")}
-                              </button>
+                              <h3 className="font-extrabold text-zinc-900 text-lg leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                                {listing.title}
+                              </h3>
                             </Link>
+
+                            {address && (
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
+                                title={t("guestContactMaps")}
+                              >
+                                <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                <span className="truncate">{address}</span>
+                              </a>
+                            )}
+
+                            <p className="text-xs text-zinc-500 font-medium leading-relaxed line-clamp-2 pt-1">
+                              {listing.content}
+                            </p>
+                          </div>
+
+                          {/* Poster info */}
+                          {listing.poster && (
+                            <div className="flex items-center gap-2">
+                              {listing.poster.avatarUrl ? (
+                                <img
+                                  src={listing.poster.avatarUrl}
+                                  alt={listing.poster.username ?? ""}
+                                  className="w-6 h-6 rounded-full object-cover border border-zinc-200"
+                                />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200">
+                                  <User className="w-3.5 h-3.5 text-zinc-400" />
+                                </div>
+                              )}
+                              <span className="text-xs text-zinc-500 font-semibold">
+                                {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Price + actions */}
+                          <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="whitespace-nowrap">
+                              <span className="text-2xl font-black text-rose-500">
+                                {formatVND(listing.depositAmount)}
+                              </span>
+                              <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsMonth")}</span>
+                              <span className="text-[11px] font-bold text-zinc-500 block">
+                                {t("guestRoomsDepositLabel")}{" "}
+                                {listing.depositAmount > 0
+                                  ? formatVND(listing.depositAmount)
+                                  : t("guestRoomsFreeDeposit")}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                id={`deposit-btn-${listing.id}`}
+                                onClick={() => {
+                                  setDepositRoom(listing);
+                                  setDepositStep("form");
+                                }}
+                                className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-bold rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                              >
+                                <Sparkles className="w-3.5 h-3.5" /> {t("guestRoomsDepositBtn")}
+                              </button>
+
+                              <Link href={`/rooms/${listing.id}`}>
+                                <button className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0">
+                                  {t("guestRoomsDetailBtn")}
+                                </button>
+                              </Link>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
 
                 {/* Pagination */}
                 {!isLoading && !error && (
@@ -616,10 +658,12 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* ─── Share Modal ─────────────────────────────────────────────────────── */}
+      {/* ─── Share Modal ──────────────────────────────────────────────────────── */}
       {shareModalRoom && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setShareModalRoom(null); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShareModalRoom(null);
+          }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-zinc-100 relative cursor-default">
@@ -639,7 +683,11 @@ export default function RoomsPage() {
               <input
                 type="text"
                 readOnly
-                value={typeof window !== "undefined" ? window.location.origin + `/rooms/${shareModalRoom.id}` : ""}
+                value={
+                  typeof window !== "undefined"
+                    ? window.location.origin + `/rooms/${shareModalRoom.id}`
+                    : ""
+                }
                 className="w-full text-xs font-semibold text-zinc-600 bg-transparent px-2 focus:outline-none truncate"
               />
               <button
@@ -657,21 +705,26 @@ export default function RoomsPage() {
       {/* ─── Quick View Modal ─────────────────────────────────────────────────── */}
       {quickViewRoom && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setQuickViewRoom(null); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setQuickViewRoom(null);
+          }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6 border border-zinc-100 relative max-h-[90vh] overflow-y-auto cursor-default">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 border border-zinc-100 relative cursor-default">
             <button
               onClick={() => setQuickViewRoom(null)}
-              className="absolute top-4 right-4 p-2 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-1 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-700 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="md:w-1/2 aspect-video md:aspect-square rounded-2xl overflow-hidden bg-zinc-100 shrink-0">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/2 aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-100">
                 <img
-                  src={quickViewRoom.images[0]?.url ?? "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80"}
+                  src={
+                    quickViewRoom.images[0]?.url ??
+                    "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80"
+                  }
                   alt={quickViewRoom.title}
                   className="w-full h-full object-cover"
                 />
@@ -679,20 +732,62 @@ export default function RoomsPage() {
 
               <div className="md:w-1/2 space-y-4">
                 <span className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-extrabold rounded-full inline-block">
+                  {quickViewRoom.room?.roomTypeName ? `${quickViewRoom.room.roomTypeName} • ` : ""}
                   {t("guestRoomsVerifiedLandlord")}
                 </span>
-                <h3 className="text-xl font-black text-zinc-900 leading-snug">{quickViewRoom.title}</h3>
+                <h3 className="text-xl font-black text-zinc-900 leading-snug">
+                  {quickViewRoom.title}
+                </h3>
                 <div className="text-xs font-semibold text-zinc-400 flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-[#2AC1BC]" /> {buildAddressString(quickViewRoom)}
                 </div>
                 <div className="text-2xl font-black text-rose-500">
                   {formatVND(quickViewRoom.depositAmount)}
-                  <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsDepositLabel")}</span>
+                  <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsMonth")}</span>
+                  <span className="text-[11px] font-bold text-zinc-500 block">
+                    {t("guestRoomsDepositLabel")}{" "}
+                    {quickViewRoom.depositAmount > 0
+                      ? formatVND(quickViewRoom.depositAmount)
+                      : t("guestRoomsFreeDeposit")}
+                  </span>
+                </div>
+
+                {/* Features tags */}
+                <div className="space-y-2 pt-2 border-t border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 block">
+                    {t("guestRoomsFeaturedAmenities")}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {quickViewRoom.room?.roomTypeName && (
+                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> {quickViewRoom.room.roomTypeName}
+                      </span>
+                    )}
+                    {quickViewRoom.room?.area && (
+                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> {quickViewRoom.room.area} m²
+                      </span>
+                    )}
+                    {quickViewRoom.room?.floor && (
+                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> Tầng {quickViewRoom.room.floor}
+                      </span>
+                    )}
+                    {quickViewRoom.room?.boardingHouseName && (
+                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> {quickViewRoom.room.boardingHouseName}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-2 pt-3">
                   <button
-                    onClick={() => { setDepositRoom(quickViewRoom); setQuickViewRoom(null); setDepositStep("form"); }}
+                    onClick={() => {
+                      setDepositRoom(quickViewRoom);
+                      setQuickViewRoom(null);
+                      setDepositStep("form");
+                    }}
                     className="flex-1 py-3 bg-[#FF6B35] text-white rounded-xl font-extrabold text-xs shadow-md shadow-[#FF6B35]/20 hover:bg-[#ff5518] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Sparkles className="w-4 h-4" /> {t("guestRoomsDepositBtn")}
@@ -712,7 +807,9 @@ export default function RoomsPage() {
       {/* ─── Deposit Modal ────────────────────────────────────────────────────── */}
       {depositRoom && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setDepositRoom(null); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDepositRoom(null);
+          }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-zinc-100 max-h-[90vh] overflow-y-auto cursor-default">
@@ -720,48 +817,70 @@ export default function RoomsPage() {
               <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
                 <Lock className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsEscrowModalTitle")}
               </h3>
-              <button onClick={() => setDepositRoom(null)} className="p-1 hover:bg-zinc-100 rounded-xl text-zinc-400 cursor-pointer">
+              <button
+                onClick={() => setDepositRoom(null)}
+                className="p-1 hover:bg-zinc-100 rounded-xl text-zinc-400 cursor-pointer"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Escrow process banner */}
+            {/* Clear 3-Step Escrow Guarantee Process Banner */}
             <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-4 rounded-2xl text-white space-y-3 border border-zinc-800">
-              <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">{t("guestRoomsEscrowTitle")}</span>
+              <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">
+                {t("guestRoomsEscrowTitle")}
+              </span>
               <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
-                  <span className="w-5 h-5 rounded-full bg-[#2AC1BC] text-white font-black inline-flex items-center justify-center">1</span>
+                  <span className="w-5 h-5 rounded-full bg-[#2AC1BC] text-white font-black inline-flex items-center justify-center">
+                    1
+                  </span>
                   <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep1")}</p>
                 </div>
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
-                  <span className="w-5 h-5 rounded-full bg-amber-400 text-zinc-900 font-black inline-flex items-center justify-center">2</span>
+                  <span className="w-5 h-5 rounded-full bg-amber-400 text-zinc-900 font-black inline-flex items-center justify-center">
+                    2
+                  </span>
                   <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep2")}</p>
                 </div>
                 <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
-                  <span className="w-5 h-5 rounded-full bg-emerald-400 text-zinc-900 font-black inline-flex items-center justify-center">3</span>
+                  <span className="w-5 h-5 rounded-full bg-emerald-400 text-zinc-900 font-black inline-flex items-center justify-center">
+                    3
+                  </span>
                   <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep3")}</p>
                 </div>
               </div>
-              <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-center">{t("guestRoomsEscrowNote")}</p>
+              <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-center">
+                {t("guestRoomsEscrowNote")}
+              </p>
             </div>
 
             {depositStep === "form" && (
               <div className="space-y-4">
                 <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1.5">
-                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">{t("guestRoomsSelectedRoom")}</span>
-                  <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">{depositRoom.title}</h4>
+                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">
+                    {t("guestRoomsSelectedRoom")}
+                  </span>
+                  <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">
+                    {depositRoom.title}
+                  </h4>
+
                   {depositRoom.depositAmount > 0 ? (
                     <div className="text-xs font-black text-rose-500">
-                      {t("guestRoomsQrAmountLabel")} {formatVND(depositRoom.depositAmount)}
+                      {t("guestRoomsDepositLabel")} {formatVND(depositRoom.depositAmount)}
                     </div>
                   ) : (
-                    <div className="text-xs font-black text-emerald-600">{t("guestRoomsFreeDepositNote")}</div>
+                    <div className="text-xs font-black text-emerald-600">
+                      {t("guestRoomsFreeDepositNote")}
+                    </div>
                   )}
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("guestRoomsTenantNameLabel")}</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
+                      {t("guestRoomsTenantNameLabel")}
+                    </label>
                     <input
                       type="text"
                       placeholder={t("guestRoomsTenantNamePlaceholder")}
@@ -770,8 +889,11 @@ export default function RoomsPage() {
                       className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
                     />
                   </div>
+
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">{t("guestRoomsTenantPhoneLabel")}</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
+                      {t("guestRoomsTenantPhoneLabel")}
+                    </label>
                     <input
                       type="text"
                       placeholder={t("guestRoomsTenantPhonePlaceholder")}
@@ -787,7 +909,7 @@ export default function RoomsPage() {
                   disabled={!tenantName || !tenantPhone}
                   className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
                 >
-                  {t("guestRoomsConfirmQrBtn")}
+                  {t("guestRoomsConfirmQrBtn")} →
                 </button>
               </div>
             )}
@@ -797,15 +919,24 @@ export default function RoomsPage() {
                 <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl inline-block">
                   <QrCode className="w-44 h-44 mx-auto text-zinc-900" />
                 </div>
+
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500 font-semibold block">{t("guestRoomsQrAmountLabel")}</span>
+                  <span className="text-xs text-zinc-500 font-semibold block">
+                    {t("guestRoomsQrAmountLabel")}
+                  </span>
                   <span className="text-2xl font-black text-rose-600">
-                    {depositRoom.depositAmount > 0 ? formatVND(depositRoom.depositAmount) : t("guestRoomsFreeDeposit")}
+                    {depositRoom.depositAmount > 0
+                      ? formatVND(depositRoom.depositAmount)
+                      : t("guestRoomsFreeDeposit")}
                   </span>
                   <p className="text-[11px] text-zinc-400 font-medium">
-                    {t("guestRoomsQrContentLabel")} <span className="font-extrabold text-zinc-800">COC {tenantPhone} #{depositRoom.id.slice(0, 8)}</span>
+                    {t("guestRoomsQrContentLabel")}{" "}
+                    <span className="font-extrabold text-zinc-800">
+                      COC {tenantPhone} #{depositRoom.id.slice(0, 8)}
+                    </span>
                   </p>
                 </div>
+
                 <button
                   onClick={() => setDepositStep("success")}
                   className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer"
@@ -821,9 +952,13 @@ export default function RoomsPage() {
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-zinc-900">{t("guestRoomsSuccessTitle")}</h4>
+                  <h4 className="text-base font-black text-zinc-900">
+                    {t("guestRoomsSuccessTitle")}
+                  </h4>
                   <p className="text-xs text-zinc-500 mt-1">
-                    {t("guestRoomsSuccessDesc", { name: depositRoom.poster?.username ?? t("guestRoomsDefaultLandlord") })}
+                    {t("guestRoomsSuccessDesc", {
+                      name: depositRoom.poster?.username ?? t("guestRoomsDefaultLandlord"),
+                    })}
                   </p>
                 </div>
                 <button

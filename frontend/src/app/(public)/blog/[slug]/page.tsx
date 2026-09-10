@@ -7,86 +7,55 @@ import {
   Calendar,
   Clock,
   ChevronRight,
-  Share2,
-  Bookmark,
-  CheckCircle2,
-  User,
-  ShieldCheck,
   ArrowLeft,
-  Sparkles,
-  MessageSquare,
   Copy,
   Check
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/context/LanguageContext";
 
 export default function BlogDetailPage() {
+  const tGuest = useTranslations("guest");
+  const tNav = useTranslations("nav");
+
   const params = useParams();
   const slug = params?.slug || "kinh-nghiem-quan-ly-nha-tro-chong-that-thoat-dien-nuoc";
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   // Mock Post Detail
   const post = {
-    title: "Bí quyết quản lý nhà trọ chống thất thoát điện nước 100% bằng AI OCR",
-    date: "25 Tháng 8, 2026",
-    readTime: "6 phút đọc",
-    category: "Bí quyết Chủ trọ",
+    title: tGuest("guestBlogDetailPostTitle"),
+    date: "25/08/2026",
+    readTime: `6 ${tGuest("guestBlogDetailReadTimePrefix")}`,
+    category: tGuest("guestBlogDetailPostCategory"),
     author: {
       name: "Nguyễn Văn Hùng",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      role: "Chuyên gia Vận hành Trọ Dormio",
+      role: tGuest("guestBlogDetailAuthorRole"),
     },
     image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=80",
-    content: `
-Quản lý chỉ số điện nước luôn là bài toán đau đầu đối với các chủ nhà trọ. Tình trạng chênh lệch giữa công tơ tổng và công tơ từng phòng, gian lận chỉ số, hay sai sót khi chép tay bằng sổ sách khiến chủ trọ tổn thất từ 5% - 15% doanh thu hàng tháng.
-
-Trong bài viết này, Dormio chia sẻ 4 nguyên nhân phổ biến gây thất thoát điện nước và cách khắc phục triệt để bằng công nghệ chốt số AI OCR hiện đại.
-
----
-
-### 1. Tại sao nhà trọ của bạn liên tục bị thất thoát điện nước?
-
-* **Ghi chép thủ công nhầm lẫn**: Vào những ngày cuối tháng khi phải chốt số cho 30-50 phòng, việc nhìn nhầm chữ số (VD: số 3 thành số 8) rất hay xảy ra.
-* **Khách thuê gian lận đồng hồ**: Một số cá nhân can thiệp vào công tơ điện hoặc vặn nhỏ vòi nước để đồng hồ không quay.
-* **Rò rỉ đường ống nước ngầm**: Rò rỉ bồn cầu, vòi nước hỏng không được phát hiện kịp thời làm thất thoát hàng chục khối nước mỗi tháng.
-
----
-
-### 2. Giải pháp chốt số tự động qua hình ảnh AI OCR
-
-Nền tảng quản lý nhà trọ **Dormio** tích hợp công nghệ AI OCR nhận diện hình ảnh thông minh:
-
-1. **Chụp ảnh trực tiếp**: Chủ trọ hoặc nhân viên mở App Dormio chụp ảnh mặt đồng hồ điện/nước.
-2. **AI tự đọc chỉ số**: Hệ thống tự động trích xuất dãy số chính xác 100% trong 0.5 giây.
-3. **Lưu trữ bằng chứng minh bạch**: Hình ảnh đồng hồ được đính kèm trực tiếp vào hóa đơn gửi cho khách thuê qua Zalo/App, loại bỏ hoàn toàn tranh cãi.
-
----
-
-### 3. Lợi ích khi ứng dụng chuyển đổi số nhà trọ
-
-* **Tiết kiệm 90% thời gian**: Không cần mang sổ sách chép tay, hệ thống tự động nhân đơn giá và tính tiền hóa đơn.
-* **Tự động cảnh báo bất thường**: Nếu phòng có lượng tiêu thụ điện/nước tăng đột biến gấp 3 lần so với tháng trước, hệ thống sẽ gửi thông báo cảnh báo rò rỉ.
-    `,
+    content: tGuest("guestBlogDetailPostContent"),
   };
 
   const relatedPosts = [
     {
       slug: "mau-hop-dong-thue-phong-tro-chuan-phap-ly-2026",
-      title: "Mẫu hợp đồng thuê phòng trọ chuẩn pháp lý mới nhất năm 2026",
+      title: tGuest("guestBlogDetailRelated1Title"),
       image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=600&q=80",
-      date: "20 Tháng 8, 2026",
+      date: "20/08/2026",
     },
     {
       slug: "gach-no-tu-dong-vietqr-tang-30-percent-dong-tien",
-      title: "Ứng dụng VietQR gạch nợ 0.5s giúp chủ trọ thu tiền nhà đúng hạn",
+      title: tGuest("guestBlogDetailRelated2Title"),
       image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=80",
-      date: "12 Tháng 8, 2026",
+      date: "12/08/2026",
     },
   ];
 
@@ -95,9 +64,9 @@ Nền tảng quản lý nhà trọ **Dormio** tích hợp công nghệ AI OCR nh
       {/* Breadcrumb Bar */}
       <div className="bg-white border-b border-zinc-200/80 py-3 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl flex items-center gap-2 text-xs font-semibold text-zinc-500 overflow-x-auto whitespace-nowrap">
-          <Link href="/" className="hover:text-[#2AC1BC]">Trang chủ</Link>
+          <Link href="/" className="hover:text-[#2AC1BC]">{tNav("home")}</Link>
           <ChevronRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-          <Link href="/blog" className="hover:text-[#2AC1BC]">Blog & Cẩm nang</Link>
+          <Link href="/blog" className="hover:text-[#2AC1BC]">{tNav("blog")}</Link>
           <ChevronRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
           <span className="text-[#2AC1BC] line-clamp-1">{post.title}</span>
         </div>
@@ -106,7 +75,7 @@ Nền tảng quản lý nhà trọ **Dormio** tích hợp công nghệ AI OCR nh
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-8">
         {/* Back Link */}
         <Link href="/blog" className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-[#2AC1BC] mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Quay lại danh sách bài viết
+          <ArrowLeft className="w-4 h-4" /> {tGuest("guestBlogDetailBackToBlog")}
         </Link>
 
         {/* Article Header */}
@@ -141,10 +110,10 @@ Nền tảng quản lý nhà trọ **Dormio** tích hợp công nghệ AI OCR nh
               </span>
               <button
                 onClick={handleCopyLink}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 font-bold hover:bg-zinc-100 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 font-bold hover:bg-zinc-100 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? "Đã chép link" : "Chia sẻ"}</span>
+                <span>{copied ? tGuest("guestBlogDetailCopied") : tGuest("guestBlogDetailShare")}</span>
               </button>
             </div>
           </div>
@@ -168,7 +137,7 @@ Nền tảng quản lý nhà trọ **Dormio** tích hợp công nghệ AI OCR nh
 
         {/* RELATED ARTICLES */}
         <div className="pt-8 border-t border-zinc-200">
-          <h3 className="text-xl font-bold text-zinc-900 mb-6">Bài viết liên quan</h3>
+          <h3 className="text-xl font-bold text-zinc-900 mb-6">{tGuest("guestBlogDetailRelatedPosts")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {relatedPosts.map((item, idx) => (
               <Link
@@ -181,7 +150,7 @@ Nền tảng quản lý nhà trọ **Dormio** tích hợp công nghệ AI OCR nh
                 </div>
                 <div>
                   <span className="text-[10px] text-zinc-400 flex items-center gap-1 mb-1">
-                    <Calendar className="w-3 h-3" /> {item.date}
+                    <Calendar className="w-3.5 h-3.5" /> {item.date}
                   </span>
                   <h4 className="text-xs font-bold text-zinc-900 group-hover:text-[#2ac1bc] line-clamp-2 leading-snug">
                     {item.title}

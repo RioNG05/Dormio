@@ -3,13 +3,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, MapPin, Minimize2, ShieldCheck, User,
+  ArrowLeft, MapPin, Minimize2,
   Phone, QrCode, CheckCircle2, X, Sparkles, Lock, Calculator,
-  Zap, Droplets, Wifi, Trash2, Check, MessageSquare, Heart, Share2, Copy, ShieldAlert, ExternalLink
+  Heart, Share2, Copy, Check, ExternalLink
 } from "lucide-react";
-import { formatVND } from "@/utils";
+import { formatCurrency } from "@/utils";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function RoomDetailPage() {
+  const { currentLocale } = useLanguage();
+  const tGuest = useTranslations("guest");
+
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [depositStep, setDepositStep] = useState<"form" | "qr" | "success">("form");
   const [tenantName, setTenantName] = useState("");
@@ -27,32 +31,28 @@ export default function RoomDetailPage() {
   const room = {
     id: "1",
     code: "#ROOM-Q1-101",
-    title: "Phòng Studio Ban Công Nguyễn Huệ Quận 1 - View Đẹp",
+    title: tGuest("guestRoomDetailSampleTitle"),
     price: 4500000,
-    depositAmount: 1000000, // Cài đặt bởi chủ nhà
+    depositAmount: 1000000,
     area: 25,
-    address: "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. HCM",
-    electricityRate: 3800, // đ/kWh
-    waterRate: 25000, // đ/m³
-    serviceFee: 150000, // đ/người
+    address: tGuest("guestRoomDetailSampleAddress"),
+    electricityRate: 3800,
+    waterRate: 25000,
+    serviceFee: 150000,
     images: [
       "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80"
     ],
-    description: `Căn hộ Studio cao cấp đầy đủ tiện nghi thiết kế hiện đại tại trung tâm Quận 1.
-    - Nội thất: Giường nệm cao cấp, tủ quần áo lớn, điều hòa Inverter tiết kiệm điện, tủ lạnh Aqua, bàn làm việc.
-    - Khu bếp riêng biệt, trang bị đầy đủ bếp từ, máy hút mùi.
-    - Phòng tắm khép kín, vòi sen nóng lạnh, kính cường lực.
-    - An ninh: Khóa cửa vân tay, camera giám sát 24/7, giờ giấc tự do không chung chủ.`,
+    description: tGuest("guestRoomDetailSampleDesc"),
     facilities: [
-      "Wifi tốc độ cao 150Mbps",
-      "Điều hòa Inverter tiết kiệm điện",
-      "Tủ lạnh Aqua 180L",
-      "Thang máy tốc độ cao",
-      "Khóa vân tay an ninh",
-      "Ban công phơi đồ thoáng mát",
-      "Chỗ để xe máy tầng trệt"
+      tGuest("guestRoomDetailFacWifi"),
+      tGuest("guestRoomDetailFacAc"),
+      tGuest("guestRoomDetailFacFridge"),
+      tGuest("guestRoomDetailFacElevator"),
+      tGuest("guestRoomDetailFacLock"),
+      tGuest("guestRoomDetailFacBalcony"),
+      tGuest("guestRoomDetailFacParking")
     ],
     landlord: {
       name: "Nguyễn Văn Rio",
@@ -62,9 +62,11 @@ export default function RoomDetailPage() {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(typeof window !== "undefined" ? window.location.href : "");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   // Utility Cost Calculator Math
@@ -84,7 +86,7 @@ export default function RoomDetailPage() {
             href="/rooms"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" /> Quay lại danh sách phòng trọ
+            <ArrowLeft className="h-4 w-4" /> {tGuest("guestRoomDetailBackToList")}
           </Link>
 
           <div className="flex items-center gap-2">
@@ -94,29 +96,29 @@ export default function RoomDetailPage() {
                 }`}
             >
               <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
-              {isSaved ? "Đã lưu" : "Lưu bài"}
+              {isSaved ? tGuest("guestRoomDetailSaved") : tGuest("guestRoomDetailSave")}
             </button>
 
             <button
               onClick={() => setIsShareOpen(true)}
               className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
-              <Share2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> Chia sẻ
+              <Share2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {tGuest("guestRoomDetailShare")}
             </button>
           </div>
         </div>
 
-        {/* Room Title Header Block (Cleaned - Removed Price from Top, Address Links to Google Maps) */}
+        {/* Room Title Header Block */}
         <div className="space-y-3 bg-zinc-50/80 p-6 sm:p-8 rounded-3xl border border-zinc-200/80 shadow-xs">
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-extrabold rounded-full">
-              Phòng Studio Ban Công
+              {tGuest("guestRoomDetailStudioBadge")}
             </span>
             <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
-              Chính chủ xác thực
+              {tGuest("guestRoomDetailVerifiedBadge")}
             </span>
             <span className="px-3 py-1 bg-zinc-200/80 text-zinc-700 text-xs font-extrabold rounded-full">
-              Mã phòng: {room.code}
+              {tGuest("guestRoomDetailRoomCode", { code: room.code })}
             </span>
           </div>
 
@@ -130,7 +132,7 @@ export default function RoomDetailPage() {
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 text-zinc-800 font-bold hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors group"
-              title="Mở Google Maps xem vị trí chính xác"
+              title={tGuest("guestContactMaps")}
             >
               <MapPin className="h-4 w-4 text-[#2AC1BC]" />
               <span>{room.address}</span>
@@ -139,7 +141,7 @@ export default function RoomDetailPage() {
 
             <div className="flex items-center gap-1 text-zinc-700">
               <Minimize2 className="h-4 w-4 text-zinc-400" />
-              <span>Diện tích: <strong>{room.area} m²</strong></span>
+              <span>{tGuest("guestRoomDetailAreaLabel")}: <strong>{room.area} m²</strong></span>
             </div>
           </div>
         </div>
@@ -159,7 +161,7 @@ export default function RoomDetailPage() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <span className="absolute top-4 left-4 px-3 py-1 bg-[#2AC1BC] text-white text-xs font-black rounded-full shadow-md">
-                  Ảnh Thực Tế 100%
+                  {tGuest("guestRoomDetailPhotoBadge")}
                 </span>
               </div>
               <div className="hidden md:flex flex-col gap-3">
@@ -172,17 +174,17 @@ export default function RoomDetailPage() {
               </div>
             </div>
 
-            {/* 1. Description Section (Moved UP above Escrow) */}
+            {/* 1. Description Section */}
             <div className="space-y-3">
-              <h2 className="text-xl font-extrabold text-zinc-900">Mô tả phòng trọ</h2>
+              <h2 className="text-xl font-extrabold text-zinc-900">{tGuest("guestRoomDetailDescTitle")}</h2>
               <div className="text-zinc-600 leading-relaxed whitespace-pre-line text-xs font-medium bg-zinc-50 p-6 rounded-3xl border border-zinc-200/80">
                 {room.description}
               </div>
             </div>
 
-            {/* 2. Facilities Section (Moved UP above Escrow) */}
+            {/* 2. Facilities Section */}
             <div className="space-y-4">
-              <h2 className="text-xl font-extrabold text-zinc-900">Trang thiết bị & Tiện ích sẵn có</h2>
+              <h2 className="text-xl font-extrabold text-zinc-900">{tGuest("guestRoomDetailFacilitiesTitle")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {room.facilities.map((fac, idx) => (
                   <div key={idx} className="flex items-center gap-2.5 p-3.5 bg-white border border-zinc-200/80 rounded-2xl text-xs font-bold text-zinc-800 shadow-xs">
@@ -195,55 +197,57 @@ export default function RoomDetailPage() {
 
             {/* 3. Escrow Deposit Process Guarantee Box */}
             <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 p-6 rounded-3xl text-white space-y-4 shadow-xl border border-zinc-800">
-              <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider block">QUY TRÌNH ĐẶT CỌC GIỮ PHÒNG DORMIO ESCROW</span>
+              <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider block">
+                {tGuest("guestRoomDetailEscrowTitle")}
+              </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
                   <span className="w-6 h-6 rounded-full bg-[#2AC1BC] text-white font-black text-xs inline-flex items-center justify-center">1</span>
-                  <h4 className="font-extrabold text-xs text-white">Khách Đặt Cọc VietQR</h4>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">Chuyển cọc trực tiếp qua hệ thống tự động.</p>
+                  <h4 className="font-extrabold text-xs text-white">{tGuest("guestRoomDetailEscrowStep1Title")}</h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">{tGuest("guestRoomDetailEscrowStep1Desc")}</p>
                 </div>
 
                 <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
                   <span className="w-6 h-6 rounded-full bg-amber-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">2</span>
-                  <h4 className="font-extrabold text-xs text-white">Dormio Tạm Giữ</h4>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">Tiền được nền tảng bảo lưu an toàn 100%.</p>
+                  <h4 className="font-extrabold text-xs text-white">{tGuest("guestRoomDetailEscrowStep2Title")}</h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">{tGuest("guestRoomDetailEscrowStep2Desc")}</p>
                 </div>
 
                 <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
                   <span className="w-6 h-6 rounded-full bg-emerald-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">3</span>
-                  <h4 className="font-extrabold text-xs text-white">Giải Ngân Cho Chủ Nhà</h4>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">Khi 2 bên chấp nhận thỏa thuận ký hợp đồng.</p>
+                  <h4 className="font-extrabold text-xs text-white">{tGuest("guestRoomDetailEscrowStep3Title")}</h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">{tGuest("guestRoomDetailEscrowStep3Desc")}</p>
                 </div>
               </div>
             </div>
 
-            {/* 4. Interactive Rent & Utility Calculator Card Widget (Defaults: People = 1, Electricity = 0, Water = 0) */}
+            {/* 4. Interactive Rent & Utility Calculator Card Widget */}
             <div className="bg-white p-6 sm:p-8 rounded-3xl text-zinc-900 shadow-md border border-zinc-200/80 space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
                 <div>
                   <h3 className="text-lg font-black text-zinc-900 flex items-center gap-2">
-                    <Calculator className="w-5 h-5 text-[#2AC1BC]" /> Công cụ ước tính tổng chi phí sinh hoạt hàng tháng
+                    <Calculator className="w-5 h-5 text-[#2AC1BC]" /> {tGuest("guestRoomDetailCalcTitle")}
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium mt-0.5">
-                    Tùy chỉnh số lượng người ở & điện nước tiêu thụ để tính số tiền thực tế cần chi trả.
+                    {tGuest("guestRoomDetailCalcSub")}
                   </p>
                 </div>
                 <button
                   onClick={() => setIsCalcOpen(!isCalcOpen)}
                   className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer hover:bg-[#72b3a3] transition-colors shrink-0"
                 >
-                  {isCalcOpen ? "Thu gọn bảng tính" : "Mở bảng tính toán"}
+                  {isCalcOpen ? tGuest("guestRoomDetailCalcClose") : tGuest("guestRoomDetailCalcOpen")}
                 </button>
               </div>
 
               {isCalcOpen && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
-                  {/* Slider 1: Số người ở (Default: 1) */}
+                  {/* Slider 1: Number of occupants */}
                   <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-zinc-500">Số người sinh hoạt:</span>
-                      <span className="text-[#2AC1BC] font-black">{peopleCount} Người</span>
+                      <span className="text-zinc-500">{tGuest("guestRoomDetailPeopleCountLabel")}</span>
+                      <span className="text-[#2AC1BC] font-black">{peopleCount} {tGuest("guestRoomDetailPeopleUnit")}</span>
                     </div>
                     <input
                       type="range"
@@ -253,13 +257,15 @@ export default function RoomDetailPage() {
                       onChange={(e) => setPeopleCount(Number(e.target.value))}
                       className="w-full accent-[#2AC1BC] cursor-pointer"
                     />
-                    <span className="text-[10px] text-zinc-400 block">Phí rác & Wifi: {formatVND(totalServiceCost)}</span>
+                    <span className="text-[10px] text-zinc-400 block">
+                      {tGuest("guestRoomDetailServiceNote")} {formatCurrency(totalServiceCost, currentLocale)}
+                    </span>
                   </div>
 
-                  {/* Slider 2: Điện tiêu thụ (Default: 0) */}
+                  {/* Slider 2: Electricity */}
                   <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-zinc-500">Điện dự kiến (kWh):</span>
+                      <span className="text-zinc-500">{tGuest("guestRoomDetailElectricityLabel")}</span>
                       <span className="text-amber-600 font-black">{electricityKwh} kWh</span>
                     </div>
                     <input
@@ -271,13 +277,15 @@ export default function RoomDetailPage() {
                       onChange={(e) => setElectricityKwh(Number(e.target.value))}
                       className="w-full accent-amber-500 cursor-pointer"
                     />
-                    <span className="text-[10px] text-zinc-400 block">Giá điện: 3.800 đ/kWh ({formatVND(totalElectricityCost)})</span>
+                    <span className="text-[10px] text-zinc-400 block">
+                      {tGuest("guestRoomDetailElectricityNote")} ({formatCurrency(totalElectricityCost, currentLocale)})
+                    </span>
                   </div>
 
-                  {/* Slider 3: Nước tiêu thụ (Default: 0) */}
+                  {/* Slider 3: Water */}
                   <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-zinc-500">Nước dự kiến (m³):</span>
+                      <span className="text-zinc-500">{tGuest("guestRoomDetailWaterLabel")}</span>
                       <span className="text-cyan-600 font-black">{waterM3} m³</span>
                     </div>
                     <input
@@ -288,7 +296,9 @@ export default function RoomDetailPage() {
                       onChange={(e) => setWaterM3(Number(e.target.value))}
                       className="w-full accent-cyan-500 cursor-pointer"
                     />
-                    <span className="text-[10px] text-zinc-400 block">Giá nước: 25.000 đ/m³ ({formatVND(totalWaterCost)})</span>
+                    <span className="text-[10px] text-zinc-400 block">
+                      {tGuest("guestRoomDetailWaterNote")} ({formatCurrency(totalWaterCost, currentLocale)})
+                    </span>
                   </div>
                 </div>
               )}
@@ -296,12 +306,12 @@ export default function RoomDetailPage() {
               {/* Total Summary Breakdown Box */}
               <div className="p-5 bg-zinc-900 rounded-2xl text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs text-zinc-400 font-semibold block">Tổng chi phí ước tính hàng tháng:</span>
-                  <span className="text-3xl font-black text-rose-500">{formatVND(totalEstimatedMonthly)}</span>
+                  <span className="text-xs text-zinc-400 font-semibold block">{tGuest("guestRoomDetailTotalCalcTitle")}</span>
+                  <span className="text-3xl font-black text-rose-500">{formatCurrency(totalEstimatedMonthly, currentLocale)}</span>
                 </div>
                 <div className="text-xs text-zinc-400 font-medium space-y-0.5">
-                  <div>• Tiền phòng: <strong className="text-white">{formatVND(room.price)}</strong></div>
-                  <div>• Điện + Nước + Dịch vụ: <strong className="text-[#2AC1BC]">{formatVND(totalElectricityCost + totalWaterCost + totalServiceCost)}</strong></div>
+                  <div>• {tGuest("guestRoomDetailRentPart")} <strong className="text-white">{formatCurrency(room.price, currentLocale)}</strong></div>
+                  <div>• {tGuest("guestRoomDetailUtilPart")} <strong className="text-[#2AC1BC]">{formatCurrency(totalElectricityCost + totalWaterCost + totalServiceCost, currentLocale)}</strong></div>
                 </div>
               </div>
             </div>
@@ -314,10 +324,14 @@ export default function RoomDetailPage() {
             {/* Price & Deposit Action Box */}
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-zinc-200/80 shadow-xl space-y-6">
               <div className="space-y-1">
-                <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider block">Giá thuê niêm yết chính chủ</span>
-                <div className="text-3xl font-black text-rose-500">{formatVND(room.price)} <span className="text-xs text-zinc-400 font-normal">/tháng</span></div>
+                <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider block">
+                  {tGuest("guestRoomDetailListedPriceLabel")}
+                </span>
+                <div className="text-3xl font-black text-rose-500">
+                  {formatCurrency(room.price, currentLocale)} <span className="text-xs text-zinc-400 font-normal">{tGuest("guestRoomDetailMonth")}</span>
+                </div>
                 <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 text-xs text-rose-700 font-bold mt-2">
-                  Tiền cọc: {formatVND(room.depositAmount)}
+                  {tGuest("guestRoomDetailDepositLabel")} {formatCurrency(room.depositAmount, currentLocale)}
                 </div>
               </div>
 
@@ -326,26 +340,30 @@ export default function RoomDetailPage() {
                   onClick={() => { setIsDepositModalOpen(true); setDepositStep("form"); }}
                   className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#FF6B35]/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4" /> Đặt Cọc Giữ Phòng VietQR
+                  <Sparkles className="w-4 h-4" /> {tGuest("guestRoomDetailDepositBtn")}
                 </button>
 
                 <a href={`tel:${room.landlord.phone}`} className="block">
                   <button className="w-full py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    <Phone className="w-4 h-4 text-[#2AC1BC]" /> Gọi Điện Hẹn Xem Phòng
+                    <Phone className="w-4 h-4 text-[#2AC1BC]" /> {tGuest("guestRoomDetailCallBtn")}
                   </button>
                 </a>
               </div>
 
               {/* Landlord Contact Profile Card */}
               <div className="pt-6 border-t border-zinc-100 space-y-3">
-                <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">THÔNG TIN CHỦ NHÀ TRỌ</span>
+                <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">
+                  {tGuest("guestRoomDetailLandlordTitle")}
+                </span>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-lg">
                     R
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-zinc-900">{room.landlord.name}</h4>
-                    <span className="text-xs font-semibold text-zinc-500">SĐT: {room.landlord.phone}</span>
+                    <span className="text-xs font-semibold text-zinc-500">
+                      {tGuest("guestRoomDetailPhoneLabel")} {room.landlord.phone}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -371,7 +389,7 @@ export default function RoomDetailPage() {
             </button>
 
             <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> Chia sẻ bài đăng phòng trọ
+              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {tGuest("guestRoomDetailShareTitle")}
             </h3>
             <p className="text-xs text-zinc-500 font-medium line-clamp-1">{room.title}</p>
 
@@ -387,7 +405,7 @@ export default function RoomDetailPage() {
                 className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Đã chép" : "Sao chép"}
+                {copied ? tGuest("guestRoomDetailCopied") : tGuest("guestRoomDetailCopy")}
               </button>
             </div>
           </div>
@@ -403,7 +421,7 @@ export default function RoomDetailPage() {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-zinc-100 max-h-[90vh] overflow-y-auto cursor-default">
             <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
               <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-[#2AC1BC]" /> Đặt Cọc Xem/Giữ Phòng VietQR
+                <Lock className="w-4 h-4 text-[#2AC1BC]" /> {tGuest("guestRoomDetailModalTitle")}
               </h3>
               <button
                 onClick={() => setIsDepositModalOpen(false)}
@@ -415,26 +433,34 @@ export default function RoomDetailPage() {
 
             {/* Escrow Explanation */}
             <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-4 rounded-2xl text-white space-y-2 border border-zinc-800">
-              <span className="text-[10px] font-black text-[#2AC1BC] uppercase block">DORMIO ESCROW BẢO VỆ TIỀN CỌC</span>
+              <span className="text-[10px] font-black text-[#2AC1BC] uppercase block">
+                {tGuest("guestRoomsEscrowTitle")}
+              </span>
               <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
-                Tiền cọc do Dormio giữ an toàn. Khi khách và chủ trọ chấp nhận thỏa thuận đồng ý thuê, hệ thống sẽ tự động chuyển thanh toán cho tài khoản chủ trọ.
+                {tGuest("guestRoomDetailEscrowModalDesc")}
               </p>
             </div>
 
             {depositStep === "form" && (
               <div className="space-y-4">
                 <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
-                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">Phòng trọ chọn cọc:</span>
+                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">
+                    {tGuest("guestRoomDetailSelectedRoomLabel")}
+                  </span>
                   <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">{room.title}</h4>
-                  <div className="text-xs font-bold text-rose-500">Cọc cài đặt bởi chủ nhà: {formatVND(room.depositAmount)}</div>
+                  <div className="text-xs font-bold text-rose-500">
+                    {tGuest("guestRoomDetailLandlordDepositLabel")} {formatCurrency(room.depositAmount, currentLocale)}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">Họ và tên người thuê *</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
+                      {tGuest("guestRoomDetailTenantNameLabel")}
+                    </label>
                     <input
                       type="text"
-                      placeholder="Nhập họ và tên..."
+                      placeholder={tGuest("guestRoomDetailTenantNamePlaceholder")}
                       value={tenantName}
                       onChange={(e) => setTenantName(e.target.value)}
                       className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
@@ -442,10 +468,12 @@ export default function RoomDetailPage() {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">Số điện thoại *</label>
+                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
+                      {tGuest("guestRoomDetailTenantPhoneLabel")}
+                    </label>
                     <input
                       type="text"
-                      placeholder="Nhập số điện thoại..."
+                      placeholder={tGuest("guestRoomDetailTenantPhonePlaceholder")}
                       value={tenantPhone}
                       onChange={(e) => setTenantPhone(e.target.value)}
                       className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
@@ -458,7 +486,7 @@ export default function RoomDetailPage() {
                   disabled={!tenantName || !tenantPhone}
                   className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
                 >
-                  Xác nhận & Chuyển sang quét mã VietQR →
+                  {tGuest("guestRoomDetailConfirmQrBtn")} →
                 </button>
               </div>
             )}
@@ -470,16 +498,20 @@ export default function RoomDetailPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500 font-semibold block">Số tiền chuyển khoản cọc:</span>
-                  <span className="text-2xl font-black text-rose-600">{formatVND(room.depositAmount)}</span>
-                  <p className="text-[11px] text-zinc-400 font-medium">Nội dung CK: <span className="font-extrabold text-zinc-800">COC {tenantPhone} P101</span></p>
+                  <span className="text-xs text-zinc-500 font-semibold block">
+                    {tGuest("guestRoomDetailTransferAmountLabel")}
+                  </span>
+                  <span className="text-2xl font-black text-rose-600">{formatCurrency(room.depositAmount, currentLocale)}</span>
+                  <p className="text-[11px] text-zinc-400 font-medium">
+                    {tGuest("guestRoomDetailTransferContentLabel")} <span className="font-extrabold text-zinc-800">COC {tenantPhone} P101</span>
+                  </p>
                 </div>
 
                 <button
                   onClick={() => setDepositStep("success")}
                   className="w-full py-3 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer"
                 >
-                  Tôi đã hoàn tất chuyển khoản VietQR
+                  {tGuest("guestRoomDetailConfirmTransferBtn")}
                 </button>
               </div>
             )}
@@ -490,16 +522,16 @@ export default function RoomDetailPage() {
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-zinc-900">Đặt cọc giữ chỗ thành công!</h4>
+                  <h4 className="text-base font-black text-zinc-900">{tGuest("guestRoomDetailSuccessTitle")}</h4>
                   <p className="text-xs text-zinc-500 mt-1">
-                    Hệ thống Dormio đã ghi nhận cọc và thông báo chủ nhà <span className="font-bold text-zinc-800">{room.landlord.name}</span>. Tiền được giữ an toàn và chỉ thanh toán cho chủ nhà khi 2 bên chấp nhận hợp đồng.
+                    {tGuest("guestRoomDetailSuccessDesc", { name: room.landlord.name })}
                   </p>
                 </div>
                 <button
                   onClick={() => setIsDepositModalOpen(false)}
                   className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
                 >
-                  Đóng cửa sổ
+                  {tGuest("guestRoomDetailCloseModal")}
                 </button>
               </div>
             )}

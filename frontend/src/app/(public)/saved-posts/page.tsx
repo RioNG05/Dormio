@@ -7,46 +7,76 @@ import {
   CheckCircle2, X, Check, Share2, Lock, ShieldCheck, Phone
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { formatVND } from "@/utils";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
+import { formatCurrency } from "@/utils";
+
+interface SavedRoomItem {
+  id: string;
+  titleVi: string;
+  titleEn: string;
+  price: number;
+  depositAmount: number;
+  area: number;
+  addressVi: string;
+  addressEn: string;
+  image: string;
+  amenitiesVi: string[];
+  amenitiesEn: string[];
+  landlord: { name: string; phone: string };
+}
+
+const INITIAL_SAVED_ROOMS: SavedRoomItem[] = [
+  {
+    id: "1",
+    titleVi: "Phòng Studio Ban Công Nguyễn Huệ Quận 1 - View Đẹp",
+    titleEn: "Studio Room with Balcony Nguyen Hue Dist 1 - Nice View",
+    price: 4500000,
+    depositAmount: 1000000,
+    area: 25,
+    addressVi: "123 Nguyễn Huệ, Bến Nghé, Quận 1, TP. HCM",
+    addressEn: "123 Nguyen Hue, Ben Nghe, District 1, HCMC",
+    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
+    amenitiesVi: ["Ban công", "Máy lạnh Inverter", "Tủ lạnh", "Bếp riêng", "Wifi free", "Khóa vân tay"],
+    amenitiesEn: ["Balcony", "Inverter AC", "Refrigerator", "Private Kitchen", "Free Wifi", "Smart Lock"],
+    landlord: { name: "Nguyễn Văn Rio", phone: "0901.234.567" }
+  },
+  {
+    id: "2",
+    titleVi: "Phòng Đơn Cao Cấp Tầng 1 Full Nội Thất Trung Tâm Q1",
+    titleEn: "Premium Single Room 1st Floor Fully Furnished Central D1",
+    price: 4000000,
+    depositAmount: 500000,
+    area: 22,
+    addressVi: "125 Nguyễn Huệ, Bến Nghé, Quận 1, TP. HCM",
+    addressEn: "125 Nguyen Hue, Ben Nghe, District 1, HCMC",
+    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
+    amenitiesVi: ["Máy lạnh", "Tủ lạnh", "Nóng lạnh", "Giờ tự do", "Bảo vệ 24/7"],
+    amenitiesEn: ["Air conditioner", "Refrigerator", "Water heater", "No curfew", "24/7 Security"],
+    landlord: { name: "Trần Thị Lan", phone: "0987.654.321" }
+  },
+  {
+    id: "3",
+    titleVi: "Phòng Đôi Sinh Viên Cầu Giấy Gần FTU Ngoại Thương",
+    titleEn: "Student Double Room Cau Giay Near Foreign Trade University",
+    price: 3200000,
+    depositAmount: 0,
+    area: 24,
+    addressVi: "45 Chùa Láng, Đống Đa, Hà Nội",
+    addressEn: "45 Chua Lang, Dong Da, Hanoi",
+    image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
+    amenitiesVi: ["Wifi tốc độ cao", "Nóng lạnh", "Ban công", "Chỗ để xe"],
+    amenitiesEn: ["High-speed Wifi", "Water heater", "Balcony", "Parking space"],
+    landlord: { name: "Lê Hoàng Nam", phone: "0912.345.678" }
+  }
+];
 
 export default function SavedPostsPage() {
+  const t = useTranslations("guest");
+  const { currentLocale } = useLanguage();
+  const isEn = currentLocale === "en";
   const { isLoggedIn } = useAuth();
 
-  const [savedRooms, setSavedRooms] = useState([
-    {
-      id: "1",
-      title: "Phòng Studio Ban Công Nguyễn Huệ Quận 1 - View Đẹp",
-      price: 4500000,
-      depositAmount: 1000000,
-      area: 25,
-      address: "123 Nguyễn Huệ, Bến Nghé, Quận 1, TP. HCM",
-      image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-      amenities: ["Ban công", "Máy lạnh Inverter", "Tủ lạnh", "Bếp riêng", "Wifi free", "Khóa vân tay"],
-      landlord: { name: "Nguyễn Văn Rio", phone: "0901.234.567" }
-    },
-    {
-      id: "2",
-      title: "Phòng Đơn Cao Cấp Tầng 1 Full Nội Thất Trung Tâm Q1",
-      price: 4000000,
-      depositAmount: 500000,
-      area: 22,
-      address: "125 Nguyễn Huệ, Bến Nghé, Quận 1, TP. HCM",
-      image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-      amenities: ["Máy lạnh", "Tủ lạnh", "Nóng lạnh", "Giờ tự do", "Bảo vệ 24/7"],
-      landlord: { name: "Trần Thị Lan", phone: "0987.654.321" }
-    },
-    {
-      id: "3",
-      title: "Phòng Đôi Sinh Viên Cầu Giấy Gần FTU Ngoại Thương",
-      price: 3200000,
-      depositAmount: 0, // Miễn phí cọc
-      area: 24,
-      address: "45 Chùa Láng, Đống Đa, Hà Nội",
-      image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
-      amenities: ["Wifi tốc độ cao", "Nóng lạnh", "Ban công", "Chỗ để xe"],
-      landlord: { name: "Lê Hoàng Nam", phone: "0912.345.678" }
-    }
-  ]);
+  const [savedRooms, setSavedRooms] = useState<SavedRoomItem[]>(INITIAL_SAVED_ROOMS);
 
   // Selected Room IDs for Side-by-Side Comparison
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
@@ -74,15 +104,15 @@ export default function SavedPostsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
           <div className="relative z-10 max-w-4xl mx-auto space-y-4">
             <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> TÍNH NĂNG DÀNH CHO THÀNH VIÊN
+              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> {t("guestSavedPostsMemberBadge")}
             </span>
 
             <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
-              <span>Danh Sách Phòng Trọ Đã Lưu</span>
+              <span>{t("guestSavedPostsLockHeroTitle")}</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto">
-              Vui lòng đăng nhập tài khoản để xem và quản lý danh sách các phòng trọ yêu thích của bạn.
+              {t("guestSavedPostsLockHeroSub")}
             </p>
           </div>
         </section>
@@ -94,21 +124,21 @@ export default function SavedPostsPage() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-zinc-900">Yêu Cầu Đăng Nhập Tài Khoản</h2>
+            <h2 className="text-2xl font-black text-zinc-900">{t("guestSavedPostsLockTitle")}</h2>
             <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-md mx-auto">
-              Trang danh sách lưu trữ phòng trọ chỉ dành cho thành viên đã có tài khoản trên nền tảng Dormio. Đăng nhập ngay để lưu giữ các căn hộ ưng ý & đối chiếu so sánh giá 24/7!
+              {t("guestSavedPostsLockDesc")}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link href="/login" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all cursor-pointer hover:scale-105">
-                Đăng nhập tài khoản ngay &rarr;
+                {t("guestSavedPostsLoginBtn")} &rarr;
               </button>
             </Link>
             <Link href="/register" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-8 py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-2xl transition-all cursor-pointer">
-                Tạo tài khoản mới
+                {t("guestSavedPostsRegisterBtn")}
               </button>
             </Link>
           </div>
@@ -125,18 +155,18 @@ export default function SavedPostsPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> DANH SÁCH PHÒNG TRỌ ĐÃ LƯU
+            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> {t("guestSavedPostsBadge")}
           </span>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">Danh Sách Yêu Thích</span> <br />
+            <span className="inline-block whitespace-nowrap">{t("guestSavedPostsTitle1")}</span> <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              So Sánh & Đặt Cọc
+              {t("guestSavedPostsTitle2")}
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto text-balance">
-            Tùy chọn tích chọn các phòng trọ để mở đối chiếu so sánh thông số giá thuê, tiền cọc và tiện ích.
+            {t("guestSavedPostsSubtitle")}
           </p>
         </div>
       </section>
@@ -148,11 +178,11 @@ export default function SavedPostsPage() {
             <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
               <Heart className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black text-zinc-900">Chưa có phòng trọ nào được lưu</h3>
-            <p className="text-xs text-zinc-500 font-medium">Hãy dạo xem danh sách phòng trọ chính chủ và nhấp vào biểu tượng trái tim để lưu lại.</p>
+            <h3 className="text-xl font-black text-zinc-900">{t("guestSavedPostsEmptyTitle")}</h3>
+            <p className="text-xs text-zinc-500 font-medium">{t("guestSavedPostsEmptySub")}</p>
             <Link href="/rooms">
               <button className="px-6 py-3 bg-[#2AC1BC] text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-[#72b3a3] transition-all cursor-pointer">
-                Khám phá danh sách phòng ngay &rarr;
+                {t("guestSavedPostsExploreRooms")} &rarr;
               </button>
             </Link>
           </div>
@@ -165,10 +195,10 @@ export default function SavedPostsPage() {
                   {selectedForCompare.length}
                 </span>
                 <span className="hidden sm:inline">
-                  Đã lưu <strong className="text-white">{savedRooms.length}</strong> phòng • Đã chọn <strong className="text-[#2AC1BC]">{selectedForCompare.length}</strong> phòng so sánh
+                  {t("guestSavedPostsSelectedInfo", { savedCount: savedRooms.length, compareCount: selectedForCompare.length })}
                 </span>
                 <span className="sm:hidden text-white font-bold">
-                  Đã chọn {selectedForCompare.length} phòng
+                  {t("guestSavedPostsSelectedMobile", { compareCount: selectedForCompare.length })}
                 </span>
               </div>
 
@@ -178,7 +208,7 @@ export default function SavedPostsPage() {
                 disabled={selectedForCompare.length === 0}
                 className="px-6 py-3 bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] to-[#FF6B35] disabled:opacity-40 hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#2AC1BC]/20 flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shrink-0"
               >
-                <Scale className="w-4 h-4" /> Bắt đầu so sánh ({selectedForCompare.length}) →
+                <Scale className="w-4 h-4" /> {t("guestSavedPostsCompareBtn", { count: selectedForCompare.length })} &rarr;
               </button>
             </div>
 
@@ -186,6 +216,9 @@ export default function SavedPostsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {savedRooms.map((room) => {
                 const isSelected = selectedForCompare.includes(room.id);
+                const roomTitle = isEn ? room.titleEn : room.titleVi;
+                const roomAddress = isEn ? room.addressEn : room.addressVi;
+                const roomAmenities = isEn ? room.amenitiesEn : room.amenitiesVi;
 
                 return (
                   <div
@@ -206,20 +239,20 @@ export default function SavedPostsPage() {
                         onChange={() => { }} // handled by div click
                         className="w-4 h-4 accent-[#2AC1BC] cursor-pointer"
                       />
-                      <span>{isSelected ? "Đã chọn so sánh" : "Chọn so sánh"}</span>
+                      <span>{isSelected ? t("guestSavedPostsSelectedCompare") : t("guestSavedPostsSelectCompare")}</span>
                     </div>
 
                     {/* Image */}
                     <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100">
                       <img
                         src={room.image}
-                        alt={room.title}
+                        alt={roomTitle}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <button
                         onClick={() => removeSaved(room.id)}
                         className="absolute top-3 right-3 p-2 bg-zinc-900/80 hover:bg-rose-600 text-white rounded-full transition-colors cursor-pointer"
-                        title="Bỏ lưu"
+                        title={t("guestSavedPostsRemoveTitle")}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -229,40 +262,40 @@ export default function SavedPostsPage() {
                       <div className="space-y-2">
                         <Link href={`/rooms/${room.id}`}>
                           <h3 className="font-extrabold text-zinc-900 text-base leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-2">
-                            {room.title}
+                            {roomTitle}
                           </h3>
                         </Link>
                         <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(room.address)}`}
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(roomAddress)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
-                          title="Mở Google Maps xem vị trí chính xác"
+                          title={t("guestSavedPostsMapTitle")}
                         >
                           <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                          <span className="truncate">{room.address}</span>
+                          <span className="truncate">{roomAddress}</span>
                         </a>
                       </div>
 
                       <div className="pt-3 border-t border-zinc-100 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xl font-black text-rose-500">{formatVND(room.price)}</span>
+                          <span className="text-xl font-black text-rose-500">{formatCurrency(room.price, currentLocale)}</span>
                           <span className="text-xs text-zinc-700 font-bold">{room.area} m²</span>
                         </div>
 
                         <span className="text-[11px] font-bold text-zinc-500 block">
-                          Tiền cọc: {room.depositAmount > 0 ? formatVND(room.depositAmount) : "Miễn phí cọc"}
+                          {t("guestSavedPostsDepositLabel")} {room.depositAmount > 0 ? formatCurrency(room.depositAmount, currentLocale) : t("guestSavedPostsFreeDepositShort")}
                         </span>
 
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Link href={`/rooms/${room.id}`}>
                             <button className="w-full py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold text-xs rounded-xl transition-all cursor-pointer text-center">
-                              Xem Chi Tiết
+                              {t("guestSavedPostsViewDetails")}
                             </button>
                           </Link>
                           <Link href={`/rooms/${room.id}`}>
                             <button className="w-full py-2.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center">
-                              Đặt Cọc Giữ Phòng
+                              {t("guestSavedPostsDepositNow")}
                             </button>
                           </Link>
                         </div>
@@ -286,10 +319,10 @@ export default function SavedPostsPage() {
             <div className="flex justify-between items-center pb-4 border-b border-zinc-100">
               <div>
                 <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-[#2AC1BC]" /> Bảng Đối Chiếu So Sánh Chi Tiết ({selectedRoomsData.length} Phòng)
+                  <Scale className="w-5 h-5 text-[#2AC1BC]" /> {t("guestSavedPostsModalTitle", { count: selectedRoomsData.length })}
                 </h3>
                 <p className="text-xs text-zinc-500 font-medium mt-0.5">
-                  So sánh trực quan giá thuê, tiền cọc, diện tích và tiện ích đi kèm.
+                  {t("guestSavedPostsModalSub")}
                 </p>
               </div>
               <button
@@ -305,36 +338,39 @@ export default function SavedPostsPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-200">
-                    <th className="p-3 text-xs font-black text-zinc-400 uppercase w-44">Tiêu chí so sánh</th>
-                    {selectedRoomsData.map((room) => (
-                      <th key={room.id} className="p-3 min-w-[220px]">
-                        <div className="space-y-2">
-                          <img src={room.image} alt={room.title} className="w-full h-28 object-cover rounded-xl border border-zinc-200" />
-                          <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-2">{room.title}</h4>
-                        </div>
-                      </th>
-                    ))}
+                    <th className="p-3 text-xs font-black text-zinc-400 uppercase w-44">{t("guestSavedPostsColCriteria")}</th>
+                    {selectedRoomsData.map((room) => {
+                      const title = isEn ? room.titleEn : room.titleVi;
+                      return (
+                        <th key={room.id} className="p-3 min-w-[220px]">
+                          <div className="space-y-2">
+                            <img src={room.image} alt={title} className="w-full h-28 object-cover rounded-xl border border-zinc-200" />
+                            <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-2">{title}</h4>
+                          </div>
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 text-xs font-semibold">
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Giá thuê / tháng</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowPrice")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 font-black text-rose-500 text-sm">
-                        {formatVND(room.price)}
+                        {formatCurrency(room.price, currentLocale)}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Tiền cọc giữ chỗ</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowDeposit")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 font-bold text-zinc-900">
-                        {room.depositAmount > 0 ? formatVND(room.depositAmount) : <span className="text-emerald-600 font-black">Miễn phí cọc xem phòng</span>}
+                        {room.depositAmount > 0 ? formatCurrency(room.depositAmount, currentLocale) : <span className="text-emerald-600 font-black">{t("guestSavedPostsFreeDeposit")}</span>}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Diện tích phòng</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowArea")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-800 font-extrabold">
                         {room.area} m²
@@ -342,29 +378,32 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Địa chỉ chi tiết</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowAddress")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-600">
-                        {room.address}
+                        {isEn ? room.addressEn : room.addressVi}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Tiện ích đi kèm</td>
-                    {selectedRoomsData.map((room) => (
-                      <td key={room.id} className="p-3">
-                        <div className="flex flex-wrap gap-1">
-                          {room.amenities.map((item, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-md text-[10px] font-bold">
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                    ))}
+                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowAmenities")}</td>
+                    {selectedRoomsData.map((room) => {
+                      const amenities = isEn ? room.amenitiesEn : room.amenitiesVi;
+                      return (
+                        <td key={room.id} className="p-3">
+                          <div className="flex flex-wrap gap-1">
+                            {amenities.map((item, idx) => (
+                              <span key={idx} className="px-2 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-md text-[10px] font-bold">
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                      );
+                    })}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Chủ nhà trọ</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowLandlord")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-700 font-bold">
                         {room.landlord.name} ({room.landlord.phone})
@@ -372,12 +411,12 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">Hành động</td>
+                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowAction")}</td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3">
                         <Link href={`/rooms/${room.id}`}>
                           <button className="w-full py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all">
-                            Xem & Đặt Cọc &rarr;
+                            {t("guestSavedPostsViewAndDeposit")} &rarr;
                           </button>
                         </Link>
                       </td>
