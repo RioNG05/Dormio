@@ -16,7 +16,7 @@ import {
   Check,
   ShieldCheck,
   Home,
-  VectorPolygon,
+  Maximize2,
   Building,
   AlertCircle,
   CheckCircle2,
@@ -498,7 +498,7 @@ export default function LandlordProfilePage({
 
                             {listing.room?.area && (
                               <span className="text-[11px] text-zinc-400 font-medium flex items-center gap-1">
-                                <VectorPolygon className="w-3 h-3 text-[#2AC1BC] shrink-0" />
+                                <Maximize2 className="w-3 h-3 text-[#2AC1BC] shrink-0" />
                                 {listing.room.area} m²
                               </span>
                             )}
