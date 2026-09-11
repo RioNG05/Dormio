@@ -34,12 +34,25 @@ import {
   ServiceFeeBreakdownDto,
   LandlordMeterReadingDto,
 } from './dto/landlord-invoices-response.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { QueryLandlordDebtsDto } from './dto/query-landlord-debts.dto';
+import {
+  LandlordDebtsResponseDto,
+  RoomDebtItemDto,
+  DebtInvoiceSummaryDto,
+  SendDebtReminderDto,
+  DebtReminderResponseDto,
+  LandlordDebtsSummaryDto,
+} from './dto/landlord-debts-response.dto';
 
 @Injectable()
 export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   /**
    * Helper to resolve active contract for tenant
@@ -1478,6 +1491,423 @@ export class InvoicesService {
 
       return invoice;
     });
+  }
+
+  // ─── UC-L-16: Debt Tracking ──────────────────────────────────────────────────
+
+  /**
+   * UC-L-16: Flip invoice status from 'unpaid' to 'overdue' once dueDate has passed
+   * without a matching paid Payment record.
+   */
+  async flipOverdueInvoices(boardingHouseId?: string): Promise<{ count: number }> {
+    const now = new Date();
+
+    const where: Prisma.InvoiceWhereInput = {
+      status: 'unpaid',
+      dueDate: { lt: now },
+      OR: [
+        { payment: null },
+        { payment: { status: { not: 'success' } } },
+      ],
+      ...(boardingHouseId ? { room: { boardingHouseId } } : {}),
+    };
+
+    const updateResult = await this.prisma.invoice.updateMany({
+      where,
+      data: {
+        status: 'overdue',
+      },
+    });
+
+    this.logger.log(
+      `[flipOverdueInvoices] Flipped ${updateResult.count} unpaid invoice(s) to overdue (boardingHouseId=${boardingHouseId || 'all'})`,
+    );
+
+    return { count: updateResult.count };
+  }
+
+  /**
+   * UC-L-16: Query Room Debt Ledger
+   *
+   * Query Invoice WHERE room.boardingHouseId = ... AND status IN ('unpaid', 'overdue')
+   * aging computed as NOW() - dueDate.
+   * Group by room for the ledger view.
+   */
+  async getLandlordDebts(
+    boardingHouseId: string,
+    query: QueryLandlordDebtsDto,
+    landlordId: string,
+  ): Promise<LandlordDebtsResponseDto> {
+    this.logger.log(
+      `Landlord ${landlordId} querying debts for house ${boardingHouseId} (duration=${query.duration}, search=${query.search}, page=${query.page})`,
+    );
+
+    // 1. Ensure any unpaid invoices past due date are updated to overdue
+    await this.flipOverdueInvoices(boardingHouseId);
+
+    const now = new Date();
+
+    // 2. Fetch all unpaid and overdue invoices for the boarding house
+    const invoices = await this.prisma.invoice.findMany({
+      where: {
+        room: {
+          boardingHouseId,
+        },
+        status: { in: ['unpaid', 'overdue'] },
+      },
+      include: {
+        room: {
+          include: {
+            boardingHouse: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        contract: {
+          include: {
+            tenantContracts: {
+              where: { isPrimary: true },
+              include: {
+                tenant: {
+                  include: {
+                    userIdentification: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    // 3. Group by room
+    const roomMap = new Map<
+      string,
+      {
+        roomId: string;
+        roomNumber: string;
+        floor: number | null;
+        buildingName: string;
+        tenant: { id: string; name: string; phone: string; email?: string } | null;
+        contractId: string | null;
+        invoices: Array<{
+          id: string;
+          period: string;
+          totalAmount: number;
+          status: 'unpaid' | 'overdue';
+          dueDate: string;
+          dueDateObj: Date;
+          agingDays: number;
+        }>;
+      }
+    >();
+
+    for (const inv of invoices) {
+      const roomId = inv.roomId;
+      if (!roomMap.has(roomId)) {
+        const primaryTenant =
+          inv.contract?.tenantContracts[0]?.tenant || null;
+        const tenantName =
+          primaryTenant?.userIdentification?.fullName ||
+          primaryTenant?.username ||
+          'Chưa có thông tin';
+        const tenantPhone = primaryTenant?.phoneNumber || '';
+        const tenantEmail = primaryTenant?.email || undefined;
+
+        roomMap.set(roomId, {
+          roomId,
+          roomNumber: inv.room.roomNumber,
+          floor: inv.room.floor ?? null,
+          buildingName: inv.room.boardingHouse.name,
+          tenant: primaryTenant
+            ? {
+                id: primaryTenant.id,
+                name: tenantName,
+                phone: tenantPhone,
+                email: tenantEmail,
+              }
+            : null,
+          contractId: inv.contractId ?? null,
+          invoices: [],
+        });
+      }
+
+      const dueDateObj = new Date(inv.dueDate);
+      const diffMs = now.getTime() - dueDateObj.getTime();
+      const agingDays = diffMs > 0 ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
+      const period = `Tháng ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`;
+
+      roomMap.get(roomId)!.invoices.push({
+        id: inv.id,
+        period,
+        totalAmount: Number(inv.totalAmount),
+        status: inv.status as 'unpaid' | 'overdue',
+        dueDate: inv.dueDate.toISOString(),
+        dueDateObj,
+        agingDays,
+      });
+    }
+
+    // 4. Transform room groups into RoomDebtItemDto
+    const allRoomDebts: RoomDebtItemDto[] = Array.from(roomMap.values()).map(
+      (entry) => {
+        let totalDebtAmount = 0;
+        let unpaidAmount = 0;
+        let overdueAmount = 0;
+        let maxAgingDays = 0;
+        let oldestDueDateObj: Date = new Date();
+
+        entry.invoices.forEach((inv, index) => {
+          totalDebtAmount += inv.totalAmount;
+          if (inv.status === 'overdue' || inv.dueDateObj < now) {
+            overdueAmount += inv.totalAmount;
+          } else {
+            unpaidAmount += inv.totalAmount;
+          }
+
+          if (inv.agingDays > maxAgingDays) {
+            maxAgingDays = inv.agingDays;
+          }
+
+          if (index === 0 || inv.dueDateObj < oldestDueDateObj) {
+            oldestDueDateObj = inv.dueDateObj;
+          }
+        });
+
+        let agingCategory: 'current' | '1_month' | '2_months' | 'bad_debt' =
+          'current';
+        if (maxAgingDays > 60) {
+          agingCategory = 'bad_debt';
+        } else if (maxAgingDays > 30) {
+          agingCategory = '2_months';
+        } else if (maxAgingDays > 0) {
+          agingCategory = '1_month';
+        } else {
+          agingCategory = 'current';
+        }
+
+        const formattedInvoices: DebtInvoiceSummaryDto[] = entry.invoices.map(
+          (i) => ({
+            id: i.id,
+            period: i.period,
+            totalAmount: i.totalAmount,
+            status: i.status,
+            dueDate: i.dueDate,
+            agingDays: i.agingDays,
+          }),
+        );
+
+        return {
+          roomId: entry.roomId,
+          roomNumber: entry.roomNumber,
+          floor: entry.floor,
+          buildingName: entry.buildingName,
+          tenant: entry.tenant,
+          contractId: entry.contractId,
+          totalDebtAmount,
+          unpaidAmount,
+          overdueAmount,
+          oldestDueDate: oldestDueDateObj.toISOString(),
+          maxAgingDays,
+          agingCategory,
+          invoicesCount: entry.invoices.length,
+          invoices: formattedInvoices,
+        };
+      },
+    );
+
+    // 5. Compute global summary metrics across ALL indebted rooms
+    let globalTotalDebt = 0;
+    let globalOverdueDebt = 0;
+    let globalBadDebt = 0;
+    let under30Count = 0;
+    let under30Amount = 0;
+    let from31To60Count = 0;
+    let from31To60Amount = 0;
+    let over60Count = 0;
+    let over60Amount = 0;
+
+    for (const r of allRoomDebts) {
+      globalTotalDebt += r.totalDebtAmount;
+      globalOverdueDebt += r.overdueAmount;
+
+      if (r.agingCategory === 'bad_debt') {
+        globalBadDebt += r.totalDebtAmount;
+        over60Count++;
+        over60Amount += r.totalDebtAmount;
+      } else if (r.agingCategory === '2_months') {
+        from31To60Count++;
+        from31To60Amount += r.totalDebtAmount;
+      } else {
+        under30Count++;
+        under30Amount += r.totalDebtAmount;
+      }
+    }
+
+    const summary: LandlordDebtsSummaryDto = {
+      totalDebtAmount: globalTotalDebt,
+      overdueDebtAmount: globalOverdueDebt,
+      badDebtAmount: globalBadDebt,
+      debtorRoomsCount: allRoomDebts.length,
+      totalInvoicesCount: invoices.length,
+      agingDistribution: {
+        under30Days: under30Count,
+        under30DaysAmount: under30Amount,
+        from31To60Days: from31To60Count,
+        from31To60DaysAmount: from31To60Amount,
+        over60Days: over60Count,
+        over60DaysAmount: over60Amount,
+      },
+    };
+
+    // 6. Apply Duration / Aging Filter
+    let filteredRooms = allRoomDebts;
+    if (query.duration && query.duration !== 'all') {
+      if (query.duration === 'current') {
+        filteredRooms = filteredRooms.filter((r) => r.agingCategory === 'current');
+      } else if (query.duration === 'overdue') {
+        filteredRooms = filteredRooms.filter((r) => r.maxAgingDays > 0);
+      } else if (query.duration === '1_month') {
+        filteredRooms = filteredRooms.filter((r) => r.agingCategory === '1_month');
+      } else if (query.duration === '2_months') {
+        filteredRooms = filteredRooms.filter((r) => r.agingCategory === '2_months');
+      } else if (query.duration === 'bad_debt') {
+        filteredRooms = filteredRooms.filter((r) => r.agingCategory === 'bad_debt');
+      }
+    }
+
+    // 7. Apply Search Filter
+    if (query.search && query.search.trim()) {
+      const term = query.search.trim().toLowerCase();
+      filteredRooms = filteredRooms.filter(
+        (r) =>
+          r.roomNumber.toLowerCase().includes(term) ||
+          (r.tenant?.name && r.tenant.name.toLowerCase().includes(term)) ||
+          (r.tenant?.phone && r.tenant.phone.includes(term)),
+      );
+    }
+
+    // 8. Sorting
+    filteredRooms.sort((a, b) => {
+      if (query.sortBy === 'aging_desc') {
+        return b.maxAgingDays - a.maxAgingDays || b.totalDebtAmount - a.totalDebtAmount;
+      }
+      if (query.sortBy === 'room_asc') {
+        return a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true });
+      }
+      // default: debt_desc
+      return b.totalDebtAmount - a.totalDebtAmount;
+    });
+
+    // 9. Pagination (Rule #9)
+    const page = Math.max(1, query.page || 1);
+    const limit = Math.max(1, query.limit || 6);
+    const total = filteredRooms.length;
+    const totalPages = Math.ceil(total / limit) || 1;
+    const skip = (page - 1) * limit;
+    const paginatedRooms = filteredRooms.slice(skip, skip + limit);
+
+    return {
+      success: true,
+      data: paginatedRooms,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+      summary,
+    };
+  }
+
+  /**
+   * UC-L-16: Dispatch debt reminder to primary tenant of indebted room
+   */
+  async sendDebtReminder(
+    boardingHouseId: string,
+    landlordId: string,
+    dto: SendDebtReminderDto,
+  ): Promise<DebtReminderResponseDto> {
+    const { roomId, note } = dto;
+
+    const room = await this.prisma.room.findFirst({
+      where: {
+        id: roomId,
+        boardingHouseId,
+      },
+      include: {
+        boardingHouse: true,
+        contracts: {
+          where: { status: 'active' },
+          include: {
+            tenantContracts: {
+              where: { isPrimary: true },
+              include: {
+                tenant: {
+                  include: {
+                    userIdentification: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Không tìm thấy phòng trong nhà trọ này.');
+    }
+
+    const primaryTenant = room.contracts[0]?.tenantContracts[0]?.tenant;
+    if (!primaryTenant) {
+      throw new BadRequestException('Phòng này hiện chưa có hợp đồng thuê hoặc người thuê chính.');
+    }
+
+    const invoices = await this.prisma.invoice.findMany({
+      where: {
+        roomId,
+        status: { in: ['unpaid', 'overdue'] },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    if (invoices.length === 0) {
+      throw new BadRequestException('Phòng này hiện không có khoản nợ nào cần thanh toán.');
+    }
+
+    const totalDebt = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
+    const tenantName =
+      primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê';
+    const tenantPhone = primaryTenant.phoneNumber;
+
+    // Dispatch in-app notification & BullMQ job
+    await this.notificationsService.createDebtReminderNotification({
+      senderId: landlordId,
+      receiverId: primaryTenant.id,
+      boardingHouseId,
+      contractId: room.contracts[0]?.id,
+      roomNumber: room.roomNumber,
+      totalDebtAmount: totalDebt,
+      customNote: note,
+    });
+
+    // Formatted copy text for Zalo / SMS
+    const reminderText = `[Dormio - ${room.boardingHouse.name}]\nKính gửi anh/chị ${tenantName} (Phòng ${room.roomNumber}),\nHệ thống xin thông báo hiện tại phòng còn khoản nợ tiền trọ/dịch vụ chưa thanh toán: ${totalDebt.toLocaleString('vi-VN')} ₫ (${invoices.length} kỳ hóa đơn).\n${note ? `Ghi chú từ chủ trọ: "${note}"\n` : ''}Kính mong anh/chị thu xếp thanh toán sớm qua ứng dụng Dormio hoặc liên hệ chủ trọ. Trân trọng!`;
+
+    return {
+      success: true,
+      message: `Đã gửi thông báo nhắc nợ tới ${tenantName} thành công`,
+      tenantName,
+      tenantPhone,
+      roomNumber: room.roomNumber,
+      totalDebtAmount: totalDebt,
+      reminderText,
+    };
   }
 }
 

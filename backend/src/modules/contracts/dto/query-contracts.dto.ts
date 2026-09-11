@@ -33,7 +33,7 @@ export class QueryContractsDto {
   page?: number = 1;
 
   @ApiPropertyOptional({
-    description: 'Items per page (default 10)',
+    description: 'Items per page (default 10, max 200)',
     example: 10,
     default: 10,
   })
@@ -41,6 +41,6 @@ export class QueryContractsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(200)
   limit?: number = 10;
 }

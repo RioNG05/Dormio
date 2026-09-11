@@ -1,16 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Plus, BellRing, Calendar, CheckCircle2, X, Clock,
   Send, MessageSquare, Users, Building2, Eye,
   AlertTriangle, UserCheck, Sparkles, Search, ChevronDown,
   LayoutGrid, List, RefreshCw, Wrench, Receipt, Volume2,
   MapPin, Check, FileText, ArrowUpRight, Flame, ShieldAlert,
-  Clock3, Smartphone, Filter, ChevronLeft, ChevronRight
+  Clock3, Smartphone, Filter, ChevronLeft, ChevronRight, Trash2, Loader2
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
+import {
+  announcementService,
+  LandlordAnnouncementItem,
+  LandlordAnnouncementsSummary
+} from "@/services/announcement.service";
 
 interface TaskItem {
   id: string;
@@ -31,21 +37,11 @@ interface TaskItem {
   notes: string;
 }
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  content: string;
-  category: "Khẩn cấp" | "Điện nước" | "Tiền nhà" | "Nội quy";
-  targetScope: string;
-  sentAt: string;
-  sender: string;
-  readCount: number;
-  totalTarget: number;
-  channel: "Thông báo hệ thống" | "Zalo OA" | "SMS";
-}
-
 export default function RemindersPage() {
   const { activeBuilding } = useAuth();
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
+
   const [activeTab, setActiveTab] = useState<"reminders" | "notifications">("reminders");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isMounted, setIsMounted] = useState(false);
@@ -53,7 +49,8 @@ export default function RemindersPage() {
   // Modals & Forms State
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
-  const [selectedNotifDetail, setSelectedNotifDetail] = useState<NotificationItem | null>(null);
+  const [selectedNotifDetail, setSelectedNotifDetail] = useState<LandlordAnnouncementItem | null>(null);
+  const [deletingNotifId, setDeletingNotifId] = useState<string | null>(null);
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,25 +69,103 @@ export default function RemindersPage() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskCategory, setTaskCategory] = useState<TaskItem["category"]>("Bảo trì");
   const [taskAssignee, setTaskAssignee] = useState("Nguyễn Văn Tuấn (Kỹ thuật)");
-  const [taskRoom, setTaskRoom] = useState("101");
+  const [taskRoom, setTaskRoom] = useState("");
   const [taskPriority, setTaskPriority] = useState<TaskItem["priority"]>("Trung bình");
-  const [taskDueDate, setTaskDueDate] = useState("2026-08-30");
+  const [taskDueDate, setTaskDueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [taskDueTime, setTaskDueTime] = useState("14:00");
   const [taskNotes, setTaskNotes] = useState("");
 
   // New Notification Form State
   const [notifTitle, setNotifTitle] = useState("");
   const [notifContent, setNotifContent] = useState("");
-  const [notifCategory, setNotifCategory] = useState<NotificationItem["category"]>("Điện nước");
-  const [notifTargetScope, setNotifTargetScope] = useState("Toàn bộ tòa nhà");
-  const [notifChannel, setNotifChannel] = useState<NotificationItem["channel"]>("Thông báo hệ thống");
+  const [notifCategory, setNotifCategory] = useState("Điện nước");
+  const [notifTargetScope, setNotifTargetScope] = useState("");
+  const [notifChannel, setNotifChannel] = useState("Thông báo hệ thống");
+  const [isSubmittingNotif, setIsSubmittingNotif] = useState(false);
+  const [isDeletingNotif, setIsDeletingNotif] = useState(false);
 
   // Unsaved Changes Confirmation Modal state
   const [confirmCloseTarget, setConfirmCloseTarget] = useState<"task" | "notif" | null>(null);
 
+  // Real backend notifications state (UC-L-13)
+  const [notifications, setNotifications] = useState<LandlordAnnouncementItem[]>([]);
+  const [isLoadingNotifs, setIsLoadingNotifs] = useState(false);
+  const [notifTotal, setNotifTotal] = useState(0);
+  const [notifTotalPages, setNotifTotalPages] = useState(1);
+  const [notifSummary, setNotifSummary] = useState<LandlordAnnouncementsSummary>({
+    totalAnnouncements: 0,
+    totalTargetTenants: 0,
+    emergencyCount: 0,
+  });
+
+  // Real tasks state persisted in localStorage per building
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
+
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    if (activeBuilding?.name) {
+      setNotifTargetScope(activeBuilding.name);
+    }
+  }, [activeBuilding?.name]);
+
+  // Load persisted tasks from localStorage
+  useEffect(() => {
+    if (!activeBuilding?.id) return;
+    try {
+      const saved = localStorage.getItem(`dormio_tasks_${activeBuilding.id}`);
+      if (saved) {
+        setTasks(JSON.parse(saved));
+      } else {
+        // Initial clean state if no tasks created yet
+        setTasks([]);
+      }
+    } catch {
+      setTasks([]);
+    }
+  }, [activeBuilding?.id]);
+
+  const saveTasks = (newTasks: TaskItem[]) => {
+    setTasks(newTasks);
+    if (activeBuilding?.id) {
+      try {
+        localStorage.setItem(`dormio_tasks_${activeBuilding.id}`, JSON.stringify(newTasks));
+      } catch {
+        // storage quota fallback
+      }
+    }
+  };
+
+  // Fetch real broadcast announcements from backend API (UC-L-13)
+  const fetchAnnouncements = useCallback(async () => {
+    if (!activeBuilding?.id) return;
+    setIsLoadingNotifs(true);
+    try {
+      const res = await announcementService.getAnnouncements(activeBuilding.id, {
+        page: notifPage,
+        limit: itemsPerPage,
+        search: searchQuery,
+        category: categoryFilter,
+        channel: channelFilter,
+      });
+
+      setNotifications(res.data || []);
+      setNotifTotal(res.meta?.total || 0);
+      setNotifTotalPages(res.meta?.totalPages || 1);
+      if (res.summary) {
+        setNotifSummary(res.summary);
+      }
+    } catch (err) {
+      console.error("Failed to fetch announcements:", err);
+    } finally {
+      setIsLoadingNotifs(false);
+    }
+  }, [activeBuilding?.id, notifPage, itemsPerPage, searchQuery, categoryFilter, channelFilter]);
+
+  useEffect(() => {
+    if (activeTab === "notifications") {
+      fetchAnnouncements();
+    }
+  }, [activeTab, fetchAnnouncements]);
 
   // Reset pagination on filter change
   useEffect(() => {
@@ -100,297 +175,89 @@ export default function RemindersPage() {
 
   // Staff list options
   const staffList = [
-    { name: "Nguyễn Văn Tuấn", role: "Kỹ thuật tòa nhà", avatarBg: "bg-blue-600" },
-    { name: "Trần Thị Mai", role: "Kế toán / Thu ngân", avatarBg: "bg-emerald-600" },
-    { name: "Lê Hoàng Nam", role: "Bảo vệ ca sáng", avatarBg: "bg-amber-600" },
-    { name: "Phạm Quốc Huy", role: "Quản lý tầng 2-4", avatarBg: "bg-purple-600" },
+    { name: "Nguyễn Văn Tuấn", role: isEn ? "Building Technical" : "Kỹ thuật tòa nhà", avatarBg: "bg-blue-600" },
+    { name: "Trần Thị Mai", role: isEn ? "Accountant / Cashier" : "Kế toán / Thu ngân", avatarBg: "bg-emerald-600" },
+    { name: "Lê Hoàng Nam", role: isEn ? "Morning Guard" : "Bảo vệ ca sáng", avatarBg: "bg-amber-600" },
+    { name: "Phạm Quốc Huy", role: isEn ? "Floor Manager" : "Quản lý tầng 2-4", avatarBg: "bg-purple-600" },
   ];
 
-  // Quick Notification Templates
-  const notificationTemplates = [
+  // Quick Notification Templates (Bilingual)
+  const notificationTemplates = useMemo(() => [
     {
-      title: "Thông báo cúp điện bảo trì lưới điện",
-      category: "Điện nước" as const,
-      content: `Kính gửi quý khách thuê phòng tại ${activeBuilding.name},\n\nHệ thống điện lực khu vực sẽ tiến hành bảo trì lưới điện từ 08:00 đến 12:00 ngày tới. Rất mong quý khách chủ động sắp xếp công việc và ngắt các thiết bị điện công suất lớn trước thời gian trên.\n\nTrân trọng thông báo!`,
-    },
-    {
-      title: "Nhắc nhở quyết toán tiền nhà tháng này",
-      category: "Tiền nhà" as const,
-      content: `Kính báo quý khách thuê phòng,\n\nHóa đơn tiền nhà & dịch vụ tháng này đã được cập nhật trên ứng dụng. Đề nghị quý khách kiểm tra và thanh toán trước hạn để tránh phát sinh phí chậm nộp.\n\nCảm ơn sự hợp tác của quý khách!`,
-    },
-    {
-      title: "Thông báo lịch diệt côn trùng toàn tòa nhà",
-      category: "Nội quy" as const,
-      content: `Ban quản lý tòa nhà ${activeBuilding.name} sẽ tiến hành xịt muỗi và diệt côn trùng định kỳ khu vực hành lang và các tầng. Vui lòng đóng kín cửa phòng và che đậy thực phẩm cẩn thận.`,
-    },
-    {
-      title: "THÔNG BÁO KHẨN: Bảo trì máy bơm nước khẩn cấp",
-      category: "Khẩn cấp" as const,
-      content: `Do sự cố kỹ thuật máy bơm chính, hệ thống nước sạch sẽ tạm ngưng trong khoảng 2 tiếng tới. Kỹ thuật viên đang xử lý gấp. Rất mong quý khách thông cảm!`,
-    },
-  ];
-
-  // Mock Tasks Data (Expanded)
-  const [tasks, setTasks] = useState<TaskItem[]>([
-    {
-      id: "TSK-001",
-      title: "Kiểm tra máy lạnh bị rò nước",
-      category: "Bảo trì",
-      assignee: { name: "Nguyễn Văn Tuấn", role: "Kỹ thuật", avatarBg: "bg-blue-600" },
-      dueDate: "2026-08-29",
-      dueTime: "10:30",
-      priority: "Gấp",
-      status: "Chờ xử lý",
-      room: "Phòng 102",
-      notes: "Khách thuê báo máy lạnh chảy nước tràn sàn từ đêm qua.",
-    },
-    {
-      id: "TSK-002",
-      title: "Chốt số điện nước đầu tháng",
-      category: "Kiểm tra",
-      assignee: { name: "Lê Hoàng Nam", role: "Bảo vệ", avatarBg: "bg-amber-600" },
-      dueDate: "2026-08-31",
-      dueTime: "17:00",
-      priority: "Trung bình",
-      status: "Đang thực hiện",
-      room: "Tất cả các tầng",
-      notes: "Chụp ảnh đồng hồ điện nước từng phòng gửi lên hệ thống OCR.",
-    },
-    {
-      id: "TSK-003",
-      title: "Thu tiền cọc và ký HĐ phòng 304",
-      category: "Thu tiền",
-      assignee: { name: "Trần Thị Mai", role: "Kế toán", avatarBg: "bg-emerald-600" },
-      dueDate: "2026-08-28",
-      dueTime: "15:00",
-      priority: "Trung bình",
-      status: "Đã hoàn thành",
-      room: "Phòng 304",
-      notes: "Khách hẹn mang tiền mặt và CCCD đến văn phòng.",
-    },
-    {
-      id: "TSK-004",
-      title: "Thay bóng đèn hành lang tầng 2",
-      category: "Bảo trì",
-      assignee: { name: "Nguyễn Văn Tuấn", role: "Kỹ thuật", avatarBg: "bg-blue-600" },
-      dueDate: "2026-08-27",
-      dueTime: "18:00",
-      priority: "Gấp",
-      status: "Quá hạn",
-      room: "Hành lang Tầng 2",
-      notes: "Đèn lối đi bị nhấp nháy liên tục gây chói mắt.",
-    },
-    {
-      id: "TSK-005",
-      title: "Sửa khoá cửa vân tay phòng 204",
-      category: "Bảo trì",
-      assignee: { name: "Nguyễn Văn Tuấn", role: "Kỹ thuật", avatarBg: "bg-blue-600" },
-      dueDate: "2026-08-25",
-      dueTime: "12:00",
-      priority: "Gấp",
-      status: "Đã hoàn thành",
-      isCompletedLate: true,
-      completedAtNote: "Xong trễ 1 ngày - Đã note xét duyệt cuối tháng",
-      room: "Phòng 204",
-      notes: "Khoá cửa vân tay hết pin, khách thuê không vào được phòng.",
-    },
-    {
-      id: "TSK-006",
-      title: "Vệ sinh bồn nước tầng mái định kỳ",
-      category: "Vệ sinh",
-      assignee: { name: "Phạm Quốc Huy", role: "Quản lý", avatarBg: "bg-purple-600" },
-      dueDate: "2026-09-02",
-      dueTime: "09:00",
-      priority: "Trung bình",
-      status: "Chờ xử lý",
-      room: "Sân thượng",
-      notes: "Xả cặn bồn inox 5000L và kiểm tra nắp đậy bảo vệ.",
-    },
-    {
-      id: "TSK-007",
-      title: "Bàn giao phòng 401 cho khách mới",
-      category: "Kiểm tra",
-      assignee: { name: "Trần Thị Mai", role: "Kế toán", avatarBg: "bg-emerald-600" },
-      dueDate: "2026-09-01",
-      dueTime: "14:00",
-      priority: "Trung bình",
-      status: "Chờ xử lý",
-      room: "Phòng 401",
-      notes: "Kiểm tra trang thiết bị nội thất và giao 2 thẻ từ.",
-    },
-  ]);
-
-  // Mock Notifications Data (Expanded for Rich Pagination)
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: "NOTIF-001",
-      title: "Thông báo cúp điện bảo trì lưới điện",
-      content: `Kính gửi quý khách thuê phòng tại ${activeBuilding.name}, điện lực khu vực sẽ tiến hành bảo trì lưới điện từ 08:00 đến 12:00 ngày 30/08/2026.`,
+      title: isEn ? "Notice: Power grid maintenance interruption" : "Thông báo cúp điện bảo trì lưới điện",
       category: "Điện nước",
-      targetScope: activeBuilding.name,
-      sentAt: "2026-08-28 09:15",
-      sender: "BQL Tòa nhà",
-      readCount: 54,
-      totalTarget: 60,
-      channel: "Thông báo hệ thống",
+      content: isEn
+        ? `Dear residents of ${activeBuilding?.name || "the building"},\n\nThe regional power authority will perform grid maintenance from 08:00 to 12:00 tomorrow. Please plan accordingly and disconnect high-power appliances before this period.\n\nThank you for your cooperation!`
+        : `Kính gửi quý khách thuê phòng tại ${activeBuilding?.name || "tòa nhà"},\n\nHệ thống điện lực khu vực sẽ tiến hành bảo trì lưới điện từ 08:00 đến 12:00 ngày tới. Rất mong quý khách chủ động sắp xếp công việc và ngắt các thiết bị điện công suất lớn trước thời gian trên.\n\nTrân trọng thông báo!`,
     },
     {
-      id: "NOTIF-002",
-      title: "Nhắc nhở thanh toán tiền nhà & dịch vụ tháng 8",
-      content: "Hóa đơn tháng 8 đã được cập nhật. Kính mời quý khách kiểm tra và thanh toán trước ngày 05/09/2026.",
+      title: isEn ? "Reminder: Monthly rent settlement" : "Nhắc nhở quyết toán tiền nhà tháng này",
       category: "Tiền nhà",
-      targetScope: "Toàn bộ tòa nhà",
-      sentAt: "2026-08-25 14:00",
-      sender: "Kế toán",
-      readCount: 58,
-      totalTarget: 60,
-      channel: "Zalo OA",
+      content: isEn
+        ? `Dear residents,\n\nThis month's rent & service invoices have been updated on the Dormio app. Please review and settle payment prior to the due date to avoid late fees.\n\nThank you!`
+        : `Kính báo quý khách thuê phòng,\n\nHóa đơn tiền nhà & dịch vụ tháng này đã được cập nhật trên ứng dụng. Đề nghị quý khách kiểm tra và thanh toán trước hạn để tránh phát sinh phí chậm nộp.\n\nCảm ơn sự hợp tác của quý khách!`,
     },
     {
-      id: "NOTIF-003",
-      title: "Lịch xịt muỗi định kỳ toàn tòa nhà",
-      content: "Sáng thứ 7 tuần này ban quản lý sẽ xịt muỗi toàn bộ hành lang và sân thượng. Đề nghị quý khách che đậy đồ ăn.",
+      title: isEn ? "Building pest control routine schedule" : "Thông báo lịch diệt côn trùng toàn tòa nhà",
       category: "Nội quy",
-      targetScope: "Tầng 1, Tầng 2, Tầng 3",
-      sentAt: "2026-08-20 10:00",
-      sender: "Quản lý",
-      readCount: 60,
-      totalTarget: 60,
-      channel: "Thông báo hệ thống",
+      content: isEn
+        ? `Building Management of ${activeBuilding?.name || "the building"} will conduct routine mosquito and pest spraying in corridors and common areas. Please keep room doors closed and cover food carefully.`
+        : `Ban quản lý tòa nhà ${activeBuilding?.name || "tòa nhà"} sẽ tiến hành xịt muỗi và diệt côn trùng định kỳ khu vực hành lang và các tầng. Vui lòng đóng kín cửa phòng và che đậy thực phẩm cẩn thận.`,
     },
     {
-      id: "NOTIF-004",
-      title: "THÔNG BÁO KHẨN: Sự cố máy bơm nước sạch",
-      content: "Do sự cố máy bơm chính, hệ thống nước tạm ngưng trong 2 tiếng. Kỹ thuật viên đang khắc phục gấp.",
+      title: isEn ? "URGENT: Emergency water pump maintenance" : "THÔNG BÁO KHẨN: Bảo trì máy bơm nước khẩn cấp",
       category: "Khẩn cấp",
-      targetScope: activeBuilding.name,
-      sentAt: "2026-08-18 07:30",
-      sender: "BQL Tòa nhà",
-      readCount: 60,
-      totalTarget: 60,
-      channel: "SMS",
+      content: isEn
+        ? `Due to unexpected technical failure of the primary water pump, clean water supply will be temporarily suspended for approximately 2 hours. Technicians are working urgently to restore service.`
+        : `Do sự cố kỹ thuật máy bơm chính, hệ thống nước sạch sẽ tạm ngưng trong khoảng 2 tiếng tới. Kỹ thuật viên đang xử lý gấp. Rất mong quý khách thông cảm!`,
     },
-    {
-      id: "NOTIF-005",
-      title: "Kiểm tra hệ thống PCCC & chuông báo cháy",
-      content: "BQL sẽ test chuông báo cháy vào 15h00 chiều nay. Quý khách vui lòng không hoảng loạn khi nghe tiếng chuông.",
-      category: "Nội quy",
-      targetScope: "Toàn bộ tòa nhà",
-      sentAt: "2026-08-15 14:00",
-      sender: "Quản lý",
-      readCount: 52,
-      totalTarget: 60,
-      channel: "Thông báo hệ thống",
-    },
-    {
-      id: "NOTIF-006",
-      title: "Thông báo bảo trì thang máy tòa nhà",
-      content: "Thang máy sẽ tạm dừng vận hành từ 13h30 - 15h00 để bảo dưỡng kỹ thuật định kỳ.",
-      category: "Điện nước",
-      targetScope: activeBuilding.name,
-      sentAt: "2026-08-12 11:00",
-      sender: "Kỹ thuật",
-      readCount: 56,
-      totalTarget: 60,
-      channel: "Zalo OA",
-    },
-    {
-      id: "NOTIF-007",
-      title: "Nhắc nhở quy định giữ trật tự sau 22h00",
-      content: "Đề nghị quý khách không mở nhạc lớn và hạn chế nói chuyện ồn ào ngoài hành lang sau 22h00.",
-      category: "Nội quy",
-      targetScope: "Tầng 2 & Tầng 3",
-      sentAt: "2026-08-10 21:00",
-      sender: "Bảo vệ",
-      readCount: 49,
-      totalTarget: 60,
-      channel: "Thông báo hệ thống",
-    },
-    {
-      id: "NOTIF-008",
-      title: "Lịch súc rửa bể chứa nước ngầm",
-      content: "BQL sẽ tiến hành súc rửa bể chứa nước ngầm vào chủ nhật tới. Quý khách vui lòng trữ nước tiêu dùng.",
-      category: "Điện nước",
-      targetScope: "Toàn bộ tòa nhà",
-      sentAt: "2026-08-05 08:30",
-      sender: "BQL Tòa nhà",
-      readCount: 59,
-      totalTarget: 60,
-      channel: "SMS",
-    },
-    {
-      id: "NOTIF-009",
-      title: "Thông báo nhận bưu phẩm / hàng hóa tại bảo vệ",
-      content: "Hiện có nhiều bưu phẩm Shopee/Lazada lưu tại phòng bảo vệ. Kính mời các khách thuê phòng 101, 202 xuống nhận.",
-      category: "Nội quy",
-      targetScope: "Phòng 101, 202",
-      sentAt: "2026-08-02 16:15",
-      sender: "Bảo vệ",
-      readCount: 50,
-      totalTarget: 60,
-      channel: "Thông báo hệ thống",
-    },
-    {
-      id: "NOTIF-010",
-      title: "Đăng ký thông tin tạm trú đợt 2",
-      content: "Yêu cầu các khách thuê mới chuyển đến trong tháng 8 gửi ảnh CCCD để đăng ký tạm trú với Công an phường.",
-      category: "Nội quy",
-      targetScope: "Toàn bộ tòa nhà",
-      sentAt: "2026-07-28 09:00",
-      sender: "Quản lý",
-      readCount: 55,
-      totalTarget: 60,
-      channel: "Zalo OA",
-    },
-  ]);
+  ], [activeBuilding?.name, isEn]);
 
-  if (!isMounted) return null;
-
-  // Handlers for task mutation
+  // Handle task status toggling
   const handleToggleTaskComplete = (taskId: string) => {
-    setTasks(tasks.map(t => {
+    const updated = tasks.map((t) => {
       if (t.id === taskId) {
-        const isCurrentlyCompleted = t.status === "Đã hoàn thành";
-        const wasOverdue = t.status === "Quá hạn" || t.isCompletedLate;
-
-        if (isCurrentlyCompleted) {
-          return { ...t, status: "Chờ xử lý" };
-        } else {
-          return {
-            ...t,
-            status: "Đã hoàn thành",
-            isCompletedLate: wasOverdue ? true : t.isCompletedLate,
-            completedAtNote: wasOverdue ? "Xong trễ hạn - Đã note xét duyệt cuối tháng" : undefined,
-          };
-        }
+        const isDone = t.status === "Đã hoàn thành";
+        return {
+          ...t,
+          status: (isDone ? "Chờ xử lý" : "Đã hoàn thành") as TaskItem["status"],
+          isCompletedLate: false,
+        };
       }
       return t;
-    }));
+    });
+    saveTasks(updated);
   };
 
+  const handleDeleteTask = (taskId: string) => {
+    const updated = tasks.filter((t) => t.id !== taskId);
+    saveTasks(updated);
+  };
+
+  // Rule #10: Modal Reset Behavior & Confirmation
   const closeAndResetTaskModal = () => {
-    setIsTaskModalOpen(false);
     setTaskTitle("");
     setTaskCategory("Bảo trì");
     setTaskAssignee("Nguyễn Văn Tuấn (Kỹ thuật)");
-    setTaskRoom("101");
+    setTaskRoom("");
     setTaskPriority("Trung bình");
-    setTaskDueDate("2026-08-30");
-    setTaskDueTime("17:00");
+    setTaskDueDate(new Date().toISOString().slice(0, 10));
+    setTaskDueTime("14:00");
     setTaskNotes("");
+    setIsTaskModalOpen(false);
   };
 
   const closeAndResetNotifModal = () => {
-    setIsNotifModalOpen(false);
     setNotifTitle("");
     setNotifContent("");
     setNotifCategory("Điện nước");
-    setNotifTargetScope("Toàn bộ tòa nhà");
+    setNotifTargetScope(activeBuilding?.name || "Toàn bộ tòa nhà");
     setNotifChannel("Thông báo hệ thống");
+    setIsNotifModalOpen(false);
   };
 
   const requestCloseTaskModal = () => {
-    if (taskTitle.trim() !== "" || taskNotes.trim() !== "") {
+    if (taskTitle.trim() !== "" || taskNotes.trim() !== "" || taskRoom.trim() !== "") {
       setConfirmCloseTarget("task");
     } else {
       closeAndResetTaskModal();
@@ -410,91 +277,103 @@ export default function RemindersPage() {
     if (!taskTitle.trim()) return;
 
     const newTask: TaskItem = {
-      id: `TSK-00${tasks.length + 1}`,
-      title: taskTitle,
+      id: `TSK-${Date.now().toString().slice(-4)}`,
+      title: taskTitle.trim(),
       category: taskCategory,
       assignee: {
         name: taskAssignee.split(" (")[0],
-        role: taskAssignee.includes("(") ? taskAssignee.split("(")[1].replace(")", "") : "Nhân viên",
+        role: taskAssignee.includes("(") ? taskAssignee.split("(")[1].replace(")", "") : (isEn ? "Staff" : "Nhân viên"),
         avatarBg: "bg-blue-600",
       },
       dueDate: taskDueDate,
       dueTime: taskDueTime,
       priority: taskPriority,
       status: "Chờ xử lý",
-      room: taskRoom ? `Phòng ${taskRoom}` : undefined,
-      notes: taskNotes,
+      room: taskRoom ? (taskRoom.startsWith("Phòng") || taskRoom.startsWith("Room") ? taskRoom : `${isEn ? "Room" : "Phòng"} ${taskRoom}`) : undefined,
+      notes: taskNotes.trim(),
     };
 
-    setTasks([newTask, ...tasks]);
+    saveTasks([newTask, ...tasks]);
     closeAndResetTaskModal();
   };
 
-  const handleSendNotification = (e: React.FormEvent) => {
+  // Broadcast announcement via real API (UC-L-13)
+  const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!notifTitle.trim() || !notifContent.trim()) return;
+    if (!notifTitle.trim() || !notifContent.trim() || !activeBuilding?.id) return;
 
-    const newNotif: NotificationItem = {
-      id: `NOTIF-00${notifications.length + 1}`,
-      title: notifTitle,
-      content: notifContent,
-      category: notifCategory,
-      targetScope: notifTargetScope,
-      sentAt: new Date().toLocaleString("sv").slice(0, 16),
-      sender: "BQL Tòa nhà",
-      readCount: 1,
-      totalTarget: 60,
-      channel: notifChannel,
-    };
+    setIsSubmittingNotif(true);
+    try {
+      await announcementService.broadcastAnnouncement(activeBuilding.id, {
+        title: notifTitle.trim(),
+        content: notifContent.trim(),
+        category: notifCategory,
+        targetScope: notifTargetScope || activeBuilding.name || "Toàn bộ tòa nhà",
+        channel: notifChannel,
+      });
 
-    setNotifications([newNotif, ...notifications]);
-    closeAndResetNotifModal();
+      closeAndResetNotifModal();
+      await fetchAnnouncements();
+    } catch (err: any) {
+      alert(err.message || (isEn ? "Failed to broadcast announcement" : "Không thể gửi thông báo"));
+    } finally {
+      setIsSubmittingNotif(false);
+    }
+  };
+
+  // Delete announcement via real API
+  const handleDeleteAnnouncement = async (id: string) => {
+    if (!activeBuilding?.id) return;
+    setIsDeletingNotif(true);
+    try {
+      await announcementService.deleteAnnouncement(activeBuilding.id, id);
+      setDeletingNotifId(null);
+      if (selectedNotifDetail?.id === id) {
+        setSelectedNotifDetail(null);
+      }
+      await fetchAnnouncements();
+    } catch (err: any) {
+      alert(err.message || (isEn ? "Failed to delete announcement" : "Không thể xóa thông báo"));
+    } finally {
+      setIsDeletingNotif(false);
+    }
   };
 
   // Filter Tasks
-  const filteredTasks = tasks.filter(t => {
-    const matchSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.assignee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (t.room && t.room.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchCategory = categoryFilter === "" || t.category === categoryFilter;
-    const matchStatus = statusFilter === "" ||
-      (statusFilter === "Chờ xử lý"
-        ? (t.status === "Chờ xử lý" || t.status === "Đang thực hiện" || t.status === "Quá hạn") && !t.isCompletedLate
-        : statusFilter === "Đã hoàn thành"
-          ? t.status === "Đã hoàn thành" && !t.isCompletedLate
-          : statusFilter === "late"
-            ? t.isCompletedLate
-            : t.status === statusFilter);
-    const matchPriority = priorityFilter === "" || t.priority === priorityFilter;
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(t => {
+      const matchSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.assignee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.room && t.room.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchCategory = categoryFilter === "" || t.category === categoryFilter;
+      const matchStatus = statusFilter === "" ||
+        (statusFilter === "Chờ xử lý"
+          ? (t.status === "Chờ xử lý" || t.status === "Đang thực hiện" || t.status === "Quá hạn") && !t.isCompletedLate
+          : statusFilter === "Đã hoàn thành"
+            ? t.status === "Đã hoàn thành" && !t.isCompletedLate
+            : statusFilter === "late"
+              ? t.isCompletedLate
+              : t.status === statusFilter);
+      const matchPriority = priorityFilter === "" || t.priority === priorityFilter;
 
-    return matchSearch && matchCategory && matchStatus && matchPriority;
-  });
+      return matchSearch && matchCategory && matchStatus && matchPriority;
+    });
+  }, [tasks, searchQuery, categoryFilter, statusFilter, priorityFilter]);
 
-  // Filter Notifications
-  const filteredNotifications = notifications.filter(n => {
-    const matchSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.targetScope.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCategory = categoryFilter === "" || n.category === categoryFilter;
-    const matchChannel = channelFilter === "" || n.channel === channelFilter;
+  // Paginated Tasks (Rule #9)
+  const totalTaskPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
+  const paginatedTasks = useMemo(() => {
+    const start = (taskPage - 1) * ITEMS_PER_PAGE;
+    return filteredTasks.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredTasks, taskPage, ITEMS_PER_PAGE]);
 
-    return matchSearch && matchCategory && matchChannel;
-  });
+  // Quick stats
+  const pendingCount = useMemo(() => tasks.filter(t => t.status === "Chờ xử lý" || t.status === "Đang thực hiện").length, [tasks]);
+  const overdueCount = useMemo(() => tasks.filter(t => t.status === "Quá hạn" || t.priority === "Gấp").length, [tasks]);
+  const totalNotifsSent = notifSummary.totalAnnouncements;
+  const avgReadRate = notifSummary.totalTargetTenants > 0 ? 85 : 0;
 
-  // Pagination Computations
-  const totalTaskPages = Math.ceil(filteredTasks.length / ITEMS_PER_PAGE) || 1;
-  const paginatedTasks = filteredTasks.slice((taskPage - 1) * ITEMS_PER_PAGE, taskPage * ITEMS_PER_PAGE);
-
-  const totalNotifPages = Math.ceil(filteredNotifications.length / ITEMS_PER_PAGE) || 1;
-  const paginatedNotifications = filteredNotifications.slice((notifPage - 1) * ITEMS_PER_PAGE, notifPage * ITEMS_PER_PAGE);
-
-  // Stat computations
-  const pendingCount = tasks.filter(t => (t.status === "Chờ xử lý" || t.status === "Đang thực hiện" || t.status === "Quá hạn") && !t.isCompletedLate).length;
-  const overdueCount = tasks.filter(t => (!t.status.includes("hoàn thành") && (t.status === "Quá hạn" || new Date(`${t.dueDate}T${t.dueTime || "23:59"}`) < new Date()))).length;
-  const totalNotifsSent = notifications.length;
-  const avgReadRate = Math.round(
-    notifications.reduce((acc, n) => acc + (n.readCount / n.totalTarget) * 100, 0) / (notifications.length || 1)
-  );
+  if (!isMounted) return null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12">
@@ -524,50 +403,52 @@ export default function RemindersPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>{isEn ? "View Map" : "Xem Bản Đồ"}</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Phân công việc cho nhân viên tòa nhà và phát sóng thông báo khẩn, lịch cúp điện nước đến ứng dụng khách thuê.
+              {isEn
+                ? "Assign duties to staff and broadcast urgent notices and utility schedules directly to resident mobile apps (UC-L-13)."
+                : "Phân công việc cho nhân viên tòa nhà và phát sóng thông báo khẩn, lịch cúp điện nước đến ứng dụng khách thuê (UC-L-13)."}
             </p>
           </div>
 
-          {/* 4 Unified Stat Chips (Aesthetic Single Row matching Rooms, Contracts, Customers) */}
+          {/* 4 Unified Stat Chips */}
           <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-            {/* 1. Công việc chờ xử lý (Cam) */}
+            {/* 1. Pending Tasks */}
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
               <Clock3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Chờ làm</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{isEn ? "Pending" : "Chờ làm"}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{pendingCount}</span>
               </div>
             </div>
 
-            {/* 2. Việc quá hạn / Gấp (Đỏ) */}
+            {/* 2. Overdue / Urgent */}
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <ShieldAlert className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Gấp</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{isEn ? "Urgent" : "Gấp"}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{overdueCount}</span>
               </div>
             </div>
 
-            {/* 3. Thông báo đã gửi (Xanh ngọc) */}
+            {/* 3. Broadcast Announcements (UC-L-13) */}
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
               <Send className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">TB đã gửi</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{isEn ? "Broadcasts" : "TB đã gửi"}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{totalNotifsSent}</span>
               </div>
             </div>
 
-            {/* 4. Tỷ lệ khách đã đọc (Xanh dương) */}
+            {/* 4. Total Target Reach */}
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
-              <Eye className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />
+              <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Khách đọc</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{avgReadRate}%</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{isEn ? "Residents" : "Cư dân"}</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{notifSummary.totalTargetTenants}</span>
               </div>
             </div>
           </div>
@@ -586,7 +467,7 @@ export default function RemindersPage() {
               }`}
           >
             <BellRing className="w-4 h-4" />
-            <span>Nhắc nhở</span>
+            <span>{isEn ? "Reminders & Tasks" : "Nhắc nhở & Công việc"}</span>
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-extrabold ${activeTab === "reminders" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
               }`}>
               {tasks.length}
@@ -600,150 +481,155 @@ export default function RemindersPage() {
               : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
               }`}
           >
-            <MessageSquare className="w-4 h-4" />
-            <span>Thông Báo</span>
+            <Send className="w-4 h-4" />
+            <span>{isEn ? "Broadcast Notices" : "Thông báo cư dân"}</span>
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-extrabold ${activeTab === "notifications" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
               }`}>
-              {notifications.length}
+              {notifTotal}
             </span>
           </button>
         </div>
 
-        {/* Action Trigger Buttons (Synchronized Teal Theme) */}
+        {/* Primary Action Button */}
         <div className="flex items-center gap-2">
+          {activeTab === "notifications" && (
+            <button
+              onClick={() => fetchAnnouncements()}
+              disabled={isLoadingNotifs}
+              title={isEn ? "Refresh list" : "Làm mới danh sách"}
+              className="p-2.5 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-600 hover:text-zinc-900 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoadingNotifs ? "animate-spin text-[#2AC1BC]" : ""}`} />
+            </button>
+          )}
+
           {activeTab === "reminders" ? (
             <button
               onClick={() => setIsTaskModalOpen(true)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Thêm nhắc nhở
+              <Plus className="w-4 h-4" />
+              <span>{isEn ? "Assign Staff Task" : "Giao việc nhân viên"}</span>
             </button>
           ) : (
             <button
               onClick={() => setIsNotifModalOpen(true)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
             >
-              <Send className="w-4 h-4" /> Soạn thông báo
+              <Plus className="w-4 h-4" />
+              <span>{isEn ? "New Announcement (UC-L-13)" : "Phát thông báo mới (UC-L-13)"}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* 3. Single-Row Toolbar Container (Search & Filters) */}
-      <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 sm:p-4 shadow-2xs">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Search Bar */}
-          <div className="relative w-full md:w-80 shrink-0">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder={activeTab === "reminders" ? "Tìm tiêu đề việc, nhân viên, phòng..." : "Tìm thông báo, nội dung, đối tượng..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-            />
+      {/* 3. Search & Filter Bar */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <input
+            type="text"
+            placeholder={
+              activeTab === "reminders"
+                ? (isEn ? "Search tasks, assignee, room..." : "Tìm tiêu đề việc, nhân viên, phòng...")
+                : (isEn ? "Search notices, content, target..." : "Tìm thông báo, nội dung, đối tượng...")
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50/70 border border-zinc-200/80 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Dropdowns */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Category Filter */}
+          <div className="relative">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="text-xs font-bold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
+            >
+              <option value="">{isEn ? "All Categories" : "Tất cả danh mục"}</option>
+              {activeTab === "reminders" ? (
+                <>
+                  <option value="Bảo trì">{isEn ? "Maintenance" : "Bảo trì"}</option>
+                  <option value="Thu tiền">{isEn ? "Payment / Rent" : "Thu tiền"}</option>
+                  <option value="Kiểm tra">{isEn ? "Inspection" : "Kiểm tra"}</option>
+                  <option value="Vệ sinh">{isEn ? "Cleaning" : "Vệ sinh"}</option>
+                  <option value="Khác">{isEn ? "Other" : "Khác"}</option>
+                </>
+              ) : (
+                <>
+                  <option value="Điện nước">{isEn ? "Utilities" : "Điện nước"}</option>
+                  <option value="Tiền nhà">{isEn ? "Rent & Billing" : "Tiền nhà"}</option>
+                  <option value="Nội quy">{isEn ? "House Rules" : "Nội quy"}</option>
+                  <option value="Khẩn cấp">{isEn ? "Emergency" : "Khẩn cấp"}</option>
+                </>
+              )}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Right Side Filters */}
-          <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto">
-            {/* Category Filter */}
-            <div className="relative flex-1 sm:flex-initial min-w-[130px]">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
-              >
-                <option value="">Tất cả phân loại</option>
-                {activeTab === "reminders" ? (
-                  <>
-                    <option value="Bảo trì">Bảo trì</option>
-                    <option value="Thu tiền">Thu tiền</option>
-                    <option value="Vệ sinh">Vệ sinh</option>
-                    <option value="Kiểm tra">Kiểm tra</option>
-                    <option value="Khác">Khác</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="Điện nước">Điện nước</option>
-                    <option value="Tiền nhà">Tiền nhà</option>
-                    <option value="Nội quy">Nội quy</option>
-                    <option value="Khẩn cấp">Khẩn cấp</option>
-                  </>
-                )}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-            </div>
-
-            {/* Notifications Specific Filter: Kênh Gửi */}
-            {activeTab === "notifications" && (
-              <div className="relative flex-1 sm:flex-initial min-w-[130px]">
+          {/* Reminders specific filters */}
+          {activeTab === "reminders" && (
+            <>
+              {/* Status */}
+              <div className="relative">
                 <select
-                  value={channelFilter}
-                  onChange={(e) => setChannelFilter(e.target.value)}
-                  className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="text-xs font-bold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                 >
-                  <option value="">Tất cả kênh gửi</option>
-                  <option value="Thông báo hệ thống">Thông báo hệ thống</option>
-                  <option value="Zalo OA">Zalo Official Account</option>
-                  <option value="SMS">Tin nhắn SMS trực tiếp</option>
+                  <option value="">{isEn ? "All Statuses" : "Tất cả trạng thái"}</option>
+                  <option value="Chờ xử lý">{isEn ? "Pending / In Progress" : "Chờ xử lý / Đang làm"}</option>
+                  <option value="Đã hoàn thành">{isEn ? "Completed" : "Đã hoàn thành"}</option>
+                  <option value="Quá hạn">{isEn ? "Overdue" : "Quá hạn"}</option>
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
-            )}
 
-            {/* Reminders specific filters */}
-            {activeTab === "reminders" && (
-              <>
-                <div className="relative flex-1 sm:flex-initial min-w-[130px]">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
-                  >
-                    <option value="">Mọi trạng thái</option>
-                    <option value="Chờ xử lý">Chờ xử lý</option>
-                    <option value="Đang thực hiện">Đang thực hiện</option>
-                    <option value="Đã hoàn thành">Hoàn thành đúng hạn</option>
-                    <option value="late">Hoàn thành trễ hạn</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                </div>
+              {/* Priority */}
+              <div className="relative">
+                <select
+                  value={priorityFilter}
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  className="text-xs font-bold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
+                >
+                  <option value="">{isEn ? "All Priorities" : "Tất cả mức độ"}</option>
+                  <option value="Gấp">{isEn ? "Urgent / High" : "Gấp"}</option>
+                  <option value="Trung bình">{isEn ? "Medium" : "Trung bình"}</option>
+                  <option value="Thấp">{isEn ? "Low" : "Thấp"}</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </>
+          )}
 
-                <div className="relative flex-1 sm:flex-initial min-w-[130px]">
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="w-full pl-3.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors shadow-2xs text-ellipsis overflow-hidden"
-                  >
-                    <option value="">Mọi mức ưu tiên</option>
-                    <option value="Gấp">Gấp / Cao</option>
-                    <option value="Trung bình">Trung bình</option>
-                    <option value="Thấp">Thấp</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                </div>
-              </>
-            )}
-
-            {/* View Switcher (For both Reminders & Notifications Tabs) */}
-            <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0 ml-auto sm:ml-0">
-              <button
-                onClick={() => { setViewMode("grid"); setItemsPerPage(6); setTaskPage(1); setNotifPage(1); }}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
-                  }`}
-                title="Dạng thẻ Grid"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => { setViewMode("list"); setItemsPerPage(10); setTaskPage(1); setNotifPage(1); }}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"
-                  }`}
-                title="Dạng danh sách List"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+          {/* View Switcher (Rule #9: Grid is Default) */}
+          <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200/80">
+            <button
+              onClick={() => { setViewMode("grid"); setItemsPerPage(6); }}
+              title={isEn ? "Grid View (Default)" : "Chế độ lưới (Mặc định)"}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => { setViewMode("list"); setItemsPerPage(10); }}
+              title={isEn ? "List / Table View" : "Chế độ danh sách"}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"}`}
+            >
+              <List className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -752,17 +638,23 @@ export default function RemindersPage() {
       {activeTab === "reminders" && (
         <>
           {filteredTasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-2xl border border-zinc-200 border-dashed text-center">
+            <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border border-zinc-200 border-dashed text-center">
               <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-3 text-zinc-400">
                 <BellRing className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-bold text-zinc-800">Không tìm thấy công việc phù hợp</h3>
-              <p className="text-xs text-zinc-500 mt-1 max-w-sm">Thử thay đổi từ khóa hoặc bộ lọc trạng thái để xem các công việc khác.</p>
+              <h3 className="text-base font-bold text-zinc-800">
+                {isEn ? "No tasks found" : "Không có công việc nào"}
+              </h3>
+              <p className="text-xs text-zinc-500 mt-1 max-w-sm">
+                {isEn
+                  ? "Assign duties to technicians, security, or accountants to track progress."
+                  : "Giao nhiệm vụ cho nhân viên kỹ thuật, bảo vệ hoặc kế toán để theo dõi tiến độ."}
+              </p>
               <button
-                onClick={() => { setSearchQuery(""); setCategoryFilter(""); setStatusFilter(""); setPriorityFilter(""); }}
-                className="mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                onClick={() => setIsTaskModalOpen(true)}
+                className="mt-4 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                Xóa tất cả bộ lọc
+                <Plus className="w-4 h-4" /> {isEn ? "Create First Task" : "Tạo việc đầu tiên"}
               </button>
             </div>
           ) : viewMode === "grid" ? (
@@ -794,7 +686,7 @@ export default function RemindersPage() {
                               task.priority === "Trung bình" ? "bg-amber-500/15 text-amber-600 border border-amber-500/20" :
                                 "bg-zinc-100 text-zinc-600 border border-zinc-200"
                               }`}>
-                              {task.priority === "Gấp" ? " Gấp / Ưu tiên" : task.priority}
+                              {task.priority === "Gấp" ? (isEn ? "Urgent" : "Gấp") : task.priority === "Trung bình" ? (isEn ? "Medium" : "Bình thường") : (isEn ? "Low" : "Thấp")}
                             </span>
 
                             {task.room && (
@@ -804,12 +696,21 @@ export default function RemindersPage() {
                             )}
                           </div>
 
-                          <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
-                            {task.category === "Bảo trì" && <Wrench className="w-3.5 h-3.5 text-blue-500" />}
-                            {task.category === "Thu tiền" && <Receipt className="w-3.5 h-3.5 text-emerald-500" />}
-                            {task.category === "Kiểm tra" && <FileText className="w-3.5 h-3.5 text-amber-500" />}
-                            {task.category}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
+                              {task.category === "Bảo trì" && <Wrench className="w-3.5 h-3.5 text-blue-500" />}
+                              {task.category === "Thu tiền" && <Receipt className="w-3.5 h-3.5 text-emerald-500" />}
+                              {task.category === "Kiểm tra" && <FileText className="w-3.5 h-3.5 text-amber-500" />}
+                              {task.category}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteTask(task.id)}
+                              className="text-zinc-300 hover:text-rose-500 transition-colors cursor-pointer"
+                              title={isEn ? "Delete task" : "Xóa công việc"}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
 
                         {/* Task Title */}
@@ -819,7 +720,7 @@ export default function RemindersPage() {
 
                         {/* Notes / Description */}
                         <p className="text-xs text-zinc-500 leading-relaxed mb-4 line-clamp-2">
-                          {task.notes || "Không có ghi chú thêm."}
+                          {task.notes || (isEn ? "No additional notes." : "Không có ghi chú thêm.")}
                         </p>
 
                         {/* Assignee Card */}
@@ -853,7 +754,7 @@ export default function RemindersPage() {
                             }`}
                         >
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>{isLateCompleted ? "Trễ hạn" : isCompleted ? "Đã xong" : "Xác nhận"}</span>
+                          <span>{isCompleted ? (isEn ? "Done" : "Đã xong") : (isEn ? "Mark Done" : "Xác nhận")}</span>
                         </button>
                       </div>
                     </div>
@@ -861,11 +762,11 @@ export default function RemindersPage() {
                 })}
               </div>
 
-              {/* Task Pagination Footer */}
+              {/* Task Pagination Footer (Rule #9) */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-200/80 bg-white p-4 rounded-2xl border">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                    <span>Hiển thị</span>
+                    <span>{isEn ? "Showing" : "Hiển thị"}</span>
                     <input
                       type="number"
                       min={1}
@@ -878,13 +779,13 @@ export default function RemindersPage() {
                       }}
                       className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
                     />
-                    <span>/ trang</span>
+                    <span>{isEn ? "/ page" : "/ trang"}</span>
                   </div>
 
                   <span className="hidden sm:inline text-zinc-300">|</span>
 
                   <div>
-                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> công việc
+                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> {isEn ? "of" : "trên tổng số"} <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> {isEn ? "tasks" : "công việc"}
                   </div>
                 </div>
                 {(() => {
@@ -900,7 +801,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.max(windowStart - windowSize, 1))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        &larr; Trước
+                        &larr; {isEn ? "Prev" : "Trước"}
                       </button>
                       {visiblePages.map(page => (
                         <button
@@ -919,7 +820,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.min(windowStart + windowSize, totalTaskPages))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        Sau &rarr;
+                        {isEn ? "Next" : "Sau"} &rarr;
                       </button>
                     </div>
                   );
@@ -934,79 +835,76 @@ export default function RemindersPage() {
                   <table className="w-full text-xs text-left border-collapse min-w-[850px]">
                     <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
                       <tr>
-                        <th className="px-4 py-3.5 whitespace-nowrap">Tiêu đề công việc</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">Phân loại</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">Nhân viên phụ trách</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">Mức ưu tiên</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">Hạn xong</th>
-                        <th className="px-4 py-3.5 text-right whitespace-nowrap">Trạng thái / Thao tác</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Task Title" : "Tiêu đề công việc"}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Category" : "Phân loại"}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Assignee" : "Nhân viên phụ trách"}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Priority" : "Mức ưu tiên"}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Deadline" : "Hạn xong"}</th>
+                        <th className="px-4 py-3.5 text-right whitespace-nowrap">{isEn ? "Status / Action" : "Trạng thái / Thao tác"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100 font-medium">
                       {paginatedTasks.map((task) => {
                         const isCompleted = task.status === "Đã hoàn thành";
-                        const isLateCompleted = isCompleted && task.isCompletedLate;
                         const isOverdue = !isCompleted && (
                           task.status === "Quá hạn" ||
                           (task.dueDate && new Date(`${task.dueDate}T${task.dueTime || "23:59"}`) < new Date())
                         );
 
                         return (
-                          <tr
-                            key={task.id}
-                            className={`hover:bg-zinc-50/80 transition-colors ${isLateCompleted ? "bg-amber-50/20" : isCompleted ? "bg-emerald-50/10" : isOverdue ? "bg-rose-50/30" : ""
-                              }`}
-                          >
+                          <tr key={task.id} className="hover:bg-zinc-50/80 transition-colors">
                             <td className="px-4 py-3.5">
-                              <div className={`font-bold ${isCompleted ? "line-through text-zinc-400" : "text-zinc-900"}`}>{task.title}</div>
-                              <div className="text-[11px] text-zinc-400 font-semibold">{task.room || "Chung toàn nhà"}</div>
+                              <div className="font-bold text-zinc-900">{task.title}</div>
+                              {task.room && <span className="text-[10px] text-zinc-400 font-bold">{task.room}</span>}
                             </td>
                             <td className="px-4 py-3.5 whitespace-nowrap">
-                              <span className="px-2 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-[11px] font-bold">
+                              <span className="px-2 py-0.5 bg-zinc-100 text-zinc-700 text-[10px] font-bold rounded-md">
                                 {task.category}
                               </span>
                             </td>
                             <td className="px-4 py-3.5 whitespace-nowrap">
                               <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 rounded-full ${task.assignee.avatarBg} text-white font-black text-[10px] flex items-center justify-center shrink-0`}>
+                                <div className={`w-6 h-6 rounded-full ${task.assignee.avatarBg} text-white font-bold text-[10px] flex items-center justify-center shrink-0`}>
                                   {task.assignee.name.split(" ").slice(-1)[0][0]}
                                 </div>
                                 <span className="font-bold text-zinc-800">{task.assignee.name}</span>
                               </div>
                             </td>
                             <td className="px-4 py-3.5 whitespace-nowrap">
-                              <span className={`px-2 py-0.5 text-[10px] font-black rounded-full uppercase ${task.priority === "Gấp" ? "bg-rose-500/10 text-rose-600 border border-rose-500/30" :
-                                task.priority === "Trung bình" ? "bg-amber-500/10 text-amber-600 border border-amber-500/30" :
+                              <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full ${task.priority === "Gấp" ? "bg-rose-50 text-rose-600 border border-rose-200" :
+                                task.priority === "Trung bình" ? "bg-amber-50 text-amber-600 border border-amber-200" :
                                   "bg-zinc-100 text-zinc-600"
                                 }`}>
-                                {task.priority}
+                                {task.priority === "Gấp" ? (isEn ? "Urgent" : "Gấp") : task.priority === "Trung bình" ? (isEn ? "Medium" : "Bình thường") : (isEn ? "Low" : "Thấp")}
                               </span>
                             </td>
                             <td className="px-4 py-3.5 whitespace-nowrap">
                               <div className="flex items-center gap-1.5 whitespace-nowrap">
-                                <Clock className={`w-3.5 h-3.5 ${isOverdue ? "text-rose-500" : isLateCompleted ? "text-amber-500" : "text-zinc-400"}`} />
-                                <span className={`font-bold ${isOverdue ? "text-rose-600 font-extrabold" : isLateCompleted ? "text-amber-700 font-bold" : "text-zinc-600"}`}>
+                                <Clock className={`w-3.5 h-3.5 ${isOverdue ? "text-rose-500" : "text-zinc-400"}`} />
+                                <span className={`font-bold ${isOverdue ? "text-rose-600 font-extrabold" : "text-zinc-600"}`}>
                                   {task.dueDate} {task.dueTime}
                                 </span>
-                                {isLateCompleted && (
-                                  <span className="px-1.5 py-0.5 text-[9px] font-black uppercase bg-amber-500/15 text-amber-700 border border-amber-500/30 rounded-md">
-                                    ⚠️ Xong trễ (Note duyệt cuối tháng)
-                                  </span>
-                                )}
                               </div>
                             </td>
                             <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                              <button
-                                onClick={() => handleToggleTaskComplete(task.id)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${isLateCompleted
-                                  ? "bg-amber-500 text-white shadow-2xs"
-                                  : isCompleted
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleToggleTaskComplete(task.id)}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${isCompleted
                                     ? "bg-emerald-500 text-white shadow-2xs"
                                     : "bg-zinc-100 text-zinc-700 hover:bg-[#2AC1BC] hover:text-white"
-                                  }`}
-                              >
-                                {isLateCompleted ? "✓ Xong (Trễ hạn)" : isCompleted ? "✓ Đã xong" : "Xác nhận xong"}
-                              </button>
+                                    }`}
+                                >
+                                  {isCompleted ? (isEn ? "✓ Done" : "✓ Đã xong") : (isEn ? "Complete" : "Xong")}
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTask(task.id)}
+                                  className="p-1.5 text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer"
+                                  title={isEn ? "Delete" : "Xóa"}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1020,7 +918,7 @@ export default function RemindersPage() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                    <span>Hiển thị</span>
+                    <span>{isEn ? "Showing" : "Hiển thị"}</span>
                     <input
                       type="number"
                       min={1}
@@ -1033,13 +931,13 @@ export default function RemindersPage() {
                       }}
                       className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
                     />
-                    <span>/ trang</span>
+                    <span>{isEn ? "/ page" : "/ trang"}</span>
                   </div>
 
                   <span className="hidden sm:inline text-zinc-300">|</span>
 
                   <div>
-                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> công việc
+                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> {isEn ? "of" : "trên tổng số"} <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> {isEn ? "tasks" : "công việc"}
                   </div>
                 </div>
                 {(() => {
@@ -1055,7 +953,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.max(windowStart - windowSize, 1))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        &larr; Trước
+                        &larr; {isEn ? "Prev" : "Trước"}
                       </button>
                       {visiblePages.map(page => (
                         <button
@@ -1074,7 +972,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.min(windowStart + windowSize, totalTaskPages))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        Sau &rarr;
+                        {isEn ? "Next" : "Sau"} &rarr;
                       </button>
                     </div>
                   );
@@ -1085,83 +983,116 @@ export default function RemindersPage() {
         </>
       )}
 
-      {/* 5. Tab 2: Tenant Notifications Broadcast Section */}
+      {/* 5. Tab 2: Tenant Notifications Broadcast Section (UC-L-13 Real Backend Data) */}
       {activeTab === "notifications" && (
         <div className="space-y-4">
-          {viewMode === "grid" ? (
+          {isLoadingNotifs ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-zinc-200 text-center">
+              <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
+              <p className="text-xs font-bold text-zinc-600">{isEn ? "Loading announcements..." : "Đang tải thông báo..."}</p>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border border-zinc-200 border-dashed text-center">
+              <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                <Send className="w-8 h-8" />
+              </div>
+              <h3 className="text-base font-bold text-zinc-800">
+                {isEn ? "No broadcast announcements yet" : "Chưa có thông báo phát sóng nào"}
+              </h3>
+              <p className="text-xs text-zinc-500 mt-1 max-w-sm">
+                {isEn
+                  ? "Publish urgent notices, electricity and water schedules, or fee reminders directly to tenants."
+                  : "Phát sóng thông báo sự cố, lịch điện nước hoặc nhắc nhở nội quy tới toàn bộ khách thuê."}
+              </p>
+              <button
+                onClick={() => setIsNotifModalOpen(true)}
+                className="mt-4 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm shadow-[#2AC1BC]/20"
+              >
+                <Plus className="w-4 h-4" /> {isEn ? "Create First Announcement" : "Tạo thông báo đầu tiên"}
+              </button>
+            </div>
+          ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedNotifications.length === 0 ? (
-                <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 font-bold">
-                  Không tìm thấy thông báo nào phù hợp với bộ lọc.
-                </div>
-              ) : (
-                paginatedNotifications.map((notif) => {
-                  const readPct = Math.round((notif.readCount / notif.totalTarget) * 100);
-                  return (
-                    <div
-                      key={notif.id}
-                      onClick={() => setSelectedNotifDetail(notif)}
-                      className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all cursor-pointer group flex flex-col justify-between"
-                    >
-                      <div>
-                        {/* Header: Category Badge + Sent At */}
-                        <div className="flex items-center justify-between gap-2 pb-3 border-b border-zinc-100">
-                          <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${
-                            notif.category === "Khẩn cấp" ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
-                            notif.category === "Điện nước" ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
-                            notif.category === "Tiền nhà" ? "bg-emerald-500/15 text-emerald-700 border border-emerald-500/30" :
-                            "bg-blue-500/15 text-blue-600 border border-blue-500/30"
-                          }`}>
-                            {notif.category}
-                          </span>
+              {notifications.map((notif) => {
+                const readPct = notif.totalTarget > 0 ? Math.round((notif.readCount / notif.totalTarget) * 100) : 0;
+                return (
+                  <div
+                    key={notif.id}
+                    onClick={() => setSelectedNotifDetail(notif)}
+                    className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all cursor-pointer group flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Header: Category Badge + Sent At */}
+                      <div className="flex items-center justify-between gap-2 pb-3 border-b border-zinc-100">
+                        <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${
+                          notif.category === "Khẩn cấp" || notif.category === "Emergency" ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
+                          notif.category === "Điện nước" || notif.category === "Utilities" ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
+                          notif.category === "Tiền nhà" || notif.category === "Rent" ? "bg-emerald-500/15 text-emerald-700 border border-emerald-500/30" :
+                          "bg-blue-500/15 text-blue-600 border border-blue-500/30"
+                        }`}>
+                          {notif.category}
+                        </span>
+                        <div className="flex items-center gap-2">
                           <span className="text-[11px] font-semibold text-zinc-400">{notif.sentAt}</span>
-                        </div>
-
-                        {/* Title & Content Body */}
-                        <div className="py-3 space-y-1.5">
-                          <h3 className="font-extrabold text-sm text-zinc-900 group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
-                            {notif.title}
-                          </h3>
-                          <p className="text-zinc-500 text-xs line-clamp-2 leading-relaxed">
-                            {notif.content}
-                          </p>
-                        </div>
-
-                        {/* Metadata Pills */}
-                        <div className="flex flex-wrap items-center gap-2 py-2 border-t border-zinc-100 text-xs font-bold text-zinc-700">
-                          <span className="inline-flex items-center gap-1.5 bg-zinc-100 px-2.5 py-1 rounded-full text-[11px]">
-                            <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> {notif.targetScope}
-                          </span>
-                          <span className="inline-flex items-center gap-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] px-2.5 py-1 rounded-full text-[11px]">
-                            <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" /> {notif.channel}
-                          </span>
-                        </div>
-
-                        {/* Read Progress Bar */}
-                        <div className="pt-2 border-t border-zinc-100">
-                          <div className="flex items-center justify-between text-[11px] font-bold mb-1">
-                            <span className="text-zinc-600">Đã đọc: {notif.readCount}/{notif.totalTarget} Khách</span>
-                            <span className="text-[#2AC1BC]">{readPct}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#2AC1BC] rounded-full transition-all" style={{ width: `${readPct}%` }} />
-                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingNotifId(notif.id);
+                            }}
+                            className="text-zinc-300 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                            title={isEn ? "Delete announcement" : "Xóa thông báo"}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
 
-                      {/* Footer Action Button */}
-                      <div className="pt-3 mt-3 border-t border-zinc-100 flex items-center justify-end">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedNotifDetail(notif); }}
-                          className="w-full px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> Xem chi tiết
-                        </button>
+                      {/* Title & Content Body */}
+                      <div className="py-3 space-y-1.5">
+                        <h3 className="font-extrabold text-sm text-zinc-900 group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                          {notif.title}
+                        </h3>
+                        <p className="text-zinc-500 text-xs line-clamp-2 leading-relaxed whitespace-pre-line">
+                          {notif.content}
+                        </p>
+                      </div>
+
+                      {/* Metadata Pills */}
+                      <div className="flex flex-wrap items-center gap-2 py-2 border-t border-zinc-100 text-xs font-bold text-zinc-700">
+                        <span className="inline-flex items-center gap-1.5 bg-zinc-100 px-2.5 py-1 rounded-full text-[11px]">
+                          <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> {notif.targetScope}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] px-2.5 py-1 rounded-full text-[11px]">
+                          <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" /> {notif.channel}
+                        </span>
+                      </div>
+
+                      {/* Read Progress Bar */}
+                      <div className="pt-2 border-t border-zinc-100">
+                        <div className="flex items-center justify-between text-[11px] font-bold mb-1">
+                          <span className="text-zinc-600">
+                            {isEn ? "Read reach" : "Đã đọc"}: {notif.readCount}/{notif.totalTarget} {isEn ? "Tenants" : "Khách"}
+                          </span>
+                          <span className="text-[#2AC1BC]">{readPct}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#2AC1BC] rounded-full transition-all" style={{ width: `${readPct}%` }} />
+                        </div>
                       </div>
                     </div>
-                  );
-                })
-              )}
+
+                    {/* Footer Action Button */}
+                    <div className="pt-3 mt-3 border-t border-zinc-100 flex items-center justify-end">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedNotifDetail(notif); }}
+                        className="w-full px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> {isEn ? "View Details" : "Xem chi tiết"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
@@ -1169,27 +1100,28 @@ export default function RemindersPage() {
                 <table className="w-full text-xs text-left border-collapse min-w-[950px]">
                   <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
                     <tr>
-                      <th className="px-4 py-3.5 whitespace-nowrap w-80">Phân loại & Tiêu đề</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Đối tượng nhận</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Kênh gửi</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Tỷ lệ đã đọc</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Thời gian đăng</th>
-                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Hành động</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap w-80">{isEn ? "Category & Title" : "Phân loại & Tiêu đề"}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Target Audience" : "Đối tượng nhận"}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Channel" : "Kênh gửi"}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Read Rate" : "Tỷ lệ đã đọc"}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Sent At" : "Thời gian đăng"}</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">{isEn ? "Actions" : "Hành động"}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
-                    {paginatedNotifications.map((notif) => {
-                      const readPct = Math.round((notif.readCount / notif.totalTarget) * 100);
+                    {notifications.map((notif) => {
+                      const readPct = notif.totalTarget > 0 ? Math.round((notif.readCount / notif.totalTarget) * 100) : 0;
 
                       return (
                         <tr key={notif.id} className="hover:bg-zinc-50/80 transition-colors">
                           <td className="px-4 py-4 max-w-sm">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${notif.category === "Khẩn cấp" ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
-                                notif.category === "Điện nước" ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
-                                  notif.category === "Tiền nhà" ? "bg-emerald-500/15 text-emerald-700 border border-emerald-500/30" :
-                                    "bg-blue-500/15 text-blue-600 border border-blue-500/30"
-                                }`}>
+                              <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${
+                                notif.category === "Khẩn cấp" || notif.category === "Emergency" ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
+                                notif.category === "Điện nước" || notif.category === "Utilities" ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
+                                notif.category === "Tiền nhà" || notif.category === "Rent" ? "bg-emerald-500/15 text-emerald-700 border border-emerald-500/30" :
+                                "bg-blue-500/15 text-blue-600 border border-blue-500/30"
+                              }`}>
                                 {notif.category}
                               </span>
                               <span className="font-bold text-zinc-900 text-sm truncate">{notif.title}</span>
@@ -1209,11 +1141,10 @@ export default function RemindersPage() {
                             </span>
                           </td>
 
-                          {/* Read Progress Bar */}
                           <td className="px-4 py-4 whitespace-nowrap min-w-[160px]">
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center justify-between text-[11px] font-bold">
-                                <span className="text-zinc-700">{notif.readCount}/{notif.totalTarget} Khách</span>
+                                <span className="text-zinc-700">{notif.readCount}/{notif.totalTarget} {isEn ? "Tenants" : "Khách"}</span>
                                 <span className="text-[#2AC1BC]">{readPct}%</span>
                               </div>
                               <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
@@ -1227,12 +1158,21 @@ export default function RemindersPage() {
                           </td>
 
                           <td className="px-4 py-4 text-right whitespace-nowrap">
-                            <button
-                              onClick={() => setSelectedNotifDetail(notif)}
-                              className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> Xem chi tiết
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => setSelectedNotifDetail(notif)}
+                                className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> {isEn ? "View" : "Xem"}
+                              </button>
+                              <button
+                                onClick={() => setDeletingNotifId(notif.id)}
+                                className="p-1.5 text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer"
+                                title={isEn ? "Delete" : "Xóa"}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1243,11 +1183,11 @@ export default function RemindersPage() {
             </div>
           )}
 
-          {/* Notifications Pagination Footer */}
+          {/* Notifications Pagination Footer (Rule #9) */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
             <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
               <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                <span>Hiển thị</span>
+                <span>{isEn ? "Showing" : "Hiển thị"}</span>
                 <input
                   type="number"
                   min={1}
@@ -1260,19 +1200,19 @@ export default function RemindersPage() {
                   }}
                   className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
                 />
-                <span>/ trang</span>
+                <span>{isEn ? "/ page" : "/ trang"}</span>
               </div>
 
               <span className="hidden sm:inline text-zinc-300">|</span>
 
               <div>
-                <span className="font-extrabold text-zinc-800">{(notifPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(notifPage * ITEMS_PER_PAGE, filteredNotifications.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredNotifications.length}</span> thông báo
+                <span className="font-extrabold text-zinc-800">{(notifPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(notifPage * ITEMS_PER_PAGE, notifTotal)}</span> {isEn ? "of" : "trên tổng số"} <span className="font-extrabold text-zinc-800">{notifTotal}</span> {isEn ? "announcements" : "thông báo"}
               </div>
             </div>
             {(() => {
               const windowSize = 5;
               const windowStart = Math.floor((notifPage - 1) / windowSize) * windowSize + 1;
-              const windowEnd = Math.min(windowStart + windowSize - 1, totalNotifPages);
+              const windowEnd = Math.min(windowStart + windowSize - 1, notifTotalPages);
               const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
 
               return (
@@ -1282,7 +1222,7 @@ export default function RemindersPage() {
                     onClick={() => setNotifPage(Math.max(windowStart - windowSize, 1))}
                     className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                   >
-                    &larr; Trước
+                    &larr; {isEn ? "Prev" : "Trước"}
                   </button>
                   {visiblePages.map(page => (
                     <button
@@ -1297,11 +1237,11 @@ export default function RemindersPage() {
                     </button>
                   ))}
                   <button
-                    disabled={notifPage === totalNotifPages || windowStart + windowSize > totalNotifPages}
-                    onClick={() => setNotifPage(Math.min(windowStart + windowSize, totalNotifPages))}
+                    disabled={notifPage === notifTotalPages || windowStart + windowSize > notifTotalPages}
+                    onClick={() => setNotifPage(Math.min(windowStart + windowSize, notifTotalPages))}
                     className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                   >
-                    Sau &rarr;
+                    {isEn ? "Next" : "Sau"} &rarr;
                   </button>
                 </div>
               );
@@ -1323,8 +1263,8 @@ export default function RemindersPage() {
                   <BellRing className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-white">Giao việc cho nhân viên</h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">Tạo nhắc nhở và phân công nhiệm vụ cụ thể</p>
+                  <h2 className="text-lg font-black tracking-tight text-white">{isEn ? "Assign Staff Task" : "Giao việc cho nhân viên"}</h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">{isEn ? "Create duties and assign responsibilities" : "Tạo nhắc nhở và phân công nhiệm vụ cụ thể"}</p>
                 </div>
               </div>
               <button
@@ -1338,11 +1278,13 @@ export default function RemindersPage() {
             <form onSubmit={handleCreateTask} className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar bg-zinc-50/50">
               {/* Task Title */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tên công việc <span className="text-rose-500">*</span></label>
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                  {isEn ? "Task Title" : "Tên công việc"} <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="VD: Kiểm tra máy lạnh rò nước phòng 102"
+                  placeholder={isEn ? "e.g. Check air conditioner leaking in Room 102" : "VD: Kiểm tra máy lạnh rò nước phòng 102"}
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -1352,7 +1294,7 @@ export default function RemindersPage() {
               {/* Assignee & Room */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Nhân viên phụ trách</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Assignee" : "Nhân viên phụ trách"}</label>
                   <select
                     value={taskAssignee}
                     onChange={(e) => setTaskAssignee(e.target.value)}
@@ -1365,10 +1307,10 @@ export default function RemindersPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Phòng liên quan</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Target Room" : "Phòng liên quan"}</label>
                   <input
                     type="text"
-                    placeholder="VD: 101, 202 hoặc Hành lang"
+                    placeholder={isEn ? "e.g. 101, 202 or Corridor" : "VD: 101, 202 hoặc Hành lang"}
                     value={taskRoom}
                     onChange={(e) => setTaskRoom(e.target.value)}
                     className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-all"
@@ -1379,30 +1321,30 @@ export default function RemindersPage() {
               {/* Category & Priority */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Phân loại</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Category" : "Phân loại"}</label>
                   <select
                     value={taskCategory}
                     onChange={(e) => setTaskCategory(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                   >
-                    <option value="Bảo trì">Bảo trì / Sửa chữa</option>
-                    <option value="Thu tiền">Thu tiền nhà / Cọc</option>
-                    <option value="Kiểm tra">Kiểm tra / Chốt số</option>
-                    <option value="Vệ sinh">Vệ sinh / Xịt muỗi</option>
-                    <option value="Khác">Khác</option>
+                    <option value="Bảo trì">{isEn ? "Maintenance / Repairs" : "Bảo trì / Sửa chữa"}</option>
+                    <option value="Thu tiền">{isEn ? "Rent / Deposit Collection" : "Thu tiền nhà / Cọc"}</option>
+                    <option value="Kiểm tra">{isEn ? "Meter Reading / Inspection" : "Kiểm tra / Chốt số"}</option>
+                    <option value="Vệ sinh">{isEn ? "Cleaning / Pest Control" : "Vệ sinh / Xịt muỗi"}</option>
+                    <option value="Khác">{isEn ? "Other" : "Khác"}</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Mức độ ưu tiên</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Priority" : "Mức độ ưu tiên"}</label>
                   <select
                     value={taskPriority}
                     onChange={(e) => setTaskPriority(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                   >
-                    <option value="Gấp">Gấp / Ưu tiên</option>
-                    <option value="Trung bình">Bình thường</option>
-                    <option value="Thấp">Thấp</option>
+                    <option value="Gấp">{isEn ? "Urgent / High" : "Gấp / Ưu tiên"}</option>
+                    <option value="Trung bình">{isEn ? "Normal" : "Bình thường"}</option>
+                    <option value="Thấp">{isEn ? "Low" : "Thấp"}</option>
                   </select>
                 </div>
               </div>
@@ -1410,7 +1352,7 @@ export default function RemindersPage() {
               {/* Due Date & Time */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Ngày hoàn thành</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Due Date" : "Ngày hoàn thành"}</label>
                   <input
                     type="date"
                     value={taskDueDate}
@@ -1419,7 +1361,7 @@ export default function RemindersPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Giờ hẹn xong</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Due Time" : "Giờ hẹn xong"}</label>
                   <input
                     type="time"
                     value={taskDueTime}
@@ -1431,10 +1373,10 @@ export default function RemindersPage() {
 
               {/* Notes */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Ghi chú chi tiết</label>
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Detailed Notes" : "Ghi chú chi tiết"}</label>
                 <textarea
                   rows={3}
-                  placeholder="Mô tả cụ thể yêu cầu công việc..."
+                  placeholder={isEn ? "Describe task requirements..." : "Mô tả cụ thể yêu cầu công việc..."}
                   value={taskNotes}
                   onChange={(e) => setTaskNotes(e.target.value)}
                   className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
@@ -1448,13 +1390,13 @@ export default function RemindersPage() {
                   onClick={requestCloseTaskModal}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {isEn ? "Cancel" : "Hủy bỏ"}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  <Check className="w-4 h-4" /> Tạo công việc mới
+                  <Check className="w-4 h-4" /> {isEn ? "Create Task" : "Tạo công việc mới"}
                 </button>
               </div>
             </form>
@@ -1462,7 +1404,7 @@ export default function RemindersPage() {
         </div>
       )}
 
-      {/* 7. MODAL 2: Create Tenant Broadcast Modal (Synchronized Theme) */}
+      {/* 7. MODAL 2: Create Tenant Broadcast Modal (UC-L-13) */}
       {isNotifModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
@@ -1475,8 +1417,8 @@ export default function RemindersPage() {
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-white">Soạn thông báo khách thuê</h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">Phát sóng sự việc đến ứng dụng di động khách thuê</p>
+                  <h2 className="text-lg font-black tracking-tight text-white">{isEn ? "Broadcast Announcement (UC-L-13)" : "Soạn thông báo khách thuê (UC-L-13)"}</h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">{isEn ? "Broadcast instant notices to all tenants' mobile app" : "Phát sóng thông báo đến ứng dụng di động khách thuê"}</p>
                 </div>
               </div>
               <button
@@ -1491,7 +1433,7 @@ export default function RemindersPage() {
               {/* Quick Template Picker */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" /> Chọn mẫu thông báo nhanh
+                  <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" /> {isEn ? "Choose Quick Template" : "Chọn mẫu thông báo nhanh"}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {notificationTemplates.map((tmpl) => (
@@ -1514,11 +1456,13 @@ export default function RemindersPage() {
 
               {/* Title */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tiêu đề thông báo <span className="text-rose-500">*</span></label>
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                  {isEn ? "Announcement Title" : "Tiêu đề thông báo"} <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="VD: Lịch cúp điện ngày 30/08"
+                  placeholder={isEn ? "e.g. Electricity outage notice on 30/08" : "VD: Lịch cúp điện ngày 30/08"}
                   value={notifTitle}
                   onChange={(e) => setNotifTitle(e.target.value)}
                   className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -1528,40 +1472,54 @@ export default function RemindersPage() {
               {/* Target & Channel */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Đối tượng nhận</label>
-                  <select
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Target Scope" : "Đối tượng nhận"}</label>
+                  <input
+                    type="text"
                     value={notifTargetScope}
                     onChange={(e) => setNotifTargetScope(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
-                  >
-                    <option value={activeBuilding.name}>Toàn bộ tòa nhà ({activeBuilding.name})</option>
-                    <option value="Tầng 1 & Tầng 2">Chỉ Tầng 1 & Tầng 2</option>
-                    <option value="Tầng 3 & Tầng 4">Chỉ Tầng 3 & Tầng 4</option>
-                    <option value="Phòng 101, 102, 103">Các phòng cụ thể chọn lọc</option>
-                  </select>
+                    placeholder={isEn ? "Entire building or selected floors" : "Toàn bộ tòa nhà hoặc các tầng"}
+                    className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Kênh phát sóng</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Broadcast Channel" : "Kênh phát sóng"}</label>
                   <select
                     value={notifChannel}
-                    onChange={(e) => setNotifChannel(e.target.value as any)}
+                    onChange={(e) => setNotifChannel(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                   >
-                    <option value="Thông báo hệ thống">Thông báo hệ thống</option>
-                    <option value="Zalo OA">Zalo Official Account</option>
-                    <option value="SMS">Tin nhắn SMS trực tiếp</option>
+                    <option value="Thông báo hệ thống">{isEn ? "In-App Notification (Dormio)" : "Thông báo hệ thống (Dormio)"}</option>
+                    <option value="Zalo OA">{isEn ? "Zalo Official Account" : "Zalo Official Account"}</option>
+                    <option value="SMS">{isEn ? "Direct SMS Message" : "Tin nhắn SMS trực tiếp"}</option>
                   </select>
                 </div>
               </div>
 
+              {/* Category */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Category" : "Phân loại"}</label>
+                <select
+                  value={notifCategory}
+                  onChange={(e) => setNotifCategory(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
+                >
+                  <option value="Điện nước">{isEn ? "Utilities (Electricity & Water)" : "Điện nước"}</option>
+                  <option value="Tiền nhà">{isEn ? "Rent & Billing Settlement" : "Tiền nhà & Hóa đơn"}</option>
+                  <option value="Nội quy">{isEn ? "House Rules & Order" : "Nội quy & Trật tự"}</option>
+                  <option value="Khẩn cấp">{isEn ? "Urgent / Emergency" : "Khẩn cấp"}</option>
+                </select>
+              </div>
+
               {/* Content */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Nội dung chi tiết <span className="text-rose-500">*</span></label>
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                  {isEn ? "Detailed Announcement Content" : "Nội dung chi tiết"} <span className="text-rose-500">*</span>
+                </label>
                 <textarea
                   rows={5}
                   required
-                  placeholder="Nhập nội dung đầy đủ gửi đến khách thuê..."
+                  placeholder={isEn ? "Enter full announcement text to broadcast to tenants..." : "Nhập nội dung đầy đủ gửi đến khách thuê..."}
                   value={notifContent}
                   onChange={(e) => setNotifContent(e.target.value)}
                   className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
@@ -1573,15 +1531,27 @@ export default function RemindersPage() {
                 <button
                   type="button"
                   onClick={requestCloseNotifModal}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                  disabled={isSubmittingNotif}
+                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  Hủy bỏ
+                  {isEn ? "Cancel" : "Hủy bỏ"}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center gap-1.5"
+                  disabled={isSubmittingNotif}
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  <Send className="w-4 h-4" /> Phát sóng thông báo ngay
+                  {isSubmittingNotif ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{isEn ? "Broadcasting..." : "Đang phát sóng..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>{isEn ? "Broadcast Announcement" : "Phát sóng thông báo ngay"}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -1601,7 +1571,7 @@ export default function RemindersPage() {
                 <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase">
                   {selectedNotifDetail.category}
                 </span>
-                <h3 className="text-sm font-bold text-white">Chi tiết thông báo</h3>
+                <h3 className="text-sm font-bold text-white">{isEn ? "Announcement Details" : "Chi tiết thông báo"}</h3>
               </div>
               <button
                 onClick={() => setSelectedNotifDetail(null)}
@@ -1615,9 +1585,9 @@ export default function RemindersPage() {
               <div>
                 <h2 className="text-base font-black text-zinc-900 leading-snug mb-1">{selectedNotifDetail.title}</h2>
                 <div className="flex items-center gap-3 text-zinc-400 text-[11px] font-bold">
-                  <span>Gửi lúc: {selectedNotifDetail.sentAt}</span>
+                  <span>{isEn ? "Sent at" : "Gửi lúc"}: {selectedNotifDetail.sentAt}</span>
                   <span>•</span>
-                  <span>Kênh: {selectedNotifDetail.channel}</span>
+                  <span>{isEn ? "Channel" : "Kênh"}: {selectedNotifDetail.channel}</span>
                 </div>
               </div>
 
@@ -1627,28 +1597,83 @@ export default function RemindersPage() {
 
               <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-blue-600" />
-                  <span className="text-zinc-700 font-bold">Tỷ lệ khách đọc App</span>
+                  <Users className="w-4 h-4 text-blue-600" />
+                  <span className="text-zinc-700 font-bold">{isEn ? "Target Reach" : "Cư dân tiếp cận"}</span>
                 </div>
                 <span className="font-black text-blue-600 text-sm">
-                  {selectedNotifDetail.readCount}/{selectedNotifDetail.totalTarget} Khách ({Math.round((selectedNotifDetail.readCount / selectedNotifDetail.totalTarget) * 100)}%)
+                  {selectedNotifDetail.totalTarget} {isEn ? "Residents" : "Cư dân"}
                 </span>
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50 flex items-center justify-end">
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setDeletingNotifId(selectedNotifDetail.id);
+                  setSelectedNotifDetail(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" /> {isEn ? "Delete Announcement" : "Xóa thông báo"}
+              </button>
+
               <button
                 onClick={() => setSelectedNotifDetail(null)}
                 className="px-5 py-2 text-xs font-bold text-white bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
               >
-                Đóng
+                {isEn ? "Close" : "Đóng"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 9. MODAL POP-UP: Confirm Close Form with Unsaved Changes */}
+      {/* 9. MODAL 4: Confirm Delete Announcement Modal */}
+      {deletingNotifId && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setDeletingNotifId(null); }}
+        >
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
+            <div className="w-14 h-14 bg-rose-50 border border-rose-200/80 rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-zinc-900 tracking-tight">
+                {isEn ? "Delete Announcement" : "Xác nhận xóa thông báo"}
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+                {isEn
+                  ? "Are you sure you want to delete this broadcast notice? This action cannot be undone."
+                  : "Bạn có chắc chắn muốn xóa thông báo này? Hành động này không thể hoàn tác."}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isDeletingNotif}
+                onClick={() => setDeletingNotifId(null)}
+                className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+              >
+                {isEn ? "Cancel" : "Hủy bỏ"}
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingNotif}
+                onClick={() => handleDeleteAnnouncement(deletingNotifId)}
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeletingNotif ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                <span>{isEn ? "Delete" : "Xác nhận xóa"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 10. MODAL POP-UP: Confirm Close Form with Unsaved Changes (Rule #10) */}
       {confirmCloseTarget && (
         <div
           className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
@@ -1662,9 +1687,13 @@ export default function RemindersPage() {
 
             {/* Header Title & Subtitle */}
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-zinc-900 tracking-tight">Xác nhận đóng form</h3>
+              <h3 className="text-xl font-black text-zinc-900 tracking-tight">
+                {isEn ? "Confirm Discard Changes" : "Xác nhận đóng form"}
+              </h3>
               <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-                Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?
+                {isEn
+                  ? "You have unsaved changes. Are you sure you want to discard your draft?"
+                  : "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?"}
               </p>
             </div>
 
@@ -1675,7 +1704,7 @@ export default function RemindersPage() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
               >
-                Tiếp tục chỉnh sửa
+                {isEn ? "Continue Editing" : "Tiếp tục chỉnh sửa"}
               </button>
               <button
                 type="button"
@@ -1686,7 +1715,7 @@ export default function RemindersPage() {
                 }}
                 className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
               >
-                Hủy thay đổi & Đóng
+                {isEn ? "Discard & Close" : "Hủy thay đổi & Đóng"}
               </button>
             </div>
           </div>

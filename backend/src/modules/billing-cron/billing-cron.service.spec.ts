@@ -53,6 +53,7 @@ const mockNotificationsService = {
 
 const mockInvoicesService = {
   generateFlatRateInvoice: jest.fn().mockResolvedValue({ id: 'inv-flat-1' }),
+  flipOverdueInvoices: jest.fn().mockResolvedValue({ count: 0 }),
 };
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

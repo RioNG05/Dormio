@@ -41,6 +41,8 @@ const mockPrisma = {
   },
   contractDocument: {
     create: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
   },
   auditLog: {
     create: jest.fn(),
@@ -553,6 +555,152 @@ describe('ContractsService', () => {
 
       await service.notifyContractCreated(params);
       expect(mockNotificationsService.createOnboardingNotification).toHaveBeenCalledWith(params);
+    });
+  });
+
+  // ─── UC-L-15: Export Contracts ─────────────────────────────────────────────
+
+  describe('UC-L-15: Export Contracts', () => {
+    const mockFullContract = {
+      id: 'c-1',
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-12-31'),
+      rentPrice: new Prisma.Decimal(3500000),
+      monthlyPaymentDate: 5,
+      status: 'active',
+      note: 'Ghi chú mẫu',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      room: {
+        id: 'r-1',
+        roomNumber: '101',
+        floor: 1,
+        area: 25,
+        maxOccupants: 2,
+        roomType: { name: 'Phòng đơn' },
+        boardingHouse: {
+          id: 'bh-1',
+          name: 'Nhà trọ Dormio',
+          houseNumber: '123',
+          street: 'Đường A',
+          ward: 'Phường B',
+          district: 'Quận C',
+          city: 'Hà Nội',
+          owner: {
+            id: 'landlord-1',
+            username: 'chutro',
+            phoneNumber: '0912345678',
+            email: 'landlord@test.com',
+          },
+        },
+        roomServices: [
+          {
+            service: {
+              id: 's-1',
+              name: 'Điện',
+              price: new Prisma.Decimal(3500),
+              unit: 'kWh',
+              isMetered: true,
+            },
+          },
+        ],
+      },
+      tenantContracts: [
+        {
+          id: 'tc-1',
+          isPrimary: true,
+          tenant: {
+            id: 'tenant-1',
+            username: 'nguyenvana',
+            phoneNumber: '0987654321',
+            email: 'vana@test.com',
+            userIdentification: {
+              identityNumber: '001200001234',
+              issueDate: new Date('2020-01-01'),
+              placeOfOrigin: 'Hà Nội',
+              placeOfResidence: 'Hà Nội',
+            },
+          },
+        },
+      ],
+      deposit: {
+        amount: new Prisma.Decimal(3500000),
+        status: 'paid',
+        type: 'contract',
+        createdAt: new Date('2026-01-01'),
+      },
+      contractDocuments: [],
+    };
+
+    it('exportContract should create ContractDocument, log audit, and return URLs', async () => {
+      mockPrisma.contract.findFirst.mockResolvedValue(mockFullContract);
+      const createdDoc = {
+        id: 'doc-1',
+        contractId: 'c-1',
+        url: 'contracts/c-1/export_123.html',
+        createdAt: new Date('2026-09-11'),
+      };
+      mockPrisma.contractDocument.create.mockResolvedValue(createdDoc);
+      mockPrisma.auditLog.create.mockResolvedValue({});
+
+      const result = await service.exportContract('bh-1', 'c-1', 'landlord-1');
+
+      expect(result.documentId).toBe('doc-1');
+      expect(result.contractId).toBe('c-1');
+      expect(result.downloadUrl).toContain('/documents/doc-1/download');
+      expect(result.printUrl).toContain('/print?autoPrint=true');
+      expect(result.html).toContain('HỢP ĐỒNG THUÊ PHÒNG TRỌ');
+      expect(mockPrisma.contractDocument.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: 'create',
+            entityType: 'CONTRACT',
+            entityId: 'c-1',
+          }),
+        }),
+      );
+    });
+
+    it('getContractPrintHtml should render the contract HTML template with autoPrint option', async () => {
+      mockPrisma.contract.findFirst.mockResolvedValue(mockFullContract);
+
+      const html = await service.getContractPrintHtml('bh-1', 'c-1', true, true);
+
+      expect(html).toContain('CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM');
+      expect(html).toContain('HỢP ĐỒNG THUÊ PHÒNG TRỌ');
+      expect(html).toContain('phòng số <strong>101</strong>');
+      expect(html).toContain('window.print()');
+    });
+
+    it('getContractDocuments should return mapped document items', async () => {
+      mockPrisma.contract.findFirst.mockResolvedValue({ id: 'c-1' });
+      mockPrisma.contractDocument.findMany.mockResolvedValue([
+        {
+          id: 'doc-1',
+          contractId: 'c-1',
+          url: 'contracts/c-1/doc1.html',
+          createdAt: new Date('2026-09-11'),
+        },
+      ]);
+
+      const docs = await service.getContractDocuments('bh-1', 'c-1');
+
+      expect(docs).toHaveLength(1);
+      expect(docs[0].id).toBe('doc-1');
+      expect(docs[0].downloadUrl).toContain('/documents/doc-1/download');
+    });
+
+    it('getContractDocumentDownload should return filename and html content', async () => {
+      mockPrisma.contract.findFirst.mockResolvedValue(mockFullContract);
+      mockPrisma.contractDocument.findFirst.mockResolvedValue({
+        id: 'doc-1',
+        contractId: 'c-1',
+      });
+
+      const result = await service.getContractDocumentDownload('bh-1', 'c-1', 'doc-1');
+
+      expect(result.filename).toContain('Hop-dong-phong-101');
+      expect(result.html).toContain('HỢP ĐỒNG THUÊ PHÒNG TRỌ');
     });
   });
 });

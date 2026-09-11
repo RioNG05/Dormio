@@ -49,6 +49,7 @@ export class BillingCronService {
     await Promise.all([
       this.processBillingReminders(dayReminder),
       this.processBillingDue(dayToday),
+      this.invoicesService.flipOverdueInvoices(),
     ]);
 
     this.logger.log('[BillingCron] Completed');

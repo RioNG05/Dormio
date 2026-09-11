@@ -1,65 +1,104 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, FileSignature, Filter, MoreHorizontal, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, Activity, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, Droplet, Trash2, Wifi, ClipboardList, Shield, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye } from "lucide-react";
+import { Plus, Search, FileSignature, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, ClipboardList, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye, Loader2, AlertTriangle, Download } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { getLandlordContracts } from "@/services/contract.service";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLandlordContracts, ContractItem, exportContract } from "@/services/contract.service";
+import ContractPreviewModal from "@/components/landlord/ContractPreviewModal";
+
+// Status label helper (bilingual)
+function getStatusLabel(status: string, isEn: boolean): string {
+  switch (status) {
+    case 'active':   return isEn ? 'Active'     : 'Đang hiệu lực';
+    case 'draft':    return isEn ? 'Draft'      : 'Chờ xác nhận';
+    case 'expired':  return isEn ? 'Expired'    : 'Hết hạn';
+    case 'canceled': return isEn ? 'Terminated' : 'Đã chấm dứt';
+    // already-mapped display values
+    case 'Đang hiệu lực': return isEn ? 'Active'     : 'Đang hiệu lực';
+    case 'Chờ xác nhận':  return isEn ? 'Draft'      : 'Chờ xác nhận';
+    case 'Quá hạn':       return isEn ? 'Overdue'    : 'Quá hạn';
+    case 'Đã chấm dứt':   return isEn ? 'Terminated' : 'Đã chấm dứt';
+    default: return status;
+  }
+}
+
+function mapContractStatus(rawStatus: string): string {
+  switch (rawStatus) {
+    case 'active':   return 'Đang hiệu lực';
+    case 'draft':    return 'Chờ xác nhận';
+    case 'expired':  return 'Quá hạn';
+    case 'canceled': return 'Đã chấm dứt';
+    default: return rawStatus;
+  }
+}
 
 export default function ContractsPage() {
   const { activeBuilding } = useAuth();
+  const { locale } = useLanguage();
+  const isEn = locale === 'en';
   const router = useRouter();
+
+  // ─── UI state ───────────────────────────────────────────────────────────────
+  const [isMounted, setIsMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isDirty, setIsDirty] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  // Rule #10: custom confirm-close modal instead of window.confirm
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  useEffect(() => { setIsMounted(true); }, []);
 
-  // Fetch real contracts if activeBuilding is a real UUID
-  React.useEffect(() => {
-    async function fetchContracts() {
-      if (!activeBuilding?.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeBuilding.id)) return;
-      try {
-        const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
-        if (res?.data && res.data.length > 0) {
-          const mapped = res.data.map((c) => ({
-            id: c.id,
-            building: activeBuilding.id,
-            room: c.room.roomNumber,
-            roomType: c.room.roomTypeName || "Studio",
-            tenant: c.tenant?.fullName || "Khách thuê",
-            tenantId: c.tenant?.id || "KH-1",
-            startDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
-            endDate: new Date(c.endDate).toLocaleDateString("vi-VN"),
-            isOverdue: new Date(c.endDate) < new Date(),
-            price: `${c.rentPrice.toLocaleString("vi-VN")} ₫`,
-            deposit: `${c.depositAmount.toLocaleString("vi-VN")} ₫`,
-            paymentDate: `${c.monthlyPaymentDate}`,
-            paymentStatus: "Đã thu đủ",
-            status: c.status === "active" ? "Đang hiệu lực" : c.status === "draft" ? "Chờ xác nhận" : c.status,
-            history: [],
-            members: [],
-          }));
-          setContracts(mapped);
-        }
-      } catch (err) {
-        console.warn("Could not load contracts from backend, using fallback data:", err);
+  // ─── Data state (NO mock data) ───────────────────────────────────────────────
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const fetchContracts = useCallback(async () => {
+    if (!activeBuilding?.id) { setIsLoading(false); return; }
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
+      if (res?.data) {
+        const mapped = res.data.map((c: ContractItem) => ({
+          id: c.id,
+          building: activeBuilding.id,
+          room: c.room.roomNumber,
+          roomType: c.room.roomTypeName || 'Studio',
+          tenant: c.tenant?.fullName || (isEn ? 'Tenant' : 'Khách thuê'),
+          tenantId: c.tenant?.id || '',
+          tenantPhone: c.tenant?.phoneNumber || '',
+          startDate: new Date(c.startDate).toLocaleDateString('vi-VN'),
+          endDate: new Date(c.endDate).toLocaleDateString('vi-VN'),
+          isOverdue: new Date(c.endDate) < new Date() && c.status !== 'canceled',
+          price: `${c.rentPrice.toLocaleString('vi-VN')} ₫`,
+          rentPrice: c.rentPrice,
+          deposit: `${c.depositAmount.toLocaleString('vi-VN')} ₫`,
+          depositAmount: c.depositAmount,
+          paymentDate: `${c.monthlyPaymentDate}`,
+          paymentStatus: isEn ? 'Collected' : 'Đã thu đủ',
+          status: mapContractStatus(c.status),
+          documentsCount: c.documentsCount,
+          createdAt: new Date(c.createdAt).toLocaleDateString('vi-VN'),
+          history: [],
+          members: [],
+        }));
+        setContracts(mapped);
       }
+    } catch (err: any) {
+      console.error('Failed to load contracts:', err);
+      setLoadError(isEn ? 'Failed to load contracts. Please try again.' : 'Không thể tải danh sách hợp đồng. Vui lòng thử lại.');
+    } finally {
+      setIsLoading(false);
     }
-    fetchContracts();
-  }, [activeBuilding?.id]);
+  }, [activeBuilding?.id, isEn]);
+
+  useEffect(() => { fetchContracts(); }, [fetchContracts]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [buildingFilter, setBuildingFilter] = useState("dormio");
-
-  const getBuildingTitle = (id: string) => {
-    return activeBuilding.name;
-  };
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false);
@@ -76,27 +115,98 @@ export default function ContractsPage() {
   const [editingService, setEditingService] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [services, setServices] = useState([
-    { id: 1, name: "Bảo vệ", type: "Cố định", price: 50000, unit: "đ/phòng", applied: true },
-    { id: 2, name: "Điện", type: "Đồng hồ", price: 3500, unit: "đ/kWh", applied: true },
-    { id: 3, name: "Nước", type: "Đồng hồ", price: 25000, unit: "đ/m³", applied: true },
-    { id: 4, name: "Rác", type: "Cố định", price: 40000, unit: "đ/phòng", applied: true },
+    { id: 1, name: isEn ? 'Security' : 'Bảo vệ', type: isEn ? 'Fixed' : 'Cố định', price: 50000, unit: isEn ? '₫/room' : 'đ/phòng', applied: true },
+    { id: 2, name: isEn ? 'Electricity' : 'Điện', type: isEn ? 'Metered' : 'Đồng hồ', price: 3500, unit: 'đ/kWh', applied: true },
+    { id: 3, name: isEn ? 'Water' : 'Nước', type: isEn ? 'Metered' : 'Đồng hồ', price: 25000, unit: 'đ/m³', applied: true },
+    { id: 4, name: isEn ? 'Garbage' : 'Rác', type: isEn ? 'Fixed' : 'Cố định', price: 40000, unit: isEn ? '₫/room' : 'đ/phòng', applied: true },
   ]);
   const [toast, setToast] = useState<{ message: string, type: "success" | "error" } | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [previewModal, setPreviewModal] = useState<{
+    isOpen: boolean;
+    contractId: string;
+    roomNumber: string;
+    tenantName?: string;
+  }>({
+    isOpen: false,
+    contractId: '',
+    roomNumber: '',
+    tenantName: '',
+  });
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
+  // Rule #10: Custom confirmation modal instead of window.confirm
   const handleCloseModal = () => {
     if (isDirty) {
-      if (window.confirm("Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn đóng?")) {
-        setIsModalOpen(false);
-        setTimeout(() => { setIsDirty(false); setStep(1); }, 200);
-      }
+      setShowCloseConfirm(true);
     } else {
       setIsModalOpen(false);
       setTimeout(() => setStep(1), 200);
+    }
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowCloseConfirm(false);
+    setIsModalOpen(false);
+    setTimeout(() => { setIsDirty(false); setStep(1); }, 200);
+  };
+
+  // Export current contract list as CSV
+  const handleExportCsv = () => {
+    const headers = isEn
+      ? ['Contract ID', 'Room', 'Tenant', 'Start Date', 'End Date', 'Rent Price', 'Deposit', 'Status']
+      : ['Mã HĐ', 'Phòng', 'Khách thuê', 'Ngày bắt đầu', 'Ngày kết thúc', 'Giá thuê', 'Tiền cọc', 'Trạng thái'];
+    const rows = contracts.map((c: any) => [
+      c.id, c.room, c.tenant, c.startDate, c.endDate, c.price, c.deposit,
+      isEn ? getStatusLabel(c.status, true) : c.status,
+    ]);
+    const csv = [headers, ...rows].map(r => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contracts_${activeBuilding?.name || 'export'}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(isEn ? 'Contract list exported successfully!' : 'Đã xuất danh sách hợp đồng thành công!', 'success');
+  };
+
+  // UC-L-15: Handle print/export of a single contract via server-side template modal
+  const handlePrintContract = (contract: any) => {
+    setPreviewModal({
+      isOpen: true,
+      contractId: contract.id,
+      roomNumber: contract.room,
+      tenantName: contract.tenant,
+    });
+  };
+
+  // UC-L-15: Direct export of contract document
+  const handleExportContract = async (contract: any) => {
+    if (!activeBuilding?.id) return;
+    try {
+      showToast(isEn ? 'Exporting contract document...' : 'Đang xuất tài liệu hợp đồng...', 'success');
+      const res = await exportContract(activeBuilding.id, contract.id);
+      if (res?.data) {
+        showToast(isEn ? 'Contract exported successfully!' : 'Xuất hợp đồng thành công!', 'success');
+        fetchContracts();
+        const blob = new Blob([res.data.html || ''], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hop-dong-phong-${String(contract.room).replace(/[^a-zA-Z0-9_-]/g, '_')}-${contract.id.substring(0, 8)}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (err: any) {
+      console.error('Failed to export contract:', err);
+      showToast(err.message || (isEn ? 'Failed to export contract.' : 'Không thể xuất hợp đồng.'), 'error');
     }
   };
 
@@ -114,74 +224,8 @@ export default function ContractsPage() {
     return dateStr;
   };
 
-  const generateMockContracts = () => {
-    const data: any[] = [];
-    const ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương"];
-    const dem = ["Văn", "Thị", "Hữu", "Minh", "Đức", "Ngọc", "Xuân", "Thu", "Thanh", "Hải", "Thành", "Công", "Quốc", "Khánh", "Gia"];
-    const ten = ["An", "Bình", "Cường", "Dũng", "Giang", "Hà", "Khang", "Linh", "Mai", "Nam", "Oanh", "Phong", "Quang", "Sơn", "Tuấn", "Uyên", "Vinh", "Vy", "Yến", "Tâm", "Thảo", "Trang", "Trung", "Tú", "Anh", "Bảo", "Châu", "Diệp", "Hân", "Khoa"];
-    const statuses = ['Đang hiệu lực', 'Quá hạn', 'Đã chấm dứt'];
-    const paymentStatuses = ['Đã thu đủ', 'Còn nợ'];
-
-    let tenantIdCounter = 100;
-    let contractCounter = 1;
-
-    const generateForBuilding = (buildingId: string, floors: number, roomsPerFloor: number) => {
-      for (let f = 1; f <= floors; f++) {
-        for (let r = 1; r <= roomsPerFloor; r++) {
-          // deterministic "randomness" based on f and r
-          const seed = f * 100 + r;
-
-          // 80% chance of being rented
-          if (seed % 5 === 0) continue;
-
-          const roomStr = `${f}${r.toString().padStart(2, '0')}`;
-          const isOverdue = seed % 4 === 0;
-          const buildingHash = buildingId === 'dormio' ? 1 : 2;
-          const hash = parseInt(roomStr.replace(/\D/g, '') || "0") * buildingHash * 137 + 19;
-          const tenantName = `${ho[hash % ho.length]} ${dem[(hash * 3) % dem.length]} ${ten[(hash * 7) % ten.length]}`;
-
-          const mems = [];
-          if (seed % 2 === 0) {
-            mems.push({ name: 'Người thân ' + contractCounter, relation: 'Gia đình', phone: '090' + (1000000 + seed * 123) });
-            if (seed % 3 === 0) mems.push({ name: 'Bạn bè ' + contractCounter, relation: 'Bạn bè', phone: '091' + (1000000 + seed * 456) });
-          }
-
-          const roomType = r % 3 === 0 ? 'Luxury' : r % 2 === 0 ? 'Studio' : '1PN';
-          const price = r % 3 === 0 ? '5.000.000' : r % 2 === 0 ? '4.000.000' : '3.500.000';
-
-          data.push({
-            id: `HD-01012026-${buildingHash}-${roomStr}`,
-            building: buildingId,
-            room: roomStr,
-            roomType: roomType,
-            tenant: tenantName,
-            tenantId: `KH${roomStr}-${buildingHash}`,
-            startDate: `01/0${(contractCounter % 9) + 1}/2024`,
-            endDate: `01/0${(contractCounter % 9) + 1}/2025`,
-            isOverdue: isOverdue,
-            price: `${price} ₫`,
-            deposit: `${price} ₫`,
-            paymentDate: `${(contractCounter % 28) + 1}`,
-            paymentStatus: isOverdue ? 'Còn nợ' : paymentStatuses[contractCounter % 2],
-            status: statuses[contractCounter % 3],
-            history: [],
-            members: mems
-          });
-
-          contractCounter++;
-          tenantIdCounter++;
-        }
-      }
-    };
-
-    generateForBuilding('dormio', 4, 15);
-    generateForBuilding('vinahouse', 3, 10);
-
-    return data;
-  };
-
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
-  const [contracts, setContracts] = useState(generateMockContracts());
+  const [contracts, setContracts] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(6);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -189,6 +233,9 @@ export default function ContractsPage() {
   if (!isMounted) {
     return null;
   }
+
+  // ─── Loading / error states rendered inside JSX below ───
+
 
   const handleTerminateContract = () => {
     const updated = contracts.map(c => c.id === selectedContract.id ? { ...c, status: 'Đã chấm dứt' } : c);
@@ -335,9 +382,12 @@ export default function ContractsPage() {
   };
 
   const filteredContracts = contracts.filter((c) => {
-    if (searchQuery && !c.tenant.toLowerCase().includes(searchQuery.toLowerCase()) && !c.room.includes(searchQuery)) return false;
-    if (statusFilter && c.status !== statusFilter) return false;
-    if (buildingFilter && c.building !== buildingFilter) return false;
+    if (searchQuery && !c.tenant.toLowerCase().includes(searchQuery.toLowerCase()) && !c.room.toLowerCase().includes(searchQuery.toLowerCase()) && !c.id.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (statusFilter) {
+      const displayStatus = getStatusLabel(c.status, isEn);
+      const rawStatus = c.status;
+      if (rawStatus !== statusFilter && displayStatus !== statusFilter) return false;
+    }
     return true;
   });
 
@@ -347,7 +397,39 @@ export default function ContractsPage() {
 
   return (
     <div className="space-y-6 relative min-h-screen">
+
+      {/* Rule #10: Custom Confirm-Close Modal (replaces window.confirm) */}
+      {showCloseConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <h3 className="text-base font-bold text-zinc-900 mb-2">
+                {isEn ? 'Confirm Close Form' : 'Xác nhận đóng form'}
+              </h3>
+              <p className="text-sm text-zinc-600">
+                {isEn ? 'You have unsaved changes. Are you sure you want to discard them?' : 'Bạn có thay đổi chưa lưu. Bạn có chắc muốn huỷ tất cả?'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 px-6 pb-6">
+              <button
+                onClick={() => setShowCloseConfirm(false)}
+                className="flex-1 px-4 py-2 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+              >
+                {isEn ? 'Continue Editing' : 'Tiếp tục chỉnh sửa'}
+              </button>
+              <button
+                onClick={handleConfirmDiscard}
+                className="flex-1 px-4 py-2 text-sm font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors"
+              >
+                {isEn ? 'Discard & Close' : 'Hủy thay đổi & Đóng'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedContract && isDetailViewOpen ? (
+
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
@@ -360,12 +442,15 @@ export default function ContractsPage() {
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-zinc-900">Phòng {selectedContract.room}</h1>
-                  <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${selectedContract.status === 'Đang hiệu lực' ? 'bg-green-50 text-green-600 border-green-100' :
+                  <h1 className="text-2xl font-bold text-zinc-900">
+                    {isEn ? 'Room' : 'Phòng'} {selectedContract.room}
+                  </h1>
+                  <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
+                    selectedContract.status === 'Đang hiệu lực' ? 'bg-green-50 text-green-600 border-green-100' :
                     selectedContract.status === 'Quá hạn' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                      'bg-zinc-100 text-zinc-600 border-zinc-200'
-                    }`}>
-                    {selectedContract.status}
+                    'bg-zinc-100 text-zinc-600 border-zinc-200'
+                  }`}>
+                    {getStatusLabel(selectedContract.status, isEn)}
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-zinc-500">
@@ -373,8 +458,14 @@ export default function ContractsPage() {
                   <span>·</span>
                   <span className="font-medium text-primary">{selectedContract.tenant}</span>
                   <span className="hidden sm:inline">|</span>
-                  <span>Mã HĐ: {selectedContract.id}</span>
-                  <button className="hover:text-zinc-700"><Copy className="w-3.5 h-3.5" /></button>
+                  <span>{isEn ? 'Contract ID' : 'Mã HĐ'}: {selectedContract.id}</span>
+                  <button
+                    onClick={(e) => copyToClipboard(e, selectedContract.id)}
+                    className="hover:text-zinc-700"
+                    title={isEn ? 'Copy ID' : 'Sao chép'}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -384,19 +475,34 @@ export default function ContractsPage() {
                 onClick={() => setIsExtendModalOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
               >
-                <CalendarDays className="w-4 h-4" /> Gia hạn
+                <CalendarDays className="w-4 h-4" />
+                {isEn ? 'Extend' : 'Gia hạn'}
               </button>
               <button
                 onClick={() => setIsTerminateModalOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-danger bg-danger-bg border border-danger-border rounded-lg hover:bg-orange-100 transition-colors"
               >
-                <Ban className="w-4 h-4" /> Chấm dứt
+                <Ban className="w-4 h-4" />
+                {isEn ? 'Terminate' : 'Chấm dứt'}
               </button>
               <button
-                onClick={() => alert("Hệ thống sẽ tạo form hợp đồng bản PDF để xuất. Chức năng này sẽ được cập nhật sau.")}
+                onClick={() => handlePrintContract(selectedContract)}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+                title={isEn ? 'Preview & Print Contract' : 'Xem trước & In hợp đồng'}
               >
-                <Printer className="w-4 h-4" /> In hợp đồng
+                <Printer className="w-4 h-4 text-[#2AC1BC]" />
+                {isEn ? 'Print Contract' : 'In hợp đồng'}
+                {selectedContract.documentsCount > 0 && (
+                  <span className="inline-flex items-center justify-center w-4 h-4 text-[9px] font-black rounded-full bg-primary text-white">{selectedContract.documentsCount}</span>
+                )}
+              </button>
+              <button
+                onClick={() => handleExportContract(selectedContract)}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-lg transition-colors shadow-xs"
+                title={isEn ? 'Export document and save to system' : 'Xuất tài liệu và lưu vào hệ thống'}
+              >
+                <Download className="w-4 h-4" />
+                {isEn ? 'Export Doc' : 'Xuất tài liệu HĐ'}
               </button>
             </div>
           </div>
@@ -808,21 +914,28 @@ export default function ContractsPage() {
           {/* Top Page Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900">Quản lý hợp đồng</h1>
-              <p className="text-sm text-zinc-500">Danh sách hợp đồng thuê phòng, thời hạn và tình trạng thanh toán</p>
+              <h1 className="text-2xl font-bold text-zinc-900">
+                {isEn ? 'Contract Management' : 'Quản lý hợp đồng'}
+              </h1>
+              <p className="text-sm text-zinc-500">
+                {isEn
+                  ? 'Rental contracts, deadlines, and payment status'
+                  : 'Danh sách hợp đồng thuê phòng, thời hạn và tình trạng thanh toán'}
+              </p>
             </div>
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
               <button
-                onClick={() => alert("Tính năng Import hợp đồng bằng file Excel đang được phát triển.")}
+                onClick={() => showToast(isEn ? 'Import feature coming soon.' : 'Tính năng Import đang được phát triển.', 'success')}
                 className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
               >
                 <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
               </button>
               <button
-                onClick={() => alert("Đã xuất danh sách hợp đồng ra file Excel thành công!")}
+                onClick={handleExportCsv}
                 className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
               >
-                <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
+                <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                {isEn ? 'Export CSV' : 'Xuất CSV'}
               </button>
               <button
                 onClick={() => router.push("/landlord/contracts/create")}
@@ -846,7 +959,7 @@ export default function ContractsPage() {
                     {activeBuilding.name}
                   </h2>
                   <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                    Đang vận hành
+                    {isEn ? 'Operational' : 'Đang vận hành'}
                   </span>
                 </div>
 
@@ -865,9 +978,11 @@ export default function ContractsPage() {
                   </a>
                 </div>
 
-                <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-                  Quản lý tổng thể hợp đồng thuê phòng, theo dõi thời hạn hợp đồng và tình trạng gia hạn của khách lưu trú một cách chuyên nghiệp.
-                </p>
+                  <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                    {isEn
+                      ? 'Manage all rental contracts, track deadlines and renewal status for your tenants.'
+                      : 'Quản lý tổng thể hợp đồng thuê phòng, theo dõi thời hạn hợp đồng và tình trạng gia hạn của khách lưu trú một cách chuyên nghiệp.'}
+                  </p>
               </div>
 
           {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets, Services, Customers) */}
@@ -875,7 +990,7 @@ export default function ContractsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng HĐ</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{isEn ? 'Total' : 'Tổng HĐ'}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{contracts.length}</span>
               </div>
             </div>
@@ -883,24 +998,24 @@ export default function ContractsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Còn hiệu lực</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Còn hiệu lực" || c.status === "Đang hiệu lực").length}</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{isEn ? 'Active' : 'Còn hiệu lực'}</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === 'Đang hiệu lực').length}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Sắp hết hạn</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Sắp hết hạn" || c.status === "Quá hạn").length}</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{isEn ? 'Overdue' : 'Quá hạn'}</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === 'Quá hạn').length}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã chấm dứt</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Chấm dứt" || c.status === "Đã chấm dứt").length}</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{isEn ? 'Terminated' : 'Đã chấm dứt'}</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === 'Đã chấm dứt').length}</span>
               </div>
             </div>
           </div>
@@ -912,13 +1027,13 @@ export default function ContractsPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Status Filter Pills */}
           <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
-            {[
-              { label: "Tất cả", value: "" },
-              { label: "Đang hiệu lực", value: "Đang hiệu lực" },
-              { label: "Sắp hết hạn", value: "Sắp hết hạn" },
-              { label: "Quá hạn", value: "Quá hạn" },
-              { label: "Đã chấm dứt", value: "Đã chấm dứt" },
-            ].map((tab) => {
+            {([
+              { label: isEn ? 'All' : 'Tất cả', value: '' },
+              { label: isEn ? 'Active' : 'Đang hiệu lực', value: 'Đang hiệu lực' },
+              { label: isEn ? 'Draft' : 'Chờ xác nhận', value: 'Chờ xác nhận' },
+              { label: isEn ? 'Overdue' : 'Quá hạn', value: 'Quá hạn' },
+              { label: isEn ? 'Terminated' : 'Đã chấm dứt', value: 'Đã chấm dứt' },
+            ] as { label: string; value: string }[]).map((tab) => {
               const isActive = statusFilter === tab.value;
               return (
                 <button
@@ -926,8 +1041,8 @@ export default function ContractsPage() {
                   onClick={() => { setStatusFilter(tab.value); setCurrentPage(1); }}
                   className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                     isActive
-                      ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20"
-                      : "bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80"
+                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20'
+                      : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80'
                   }`}
                 >
                   {tab.label}
@@ -942,7 +1057,7 @@ export default function ContractsPage() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm tên, số phòng, mã HĐ..."
+                placeholder={isEn ? 'Search name, room number, contract ID...' : 'Tìm tên, số phòng, mã HĐ...'}
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -970,11 +1085,37 @@ export default function ContractsPage() {
       </div>
 
       {/* Grid View or Table View Container */}
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-zinc-200/80 rounded-2xl">
+          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <p className="text-sm font-semibold text-zinc-500">
+            {isEn ? 'Loading contracts...' : 'Đang tải danh sách hợp đồng...'}
+          </p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {!isLoading && loadError && (
+        <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-rose-200 rounded-2xl">
+          <AlertTriangle className="w-8 h-8 text-rose-500" />
+          <p className="text-sm font-semibold text-rose-600">{loadError}</p>
+          <button
+            onClick={fetchContracts}
+            className="px-4 py-2 text-sm font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] transition-colors"
+          >
+            {isEn ? 'Retry' : 'Thử lại'}
+          </button>
+        </div>
+      )}
+
+      {!isLoading && !loadError && (
+      <>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedContracts.length === 0 ? (
             <div className="col-span-full p-8 text-center text-zinc-400 font-bold bg-white border border-zinc-200/80 rounded-2xl">
-              Không tìm thấy hợp đồng nào phù hợp với bộ lọc.
+              {isEn ? 'No contracts found matching the filter.' : 'Không tìm thấy hợp đồng nào phù hợp với bộ lọc.'}
             </div>
           ) : (
             paginatedContracts.map((c, idx) => {
@@ -1002,14 +1143,14 @@ export default function ContractsPage() {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-black text-base text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                              Phòng {c.room}
+                              {isEn ? 'Room' : 'Phòng'} {c.room}
                             </h3>
                             <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                              {c.building === 'dormio' ? 'Dormio Premier' : 'Dormio Campus'}
+                              {activeBuilding?.name || 'Dormio'}
                             </span>
                           </div>
                           <div className="text-[11px] text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
-                            <span>Mã: {c.id}</span>
+                            <span>{isEn ? 'ID' : 'Mã'}: {c.id.substring(0, 12)}...</span>
                             <button
                               onClick={(e) => copyToClipboard(e, c.id)}
                               className="p-0.5 hover:text-[#2AC1BC] transition-colors rounded"
@@ -1030,7 +1171,7 @@ export default function ContractsPage() {
                           c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
                           c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
                         }`} />
-                        {c.status}
+                        {getStatusLabel(c.status, isEn)}
                       </span>
                     </div>
 
@@ -1038,13 +1179,15 @@ export default function ContractsPage() {
                     <div className="py-3 space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5 text-zinc-400" /> Đại diện thuê:
+                          <User className="w-3.5 h-3.5 text-zinc-400" />
+                          {isEn ? 'Tenant:' : 'Đại diện thuê:'}
                         </span>
                         <div className="flex flex-col items-end">
                           <span className="font-extrabold text-zinc-900">{c.tenant}</span>
                           {c.members && c.members.length > 0 && (
                             <span className="text-[10px] font-bold text-zinc-500 flex items-center gap-1">
-                              <Users className="w-3 h-3 text-zinc-400" /> +{c.members.length} người ở cùng
+                              <Users className="w-3 h-3 text-zinc-400" />
+                              +{c.members.length} {isEn ? 'housemates' : 'người ở cùng'}
                             </span>
                           )}
                         </div>
@@ -1052,20 +1195,22 @@ export default function ContractsPage() {
 
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <DollarSign className="w-3.5 h-3.5 text-zinc-400" /> Giá thuê:
+                          <DollarSign className="w-3.5 h-3.5 text-zinc-400" />
+                          {isEn ? 'Rent:' : 'Giá thuê:'}
                         </span>
-                        <span className="font-black text-sm text-[#2AC1BC]">{c.price} / tháng</span>
+                        <span className="font-black text-sm text-[#2AC1BC]">{c.price} / {isEn ? 'month' : 'tháng'}</span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <CalendarDays className="w-3.5 h-3.5 text-zinc-400" /> Thời hạn:
+                          <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />
+                          {isEn ? 'Period:' : 'Thời hạn:'}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-zinc-800">{c.startDate} - {c.endDate}</span>
                           {c.isOverdue && (
                             <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                              Hết hạn
+                              {isEn ? 'Expired' : 'Hết hạn'}
                             </span>
                           )}
                         </div>
@@ -1073,7 +1218,8 @@ export default function ContractsPage() {
 
                       <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
                         <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <CreditCard className="w-3.5 h-3.5 text-zinc-400" /> Thu tiền:
+                          <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
+                          {isEn ? 'Payment:' : 'Thu tiền:'}
                         </span>
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${
                           c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
@@ -1094,6 +1240,13 @@ export default function ContractsPage() {
                       <Eye className="w-3.5 h-3.5" /> Chi tiết
                     </button>
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handlePrintContract(c); }}
+                        className="p-1.5 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl transition-all cursor-pointer"
+                        title={isEn ? "Print / Export" : "In / Xuất văn bản HĐ"}
+                      >
+                        <Printer className="w-3.5 h-3.5 text-zinc-700" />
+                      </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsExtendModalOpen(true); }}
                         className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
@@ -1235,6 +1388,13 @@ export default function ContractsPage() {
                               <CalendarDays className="w-4 h-4" />
                             </button>
                             <button
+                              onClick={(e) => { e.stopPropagation(); handlePrintContract(c); }}
+                              className="p-1.5 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                              title={isEn ? "Print / Export contract" : "In / Xuất văn bản HĐ"}
+                            >
+                              <Printer className="w-4 h-4 text-[#2AC1BC]" />
+                            </button>
+                            <button
                               onClick={(e) => { e.stopPropagation(); setIsTerminateModalOpen(true); setSelectedContract(c); }}
                               className="p-1.5 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                               title="Chấm dứt hợp đồng"
@@ -1343,6 +1503,8 @@ export default function ContractsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+          )}
+          </>
           )}
         </div>
       )}
@@ -1847,6 +2009,19 @@ export default function ContractsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* UC-L-15: Contract Preview & Print Modal */}
+      {previewModal.isOpen && activeBuilding?.id && (
+        <ContractPreviewModal
+          isOpen={previewModal.isOpen}
+          onClose={() => setPreviewModal((prev) => ({ ...prev, isOpen: false }))}
+          buildingId={activeBuilding.id}
+          contractId={previewModal.contractId}
+          roomNumber={previewModal.roomNumber}
+          tenantName={previewModal.tenantName}
+          onExportSuccess={fetchContracts}
+        />
       )}
     </div>
   );
