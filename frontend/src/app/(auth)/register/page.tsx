@@ -7,6 +7,7 @@ import {
   User, Phone, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck, Loader2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "@/context/LanguageContext";
 import { api } from "@/services/api";
 
 interface RegisterApiResponse {
@@ -21,6 +22,7 @@ interface RegisterApiResponse {
 }
 
 export default function RegisterPage() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const { loginWithToken } = useAuth();
 
@@ -43,12 +45,12 @@ export default function RegisterPage() {
     if (!agreed) return;
 
     if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
+      setError(t("authRegisterErrPassMismatch"));
       return;
     }
 
     if (password.length < 8) {
-      setError("Mật khẩu phải có ít nhất 8 ký tự.");
+      setError(t("authRegisterErrPassLength"));
       return;
     }
 
@@ -68,7 +70,7 @@ export default function RegisterPage() {
         payload.email = email;
         // phoneNumber is required by DTO — user must provide it regardless
         if (!phone) {
-          setError("Vui lòng nhập số điện thoại. Số điện thoại là bắt buộc khi đăng ký.");
+          setError(t("authRegisterErrPhoneRequired"));
           setIsLoading(false);
           return;
         }
@@ -80,7 +82,7 @@ export default function RegisterPage() {
       const { token, user } = authData || {};
 
       if (!token || !user) {
-        throw new Error("Không thể tạo tài khoản.");
+        throw new Error(t("authRegisterErrCannotCreate"));
       }
 
       loginWithToken(token, {
@@ -95,11 +97,11 @@ export default function RegisterPage() {
       // After registration, go to tenant dashboard
       router.push("/tenant");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Đã xảy ra lỗi. Vui lòng thử lại.";
+      const message = err instanceof Error ? err.message : t("authLoginErrGeneric");
       if (message.includes("phone_number_already_exists")) {
-        setError("Số điện thoại đã được đăng ký. Vui lòng đăng nhập hoặc dùng số khác.");
+        setError(t("authRegisterErrPhoneExists"));
       } else if (message.includes("email_already_exists")) {
-        setError("Email đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.");
+        setError(t("authRegisterErrEmailExists"));
       } else {
         setError(message);
       }
@@ -114,14 +116,14 @@ export default function RegisterPage() {
       {/* Top Header & Badge */}
       <div className="space-y-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#FF6B35] text-[11px] font-black rounded-full border border-rose-200 uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 fill-[#FF6B35]" /> DÙNG THỬ MIỄN PHÍ 7 NGÀY
+          <Sparkles className="w-3.5 h-3.5 fill-[#FF6B35]" /> {t("authRegisterBadge")}
         </span>
 
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-          Tạo tài khoản Dormio
+          {t("authRegisterTitle")}
         </h1>
         <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-          Tham gia cộng đồng quản lý nhà trọ hiện đại & kết nối phòng trọ hàng đầu.
+          {t("authRegisterSubtitle")}
         </p>
       </div>
 
@@ -129,7 +131,7 @@ export default function RegisterPage() {
       <div className="p-3.5 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center gap-3 text-xs text-zinc-700 font-semibold">
         <ShieldCheck className="w-5 h-5 text-[#2AC1BC] shrink-0" />
         <span>
-          Tài khoản đăng ký mặc định là <strong>Khách thuê / Người dùng nền tảng</strong>. Bạn có thể chọn <strong className="text-[#FF6B35]">"Đăng ký trở thành chủ trọ"</strong> bất kỳ lúc nào sau khi đăng nhập!
+          {t("authRegisterNoticePrefix")} <strong>{t("authRegisterNoticeTenantRole")}</strong>{t("authRegisterNoticeMid")} <strong className="text-[#FF6B35]">{t("authRegisterNoticeUpgradeAction")}</strong> {t("authRegisterNoticeSuffix")}
         </span>
       </div>
 
@@ -142,7 +144,7 @@ export default function RegisterPage() {
             method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Phone className="w-3.5 h-3.5" /> Số điện thoại
+          <Phone className="w-3.5 h-3.5" /> {t("authLoginMethodPhone")}
         </button>
         <button
           type="button"
@@ -151,7 +153,7 @@ export default function RegisterPage() {
             method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Mail className="w-3.5 h-3.5" /> Địa chỉ Email
+          <Mail className="w-3.5 h-3.5" /> {t("authLoginMethodEmail")}
         </button>
       </div>
 
@@ -160,13 +162,13 @@ export default function RegisterPage() {
 
         {/* Full Name */}
         <div className="space-y-1">
-          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">HỌ VÀ TÊN *</label>
+          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("authRegisterFullNameLabel")}</label>
           <div className="relative">
             <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               required
-              placeholder="Nguyễn Văn A"
+              placeholder={t("authRegisterFullNamePlaceholder")}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
@@ -176,7 +178,7 @@ export default function RegisterPage() {
 
         {/* Phone number — always required */}
         <div className="space-y-1">
-          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">SỐ ĐIỆN THOẠI *</label>
+          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("authLoginPhoneLabel")}</label>
           <div className="relative">
             <Phone className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -193,7 +195,7 @@ export default function RegisterPage() {
         {/* Email — shown when email method selected */}
         {method === "email" && (
           <div className="space-y-1">
-            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">ĐỊA CHỈ EMAIL</label>
+            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("authRegisterEmailOptionalLabel")}</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -209,13 +211,13 @@ export default function RegisterPage() {
 
         {/* Password Field */}
         <div className="space-y-1">
-          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">MẬT KHẨU *</label>
+          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("authLoginPasswordLabel")}</label>
           <div className="relative">
             <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type={showPassword ? "text" : "password"}
               required
-              placeholder="Tối thiểu 8 ký tự"
+              placeholder={t("authRegisterPassPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-10 pr-10 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
@@ -232,13 +234,13 @@ export default function RegisterPage() {
 
         {/* Confirm Password Field */}
         <div className="space-y-1">
-          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">XÁC NHẬN MẬT KHẨU *</label>
+          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("authRegisterConfirmPassLabel")}</label>
           <div className="relative">
             <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type={showConfirmPassword ? "text" : "password"}
               required
-              placeholder="Nhập lại mật khẩu"
+              placeholder={t("authRegisterConfirmPassPlaceholder")}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full pl-10 pr-10 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
@@ -263,7 +265,7 @@ export default function RegisterPage() {
             className="w-4 h-4 accent-[#2AC1BC] rounded cursor-pointer shrink-0"
           />
           <label htmlFor="terms" className="text-xs text-zinc-600 font-medium cursor-pointer">
-            Tôi đồng ý với <Link href="/terms" className="font-extrabold text-[#2AC1BC] hover:underline">Điều khoản dịch vụ</Link> và <Link href="/privacy" className="font-extrabold text-[#2AC1BC] hover:underline">Chính sách bảo mật</Link> của Dormio.
+            {t("authRegisterTermsAgree")} <Link href="/terms" className="font-extrabold text-[#2AC1BC] hover:underline">{t("authRegisterTermsLink")}</Link> {t("authRegisterTermsAnd")} <Link href="/privacy" className="font-extrabold text-[#2AC1BC] hover:underline">{t("authRegisterPrivacyLink")}</Link> {t("authRegisterTermsSuffix")}
           </label>
         </div>
 
@@ -281,9 +283,9 @@ export default function RegisterPage() {
           className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
         >
           {isLoading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Đang tạo tài khoản...</>
+            <><Loader2 className="w-4 h-4 animate-spin" /> {t("authRegisterLoading")}</>
           ) : (
-            <><span>Tạo tài khoản ngay</span><ArrowRight className="w-4 h-4" /></>
+            <><span>{t("authRegisterSubmitBtn")}</span><ArrowRight className="w-4 h-4" /></>
           )}
         </button>
 
@@ -291,9 +293,9 @@ export default function RegisterPage() {
 
       {/* Bottom Auth Navigation Link */}
       <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-        Bạn đã có tài khoản?{" "}
+        {t("authRegisterAlreadyAccount")}{" "}
         <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
-          Đăng nhập ngay
+          {t("authRegisterLoginLink")}
         </Link>
       </div>
 
