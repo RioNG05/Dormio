@@ -158,7 +158,7 @@ export default function TenantAdminComplaintsPage() {
     if (!files || files.length === 0) return;
 
     if (uploadedImages.length + files.length > 5) {
-      setFormError("Chỉ được đính kèm tối đa 5 ảnh bằng chứng.");
+      setFormError(t("tenantMaxEvidenceImagesError"));
       return;
     }
 
@@ -180,11 +180,11 @@ export default function TenantAdminComplaintsPage() {
   const handleSubmitGrievance = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setFormError("Vui lòng nhập tiêu đề khiếu nại.");
+      setFormError(t("tenantTitleRequiredError"));
       return;
     }
     if (description.trim().length < 10) {
-      setFormError("Mô tả chi tiết phải có ít nhất 10 ký tự.");
+      setFormError(t("tenantDescMinLengthError"));
       return;
     }
 
@@ -204,7 +204,7 @@ export default function TenantAdminComplaintsPage() {
       resetForm();
     } catch (err: unknown) {
       console.error("API create error:", err);
-      const errorMsg = err instanceof Error ? err.message : "Gửi khiếu nại không thành công. Vui lòng kiểm tra lại.";
+      const errorMsg = err instanceof Error ? err.message : t("tenantSubmitFailedError");
       setFormError(errorMsg);
     } finally {
       setIsSubmitting(false);
@@ -240,7 +240,7 @@ export default function TenantAdminComplaintsPage() {
     if (!dateStr) return "-";
     try {
       const d = new Date(dateStr);
-      return new Intl.DateTimeFormat("vi-VN", {
+      return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -257,19 +257,19 @@ export default function TenantAdminComplaintsPage() {
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black uppercase flex items-center gap-1">
             <AlertTriangle className="w-3 h-3 text-rose-600" />
-            <span>{t("priorityUrgent")}</span>
+            <span>{t("tenantPriorityUrgent")}</span>
           </span>
         );
       case "medium":
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black uppercase">
-            {t("priorityNormal")}
+            {t("tenantPriorityNormal")}
           </span>
         );
       default:
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-[10px] font-black uppercase">
-            {t("priorityLow") || "Thấp"}
+            {t("tenantPriorityLow")}
           </span>
         );
     }
@@ -282,7 +282,7 @@ export default function TenantAdminComplaintsPage() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span>{t("statusResponded")}</span>
+            <span>{t("tenantStatusResponded")}</span>
           </span>
         );
       case "in_progress":
@@ -290,14 +290,14 @@ export default function TenantAdminComplaintsPage() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
             <Clock className="w-3 h-3 text-blue-600 animate-spin" />
-            <span>Đang xử lý</span>
+            <span>{t("tenantStatusProcessing")}</span>
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span>{t("statusUnresponded")}</span>
+            <span>{t("tenantStatusUnresponded")}</span>
           </span>
         );
     }
@@ -310,17 +310,13 @@ export default function TenantAdminComplaintsPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/70 text-[#2AC1BC] text-[11px] font-bold mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>
-              {locale === "en"
-                ? "Dormio Escrow Tenant Protection"
-                : "Bảo vệ quyền lợi khách thuê bởi Dormio Escrow"}
-            </span>
+            <span>{t("tenantEscrowProtectedBadge")}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t("complaintsTitle")}
+            {t("tenantComplaintsTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1 leading-relaxed max-w-3xl">
-            {t("complaintsSubtitle")}
+            {t("tenantComplaintsSubtitle")}
           </p>
         </div>
 
@@ -332,7 +328,7 @@ export default function TenantAdminComplaintsPage() {
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#2AC1BC] to-[#20a8a3] hover:from-[#20a8a3] hover:to-[#1a938f] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#2AC1BC]/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>{t("btnNewComplaint")}</span>
+          <span>{t("tenantBtnNewComplaint")}</span>
         </Button>
       </div>
 
@@ -353,7 +349,7 @@ export default function TenantAdminComplaintsPage() {
                   : "text-zinc-600 hover:text-zinc-900"
               }`}
             >
-              <span>{t("tabAllIssues")}</span>
+              <span>{t("tenantTabAllIssues")}</span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                   statusFilter === "all"
@@ -377,7 +373,7 @@ export default function TenantAdminComplaintsPage() {
             >
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
-                <span>{t("statusUnresponded")}</span>
+                <span>{t("tenantStatusUnresponded")}</span>
               </div>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
@@ -402,7 +398,7 @@ export default function TenantAdminComplaintsPage() {
             >
               <div className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{t("statusResponded")}</span>
+                <span>{t("tenantStatusResponded")}</span>
               </div>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
@@ -426,7 +422,7 @@ export default function TenantAdminComplaintsPage() {
                     ? "bg-zinc-900 text-white shadow-xs"
                     : "text-zinc-500 hover:text-zinc-900"
                 }`}
-                title="Dạng Lưới"
+                title={t("tenantGridView")}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -437,7 +433,7 @@ export default function TenantAdminComplaintsPage() {
                     ? "bg-zinc-900 text-white shadow-xs"
                     : "text-zinc-500 hover:text-zinc-900"
                 }`}
-                title="Dạng Bảng"
+                title={t("tenantTableView")}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -452,7 +448,7 @@ export default function TenantAdminComplaintsPage() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Tìm mã, tiêu đề khiếu nại..."
+                placeholder={t("tenantSearchGrievancePlaceholder")}
                 className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
               />
             </div>
@@ -465,7 +461,7 @@ export default function TenantAdminComplaintsPage() {
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {paginatedComplaints.length === 0 ? (
               <div className="col-span-full py-12 text-center text-zinc-400 text-xs">
-                Không tìm thấy khiếu nại nào phù hợp.
+                {t("tenantNoGrievancesFound")}
               </div>
             ) : (
               paginatedComplaints.map((item) => (
@@ -481,7 +477,7 @@ export default function TenantAdminComplaintsPage() {
                           {item.id}
                         </span>
                         <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-orange-50 text-[#FF6B35] border border-orange-200/80">
-                          BQT Dormio
+                          {t("tenantBqtDormioBadge")}
                         </span>
                       </div>
                       {getPriorityBadge(item.priority)}
@@ -501,7 +497,7 @@ export default function TenantAdminComplaintsPage() {
                     <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100 text-[11px] text-emerald-800 space-y-1">
                       <div className="font-black flex items-center gap-1 text-emerald-700">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Phản hồi từ Ban Quản Trị:</span>
+                        <span>{t("tenantResolutionResponseFromAdmin")}</span>
                       </div>
                       <p className="line-clamp-2 font-medium leading-relaxed">
                         {item.resolutionNote}
@@ -525,19 +521,19 @@ export default function TenantAdminComplaintsPage() {
             <table className="w-full text-xs text-left">
               <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 uppercase font-black text-[10px] tracking-wider">
                 <tr>
-                  <th className="px-6 py-4">Mã số</th>
-                  <th className="px-6 py-4">Tiêu đề khiếu nại</th>
-                  <th className="px-6 py-4">Mức độ</th>
-                  <th className="px-6 py-4">Ngày gửi</th>
-                  <th className="px-6 py-4">Trạng thái</th>
-                  <th className="px-6 py-4 text-right">Chi tiết</th>
+                  <th className="px-6 py-4">{t("tenantColGrievanceId")}</th>
+                  <th className="px-6 py-4">{t("tenantColGrievanceTitle")}</th>
+                  <th className="px-6 py-4">{t("tenantColGrievancePriority")}</th>
+                  <th className="px-6 py-4">{t("tenantColGrievanceDate")}</th>
+                  <th className="px-6 py-4">{t("tenantColGrievanceStatus")}</th>
+                  <th className="px-6 py-4 text-right">{t("tenantColGrievanceAction")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
                 {paginatedComplaints.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-zinc-400">
-                      Không có khiếu nại nào.
+                      {t("tenantNoGrievances")}
                     </td>
                   </tr>
                 ) : (
@@ -578,10 +574,11 @@ export default function TenantAdminComplaintsPage() {
         {/* Standard Pagination Bar (Rule #9) */}
         <div className="p-4 sm:p-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-50/50">
           <div className="text-xs font-medium text-zinc-500">
-            Hiển thị {(currentPage - 1) * itemsPerPage + 1}-{Math.min(
-              currentPage * itemsPerPage,
-              filteredComplaints.length
-            )} trên {filteredComplaints.length} khiếu nại
+            {t("tenantShowingGrievancesRange", {
+              from: (currentPage - 1) * itemsPerPage + 1,
+              to: Math.min(currentPage * itemsPerPage, filteredComplaints.length),
+              total: filteredComplaints.length,
+            })}
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -639,10 +636,10 @@ export default function TenantAdminComplaintsPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-zinc-900">
-                    Gửi khiếu nại tới Ban Quản Trị
+                    {t("tenantCreateGrievanceModalTitle")}
                   </h3>
                   <p className="text-xs text-zinc-400">
-                    Hồ sơ sẽ được gửi đến BQT Dormio để thanh tra độc lập
+                    {t("tenantCreateGrievanceModalSubtitle")}
                   </p>
                 </div>
               </div>
@@ -664,12 +661,12 @@ export default function TenantAdminComplaintsPage() {
 
               {/* Priority Selection */}
               <div>
-                <label className="font-bold text-zinc-700 block mb-1.5">Mức độ nghiêm trọng</label>
+                <label className="font-bold text-zinc-700 block mb-1.5">{t("tenantFieldSeverityLabel")}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { key: "low", label: "Nhẹ / Góp ý", color: "border-zinc-200" },
-                    { key: "medium", label: "Bình thường", color: "border-amber-200" },
-                    { key: "high", label: "Khẩn cấp / Tranh chấp", color: "border-rose-300" },
+                    { key: "low", label: t("tenantPriorityLowDesc"), color: "border-zinc-200" },
+                    { key: "medium", label: t("tenantPriorityNormalDesc"), color: "border-amber-200" },
+                    { key: "high", label: t("tenantPriorityUrgentDesc"), color: "border-rose-300" },
                   ].map((p) => (
                     <button
                       key={p.key}
@@ -692,13 +689,13 @@ export default function TenantAdminComplaintsPage() {
               {/* Title */}
               <div>
                 <label className="font-bold text-zinc-700 block mb-1.5">
-                  Tiêu đề khiếu nại <span className="text-rose-500">*</span>
+                  {t("tenantFieldTitleLabel")} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Ví dụ: Chủ trọ tự ý tăng tiền cọc sai quy định hợp đồng..."
+                  placeholder={t("tenantFieldTitlePlaceholder")}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs"
                 />
               </div>
@@ -706,13 +703,13 @@ export default function TenantAdminComplaintsPage() {
               {/* Description */}
               <div>
                 <label className="font-bold text-zinc-700 block mb-1.5">
-                  Mô tả chi tiết sự việc <span className="text-rose-500">*</span>
+                  {t("tenantFieldDescLabel")} <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Mô tả cụ thể thời gian, địa điểm, sự việc đã xảy ra và các yêu cầu bồi thường/khắc phục..."
+                  placeholder={t("tenantFieldDescPlaceholder")}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs leading-relaxed"
                 />
               </div>
@@ -720,7 +717,7 @@ export default function TenantAdminComplaintsPage() {
               {/* Image attachments */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-bold text-zinc-700">Ảnh bằng chứng (tối đa 5 ảnh)</label>
+                  <label className="font-bold text-zinc-700">{t("tenantFieldPhotosLabel")}</label>
                   <span className="text-zinc-400">{uploadedImages.length}/5</span>
                 </div>
 
@@ -745,7 +742,7 @@ export default function TenantAdminComplaintsPage() {
                       className="h-20 rounded-xl border border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#2AC1BC] transition-colors cursor-pointer"
                     >
                       <UploadCloud className="w-5 h-5 mb-1" />
-                      <span className="text-[10px] font-bold">Thêm ảnh</span>
+                      <span className="text-[10px] font-bold">{t("tenantAddPhotoBtn")}</span>
                     </button>
                   )}
                 </div>
@@ -766,14 +763,14 @@ export default function TenantAdminComplaintsPage() {
                   onClick={handleCloseModal}
                   className="px-4 py-2 text-xs font-bold text-zinc-600"
                 >
-                  Hủy bỏ
+                  {t("tenantBtnCancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#20a8a3] rounded-xl cursor-pointer shadow-sm shadow-[#2AC1BC]/25"
                 >
-                  {isSubmitting ? "Đang gửi..." : "Gửi khiếu nại chính thức"}
+                  {isSubmitting ? t("tenantSubmitting") : t("tenantBtnSubmitOfficial")}
                 </Button>
               </div>
             </form>
@@ -812,21 +809,21 @@ export default function TenantAdminComplaintsPage() {
                   {selectedGrievance.title}
                 </h3>
                 <div className="text-[11px] text-zinc-400 mt-1 flex items-center gap-2">
-                  <span>Ngày gửi: {formatDate(selectedGrievance.createdAt)}</span>
+                  <span>{t("tenantSubmittedDateLabel", { date: formatDate(selectedGrievance.createdAt) })}</span>
                   <span>&bull;</span>
-                  <span>Phòng {selectedGrievance.roomNumber || "101"} ({selectedGrievance.boardingHouseName || "Dormio"})</span>
+                  <span>{t("tenantRoomGrievanceBadge", { room: selectedGrievance.roomNumber || "101", house: selectedGrievance.boardingHouseName || "Dormio" })}</span>
                 </div>
               </div>
 
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">Nội dung phản ánh</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">{t("tenantComplaintContentTitle")}</span>
                 <p className="text-zinc-700 font-medium whitespace-pre-wrap">{selectedGrievance.description}</p>
               </div>
 
               {/* Evidence Images */}
               {selectedGrievance.images && selectedGrievance.images.length > 0 && (
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-2">Ảnh bằng chứng đính kèm</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-2">{t("tenantEvidencePhotosTitle")}</span>
                   <div className="flex flex-wrap gap-2">
                     {selectedGrievance.images.map((img) => (
                       <div
@@ -847,7 +844,7 @@ export default function TenantAdminComplaintsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-black text-emerald-900 text-xs">
                       <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      <span>Phản hồi chính thức từ {selectedGrievance.resolvedByName || "Ban Quản Trị Dormio"}</span>
+                      <span>{t("tenantOfficialResponseFromAdmin", { name: selectedGrievance.resolvedByName || t("tenantDefaultAdminName") })}</span>
                     </div>
                     {selectedGrievance.resolvedAt && (
                       <span className="text-[10px] text-emerald-600 font-semibold">
@@ -862,7 +859,7 @@ export default function TenantAdminComplaintsPage() {
               ) : (
                 <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 font-medium flex items-center gap-2.5">
                   <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Hồ sơ đang được chuyển tới BQT để xác minh với chủ nhà trọ. Kết quả sẽ được cập nhật tại đây.</span>
+                  <span>{t("tenantPendingVerificationNotice")}</span>
                 </div>
               )}
             </div>
@@ -872,7 +869,7 @@ export default function TenantAdminComplaintsPage() {
                 onClick={() => setSelectedGrievance(null)}
                 className="px-5 py-2 text-xs font-bold bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl"
               >
-                Đóng
+                {t("tenantBtnClose")}
               </Button>
             </div>
           </div>
@@ -893,9 +890,9 @@ export default function TenantAdminComplaintsPage() {
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-sm font-black text-zinc-900">Xác nhận đóng form</h3>
+              <h3 className="text-sm font-black text-zinc-900">{t("tenantConfirmCloseFormTitle")}</h3>
               <p className="text-xs text-zinc-500">
-                Các thông tin khiếu nại chưa gửi sẽ bị hủy bỏ hoàn toàn. Bạn có chắc chắn muốn thoát?
+                {t("tenantConfirmCloseFormDesc")}
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
@@ -904,7 +901,7 @@ export default function TenantAdminComplaintsPage() {
                 onClick={() => setShowExitConfirm(false)}
                 className="flex-1 py-2 text-xs font-bold text-zinc-700"
               >
-                Tiếp tục chỉnh sửa
+                {t("tenantBtnKeepEditing")}
               </Button>
               <Button
                 onClick={() => {
@@ -914,7 +911,7 @@ export default function TenantAdminComplaintsPage() {
                 }}
                 className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
               >
-                Hủy thay đổi & Đóng
+                {t("tenantBtnDiscardAndClose")}
               </Button>
             </div>
           </div>
@@ -932,7 +929,7 @@ export default function TenantAdminComplaintsPage() {
             className="bg-white rounded-3xl p-4 max-w-xl w-full space-y-3"
           >
             <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-xs font-bold text-zinc-700">Ảnh bằng chứng</span>
+              <span className="text-xs font-bold text-zinc-700">{t("tenantEvidencePhotoTitle")}</span>
               <button onClick={() => setPreviewImage(null)} className="p-1 hover:bg-zinc-100 rounded-full">
                 <X className="w-4 h-4" />
               </button>

@@ -70,8 +70,8 @@ function getAvatarBg(str: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function formatDisplayName(name?: string | null): string {
-  if (!name) return "Chủ trọ";
+function formatDisplayName(name?: string | null, fallback = ""): string {
+  if (!name) return fallback;
   return name
     .trim()
     .split(/\s+/)
@@ -88,24 +88,24 @@ function formatPhoneDisplay(phone?: string | null): string {
   return phone;
 }
 
-function formatMessageTime(isoString: string): string {
+function formatMessageTime(isoString: string, locale = "vi"): string {
   try {
     const d = new Date(isoString);
-    return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString(locale === "en" ? "en-US" : "vi-VN", { hour: "2-digit", minute: "2-digit" });
   } catch {
     return "";
   }
 }
 
-function formatConversationTime(isoString: string): string {
+function formatConversationTime(isoString: string, locale = "vi"): string {
   try {
     const d = new Date(isoString);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
     if (isToday) {
-      return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      return d.toLocaleTimeString(locale === "en" ? "en-US" : "vi-VN", { hour: "2-digit", minute: "2-digit" });
     }
-    return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+    return d.toLocaleDateString(locale === "en" ? "en-US" : "vi-VN", { day: "2-digit", month: "2-digit" });
   } catch {
     return "";
   }
@@ -161,12 +161,15 @@ export default function TenantMessagesPage() {
   }, [activeChat]);
 
   // Tenant Quick Replies
-  const quickReplies = [
-    "Dạ em đã thanh toán tiền phòng tháng này rồi ạ! 💳",
-    "Em nhờ BQL kiểm tra giúp thiết bị trong phòng với ạ. 🔧",
-    "Cho em hỏi lịch thu gom rác / vệ sinh tuần này thế nào ạ? 🧹",
-    "Dạ em đã nhận được thông báo, cảm ơn BQL! 🙏",
-  ];
+  const quickReplies = useMemo(
+    () => [
+      t("tenantQuickReplyPaid"),
+      t("tenantQuickReplyCheckDevice"),
+      t("tenantQuickReplyTrashSchedule"),
+      t("tenantQuickReplyReceivedNotice"),
+    ],
+    [t]
+  );
 
   // 1. Mount & load initial conversations & contacts from real DB
   useEffect(() => {
@@ -380,7 +383,7 @@ export default function TenantMessagesPage() {
     setIsSending(true);
     try {
       const payload = {
-        content: text || "Đính kèm tệp tin",
+        content: text || t("tenantDefaultAttachmentText"),
         attachments: pendingAttachments.map((att, idx) => ({
           type: att.type,
           url: att.url,
@@ -455,10 +458,10 @@ export default function TenantMessagesPage() {
         <div className="p-3.5 sm:p-4 border-b border-zinc-200/80 space-y-2.5 bg-white shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
-              {t("messagesTitle")}
+              {t("tenantMessagesTitle")}
             </h2>
             <span className="px-2 py-0.5 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-black uppercase">
-              {conversations.length} {locale === "en" ? "contacts" : "kênh"}
+              {t("tenantChannelsCount", { count: conversations.length })}
             </span>
           </div>
 
@@ -468,7 +471,7 @@ export default function TenantMessagesPage() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t("searchChatPlaceholder")}
+              placeholder={t("tenantSearchChatPlaceholder")}
               className="w-full pl-9 pr-8 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
             />
             {searchTerm && (
@@ -484,10 +487,10 @@ export default function TenantMessagesPage() {
           {/* Filter Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             {[
-              { id: "all", label: t("tabAll") },
-              { id: "landlord", label: t("tabLandlord") },
-              { id: "employee", label: t("tabStaff") },
-              { id: "unread", label: t("tabUnread") },
+              { id: "all", label: t("tenantTabAll") },
+              { id: "landlord", label: t("tenantTabLandlord") },
+              { id: "employee", label: t("tenantTabStaff") },
+              { id: "unread", label: t("tenantTabUnread") },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -509,12 +512,12 @@ export default function TenantMessagesPage() {
           {isLoadingConversations ? (
             <div className="p-8 text-center text-xs font-semibold text-zinc-400 flex flex-col items-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-              <span>Đang tải danh sách...</span>
+              <span>{t("tenantLoadingConversations")}</span>
             </div>
           ) : filteredConversations.length === 0 ? (
             <div className="p-6 text-center text-xs text-zinc-400 space-y-2">
               <MessageSquare className="w-8 h-8 mx-auto text-zinc-300" />
-              <p className="font-semibold text-zinc-600">Chưa có cuộc trò chuyện nào</p>
+              <p className="font-semibold text-zinc-600">{t("tenantNoConversationsTitle")}</p>
               {contacts.length > 0 ? (
                 <button
                   onClick={async () => {
@@ -528,10 +531,10 @@ export default function TenantMessagesPage() {
                   }}
                   className="mt-2 px-3 py-1.5 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#23a8a3] transition-colors"
                 >
-                  Bắt đầu nhắn tin với {formatDisplayName(contacts[0].fullName)}
+                  {t("tenantStartChatWith", { name: formatDisplayName(contacts[0].fullName, t("tenantFallbackLandlord")) })}
                 </button>
               ) : (
-                <p className="text-[11px]">Vui lòng kiểm tra lại hợp đồng thuê trọ của bạn.</p>
+                <p className="text-[11px]">{t("tenantCheckContractNotice")}</p>
               )}
             </div>
           ) : (
@@ -570,22 +573,22 @@ export default function TenantMessagesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
                       <h3 className="text-xs sm:text-sm font-black text-zinc-900 truncate">
-                        {formatDisplayName(conv.participant?.fullName)}
+                        {formatDisplayName(conv.participant?.fullName, t("tenantFallbackLandlord"))}
                       </h3>
                       <span className="text-[10px] text-zinc-400 shrink-0 font-medium">
-                        {formatConversationTime(conv.updatedAt)}
+                        {formatConversationTime(conv.updatedAt, locale)}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/60 shrink-0">
                         {conv.participant?.role === "landlord"
-                          ? (locale === "en" ? "Landlord" : "Chủ Nhà Trọ")
+                          ? t("tenantRoleLandlord")
                           : conv.participant?.role === "admin"
-                          ? (locale === "en" ? "Landlord / Admin" : "Chủ Trọ / Quản Trị")
+                          ? t("tenantRoleAdmin")
                           : conv.participant?.role === "employee"
-                          ? (locale === "en" ? "Staff / Manager" : "Quản Lý / Nhân Viên")
-                          : (locale === "en" ? "Resident" : "Cư Dân")}
+                          ? t("tenantRoleEmployee")
+                          : t("tenantRoleResident")}
                       </span>
                       <span className="text-[10px] text-zinc-400 truncate">
                         {formatPhoneDisplay(conv.participant?.phoneNumber)}
@@ -593,7 +596,7 @@ export default function TenantMessagesPage() {
                     </div>
 
                     <p className="text-xs text-zinc-500 truncate font-normal">
-                      {conv.lastMessage?.content || "Chưa có tin nhắn mới"}
+                      {conv.lastMessage?.content || t("tenantNoNewMessages")}
                     </p>
                   </div>
 
@@ -624,7 +627,7 @@ export default function TenantMessagesPage() {
                 <button
                   onClick={() => setMobileShowChat(false)}
                   className="md:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
-                  title="Quay lại danh sách"
+                  title={t("tenantBackToList")}
                 >
                   <ArrowLeft className="w-5 h-5 text-zinc-700" />
                 </button>
@@ -647,21 +650,21 @@ export default function TenantMessagesPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <h3 className="text-xs sm:text-sm font-black text-zinc-900 truncate shrink-0">
-                      {formatDisplayName(activeChat.participant?.fullName)}
+                      {formatDisplayName(activeChat.participant?.fullName, t("tenantFallbackLandlord"))}
                     </h3>
                     <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-600 text-[10px] font-bold truncate">
                       {activeChat.participant?.role === "landlord"
-                        ? (locale === "en" ? "Landlord" : "Chủ Nhà Trọ")
+                        ? t("tenantRoleLandlord")
                         : activeChat.participant?.role === "admin"
-                        ? (locale === "en" ? "Landlord / Admin" : "Chủ Trọ / Quản Trị")
+                        ? t("tenantRoleAdmin")
                         : activeChat.participant?.role === "employee"
-                        ? (locale === "en" ? "Staff / Manager" : "Quản Lý / Nhân Viên")
-                        : (locale === "en" ? "Resident" : "Cư Dân")}
+                        ? t("tenantRoleEmployee")
+                        : t("tenantRoleResident")}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-zinc-400 font-medium truncate mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-emerald-500" />
-                    <span className="truncate">{t("onlineNow")}</span>
+                    <span className="truncate">{t("tenantOnlineNow")}</span>
                     <span className="hidden sm:inline text-zinc-300">•</span>
                     <a
                       href={`tel:${activeChat.participant?.phoneNumber}`}
@@ -677,7 +680,7 @@ export default function TenantMessagesPage() {
                 <a
                   href={`tel:${activeChat.participant?.phoneNumber}`}
                   className="p-1.5 sm:p-2 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-700 hover:bg-[#2AC1BC] hover:text-white hover:border-[#2AC1BC] transition-all cursor-pointer shadow-2xs"
-                  title="Gọi điện"
+                  title={t("tenantCallLandlord")}
                 >
                   <Phone className="w-4 h-4" />
                 </a>
@@ -688,7 +691,7 @@ export default function TenantMessagesPage() {
                       ? "bg-[#2AC1BC] text-white border-[#2AC1BC]"
                       : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                   }`}
-                  title="Thông tin phòng"
+                  title={t("tenantRoomInfoTooltip")}
                 >
                   <Info className="w-4 h-4" />
                 </button>
@@ -700,19 +703,21 @@ export default function TenantMessagesPage() {
               {isLoadingMessages ? (
                 <div className="flex items-center justify-center h-full text-zinc-400 text-xs gap-2">
                   <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-                  <span>Đang tải tin nhắn...</span>
+                  <span>{t("tenantLoadingMessages")}</span>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-400 text-xs space-y-2">
                   <MessageSquare className="w-10 h-10 text-zinc-300" />
-                  <p>Bắt đầu cuộc trò chuyện với {formatDisplayName(activeChat.participant?.fullName)}</p>
+                  <p>{t("tenantStartChatWithName", { name: formatDisplayName(activeChat.participant?.fullName, t("tenantFallbackLandlord")) })}</p>
                 </div>
               ) : (
                 messages.map((msg) => {
                   const isMe = msg.senderId === user?.id || msg.senderId === "my-user-id";
                   const isInvoiceMsg =
-                    msg.content.includes("hóa đơn") ||
-                    msg.content.includes("tiền phòng") ||
+                    msg.content.toLowerCase().includes("hóa đơn") ||
+                    msg.content.toLowerCase().includes("tiền phòng") ||
+                    msg.content.toLowerCase().includes("invoice") ||
+                    msg.content.toLowerCase().includes("rent") ||
                     msg.content.includes("INV-") ||
                     msg.content.includes("💳");
 
@@ -748,20 +753,20 @@ export default function TenantMessagesPage() {
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] font-black uppercase text-amber-900 flex items-center gap-1">
                                 <Receipt className="w-3.5 h-3.5 text-[#FF6B35]" />
-                                Hóa Đơn Tiền Phòng Kỳ Này
+                                {t("tenantCurrentRoomBillCard")}
                               </span>
                               <span className="px-1.5 py-0.5 rounded bg-amber-200/60 text-amber-900 text-[9px] font-bold">
-                                Chờ thanh toán
+                                {t("tenantPendingPaymentBadge")}
                               </span>
                             </div>
                             <p className="text-[11px] text-zinc-600">
-                              Bấm xem chi tiết các khoản chi phí và thanh toán nhanh qua VietQR.
+                              {t("tenantClickViewInvoiceHint")}
                             </p>
                             <Link
                               href="/tenant/invoices"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold transition-all shadow-xs"
                             >
-                              <span>Xem & Thanh toán</span>
+                              <span>{t("tenantViewAndPayBtn")}</span>
                               <ArrowRight className="w-3.5 h-3.5" />
                             </Link>
                           </div>
@@ -799,7 +804,7 @@ export default function TenantMessagesPage() {
                                   }`}
                                 >
                                   <File className="w-4 h-4 shrink-0" />
-                                  <span className="truncate">Tệp đính kèm ({Math.round(att.sizeBytes / 1024)} KB)</span>
+                                  <span className="truncate">{t("tenantAttachedFileWithKb", { size: Math.round(att.sizeBytes / 1024) })}</span>
                                 </a>
                               );
                             })}
@@ -811,7 +816,7 @@ export default function TenantMessagesPage() {
                             isMe ? "text-teal-100" : "text-zinc-400"
                           }`}
                         >
-                          <span>{formatMessageTime(msg.sentAt)}</span>
+                          <span>{formatMessageTime(msg.sentAt, locale)}</span>
                           {isMe && <CheckCheck className="w-3.5 h-3.5" />}
                         </div>
                       </div>
@@ -826,7 +831,7 @@ export default function TenantMessagesPage() {
             <div className="px-3.5 py-1.5 border-t border-zinc-100 bg-white flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
               <span className="text-[10px] font-black uppercase text-zinc-400 flex items-center gap-1 shrink-0">
                 <Sparkles className="w-3.5 h-3.5 text-[#FF6B35]" />
-                {t("quickPillsTitle")}:
+                {t("tenantQuickPillsTitle")}:
               </span>
               {quickReplies.map((pill, idx) => (
                 <button
@@ -889,7 +894,7 @@ export default function TenantMessagesPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="p-2 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-                  title="Đính kèm tệp"
+                  title={t("tenantAttachFileTooltip")}
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
@@ -897,7 +902,7 @@ export default function TenantMessagesPage() {
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   className="p-2 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-                  title="Gửi hình ảnh"
+                  title={t("tenantSendImageTooltip")}
                 >
                   <ImageIcon className="w-4 h-4" />
                 </button>
@@ -907,7 +912,7 @@ export default function TenantMessagesPage() {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder={t("typeMessagePlaceholder")}
+                placeholder={t("tenantTypeMessagePlaceholder")}
                 className="flex-1 px-3.5 py-2 sm:py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
               />
 
@@ -927,7 +932,7 @@ export default function TenantMessagesPage() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 text-xs p-6 space-y-3">
             <MessageSquare className="w-12 h-12 text-zinc-300" />
-            <p className="font-semibold text-zinc-600 text-sm">Chọn một cuộc trò chuyện để bắt đầu</p>
+            <p className="font-semibold text-zinc-600 text-sm">{t("tenantSelectChatToStart")}</p>
           </div>
         )}
       </div>
@@ -946,7 +951,7 @@ export default function TenantMessagesPage() {
             {/* Header on mobile */}
             <div className="flex lg:hidden items-center justify-between pb-3 border-b border-zinc-200">
               <span className="text-xs font-black text-zinc-900 uppercase">
-                {t("roomInfoTitle")}
+                {t("tenantRoomInfoTitle")}
               </span>
               <button
                 onClick={() => setShowRightDrawer(false)}
@@ -960,16 +965,16 @@ export default function TenantMessagesPage() {
             <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
-                  {t("roomInfoTitle")}
+                  {t("tenantRoomInfoTitle")}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
-                  {t("roomStatusActive")}
+                  {t("tenantRoomStatusActive")}
                 </span>
               </div>
 
               <div>
                 <h4 className="text-base font-black text-zinc-900">
-                  {activeChat.participant?.roomName || "Phòng 101"} &bull; Studio
+                  {activeChat.participant?.roomName || `${t("tenantRoomNumber")} 101`} &bull; Studio
                 </h4>
                 <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
                   <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
@@ -978,8 +983,8 @@ export default function TenantMessagesPage() {
               </div>
 
               <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-xs">
-                <span className="text-zinc-500">{t("rentPrice")}</span>
-                <span className="font-bold text-[#2AC1BC]">4.500.000 ₫/tháng</span>
+                <span className="text-zinc-500">{t("tenantRentPrice")}</span>
+                <span className="font-bold text-[#2AC1BC]">4.500.000 ₫/{t("tenantPerMonth")}</span>
               </div>
             </div>
 
@@ -987,23 +992,23 @@ export default function TenantMessagesPage() {
             <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200/80 shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-wider text-orange-900">
-                  {t("paymentDue")}
+                  {t("tenantPaymentDue")}
                 </span>
                 <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase">
-                  {t("unpaid")}
+                  {t("tenantUnpaid")}
                 </span>
               </div>
 
               <div>
                 <div className="text-lg font-black text-zinc-900">4.120.000 ₫</div>
                 <div className="text-[11px] text-zinc-500 font-medium">
-                  {t("dueDate")}: 05/08/2026
+                  {t("tenantDueDate")}: 05/08/2026
                 </div>
               </div>
 
               <Link href="/tenant/invoices">
                 <Button className="w-full h-8 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1">
-                  <span>{t("btnViewInvoice")}</span>
+                  <span>{t("tenantBtnViewInvoice")}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Button>
               </Link>
@@ -1012,11 +1017,11 @@ export default function TenantMessagesPage() {
             {/* Shared Attachments & Photos */}
             <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-3">
               <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block">
-                {t("sharedMedia")} ({activeChatMedia.total})
+                {t("tenantSharedMedia")} ({activeChatMedia.total})
               </span>
 
               {activeChatMedia.total === 0 ? (
-                <p className="text-xs text-zinc-400 text-center py-2">Chưa có tệp chia sẻ</p>
+                <p className="text-xs text-zinc-400 text-center py-2">{t("tenantNoSharedMedia")}</p>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {activeChatMedia.images.slice(0, 3).map((img, i) => (
@@ -1062,7 +1067,7 @@ export default function TenantMessagesPage() {
           <div className="relative max-w-3xl max-h-[90vh]">
             <img
               src={previewImage}
-              alt="Xem ảnh"
+              alt={t("tenantViewPhoto")}
               className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl"
             />
             <button
