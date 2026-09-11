@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { formatCurrency } from "@/utils";
 import {
   bulkGenerateRooms,
   createRoom,
@@ -23,9 +25,23 @@ import {
   type RoomTypeItem,
 } from "@/services/room.service";
 
+
+const AMENITY_LABELS: Record<string, { vi: string; en: string }> = {
+  WiFi: { vi: "WiFi", en: "WiFi" },
+  "Điều hòa": { vi: "Điều hòa", en: "Air Conditioner" },
+  "Nóng lạnh": { vi: "Nóng lạnh", en: "Water Heater" },
+  "Tủ quần áo": { vi: "Tủ quần áo", en: "Wardrobe" },
+  Giường: { vi: "Giường", en: "Bed" },
+  "Kệ bếp": { vi: "Kệ bếp", en: "Kitchen Shelf" },
+  "Ban công": { vi: "Ban công", en: "Balcony" },
+  "WC riêng": { vi: "WC riêng", en: "Private Bathroom" },
+};
+
 export default function RoomsPage() {
   const { activeBuilding, buildings, refreshBuildings, selectBuilding } = useAuth();
   const router = useRouter();
+  const t = useTranslations("landlord");
+  const { currentLocale } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
 
   // View mode & pagination according to Rule 9
@@ -69,8 +85,8 @@ export default function RoomsPage() {
     onConfirm: () => void;
   }>({
     isOpen: false,
-    title: "Xác nhận đóng form",
-    message: "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
+    title: t("landlordRoomsConfirmCloseTitle"),
+    message: t("landlordRoomsConfirmCloseMessage"),
     onConfirm: () => {},
   });
 
@@ -292,8 +308,8 @@ export default function RoomsPage() {
     if (isSingleDirty) {
       setConfirmModal({
         isOpen: true,
-        title: "Xác nhận đóng form",
-        message: "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
+        title: t("landlordRoomsConfirmCloseTitle"),
+        message: t("landlordRoomsConfirmCloseMessage"),
         onConfirm: () => {
           setIsSingleModalOpen(false);
           resetSingleForm();
@@ -312,18 +328,18 @@ export default function RoomsPage() {
     setSingleError(null);
 
     if (!formRoomNumber.trim()) {
-      setSingleError("Vui lòng nhập số phòng.");
+      setSingleError(t("landlordRoomsErrorRoomNumberRequired"));
       return;
     }
 
     const floorNum = parseInt(formFloor, 10);
     if (isNaN(floorNum) || floorNum < 1) {
-      setSingleError("Tầng phải là một số nguyên lớn hơn hoặc bằng 1.");
+      setSingleError(t("landlordRoomsErrorFloorInvalid"));
       return;
     }
 
     if (!formRoomTypeId) {
-      setSingleError("Vui lòng chọn loại phòng.");
+      setSingleError(t("landlordRoomsErrorRoomTypeRequired"));
       return;
     }
 
@@ -331,7 +347,7 @@ export default function RoomsPage() {
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     if (!buildingId || !UUID_RE.test(buildingId)) {
-      setSingleError("Không tìm thấy thông tin tòa nhà. Vui lòng chọn lại tòa nhà và thử lại.");
+      setSingleError(t("landlordRoomsErrorBuildingNotFound"));
       return;
     }
 
@@ -351,7 +367,7 @@ export default function RoomsPage() {
         });
         setToastMessage({
           type: "success",
-          text: `Đã cập nhật phòng ${formRoomNumber.trim()} thành công!`,
+          text: t("landlordRoomsToastUpdateSuccess", { room: formRoomNumber.trim() }),
         });
       } else {
         // UC-L-03: Create Room
@@ -367,7 +383,7 @@ export default function RoomsPage() {
         });
         setToastMessage({
           type: "success",
-          text: `Đã tạo mới phòng ${formRoomNumber.trim()} thành công!`,
+          text: t("landlordRoomsToastCreateSuccess", { room: formRoomNumber.trim() }),
         });
       }
 
@@ -376,7 +392,7 @@ export default function RoomsPage() {
       setIsSingleModalOpen(false);
       setIsSingleDirty(false);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || "Không thể lưu thông tin phòng. Vui lòng thử lại.";
+      const msg = err?.response?.data?.message || err?.message || t("landlordRoomsErrorSaveFailed");
       setSingleError(msg);
     } finally {
       setIsSingleSubmitting(false);
@@ -405,8 +421,8 @@ export default function RoomsPage() {
     if (isBulkDirty) {
       setConfirmModal({
         isOpen: true,
-        title: "Xác nhận đóng form",
-        message: "Bạn đang có thiết lập tạo phòng chưa tạo. Bạn có chắc chắn muốn đóng và hủy bỏ các thay đổi?",
+        title: t("landlordRoomsConfirmCloseTitle"),
+        message: t("landlordRoomsConfirmCloseBulkMessage"),
         onConfirm: () => {
           setIsBulkModalOpen(false);
           resetBulkForm();
@@ -454,17 +470,17 @@ export default function RoomsPage() {
     setBulkError(null);
 
     if (!bulkNameFormat.trim()) {
-      setBulkError("Vui lòng nhập mẫu đặt tên phòng (ví dụ: P{floor}0{index}).");
+      setBulkError(t("landlordRoomsErrorBulkPatternRequired"));
       return;
     }
 
     if (bulkFloorCount < 1 || bulkRoomsPerFloor < 1) {
-      setBulkError("Số tầng và số phòng mỗi tầng phải tối thiểu là 1.");
+      setBulkError(t("landlordRoomsErrorBulkFloorsInvalid"));
       return;
     }
 
     if (!bulkRoomTypeId) {
-      setBulkError("Vui lòng chọn loại phòng trước khi tạo hàng loạt.");
+      setBulkError(t("landlordRoomsErrorBulkTypeRequired"));
       return;
     }
 
@@ -472,14 +488,14 @@ export default function RoomsPage() {
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     if (!buildingId || !UUID_RE.test(buildingId)) {
-      setBulkError("Không tìm thấy thông tin tòa nhà. Vui lòng chọn lại tòa nhà và thử lại.");
+      setBulkError(t("landlordRoomsErrorBuildingNotFound"));
       return;
     }
 
     // Check duplicate room numbers within generated list
     const uniqueSet = new Set(previewRoomNumbers);
     if (uniqueSet.size !== previewRoomNumbers.length) {
-      setBulkError("Mẫu đặt tên tạo ra các số phòng trùng nhau trong cùng một đợt. Vui lòng tinh chỉnh lại mẫu số phòng.");
+      setBulkError(t("landlordRoomsErrorBulkDuplicate"));
       return;
     }
 
@@ -497,7 +513,7 @@ export default function RoomsPage() {
 
       setToastMessage({
         type: "success",
-        text: `Đã tạo tự động thành công ${response.count} phòng mới vào hệ thống!`,
+        text: t("landlordRoomsToastBulkSuccess", { count: response.count }),
       });
 
       // Refresh room list from server
@@ -505,7 +521,7 @@ export default function RoomsPage() {
       setIsBulkModalOpen(false);
       resetBulkForm();
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || "Không thể tạo phòng tự động. Vui lòng thử lại.";
+      const msg = err?.response?.data?.message || err?.message || t("landlordRoomsErrorSaveFailed");
       setBulkError(msg);
     } finally {
       setIsBulkSubmitting(false);
@@ -620,9 +636,9 @@ export default function RoomsPage() {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Quản lý phòng</h1>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{t("landlordRoomsPageTitle")}</h1>
           <p className="text-sm text-zinc-500 mt-0.5">
-            Danh sách phòng theo tòa nhà, cấu hình dịch vụ và sinh mã phòng tự động
+            {t("landlordRoomsPageSubtitle")}
           </p>
         </div>
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
@@ -640,10 +656,10 @@ export default function RoomsPage() {
               setIsBulkModalOpen(true);
             }}
             className="cursor-pointer px-4 py-2 text-xs sm:text-sm font-bold text-zinc-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all shadow-sm flex items-center gap-1.5"
-            title="Tạo hàng loạt phòng theo tầng và mẫu số phòng (UC-L-02)"
+            title={t("landlordRoomsBulkGenerateTooltip")}
           >
             <Sparkles className="w-4 h-4 text-amber-700" />
-            <span>Tạo phòng tự động</span>
+            <span>{t("landlordRoomsBulkGenerateBtn")}</span>
           </button>
 
           {/* Single Room Add Button (UC-L-03) */}
@@ -651,7 +667,7 @@ export default function RoomsPage() {
             onClick={handleOpenCreateModal}
             className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Thêm phòng
+            <Plus className="w-4 h-4" /> {t("landlordRoomsAddRoomBtn")}
           </button>
         </div>
       </div>
@@ -669,7 +685,7 @@ export default function RoomsPage() {
                 {activeBuilding.name}
               </h2>
               <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                Đang vận hành
+                {t("landlordRoomsInOperation")}
               </span>
             </div>
 
@@ -686,12 +702,12 @@ export default function RoomsPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>{t("landlordRoomsViewMap")}</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Quản lý tổng thể cấu trúc phòng, theo dõi tình trạng lưu trú và tài sản.
+              {t("landlordRoomsBannerDesc")}
             </p>
           </div>
 
@@ -701,7 +717,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md w-full lg:w-[140px]">
                 <Home className="w-5 h-5 text-zinc-400 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng phòng</span>
+                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">{t("landlordRoomsStatTotal")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{totalRoomsCount}</span>
                 </div>
               </div>
@@ -709,7 +725,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[140px]">
                 <Target className="w-5 h-5 text-rose-500 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Lấp đầy</span>
+                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordRoomsOccupancy")}</span>
                   <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{occupancyRate}%</span>
                 </div>
               </div>
@@ -719,7 +735,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang thuê</span>
+                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordRoomsStatusOccupied")}</span>
                   <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">{occupiedCount}</span>
                 </div>
               </div>
@@ -727,7 +743,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-blue-500/10 rounded-2xl border border-blue-500/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Phòng trống</span>
+                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordRoomsStatusVacant")}</span>
                   <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">{vacantCount}</span>
                 </div>
               </div>
@@ -735,7 +751,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-[#FF6B35]/10 rounded-2xl border border-[#FF6B35]/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Bảo trì</span>
+                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordRoomsStatusMaintenance")}</span>
                   <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">{maintenanceCount}</span>
                 </div>
               </div>
@@ -743,7 +759,7 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-purple-500/10 rounded-2xl border border-purple-500/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">Đặt cọc</span>
+                  <span className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">{t("landlordRoomsStatusReserved")}</span>
                   <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">{reservedCount}</span>
                 </div>
               </div>
@@ -762,7 +778,7 @@ export default function RoomsPage() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm số phòng, loại phòng..."
+                placeholder={t("landlordRoomsSearchInputPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -782,10 +798,10 @@ export default function RoomsPage() {
                     ? "bg-white text-zinc-900 shadow-sm"
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
-                title="Hiển thị dạng lưới (Grid view - Mặc định)"
+                title={t("landlordRoomsViewGridTooltip")}
               >
                 <Grid className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Lưới</span>
+                <span className="hidden sm:inline">{t("landlordRoomsViewGrid")}</span>
               </button>
               <button
                 type="button"
@@ -795,10 +811,10 @@ export default function RoomsPage() {
                     ? "bg-white text-zinc-900 shadow-sm"
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
-                title="Hiển thị dạng bảng (Table view)"
+                title={t("landlordRoomsViewTableTooltip")}
               >
                 <List className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Bảng</span>
+                <span className="hidden sm:inline">{t("landlordRoomsViewTable")}</span>
               </button>
             </div>
           </div>
@@ -814,11 +830,11 @@ export default function RoomsPage() {
                 }}
                 className="pl-3 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-2xs"
               >
-                <option value="">Mọi trạng thái</option>
-                <option value="Trống">Trống</option>
-                <option value="Đang thuê">Đang thuê</option>
-                <option value="Bảo trì">Bảo trì</option>
-                <option value="Đặt cọc">Đặt cọc</option>
+                <option value="">{t("landlordRoomsAllStatuses")}</option>
+                <option value="Trống">{t("landlordRoomsStatusVacant")}</option>
+                <option value="Đang thuê">{t("landlordRoomsStatusOccupied")}</option>
+                <option value="Bảo trì">{t("landlordRoomsStatusMaintenance")}</option>
+                <option value="Đặt cọc">{t("landlordRoomsStatusReserved")}</option>
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             </div>
@@ -832,10 +848,10 @@ export default function RoomsPage() {
                 }}
                 className="pl-3 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-2xs"
               >
-                <option value="">Mọi hợp đồng</option>
-                <option value="active">HĐ Có hiệu lực</option>
-                <option value="expired">HĐ Quá hạn</option>
-                <option value="none">Chưa có HĐ</option>
+                <option value="">{t("landlordRoomsAllContracts")}</option>
+                <option value="active">{t("landlordRoomsContractActive")}</option>
+                <option value="expired">{t("landlordRoomsContractExpired")}</option>
+                <option value="none">{t("landlordRoomsContractNone")}</option>
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             </div>
@@ -847,17 +863,17 @@ export default function RoomsPage() {
           {isLoadingMetadata ? (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
               <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-              <p className="text-sm font-bold text-zinc-700">Đang tải dữ liệu phòng từ máy chủ...</p>
-              <p className="text-xs text-zinc-400 mt-1">Đang đồng bộ thông tin phòng và dịch vụ</p>
+              <p className="text-sm font-bold text-zinc-700">{t("landlordRoomsLoadingData")}</p>
+              <p className="text-xs text-zinc-400 mt-1">{t("landlordRoomsSyncingInfo")}</p>
             </div>
           ) : paginatedRooms.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-50/50 rounded-2xl border border-zinc-200 border-dashed text-center">
               <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-zinc-100 flex items-center justify-center mb-4 text-zinc-400">
                 <Search className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-bold text-zinc-900 mb-1">Không tìm thấy phòng phù hợp</h3>
+              <h3 className="text-base font-bold text-zinc-900 mb-1">{t("landlordRoomsEmptyTitle")}</h3>
               <p className="text-xs text-zinc-500 max-w-sm">
-                Không có phòng nào thỏa mãn tiêu chí tìm kiếm hoặc cơ sở hiện chưa có phòng.
+                {t("landlordRoomsEmptyDesc")}
               </p>
               <div className="flex items-center gap-3 mt-5">
                 <button
@@ -869,13 +885,13 @@ export default function RoomsPage() {
                   }}
                   className="px-4 py-2 bg-white border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors shadow-2xs cursor-pointer"
                 >
-                  Xóa bộ lọc
+                  {t("landlordRoomsClearFilter")}
                 </button>
                 <button
                   onClick={() => setIsBulkModalOpen(true)}
                   className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
                 >
-                  <Sparkles className="w-4 h-4" /> Tạo phòng tự động
+                  <Sparkles className="w-4 h-4" /> {t("landlordRoomsBulkGenerateBtn")}
                 </button>
               </div>
             </div>
@@ -889,7 +905,7 @@ export default function RoomsPage() {
                 >
                   <div className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex items-center justify-center px-3 py-3 text-white">
                     <span className="text-sm font-black tracking-wider text-white flex items-center gap-1.5">
-                      <span className="text-[10px] uppercase font-bold text-zinc-400">TẦNG</span>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400">{t("landlordRoomsColFloor")}</span>
                       <span className="text-lg font-black">{floor}</span>
                     </span>
                   </div>
@@ -937,7 +953,7 @@ export default function RoomsPage() {
                               handleOpenEditModal(room);
                             }}
                             className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-800 hover:bg-white/80 rounded-md transition-all cursor-pointer opacity-80 hover:opacity-100"
-                            title="Chỉnh sửa phòng (UC-L-03)"
+                            title={t("landlordRoomsEditRoomTooltip")}
                           >
                             <Edit className="w-3.5 h-3.5" />
                           </button>
@@ -971,7 +987,15 @@ export default function RoomsPage() {
                                 : "text-zinc-500 bg-zinc-100"
                             }`}
                           >
-                            {room.status}
+                            {room.status === "Đang thuê"
+                              ? t("landlordRoomsStatusOccupied")
+                              : room.status === "Trống"
+                              ? t("landlordRoomsStatusVacant")
+                              : room.status === "Bảo trì"
+                              ? t("landlordRoomsStatusMaintenance")
+                              : room.status === "Đặt cọc"
+                              ? t("landlordRoomsStatusReserved")
+                              : room.status}
                           </span>
                         </div>
                       );
@@ -992,16 +1016,16 @@ export default function RoomsPage() {
                         checked={isAllCurrentPageSelected}
                         onChange={toggleSelectAllCurrentPage}
                         className="w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC] cursor-pointer"
-                        title="Chọn tất cả trong trang hiện tại"
+                        title={t("landlordRoomsSelectAllTooltip")}
                       />
                     </th>
-                    <th className="p-3">Số phòng</th>
-                    <th className="p-3">Tầng</th>
-                    <th className="p-3">Loại phòng</th>
-                    <th className="p-3">Diện tích</th>
-                    <th className="p-3">Trạng thái</th>
-                    <th className="p-3">Dịch vụ đi kèm</th>
-                    <th className="p-3 text-right">Thao tác</th>
+                    <th className="p-3">{t("landlordRoomsColRoomNumber")}</th>
+                    <th className="p-3">{t("landlordRoomsColFloor")}</th>
+                    <th className="p-3">{t("landlordRoomsColRoomType")}</th>
+                    <th className="p-3">{t("landlordRoomsColArea")}</th>
+                    <th className="p-3">{t("landlordRoomsColStatus")}</th>
+                    <th className="p-3">{t("landlordRoomsColServices")}</th>
+                    <th className="p-3 text-right">{t("landlordRoomsColActions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200/70">
@@ -1023,7 +1047,7 @@ export default function RoomsPage() {
                           />
                         </td>
                         <td className="p-3 font-black text-zinc-900 text-sm">{room.id}</td>
-                        <td className="p-3 font-semibold text-zinc-600">Tầng {room.floor}</td>
+                        <td className="p-3 font-semibold text-zinc-600">{t("landlordRoomsFloorText", { floor: room.floor })}</td>
                         <td className="p-3 font-medium text-zinc-700">{room.roomType || "Studio"}</td>
                         <td className="p-3 text-zinc-600">{room.area ? `${room.area} m²` : "25 m²"}</td>
                         <td className="p-3">
@@ -1038,33 +1062,51 @@ export default function RoomsPage() {
                                 : "bg-purple-100 text-purple-700"
                             }`}
                           >
-                            {room.status}
+                            {room.status === "Đang thuê"
+                              ? t("landlordRoomsStatusOccupied")
+                              : room.status === "Trống"
+                              ? t("landlordRoomsStatusVacant")
+                              : room.status === "Bảo trì"
+                              ? t("landlordRoomsStatusMaintenance")
+                              : room.status === "Đặt cọc"
+                              ? t("landlordRoomsStatusReserved")
+                              : room.status}
                           </span>
                         </td>
                         <td className="p-3">
                           <div className="flex flex-wrap gap-1 max-w-xs">
-                            {(room.services || ["Điện", "Nước"]).map((s: string, idx: number) => (
-                              <span
-                                key={idx}
-                                className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] rounded font-medium"
-                              >
-                                {s}
-                              </span>
-                            ))}
+                            {(room.services || ["Điện", "Nước"]).map((s: string, idx: number) => {
+                              const sLabel =
+                                s === "Điện" ? t("landlordRoomsServiceElectricity")
+                                : s === "Nước" ? t("landlordRoomsServiceWater")
+                                : s === "WiFi" ? t("landlordRoomsServiceWifi")
+                                : s === "Vệ sinh" ? t("landlordRoomsServiceCleaning")
+                                : s === "Rác" ? t("landlordRoomsServiceTrash")
+                                : s === "Bảo vệ" ? t("landlordRoomsServiceSecurity")
+                                : s;
+                              return (
+                                <span
+                                  key={idx}
+                                  className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] rounded font-medium"
+                                >
+                                  {sLabel}
+                                </span>
+                              );
+                            })}
                           </div>
                         </td>
                         <td className="p-3 text-right space-x-1.5">
                           <button
                             onClick={() => handleOpenEditModal(room)}
                             className="p-1.5 text-zinc-500 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                            title="Chỉnh sửa phòng (UC-L-03)"
+                            title={t("landlordRoomsEditRoomTooltip")}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
                             className="p-1.5 text-zinc-500 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                            title="Xem chi tiết"
+                            title={t("landlordRoomsViewDetailTooltip")}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -1080,9 +1122,9 @@ export default function RoomsPage() {
 
         {/* Standardized Pagination Bar (Rule 9) */}
         <div className="p-4 border-t border-zinc-200/80 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600 font-medium">
-          {/* Left section: Hiển thị [<input>] / trang | X-Y trên Z mục */}
+          {/* Left section: Pagination controls */}
           <div className="flex items-center gap-2">
-            <span>Hiển thị</span>
+            <span>{t("landlordRoomsPaginationShowing")}</span>
             <input
               type="number"
               min={1}
@@ -1104,7 +1146,7 @@ export default function RoomsPage() {
               {totalItems === 0
                 ? "0 - 0"
                 : `${startIndex + 1} - ${endIndex}`}{" "}
-              trên {totalItems} phòng
+              {t("landlordRoomsPaginationOf", { total: totalItems })}
             </span>
           </div>
 
@@ -1115,7 +1157,7 @@ export default function RoomsPage() {
               onClick={handlePrevWindow}
               disabled={windowStart === 1}
               className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              title="Lùi 5 trang"
+              title={t("landlordRoomsPaginationPrev5")}
             >
               <ChevronsLeft className="w-4 h-4 text-zinc-600" />
             </button>
@@ -1125,7 +1167,7 @@ export default function RoomsPage() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={safeCurrentPage === 1}
               className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              title="Trang trước"
+              title={t("landlordRoomsPaginationPrev")}
             >
               <ChevronLeft className="w-4 h-4 text-zinc-600" />
             </button>
@@ -1150,7 +1192,7 @@ export default function RoomsPage() {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={safeCurrentPage >= totalPages}
               className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              title="Trang sau"
+              title={t("landlordRoomsPaginationNext")}
             >
               <ChevronRight className="w-4 h-4 text-zinc-600" />
             </button>
@@ -1160,7 +1202,7 @@ export default function RoomsPage() {
               onClick={handleNextWindow}
               disabled={windowStart + 5 > totalPages}
               className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              title="Tiến 5 trang"
+              title={t("landlordRoomsPaginationNext5")}
             >
               <ChevronsRight className="w-4 h-4 text-zinc-600" />
             </button>
@@ -1187,10 +1229,10 @@ export default function RoomsPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black text-zinc-900 tracking-tight">
-                    Tạo phòng tự động (Hàng loạt)
+                    {t("landlordRoomsBulkModalTitle")}
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
-                    Hệ thống tự động sinh số phòng theo số tầng và cấu trúc mẫu chỉ định
+                    {t("landlordRoomsBulkModalSubtitle")}
                   </p>
                 </div>
               </div>
@@ -1209,7 +1251,7 @@ export default function RoomsPage() {
                 <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-start gap-2.5">
                   <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
                   <div className="space-y-1">
-                    <p className="font-black text-red-800">Không thể khởi tạo phòng</p>
+                    <p className="font-black text-red-800">{t("landlordRoomsBulkErrorHeader")}</p>
                     <p className="font-medium leading-relaxed">{bulkError}</p>
                   </div>
                 </div>
@@ -1220,10 +1262,10 @@ export default function RoomsPage() {
                 <div className="flex items-center justify-between text-xs font-bold text-zinc-700">
                   <span className="flex items-center gap-1.5">
                     <Building2 className="w-4 h-4 text-[#2AC1BC]" />
-                    Hạn mức gói phòng hiện tại:
+                    {t("landlordRoomsBulkQuotaLabel")}
                   </span>
                   <span className="text-zinc-900 font-black">
-                    {currentTotalRooms} / {maxPlanRoom} phòng
+                    {t("landlordRoomsBulkQuotaValue", { current: currentTotalRooms, max: maxPlanRoom })}
                   </span>
                 </div>
                 <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
@@ -1239,7 +1281,7 @@ export default function RoomsPage() {
                 {isOverQuota && (
                   <p className="text-[11px] font-bold text-red-600 flex items-center gap-1 mt-1">
                     <ShieldAlert className="w-3.5 h-3.5" />
-                    Cảnh báo: Tạo thêm {totalGeneratedCount} phòng sẽ vượt quá hạn mức gói ({maxPlanRoom} phòng). Vui lòng điều chỉnh hoặc nâng cấp gói.
+                    {t("landlordRoomsBulkQuotaWarning", { count: totalGeneratedCount, max: maxPlanRoom })}
                   </p>
                 )}
               </div>
@@ -1248,7 +1290,7 @@ export default function RoomsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-700">
-                    Số tầng <span className="text-red-500">*</span>
+                    {t("landlordRoomsBulkFloorCountLabel")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -1265,7 +1307,7 @@ export default function RoomsPage() {
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-700">
-                    Số phòng mỗi tầng <span className="text-red-500">*</span>
+                    {t("landlordRoomsBulkRoomsPerFloorLabel")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -1283,7 +1325,7 @@ export default function RoomsPage() {
                 <div className="sm:col-span-2 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-zinc-700">
-                      Mẫu đặt tên số phòng <span className="text-red-500">*</span>
+                      {t("landlordRoomsBulkNameFormatLabel")} <span className="text-red-500">*</span>
                     </label>
                     <span className="text-[11px] text-zinc-400">
                       Placeholder: <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">&#123;floor&#125;</code>, <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">&#123;index&#125;</code>
@@ -1296,11 +1338,11 @@ export default function RoomsPage() {
                       setBulkNameFormat(e.target.value);
                       setIsBulkDirty(true);
                     }}
-                    placeholder="VD: P{floor}0{index} hoặc {floor}0{index}"
+                    placeholder={t("landlordRoomsBulkNameFormatPlaceholder")}
                     className="w-full px-3.5 py-2 text-xs font-bold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 font-mono text-zinc-800"
                   />
                   <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-zinc-500">
-                    <span className="font-bold">Mẫu gợi ý:</span>
+                    <span className="font-bold">{t("landlordRoomsBulkSuggestedPatterns")}</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -1335,7 +1377,7 @@ export default function RoomsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">Loại phòng</label>
+                  <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsBulkRoomTypeLabel")}</label>
                   <select
                     value={bulkRoomTypeId}
                     onChange={(e) => {
@@ -1352,16 +1394,16 @@ export default function RoomsPage() {
                       ))
                     ) : (
                       <>
-                        <option value="studio">Studio (Khép kín)</option>
-                        <option value="1pn">1 Phòng ngủ (1PN)</option>
-                        <option value="2pn">2 Phòng ngủ (2PN)</option>
+                        <option value="studio">{t("landlordRoomsTypeStudio")}</option>
+                        <option value="1pn">{t("landlordRoomsType1Bed")}</option>
+                        <option value="2pn">{t("landlordRoomsType2Bed")}</option>
                       </>
                     )}
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">Diện tích (m²)</label>
+                  <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsBulkAreaLabel")}</label>
                   <input
                     type="number"
                     min={1}
@@ -1380,10 +1422,10 @@ export default function RoomsPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
                     <Receipt className="w-4 h-4 text-[#2AC1BC]" />
-                    Dịch vụ áp dụng tự động cho các phòng tạo mới
+                    {t("landlordRoomsBulkServicesSection")}
                   </label>
                   <span className="text-[11px] text-zinc-400">
-                    Đã chọn {bulkServiceIds.length} dịch vụ
+                    {t("landlordRoomsBulkServicesSelected", { count: bulkServiceIds.length })}
                   </span>
                 </div>
 
@@ -1418,19 +1460,27 @@ export default function RoomsPage() {
                       );
                     })
                   ) : (
-                    ["Điện", "Nước", "WiFi", "Vệ sinh"].map((item, idx) => (
-                      <label
-                        key={idx}
-                        className="flex items-center gap-2 p-2.5 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-3.5 h-3.5 rounded text-[#2AC1BC]"
-                        />
-                        <span>{item}</span>
-                      </label>
-                    ))
+                    ["Điện", "Nước", "WiFi", "Vệ sinh"].map((item, idx) => {
+                      const itemLabel =
+                        item === "Điện" ? t("landlordRoomsServiceElectricity")
+                        : item === "Nước" ? t("landlordRoomsServiceWater")
+                        : item === "WiFi" ? t("landlordRoomsServiceWifi")
+                        : item === "Vệ sinh" ? t("landlordRoomsServiceCleaning")
+                        : item;
+                      return (
+                        <label
+                          key={idx}
+                          className="flex items-center gap-2 p-2.5 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            defaultChecked
+                            className="w-3.5 h-3.5 rounded text-[#2AC1BC]"
+                          />
+                          <span>{itemLabel}</span>
+                        </label>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -1440,10 +1490,10 @@ export default function RoomsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-amber-400" />
-                    Xem trước danh sách số phòng ({previewRoomNumbers.length} phòng)
+                    {t("landlordRoomsBulkPreviewTitle", { count: previewRoomNumbers.length })}
                   </span>
                   <span className="text-[10px] font-mono text-zinc-400">
-                    Tầng: 1..{bulkFloorCount} | Phòng: 1..{bulkRoomsPerFloor}
+                    {t("landlordRoomsBulkPreviewSummary", { floors: bulkFloorCount, roomsPerFloor: bulkRoomsPerFloor })}
                   </span>
                 </div>
 
@@ -1466,7 +1516,7 @@ export default function RoomsPage() {
                   onClick={handleCloseBulkModal}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordRoomsBulkBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1479,8 +1529,8 @@ export default function RoomsPage() {
                     <Sparkles className="w-4 h-4" />
                   )}
                   {isBulkSubmitting
-                    ? "Đang khởi tạo phòng..."
-                    : `Xác nhận tạo ${totalGeneratedCount} phòng`}
+                    ? t("landlordRoomsBulkBtnSubmitting")
+                    : t("landlordRoomsBulkBtnConfirm", { count: totalGeneratedCount })}
                 </button>
               </div>
             </form>
@@ -1511,12 +1561,12 @@ export default function RoomsPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black text-zinc-900">
-                    {selectedRoomId ? "Chỉnh sửa phòng" : "Thêm phòng mới"}
+                    {selectedRoomId ? t("landlordRoomsSingleTitleEdit") : t("landlordRoomsSingleTitleCreate")}
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
                     {selectedRoomId
-                      ? "Cập nhật thông tin chi tiết của phòng và dịch vụ áp dụng (UC-L-03)"
-                      : "Điền thông tin chi tiết để tạo phòng trên hệ thống và liên kết dịch vụ (UC-L-03)"}
+                      ? t("landlordRoomsSingleDescEdit")
+                      : t("landlordRoomsSingleDescCreate")}
                   </p>
                 </div>
               </div>
@@ -1544,12 +1594,12 @@ export default function RoomsPage() {
                   <div className="lg:col-span-3 space-y-6">
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-4">
                       <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                        <Home className="w-4 h-4 text-[#2AC1BC]" /> Thông tin phòng
+                        <Home className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordRoomsSingleSectionInfo")}
                       </h3>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">Tòa nhà</label>
+                          <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsSingleBuildingLabel")}</label>
                           <div className="w-full px-3 py-2 text-xs border border-zinc-200 bg-zinc-50 rounded-xl font-medium text-zinc-700 truncate">
                             {activeBuilding?.name || "Dormio Boarding House"}
                           </div>
@@ -1557,7 +1607,7 @@ export default function RoomsPage() {
 
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-zinc-700">
-                            Số phòng <span className="text-red-500">*</span>
+                            {t("landlordRoomsSingleRoomNumberLabel")} <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -1574,7 +1624,7 @@ export default function RoomsPage() {
 
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-zinc-700">
-                            Loại phòng <span className="text-red-500">*</span>
+                            {t("landlordRoomsSingleRoomTypeLabel")} <span className="text-red-500">*</span>
                           </label>
                           <select
                             value={formRoomTypeId}
@@ -1592,9 +1642,9 @@ export default function RoomsPage() {
                               ))
                             ) : (
                               <>
-                                <option value="studio">Studio (Khép kín)</option>
-                                <option value="1pn">1 Phòng ngủ (1PN)</option>
-                                <option value="2pn">2 Phòng ngủ (2PN)</option>
+                                <option value="studio">{t("landlordRoomsTypeStudio")}</option>
+                                <option value="1pn">{t("landlordRoomsType1Bed")}</option>
+                                <option value="2pn">{t("landlordRoomsType2Bed")}</option>
                               </>
                             )}
                           </select>
@@ -1602,7 +1652,7 @@ export default function RoomsPage() {
 
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-zinc-700">
-                            Tầng <span className="text-red-500">*</span>
+                            {t("landlordRoomsSingleFloorLabel")} <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="number"
@@ -1619,7 +1669,7 @@ export default function RoomsPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">Diện tích (m²)</label>
+                          <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsBulkAreaLabel")}</label>
                           <input
                             type="number"
                             step="0.1"
@@ -1635,7 +1685,7 @@ export default function RoomsPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">Số người tối đa</label>
+                          <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsSingleMaxOccupantsLabel")}</label>
                           <input
                             type="number"
                             min={1}
@@ -1650,7 +1700,7 @@ export default function RoomsPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">Trạng thái phòng</label>
+                          <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsSingleStatusLabel")}</label>
                           <select
                             value={formStatus}
                             onChange={(e) => {
@@ -1659,15 +1709,15 @@ export default function RoomsPage() {
                             }}
                             className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
                           >
-                            <option value="available">Trống (Sẵn sàng cho thuê)</option>
-                            <option value="occupied">Đang thuê</option>
-                            <option value="maintainace">Bảo trì</option>
-                            <option value="deposited">Đặt cọc</option>
+                            <option value="available">{t("landlordRoomsSingleStatusAvailable")}</option>
+                            <option value="occupied">{t("landlordRoomsSingleStatusOccupied")}</option>
+                            <option value="maintainace">{t("landlordRoomsSingleStatusMaintenance")}</option>
+                            <option value="deposited">{t("landlordRoomsSingleStatusDeposited")}</option>
                           </select>
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">Giá thuê tham khảo (VNĐ)</label>
+                          <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsSinglePriceLabel")}</label>
                           <input
                             type="text"
                             value={formPrice}
@@ -1682,7 +1732,7 @@ export default function RoomsPage() {
                       </div>
 
                       <div className="space-y-1.5 pt-1">
-                        <label className="text-xs font-bold text-zinc-700">URL ảnh đại diện phòng</label>
+                        <label className="text-xs font-bold text-zinc-700">{t("landlordRoomsSingleImageLabel")}</label>
                         <input
                           type="text"
                           value={formImageUrl}
@@ -1700,14 +1750,14 @@ export default function RoomsPage() {
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
                       <div className="flex items-center justify-between">
                         <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                          <Receipt className="w-4 h-4 text-[#2AC1BC]" /> Dịch vụ phòng (UC-L-03)
+                          <Receipt className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordRoomsSingleSectionServices")}
                         </h3>
                         <span className="text-[11px] font-semibold text-zinc-500">
-                          Đã chọn {selectedServiceIds.length} dịch vụ
+                          {t("landlordRoomsSingleServicesSelected", { count: selectedServiceIds.length })}
                         </span>
                       </div>
                       <p className="text-xs text-zinc-500 leading-relaxed">
-                        Tích chọn các dịch vụ áp dụng cho phòng này. Dịch vụ không chọn sẽ tự động tách khỏi phòng.
+                        {t("landlordRoomsSingleServicesHint")}
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -1740,23 +1790,31 @@ export default function RoomsPage() {
                                   <span className="truncate">{srv.name}</span>
                                 </div>
                                 <span className="text-[11px] font-mono text-zinc-500 shrink-0">
-                                  {srv.price} đ/{srv.unit}
+                                  {formatCurrency(Number(srv.price) || srv.price, currentLocale)} / {srv.unit}
                                 </span>
                               </label>
                             );
                           })
                         ) : (
-                          ["Điện (3.500 đ/kWh)", "Nước (25.000 đ/m³)", "WiFi (100.000 đ/tháng)", "Rác (20.000 đ/phòng)"].map((label, idx) => (
+                          [
+                            { id: "dien", name: t("landlordRoomsServiceElectricity"), rate: "3.500 đ/kWh" },
+                            { id: "nuoc", name: t("landlordRoomsServiceWater"), rate: "25.000 đ/m³" },
+                            { id: "wifi", name: t("landlordRoomsServiceWifi"), rate: "100.000 đ/tháng" },
+                            { id: "rac", name: t("landlordRoomsServiceTrash"), rate: "20.000 đ/phòng" },
+                          ].map((srv, idx) => (
                             <label
                               key={idx}
-                              className="flex items-center gap-2 p-2.5 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 cursor-pointer"
+                              className="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 cursor-pointer"
                             >
-                              <input
-                                type="checkbox"
-                                defaultChecked
-                                className="w-3.5 h-3.5 rounded text-[#2AC1BC]"
-                              />
-                              <span>{label}</span>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  defaultChecked
+                                  className="w-3.5 h-3.5 rounded text-[#2AC1BC]"
+                                />
+                                <span>{srv.name}</span>
+                              </div>
+                              <span className="text-[11px] font-mono text-zinc-400">{srv.rate}</span>
                             </label>
                           ))
                         )}
@@ -1768,7 +1826,7 @@ export default function RoomsPage() {
                   <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
                       <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                        <Target className="w-4 h-4 text-[#2AC1BC]" /> Tiện nghi phòng
+                        <Target className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordRoomsSingleSectionAmenities")}
                       </h3>
                       <div className="flex flex-wrap gap-1.5">
                         {['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng'].map((item) => (
@@ -1795,7 +1853,7 @@ export default function RoomsPage() {
 
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-2">
                       <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                        <FileSignature className="w-4 h-4 text-[#2AC1BC]" /> Ghi chú nội bộ
+                        <FileSignature className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordRoomsSingleSectionNotes")}
                       </h3>
                       <textarea
                         rows={4}
@@ -1804,7 +1862,7 @@ export default function RoomsPage() {
                           setFormNotes(e.target.value);
                           setIsSingleDirty(true);
                         }}
-                        placeholder="Ghi chú thêm về hiện trạng phòng, nội thất bàn giao..."
+                        placeholder={t("landlordRoomsSingleNotesPlaceholder")}
                         className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
                       />
                     </div>
@@ -1820,7 +1878,7 @@ export default function RoomsPage() {
                   disabled={isSingleSubmitting}
                   className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  Hủy bỏ
+                  {t("landlordRoomsSingleBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1835,10 +1893,10 @@ export default function RoomsPage() {
                     <Plus className="w-4 h-4" />
                   )}
                   {isSingleSubmitting
-                    ? "Đang lưu..."
+                    ? t("landlordRoomsSingleBtnSaving")
                     : selectedRoomId
-                    ? "Lưu thay đổi"
-                    : "Tạo phòng"}
+                    ? t("landlordRoomsSingleBtnSaveEdit")
+                    : t("landlordRoomsSingleBtnSaveCreate")}
                 </button>
               </div>
             </form>
@@ -1860,8 +1918,8 @@ export default function RoomsPage() {
 
 function ConfirmModal({
   isOpen,
-  title = "Xác nhận đóng form",
-  message = "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
+  title,
+  message,
   onConfirm,
   onCancel,
 }: {
@@ -1871,6 +1929,7 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("landlord");
   if (!isOpen) return null;
   return (
     <div
@@ -1897,14 +1956,14 @@ function ConfirmModal({
             onClick={onCancel}
             className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
           >
-            Tiếp tục chỉnh sửa
+            {t("landlordRoomsContinueEditing")}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
           >
-            Hủy thay đổi & Đóng
+            {t("landlordRoomsDiscardAndClose")}
           </button>
         </div>
       </div>

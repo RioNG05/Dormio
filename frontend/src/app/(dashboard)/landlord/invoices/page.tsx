@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
   landlordInvoiceService,
   LandlordInvoiceItem,
@@ -24,6 +25,25 @@ function InvoicesContent() {
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("landlord");
+  const { currentLocale } = useLanguage();
+
+  const getInvoiceStatusLabel = (status: string) => {
+    switch (status) {
+      case "Đã thu":
+      case "Đã thanh toán":
+      case "paid":
+        return t("landlordInvoicesStatusPaid");
+      case "Quá hạn":
+      case "overdue":
+        return t("landlordInvoicesStatusOverdue");
+      case "Chưa thu":
+      case "Chờ thanh toán":
+      case "unpaid":
+      default:
+        return t("landlordInvoicesStatusUnpaid");
+    }
+  };
 
   // URL Params parsing
   const urlSearch = searchParams.get("search") || searchParams.get("room") || "";
@@ -108,8 +128,7 @@ function InvoicesContent() {
             setCreateForm((prev) => ({
               ...prev,
               roomId: prev.roomId || first.id,
-              roomName: prev.roomName || `Phòng ${first.roomNumber}`,
-              rentAmount: prev.rentAmount || 0,
+              roomName: prev.roomName || (currentLocale === "en" ? `Room ${first.roomNumber}` : `Phòng ${first.roomNumber}`),
             }));
           }
         }
@@ -210,10 +229,10 @@ function InvoicesContent() {
   // Format large money amounts cleanly without wrapping
   const formatLargeMoney = (amount: number) => {
     if (amount >= 1_000_000_000) {
-      return `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, '')} Tỷ ₫`;
+      return `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, '')} ${t("landlordInvoicesUnitBillion")}`;
     }
     if (amount >= 100_000_000) {
-      return `${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '')}M ₫`;
+      return `${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '')} ${t("landlordInvoicesUnitMillion")}`;
     }
     return `${amount.toLocaleString("vi-VN")} ₫`;
   };
@@ -260,11 +279,11 @@ function InvoicesContent() {
   // Mark Paid Handler with real backend recording (UC-L-06 Part 3)
   const handleMarkAsPaid = async (
     invId: string,
-    method = "Giao dịch ngoài (Tiền mặt / Chuyển khoản thủ công)",
+    method = t("landlordInvoicesPaymentMethodManual"),
   ) => {
     if (!activeBuilding?.id) return;
     try {
-      const isCash = method.toLowerCase().includes("tiền mặt");
+      const isCash = method.toLowerCase().includes("tiền mặt") || method.toLowerCase().includes("cash");
       await landlordInvoiceService.recordManualPayment(activeBuilding.id, invId, {
         method: isCash ? "cash" : "banking",
         note: method,
@@ -279,7 +298,7 @@ function InvoicesContent() {
       }
     } catch (err: any) {
       console.error("Lỗi cập nhật thanh toán:", err);
-      alert(err?.message || "Không thể cập nhật trạng thái thanh toán");
+      alert(err?.message || t("landlordInvoicesAlertUpdateStatusFailed"));
     }
   };
 
@@ -287,7 +306,7 @@ function InvoicesContent() {
   const handleCreateInvoiceSubmit = async () => {
     if (!activeBuilding?.id) return;
     if (!createForm.roomId) {
-      alert("Vui lòng chọn phòng cần lập hóa đơn");
+      alert(t("landlordInvoicesAlertSelectRoom"));
       return;
     }
     try {
@@ -305,7 +324,7 @@ function InvoicesContent() {
         waterRate: createForm.waterRate,
         serviceFees: [
           { name: "Internet / Wifi", amount: createForm.wifiFee },
-          { name: "Rác & Vệ sinh", amount: createForm.trashFee },
+          { name: t("landlordInvoicesFeeTrash"), amount: createForm.trashFee },
         ],
         discount: createForm.discount,
       });
@@ -314,7 +333,7 @@ function InvoicesContent() {
       await fetchInvoices();
     } catch (err: any) {
       console.error("Lỗi tạo hóa đơn:", err);
-      alert(err?.message || "Không thể tạo hóa đơn");
+      alert(err?.message || t("landlordInvoicesAlertCreateFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -335,10 +354,10 @@ function InvoicesContent() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-[#2AC1BC]" /> Hóa Đơn & Thanh Toán
+            <Receipt className="w-6 h-6 text-[#2AC1BC]" /> {t("landlordInvoicesTitle")}
           </h1>
           <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            Quản lý hóa đơn hàng tháng, chốt chỉ số điện nước AI OCR & VietQR tự động.
+            {t("landlordInvoicesSubtitle")}
           </p>
         </div>
 
@@ -347,18 +366,18 @@ function InvoicesContent() {
             onClick={handleOpenOcrModal}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-amber-900 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
           >
-            <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" /> AI Quét Điện Nước OCR
+            <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" /> {t("landlordInvoicesBtnOcrScan")}
           </button>
 
           <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200/80 rounded-xl hover:bg-zinc-50 transition-all cursor-pointer shadow-2xs whitespace-nowrap">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" /> Xuất Excel
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" /> {t("landlordInvoicesBtnExportExcel")}
           </button>
 
           <button
             onClick={handleOpenCreateModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
           >
-            <Plus className="w-4 h-4 shrink-0" /> Tạo Hóa Đơn Mới
+            <Plus className="w-4 h-4 shrink-0" /> {t("landlordInvoicesBtnCreateInvoice")}
           </button>
         </div>
       </div>
@@ -386,12 +405,12 @@ function InvoicesContent() {
                 rel="noreferrer"
                 className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>{t("landlordInvoicesViewMap")}</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Theo dõi công nợ, tiền phòng, điện nước và chốt số tự động qua VietQR & AI OCR.
+              {t("landlordInvoicesBannerSub")}
             </p>
           </div>
 
@@ -402,7 +421,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">TỔNG HÓA ĐƠN</span>
+                  <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesTotalInvoicesShort")}</span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{totalInvoicesCount}</span>
                 </div>
               </div>
@@ -411,7 +430,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">QUÁ HẠN</span>
+                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesOverdueShort")}</span>
                   <span className="font-black text-rose-400 text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{overdueCount}</span>
                 </div>
               </div>
@@ -420,7 +439,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors rounded-2xl border border-emerald-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">ĐÃ THU ({paidCount})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesPaidShort").replace("{count}", String(paidCount))}</span>
                   <span className="font-black text-emerald-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalPaidAmount)}
                   </span>
@@ -431,7 +450,7 @@ function InvoicesContent() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">CHƯA THU ({unpaidCount})</span>
+                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesUnpaidShort").replace("{count}", String(unpaidCount))}</span>
                   <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(totalUnpaidAmount)}
                   </span>
@@ -450,7 +469,7 @@ function InvoicesContent() {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm mã hóa đơn, phòng, tên người thuê, SĐT..."
+              placeholder={t("landlordInvoicesSearchPlaceholder")}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -467,7 +486,7 @@ function InvoicesContent() {
               <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
                 <div className="flex items-center gap-1 shrink-0">
                   <Calendar className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                  <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">Tháng:</span>
+                  <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">{t("landlordInvoicesFilterMonth")}</span>
                 </div>
                 <select
                   value={selectedMonth}
@@ -477,25 +496,25 @@ function InvoicesContent() {
                   }}
                   className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
                 >
-                  <option value="all">Tất cả tháng</option>
-                  <option value="01">Tháng 01</option>
-                  <option value="02">Tháng 02</option>
-                  <option value="03">Tháng 03</option>
-                  <option value="04">Tháng 04</option>
-                  <option value="05">Tháng 05</option>
-                  <option value="06">Tháng 06</option>
-                  <option value="07">Tháng 07</option>
-                  <option value="08">Tháng 08</option>
-                  <option value="09">Tháng 09</option>
-                  <option value="10">Tháng 10</option>
-                  <option value="11">Tháng 11</option>
-                  <option value="12">Tháng 12</option>
+                  <option value="all">{t("landlordInvoicesAllMonths")}</option>
+                  <option value="01">{t("landlordInvoicesMonthPrefix").replace("{month}", "01")}</option>
+                  <option value="02">{t("landlordInvoicesMonthPrefix").replace("{month}", "02")}</option>
+                  <option value="03">{t("landlordInvoicesMonthPrefix").replace("{month}", "03")}</option>
+                  <option value="04">{t("landlordInvoicesMonthPrefix").replace("{month}", "04")}</option>
+                  <option value="05">{t("landlordInvoicesMonthPrefix").replace("{month}", "05")}</option>
+                  <option value="06">{t("landlordInvoicesMonthPrefix").replace("{month}", "06")}</option>
+                  <option value="07">{t("landlordInvoicesMonthPrefix").replace("{month}", "07")}</option>
+                  <option value="08">{t("landlordInvoicesMonthPrefix").replace("{month}", "08")}</option>
+                  <option value="09">{t("landlordInvoicesMonthPrefix").replace("{month}", "09")}</option>
+                  <option value="10">{t("landlordInvoicesMonthPrefix").replace("{month}", "10")}</option>
+                  <option value="11">{t("landlordInvoicesMonthPrefix").replace("{month}", "11")}</option>
+                  <option value="12">{t("landlordInvoicesMonthPrefix").replace("{month}", "12")}</option>
                 </select>
               </div>
 
               {/* Year Filter Dropdown */}
               <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
-                <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">Năm:</span>
+                <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">{t("landlordInvoicesFilterYear")}</span>
                 <select
                   value={selectedYear}
                   onChange={(e) => {
@@ -504,7 +523,7 @@ function InvoicesContent() {
                   }}
                   className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
                 >
-                  <option value="all">Tất cả năm</option>
+                  <option value="all">{t("landlordInvoicesAllYears")}</option>
                   <option value="2026">2026</option>
                   <option value="2025">2025</option>
                   <option value="2024">2024</option>
@@ -518,7 +537,7 @@ function InvoicesContent() {
                 onClick={() => setViewMode("grid")}
                 className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
                   }`}
-                title="Dạng Lưới (Grid)"
+                title={t("landlordInvoicesViewGrid")}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
@@ -526,7 +545,7 @@ function InvoicesContent() {
                 onClick={() => setViewMode("table")}
                 className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "table" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
                   }`}
-                title="Dạng Bảng (Table)"
+                title={t("landlordInvoicesViewTable")}
               >
                 <List className="w-3.5 h-3.5" />
               </button>
@@ -541,7 +560,7 @@ function InvoicesContent() {
             className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "all" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
           >
-            Tất cả ({totalInvoicesCount})
+            {t("landlordInvoicesTabAll").replace("{count}", String(totalInvoicesCount))}
           </button>
 
           <button
@@ -549,7 +568,7 @@ function InvoicesContent() {
             className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "unpaid" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
           >
-            Chưa thu ({unpaidCount})
+            {t("landlordInvoicesTabUnpaid").replace("{count}", String(unpaidCount))}
           </button>
 
           <button
@@ -557,7 +576,7 @@ function InvoicesContent() {
             className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "paid" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
           >
-            Đã thu ({paidCount})
+            {t("landlordInvoicesTabPaid").replace("{count}", String(paidCount))}
           </button>
 
           <button
@@ -565,7 +584,7 @@ function InvoicesContent() {
             className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "overdue" ? "bg-rose-500 text-white shadow-2xs" : "bg-rose-50 text-rose-700 hover:bg-rose-100"
               }`}
           >
-            Quá hạn ({overdueCount})
+            {t("landlordInvoicesTabOverdue").replace("{count}", String(overdueCount))}
           </button>
         </div>
       </div>
@@ -577,9 +596,9 @@ function InvoicesContent() {
             <Receipt className="w-8 h-8" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="font-black text-base text-zinc-900">Chưa có dữ liệu hóa đơn nào</h3>
+            <h3 className="font-black text-base text-zinc-900">{t("landlordInvoicesNoDataTitle")}</h3>
             <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-              Tòa nhà hiện chưa có dữ liệu hóa đơn hoặc thanh toán nào. Hóa đơn sẽ được tạo tự động khi chốt chỉ số điện nước (UC-L-06) hoặc khi bạn lập hóa đơn mới.
+              {t("landlordInvoicesNoDataDesc")}
             </p>
           </div>
           <button
@@ -587,14 +606,14 @@ function InvoicesContent() {
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25aca7] text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer hover:scale-105"
           >
             <Plus className="w-4 h-4" />
-            <span>Lập Hóa Đơn Mới</span>
+            <span>{t("landlordInvoicesBtnCreateInvoice")}</span>
           </button>
         </div>
       ) : paginatedInvoices.length === 0 ? (
         <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
           <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-zinc-800">Không tìm thấy hóa đơn nào</h3>
-          <p className="text-xs text-zinc-400">Thử thay đổi bộ lọc hoặc cụm từ tìm kiếm của bạn.</p>
+          <h3 className="font-extrabold text-sm text-zinc-800">{t("landlordInvoicesEmptyTitle")}</h3>
+          <p className="text-xs text-zinc-400">{t("landlordInvoicesEmptyDesc")}</p>
         </div>
       ) : viewMode === "grid" ? (
         /* GRID VIEW (Rule #9 Default) */
@@ -627,15 +646,15 @@ function InvoicesContent() {
 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">Người thuê:</span>
+                      <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelTenant")}</span>
                       <span className="font-bold text-zinc-900">{inv.tenantName}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">Kỳ thu:</span>
-                      <span className="font-bold text-zinc-800">Tháng {inv.period}</span>
+                      <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelPeriod")}</span>
+                      <span className="font-bold text-zinc-800">{t("landlordInvoicesLabelPeriodMonth").replace("{period}", inv.period)}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">Mã hóa đơn:</span>
+                      <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelInvoiceId")}</span>
                       <span className="font-mono text-zinc-600 text-[11px]">{inv.id}</span>
                     </div>
                   </div>
@@ -643,15 +662,15 @@ function InvoicesContent() {
                   {/* Fee Items Breakdown Summary */}
                   <div className="p-3 bg-zinc-50 rounded-xl space-y-1.5 text-[11px]">
                     <div className="flex justify-between text-zinc-600">
-                      <span>Tiền phòng:</span>
+                      <span>{t("landlordInvoicesFeeRent")}</span>
                       <span className="font-bold text-zinc-800">{inv.rentAmount.toLocaleString("vi-VN")} ₫</span>
                     </div>
                     <div className="flex justify-between text-zinc-600">
-                      <span>Điện ({inv.elecNew - inv.elecOld} kWh):</span>
+                      <span>{t("landlordInvoicesFeeElec").replace("{usage}", String(inv.elecNew - inv.elecOld))}</span>
                       <span className="font-bold text-zinc-800">{((inv.elecNew - inv.elecOld) * inv.elecRate).toLocaleString("vi-VN")} ₫</span>
                     </div>
                     <div className="flex justify-between text-zinc-600">
-                      <span>Nước ({inv.waterNew - inv.waterOld} m³):</span>
+                      <span>{t("landlordInvoicesFeeWater").replace("{usage}", String(inv.waterNew - inv.waterOld))}</span>
                       <span className="font-bold text-zinc-800">{((inv.waterNew - inv.waterOld) * inv.waterRate).toLocaleString("vi-VN")} ₫</span>
                     </div>
                   </div>
@@ -661,13 +680,13 @@ function InvoicesContent() {
                 <div className="pt-3 border-t border-zinc-100 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">Tổng tiền</span>
+                      <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">{t("landlordInvoicesLabelTotal")}</span>
                       <span className="font-black text-base text-[#2AC1BC]">
                         {inv.totalAmount.toLocaleString("vi-VN")} ₫
                       </span>
                     </div>
                     <span className={`text-[10px] font-bold ${isOverdue ? "text-rose-600 font-black" : "text-zinc-400"}`}>
-                      Hạn: {inv.deadline}
+                      {t("landlordInvoicesLabelDeadline").replace("{deadline}", inv.deadline)}
                     </span>
                   </div>
 
@@ -676,13 +695,13 @@ function InvoicesContent() {
                       onClick={() => setSelectedInvoice(inv)}
                       className="flex-1 py-2 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      <Eye className="w-3.5 h-3.5" /> Xem Chi Tiết
+                      <Eye className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnViewDetail")}
                     </button>
                     {!isPaid && (
                       <button
                         onClick={() => handleMarkAsPaid(inv.id)}
                         className="py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
-                        title="Đánh dấu đã thu"
+                        title={t("landlordInvoicesTooltipMarkPaid")}
                       >
                         <Check className="w-3.5 h-3.5" /> Thu
                       </button>
@@ -700,14 +719,14 @@ function InvoicesContent() {
             <table className="w-full text-xs text-left">
               <thead className="text-[11px] text-zinc-500 bg-zinc-50 border-b border-zinc-200 uppercase font-black tracking-wider">
                 <tr>
-                  <th className="px-4 py-3">Mã HĐ</th>
-                  <th className="px-4 py-3">Phòng</th>
-                  <th className="px-4 py-3">Người thuê</th>
-                  <th className="px-4 py-3">Kỳ thu</th>
-                  <th className="px-4 py-3">Tổng tiền</th>
-                  <th className="px-4 py-3">Hạn nộp</th>
-                  <th className="px-4 py-3">Trạng thái</th>
-                  <th className="px-4 py-3 text-right">Thao tác</th>
+                  <th className="px-4 py-3">{t("landlordInvoicesColInvoiceId")}</th>
+                  <th className="px-4 py-3">{t("landlordInvoicesRoom")}</th>
+                  <th className="px-4 py-3">{t("landlordInvoicesSectionTenant")}</th>
+                  <th className="px-4 py-3">{t("landlordInvoicesColPeriod")}</th>
+                  <th className="px-4 py-3">{t("landlordInvoicesColTotal")}</th>
+                  <th className="px-4 py-3">{t("landlordInvoicesColDeadline")}</th>
+                  <th className="px-4 py-3">{t("landlordInvoicesColStatus")}</th>
+                  <th className="px-4 py-3 text-right">{t("landlordInvoicesColActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-semibold">
@@ -719,7 +738,7 @@ function InvoicesContent() {
                     </td>
                     <td className="px-4 py-3.5 font-black text-zinc-900">{inv.roomName}</td>
                     <td className="px-4 py-3.5 text-zinc-700">{inv.tenantName}</td>
-                    <td className="px-4 py-3.5 text-zinc-600">Tháng {inv.period}</td>
+                    <td className="px-4 py-3.5 text-zinc-600">{t("landlordInvoicesLabelPeriodMonth").replace("{period}", inv.period)}</td>
                     <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">{inv.totalAmount.toLocaleString("vi-VN")} ₫</td>
                     <td className={`px-4 py-3.5 font-bold ${inv.status === "Quá hạn" ? "text-rose-600 font-black" : "text-zinc-600"}`}>
                       {inv.deadline}
@@ -729,7 +748,7 @@ function InvoicesContent() {
                         inv.status === "Quá hạn" ? "bg-rose-50 text-rose-700 border-rose-200" :
                           "bg-amber-50 text-amber-700 border-amber-200"
                         }`}>
-                        {inv.status}
+                        {getInvoiceStatusLabel(inv.status)}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right">
@@ -737,7 +756,7 @@ function InvoicesContent() {
                         onClick={() => setSelectedInvoice(inv)}
                         className="px-2.5 py-1 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
                       >
-                        <Eye className="w-3.5 h-3.5" /> Chi tiết
+                        <Eye className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnViewDetail")}
                       </button>
                     </td>
                   </tr>
@@ -752,7 +771,7 @@ function InvoicesContent() {
       {totalItems > 0 && (
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
           <div className="flex items-center gap-2 text-zinc-600">
-            <span>Hiển thị</span>
+            <span>{t("landlordInvoicesPaginationShow")}</span>
             <input
               type="number"
               min={1}
@@ -765,10 +784,10 @@ function InvoicesContent() {
               }}
               className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
             />
-            <span>/ trang</span>
+            <span>{t("landlordInvoicesPaginationPerPage")}</span>
             <span className="text-zinc-400">|</span>
             <span>
-              {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} trên {totalItems} mục
+              {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} {t("landlordInvoicesPaginationOf")} {totalItems} {t("landlordInvoicesPaginationItems")}
             </span>
           </div>
 
@@ -786,7 +805,7 @@ function InvoicesContent() {
               <button
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
                 className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
-                title="5 trang trước"
+                title={t("landlordInvoicesTooltipPrev5")}
               >
                 &laquo;
               </button>
@@ -807,7 +826,7 @@ function InvoicesContent() {
               <button
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
                 className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
-                title="5 trang sau"
+                title={t("landlordInvoicesTooltipNext5")}
               >
                 &raquo;
               </button>
@@ -839,15 +858,15 @@ function InvoicesContent() {
                 </div>
                 <div>
                   <h3 className="font-black text-base text-zinc-900 flex items-center gap-2">
-                    Chi Tiết Hóa Đơn {selectedInvoice.roomName}
+                    {t("landlordInvoicesModalDetailTitle").replace("{room}", selectedInvoice.roomName)}
                     <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${selectedInvoice.status === "Đã thu" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                       selectedInvoice.status === "Quá hạn" ? "bg-rose-50 text-rose-700 border-rose-200" :
                         "bg-amber-50 text-amber-700 border-amber-200"
                       }`}>
-                      {selectedInvoice.status}
+                      {getInvoiceStatusLabel(selectedInvoice.status)}
                     </span>
                   </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">Mã HĐ: {selectedInvoice.id} • Kỳ thu: Tháng {selectedInvoice.period}</p>
+                  <p className="text-xs text-zinc-500 font-semibold">{t("landlordInvoicesModalDetailSub").replace("{id}", selectedInvoice.id).replace("{period}", selectedInvoice.period)}</p>
                 </div>
               </div>
 
@@ -864,42 +883,42 @@ function InvoicesContent() {
               {/* Tenant & Building Info Card */}
               <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Người Thuê</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("landlordInvoicesSectionTenant")}</span>
                   <p className="font-black text-sm text-zinc-900">{selectedInvoice.tenantName}</p>
                   <p className="text-zinc-500 font-semibold">{selectedInvoice.tenantPhone}</p>
                 </div>
 
                 <div className="space-y-1 sm:text-right">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Thời Hạn & Ngày Lập</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("landlordInvoicesSectionDeadlineAndCreated")}</span>
                   <p className="font-bold text-zinc-800">
-                    Hạn nộp: <span className={`font-black ${selectedInvoice.status === "Quá hạn" ? "text-rose-600 font-extrabold" : "text-zinc-800"}`}>{selectedInvoice.deadline}</span>
+                    {t("landlordInvoicesDeadlinePrefix")} <span className={`font-black ${selectedInvoice.status === "Quá hạn" ? "text-rose-600 font-extrabold" : "text-zinc-800"}`}>{selectedInvoice.deadline}</span>
                     {selectedInvoice.status === "Quá hạn" && (
-                      <span className="ml-1.5 px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-black rounded-md border border-rose-200">Quá hạn</span>
+                      <span className="ml-1.5 px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-black rounded-md border border-rose-200">{t("landlordInvoicesStatusOverdue")}</span>
                     )}
                   </p>
-                  <p className="text-zinc-500 font-medium">Lập ngày: {selectedInvoice.createdAt}</p>
+                  <p className="text-zinc-500 font-medium">{t("landlordInvoicesCreatedPrefix")} {selectedInvoice.createdAt}</p>
                 </div>
               </div>
 
               {/* Fee Breakdown Table */}
               <div className="space-y-3">
                 <h4 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-[#2AC1BC]" /> Chi Tiết Các Khoản Phí
+                  <FileText className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordInvoicesSectionFeeBreakdown")}
                 </h4>
 
                 <div className="border border-zinc-200 rounded-2xl overflow-x-auto custom-scrollbar">
                   <table className="w-full text-xs text-left min-w-[500px]">
                     <thead className="bg-zinc-50 border-b border-zinc-200 font-black text-zinc-500 uppercase text-[10px]">
                       <tr>
-                        <th className="px-4 py-2.5">Khoản mục</th>
-                        <th className="px-4 py-2.5">Chỉ số cũ - mới</th>
-                        <th className="px-4 py-2.5 text-right">Đơn giá</th>
-                        <th className="px-4 py-2.5 text-right">Thành tiền</th>
+                        <th className="px-4 py-2.5">{t("landlordInvoicesColItem")}</th>
+                        <th className="px-4 py-2.5">{t("landlordInvoicesColOldNewIndex")}</th>
+                        <th className="px-4 py-2.5 text-right">{t("landlordInvoicesColUnitPrice")}</th>
+                        <th className="px-4 py-2.5 text-right">{t("landlordInvoicesColAmount")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100 font-semibold">
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900">Tiền phòng ({selectedInvoice.roomName})</td>
+                        <td className="px-4 py-3 font-bold text-zinc-900">{t("landlordInvoicesItemRoomRent").replace("{room}", selectedInvoice.roomName)}</td>
                         <td className="px-4 py-3 text-zinc-400">-</td>
                         <td className="px-4 py-3 text-right">{selectedInvoice.rentAmount.toLocaleString("vi-VN")} ₫</td>
                         <td className="px-4 py-3 text-right font-black text-zinc-900">{selectedInvoice.rentAmount.toLocaleString("vi-VN")} ₫</td>
@@ -907,7 +926,7 @@ function InvoicesContent() {
 
                       <tr>
                         <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
-                          <Zap className="w-3.5 h-3.5 text-amber-500" /> Tiền Điện
+                          <Zap className="w-3.5 h-3.5 text-amber-500" /> {t("landlordInvoicesItemElec")}
                         </td>
                         <td className="px-4 py-3 text-zinc-600">
                           {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} ({selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
@@ -920,7 +939,7 @@ function InvoicesContent() {
 
                       <tr>
                         <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
-                          <Droplets className="w-3.5 h-3.5 text-blue-500" /> Tiền Nước
+                          <Droplets className="w-3.5 h-3.5 text-blue-500" /> {t("landlordInvoicesItemWater")}
                         </td>
                         <td className="px-4 py-3 text-zinc-600">
                           {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} ({selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
@@ -934,7 +953,7 @@ function InvoicesContent() {
                       {selectedInvoice.serviceFees.map((fee, idx) => (
                         <tr key={idx}>
                           <td className="px-4 py-3 font-bold text-zinc-900">{fee.name}</td>
-                          <td className="px-4 py-3 text-zinc-400">Cố định / tháng</td>
+                          <td className="px-4 py-3 text-zinc-400">{t("landlordInvoicesItemFixedMonthly")}</td>
                           <td className="px-4 py-3 text-right">{fee.amount.toLocaleString("vi-VN")} ₫</td>
                           <td className="px-4 py-3 text-right font-black text-zinc-900">{fee.amount.toLocaleString("vi-VN")} ₫</td>
                         </tr>
@@ -942,7 +961,7 @@ function InvoicesContent() {
 
                       {selectedInvoice.discount > 0 && (
                         <tr className="bg-rose-50/40">
-                          <td className="px-4 py-3 font-bold text-rose-700">Chiết khấu / Giảm giá</td>
+                          <td className="px-4 py-3 font-bold text-rose-700">{t("landlordInvoicesItemDiscount")}</td>
                           <td className="px-4 py-3 text-zinc-400">-</td>
                           <td className="px-4 py-3 text-right text-rose-700">-{selectedInvoice.discount.toLocaleString("vi-VN")} ₫</td>
                           <td className="px-4 py-3 text-right font-black text-rose-700">-{selectedInvoice.discount.toLocaleString("vi-VN")} ₫</td>
@@ -958,28 +977,28 @@ function InvoicesContent() {
                 {/* VietQR Bank Card */}
                 <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl flex items-center gap-4">
                   <div className="w-24 h-24 bg-white rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-zinc-200">
-                    <img src={getVietQrUrl(selectedInvoice)} alt="Mã VietQR" className="w-full h-full object-contain" />
+                    <img src={getVietQrUrl(selectedInvoice)} alt={currentLocale === "en" ? "VietQR Code" : "Mã VietQR"} className="w-full h-full object-contain" />
                   </div>
 
                   <div className="space-y-1 text-[11px] min-w-0">
                     <span className="font-extrabold text-[#2AC1BC] flex items-center gap-1">
-                      <QrCode className="w-3.5 h-3.5" /> Quét VietQR Tự Động
+                      <QrCode className="w-3.5 h-3.5" /> {t("landlordInvoicesVietQrAuto")}
                     </span>
-                    <p className="font-bold text-zinc-900">Ngân hàng MBBank</p>
+                    <p className="font-bold text-zinc-900">{t("landlordInvoicesVietQrBank")}</p>
                     <p className="font-mono text-zinc-700 font-bold">STK: 0988123456</p>
-                    <p className="text-zinc-500 font-medium truncate">Nội dung: {selectedInvoice.id} {selectedInvoice.roomName.replace(' ', '')}</p>
+                    <p className="text-zinc-500 font-medium truncate">{t("landlordInvoicesVietQrMemo").replace("{memo}", `${selectedInvoice.id} ${selectedInvoice.roomName.replace(" ", "")}`)}</p>
                   </div>
                 </div>
 
                 {/* Grand Total */}
                 <div className="p-5 bg-zinc-900 text-white rounded-2xl space-y-2 text-right shadow-inner">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Tổng Cộng Phải Thanh Toán</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">{t("landlordInvoicesGrandTotal")}</span>
                   <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] block">
                     {selectedInvoice.totalAmount.toLocaleString("vi-VN")} ₫
                   </span>
                   {selectedInvoice.paidAt && (
                     <span className="text-[10px] font-bold text-emerald-400 block">
-                      Đã thu tiền lúc {selectedInvoice.paidAt} ({selectedInvoice.paymentMethod})
+                      {t("landlordInvoicesPaidAtBadgeDetail").replace("{time}", selectedInvoice.paidAt || "").replace("{method}", selectedInvoice.paymentMethod || "")}
                     </span>
                   )}
                 </div>
@@ -1001,13 +1020,13 @@ function InvoicesContent() {
                   }}
                   className="px-4 py-2 bg-zinc-100 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> Nhắc Thu Tiền Qua Chat
+                  <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordInvoicesBtnRemindChat")}
                 </button>
               ) : (
                 /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
                 <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-black rounded-xl">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Đã thu tiền ({selectedInvoice.paidAt}) — {selectedInvoice.paymentMethod}</span>
+                  <span>{t("landlordInvoicesPaidAtBadge").replace("{time}", selectedInvoice.paidAt || "").replace("{method}", selectedInvoice.paymentMethod || "")}</span>
                 </div>
               )}
 
@@ -1015,10 +1034,10 @@ function InvoicesContent() {
                 {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
                 {selectedInvoice.status !== "Đã thu" && (
                   <button
-                    onClick={() => handleMarkAsPaid(selectedInvoice.id, "Giao dịch ngoài (Tiền mặt / Chuyển khoản thủ công)")}
+                    onClick={() => handleMarkAsPaid(selectedInvoice.id, t("landlordInvoicesPaymentMethodManual"))}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <Check className="w-4 h-4" /> Xác Nhận Đã Thu Tiền
+                    <Check className="w-4 h-4" /> {t("landlordInvoicesBtnConfirmPaid")}
                   </button>
                 )}
               </div>
@@ -1041,8 +1060,8 @@ function InvoicesContent() {
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">Lập Hóa Đơn Mới</h3>
-                  <p className="text-xs text-zinc-500 font-semibold">Tự động tính tiền điện nước và tạo mã VietQR thanh toán.</p>
+                  <h3 className="font-black text-base text-zinc-900">{t("landlordInvoicesModalCreateTitle")}</h3>
+                  <p className="text-xs text-zinc-500 font-semibold">{t("landlordInvoicesModalCreateSub")}</p>
                 </div>
               </div>
               <button
@@ -1057,7 +1076,7 @@ function InvoicesContent() {
             <div className="p-6 overflow-y-auto space-y-4 text-xs custom-scrollbar">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-700">Chọn Phòng *</label>
+                  <label className="font-bold text-zinc-700">{t("landlordInvoicesFieldRoom")}</label>
                   <select
                     value={createForm.roomId}
                     onChange={(e) => {
@@ -1067,18 +1086,18 @@ function InvoicesContent() {
                       let waterRate = createForm.waterRate;
                       if (r?.services) {
                         const elec = r.services.find(
-                          (s) => s.isMetered && s.name.toLowerCase().includes("điện"),
+                          (s) => s.isMetered && (s.name.toLowerCase().includes("điện") || s.name.toLowerCase().includes("electric")),
                         );
                         if (elec) elecRate = Number(elec.price) || elecRate;
                         const water = r.services.find(
-                          (s) => s.isMetered && s.name.toLowerCase().includes("nước"),
+                          (s) => s.isMetered && (s.name.toLowerCase().includes("nước") || s.name.toLowerCase().includes("water")),
                         );
                         if (water) waterRate = Number(water.price) || waterRate;
                       }
                       setCreateForm({
                         ...createForm,
                         roomId: selectedId,
-                        roomName: r ? `Phòng ${r.roomNumber}` : "",
+                        roomName: r ? (currentLocale === "en" ? `Room ${r.roomNumber}` : `Phòng ${r.roomNumber}`) : "",
                         elecRate,
                         waterRate,
                       });
@@ -1086,17 +1105,17 @@ function InvoicesContent() {
                     }}
                     className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
                   >
-                    <option value="">-- Chọn phòng --</option>
+                    <option value="">{t("landlordInvoicesSelectRoomPlaceholder")}</option>
                     {availableRooms.map((r) => (
                       <option key={r.id} value={r.id}>
-                        Phòng {r.roomNumber} (Tầng {r.floor} — {r.roomType?.name || "Tiêu chuẩn"})
+                        {t("landlordInvoicesRoomOption").replace("{roomNumber}", r.roomNumber).replace("{floor}", String(r.floor)).replace("{roomType}", r.roomType?.name || t("landlordInvoicesStandardRoom"))}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-700">Kỳ Thanh Toán *</label>
+                  <label className="font-bold text-zinc-700">{t("landlordInvoicesFieldPeriod")}</label>
                   <input
                     type="text"
                     value={createForm.period}
@@ -1112,11 +1131,11 @@ function InvoicesContent() {
 
               {/* Meter Readings Inputs */}
               <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
-                <span className="font-black text-xs text-zinc-900 uppercase tracking-wider block">Chỉ Số Điện Nước</span>
+                <span className="font-black text-xs text-zinc-900 uppercase tracking-wider block">{t("landlordInvoicesMeterReadingsTitle")}</span>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-zinc-500">Điện Cũ (kWh)</label>
+                    <label className="text-[10px] font-extrabold text-zinc-500">{t("landlordInvoicesElecOld")}</label>
                     <input
                       type="number"
                       value={createForm.elecOld}
@@ -1129,7 +1148,7 @@ function InvoicesContent() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-amber-700">Điện Mới (kWh)</label>
+                    <label className="text-[10px] font-extrabold text-amber-700">{t("landlordInvoicesElecNew")}</label>
                     <input
                       type="number"
                       value={createForm.elecNew}
@@ -1142,7 +1161,7 @@ function InvoicesContent() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-zinc-500">Nước Cũ (m³)</label>
+                    <label className="text-[10px] font-extrabold text-zinc-500">{t("landlordInvoicesWaterOld")}</label>
                     <input
                       type="number"
                       value={createForm.waterOld}
@@ -1155,7 +1174,7 @@ function InvoicesContent() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-blue-700">Nước Mới (m³)</label>
+                    <label className="text-[10px] font-extrabold text-blue-700">{t("landlordInvoicesWaterNew")}</label>
                     <input
                       type="number"
                       value={createForm.waterNew}
@@ -1172,7 +1191,7 @@ function InvoicesContent() {
               {/* Total Summary preview */}
               <div className="p-4 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-extrabold text-zinc-500 block uppercase">Dự Tính Tổng Tiền</span>
+                  <span className="text-[10px] font-extrabold text-zinc-500 block uppercase">{t("landlordInvoicesPreviewTotal")}</span>
                   <span className="text-xl font-black text-[#2AC1BC]">
                     {(
                       createForm.rentAmount +
@@ -1182,7 +1201,7 @@ function InvoicesContent() {
                     ).toLocaleString("vi-VN")} ₫
                   </span>
                 </div>
-                <span className="text-[11px] font-bold text-zinc-500">Hạn nộp: {createForm.deadline}</span>
+                <span className="text-[11px] font-bold text-zinc-500">{t("landlordInvoicesDeadlinePrefix")} {createForm.deadline}</span>
               </div>
             </div>
 
@@ -1192,7 +1211,7 @@ function InvoicesContent() {
                 onClick={handleRequestCloseCreate}
                 className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                Hủy bỏ
+                {t("landlordInvoicesBtnCancel")}
               </button>
               <button
                 disabled={isSubmitting}
@@ -1200,7 +1219,7 @@ function InvoicesContent() {
                 className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>{isSubmitting ? "Đang xử lý..." : "Lập & Phát Hành Hóa Đơn"}</span>
+                <span>{isSubmitting ? t("landlordInvoicesBtnSubmitting") : t("landlordInvoicesBtnSubmitCreate")}</span>
               </button>
             </div>
           </div>
@@ -1221,8 +1240,8 @@ function InvoicesContent() {
                   <Sparkles className="w-6 h-6 fill-amber-500" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-zinc-900">AI OCR Đối Soát Chỉ Số Đồng Hồ Điện</h2>
-                  <p className="text-xs text-zinc-500 font-medium">So sánh ảnh chụp thực tế và số liệu AI tự động nhận diện trước khi tính hóa đơn.</p>
+                  <h2 className="text-xl font-black text-zinc-900">{t("landlordInvoicesOcrModalTitle")}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">{t("landlordInvoicesOcrModalSub")}</p>
                 </div>
               </div>
               <button
@@ -1238,11 +1257,9 @@ function InvoicesContent() {
               {/* Left Side: Photo with AI Bounding Box */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">
-                    1. Ảnh Đồng Hồ {createForm.roomName || "Phòng"}
-                  </span>
+                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">{t("landlordInvoicesOcrPhotoTitle")}</span>
                   <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-extrabold">
-                    AI Nhận Diện Tự Động
+                    {t("landlordInvoicesOcrAccuracy")}
                   </span>
                 </div>
 
@@ -1254,9 +1271,7 @@ function InvoicesContent() {
                         OCR Box
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-400">
-                      Chỉ số đồng hồ điện — {createForm.roomName || "Đang chọn phòng"}
-                    </p>
+                    <p className="text-[11px] text-zinc-400">{t("landlordInvoicesOcrMeterDesc")}</p>
                   </div>
                 </div>
               </div>
@@ -1264,19 +1279,15 @@ function InvoicesContent() {
               {/* Right Side: AI Extracted Details & Inputs */}
               <div className="space-y-4 bg-zinc-50 p-5 rounded-2xl border border-zinc-200/80 flex flex-col justify-between">
                 <div className="space-y-4">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">
-                    2. Chi Tiết Tính Tiền Điện Kỳ {createForm.period}
-                  </span>
+                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">{t("landlordInvoicesOcrDetailsTitle")}</span>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-white rounded-xl border border-zinc-200">
-                      <span className="text-[10px] font-extrabold text-zinc-400 block">CHỈ SỐ CŨ</span>
-                      <span className="text-base font-black text-zinc-800">
-                        {createForm.elecOld.toLocaleString("vi-VN")} kWh
-                      </span>
+                      <span className="text-[10px] font-extrabold text-zinc-400 block">{t("landlordInvoicesOcrOldIndex")}</span>
+                      <span className="text-base font-black text-zinc-800">1.318 kWh</span>
                     </div>
                     <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
-                      <span className="text-[10px] font-extrabold text-amber-700 block">CHỈ SỐ MỚI (AI OCR)</span>
+                      <span className="text-[10px] font-extrabold text-amber-700 block">{t("landlordInvoicesOcrNewIndex")}</span>
                       <input
                         type="text"
                         value={ocrMeterValue}
@@ -1291,19 +1302,15 @@ function InvoicesContent() {
 
                   <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2">
                     <div className="flex justify-between text-xs font-bold text-zinc-600">
-                      <span>Sản lượng tiêu thụ:</span>
-                      <span className="text-zinc-900 font-black">
-                        {Math.max(0, parseInt(ocrMeterValue || "0") - createForm.elecOld)} kWh
-                      </span>
+                      <span>{t("landlordInvoicesOcrUsage")}</span>
+                      <span className="text-zinc-900 font-black">{Math.max(0, parseInt(ocrMeterValue || "0") - 1318)} kWh</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-600">
-                      <span>Đơn giá điện:</span>
-                      <span className="text-zinc-900">
-                        {createForm.elecRate.toLocaleString("vi-VN")} ₫ / kWh
-                      </span>
+                      <span>{t("landlordInvoicesOcrUnitPrice")}</span>
+                      <span className="text-zinc-900">3.500 ₫ / kWh</span>
                     </div>
                     <div className="border-t border-zinc-100 pt-2 flex justify-between text-sm font-black text-zinc-900">
-                      <span>Thành tiền điện:</span>
+                      <span>{t("landlordInvoicesOcrAmount")}</span>
                       <span className="text-[#2AC1BC]">
                         {(
                           Math.max(0, parseInt(ocrMeterValue || "0") - createForm.elecOld) *
@@ -1320,7 +1327,7 @@ function InvoicesContent() {
                     onClick={handleRequestCloseOcr}
                     className="flex-1 py-3 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                   >
-                    Hủy bỏ
+                    {t("landlordInvoicesBtnCancel")}
                   </button>
                   <button
                     onClick={() => {
@@ -1329,7 +1336,7 @@ function InvoicesContent() {
                     }}
                     className="flex-1 py-3 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md transition-all cursor-pointer"
                   >
-                    Xác Nhận & Cập Nhật Hóa Đơn
+                    {t("landlordInvoicesOcrConfirm")}
                   </button>
                 </div>
               </div>
@@ -1350,9 +1357,9 @@ function InvoicesContent() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-lg font-black text-zinc-900">Xác nhận đóng form</h3>
+              <h3 className="text-lg font-black text-zinc-900">{t("landlordInvoicesConfirmCloseTitle")}</h3>
               <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
-                Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?
+                {t("landlordInvoicesConfirmCloseDesc")}
               </p>
             </div>
 
@@ -1361,14 +1368,14 @@ function InvoicesContent() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordInvoicesConfirmCloseKeep")}
               </button>
 
               <button
                 onClick={handleConfirmCloseModal}
                 className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordInvoicesConfirmCloseDiscard")}
               </button>
             </div>
           </div>
@@ -1378,9 +1385,14 @@ function InvoicesContent() {
   );
 }
 
+function InvoicesFallback() {
+  const t = useTranslations("landlord");
+  return <div className="p-8 text-center text-xs font-bold text-zinc-400">{t("landlordInvoicesLoading")}</div>;
+}
+
 export default function InvoicesPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs font-bold text-zinc-400">Đang tải dữ liệu hóa đơn...</div>}>
+    <Suspense fallback={<InvoicesFallback />}>
       <InvoicesContent />
     </Suspense>
   );

@@ -5,18 +5,16 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, FileSignature, X, Check, ChevronRight, ChevronLeft, ChevronDown, DollarSign, Home, Image as ImageIcon, User, Building2, LayoutGrid, List, FileText, CalendarDays, Ban, ArrowLeft, Copy, Printer, Edit2, Zap, ClipboardList, UploadCloud, Users, Gauge, History, MapPin, FileSpreadsheet, CreditCard, Eye, Loader2, AlertTriangle, Download } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useLanguage } from "@/context/LanguageContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { getLandlordContracts, ContractItem, exportContract } from "@/services/contract.service";
 import ContractPreviewModal from "@/components/landlord/ContractPreviewModal";
 
-// Status label helper (bilingual)
 function getStatusLabel(status: string, isEn: boolean): string {
   switch (status) {
     case 'active':   return isEn ? 'Active'     : 'Đang hiệu lực';
     case 'draft':    return isEn ? 'Draft'      : 'Chờ xác nhận';
     case 'expired':  return isEn ? 'Expired'    : 'Hết hạn';
     case 'canceled': return isEn ? 'Terminated' : 'Đã chấm dứt';
-    // already-mapped display values
     case 'Đang hiệu lực': return isEn ? 'Active'     : 'Đang hiệu lực';
     case 'Chờ xác nhận':  return isEn ? 'Draft'      : 'Chờ xác nhận';
     case 'Quá hạn':       return isEn ? 'Overdue'    : 'Quá hạn';
@@ -37,23 +35,52 @@ function mapContractStatus(rawStatus: string): string {
 
 export default function ContractsPage() {
   const { activeBuilding } = useAuth();
-  const { locale } = useLanguage();
-  const isEn = locale === 'en';
   const router = useRouter();
+  const t = useTranslations("landlord");
+  const { currentLocale, locale } = useLanguage();
+  const isEn = (currentLocale || locale) === 'en';
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
-  // ─── UI state ───────────────────────────────────────────────────────────────
-  const [isMounted, setIsMounted] = useState(false);
+  const getContractStatusLabel = (status: string) => {
+    switch (status) {
+      case 'Đang hiệu lực':
+      case 'Còn hiệu lực':
+        return t("landlordContractsStatusActive");
+      case 'Sắp hết hạn':
+        return t("landlordContractsStatusExpiring");
+      case 'Quá hạn':
+        return t("landlordContractsStatusOverdue");
+      case 'Đã chấm dứt':
+      case 'Chấm dứt':
+        return t("landlordContractsStatusEnded");
+      case 'Chờ xác nhận':
+        return t("landlordContractsStatusDraft");
+      default:
+        return status;
+    }
+  };
+
+  const getPaymentStatusLabel = (status: string) => {
+    switch (status) {
+      case 'Đã thu đủ':
+        return t("landlordContractsPaymentStatusPaid");
+      case 'Còn nợ':
+        return t("landlordContractsPaymentStatusUnpaid");
+      default:
+        return status;
+    }
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isDirty, setIsDirty] = useState(false);
   // Rule #10: custom confirm-close modal instead of window.confirm
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
-  useEffect(() => { setIsMounted(true); }, []);
-
-  // ─── Data state (NO mock data) ───────────────────────────────────────────────
+  const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => { setIsMounted(true); }, []);
 
   const fetchContracts = useCallback(async () => {
     if (!activeBuilding?.id) { setIsLoading(false); return; }
@@ -61,14 +88,14 @@ export default function ContractsPage() {
     setLoadError(null);
     try {
       const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
-      if (res?.data) {
+      if (res?.data && res.data.length > 0) {
         const mapped = res.data.map((c: ContractItem) => ({
           id: c.id,
           building: activeBuilding.id,
           room: c.room.roomNumber,
           roomType: c.room.roomTypeName || 'Studio',
           tenant: c.tenant?.fullName || (isEn ? 'Tenant' : 'Khách thuê'),
-          tenantId: c.tenant?.id || '',
+          tenantId: c.tenant?.id || 'KH-1',
           tenantPhone: c.tenant?.phoneNumber || '',
           startDate: new Date(c.startDate).toLocaleDateString('vi-VN'),
           endDate: new Date(c.endDate).toLocaleDateString('vi-VN'),
@@ -88,8 +115,8 @@ export default function ContractsPage() {
         setContracts(mapped);
       }
     } catch (err: any) {
-      console.error('Failed to load contracts:', err);
-      setLoadError(isEn ? 'Failed to load contracts. Please try again.' : 'Không thể tải danh sách hợp đồng. Vui lòng thử lại.');
+      console.warn("Could not load contracts from backend, using fallback data:", err);
+      setLoadError(isEn ? "Failed to load contracts. Please try again." : "Không thể tải danh sách hợp đồng. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
@@ -142,7 +169,7 @@ export default function ContractsPage() {
   // Rule #10: Custom confirmation modal instead of window.confirm
   const handleCloseModal = () => {
     if (isDirty) {
-      setShowCloseConfirm(true);
+      setShowDiscardModal(true);
     } else {
       setIsModalOpen(false);
       setTimeout(() => setStep(1), 200);
@@ -242,7 +269,7 @@ export default function ContractsPage() {
     setContracts(updated);
     setSelectedContract(updated.find(c => c.id === selectedContract.id));
     setIsTerminateModalOpen(false);
-    showToast("Đã chấm dứt hợp đồng", "success");
+    showToast(t("landlordContractsToastTerminateSuccess"), "success");
   };
 
   const handleExtendContract = (newDate: string) => {
@@ -250,7 +277,7 @@ export default function ContractsPage() {
     setContracts(updated);
     setSelectedContract(updated.find(c => c.id === selectedContract.id));
     setIsExtendModalOpen(false);
-    showToast("Đã gia hạn hợp đồng", "success");
+    showToast(t("landlordContractsToastExtendSuccess"), "success");
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,7 +301,7 @@ export default function ContractsPage() {
   const copyToClipboard = (e: React.MouseEvent, text: string) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
-    showToast("Đã sao chép mã hợp đồng!", "success");
+    showToast(t("landlordContractsToastCodeCopied"), "success");
   };
 
   const handleFinish = () => {
@@ -288,7 +315,7 @@ export default function ContractsPage() {
     const reason = formData.get("reason") as string;
 
     if (!reason || reason.trim() === "") {
-      showToast("Vui lòng nhập lý do thay đổi hợp đồng!", "error");
+      showToast(t("landlordContractsToastReasonRequired"), "error");
       return;
     }
 
@@ -312,7 +339,7 @@ export default function ContractsPage() {
     setSelectedContract(updatedContract);
     setIsEditingContract(false);
 
-    showToast("Đã cập nhật thông tin hợp đồng thành công!", "success");
+    showToast(t("landlordContractsToastUpdateContractSuccess"), "success");
   };
 
   const handleSaveCheckoutNotice = (e: React.FormEvent) => {
@@ -322,7 +349,7 @@ export default function ContractsPage() {
     const note = formData.get("checkoutNote") as string;
 
     if (!date) {
-      showToast("Vui lòng chọn ngày dự kiến trả phòng!", "error");
+      showToast(t("landlordContractsToastCheckoutDateRequired"), "error");
       return;
     }
 
@@ -337,7 +364,7 @@ export default function ContractsPage() {
     setContracts(contracts.map(c => c.id === selectedContract.id ? updatedContract : c));
     setSelectedContract(updatedContract);
     setIsCheckoutNoticeModalOpen(false);
-    showToast("Đã ghi nhận thông báo trả phòng!", "success");
+    showToast(t("landlordContractsToastCheckoutSuccess"), "success");
   };
 
   const handleSaveMember = (e: React.FormEvent) => {
@@ -346,12 +373,12 @@ export default function ContractsPage() {
     const customer = formData.get("customer") as string;
     const relation = formData.get("relation") as string;
     if (!customer) {
-      showToast("Vui lòng chọn khách hàng", "error");
+      showToast(t("landlordContractsToastCustomerRequired"), "error");
       return;
     }
     setMembers([...members, { name: customer, relation }]);
     setIsAddMemberModalOpen(false);
-    showToast("Đã thêm thành viên", "success");
+    showToast(t("landlordContractsToastAddMemberSuccess"), "success");
   };
 
   const handleSaveService = (e: React.FormEvent) => {
@@ -362,7 +389,7 @@ export default function ContractsPage() {
     const isApplied = formData.get("applied") === "on";
 
     if (!name) {
-      showToast("Vui lòng nhập tên dịch vụ", "error");
+      showToast(t("landlordContractsToastServiceNameRequired"), "error");
       return;
     }
 
@@ -372,10 +399,10 @@ export default function ContractsPage() {
       } else {
         setServices(services.map(s => s.id === editingService.id ? { ...s, price: priceStr ? parseInt(priceStr) : s.price, applied: true } : s));
       }
-      showToast("Đã cập nhật dịch vụ", "success");
+      showToast(t("landlordContractsToastUpdateServiceSuccess"), "success");
     } else {
       setServices([...services, { id: Date.now(), name, type: "Tùy chỉnh", price: priceStr ? parseInt(priceStr) : 0, unit: "VNĐ", applied: true }]);
-      showToast("Đã thêm dịch vụ", "success");
+      showToast(t("landlordContractsToastAddServiceSuccess"), "success");
     }
     setIsServiceModalOpen(false);
     setEditingService(null);
@@ -442,15 +469,12 @@ export default function ContractsPage() {
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-zinc-900">
-                    {isEn ? 'Room' : 'Phòng'} {selectedContract.room}
-                  </h1>
-                  <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                    selectedContract.status === 'Đang hiệu lực' ? 'bg-green-50 text-green-600 border-green-100' :
+                  <h1 className="text-2xl font-bold text-zinc-900">{t("landlordContractsRoomPrefix").replace("{room}", selectedContract.room)}</h1>
+                  <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${selectedContract.status === 'Đang hiệu lực' ? 'bg-green-50 text-green-600 border-green-100' :
                     selectedContract.status === 'Quá hạn' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                    'bg-zinc-100 text-zinc-600 border-zinc-200'
-                  }`}>
-                    {getStatusLabel(selectedContract.status, isEn)}
+                      'bg-zinc-100 text-zinc-600 border-zinc-200'
+                    }`}>
+                    {getContractStatusLabel(selectedContract.status)}
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-zinc-500">
@@ -458,14 +482,8 @@ export default function ContractsPage() {
                   <span>·</span>
                   <span className="font-medium text-primary">{selectedContract.tenant}</span>
                   <span className="hidden sm:inline">|</span>
-                  <span>{isEn ? 'Contract ID' : 'Mã HĐ'}: {selectedContract.id}</span>
-                  <button
-                    onClick={(e) => copyToClipboard(e, selectedContract.id)}
-                    className="hover:text-zinc-700"
-                    title={isEn ? 'Copy ID' : 'Sao chép'}
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
+                  <span>{t("landlordContractsContractCode")}: {selectedContract.id}</span>
+                  <button className="hover:text-zinc-700"><Copy className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             </div>
@@ -475,34 +493,20 @@ export default function ContractsPage() {
                 onClick={() => setIsExtendModalOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
               >
-                <CalendarDays className="w-4 h-4" />
-                {isEn ? 'Extend' : 'Gia hạn'}
+                <CalendarDays className="w-4 h-4" /> {t("landlordContractsBtnExtend")}
               </button>
               <button
                 onClick={() => setIsTerminateModalOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-danger bg-danger-bg border border-danger-border rounded-lg hover:bg-orange-100 transition-colors"
               >
-                <Ban className="w-4 h-4" />
-                {isEn ? 'Terminate' : 'Chấm dứt'}
+                <Ban className="w-4 h-4" /> {t("landlordContractsBtnTerminate")}
               </button>
               <button
-                onClick={() => handlePrintContract(selectedContract)}
+                onClick={() => alert(t("landlordContractsPdfAlert"))}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
                 title={isEn ? 'Preview & Print Contract' : 'Xem trước & In hợp đồng'}
               >
-                <Printer className="w-4 h-4 text-[#2AC1BC]" />
-                {isEn ? 'Print Contract' : 'In hợp đồng'}
-                {selectedContract.documentsCount > 0 && (
-                  <span className="inline-flex items-center justify-center w-4 h-4 text-[9px] font-black rounded-full bg-primary text-white">{selectedContract.documentsCount}</span>
-                )}
-              </button>
-              <button
-                onClick={() => handleExportContract(selectedContract)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-lg transition-colors shadow-xs"
-                title={isEn ? 'Export document and save to system' : 'Xuất tài liệu và lưu vào hệ thống'}
-              >
-                <Download className="w-4 h-4" />
-                {isEn ? 'Export Doc' : 'Xuất tài liệu HĐ'}
+                <Printer className="w-4 h-4" /> {t("landlordContractsBtnPrint")}
               </button>
             </div>
           </div>
@@ -517,81 +521,81 @@ export default function ContractsPage() {
                 <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-zinc-900">Thông tin hợp đồng</h3>
+                    <h3 className="font-semibold text-zinc-900">{t("landlordContractsContractInfoTitle")}</h3>
                   </div>
                   {isEditingContract ? (
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => setIsEditingContract(false)} className="px-3 py-1 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Hủy</button>
-                      <button type="submit" className="px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors shadow-sm">Lưu thay đổi</button>
+                      <button type="button" onClick={() => setIsEditingContract(false)} className="px-3 py-1 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors">{t("landlordContractsBtnCancel")}</button>
+                      <button type="submit" className="px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors shadow-sm">{t("landlordContractsBtnSaveChange")}</button>
                     </div>
                   ) : (
                     <button type="button" onClick={() => setIsEditingContract(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">
-                      <Edit2 className="w-3.5 h-3.5" /> Chỉnh sửa
+                      <Edit2 className="w-3.5 h-3.5" /> {t("landlordContractsBtnEdit")}
                     </button>
                   )}
                 </div>
                 <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">Phòng</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{t("landlordRoomDetailRoomPrefix")}</div>
                     {isEditingContract ? <input type="text" name="room" defaultValue={selectedContract.room} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" /> : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{selectedContract.room}</div>}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">Tòa nhà</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{t("landlordSetupTotalFloorLabel")}</div>
                     {isEditingContract ? <input type="text" name="building" defaultValue="Dormio Building" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" /> : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">Dormio Building</div>}
                   </div>
 
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">Ngày bắt đầu</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{t("landlordContractsStartDateLabel")}</div>
                     {isEditingContract ? (
                       <input type="date" name="startDate" defaultValue={formatDateToInput(selectedContract.startDate)} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors cursor-pointer" />
                     ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{selectedContract.startDate}</div>}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">Ngày kết thúc</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{t("landlordContractsEndDateLabel")}</div>
                     {isEditingContract ? (
                       <input type="date" name="endDate" defaultValue={formatDateToInput(selectedContract.endDate)} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors cursor-pointer" />
                     ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{selectedContract.endDate}</div>}
                   </div>
 
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">Giá thuê</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{t("landlordContractsRentPriceLabel")}</div>
                     {isEditingContract ? (
                       <div className="relative">
                         <input type="text" name="price" defaultValue={selectedContract.price.replace(' ₫', '')} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">VNĐ</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
                       </div>
                     ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{selectedContract.price}</div>}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">Tiền đặt cọc</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{t("landlordContractsDepositLabel")}</div>
                     {isEditingContract ? (
                       <div className="relative">
                         <input type="text" name="deposit" defaultValue={selectedContract.deposit?.replace(' ₫', '') || '0'} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">VNĐ</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
                       </div>
                     ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{selectedContract.deposit}</div>}
                   </div>
 
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{isEditingContract ? "Ngày thanh toán hàng tháng" : "Ngày thanh toán"}</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{isEditingContract ? t("landlordContractsPaymentDateMonthlyLabel") : t("landlordContractsPaymentDateLabel")}</div>
                     {isEditingContract ? (
                       <input type="number" name="paymentDate" min="1" max="31" defaultValue={selectedContract.paymentDate || '5'} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
-                    ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">Ngày {selectedContract.paymentDate || '5'} hàng tháng</div>}
+                    ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{t("landlordContractsPaymentDateEveryMonth").replace("{day}", selectedContract.paymentDate || "5")}</div>}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">Ngày tạo</div>
+                    <div className="text-sm font-medium text-zinc-500 mb-1.5">{t("landlordContractsStartDateLabel")}</div>
                     <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">11/07/2026</div>
                   </div>
                 </div>
                 {isEditingContract && (
                   <div className="px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="border-t border-zinc-100 pt-5 mt-1">
-                      <label className="block text-sm font-semibold text-zinc-700 mb-2">Lý do thay đổi <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-zinc-700 mb-2">{t("landlordContractsEditReasonLabel")} <span className="text-red-500">*</span></label>
                       <textarea
                         name="reason"
                         className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                         rows={3}
-                        placeholder="Nhập lý do thay đổi thông tin hợp đồng để lưu lại lịch sử..."
+                        placeholder={t("landlordContractsEditReasonPlaceholder")}
                       ></textarea>
                     </div>
                   </div>
@@ -601,7 +605,7 @@ export default function ContractsPage() {
                 <div className="px-5 py-4 bg-zinc-50/30 border-t border-zinc-100">
                   <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-2 mb-3">
                     <History className="w-4 h-4 text-zinc-500" />
-                    Lịch sử thay đổi
+                    {t("landlordContractsHistoryTitle")}
                   </h4>
                   {selectedContract.history && selectedContract.history.length > 0 ? (
                     <div className="space-y-3 pl-1.5">
@@ -614,7 +618,7 @@ export default function ContractsPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-zinc-500 italic">Chưa có thay đổi nào.</p>
+                    <p className="text-sm text-zinc-500 italic">{t("landlordContractsHistoryEmpty")}</p>
                   )}
                 </div>
               </form>
@@ -623,33 +627,33 @@ export default function ContractsPage() {
               <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
                   <CalendarDays className="w-4 h-4 text-orange-500" />
-                  <h3 className="font-semibold text-zinc-900">Thông báo trả phòng</h3>
+                  <h3 className="font-semibold text-zinc-900">{t("landlordContractsCheckoutNoticeTitle")}</h3>
                 </div>
                 <div className="p-5 flex flex-col gap-4">
                   {selectedContract.checkoutNotice ? (
                     <>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-sm font-medium text-zinc-500 mb-1">Ngày dự kiến trả phòng</p>
+                          <p className="text-sm font-medium text-zinc-500 mb-1">{t("landlordContractsCheckoutNoticeDate")}</p>
                           <p className="text-sm font-semibold text-zinc-900">{selectedContract.checkoutNotice.date}</p>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-zinc-500 mb-1">Ghi chú</p>
-                          <p className="text-sm font-semibold text-zinc-900">{selectedContract.checkoutNotice.note || "Không có"}</p>
+                          <p className="text-sm font-medium text-zinc-500 mb-1">{t("landlordContractsCheckoutNoticeNote")}</p>
+                          <p className="text-sm font-semibold text-zinc-900">{selectedContract.checkoutNotice.note || t("landlordContractsCheckoutNoticeNoNote")}</p>
                         </div>
                       </div>
                       <div>
                         <button onClick={() => setIsCheckoutNoticeModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-lg hover:bg-zinc-200 transition-colors">
-                          <Edit2 className="w-4 h-4" /> Cập nhật thông báo
+                          <Edit2 className="w-4 h-4" /> {t("landlordContractsCheckoutNoticeUpdate")}
                         </button>
                       </div>
                     </>
                   ) : (
                     <>
-                      <p className="text-sm text-zinc-600">Khách thuê chưa thông báo trả phòng. Nhấn nút bên dưới để ghi nhận.</p>
+                      <p className="text-sm text-zinc-600">{t("landlordContractsCheckoutNoticeEmpty")}</p>
                       <div>
                         <button onClick={() => setIsCheckoutNoticeModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-lg hover:bg-zinc-200 transition-colors">
-                          <ClipboardList className="w-4 h-4" /> Ghi nhận trả phòng
+                          <ClipboardList className="w-4 h-4" /> {t("landlordContractsCheckoutNoticeBtn")}
                         </button>
                       </div>
                     </>
@@ -661,15 +665,15 @@ export default function ContractsPage() {
               <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
                   <ImageIcon className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-zinc-900">Tài liệu hợp đồng</h3>
+                  <h3 className="font-semibold text-zinc-900">{t("landlordContractsContractDocumentsTitle")}</h3>
                 </div>
                 <div className="p-5">
                   <div className="border-2 border-dashed border-zinc-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer group">
                     <div className="p-3 bg-zinc-100 rounded-full group-hover:bg-primary/10 transition-colors mb-3">
                       <UploadCloud className="w-6 h-6 text-zinc-500 group-hover:text-primary" />
                     </div>
-                    <h4 className="font-semibold text-zinc-900 text-sm">Kéo thả hoặc nhấn để chọn</h4>
-                    <p className="text-xs text-zinc-500 mt-1">0/10 ảnh · mỗi ảnh tối đa 5MB</p>
+                    <h4 className="font-semibold text-zinc-900 text-sm">{t("landlordContractsContractDocumentsUploadTitle")}</h4>
+                    <p className="text-xs text-zinc-500 mt-1">{t("landlordContractsContractDocumentsUploadDesc")}</p>
                   </div>
                 </div>
               </div>
@@ -681,7 +685,7 @@ export default function ContractsPage() {
               <div onClick={() => router.push(`/landlord/customers?id=${selectedContract.tenantId}`)} className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group">
                 <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 group-hover:bg-primary/5 transition-colors">
                   <User className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-zinc-900">Khách thuê chính</h3>
+                  <h3 className="font-semibold text-zinc-900">{t("landlordContractsPrimaryTenantTitle")}</h3>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-xl group-hover:bg-primary/10 transition-colors">
@@ -700,7 +704,7 @@ export default function ContractsPage() {
               <div onClick={() => router.push(`/landlord/rooms?id=${selectedContract.room}`)} className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:border-green-500/30 transition-all group">
                 <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 group-hover:bg-green-50/50 transition-colors">
                   <Home className="w-4 h-4 text-green-500" />
-                  <h3 className="font-semibold text-zinc-900">Phòng thuê</h3>
+                  <h3 className="font-semibold text-zinc-900">{t("landlordRoomDetailRoomPrefix")}</h3>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-3 p-3 bg-green-50/50 border border-green-100 rounded-xl group-hover:bg-green-100/50 transition-colors">
@@ -708,7 +712,7 @@ export default function ContractsPage() {
                       <Building2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-semibold text-green-700 text-sm">Phòng {selectedContract.room}</div>
+                      <div className="font-semibold text-green-700 text-sm">{t("landlordContractsRoomPrefix").replace("{room}", selectedContract.room)}</div>
                       <div className="text-xs text-green-600/80">{selectedContract.roomType}</div>
                     </div>
                   </div>
@@ -720,11 +724,10 @@ export default function ContractsPage() {
                 <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-purple-500" />
-                    <h3 className="font-semibold text-zinc-900">Thành viên</h3>
+                    <h3 className="font-semibold text-zinc-900">{t("landlordContractsMembersTitle")}</h3>
                   </div>
                   <button onClick={() => setIsAddMemberModalOpen(true)} className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors">
-                    <Plus className="w-3 h-3" /> Thêm
-                  </button>
+                    <Plus className="w-3 h-3" />{t("landlordContractsModalServiceAdd")}</button>
                 </div>
                 <div className="p-0">
                   {members.length > 0 ? (
@@ -743,7 +746,7 @@ export default function ContractsPage() {
                     </div>
                   ) : (
                     <div className="p-5 text-center">
-                      <p className="text-sm text-zinc-500">Chưa có thành viên nào</p>
+                      <p className="text-sm text-zinc-500">{t("landlordContractsMembersEmpty")}</p>
                     </div>
                   )}
                 </div>
@@ -754,22 +757,21 @@ export default function ContractsPage() {
                 <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-orange-500" />
-                    <h3 className="font-semibold text-zinc-900">Dịch vụ</h3>
+                    <h3 className="font-semibold text-zinc-900">{t("landlordContractsServicesTitle")}</h3>
                   </div>
                   <button onClick={() => { setEditingService(null); setIsServiceModalOpen(true); }} className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors">
-                    <Plus className="w-3 h-3" /> Thêm
-                  </button>
+                    <Plus className="w-3 h-3" />{t("landlordContractsModalServiceAdd")}</button>
                 </div>
                 <div className="p-0 divide-y divide-zinc-100">
                   {services.filter(s => s.applied).map(service => (
                     <div key={service.id} className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-zinc-900">{service.name}</span>
-                        <span className="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded">{service.type}</span>
+                        <span className="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded">{service.type === 'Cố định' ? (currentLocale === 'en' ? 'Fixed' : 'Cố định') : service.type === 'Đồng hồ' ? (currentLocale === 'en' ? 'Metered' : 'Đồng hồ') : service.type}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-orange-600">
-                          {service.price > 0 ? service.price.toLocaleString() : "Miễn phí"} <span className="text-xs text-zinc-500 font-normal">{service.price > 0 ? service.unit : ""}</span>
+                          {service.price > 0 ? service.price.toLocaleString() : t("landlordContractsServiceFree")} <span className="text-xs text-zinc-500 font-normal">{service.price > 0 ? service.unit : ""}</span>
                         </span>
                         <button onClick={() => { setEditingService(service); setIsServiceModalOpen(true); }} className="text-zinc-400 hover:text-zinc-700 transition-colors"><Edit2 className="w-3 h-3" /></button>
                       </div>
@@ -777,7 +779,7 @@ export default function ContractsPage() {
                   ))}
                   {services.filter(s => s.applied).length === 0 && (
                     <div className="p-5 text-center">
-                      <p className="text-sm text-zinc-500">Chưa có dịch vụ nào</p>
+                      <p className="text-sm text-zinc-500">{t("landlordContractsServicesEmpty")}</p>
                     </div>
                   )}
                 </div>
@@ -792,28 +794,24 @@ export default function ContractsPage() {
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md">
               <form onSubmit={handleSaveCheckoutNotice} className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">Ghi nhận thông báo trả phòng</h3>
+                  <h3 className="text-lg font-bold text-zinc-900">{t("landlordContractsCheckoutNoticeModalTitle")}</h3>
                   <button type="button" onClick={() => setIsCheckoutNoticeModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="p-6 space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">Ngày dự kiến trả phòng <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsCheckoutNoticeDate")} <span className="text-red-500">*</span></label>
                     <input type="date" name="checkoutDate" defaultValue={formatDateToInput(selectedContract.checkoutNotice?.date)} required className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors cursor-pointer" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">Ghi chú</label>
-                    <input type="text" name="checkoutNote" defaultValue={selectedContract.checkoutNotice?.note} placeholder="Trả muộn 15 ngày" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsCheckoutNoticeNote")}</label>
+                    <input type="text" name="checkoutNote" defaultValue={selectedContract.checkoutNotice?.note} placeholder={t("landlordContractsCheckoutNoticeNotePlaceholder")} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <button type="button" onClick={() => setIsCheckoutNoticeModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">
-                    Hủy
-                  </button>
-                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">
-                    Lưu
-                  </button>
+                  <button type="button" onClick={() => setIsCheckoutNoticeModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">{t("landlordContractsBtnCancel")}</button>
+                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">{t("landlordContractsBtnSave")}</button>
                 </div>
               </form>
             </div>
@@ -824,33 +822,29 @@ export default function ContractsPage() {
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md">
               <form onSubmit={handleSaveMember} className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">Thêm thành viên</h3>
+                  <h3 className="text-lg font-bold text-zinc-900">{t("landlordContractsAddMemberModalTitle")}</h3>
                   <button type="button" onClick={() => setIsAddMemberModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="p-6 space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">Khách hàng <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsAddMemberSelectCustomer")} <span className="text-red-500">*</span></label>
                     <select name="customer" required className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white">
-                      <option value="">Chọn khách hàng</option>
+                      <option value="">{t("landlordContractsAddMemberSelectPlaceholder")}</option>
                       <option value="Trần Thị B">Trần Thị B</option>
                       <option value="Nguyễn Văn A">Nguyễn Văn A</option>
                       <option value="Lê Văn C">Lê Văn C</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">Quan hệ</label>
-                    <input type="text" name="relation" placeholder="VD: Vợ/chồng, Con, Bạn cùng phòng..." className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsAddMemberRelation")}</label>
+                    <input type="text" name="relation" placeholder={t("landlordContractsAddMemberRelationPlaceholder")} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <button type="button" onClick={() => setIsAddMemberModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">
-                    Huỷ
-                  </button>
-                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">
-                    Thêm
-                  </button>
+                  <button type="button" onClick={() => setIsAddMemberModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">{t("landlordContractsBtnCancel")}</button>
+                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">{t("landlordSetupAddRoomType")}</button>
                 </div>
               </form>
             </div>
@@ -861,41 +855,37 @@ export default function ContractsPage() {
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md">
               <form onSubmit={handleSaveService} className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">{editingService ? "Chỉnh sửa dịch vụ" : "Thêm dịch vụ"}</h3>
+                  <h3 className="text-lg font-bold text-zinc-900">{editingService ? t("landlordContractsServiceEditModalTitle") : t("landlordSetupAddService")}</h3>
                   <button type="button" onClick={() => { setIsServiceModalOpen(false); setEditingService(null); }} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="p-6 space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">Dịch vụ</label>
-                    <input type="text" name="name" defaultValue={editingService?.name || ""} placeholder="Nhập tên dịch vụ mới..." readOnly={!!editingService} className={`w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors ${editingService ? 'bg-zinc-100 text-zinc-500 outline-none' : ''}`} />
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsServiceNameLabel")}</label>
+                    <input type="text" name="name" defaultValue={editingService?.name || ""} placeholder={t("landlordContractsServiceNamePlaceholder")} readOnly={!!editingService} className={`w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors ${editingService ? 'bg-zinc-100 text-zinc-500 outline-none' : ''}`} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">Giá tùy chỉnh (để trống dùng giá mặc định)</label>
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsServiceCustomPriceLabel")}</label>
                     <div className="relative">
                       <input type="number" name="price" defaultValue={editingService?.price || ""} placeholder="0" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">VNĐ</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">Lý do điều chỉnh</label>
-                    <input type="text" name="reason" placeholder="VD: Điều chỉnh theo yêu cầu của khách" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsServiceReasonLabel")}</label>
+                    <input type="text" name="reason" placeholder={t("landlordContractsServiceReasonPlaceholder")} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
                   </div>
                   {editingService && (
                     <label className="flex items-center gap-2 mt-4 cursor-pointer w-max">
                       <input type="checkbox" name="applied" defaultChecked={editingService.applied} className="w-4 h-4 text-primary rounded border-zinc-300 focus:ring-primary" />
-                      <span className="text-sm font-medium text-zinc-900">Đang áp dụng</span>
+                      <span className="text-sm font-medium text-zinc-900">{t("landlordContractsServiceApplied")}</span>
                     </label>
                   )}
                 </div>
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <button type="button" onClick={() => { setIsServiceModalOpen(false); setEditingService(null); }} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">
-                    Huỷ
-                  </button>
-                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">
-                    Lưu
-                  </button>
+                  <button type="button" onClick={() => { setIsServiceModalOpen(false); setEditingService(null); }} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">{t("landlordContractsBtnCancel")}</button>
+                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">{t("landlordContractsBtnSave")}</button>
                 </div>
               </form>
             </div>
@@ -914,24 +904,18 @@ export default function ContractsPage() {
           {/* Top Page Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900">
-                {isEn ? 'Contract Management' : 'Quản lý hợp đồng'}
-              </h1>
-              <p className="text-sm text-zinc-500">
-                {isEn
-                  ? 'Rental contracts, deadlines, and payment status'
-                  : 'Danh sách hợp đồng thuê phòng, thời hạn và tình trạng thanh toán'}
-              </p>
+              <h1 className="text-2xl font-bold text-zinc-900">{t("landlordContractsTitle")}</h1>
+              <p className="text-sm text-zinc-500">{t("landlordContractsSubtitle")}</p>
             </div>
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
               <button
-                onClick={() => showToast(isEn ? 'Import feature coming soon.' : 'Tính năng Import đang được phát triển.', 'success')}
+                onClick={() => alert(t("landlordContractsExcelImportNotice"))}
                 className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
               >
                 <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
               </button>
               <button
-                onClick={handleExportCsv}
+                onClick={() => alert(t("landlordContractsExcelExportSuccess"))}
                 className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
               >
                 <FileSpreadsheet className="w-4 h-4 text-blue-600" />
@@ -941,7 +925,7 @@ export default function ContractsPage() {
                 onClick={() => router.push("/landlord/contracts/create")}
                 className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
-                <Plus className="w-4 h-4" /> Lập hợp đồng mới
+                <Plus className="w-4 h-4" /> {t("landlordContractsCreateBtn")}
               </button>
             </div>
           </div>
@@ -959,7 +943,7 @@ export default function ContractsPage() {
                     {activeBuilding.name}
                   </h2>
                   <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                    {isEn ? 'Operational' : 'Đang vận hành'}
+                    {t("landlordContractsBannerOperating")}
                   </span>
                 </div>
 
@@ -974,537 +958,524 @@ export default function ContractsPage() {
                     rel="noreferrer"
                     className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
                   >
-                    <span>Xem Bản Đồ</span> &rarr;
+                    <span>{t("landlordOverviewViewMap")}</span> &rarr;
                   </a>
                 </div>
 
-                  <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-                    {isEn
-                      ? 'Manage all rental contracts, track deadlines and renewal status for your tenants.'
-                      : 'Quản lý tổng thể hợp đồng thuê phòng, theo dõi thời hạn hợp đồng và tình trạng gia hạn của khách lưu trú một cách chuyên nghiệp.'}
-                  </p>
+                <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                  {t("landlordContractsBannerDesc")}
+                </p>
               </div>
 
-          {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets, Services, Customers) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
-              <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{isEn ? 'Total' : 'Tổng HĐ'}</span>
-                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{contracts.length}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{isEn ? 'Active' : 'Còn hiệu lực'}</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === 'Đang hiệu lực').length}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{isEn ? 'Overdue' : 'Quá hạn'}</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === 'Quá hạn').length}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{isEn ? 'Terminated' : 'Đã chấm dứt'}</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === 'Đã chấm dứt').length}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SINGLE ROW TOOLBAR (Filter Pills + Search Bar all in 1 Row) */}
-      <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Status Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
-            {([
-              { label: isEn ? 'All' : 'Tất cả', value: '' },
-              { label: isEn ? 'Active' : 'Đang hiệu lực', value: 'Đang hiệu lực' },
-              { label: isEn ? 'Draft' : 'Chờ xác nhận', value: 'Chờ xác nhận' },
-              { label: isEn ? 'Overdue' : 'Quá hạn', value: 'Quá hạn' },
-              { label: isEn ? 'Terminated' : 'Đã chấm dứt', value: 'Đã chấm dứt' },
-            ] as { label: string; value: string }[]).map((tab) => {
-              const isActive = statusFilter === tab.value;
-              return (
-                <button
-                  key={tab.value}
-                  onClick={() => { setStatusFilter(tab.value); setCurrentPage(1); }}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20'
-                      : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Input & View Mode Switcher */}
-          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder={isEn ? 'Search name, room number, contract ID...' : 'Tìm tên, số phòng, mã HĐ...'}
-                value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-              />
-            </div>
-
-            <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
-              <button
-                onClick={() => { setViewMode("grid"); setRowsPerPage(6); setCurrentPage(1); }}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"}`}
-                title="Xem dạng thẻ (Grid)"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => { setViewMode("list"); setRowsPerPage(10); setCurrentPage(1); }}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"}`}
-                title="Xem dạng bảng (List)"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Grid View or Table View Container */}
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-zinc-200/80 rounded-2xl">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-sm font-semibold text-zinc-500">
-            {isEn ? 'Loading contracts...' : 'Đang tải danh sách hợp đồng...'}
-          </p>
-        </div>
-      )}
-
-      {/* Error State */}
-      {!isLoading && loadError && (
-        <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-rose-200 rounded-2xl">
-          <AlertTriangle className="w-8 h-8 text-rose-500" />
-          <p className="text-sm font-semibold text-rose-600">{loadError}</p>
-          <button
-            onClick={fetchContracts}
-            className="px-4 py-2 text-sm font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] transition-colors"
-          >
-            {isEn ? 'Retry' : 'Thử lại'}
-          </button>
-        </div>
-      )}
-
-      {!isLoading && !loadError && (
-      <>
-      {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedContracts.length === 0 ? (
-            <div className="col-span-full p-8 text-center text-zinc-400 font-bold bg-white border border-zinc-200/80 rounded-2xl">
-              {isEn ? 'No contracts found matching the filter.' : 'Không tìm thấy hợp đồng nào phù hợp với bộ lọc.'}
-            </div>
-          ) : (
-            paginatedContracts.map((c, idx) => {
-              const isSelected = selectedContractIds.includes(c.id);
-              return (
-                <div
-                  key={c.id || idx}
-                  onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                  className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden ${
-                    isSelected ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 ring-2 ring-[#2AC1BC]/20' : 'border-zinc-200/80 hover:border-[#2AC1BC]/40'
-                  }`}
-                >
-                  {/* Card Header: Checkbox + Room & Building & Status */}
-                  <div>
-                    <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100">
-                      <div className="flex items-start gap-2.5">
-                        <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => handleSelectOne(e, c.id)}
-                            className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-black text-base text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                              {isEn ? 'Room' : 'Phòng'} {c.room}
-                            </h3>
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                              {activeBuilding?.name || 'Dormio'}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
-                            <span>{isEn ? 'ID' : 'Mã'}: {c.id.substring(0, 12)}...</span>
-                            <button
-                              onClick={(e) => copyToClipboard(e, c.id)}
-                              className="p-0.5 hover:text-[#2AC1BC] transition-colors rounded"
-                              title="Sao chép mã hợp đồng"
-                            >
-                              <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border shrink-0 ${
-                        c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                        'bg-zinc-100 text-zinc-600 border-zinc-200'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
-                          c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
-                        }`} />
-                        {getStatusLabel(c.status, isEn)}
-                      </span>
-                    </div>
-
-                    {/* Card Body */}
-                    <div className="py-3 space-y-2.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5 text-zinc-400" />
-                          {isEn ? 'Tenant:' : 'Đại diện thuê:'}
-                        </span>
-                        <div className="flex flex-col items-end">
-                          <span className="font-extrabold text-zinc-900">{c.tenant}</span>
-                          {c.members && c.members.length > 0 && (
-                            <span className="text-[10px] font-bold text-zinc-500 flex items-center gap-1">
-                              <Users className="w-3 h-3 text-zinc-400" />
-                              +{c.members.length} {isEn ? 'housemates' : 'người ở cùng'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <DollarSign className="w-3.5 h-3.5 text-zinc-400" />
-                          {isEn ? 'Rent:' : 'Giá thuê:'}
-                        </span>
-                        <span className="font-black text-sm text-[#2AC1BC]">{c.price} / {isEn ? 'month' : 'tháng'}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />
-                          {isEn ? 'Period:' : 'Thời hạn:'}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-zinc-800">{c.startDate} - {c.endDate}</span>
-                          {c.isOverdue && (
-                            <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                              {isEn ? 'Expired' : 'Hết hạn'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
-                        <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                          <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
-                          {isEn ? 'Payment:' : 'Thu tiền:'}
-                        </span>
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${
-                          c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
-                        }`}>
-                          {c.paymentStatus === 'Còn nợ' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />}
-                          {c.paymentStatus}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Footer Actions */}
-                  <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsDetailViewOpen(true); }}
-                      className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
-                    >
-                      <Eye className="w-3.5 h-3.5" /> Chi tiết
-                    </button>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handlePrintContract(c); }}
-                        className="p-1.5 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl transition-all cursor-pointer"
-                        title={isEn ? "Print / Export" : "In / Xuất văn bản HĐ"}
-                      >
-                        <Printer className="w-3.5 h-3.5 text-zinc-700" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsExtendModalOpen(true); }}
-                        className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                        title="Gia hạn hợp đồng"
-                      >
-                        <CalendarDays className="w-3.5 h-3.5" /> Gia hạn
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsTerminateModalOpen(true); }}
-                        className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                        title="Chấm dứt hợp đồng"
-                      >
-                        <Ban className="w-3.5 h-3.5" /> Chấm dứt
-                      </button>
-                    </div>
+              {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets, Services, Customers) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
+                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                  <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordContractsStatTotal")}</span>
+                    <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{contracts.length}</span>
                   </div>
                 </div>
-              );
-            })
+
+                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordContractsStatActive")}</span>
+                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Còn hiệu lực" || c.status === "Đang hiệu lực").length}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordContractsStatExpiring")}</span>
+                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Sắp hết hạn" || c.status === "Quá hạn").length}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordContractsStatEnded")}</span>
+                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{contracts.filter(c => c.status === "Chấm dứt" || c.status === "Đã chấm dứt").length}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SINGLE ROW TOOLBAR (Filter Pills + Search Bar all in 1 Row) */}
+          <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              {/* Status Filter Pills */}
+              <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                {[
+                  { label: t("landlordContractsFilterAll"), value: "" },
+                  { label: t("landlordContractsFilterActive"), value: "Đang hiệu lực" },
+                  { label: t("landlordContractsFilterExpiring"), value: "Sắp hết hạn" },
+                  { label: t("landlordContractsFilterOverdue"), value: "Quá hạn" },
+                  { label: t("landlordContractsFilterEnded"), value: "Đã chấm dứt" },
+                ].map((tab) => {
+                  const isActive = statusFilter === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => { setStatusFilter(tab.value); setCurrentPage(1); }}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${isActive
+                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20'
+                          : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80'
+                        }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search Input & View Mode Switcher */}
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    placeholder={t("landlordContractsSearchPlaceholder")}
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
+                  <button
+                    onClick={() => { setViewMode("grid"); setRowsPerPage(6); setCurrentPage(1); }}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"}`}
+                    title={t("landlordContractsGridView")}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => { setViewMode("list"); setRowsPerPage(10); setCurrentPage(1); }}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"}`}
+                    title={t("landlordContractsListView")}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid View or Table View Container */}
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-zinc-200/80 rounded-2xl">
+              <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+              <p className="text-sm font-semibold text-zinc-500">
+                {isEn ? 'Loading contracts...' : 'Đang tải danh sách hợp đồng...'}
+              </p>
+            </div>
           )}
-        </div>
-      ) : (
-        /* Table Container with Visible Horizontal Scrollbar */
-        <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
-          <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-            <table className="w-full min-w-[850px] text-xs text-left border-collapse">
-              <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
-                <tr>
-                  <th className="px-4 py-3.5 w-12 text-center whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={paginatedContracts.length > 0 && paginatedContracts.every(c => selectedContractIds.includes(c.id))}
-                      onChange={handleSelectAll}
-                      className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                    />
-                  </th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">PHÒNG & MÃ HĐ</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">KHÁCH THUÊ</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">THỜI HẠN HỢP ĐỒNG</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">GIÁ THUÊ</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">THU TIỀN</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">TRẠNG THÁI</th>
-                  <th className="px-5 py-3.5 text-right whitespace-nowrap">THAO TÁC</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 bg-white">
-                {paginatedContracts.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="p-8 text-center text-zinc-400 font-bold">
-                      Không tìm thấy hợp đồng nào phù hợp với bộ lọc.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedContracts.map((c, idx) => {
-                    const isSelected = selectedContractIds.includes(c.id);
-                    return (
-                      <tr
-                        key={c.id || idx}
-                        onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                        className={`hover:bg-zinc-50/80 transition-colors group cursor-pointer ${isSelected ? 'bg-[#2AC1BC]/5' : ''}`}
-                      >
-                        <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => handleSelectOne(e, c.id)}
-                            className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-5 py-4 whitespace-nowrap">
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2">
-                              <span className="font-black text-sm text-[#2AC1BC]">Phòng {c.room}</span>
-                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                {c.building === 'dormio' ? 'Dormio Premier' : 'Dormio Campus'}
+
+          {/* Error State */}
+          {!isLoading && loadError && (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-rose-200 rounded-2xl">
+              <AlertTriangle className="w-8 h-8 text-rose-500" />
+              <p className="text-sm font-semibold text-rose-600">{loadError}</p>
+              <button
+                onClick={fetchContracts}
+                className="px-4 py-2 text-sm font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] transition-colors"
+              >
+                {isEn ? 'Retry' : 'Thử lại'}
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !loadError && (
+            <>
+              {viewMode === "grid" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {paginatedContracts.length === 0 ? (
+                    <div className="col-span-full p-8 text-center text-zinc-400 font-bold bg-white border border-zinc-200/80 rounded-2xl">
+                      {t("landlordContractsNoContractsFound")}
+                    </div>
+                  ) : (
+                    paginatedContracts.map((c, idx) => {
+                      const isSelected = selectedContractIds.includes(c.id);
+                      return (
+                        <div
+                          key={c.id || idx}
+                          onClick={() => router.push(`/landlord/contracts/${c.id}`)}
+                          className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden ${isSelected ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 ring-2 ring-[#2AC1BC]/20' : 'border-zinc-200/80 hover:border-[#2AC1BC]/40'
+                            }`}
+                        >
+                          {/* Card Header: Checkbox + Room & Building & Status */}
+                          <div>
+                            <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100">
+                              <div className="flex items-start gap-2.5">
+                                <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={(e) => handleSelectOne(e, c.id)}
+                                    className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
+                                  />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h3 className="font-black text-base text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
+                                      {t("landlordRoomDetailRoomPrefix")} {c.room}
+                                    </h3>
+                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                      {activeBuilding?.name || 'Dormio'}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
+                                    <span>{t("landlordContractsContractCodeShort")} {c.id}</span>
+                                    <button
+                                      onClick={(e) => copyToClipboard(e, c.id)}
+                                      className="p-0.5 hover:text-[#2AC1BC] transition-colors rounded"
+                                      title={t("landlordContractsCopyCodeTitle")}
+                                    >
+                                      <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border shrink-0 ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                  c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                    'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
+                                    c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
+                                  }`} />
+                                {getContractStatusLabel(c.status)}
                               </span>
                             </div>
-                            <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold">
-                              <span>{c.id}</span>
+
+                            {/* Card Body */}
+                            <div className="py-3 space-y-2.5">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                                  <User className="w-3.5 h-3.5 text-zinc-400" /> {t("landlordContractsRepresentative")}
+                                </span>
+                                <div className="flex flex-col items-end">
+                                  <span className="font-extrabold text-zinc-900">{c.tenant}</span>
+                                  {c.members && c.members.length > 0 && (
+                                    <span className="text-[10px] font-bold text-zinc-500 flex items-center gap-1">
+                                      <Users className="w-3 h-3 text-zinc-400" /> {t("landlordContractsRoommatesCount").replace("{count}", String(c.members.length))}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                                  <DollarSign className="w-3.5 h-3.5 text-zinc-400" /> {t("landlordContractsRentPriceLabel")}:
+                                </span>
+                                <span className="font-black text-sm text-[#2AC1BC]">{c.price} {t("landlordContractsPerMonth")}</span>
+                              </div>
+
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                                  <CalendarDays className="w-3.5 h-3.5 text-zinc-400" /> {t("landlordContractsDurationLabel")}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-zinc-800">{c.startDate} - {c.endDate}</span>
+                                  {c.isOverdue && (
+                                    <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                      {t("landlordContractsDueExpired")}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
+                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
+                                  <CreditCard className="w-3.5 h-3.5 text-zinc-400" /> {t("landlordContractsPaymentLabel")}
+                                </span>
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                                  }`}>
+                                  {c.paymentStatus === 'Còn nợ' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />}
+                                  {getPaymentStatusLabel(c.paymentStatus)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Footer Actions */}
+                          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsDetailViewOpen(true); }}
+                              className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> {t("landlordContractsBtnDetail")}
+                            </button>
+                            <div className="flex items-center gap-1.5">
                               <button
-                                onClick={(e) => copyToClipboard(e, c.id)}
-                                className="p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded"
-                                title="Sao chép mã hợp đồng"
+                                onClick={(e) => { e.stopPropagation(); handlePrintContract(c); }}
+                                className="p-1.5 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl transition-all cursor-pointer"
+                                title={isEn ? "Print / Export" : "In / Xuất văn bản HĐ"}
                               >
-                                <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                <Printer className="w-3.5 h-3.5 text-zinc-700" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsExtendModalOpen(true); }}
+                                className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                                title={t("landlordContractsBtnExtend")}
+                              >
+                                <CalendarDays className="w-3.5 h-3.5" /> {t("landlordContractsBtnExtend")}
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedContract(c); setIsTerminateModalOpen(true); }}
+                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                                title={t("landlordContractsBtnTerminate")}
+                              >
+                                <Ban className="w-3.5 h-3.5" /> {t("landlordContractsBtnTerminate")}
                               </button>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-5 py-4 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className="font-extrabold text-zinc-900 text-sm">{c.tenant}</span>
-                            {c.members && c.members.length > 0 && (
-                              <span className="text-[10px] font-bold text-zinc-500 mt-0.5 flex items-center gap-1">
-                                <Users className="w-3 h-3 text-zinc-400" /> +{c.members.length} thành viên
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-zinc-700 text-xs">{c.startDate} <span className="text-zinc-300 font-normal">-</span> {c.endDate}</span>
-                            {c.isOverdue && (
-                              <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
-                                Hết hạn
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 font-black text-zinc-900 text-sm whitespace-nowrap">
-                          {c.price}
-                        </td>
-                        <td className="px-5 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
-                            }`}>
-                            {c.paymentStatus === 'Còn nợ' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>}
-                            {c.paymentStatus}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                            c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              'bg-zinc-100 text-zinc-600 border-zinc-200'
-                            }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
-                              c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
-                              }`}></span>
-                            {c.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1 text-zinc-400">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setIsExtendModalOpen(true); setSelectedContract(c); }}
-                              className="p-1.5 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors cursor-pointer"
-                              title="Gia hạn hợp đồng"
-                            >
-                              <CalendarDays className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handlePrintContract(c); }}
-                              className="p-1.5 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                              title={isEn ? "Print / Export contract" : "In / Xuất văn bản HĐ"}
-                            >
-                              <Printer className="w-4 h-4 text-[#2AC1BC]" />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setIsTerminateModalOpen(true); setSelectedContract(c); }}
-                              className="p-1.5 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title="Chấm dứt hợp đồng"
-                            >
-                              <Ban className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              ) : (
+                /* Table Container with Visible Horizontal Scrollbar */
+                <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
+                  <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
+                    <table className="w-full min-w-[850px] text-xs text-left border-collapse">
+                      <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
+                        <tr>
+                          <th className="px-4 py-3.5 w-12 text-center whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={paginatedContracts.length > 0 && paginatedContracts.every(c => selectedContractIds.includes(c.id))}
+                              onChange={handleSelectAll}
+                              className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
+                            />
+                          </th>
+                          <th className="px-5 py-3.5 whitespace-nowrap">{t("landlordContractsTableHeaderRoomCode")}</th>
+                          <th className="px-5 py-3.5 whitespace-nowrap">{t("landlordContractsTableHeaderTenant")}</th>
+                          <th className="px-5 py-3.5 whitespace-nowrap">{t("landlordContractsTableHeaderDuration")}</th>
+                          <th className="px-5 py-3.5 whitespace-nowrap">{t("landlordContractsTableHeaderPrice")}</th>
+                          <th className="px-5 py-3.5 whitespace-nowrap">{t("landlordContractsTableHeaderPayment")}</th>
+                          <th className="px-5 py-3.5 whitespace-nowrap">{t("landlordContractsTableHeaderStatus")}</th>
+                          <th className="px-5 py-3.5 text-right whitespace-nowrap">{t("landlordContractsTableHeaderAction")}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 bg-white">
+                        {paginatedContracts.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="p-8 text-center text-zinc-400 font-bold">
+                              {t("landlordContractsNoContractsFound")}
+                            </td>
+                          </tr>
+                        ) : (
+                          paginatedContracts.map((c, idx) => {
+                            const isSelected = selectedContractIds.includes(c.id);
+                            return (
+                              <tr
+                                key={c.id || idx}
+                                onClick={() => router.push(`/landlord/contracts/${c.id}`)}
+                                className={`hover:bg-zinc-50/80 transition-colors group cursor-pointer ${isSelected ? 'bg-[#2AC1BC]/5' : ''}`}
+                              >
+                                <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={(e) => handleSelectOne(e, c.id)}
+                                    className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
+                                  />
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <div className="flex flex-col gap-0.5">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-black text-sm text-[#2AC1BC]">{t("landlordRoomDetailRoomPrefix")} {c.room}</span>
+                                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                        {c.building === 'dormio' ? 'Dormio Premier' : 'Dormio Campus'}
+                                      </span>
+                                    </div>
+                                    <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold">
+                                      <span>{c.id}</span>
+                                      <button
+                                        onClick={(e) => copyToClipboard(e, c.id)}
+                                        className="p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded"
+                                        title={t("landlordContractsCopyCodeTitle")}
+                                      >
+                                        <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <div className="flex flex-col">
+                                    <span className="font-extrabold text-zinc-900 text-sm">{c.tenant}</span>
+                                    {c.members && c.members.length > 0 && (
+                                      <span className="text-[10px] font-bold text-zinc-500 mt-0.5 flex items-center gap-1">
+                                        <Users className="w-3 h-3 text-zinc-400" /> {t("landlordContractsRoommatesCountTable").replace("{count}", String(c.members.length))}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-zinc-700 text-xs">{c.startDate} <span className="text-zinc-300 font-normal">-</span> {c.endDate}</span>
+                                    {c.isOverdue && (
+                                      <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                                        {t("landlordContractsDueExpired")}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-5 py-4 font-black text-zinc-900 text-sm whitespace-nowrap">
+                                  {c.price}
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.paymentStatus === 'Đã thu đủ' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                                    }`}>
+                                    {c.paymentStatus === 'Còn nợ' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>}
+                                    {getPaymentStatusLabel(c.paymentStatus)}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                    c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                      'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                    }`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực' ? 'bg-emerald-500' :
+                                      c.status === 'Sắp hết hạn' || c.status === 'Quá hạn' ? 'bg-amber-500' : 'bg-zinc-400'
+                                      }`}></span>
+                                    {getContractStatusLabel(c.status)}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-4 text-right whitespace-nowrap">
+                                  <div className="flex items-center justify-end gap-1 text-zinc-400">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setIsExtendModalOpen(true); setSelectedContract(c); }}
+                                      className="p-1.5 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors cursor-pointer"
+                                      title={t("landlordContractsBtnExtend")}
+                                    >
+                                      <CalendarDays className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handlePrintContract(c); }}
+                                      className="p-1.5 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                                      title={isEn ? "Print / Export contract" : "In / Xuất văn bản HĐ"}
+                                    >
+                                      <Printer className="w-4 h-4 text-[#2AC1BC]" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setIsTerminateModalOpen(true); setSelectedContract(c); }}
+                                      className="p-1.5 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                      title={t("landlordContractsBtnTerminate")}
+                                    >
+                                      <Ban className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
-          {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
-            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-              <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                <span>Hiển thị</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={500}
-                  value={rowsPerPage || ""}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val);
-                    setCurrentPage(1);
-                  }}
-                  className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
-                />
-                <span>/ trang</span>
+              {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+                    <span>{t("landlordContractsPaginationShowing")}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={rowsPerPage || ""}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                        setCurrentPage(1);
+                      }}
+                      className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                    />
+                    <span>/ trang</span>
+                  </div>
+
+                  <span className="hidden sm:inline text-zinc-300">|</span>
+
+                  <div>
+                    <span className="font-extrabold text-zinc-800">{totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(currentPage * rowsPerPage, totalItems)}</span> {t("landlordContractsPaginationOf")} <span className="font-extrabold text-zinc-800">{totalItems}</span> {t("landlordContractsPaginationTotalContracts")}
+                  </div>
+                </div>
+                {(() => {
+                  const windowSize = 5;
+                  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
+                  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+                  const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+
+                  return (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        &larr; {t("landlordContractsPaginationPrev")}
+                      </button>
+                      {visiblePages.map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${currentPage === page
+                              ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                              : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
+                        onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
+                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        {t("landlordContractsPaginationNext")} &rarr;
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
 
-              <span className="hidden sm:inline text-zinc-300">|</span>
-
-              <div>
-                <span className="font-extrabold text-zinc-800">{totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(currentPage * rowsPerPage, totalItems)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{totalItems}</span> hợp đồng
-              </div>
-            </div>
-            {(() => {
-              const windowSize = 5;
-              const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
-              const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
-              const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
-
-              return (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    &larr; Trước
+              {/* Floating Action Bar */}
+              {selectedContractIds.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[40] bg-white/80 backdrop-blur-xl rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 px-2 py-2 flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-500">
+                  <div className="px-5 py-2 bg-gradient-to-r from-primary to-primary-hover text-white font-bold text-sm rounded-full whitespace-nowrap shadow-md shadow-primary/20">
+                    {t("landlordContractsBatchCount").replace("{count}", String(selectedContractIds.length))}
+                  </div>
+                  <div className="w-px h-6 bg-zinc-200/50 mx-1"></div>
+                  <button onClick={() => setIsExtendModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
+                    <CalendarDays className="w-4 h-4 text-primary" /> {t("landlordContractsBatchExtend")}
                   </button>
-                  {visiblePages.map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                        currentPage === page
-                          ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
-                          : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
-                    onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                    className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    Sau &rarr;
+                  <button onClick={() => setIsAdjustRentModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
+                    <DollarSign className="w-4 h-4 text-primary" /> {t("landlordContractsBatchAdjustRent")}
+                  </button>
+                  <button onClick={() => setIsAdjustDepositModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
+                    <FileText className="w-4 h-4 text-primary" /> {t("landlordContractsBatchAdjustDeposit")}
+                  </button>
+                  <button onClick={() => setIsAdjustPaymentDateModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
+                    <CalendarDays className="w-4 h-4 text-primary" /> {t("landlordContractsBatchAdjustPaymentDate")}
+                  </button>
+                  <div className="w-px h-6 bg-zinc-200/50 mx-1"></div>
+                  <button onClick={() => setSelectedContractIds([])} className="p-2 text-zinc-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors shrink-0">
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
-              );
-            })()}
-          </div>
-
-          {/* Floating Action Bar */}
-          {selectedContractIds.length > 0 && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[40] bg-white/80 backdrop-blur-xl rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 px-2 py-2 flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-500">
-              <div className="px-5 py-2 bg-gradient-to-r from-primary to-primary-hover text-white font-bold text-sm rounded-full whitespace-nowrap shadow-md shadow-primary/20">
-                {selectedContractIds.length} hợp đồng
-              </div>
-              <div className="w-px h-6 bg-zinc-200/50 mx-1"></div>
-              <button onClick={() => setIsExtendModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
-                <CalendarDays className="w-4 h-4 text-primary" /> Gia hạn
-              </button>
-              <button onClick={() => setIsAdjustRentModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
-                <DollarSign className="w-4 h-4 text-primary" /> Giá thuê
-              </button>
-              <button onClick={() => setIsAdjustDepositModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
-                <FileText className="w-4 h-4 text-primary" /> Tiền cọc
-              </button>
-              <button onClick={() => setIsAdjustPaymentDateModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap">
-                <CalendarDays className="w-4 h-4 text-primary" /> Ngày thu
-              </button>
-              <div className="w-px h-6 bg-zinc-200/50 mx-1"></div>
-              <button onClick={() => setSelectedContractIds([])} className="p-2 text-zinc-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors shrink-0">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-          </>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1514,26 +1485,26 @@ export default function ContractsPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsAdjustRentModalOpen(false); }}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-lg font-bold text-zinc-900">Điều chỉnh giá thuê · {selectedContractIds.length} hợp đồng</h2>
+              <h2 className="text-lg font-bold text-zinc-900">{t("landlordContractsAdjustRentModalTitle").replace("{count}", String(selectedContractIds.length))}</h2>
               <button onClick={() => setIsAdjustRentModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">Cách điều chỉnh</label>
+                <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustMethod")}</label>
                 <div className="flex gap-2 p-1 bg-zinc-100 rounded-xl">
-                  <button onClick={() => setAdjustRentMethod('percent')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'percent' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>Theo %</button>
-                  <button onClick={() => setAdjustRentMethod('add')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'add' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>Cộng/trừ</button>
-                  <button onClick={() => setAdjustRentMethod('set')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'set' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>Đặt giá trị</button>
+                  <button onClick={() => setAdjustRentMethod('percent')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'percent' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>{t("landlordContractsAdjustMethodPercent").replace(" (+/-)", "")}</button>
+                  <button onClick={() => setAdjustRentMethod('add')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'add' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>{t("landlordContractsAdjustMethodAdd")}</button>
+                  <button onClick={() => setAdjustRentMethod('set')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'set' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>{t("landlordContractsAdjustMethodSet")}</button>
                 </div>
               </div>
 
               {adjustRentMethod === 'percent' && (
                 <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">Phần trăm (+/-)</label>
+                  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustMethodPercent")}</label>
                   <div className="relative">
-                    <input type="text" placeholder="VD: 10 hoặc -5" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                    <input type="text" placeholder={t("landlordContractsAdjustMethodPercentPlaceholder")} className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">%</span>
                   </div>
                 </div>
@@ -1541,33 +1512,33 @@ export default function ContractsPage() {
 
               {adjustRentMethod === 'add' && (
                 <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">Số tiền (+/-)</label>
+                  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustValueAmount")}</label>
                   <div className="relative">
                     <input type="text" placeholder="VD: 200000" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">đ</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">₫</span>
                   </div>
                 </div>
               )}
 
               {adjustRentMethod === 'set' && (
                 <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">Giá trị mới</label>
+                  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustNewValue")}</label>
                   <div className="relative">
                     <input type="text" placeholder="VND" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">VNĐ</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">Lý do</label>
-                <textarea placeholder="VD: Điều chỉnh giá định kỳ 2026" rows={3} className="w-full px-4 py-3 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none placeholder:text-zinc-400"></textarea>
+                <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustReason")}</label>
+                <textarea placeholder={t("landlordContractsAdjustReasonPlaceholder")} rows={3} className="w-full px-4 py-3 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none placeholder:text-zinc-400"></textarea>
               </div>
             </div>
 
             <div className="p-6 pt-2 flex justify-between gap-3">
-              <button onClick={() => setIsAdjustRentModalOpen(false)} className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center">Hủy</button>
-              <button onClick={() => { setIsAdjustRentModalOpen(false); showToast(`Đã điều chỉnh giá thuê cho ${selectedContractIds.length} hợp đồng`, "success"); }} className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center">Áp dụng</button>
+              <button onClick={() => setIsAdjustRentModalOpen(false)} className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center">{t("landlordContractsBtnCancel")}</button>
+              <button onClick={() => { setIsAdjustRentModalOpen(false); showToast(t("landlordContractsToastAdjustRentSuccess").replace("{count}", String(selectedContractIds.length)), "success"); }} className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center">{t("landlordContractsApplyBtn")}</button>
             </div>
           </div>
         </div>
@@ -1577,26 +1548,26 @@ export default function ContractsPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsAdjustDepositModalOpen(false); }}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-lg font-bold text-zinc-900">Điều chỉnh tiền cọc · {selectedContractIds.length} hợp đồng</h2>
+              <h2 className="text-lg font-bold text-zinc-900">{t("landlordContractsAdjustDepositModalTitle").replace("{count}", String(selectedContractIds.length))}</h2>
               <button onClick={() => setIsAdjustDepositModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">Cách điều chỉnh</label>
+                <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustMethod")}</label>
                 <div className="flex gap-2 p-1 bg-zinc-100 rounded-xl">
-                  <button onClick={() => setAdjustDepositMethod('percent')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'percent' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>Theo %</button>
-                  <button onClick={() => setAdjustDepositMethod('add')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'add' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>Cộng/trừ</button>
-                  <button onClick={() => setAdjustDepositMethod('set')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'set' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>Đặt giá trị</button>
+                  <button onClick={() => setAdjustDepositMethod('percent')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'percent' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>{t("landlordContractsAdjustMethodPercent").replace(" (+/-)", "")}</button>
+                  <button onClick={() => setAdjustDepositMethod('add')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'add' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>{t("landlordContractsAdjustMethodAdd")}</button>
+                  <button onClick={() => setAdjustDepositMethod('set')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'set' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}>{t("landlordContractsAdjustMethodSet")}</button>
                 </div>
               </div>
 
               {adjustDepositMethod === 'percent' && (
                 <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">Phần trăm (+/-)</label>
+                  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustMethodPercent")}</label>
                   <div className="relative">
-                    <input type="text" placeholder="VD: 10 hoặc -5" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                    <input type="text" placeholder={t("landlordContractsAdjustMethodPercentPlaceholder")} className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">%</span>
                   </div>
                 </div>
@@ -1604,33 +1575,33 @@ export default function ContractsPage() {
 
               {adjustDepositMethod === 'add' && (
                 <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">Số tiền (+/-)</label>
+                  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustValueAmount")}</label>
                   <div className="relative">
                     <input type="text" placeholder="VD: 200000" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">đ</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">₫</span>
                   </div>
                 </div>
               )}
 
               {adjustDepositMethod === 'set' && (
                 <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">Giá trị mới</label>
+                  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustNewValue")}</label>
                   <div className="relative">
                     <input type="text" placeholder="VND" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">VNĐ</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">Lý do</label>
-                <textarea placeholder="VD: Điều chỉnh giá định kỳ 2026" rows={3} className="w-full px-4 py-3 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none placeholder:text-zinc-400"></textarea>
+                <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustReason")}</label>
+                <textarea placeholder={t("landlordContractsAdjustReasonPlaceholder")} rows={3} className="w-full px-4 py-3 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none placeholder:text-zinc-400"></textarea>
               </div>
             </div>
 
             <div className="p-6 pt-2 flex justify-between gap-3">
-              <button onClick={() => setIsAdjustDepositModalOpen(false)} className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center">Hủy</button>
-              <button onClick={() => { setIsAdjustDepositModalOpen(false); showToast(`Đã điều chỉnh tiền cọc cho ${selectedContractIds.length} hợp đồng`, "success"); }} className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center">Áp dụng</button>
+              <button onClick={() => setIsAdjustDepositModalOpen(false)} className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center">{t("landlordContractsBtnCancel")}</button>
+              <button onClick={() => { setIsAdjustDepositModalOpen(false); showToast(t("landlordContractsToastAdjustDepositSuccess").replace("{count}", String(selectedContractIds.length)), "success"); }} className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center">{t("landlordContractsApplyBtn")}</button>
             </div>
           </div>
         </div>
@@ -1640,20 +1611,20 @@ export default function ContractsPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsAdjustPaymentDateModalOpen(false); }}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-lg font-bold text-zinc-900">Đổi ngày thu tiền · {selectedContractIds.length} hợp đồng</h2>
+              <h2 className="text-lg font-bold text-zinc-900">{t("landlordContractsAdjustPaymentDateModalTitle").replace("{count}", String(selectedContractIds.length))}</h2>
               <button onClick={() => setIsAdjustPaymentDateModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">Ngày thu tiền hàng tháng</label>
+                <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustPaymentDayLabel")}</label>
                 <input type="text" placeholder="1-31" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
               </div>
             </div>
             <div className="p-6 pt-2 flex justify-between gap-3">
-              <button onClick={() => setIsAdjustPaymentDateModalOpen(false)} className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center">Hủy</button>
-              <button onClick={() => { setIsAdjustPaymentDateModalOpen(false); showToast(`Đã đổi ngày thu tiền cho ${selectedContractIds.length} hợp đồng`, "success"); }} className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center">Áp dụng</button>
+              <button onClick={() => setIsAdjustPaymentDateModalOpen(false)} className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center">{t("landlordContractsBtnCancel")}</button>
+              <button onClick={() => { setIsAdjustPaymentDateModalOpen(false); showToast(t("landlordContractsToastAdjustPaymentDateSuccess").replace("{count}", String(selectedContractIds.length)), "success"); }} className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center">{t("landlordContractsApplyBtn")}</button>
             </div>
           </div>
         </div>
@@ -1663,37 +1634,37 @@ export default function ContractsPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsExtendModalOpen(false); }}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-xl font-bold text-zinc-900">Gia hạn hợp đồng</h2>
+              <h2 className="text-xl font-bold text-zinc-900">{t("landlordContractsExtendModalTitle")}</h2>
               <button onClick={() => setIsExtendModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">Ngày kết thúc mới <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-zinc-900 mb-1.5">{t("landlordContractsExtendEndDateLabel")} <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <input type="text" placeholder="dd/mm/yyyy" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
                   <CalendarDays className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">Giá thuê mới (VNĐ)</label>
+                <label className="block text-sm font-medium text-zinc-900 mb-1.5">{t("landlordContractsExtendNewRentLabel")}</label>
                 <div className="relative">
                   <input type="text" placeholder="3.000.000" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">VNĐ</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
                 </div>
-                <p className="text-xs text-zinc-500 mt-1.5 font-medium">Để trống nếu giữ nguyên giá hiện tại (3.000.000 ₫)</p>
+                <p className="text-xs text-zinc-500 mt-1.5 font-medium">{t("landlordContractsExtendNewRentHint")}</p>
               </div>
             </div>
             <div className="p-6 pt-2 flex justify-end gap-3">
-              <button onClick={() => setIsExtendModalOpen(false)} className="px-5 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">Huỷ</button>
+              <button onClick={() => setIsExtendModalOpen(false)} className="px-5 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">{t("landlordContractsBtnCancel")}</button>
               <button onClick={() => {
                 if (selectedContract) {
                   setContracts(contracts.map(c => c.id === selectedContract.id ? { ...c, status: 'Đang hiệu lực' } : c));
                 }
                 setIsExtendModalOpen(false);
-                showToast("Đã gia hạn hợp đồng", "success");
-              }} className="px-5 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">Gia hạn</button>
+                showToast(t("landlordContractsToastExtendSuccess"), "success");
+              }} className="px-5 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm">{t("landlordContractsBtnExtend")}</button>
             </div>
           </div>
         </div>
@@ -1703,27 +1674,27 @@ export default function ContractsPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsTerminateModalOpen(false); }}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-xl font-bold text-danger">Chấm dứt hợp đồng</h2>
+              <h2 className="text-xl font-bold text-danger">{t("landlordContractsTerminateModalTitle")}</h2>
               <button onClick={() => setIsTerminateModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">Ngày chấm dứt <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-zinc-900 mb-1.5">{t("landlordContractsTerminatedDateLabel")} <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <input type="text" placeholder="dd/mm/yyyy" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" />
                   <CalendarDays className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">Lý do chấm dứt <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-zinc-900 mb-1.5">{t("landlordContractsTerminateReasonLabel")} <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <select className="w-full pl-3 pr-10 py-2 text-sm border border-zinc-200 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 cursor-pointer">
-                    <option value="">Chọn lý do</option>
-                    <option value="1">Khách không có nhu cầu thuê tiếp</option>
-                    <option value="2">Vi phạm hợp đồng</option>
-                    <option value="3">Thỏa thuận chấm dứt sớm</option>
+                    <option value="">{t("landlordContractsTerminateReasonPlaceholder")}</option>
+                    <option value="1">{t("landlordContractsTerminateReason1")}</option>
+                    <option value="2">{t("landlordContractsTerminateReason2")}</option>
+                    <option value="3">{t("landlordContractsTerminateReason3")}</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                 </div>
@@ -1732,24 +1703,24 @@ export default function ContractsPage() {
               <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-4">
                 <div className="flex items-center gap-2 text-primary font-medium">
                   <Gauge className="w-4 h-4" />
-                  <span>Chỉ số đồng hồ cuối</span>
+                  <span>{t("landlordContractsTerminateEndIndexTitle")}</span>
                 </div>
-                <p className="text-xs text-zinc-500">Ghi chỉ số cuối cùng để tính tiền điện/nước kỳ cuối</p>
+                <p className="text-xs text-zinc-500">{t("landlordContractsTerminateEndIndexHint")}</p>
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold w-12 text-zinc-800">Điện</span>
-                    <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">Cũ: 11</span>
+                    <span className="text-sm font-semibold w-12 text-zinc-800">{t("landlordContractsTerminateLastElec")}</span>
+                    <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">{t("landlordContractsTerminateLastOldPrefix")} 11</span>
                     <div className="relative flex-1">
-                      <input type="text" placeholder="Chỉ số mới" className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary" />
+                      <input type="text" placeholder={t("landlordContractsTerminateNewIndexPlaceholder")} className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary" />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">kWh</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold w-12 text-zinc-800">Nước</span>
-                    <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">Cũ: 12</span>
+                    <span className="text-sm font-semibold w-12 text-zinc-800">{t("landlordContractsTerminateLastWater")}</span>
+                    <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">{t("landlordContractsTerminateLastOldPrefix")} 12</span>
                     <div className="relative flex-1">
-                      <input type="text" placeholder="Chỉ số mới" className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary" />
+                      <input type="text" placeholder={t("landlordContractsTerminateNewIndexPlaceholder")} className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary" />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">m³</span>
                     </div>
                   </div>
@@ -1757,14 +1728,14 @@ export default function ContractsPage() {
               </div>
             </div>
             <div className="p-6 pt-2 flex justify-end gap-3">
-              <button onClick={() => setIsTerminateModalOpen(false)} className="px-5 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">Huỷ</button>
+              <button onClick={() => setIsTerminateModalOpen(false)} className="px-5 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">{t("landlordContractsBtnCancel")}</button>
               <button onClick={() => {
                 if (selectedContract) {
                   setContracts(contracts.map(c => c.id === selectedContract.id ? { ...c, status: 'Đã chấm dứt' } : c));
                 }
                 setIsTerminateModalOpen(false);
-                showToast("Đã chấm dứt hợp đồng", "success");
-              }} className="px-5 py-2 text-sm font-bold text-white bg-danger rounded-lg hover:bg-danger-hover transition-colors shadow-sm">Chấm dứt</button>
+                showToast(t("landlordContractsToastTerminateSuccess"), "success");
+              }} className="px-5 py-2 text-sm font-bold text-white bg-danger rounded-lg hover:bg-danger-hover transition-colors shadow-sm">{t("landlordContractsBtnTerminate")}</button>
             </div>
           </div>
         </div>
@@ -1785,8 +1756,8 @@ export default function ContractsPage() {
                   <FileSignature className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-zinc-900">Tạo hợp đồng mới</h2>
-                  <p className="text-sm text-zinc-500">Hoàn thiện thông tin để tạo hợp đồng điện tử</p>
+                  <h2 className="text-xl font-bold text-zinc-900">{t("landlordContractsCreateTitle")}</h2>
+                  <p className="text-sm text-zinc-500">{t("landlordContractsCreateSubtitle")}</p>
                 </div>
               </div>
               <button
@@ -1806,7 +1777,7 @@ export default function ContractsPage() {
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-colors ${step === 1 ? 'bg-primary text-white shadow-md' : step > 1 ? 'bg-blue-50 text-primary' : 'bg-zinc-100 text-zinc-500'
                     }`}
                 >
-                  {step > 1 ? <Check className="w-4 h-4" /> : <Home className="w-4 h-4" />} Phòng & Khách
+                  {step > 1 ? <Check className="w-4 h-4" /> : <Home className="w-4 h-4" />} {t("landlordContractsCreateStep1Title")}
                 </button>
                 <ChevronRight className="w-4 h-4 text-zinc-300 hidden sm:block" />
 
@@ -1815,7 +1786,7 @@ export default function ContractsPage() {
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-colors ${step === 2 ? 'bg-primary text-white shadow-md' : step > 2 ? 'bg-blue-50 text-primary' : 'bg-zinc-100 text-zinc-500'
                     }`}
                 >
-                  {step > 2 ? <Check className="w-4 h-4" /> : <DollarSign className="w-4 h-4" />} Tài chính & Dịch vụ
+                  {step > 2 ? <Check className="w-4 h-4" /> : <DollarSign className="w-4 h-4" />} {t("landlordContractsCreateStep2Title")}
                 </button>
                 <ChevronRight className="w-4 h-4 text-zinc-300 hidden sm:block" />
 
@@ -1824,26 +1795,26 @@ export default function ContractsPage() {
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-colors ${step === 3 ? 'bg-primary text-white shadow-md' : 'bg-zinc-100 text-zinc-500'
                     }`}
                 >
-                  <FileSignature className="w-4 h-4" /> Chốt hợp đồng
+                  <FileSignature className="w-4 h-4" /> {t("landlordContractsCreateStep3Title")}
                 </button>
               </div>
 
               {step === 1 && (
                 <div className="space-y-8 animate-in fade-in duration-500">
                   <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">Thông tin phòng</h3>
+                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">{t("landlordContractsCreateStep1Subtitle")}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Tòa nhà <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordSetupTotalFloorLabel")} <span className="text-red-500">*</span></label>
                         <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                          <option value="">-- Chọn tòa nhà --</option>
-                          <option value="toaa">Tòa A</option>
+                          <option value="">{t("landlordContractsSelectBuildingPlaceholder")}</option>
+                          <option value="toaa">{currentLocale === 'en' ? 'Building A' : 'Tòa A'}</option>
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Phòng <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordRoomDetailRoomPrefix")} <span className="text-red-500">*</span></label>
                         <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                          <option value="">-- Chọn phòng --</option>
+                          <option value="">{t("landlordContractsSelectRoomPlaceholder")}</option>
                           <option value="101">101</option>
                           <option value="102">102</option>
                         </select>
@@ -1853,16 +1824,16 @@ export default function ContractsPage() {
 
                   <div className="space-y-6">
                     <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                      <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Người đại diện thuê</h3>
-                      <button className="text-sm text-primary font-bold hover:underline">Thêm khách mới</button>
+                      <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">{t("landlordContractsTenantRepSubtitle")}</h3>
+                      <button className="text-sm text-primary font-bold hover:underline">{t("landlordContractsNewCustomerBtn")}</button>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-zinc-700">Khách thuê <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-bold text-zinc-700">{t("landlordContractsTenantLabel")} <span className="text-red-500">*</span></label>
                       <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                        <option value="">-- Tìm khách thuê có sẵn --</option>
+                        <option value="">{t("landlordContractsSearchCustomerPlaceholder")}</option>
                         <option value="kh1">Nguyễn Văn A - 0901234567</option>
                       </select>
-                      <p className="text-xs text-zinc-500 mt-1">Gõ số điện thoại hoặc tên để tìm kiếm</p>
+                      <p className="text-xs text-zinc-500 mt-1">{t("landlordContractsSearchCustomerHint")}</p>
                     </div>
                   </div>
 
@@ -1871,7 +1842,7 @@ export default function ContractsPage() {
                       onClick={() => setStep(2)}
                       className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover shadow-sm transition-all"
                     >
-                      Tiếp theo <ChevronRight className="w-4 h-4" />
+                      {t("landlordSetupNextToStep2")} <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1880,55 +1851,55 @@ export default function ContractsPage() {
               {step === 2 && (
                 <div className="space-y-8 animate-in fade-in duration-500">
                   <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">Tài chính</h3>
+                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">{t("landlordContractsCreateStep2Subtitle")}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Giá thuê (VND/tháng) <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsRentPriceMonthlyLabel")} <span className="text-red-500">*</span></label>
                         <input type="text" defaultValue="3.000.000" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Tiền cọc (VND) <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsDepositLabel")} <span className="text-red-500">*</span></label>
                         <input type="text" defaultValue="3.000.000" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Chu kỳ thu tiền</label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsPaymentCycleLabel")}</label>
                         <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                          <option value="1">1 tháng/lần</option>
-                          <option value="3">3 tháng/lần</option>
-                          <option value="6">6 tháng/lần</option>
-                          <option value="12">1 năm/lần</option>
+                          <option value="1">{t("landlordContractsCycle1Month")}</option>
+                          <option value="3">{t("landlordContractsCycle3Months")}</option>
+                          <option value="6">{t("landlordContractsCycle6Months")}</option>
+                          <option value="12">{t("landlordContractsCycle12Months")}</option>
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Ngày thu tiền hàng tháng</label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsPaymentDateMonthlyLabel")}</label>
                         <input type="number" min="1" max="31" defaultValue="5" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors" />
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">Thời hạn hợp đồng</h3>
+                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">{t("landlordContractsTableHeaderDuration")}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Ngày bắt đầu <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsStartDateLabel")} <span className="text-red-500">*</span></label>
                         <input type="date" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors text-zinc-700" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Ngày kết thúc <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsEndDateLabel")} <span className="text-red-500">*</span></label>
                         <input type="date" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors text-zinc-700" />
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">Chốt chỉ số đồng hồ ban đầu</h3>
+                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">{t("landlordContractsInitialReadingTitle")}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Số điện đầu</label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsInitialReadingElec")}</label>
                         <input type="number" defaultValue="0" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">Số nước đầu</label>
+                        <label className="text-sm font-bold text-zinc-700">{t("landlordContractsInitialReadingWater")}</label>
                         <input type="number" defaultValue="0" className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors" />
                       </div>
                     </div>
@@ -1939,13 +1910,13 @@ export default function ContractsPage() {
                       onClick={() => setStep(1)}
                       className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
                     >
-                      <ChevronLeft className="w-4 h-4" /> Quay lại
+                      <ChevronLeft className="w-4 h-4" /> {t("landlordSetupBackToStep1")}
                     </button>
                     <button
                       onClick={() => setStep(3)}
                       className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover shadow-sm transition-all"
                     >
-                      Tiếp theo <ChevronRight className="w-4 h-4" />
+                      {t("landlordSetupNextToStep2")} <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1957,34 +1928,34 @@ export default function ContractsPage() {
                     <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
                       <FileSignature className="w-8 h-8" />
                     </div>
-                    <h2 className="text-xl font-bold text-zinc-900">Xác nhận tạo hợp đồng</h2>
-                    <p className="text-sm text-zinc-500 mt-1">Bạn có thể tải lên bản scan hợp đồng giấy để lưu trữ.</p>
+                    <h2 className="text-xl font-bold text-zinc-900">{t("landlordContractsStepConfirmTitle")}</h2>
+                    <p className="text-sm text-zinc-500 mt-1">{t("landlordContractsStepConfirmDesc")}</p>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Đính kèm tài liệu</h3>
+                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">{t("landlordContractsCreateStep3Subtitle")}</h3>
                     <div className="border-2 border-dashed border-zinc-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-zinc-50 hover:border-primary transition-colors cursor-pointer group">
                       <ImageIcon className="w-10 h-10 text-zinc-400 group-hover:text-primary mb-3" />
-                      <span className="text-sm font-bold text-zinc-700">Tải lên file PDF hoặc ảnh (tùy chọn)</span>
-                      <span className="text-xs text-zinc-500 mt-1">Giới hạn 10MB</span>
+                      <span className="text-sm font-bold text-zinc-700">{t("landlordContractsUploadDocTitle")}</span>
+                      <span className="text-xs text-zinc-500 mt-1">{t("landlordContractsUploadDocHint")}</span>
                     </div>
                   </div>
 
                   <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-zinc-500 font-medium">Phòng:</span>
-                      <span className="font-bold text-zinc-900">101 - Tòa A</span>
+                      <span className="text-zinc-500 font-medium">{t("landlordRoomDetailRoomPrefix")}:</span>
+                      <span className="font-bold text-zinc-900">101 - {currentLocale === 'en' ? 'Building A' : 'Tòa A'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500 font-medium">Khách thuê:</span>
+                      <span className="text-zinc-500 font-medium">{t("landlordContractsTenantLabel")}:</span>
                       <span className="font-bold text-zinc-900">Nguyễn Văn A</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500 font-medium">Thời hạn:</span>
-                      <span className="font-bold text-zinc-900">1 năm (15/08/2023 - 15/08/2024)</span>
+                      <span className="text-zinc-500 font-medium">{t("landlordContractsDurationLabel")}</span>
+                      <span className="font-bold text-zinc-900">{currentLocale === 'en' ? '1 year (15/08/2023 - 15/08/2024)' : '1 năm (15/08/2023 - 15/08/2024)'}</span>
                     </div>
                     <div className="flex justify-between pt-3 border-t border-zinc-200">
-                      <span className="text-zinc-500 font-medium">Tổng tiền cọc phải thu:</span>
+                      <span className="text-zinc-500 font-medium">{t("landlordContractsTotalDepositDue")}</span>
                       <span className="font-bold text-primary text-base">3.000.000 ₫</span>
                     </div>
                   </div>
@@ -1994,13 +1965,13 @@ export default function ContractsPage() {
                       onClick={() => setStep(2)}
                       className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
                     >
-                      <ChevronLeft className="w-4 h-4" /> Quay lại
+                      <ChevronLeft className="w-4 h-4" /> {t("landlordSetupBackToStep1")}
                     </button>
                     <button
                       onClick={handleFinish}
                       className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover shadow-sm transition-all"
                     >
-                      <Check className="w-4 h-4" /> Ký hợp đồng
+                      <Check className="w-4 h-4" /> {t("landlordContractsSignContractBtn")}
                     </button>
                   </div>
                 </div>
@@ -2022,6 +1993,54 @@ export default function ContractsPage() {
           tenantName={previewModal.tenantName}
           onExportSuccess={fetchContracts}
         />
+      )}
+
+      {/* UNSAVED CHANGES POPUP (RULE 10) */}
+      {showDiscardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-zinc-100 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDiscardModal(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-zinc-900">{t("landlordContractsConfirmCloseTitle")}</h3>
+              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                {t("landlordContractsConfirmCloseDesc")}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDiscardModal(false)}
+                className="px-4 py-2 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
+              >
+                {t("landlordContractsConfirmCloseContinue")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDiscardModal(false);
+                  setIsModalOpen(false);
+                  setTimeout(() => { setIsDirty(false); setStep(1); }, 200);
+                }}
+                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors shadow-xs"
+              >
+                {t("landlordContractsConfirmCloseDiscard")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

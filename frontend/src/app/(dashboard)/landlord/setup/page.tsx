@@ -20,6 +20,7 @@ import {
   Info,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
   setupBoardingHouse,
   type SetupBoardingHousePayload,
@@ -43,51 +44,11 @@ const MAX_FREE_TIER_ROOMS = 10;
 
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-const DEFAULT_SERVICES: ServiceItem[] = [
-  {
-    id: createId(),
-    name: "Điện sinh hoạt",
-    unit: "kWh",
-    price: "3500",
-    isMetered: true,
-    autoApplied: true,
-  },
-  {
-    id: createId(),
-    name: "Nước sinh hoạt",
-    unit: "m³",
-    price: "25000",
-    isMetered: true,
-    autoApplied: true,
-  },
-  {
-    id: createId(),
-    name: "Internet / WiFi",
-    unit: "tháng",
-    price: "100000",
-    isMetered: false,
-    autoApplied: true,
-  },
-];
-
-const DEFAULT_ROOM_TYPES: RoomTypeItem[] = [
-  {
-    id: createId(),
-    name: "Phòng khép kín tiêu chuẩn",
-    description: "Có gác lửng, WC khép kín, kệ bếp nấu ăn riêng",
-  },
-];
-
-const NAME_FORMAT_PRESETS = [
-  { label: "P{floor}0{index} (P101, P102...)", value: "P{floor}0{index}" },
-  { label: "P{floor}{index} (P11, P12...)", value: "P{floor}{index}" },
-  { label: "{floor}0{index} (101, 102...)", value: "{floor}0{index}" },
-  { label: "Phòng {floor}0{index}", value: "Phòng {floor}0{index}" },
-];
-
 export default function SetupWizardPage() {
   const router = useRouter();
   const { buildings, selectBuilding, refreshBuildings, upgradeToLandlord } = useAuth();
+  const t = useTranslations("landlord");
+  const { currentLocale } = useLanguage();
 
   // ─── WIZARD PROGRESS ─────────────────────────────────────────────────────────
   const [step, setStep] = useState<WizardStep>(1);
@@ -99,7 +60,7 @@ export default function SetupWizardPage() {
   const [info, setInfo] = useState({
     name: "",
     description: "",
-    country: "Việt Nam",
+    country: t("landlordSetupCountryDefault"),
     province: "",
     city: "",
     district: "",
@@ -112,8 +73,40 @@ export default function SetupWizardPage() {
   });
 
   // ─── STEP 2 STATE: SERVICES & ROOM TYPES ─────────────────────────────────────
-  const [services, setServices] = useState<ServiceItem[]>(DEFAULT_SERVICES);
-  const [roomTypes, setRoomTypes] = useState<RoomTypeItem[]>(DEFAULT_ROOM_TYPES);
+  const [services, setServices] = useState<ServiceItem[]>(() => [
+    {
+      id: createId(),
+      name: t("landlordSetupDefaultServiceElec"),
+      unit: "kWh",
+      price: "3500",
+      isMetered: true,
+      autoApplied: true,
+    },
+    {
+      id: createId(),
+      name: t("landlordSetupDefaultServiceWater"),
+      unit: "m³",
+      price: "25000",
+      isMetered: true,
+      autoApplied: true,
+    },
+    {
+      id: createId(),
+      name: t("landlordSetupDefaultServiceInternet"),
+      unit: t("landlordSetupDefaultUnitMonth"),
+      price: "100000",
+      isMetered: false,
+      autoApplied: true,
+    },
+  ]);
+
+  const [roomTypes, setRoomTypes] = useState<RoomTypeItem[]>(() => [
+    {
+      id: createId(),
+      name: t("landlordSetupDefaultRoomTypeName"),
+      description: t("landlordSetupDefaultRoomTypeDesc"),
+    },
+  ]);
 
   // ─── STEP 3 STATE: BULK ROOM GENERATION ──────────────────────────────────────
   const [roomsConfig, setRoomsConfig] = useState({
@@ -125,6 +118,19 @@ export default function SetupWizardPage() {
     roomTypeIndex: 0,
     serviceIndices: [0, 1, 2], // default apply initial services
   });
+
+  const nameFormatPresets = useMemo(
+    () => [
+      { label: "P{floor}0{index} (P101, P102...)", value: "P{floor}0{index}" },
+      { label: "P{floor}{index} (P11, P12...)", value: "P{floor}{index}" },
+      { label: "{floor}0{index} (101, 102...)", value: "{floor}0{index}" },
+      {
+        label: `${t("landlordSetupPresetRoomPrefix")} {floor}0{index}`,
+        value: `${t("landlordSetupPresetRoomPrefix")} {floor}0{index}`,
+      },
+    ],
+    [t]
+  );
 
   // ─── HELPERS & TOUCHED DETECTION ─────────────────────────────────────────────
   const isDirty = useMemo(() => {
@@ -174,7 +180,7 @@ export default function SetupWizardPage() {
       {
         id: createId(),
         name: "",
-        unit: "tháng",
+        unit: t("landlordSetupDefaultUnitMonth"),
         price: "0",
         isMetered: false,
         autoApplied: true,
@@ -280,7 +286,9 @@ export default function SetupWizardPage() {
 
     if (isQuotaExceeded) {
       setErrorMessage(
-        `Số phòng (${totalRoomsToCreate}) vượt quá giới hạn gói Miễn phí (${MAX_FREE_TIER_ROOMS} phòng). Vui lòng giảm số tầng hoặc số phòng.`
+        t("landlordSetupErrorQuotaExceeded")
+          .replace("{total}", String(totalRoomsToCreate))
+          .replace("{max}", String(MAX_FREE_TIER_ROOMS))
       );
       return;
     }
@@ -293,7 +301,7 @@ export default function SetupWizardPage() {
       }));
 
     if (cleanedRoomTypes.length === 0) {
-      setErrorMessage("Vui lòng nhập ít nhất một loại phòng hợp lệ.");
+      setErrorMessage(t("landlordSetupErrorNoRoomType"));
       setStep(2);
       return;
     }
@@ -326,7 +334,7 @@ export default function SetupWizardPage() {
       district: info.district.trim(),
       province: info.province.trim(),
       city: info.city.trim() || undefined,
-      country: info.country.trim() || "Việt Nam",
+      country: info.country.trim() || t("landlordSetupCountryDefault"),
       totalFloor: info.totalFloor ? parseInt(info.totalFloor, 10) : undefined,
       builtAt: info.builtAt,
       thumbnail: info.thumbnail.trim() || undefined,
@@ -372,7 +380,7 @@ export default function SetupWizardPage() {
       // Granted dashboard access upon successful creation -> navigate to landlord overview
       router.push("/landlord");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Đã có lỗi xảy ra khi tạo nhà trọ.";
+      const msg = err instanceof Error ? err.message : t("landlordSetupErrorGeneric");
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
@@ -407,13 +415,13 @@ export default function SetupWizardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-bold border border-[#2AC1BC]/20">
-              <Sparkles className="w-3.5 h-3.5" /> Quy trình khởi tạo 3 bước (UC-L-01)
+              <Sparkles className="w-3.5 h-3.5" /> {t("landlordSetupBadge")}
             </div>
             <h1 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
-              Thiết lập nhà trọ & Tạo phòng hàng loạt
+              {t("landlordSetupTitle")}
             </h1>
             <p className="mt-1 text-sm text-zinc-500 font-medium">
-              Chỉ mất 2 phút để hoàn tất hồ sơ pháp lý, bảng dịch vụ và cấu hình sơ đồ phòng ban đầu.
+              {t("landlordSetupSubtitle")}
             </p>
           </div>
           <button
@@ -421,7 +429,7 @@ export default function SetupWizardPage() {
             onClick={handleCancel}
             className="self-start sm:self-auto text-xs font-bold text-zinc-400 hover:text-zinc-700 px-3 py-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors"
           >
-            Hủy bỏ
+            {t("landlordSetupCancel")}
           </button>
         </div>
 
@@ -430,16 +438,18 @@ export default function SetupWizardPage() {
           <StepperItem
             stepNumber={1}
             currentStep={step}
-            title="Thông tin chung"
-            desc="Địa chỉ & Tòa nhà"
+            stepLabel={t("landlordSetupStepNumber")}
+            title={t("landlordSetupStep1Title")}
+            desc={t("landlordSetupStep1Desc")}
             icon={<Building2 className="w-4 h-4" />}
             onClick={() => step > 1 && setStep(1)}
           />
           <StepperItem
             stepNumber={2}
             currentStep={step}
-            title="Dịch vụ & Loại phòng"
-            desc="Biểu giá & Tiện ích"
+            stepLabel={t("landlordSetupStepNumber")}
+            title={t("landlordSetupStep2Title")}
+            desc={t("landlordSetupStep2Desc")}
             icon={<Layers className="w-4 h-4" />}
             onClick={() => {
               if (step > 2 || isStep1Valid) setStep(2);
@@ -448,8 +458,9 @@ export default function SetupWizardPage() {
           <StepperItem
             stepNumber={3}
             currentStep={step}
-            title="Tạo phòng hàng loạt"
-            desc="Sơ đồ & Preview"
+            stepLabel={t("landlordSetupStepNumber")}
+            title={t("landlordSetupStep3Title")}
+            desc={t("landlordSetupStep3Desc")}
             icon={<Sparkles className="w-4 h-4" />}
             onClick={() => {
               if (isStep1Valid && isStep2Valid) setStep(3);
@@ -466,7 +477,7 @@ export default function SetupWizardPage() {
         >
           <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold text-red-900">Không thể hoàn tất tạo nhà trọ</p>
+            <p className="font-bold text-red-900">{t("landlordSetupErrorTitle")}</p>
             <p className="text-red-700 leading-relaxed">{errorMessage}</p>
           </div>
         </div>
@@ -481,83 +492,87 @@ export default function SetupWizardPage() {
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-zinc-900">1. Thông tin cơ sở nhà trọ</h2>
+                <h2 className="text-lg font-black text-zinc-900">{t("landlordSetupSection1Title")}</h2>
                 <p className="text-xs text-zinc-500 font-medium">
-                  Tên hiển thị và địa chỉ chính xác giúp quản lý hóa đơn và hợp đồng thuê.
+                  {t("landlordSetupSection1Desc")}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2">
-                <Field label="Tên nhà trọ / Tòa nhà" required hint="Tên sẽ hiển thị trên thanh chọn nhà trọ">
+                <Field
+                  label={t("landlordSetupNameLabel")}
+                  required
+                  hint={t("landlordSetupNameHint")}
+                >
                   <input
                     type="text"
                     required
                     value={info.name}
                     onChange={(e) => updateInfo("name", e.target.value)}
-                    placeholder="Ví dụ: KTX Ánh Dương 1, Tòa nhà Bình An..."
+                    placeholder={t("landlordSetupNamePlaceholder")}
                     className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                   />
                 </Field>
               </div>
 
-              <Field label="Số nhà" required>
+              <Field label={t("landlordSetupHouseNumberLabel")} required>
                 <input
                   type="text"
                   required
                   value={info.houseNumber}
                   onChange={(e) => updateInfo("houseNumber", e.target.value)}
-                  placeholder="Ví dụ: 12/4, 45B..."
+                  placeholder={t("landlordSetupHouseNumberPlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label="Tên đường / Phố" required>
+              <Field label={t("landlordSetupStreetLabel")} required>
                 <input
                   type="text"
                   required
                   value={info.street}
                   onChange={(e) => updateInfo("street", e.target.value)}
-                  placeholder="Ví dụ: Võ Văn Ngân, Lê Văn Việt..."
+                  placeholder={t("landlordSetupStreetPlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label="Phường / Xã" required>
+              <Field label={t("landlordSetupWardLabel")} required>
                 <input
                   type="text"
                   required
                   value={info.ward}
                   onChange={(e) => updateInfo("ward", e.target.value)}
-                  placeholder="Ví dụ: Phường Linh Trung"
+                  placeholder={t("landlordSetupWardPlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label="Quận / Huyện" required>
+              <Field label={t("landlordSetupDistrictLabel")} required>
                 <input
                   type="text"
                   required
                   value={info.district}
                   onChange={(e) => updateInfo("district", e.target.value)}
-                  placeholder="Ví dụ: TP. Thủ Đức, Quận 9..."
+                  placeholder={t("landlordSetupDistrictPlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label="Tỉnh / Thành phố" required>
+              <Field label={t("landlordSetupProvinceLabel")} required>
                 <input
                   type="text"
                   required
                   value={info.province}
                   onChange={(e) => updateInfo("province", e.target.value)}
-                  placeholder="Ví dụ: TP. Hồ Chí Minh, Hà Nội..."
+                  placeholder={t("landlordSetupProvincePlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label="Quốc gia" required>
+              <Field label={t("landlordSetupCountryLabel")} required>
                 <input
                   type="text"
                   required
@@ -567,19 +582,22 @@ export default function SetupWizardPage() {
                 />
               </Field>
 
-              <Field label="Tổng số tầng của tòa nhà" hint="Dùng để tự động điền cấu hình tạo phòng">
+              <Field
+                label={t("landlordSetupTotalFloorLabel")}
+                hint={t("landlordSetupTotalFloorHint")}
+              >
                 <input
                   type="number"
                   min="1"
                   max="100"
                   value={info.totalFloor}
                   onChange={(e) => updateInfo("totalFloor", e.target.value)}
-                  placeholder="Ví dụ: 3"
+                  placeholder={t("landlordSetupTotalFloorPlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label="Năm / Ngày hoàn thành xây dựng" required>
+              <Field label={t("landlordSetupBuiltAtLabel")} required>
                 <input
                   type="date"
                   required
@@ -590,24 +608,30 @@ export default function SetupWizardPage() {
               </Field>
 
               <div className="md:col-span-2">
-                <Field label="Ảnh đại diện (URL Cloudinary hoặc hình ảnh)" hint="Tùy chọn tải ảnh nhà trọ">
+                <Field
+                  label={t("landlordSetupThumbnailLabel")}
+                  hint={t("landlordSetupThumbnailHint")}
+                >
                   <input
                     type="url"
                     value={info.thumbnail}
                     onChange={(e) => updateInfo("thumbnail", e.target.value)}
-                    placeholder="https://res.cloudinary.com/..."
+                    placeholder={t("landlordSetupThumbnailPlaceholder")}
                     className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                   />
                 </Field>
               </div>
 
               <div className="md:col-span-2">
-                <Field label="Mô tả tóm tắt tòa nhà" hint="Tiện ích xung quanh, nội quy cơ bản...">
+                <Field
+                  label={t("landlordSetupDescriptionLabel")}
+                  hint={t("landlordSetupDescriptionHint")}
+                >
                   <textarea
                     rows={3}
                     value={info.description}
                     onChange={(e) => updateInfo("description", e.target.value)}
-                    placeholder="Gần các trường đại học, khu vực an ninh cao, có bảo vệ 24/7..."
+                    placeholder={t("landlordSetupDescriptionPlaceholder")}
                     className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15 resize-none"
                   />
                 </Field>
@@ -621,7 +645,7 @@ export default function SetupWizardPage() {
               onClick={handleCancel}
               className="px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-colors"
             >
-              Hủy bỏ
+              {t("landlordSetupCancel")}
             </button>
             <button
               type="button"
@@ -629,7 +653,7 @@ export default function SetupWizardPage() {
               onClick={() => setStep(2)}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-sm hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Tiếp tục sang bước 2 <ChevronRight className="w-4 h-4" />
+              {t("landlordSetupNextToStep2")} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </section>
@@ -646,9 +670,9 @@ export default function SetupWizardPage() {
                   <Wrench className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-zinc-900">2a. Dịch vụ ban đầu</h2>
+                  <h2 className="text-lg font-black text-zinc-900">{t("landlordSetupSection2aTitle")}</h2>
                   <p className="text-xs text-zinc-500 font-medium">
-                    Các dịch vụ dùng để tính tiền điện, nước, dịch vụ kèm theo hàng tháng.
+                    {t("landlordSetupSection2aDesc")}
                   </p>
                 </div>
               </div>
@@ -657,14 +681,14 @@ export default function SetupWizardPage() {
                 onClick={addService}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
               >
-                <Plus className="w-3.5 h-3.5" /> Thêm dịch vụ
+                <Plus className="w-3.5 h-3.5" /> {t("landlordSetupAddService")}
               </button>
             </div>
 
             <div className="space-y-3">
               {services.length === 0 ? (
                 <div className="p-4 rounded-2xl border border-dashed border-zinc-200 text-center text-xs text-zinc-400">
-                  Chưa có dịch vụ nào. Bấm &quot;Thêm dịch vụ&quot; để thiết lập biểu phí.
+                  {t("landlordSetupNoServices")}
                 </div>
               ) : (
                 services.map((service, index) => (
@@ -675,20 +699,20 @@ export default function SetupWizardPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                       <div className="sm:col-span-4">
                         <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                          Tên dịch vụ #{index + 1}
+                          {t("landlordSetupServiceNameLabel").replace("{index}", String(index + 1))}
                         </label>
                         <input
                           type="text"
                           value={service.name}
                           onChange={(e) => updateService(service.id, "name", e.target.value)}
-                          placeholder="Ví dụ: Điện, Nước, WiFi..."
+                          placeholder={t("landlordSetupServiceNamePlaceholder")}
                           className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                         />
                       </div>
 
                       <div className="sm:col-span-3">
                         <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                          Đơn giá (VNĐ)
+                          {t("landlordSetupServicePriceLabel")}
                         </label>
                         <input
                           type="number"
@@ -703,13 +727,13 @@ export default function SetupWizardPage() {
 
                       <div className="sm:col-span-2">
                         <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                          Đơn vị
+                          {t("landlordSetupServiceUnitLabel")}
                         </label>
                         <input
                           type="text"
                           value={service.unit}
                           onChange={(e) => updateService(service.id, "unit", e.target.value)}
-                          placeholder="kWh, m³..."
+                          placeholder={t("landlordSetupServiceUnitPlaceholder")}
                           className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                         />
                       </div>
@@ -724,7 +748,7 @@ export default function SetupWizardPage() {
                             }
                             className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] h-3.5 w-3.5"
                           />
-                          Đồng hồ
+                          {t("landlordSetupServiceMetered")}
                         </label>
 
                         <label className="flex items-center gap-1.5 text-xs font-medium text-zinc-700 cursor-pointer">
@@ -736,7 +760,7 @@ export default function SetupWizardPage() {
                             }
                             className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] h-3.5 w-3.5"
                           />
-                          Tự áp dụng
+                          {t("landlordSetupServiceAutoApplied")}
                         </label>
                       </div>
 
@@ -745,7 +769,7 @@ export default function SetupWizardPage() {
                           type="button"
                           onClick={() => removeService(service.id)}
                           className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Xóa dịch vụ"
+                          title={t("landlordSetupDeleteService")}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -766,13 +790,13 @@ export default function SetupWizardPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-black text-zinc-900">2b. Loại phòng</h2>
+                    <h2 className="text-lg font-black text-zinc-900">{t("landlordSetupSection2bTitle")}</h2>
                     <span className="text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-600 px-2 py-0.5 rounded-md border border-red-200">
-                      Bắt buộc ≥ 1 loại
+                      {t("landlordSetupSection2bRequired")}
                     </span>
                   </div>
                   <p className="text-xs text-zinc-500 font-medium">
-                    Phân loại phòng (Studio, Gác lửng, 1PN...) để gán cho các phòng tạo ở Bước 3.
+                    {t("landlordSetupSection2bDesc")}
                   </p>
                 </div>
               </div>
@@ -781,7 +805,7 @@ export default function SetupWizardPage() {
                 onClick={addRoomType}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
               >
-                <Plus className="w-3.5 h-3.5" /> Thêm loại phòng
+                <Plus className="w-3.5 h-3.5" /> {t("landlordSetupAddRoomType")}
               </button>
             </div>
 
@@ -794,27 +818,28 @@ export default function SetupWizardPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                     <div className="sm:col-span-5">
                       <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                        Tên loại phòng #{index + 1} <span className="text-red-500">*</span>
+                        {t("landlordSetupRoomTypeNameLabel").replace("{index}", String(index + 1))}{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={rt.name}
                         onChange={(e) => updateRoomType(rt.id, "name", e.target.value)}
-                        placeholder="Ví dụ: Studio ban công, Phòng đơn..."
+                        placeholder={t("landlordSetupRoomTypeNamePlaceholder")}
                         className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                       />
                     </div>
 
                     <div className="sm:col-span-6">
                       <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                        Mô tả đặc điểm tiện nghi
+                        {t("landlordSetupRoomTypeDescLabel")}
                       </label>
                       <input
                         type="text"
                         value={rt.description ?? ""}
                         onChange={(e) => updateRoomType(rt.id, "description", e.target.value)}
-                        placeholder="Ví dụ: Có máy lạnh, tủ lạnh, giường nệm..."
+                        placeholder={t("landlordSetupRoomTypeDescPlaceholder")}
                         className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                       />
                     </div>
@@ -825,7 +850,7 @@ export default function SetupWizardPage() {
                           type="button"
                           onClick={() => removeRoomType(rt.id)}
                           className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Xóa loại phòng"
+                          title={t("landlordSetupDeleteRoomType")}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -843,7 +868,7 @@ export default function SetupWizardPage() {
               onClick={() => setStep(1)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" /> Quay lại Bước 1
+              <ChevronLeft className="w-4 h-4" /> {t("landlordSetupBackToStep1")}
             </button>
             <button
               type="button"
@@ -851,7 +876,7 @@ export default function SetupWizardPage() {
               onClick={() => setStep(3)}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-sm hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Tiếp tục sang bước 3 <ChevronRight className="w-4 h-4" />
+              {t("landlordSetupNextToStep3")} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </section>
@@ -868,15 +893,15 @@ export default function SetupWizardPage() {
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-zinc-900">3. Thiết lập tạo phòng hàng loạt</h2>
+                  <h2 className="text-lg font-black text-zinc-900">{t("landlordSetupSection3Title")}</h2>
                   <p className="text-xs text-zinc-500 font-medium">
-                    Hệ thống tự động sinh số phòng và gán loại phòng, dịch vụ đi kèm.
+                    {t("landlordSetupSection3Desc")}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Số tầng tạo phòng" required>
+                <Field label={t("landlordSetupFloorCountLabel")} required>
                   <input
                     type="number"
                     min="1"
@@ -892,7 +917,7 @@ export default function SetupWizardPage() {
                   />
                 </Field>
 
-                <Field label="Số phòng mỗi tầng" required>
+                <Field label={t("landlordSetupRoomsPerFloorLabel")} required>
                   <input
                     type="number"
                     min="1"
@@ -910,9 +935,9 @@ export default function SetupWizardPage() {
 
                 <div className="sm:col-span-2">
                   <Field
-                    label="Mẫu đánh số phòng (Template)"
+                    label={t("landlordSetupNameFormatLabel")}
                     required
-                    hint="{floor} là số tầng, {index} là số thứ tự phòng trong tầng"
+                    hint={t("landlordSetupNameFormatHint")}
                   >
                     <input
                       type="text"
@@ -927,7 +952,7 @@ export default function SetupWizardPage() {
                       className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                     />
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {NAME_FORMAT_PRESETS.map((preset) => (
+                      {nameFormatPresets.map((preset) => (
                         <button
                           key={preset.value}
                           type="button"
@@ -950,7 +975,7 @@ export default function SetupWizardPage() {
                   </Field>
                 </div>
 
-                <Field label="Diện tích trung bình (m²)">
+                <Field label={t("landlordSetupAreaLabel")}>
                   <input
                     type="number"
                     min="1"
@@ -967,7 +992,7 @@ export default function SetupWizardPage() {
                   />
                 </Field>
 
-                <Field label="Sức chứa tối đa (người)">
+                <Field label={t("landlordSetupMaxOccupantsLabel")}>
                   <input
                     type="number"
                     min="1"
@@ -984,7 +1009,7 @@ export default function SetupWizardPage() {
                 </Field>
 
                 <div className="sm:col-span-2">
-                  <Field label="Gán loại phòng mặc định" required>
+                  <Field label={t("landlordSetupDefaultRoomTypeLabel")} required>
                     <select
                       value={roomsConfig.roomTypeIndex}
                       onChange={(e) =>
@@ -1008,7 +1033,7 @@ export default function SetupWizardPage() {
 
                 <div className="sm:col-span-2">
                   <label className="text-xs font-bold text-zinc-700 block mb-2">
-                    Dịch vụ tự động gán vào từng phòng:
+                    {t("landlordSetupAutoAssignServicesLabel")}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {services
@@ -1050,10 +1075,10 @@ export default function SetupWizardPage() {
                 <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[#2AC1BC]" />
-                    <h3 className="text-sm font-black text-zinc-900">Xem trước sơ đồ phòng</h3>
+                    <h3 className="text-sm font-black text-zinc-900">{t("landlordSetupPreviewTitle")}</h3>
                   </div>
                   <span className="text-xs font-extrabold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2.5 py-0.5 rounded-full">
-                    {totalRoomsToCreate} phòng
+                    {totalRoomsToCreate} {t("landlordSetupRoomsTotal")}
                   </span>
                 </div>
 
@@ -1062,21 +1087,24 @@ export default function SetupWizardPage() {
                   <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-xs text-amber-900 space-y-1.5 animate-in fade-in">
                     <div className="flex items-center gap-2 font-bold text-amber-900">
                       <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      Vượt quá giới hạn gói Free ({totalRoomsToCreate}/{MAX_FREE_TIER_ROOMS} phòng)
+                      {t("landlordSetupQuotaExceededTitle")
+                        .replace("{total}", String(totalRoomsToCreate))
+                        .replace("{max}", String(MAX_FREE_TIER_ROOMS))}
                     </div>
                     <p className="text-amber-800 leading-relaxed font-medium">
-                      Gói tài khoản Miễn phí chỉ cho phép quản lý tối đa {MAX_FREE_TIER_ROOMS} phòng.
-                      Vui lòng giảm số tầng hoặc số phòng mỗi tầng để có thể khởi tạo.
+                      {t("landlordSetupQuotaExceededDesc").replace("{max}", String(MAX_FREE_TIER_ROOMS))}
                     </p>
                   </div>
                 ) : (
                   <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900 font-semibold">
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      Hạn mức gói Free:
+                      {t("landlordSetupQuotaLimitLabel")}
                     </span>
                     <span className="font-extrabold">
-                      {totalRoomsToCreate} / {MAX_FREE_TIER_ROOMS} phòng
+                      {t("landlordSetupQuotaRatio")
+                        .replace("{total}", String(totalRoomsToCreate))
+                        .replace("{max}", String(MAX_FREE_TIER_ROOMS))}
                     </span>
                   </div>
                 )}
@@ -1090,10 +1118,10 @@ export default function SetupWizardPage() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-black text-zinc-600 uppercase tracking-wider">
-                          Tầng {group.floor}
+                          {t("landlordSetupFloorPrefix")} {group.floor}
                         </span>
                         <span className="text-[10px] text-zinc-400 font-bold">
-                          {group.roomNumbers.length} phòng
+                          {t("landlordSetupPreviewFloorRooms").replace("{count}", String(group.roomNumbers.length))}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -1112,7 +1140,7 @@ export default function SetupWizardPage() {
 
                 <div className="pt-2 text-[11px] text-zinc-400 flex items-center gap-1.5 border-t border-zinc-100">
                   <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                  Bạn có thể chỉnh sửa lại giá thuê, diện tích từng phòng sau khi tạo.
+                  {t("landlordSetupPreviewHint")}
                 </div>
               </div>
             </div>
@@ -1126,7 +1154,7 @@ export default function SetupWizardPage() {
               onClick={() => setStep(2)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" /> Quay lại Bước 2
+              <ChevronLeft className="w-4 h-4" /> {t("landlordSetupBackToStep2")}
             </button>
             <button
               type="button"
@@ -1137,12 +1165,12 @@ export default function SetupWizardPage() {
               {isSubmitting ? (
                 <>
                   <LoaderCircle className="w-4 h-4 animate-spin" />
-                  Đang thiết lập dữ liệu...
+                  {t("landlordSetupSubmitting")}
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  Hoàn thành & Khởi tạo nhà trọ
+                  {t("landlordSetupSubmit")}
                 </>
               )}
             </button>
@@ -1168,10 +1196,9 @@ export default function SetupWizardPage() {
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-zinc-900">Xác nhận đóng form</h3>
+              <h3 className="text-lg font-black text-zinc-900">{t("landlordSetupConfirmCloseTitle")}</h3>
               <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                Bạn đã nhập một số dữ liệu cho nhà trọ này. Nếu thoát bây giờ, các thông tin đã điền
-                sẽ không được lưu lại.
+                {t("landlordSetupConfirmCloseDesc")}
               </p>
             </div>
 
@@ -1181,14 +1208,14 @@ export default function SetupWizardPage() {
                 onClick={() => setShowCancelModal(false)}
                 className="px-4 py-2 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordSetupConfirmCloseContinue")}
               </button>
               <button
                 type="button"
                 onClick={confirmDiscardAndExit}
                 className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors shadow-xs"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordSetupConfirmCloseDiscard")}
               </button>
             </div>
           </div>
@@ -1203,6 +1230,7 @@ export default function SetupWizardPage() {
 function StepperItem({
   stepNumber,
   currentStep,
+  stepLabel,
   title,
   desc,
   icon,
@@ -1210,6 +1238,7 @@ function StepperItem({
 }: {
   stepNumber: WizardStep;
   currentStep: WizardStep;
+  stepLabel: string;
   title: string;
   desc: string;
   icon: React.ReactNode;
@@ -1244,7 +1273,7 @@ function StepperItem({
       <div className="min-w-0 hidden sm:block">
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-black uppercase text-zinc-400">
-            Bước {stepNumber}
+            {stepLabel} {stepNumber}
           </span>
         </div>
         <p

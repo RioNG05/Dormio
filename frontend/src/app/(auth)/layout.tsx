@@ -3,12 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { Building2, CheckCircle2, TrendingUp, Zap, Sparkles, ShieldCheck, Star } from "lucide-react";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
+import { formatCurrency } from "@/utils";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations("auth");
+  const { currentLocale } = useLanguage();
+
   return (
     <div className="flex min-h-screen bg-white">
       {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding) */}
@@ -26,7 +31,7 @@ export default function AuthLayout({
           </Link>
 
           <Link href="/" className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors">
-            ← Trang chủ
+            {t("authLayoutBackHome")}
           </Link>
         </div>
 
@@ -37,7 +42,7 @@ export default function AuthLayout({
 
         {/* Footer Legal Note */}
         <div className="pt-6 border-t border-zinc-100 text-center sm:text-left text-[11px] text-zinc-400 font-medium">
-          © {new Date().getFullYear()} Dormio Platform. Nền tảng quản lý & cho thuê nhà trọ số 1 Việt Nam.
+          {t("authLayoutFooterLegal", { year: new Date().getFullYear() })}
         </div>
       </div>
 
@@ -62,33 +67,33 @@ export default function AuthLayout({
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-white">Trọ Cao Cấp An Bình - P.302</h3>
-                  <p className="text-[11px] text-zinc-400 font-medium">123 Nguyễn Huệ, Quận 1, TP.HCM</p>
+                  <h3 className="font-extrabold text-sm text-white">{t("authLayoutShowcaseRoomTitle")}</h3>
+                  <p className="text-[11px] text-zinc-400 font-medium">{t("authLayoutShowcaseRoomAddress")}</p>
                 </div>
               </div>
               <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-full border border-emerald-500/30">
-                Đang hợp đồng
+                {t("authLayoutShowcaseStatusActive")}
               </span>
             </div>
 
             {/* 3 Metric Stat Boxes */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">Tiền phòng</span>
-                <div className="text-base font-black text-white">4.500.000đ</div>
-                <span className="text-[9px] text-emerald-400 font-extrabold block">▲ Đã thu</span>
+                <span className="text-[10px] text-zinc-400 font-bold block">{t("authLayoutShowcaseMetricRent")}</span>
+                <div className="text-base font-black text-white">{formatCurrency(4500000, currentLocale)}</div>
+                <span className="text-[9px] text-emerald-400 font-extrabold block">{t("authLayoutShowcaseMetricCollected")}</span>
               </div>
 
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">Điện & Nước</span>
-                <div className="text-base font-black text-white">680.000đ</div>
-                <span className="text-[9px] text-[#2AC1BC] font-extrabold block">Chốt OCR tự động</span>
+                <span className="text-[10px] text-zinc-400 font-bold block">{t("authLayoutShowcaseMetricUtilities")}</span>
+                <div className="text-base font-black text-white">{formatCurrency(680000, currentLocale)}</div>
+                <span className="text-[9px] text-[#2AC1BC] font-extrabold block">{t("authLayoutShowcaseMetricAutoOcr")}</span>
               </div>
 
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">Tỷ lệ lấp đầy</span>
+                <span className="text-[10px] text-zinc-400 font-bold block">{t("authLayoutShowcaseMetricOccupancy")}</span>
                 <div className="text-base font-black text-white">98.5%</div>
-                <span className="text-[9px] text-[#FF6B35] font-extrabold block">+4.2% so với T12</span>
+                <span className="text-[9px] text-[#FF6B35] font-extrabold block">{t("authLayoutShowcaseMetricOccupancyGrowth")}</span>
               </div>
             </div>
 
@@ -99,12 +104,12 @@ export default function AuthLayout({
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-white">Thanh toán VietQR tự động</h4>
-                  <p className="text-[10px] text-zinc-400 font-medium">Nhận thông báo tức thì & Gạch nợ 0.5s</p>
+                  <h4 className="text-xs font-black text-white">{t("authLayoutShowcaseVietQrTitle")}</h4>
+                  <p className="text-[10px] text-zinc-400 font-medium">{t("authLayoutShowcaseVietQrDesc")}</p>
                 </div>
               </div>
               <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-lg shrink-0">
-                Thành công
+                {t("authLayoutShowcaseVietQrSuccess")}
               </span>
             </div>
 
@@ -114,15 +119,15 @@ export default function AuthLayout({
                 NQ
               </div>
               <div className="space-y-0.5">
-                <h5 className="text-xs font-extrabold text-white">Anh Nguyễn Quốc Nam</h5>
-                <p className="text-[10px] text-zinc-400 font-medium">Chủ chuỗi 150 phòng trọ tại Bình Thạnh</p>
+                <h5 className="text-xs font-extrabold text-white">{t("authLayoutTestimonialAuthor")}</h5>
+                <p className="text-[10px] text-zinc-400 font-medium">{t("authLayoutTestimonialRole")}</p>
                 <div className="flex items-center gap-1 text-[10px] text-amber-400 font-black pt-0.5">
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
-                  <span className="text-zinc-300 ml-1">"Tiết kiệm 80% thời gian chốt số"</span>
+                  <span className="text-zinc-300 ml-1">{t("authLayoutTestimonialQuote")}</span>
                 </div>
               </div>
             </div>
