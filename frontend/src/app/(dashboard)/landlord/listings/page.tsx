@@ -26,12 +26,14 @@ import {
   ShieldCheck,
   Clock,
   Loader2,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import {
   postService,
   PostListing,
   PostQuotaStatus,
+  UnlistedVacantRoom,
 } from "@/services/post.service";
 
 export default function ListingsPage() {
@@ -52,6 +54,7 @@ export default function ListingsPage() {
   // Data states
   const [listings, setListings] = useState<PostListing[]>([]);
   const [quota, setQuota] = useState<PostQuotaStatus | null>(null);
+  const [unlistedRooms, setUnlistedRooms] = useState<UnlistedVacantRoom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -64,7 +67,7 @@ export default function ListingsPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [quotaRes, listingsRes] = await Promise.allSettled([
+      const [quotaRes, listingsRes, unlistedRes] = await Promise.allSettled([
         postService.getQuota(),
         postService.getMyListings({
           page,
@@ -72,6 +75,7 @@ export default function ListingsPage() {
           status: statusFilter || undefined,
           search: searchQuery || undefined,
         }),
+        postService.getUnlistedRooms(),
       ]);
 
       if (quotaRes.status === "fulfilled") {
@@ -91,70 +95,25 @@ export default function ListingsPage() {
       }
 
       if (listingsRes.status === "fulfilled") {
-        setListings(listingsRes.value.data);
-        setTotalItems(listingsRes.value.meta.total);
-        setTotalPages(listingsRes.value.meta.totalPages);
+        setListings(listingsRes.value.data || []);
+        setTotalItems(listingsRes.value.meta?.total || 0);
+        setTotalPages(listingsRes.value.meta?.totalPages || 1);
       } else {
-        // Fallback demo data if backend is offline
-        setListings([
-          {
-            id: "post-demo-1",
-            postedBy: "user-1",
-            roomId: "room-101",
-            title: "Cho thuê phòng Studio cao cấp Quận 1 - Full nội thất, ban công riêng",
-            content: "Toà nhà Dormio Premier 123 Nguyễn Huệ, an ninh 24/7, giờ giấc tự do, bếp riêng...",
-            depositAmount: 3500000,
-            status: "posted",
-            sourceType: "free_quote",
-            createdAt: new Date().toISOString(),
-            viewsCount: 142,
-            images: [
-              {
-                id: "img-1",
-                url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-              },
-            ],
-            room: {
-              id: "room-101",
-              roomNumber: "101",
-              floor: 1,
-              area: 28,
-              roomTypeName: "Studio",
-              boardingHouseName: "Dormio Premier Quận 1",
-            },
-          },
-          {
-            id: "post-demo-2",
-            postedBy: "user-1",
-            roomId: "room-202",
-            title: "Phòng trọ sinh viên tiện nghi gần ĐH Quốc Gia Cầu Giấy, giá cực tốt",
-            content: "Phòng mới xây 100%, đầy đủ máy lạnh, nước nóng, khoá vân tay, wifi tốc độ cao.",
-            depositAmount: 2000000,
-            status: "posted",
-            sourceType: "purchased",
-            createdAt: new Date().toISOString(),
-            viewsCount: 89,
-            images: [
-              {
-                id: "img-2",
-                url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-              },
-            ],
-            room: {
-              id: "room-202",
-              roomNumber: "202",
-              floor: 2,
-              area: 22,
-              roomTypeName: "Tiêu chuẩn",
-              boardingHouseName: "Dormio Campus Cầu Giấy",
-            },
-          },
-        ]);
-        setTotalItems(2);
+        setListings([]);
+        setTotalItems(0);
         setTotalPages(1);
+      }
+
+      if (unlistedRes.status === "fulfilled") {
+        setUnlistedRooms(unlistedRes.value || []);
+      } else {
+        setUnlistedRooms([]);
       }
     } catch (err: any) {
       console.error("Error loading listings data:", err);
+      setListings([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
@@ -294,6 +253,54 @@ export default function ListingsPage() {
           </div>
         </div>
       </div>
+
+      {/* UC-L-12: AI Rental Post Suggestions for Unlisted Vacant Rooms */}
+      {unlistedRooms.length > 0 && (
+        <div className="bg-linear-to-r from-teal-950 via-zinc-900 to-zinc-900 border border-teal-800/40 rounded-3xl p-5 sm:p-6 text-white shadow-lg space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-300" /> Gợi ý AI (UC-L-12)
+                </span>
+                <span className="text-xs text-zinc-300">Phát hiện {unlistedRooms.length} phòng trống chưa có tin đăng</span>
+              </div>
+              <h3 className="text-base font-bold text-white">Đăng tin tìm khách ngay để tối ưu tỷ lệ lấp đầy</h3>
+            </div>
+            <Link
+              href="/landlord/listings/create"
+              className="text-xs font-bold text-[#2AC1BC] hover:underline"
+            >
+              Xem tất cả phòng &rarr;
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {unlistedRooms.slice(0, 3).map((room) => (
+              <div
+                key={room.roomId}
+                className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#2AC1BC]/50 transition-all flex items-center justify-between gap-3"
+              >
+                <div className="space-y-1 text-xs">
+                  <div className="font-bold text-white flex items-center gap-1.5">
+                    <span>P.{room.roomNumber} (Tầng {room.floor})</span>
+                    <span className="text-[10px] text-[#2AC1BC] font-semibold">• {room.roomTypeName}</span>
+                  </div>
+                  <div className="text-[11px] text-zinc-400 line-clamp-1">{room.boardingHouseName}</div>
+                  <div className="text-[10px] text-amber-300">Đang trống {room.vacantDays} ngày</div>
+                </div>
+                <Link
+                  href={`/landlord/listings/create?roomId=${room.roomId}&aiDraft=true`}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#23a5a0] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  <span>Soạn tin AI</span>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filter and View Mode Toolbar */}
       <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">

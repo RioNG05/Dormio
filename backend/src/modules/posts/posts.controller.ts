@@ -44,6 +44,11 @@ import {
   PosterAnalyticsOverviewDto,
   SinglePostAnalyticsDto,
 } from './dto/post-analytics.dto';
+import {
+  CreateAiPostDraftDto,
+  AiPostDraftResponseDto,
+} from './dto/create-ai-post-draft.dto';
+import { UnlistedRoomResponseDto } from './dto/unlisted-room-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
@@ -141,6 +146,48 @@ export class PostsController {
       `GET /posts/my-listings called by user ${user.id} with page=${query.page}, limit=${query.limit}`,
     );
     return this.postsService.getMyPosts(user.id, query);
+  }
+
+  // ─── UC-L-12: AI Rental Post Suggestions ──────────────────────────────────
+
+  @Post('ai-draft')
+  @ApiOperation({
+    summary: 'Gợi ý bản nháp tin đăng cho thuê bằng AI (UC-L-12)',
+    description:
+      'Tạo bản nháp bài đăng cho thuê phòng dựa trên dữ liệu thực tế của phòng và nhà trọ. ' +
+      'Ghi nhận phiên thảo luận và tin nhắn trong AiConversation & AiMessage. ' +
+      'Lưu ý kiến trúc: Endpoint này CHỈ TẠO BẢN NHÁP và không tạo bản ghi Post.',
+  })
+  @ApiCreatedResponse({
+    description: 'Bản nháp bài đăng cho thuê bằng AI được tạo thành công',
+    type: AiPostDraftResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'ID phòng không hợp lệ' })
+  @ApiResponse({ status: 403, description: 'Chủ nhà không sở hữu phòng được chỉ định' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy phòng' })
+  async generateAiPostDraft(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateAiPostDraftDto,
+  ): Promise<AiPostDraftResponseDto> {
+    this.logger.log(`POST /posts/ai-draft called by user ${user.id} for room ${dto.roomId}`);
+    return this.postsService.generateAiPostDraft(user.id, dto);
+  }
+
+  @Get('unlisted-rooms')
+  @ApiOperation({
+    summary: 'Danh sách phòng trống chưa có tin đăng công khai (Trigger UC-L-12)',
+    description:
+      'Truy xuất danh sách các phòng khả dụng (status=available) thuộc sở hữu của chủ nhà chưa có tin đăng công khai (status=posted) để kích hoạt gợi ý tạo tin đăng AI.',
+  })
+  @ApiOkResponse({
+    description: 'Danh sách phòng trống chưa đăng tin',
+    type: [UnlistedRoomResponseDto],
+  })
+  async getUnlistedVacantRooms(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<UnlistedRoomResponseDto[]> {
+    this.logger.log(`GET /posts/unlisted-rooms called by user ${user.id}`);
+    return this.postsService.getUnlistedVacantRooms(user.id);
   }
 
   // ─── UC-PU-03: Saved / Bookmarked Posts ───────────────────────────────────

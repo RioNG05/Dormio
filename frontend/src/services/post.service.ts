@@ -476,7 +476,66 @@ export const postService = {
     }
     return res as ConfirmPlatformDepositResponse;
   },
+
+  /**
+   * UC-L-12: Generate context-aware AI rental post draft
+   */
+  async generateAiDraft(payload: CreateAiPostDraftPayload): Promise<AiPostDraftResponse> {
+    const res = await api.post<
+      { success: boolean; data: AiPostDraftResponse } | AiPostDraftResponse
+    >("/v1/posts/ai-draft", payload);
+    if (res && typeof res === "object" && "data" in res) {
+      return (res as { data: AiPostDraftResponse }).data;
+    }
+    return res as AiPostDraftResponse;
+  },
+
+  /**
+   * UC-L-12: Get vacant rooms with no active listing
+   */
+  async getUnlistedRooms(): Promise<UnlistedVacantRoom[]> {
+    const res = await api.get<
+      { success: boolean; data: UnlistedVacantRoom[] } | UnlistedVacantRoom[]
+    >("/v1/posts/unlisted-rooms");
+    if (res && typeof res === "object" && "data" in res) {
+      return (res as { data: UnlistedVacantRoom[] }).data;
+    }
+    return (res as UnlistedVacantRoom[]) || [];
+  },
 };
+
+// ─── UC-L-12: AI Rental Post Draft Interfaces ───────────────────────────────
+
+export interface CreateAiPostDraftPayload {
+  roomId: string;
+  tone?: "professional" | "youthful" | "budget";
+  customNotes?: string;
+}
+
+export interface AiPostDraftResponse {
+  conversationId: string;
+  title: string;
+  content: string;
+  depositAmount: number;
+  highlights: string[];
+  imageUrls: string[];
+  createdAt: string;
+}
+
+export interface UnlistedVacantRoom {
+  roomId: string;
+  roomNumber: string;
+  floor: number;
+  area: number | null;
+  roomTypeName: string;
+  boardingHouseId: string;
+  boardingHouseName: string;
+  boardingHouseAddress: string;
+  status: string;
+  basePrice: number;
+  thumbnail: string | null;
+  vacantDays: number;
+}
 
 export interface InitiatePlatformDepositPayload {
   amount?: number;
