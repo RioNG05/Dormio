@@ -148,9 +148,6 @@ export default function AdminBoardingHouseModerationPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "locked" | "reported">("all");
 
-  // Inspection Modal State
-  const [inspectHouse, setInspectHouse] = useState<HouseModerationItem | null>(null);
-
   // Lock Modal State
   const [lockTarget, setLockTarget] = useState<HouseModerationItem | null>(null);
   const [lockReason, setLockReason] = useState("");
@@ -234,9 +231,6 @@ export default function AdminBoardingHouseModerationPage() {
       setHouses((prev) =>
         prev.map((h) => (h.id === lockTarget.id ? { ...h, status: "locked", lockReason: lockReason.trim() } : h))
       );
-      if (inspectHouse?.id === lockTarget.id) {
-        setInspectHouse((prev) => (prev ? { ...prev, status: "locked", lockReason: lockReason.trim() } : null));
-      }
       setLockTarget(null);
       setLockReason("");
       setIsLocking(false);
@@ -257,9 +251,6 @@ export default function AdminBoardingHouseModerationPage() {
       setHouses((prev) =>
         prev.map((h) => (h.id === unlockTarget.id ? { ...h, status: "active", lockReason: undefined } : h))
       );
-      if (inspectHouse?.id === unlockTarget.id) {
-        setInspectHouse((prev) => (prev ? { ...prev, status: "active", lockReason: undefined } : null));
-      }
       setUnlockTarget(null);
       setIsUnlocking(false);
       setFeedbackMsg({ type: "success", text: t("adminHouseModUnlockSuccess") });
@@ -435,11 +426,11 @@ export default function AdminBoardingHouseModerationPage() {
                 className="bg-white rounded-2xl border border-zinc-200/90 transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md"
               >
                 <div>
-                  <div className="relative h-44 w-full bg-zinc-100 overflow-hidden">
+                  <Link href={`/admin/boarding-houses/${item.id}`} className="block relative h-44 w-full bg-zinc-100 overflow-hidden group">
                     <img
-                      src={item.coverImage}
+                      src={item.coverImage || "/house-placeholder.jpg"}
                       alt={item.name}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-black/30" />
 
@@ -477,15 +468,15 @@ export default function AdminBoardingHouseModerationPage() {
                         {occupancyRate}% {t("adminHouseModOccupied")}
                       </span>
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="p-4 space-y-2.5">
-                    <button
-                      onClick={() => setInspectHouse(item)}
-                      className="text-sm font-black text-zinc-900 line-clamp-2 hover:text-orange-600 transition-colors text-left cursor-pointer"
+                    <Link
+                      href={`/admin/boarding-houses/${item.id}`}
+                      className="text-sm font-black text-zinc-900 line-clamp-2 hover:text-orange-600 transition-colors text-left cursor-pointer block"
                     >
                       {item.name}
-                    </button>
+                    </Link>
                     <div className="flex items-center gap-1.5 text-xs text-zinc-500">
                       <MapPin className="w-3.5 h-3.5 text-orange-600 shrink-0" />
                       <span className="truncate">{item.address}</span>
@@ -498,12 +489,13 @@ export default function AdminBoardingHouseModerationPage() {
                 </div>
 
                 <div className="p-4 pt-0 border-t border-zinc-100 mt-2 flex items-center gap-2">
-                  <button
-                    onClick={() => setInspectHouse(item)}
-                    className="flex-1 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer text-center"
+                  <Link
+                    href={`/admin/boarding-houses/${item.id}`}
+                    className="flex-1 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5"
                   >
-                    {t("adminModActionInspect")}
-                  </button>
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{t("adminModActionInspect")}</span>
+                  </Link>
 
                   {item.status === "locked" ? (
                     <button
@@ -547,13 +539,13 @@ export default function AdminBoardingHouseModerationPage() {
                 return (
                   <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="p-3.5 max-w-xs">
-                      <div onClick={() => setInspectHouse(item)} className="cursor-pointer group flex items-center gap-3">
-                        <img src={item.coverImage} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-zinc-200" />
+                      <Link href={`/admin/boarding-houses/${item.id}`} className="cursor-pointer group flex items-center gap-3">
+                        <img src={item.coverImage || "/house-placeholder.jpg"} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-zinc-200" />
                         <div>
                           <div className="font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">{item.name}</div>
                           <div className="text-[11px] text-zinc-400 line-clamp-1">{item.address}</div>
                         </div>
-                      </div>
+                      </Link>
                     </td>
                     <td className="p-3.5">
                       <div className="font-bold text-zinc-800">{item.landlordName}</div>
@@ -583,13 +575,13 @@ export default function AdminBoardingHouseModerationPage() {
                       </span>
                     </td>
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-                      <button
-                        onClick={() => setInspectHouse(item)}
-                        className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors cursor-pointer"
+                      <Link
+                        href={`/admin/boarding-houses/${item.id}`}
+                        className="inline-flex p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors cursor-pointer"
                         title={t("adminModActionInspect")}
                       >
                         <Eye className="w-4 h-4" />
-                      </button>
+                      </Link>
                       {item.status === "locked" ? (
                         <button
                           onClick={() => handleOpenUnlock(item)}
@@ -691,123 +683,6 @@ export default function AdminBoardingHouseModerationPage() {
           </button>
         </div>
       </div>
-
-      {/* INSPECT BOARDING HOUSE MODAL */}
-      {inspectHouse && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-          onClick={() => setInspectHouse(null)}
-        >
-          <div
-            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8 animate-scaleIn max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between pb-3 border-b border-zinc-100">
-              <div>
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase text-white ${
-                    inspectHouse.status === "active"
-                      ? "bg-emerald-600"
-                      : inspectHouse.status === "locked"
-                      ? "bg-red-600"
-                      : "bg-amber-600"
-                  }`}
-                >
-                  {inspectHouse.status === "active"
-                    ? t("adminHouseModStatusActive")
-                    : inspectHouse.status === "locked"
-                    ? t("adminHouseModStatusLocked")
-                    : t("adminHouseModStatusReported")}
-                </span>
-                <h2 className="text-lg font-black text-zinc-900 mt-1">{inspectHouse.name}</h2>
-                <p className="text-xs text-zinc-400 font-mono">ID: {inspectHouse.id}</p>
-              </div>
-              <button
-                onClick={() => setInspectHouse(null)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="h-52 rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200">
-              <img src={inspectHouse.coverImage} alt="" className="w-full h-full object-cover" />
-            </div>
-
-            {/* Reports */}
-            {inspectHouse.reportsCount > 0 && (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1.5 text-xs">
-                <div className="flex items-center gap-2 font-bold text-amber-800">
-                  <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span>{t("adminHouseModGrievanceReports", { count: inspectHouse.reportsCount })}</span>
-                </div>
-                <ul className="list-disc pl-5 space-y-1 font-medium">
-                  {inspectHouse.reportReasons.map((r, i) => (
-                    <li key={i}>{r}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Lock Notice */}
-            {inspectHouse.status === "locked" && inspectHouse.lockReason && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 space-y-1 text-xs">
-                <div className="font-bold flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-red-600" />
-                  <span>{t("adminHouseModLockReasonLabel")}</span>
-                </div>
-                <p className="font-medium">{inspectHouse.lockReason}</p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100 space-y-1">
-                <span className="font-bold text-zinc-500 uppercase">{t("adminHouseModAddress")}</span>
-                <div className="text-zinc-800 font-medium">{inspectHouse.address}</div>
-              </div>
-              <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100 space-y-1">
-                <span className="font-bold text-zinc-500 uppercase">{t("adminHouseModLandlordContact")}</span>
-                <div className="text-zinc-800 font-medium">{inspectHouse.landlordName}</div>
-                <div className="text-zinc-500">{inspectHouse.landlordPhone} • {inspectHouse.landlordEmail}</div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100">
-              <button
-                onClick={() => setInspectHouse(null)}
-                className="px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
-              >
-                {t("adminHouseModClose")}
-              </button>
-              {inspectHouse.status === "locked" ? (
-                <button
-                  onClick={() => {
-                    const target = inspectHouse;
-                    setInspectHouse(null);
-                    handleOpenUnlock(target);
-                  }}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <Unlock className="w-3.5 h-3.5" />
-                  <span>{t("adminHouseModUnlockHouse")}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    const target = inspectHouse;
-                    setInspectHouse(null);
-                    handleOpenLock(target);
-                  }}
-                  className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>{t("adminHouseModLockHouse")}</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* LOCK HOUSE MODAL */}
       {lockTarget && (

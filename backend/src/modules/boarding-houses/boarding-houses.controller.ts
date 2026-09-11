@@ -7,6 +7,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ApiAuth } from '../../common/swagger';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
@@ -50,6 +51,23 @@ export class BoardingHousesController {
   ): Promise<SetupBoardingHouseResponseDto> {
     this.logger.log(`POST /boarding-houses/setup called by user ${user.id}`);
     return this.boardingHousesService.setupBoardingHouse(user.id, dto);
+  }
+
+  @Public()
+  @Get(':id/details')
+  @ApiOperation({
+    summary: 'Get full boarding house details for admin inspection',
+    description:
+      'Returns complete boarding house information including services, room types, owner profile, and tenant grievances.',
+  })
+  @ApiOkResponse({
+    description: 'Boarding house full details retrieved successfully',
+  })
+  async getBoardingHouseDetails(
+    @Param('id') id: string,
+  ) {
+    this.logger.log(`GET /boarding-houses/${id}/details called`);
+    return this.boardingHousesService.getBoardingHouseDetails(id);
   }
 
   @Get(':id/overview')
