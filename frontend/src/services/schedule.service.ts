@@ -92,7 +92,7 @@ export interface UpdateRecurrencePayload {
 export const scheduleService = {
   // ─── Shifts Management ──────────────────────────────────────────────────
   async getShifts(boardingHouseId: string): Promise<ShiftItem[]> {
-    const res = await api.get<ShiftItem[]>('/landlord/shifts', {
+    const res = await api.get<ShiftItem[]>('/v1/landlord/shifts', {
       headers: { 'x-boarding-house-id': boardingHouseId },
     });
     return (res as any)?.data || (res as any) || [];
@@ -102,7 +102,7 @@ export const scheduleService = {
     boardingHouseId: string,
     payload: CreateShiftPayload,
   ): Promise<ShiftItem> {
-    const res = await api.post<ShiftItem>('/landlord/shifts', payload, {
+    const res = await api.post<ShiftItem>('/v1/landlord/shifts', payload, {
       headers: { 'x-boarding-house-id': boardingHouseId },
     });
     return (res as any)?.data || (res as any);
@@ -113,7 +113,7 @@ export const scheduleService = {
     shiftId: string,
     payload: UpdateShiftPayload,
   ): Promise<ShiftItem> {
-    const res = await api.patch<ShiftItem>(`/landlord/shifts/${shiftId}`, payload, {
+    const res = await api.patch<ShiftItem>(`/v1/landlord/shifts/${shiftId}`, payload, {
       headers: { 'x-boarding-house-id': boardingHouseId },
     });
     return (res as any)?.data || (res as any);
@@ -124,7 +124,7 @@ export const scheduleService = {
     shiftId: string,
   ): Promise<{ success: boolean; message: string }> {
     const res = await api.delete<{ success: boolean; message: string }>(
-      `/landlord/shifts/${shiftId}`,
+      `/v1/landlord/shifts/${shiftId}`,
       {
         headers: { 'x-boarding-house-id': boardingHouseId },
       },
@@ -157,7 +157,7 @@ export const scheduleService = {
     if (params.limit) query.append('limit', String(params.limit));
 
     const qs = query.toString();
-    const endpoint = `/landlord/schedules${qs ? `?${qs}` : ''}`;
+    const endpoint = `/v1/landlord/schedules${qs ? `?${qs}` : ''}`;
 
     const res = await api.get<SchedulesResponse>(endpoint, {
       headers: { 'x-boarding-house-id': boardingHouseId },
@@ -169,7 +169,7 @@ export const scheduleService = {
     boardingHouseId: string,
     payload: CreateRecurringPayload,
   ): Promise<{ success: boolean; patternsCreated: number; schedulesMaterialized: number; message: string }> {
-    const res = await api.post<any>('/landlord/schedules/recurring', payload, {
+    const res = await api.post<any>('/v1/landlord/schedules/recurring', payload, {
       headers: { 'x-boarding-house-id': boardingHouseId },
     });
     return (res as any)?.data || (res as any);
@@ -180,7 +180,7 @@ export const scheduleService = {
     payload: CreateAdhocPayload,
   ): Promise<WorkScheduleItem> {
     const res = await api.post<WorkScheduleItem>(
-      '/landlord/schedules/adhoc',
+      '/v1/landlord/schedules/adhoc',
       payload,
       {
         headers: { 'x-boarding-house-id': boardingHouseId },
@@ -195,7 +195,7 @@ export const scheduleService = {
     payload: UpdateSchedulePayload,
   ): Promise<WorkScheduleItem> {
     const res = await api.patch<WorkScheduleItem>(
-      `/landlord/schedules/${scheduleId}`,
+      `/v1/landlord/schedules/${scheduleId}`,
       payload,
       {
         headers: { 'x-boarding-house-id': boardingHouseId },
@@ -210,7 +210,7 @@ export const scheduleService = {
     payload: UpdateRecurrencePayload,
   ): Promise<{ updatedCount: number; message: string }> {
     const res = await api.patch<any>(
-      `/landlord/schedules/recurrence/${recurrenceId}`,
+      `/v1/landlord/schedules/recurrence/${recurrenceId}`,
       payload,
       {
         headers: { 'x-boarding-house-id': boardingHouseId },
@@ -225,7 +225,7 @@ export const scheduleService = {
     mode: 'single' | 'future' = 'single',
   ): Promise<{ deletedCount: number; message: string }> {
     const res = await api.delete<any>(
-      `/landlord/schedules/${scheduleId}?mode=${mode}`,
+      `/v1/landlord/schedules/${scheduleId}?mode=${mode}`,
       {
         headers: { 'x-boarding-house-id': boardingHouseId },
       },
