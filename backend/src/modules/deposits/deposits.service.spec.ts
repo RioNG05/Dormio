@@ -29,6 +29,14 @@ describe('DepositsService', () => {
     deposit: {
       create: jest.fn(),
       update: jest.fn(),
+      findFirst: jest.fn(),
+    },
+    payment: {
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    contract: {
+      findFirst: jest.fn(),
     },
     room: {
       update: jest.fn(),
@@ -45,6 +53,9 @@ describe('DepositsService', () => {
     deposit: {
       findFirst: jest.fn(),
       findMany: jest.fn(),
+    },
+    notification: {
+      create: jest.fn().mockResolvedValue({}),
     },
     $transaction: jest.fn(),
   };
@@ -394,6 +405,107 @@ describe('DepositsService', () => {
       );
 
       expect(result.status).toBe(DepositStatus.forfeited);
+    });
+  });
+
+  describe('processAutoRefundPlatformDeposits (UC-PU-04 Step 7)', () => {
+    const expiredDeposit = {
+      id: 'dep-expired-1',
+      roomId: mockRoomId,
+      boardingHouseId: mockBoardingHouseId,
+      contractId: null,
+      postId: 'post-123',
+      type: DepositType.platform,
+      amount: new Prisma.Decimal(2000000),
+      status: DepositStatus.paid,
+      payment: {
+        id: 'pay-charge-1',
+        payerId: 'user-alice',
+        amount: new Prisma.Decimal(2000000),
+        transactionRef: 'TXN-123',
+        method: 'banking',
+      },
+      room: {
+        id: mockRoomId,
+        roomNumber: '102',
+        status: RoomStatus.deposited,
+      },
+      createdAt: new Date('2026-01-01'),
+    };
+
+    it('should scan expired deposits, create refund payment, link refundPaymentId, mark refund, reset room, and log audit', async () => {
+      mockPrisma.deposit.findMany.mockResolvedValue([expiredDeposit]);
+
+      const mockRefundPayment = { id: 'pay-refund-1' };
+      transactionClient.payment.create.mockResolvedValue(mockRefundPayment);
+      transactionClient.payment.update.mockResolvedValue({});
+      transactionClient.deposit.update.mockResolvedValue({});
+      transactionClient.deposit.findFirst.mockResolvedValue(null); // No other active deposit
+      transactionClient.contract.findFirst.mockResolvedValue(null); // No active contract
+      transactionClient.room.update.mockResolvedValue({});
+      transactionClient.auditLog.create.mockResolvedValue({});
+
+      const count = await service.processAutoRefundPlatformDeposits(7);
+
+      expect(count).toBe(1);
+
+      // 1. New refund payment created
+      expect(transactionClient.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            type: 'refund',
+            status: 'success',
+            payerId: 'user-alice',
+          }),
+        }),
+      );
+
+      // 2. Original payment linked via refundPaymentId
+      expect(transactionClient.payment.update).toHaveBeenCalledWith({
+        where: { id: 'pay-charge-1' },
+        data: { refundPaymentId: 'pay-refund-1' },
+      });
+
+      // 3. Deposit status updated to refund
+      expect(transactionClient.deposit.update).toHaveBeenCalledWith({
+        where: { id: 'dep-expired-1' },
+        data: { status: DepositStatus.refund },
+      });
+
+      // 4. Room status reset to available
+      expect(transactionClient.room.update).toHaveBeenCalledWith({
+        where: { id: mockRoomId },
+        data: { status: RoomStatus.available },
+      });
+
+      // 5. AuditLogs created for PAYMENT and DEPOSIT
+      expect(transactionClient.auditLog.create).toHaveBeenCalledTimes(2);
+
+      // 6. Notification sent to payer outside tx
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            receiverId: 'user-alice',
+            type: 'deposit_refunded',
+          }),
+        }),
+      );
+    });
+
+    it('should not reset room status if another active deposit exists', async () => {
+      mockPrisma.deposit.findMany.mockResolvedValue([expiredDeposit]);
+
+      transactionClient.payment.create.mockResolvedValue({ id: 'pay-refund-2' });
+      transactionClient.payment.update.mockResolvedValue({});
+      transactionClient.deposit.update.mockResolvedValue({});
+      transactionClient.deposit.findFirst.mockResolvedValue({ id: 'dep-other-active' }); // Another active deposit
+      transactionClient.contract.findFirst.mockResolvedValue(null);
+      transactionClient.auditLog.create.mockResolvedValue({});
+
+      const count = await service.processAutoRefundPlatformDeposits(7);
+
+      expect(count).toBe(1);
+      expect(transactionClient.room.update).not.toHaveBeenCalled();
     });
   });
 });

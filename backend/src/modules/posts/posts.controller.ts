@@ -21,10 +21,16 @@ import {
   ApiTags,
   ApiParam,
   ApiCreatedResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { CreatePlatformDepositDto } from './dto/create-platform-deposit.dto';
+import {
+  CreatePlatformDepositDto,
+  InitiatePlatformDepositDto,
+  ConfirmPlatformDepositDto,
+  PlatformDepositInstructionDto,
+} from './dto/create-platform-deposit.dto';
 import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
@@ -279,36 +285,71 @@ export class PostsController {
     return this.postsService.getPublicPostById(id);
   }
 
-  @Public()
   @Post('browse/:id/deposit')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'UC-PU-04: Place a platform deposit on a rental listing',
+    summary: 'UC-PU-04: Initiate direct online deposit on a rental listing',
     description:
-      'Creates a platform DEPOSIT record for the given post, marks the linked room as deposited, ' +
-      'and hides the post from search results. No authentication required. ' +
-      'Tenant is identified by tenantName + tenantPhone.',
+      'Checks identity verification gate (UserIdentification CCCD). If missing, rejects with 403 IDENTITY_VERIFICATION_REQUIRED. ' +
+      'Creates pending Deposit and Payment with VietQR instruction payload.',
   })
   @ApiParam({ name: 'id', description: 'Post listing UUID' })
   @ApiCreatedResponse({
-    description: 'Platform deposit created — post hidden and room marked deposited',
+    description: 'Platform deposit and VietQR payment instruction created successfully',
+    type: PlatformDepositInstructionDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Post not available, room occupied, or active deposit already exists',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Identity verification required before placing online deposit (IDENTITY_VERIFICATION_REQUIRED)',
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async createPlatformDeposit(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: InitiatePlatformDepositDto,
+  ): Promise<PlatformDepositInstructionDto> {
+    this.logger.log(
+      `POST /posts/browse/${id}/deposit called by user ${user.id}`,
+    );
+    return this.postsService.createPlatformDeposit(user.id, id, dto);
+  }
+
+  @Post('browse/:id/deposit/confirm')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'UC-PU-04 Step 5: Confirm platform deposit payment',
+    description:
+      'Marks Payment as success, Deposit as paid, Room as deposited, logs AuditLog in one atomic transaction, ' +
+      'and notifies the landlord to prepare the rental contract (UC-L-04 Flow A).',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiOkResponse({
+    description: 'Deposit confirmed and room marked deposited',
     schema: {
       type: 'object',
       properties: {
+        success: { type: 'boolean', example: true },
         depositId: { type: 'string', example: 'uuid' },
-        postId: { type: 'string', example: 'uuid' },
+        status: { type: 'string', example: 'paid' },
         message: { type: 'string', example: 'Đặt cọc thành công!' },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Post is not available for deposit (hidden, room occupied, or already deposited)' })
-  @ApiResponse({ status: 404, description: 'Post not found' })
-  async createPlatformDeposit(
+  @ApiResponse({ status: 400, description: 'Invalid deposit status or missing payment info' })
+  @ApiResponse({ status: 404, description: 'Deposit not found' })
+  async confirmPlatformDeposit(
+    @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: CreatePlatformDepositDto,
-  ): Promise<{ depositId: string; postId: string; message: string }> {
-    this.logger.log(`POST /posts/browse/${id}/deposit called by tenant ${dto.tenantPhone}`);
-    return this.postsService.createPlatformDeposit(id, dto);
+    @Body() dto: ConfirmPlatformDepositDto,
+  ): Promise<{ success: boolean; depositId: string; status: string; message: string }> {
+    this.logger.log(
+      `POST /posts/browse/${id}/deposit/confirm called for deposit ${dto.depositId} by user ${user.id}`,
+    );
+    return this.postsService.confirmPlatformDeposit(user.id, id, dto);
   }
 
   @Get(':id')

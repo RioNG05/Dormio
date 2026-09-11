@@ -33,8 +33,17 @@ import {
   DepositType,
   DepositStatus,
   RoomStatus,
+  PaymentType,
+  PaymentMethod,
+  PaymentStatus,
+  AuditLogAction,
 } from '@prisma';
-import { CreatePlatformDepositDto } from './dto/create-platform-deposit.dto';
+import {
+  CreatePlatformDepositDto,
+  InitiatePlatformDepositDto,
+  ConfirmPlatformDepositDto,
+  PlatformDepositInstructionDto,
+} from './dto/create-platform-deposit.dto';
 
 export const BASE_DAILY_FREE_POST_QUOTA = 3;
 
@@ -931,15 +940,43 @@ export class PostsService {
    *
    * No authentication required — tenant is identified only by tenantName + tenantPhone.
    */
+  /**
+   * UC-PU-04 Step 1-4: Initiate Direct Online Deposit on a Post
+   *
+   * 1. Identity verification gate: check UserIdentification WHERE userId = current_user.id.
+   *    If missing -> throw ForbiddenException({ code: 'IDENTITY_VERIFICATION_REQUIRED', message: '...' })
+   * 2. Confirm deposit amount (defaults to Post.depositAmount).
+   * 3. Create Deposit(boardingHouseId, roomId, postId, type='platform', amount, status='pending', recordedManually=false).
+   * 4. Create Payment(depositId, payerId=userId, type='charge', status='pending', amount, method='banking', qrCodeUrl).
+   */
   async createPlatformDeposit(
+    userId: string,
     postId: string,
-    dto: CreatePlatformDepositDto,
-  ): Promise<{ depositId: string; postId: string; message: string }> {
+    dto: InitiatePlatformDepositDto,
+  ): Promise<PlatformDepositInstructionDto> {
     this.logger.log(
-      `UC-PU-04: Platform deposit on post ${postId} by tenant ${dto.tenantPhone}`,
+      `UC-PU-04: Initiate platform deposit on post ${postId} by user ${userId}`,
     );
 
-    // 1. Load post with room + boarding house
+    // 1. Identity Verification Gate (UC-PU-04 Step 1)
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { userIdentification: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    if (!user.userIdentification) {
+      throw new ForbiddenException({
+        code: 'IDENTITY_VERIFICATION_REQUIRED',
+        message:
+          'Vui lòng hoàn thành xác minh danh tính (CCCD) trước khi thực hiện đặt cọc trực tuyến theo quy định nền tảng (UC-PU-04).',
+      });
+    }
+
+    // 2. Load post with room + boarding house
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
       include: {
@@ -957,55 +994,78 @@ export class PostsService {
 
     if (post.status !== PostStatus.posted) {
       throw new BadRequestException(
-        'This listing is no longer accepting deposits (hidden or not yet published)',
+        'Tin đăng này hiện không nhận đặt cọc trực tuyến (đã tạm ẩn hoặc chưa đăng).',
       );
     }
 
-    // Guard: post must have a linked room (Deposit.roomId is non-nullable)
+    // Guard: post must have a linked room
     if (!post.roomId || !post.room) {
       throw new BadRequestException(
-        'This listing is not linked to a specific room and does not support online deposits. Please contact the landlord directly.',
+        'Tin đăng này chưa liên kết với phòng cụ thể nên không hỗ trợ đặt cọc trực tuyến. Vui lòng liên hệ trực tiếp chủ trọ.',
       );
     }
 
-    // 2. Validate room is available
+    // Validate room is available
     if (post.room.status !== RoomStatus.available) {
       throw new BadRequestException(
-        'This room is no longer available. Please choose another listing.',
+        'Phòng trọ này hiện không còn khả dụng để đặt cọc (đang thuê hoặc đã cọc).',
       );
     }
 
-    // Guard: no active platform deposit already pending for this post
-    const existing = await this.prisma.deposit.findFirst({
+    // Guard: no active platform deposit already pending or paid for this post or room
+    const existingActiveDeposit = await this.prisma.deposit.findFirst({
       where: {
-        postId,
+        OR: [{ postId }, { roomId: post.roomId }],
         status: { in: [DepositStatus.pending, DepositStatus.paid] },
       },
     });
-    if (existing) {
+    if (existingActiveDeposit) {
       throw new BadRequestException(
-        'This room already has an active deposit from another tenant. Please choose another listing.',
+        'Phòng này hiện đã có người đặt cọc giữ chỗ đang được xử lý. Vui lòng chọn phòng khác.',
       );
     }
 
-    // 3. Serialize tenant info into note field
+    // Determine deposit amount (default to Post.depositAmount)
+    const rawAmount =
+      dto.amount !== undefined ? Number(dto.amount) : Number(post.depositAmount);
+    if (isNaN(rawAmount) || rawAmount <= 0) {
+      throw new BadRequestException('Số tiền đặt cọc giữ chỗ không hợp lệ.');
+    }
+    const depositAmount = new Prisma.Decimal(rawAmount);
+
+    const tenantName =
+      dto.tenantName?.trim() ||
+      user.userIdentification.fullName ||
+      user.username ||
+      'Khách thuê';
+    const tenantPhone = dto.tenantPhone?.trim() || user.phoneNumber;
+
+    // Serialize tenant info and optional note into note field
     const notePayload = JSON.stringify({
-      tenantName: dto.tenantName.trim(),
-      tenantPhone: dto.tenantPhone.trim(),
+      tenantName,
+      tenantPhone,
       note: dto.note?.trim() ?? null,
     });
 
-    // 4. Atomic transaction
-    const deposit = await this.prisma.$transaction(async (tx) => {
-      // 4a. Create DEPOSIT row (type=platform, status=pending — awaiting webhook confirmation)
+    const transactionRef = `TXN-DEP-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+    const bankCode = '970422'; // MBBank partner
+    const accountNumber = '0987654321';
+    const accountName = 'DORMIO ESCROW VIETNAM';
+    const transferContent = transactionRef;
+    const qrCodeUrl = `https://api.vietqr.io/image/${bankCode}-${accountNumber}-compact2.png?amount=${rawAmount}&addInfo=${encodeURIComponent(
+      transferContent,
+    )}`;
+
+    // Atomic creation of Deposit (pending) + Payment (charge, pending)
+    const result = await this.prisma.$transaction(async (tx) => {
       const dep = await tx.deposit.create({
         data: {
           roomId: post.roomId!,
           boardingHouseId: post.room!.boardingHouseId,
-          postId,
+          postId: post.id,
           contractId: null,
           type: DepositType.platform,
-          amount: new Prisma.Decimal(Number(post.depositAmount)),
+          amount: depositAmount,
           status: DepositStatus.pending,
           recordedManually: false,
           recordedBy: null,
@@ -1013,29 +1073,211 @@ export class PostsService {
         },
       });
 
-      // 4b. Mark the linked room as deposited (no longer available)
-      await tx.room.update({
-        where: { id: post.roomId! },
-        data: { status: RoomStatus.deposited },
+      const payment = await tx.payment.create({
+        data: {
+          depositId: dep.id,
+          payerId: userId,
+          type: PaymentType.charge,
+          status: PaymentStatus.pending,
+          amount: depositAmount,
+          method: PaymentMethod.banking,
+          transactionRef,
+          receiptNumber: `REC-DEP-${Date.now().toString().slice(-6)}`,
+          paidAt: new Date(),
+          qrCodeUrl,
+        },
       });
 
-      // 4c. Hide the post so it no longer appears in browse / search results
-      await tx.post.update({
-        where: { id: postId },
-        data: { status: PostStatus.hidden },
-      });
-
-      return dep;
+      return { dep, payment };
     });
 
     this.logger.log(
-      `UC-PU-04: Deposit ${deposit.id} created for post ${postId}. Post hidden, room marked deposited.`,
+      `UC-PU-04: Created pending deposit ${result.dep.id} and payment ${result.payment.id} for post ${postId}`,
     );
 
     return {
+      depositId: result.dep.id,
+      paymentId: result.payment.id,
+      postId: post.id,
+      roomId: post.roomId,
+      amount: rawAmount,
+      transactionRef,
+      qrCodeUrl,
+      bankCode,
+      accountNumber,
+      accountName,
+      transferContent,
+      status: 'pending',
+      message: 'Lệnh đặt cọc đã được tạo. Vui lòng quét mã VietQR để hoàn tất chuyển khoản.',
+    };
+  }
+
+  /**
+   * UC-PU-04 Step 5-6: Gateway Callback on success (single transaction)
+   *
+   * 1. Payment.status = 'success'
+   * 2. Deposit.status = 'paid'
+   * 3. Room.status = 'deposited'
+   * 4. AuditLog for PAYMENT & DEPOSIT inside same transaction
+   * 5. Outside transaction: Notification to landlord (receiverId = post.postedBy)
+   */
+  async confirmPlatformDeposit(
+    userId: string,
+    postId: string,
+    dto: ConfirmPlatformDepositDto,
+  ): Promise<{ success: boolean; depositId: string; status: string; message: string }> {
+    this.logger.log(
+      `UC-PU-04: Confirm platform deposit ${dto.depositId} on post ${postId} by user ${userId}`,
+    );
+
+    const deposit = await this.prisma.deposit.findFirst({
+      where: {
+        id: dto.depositId,
+        postId,
+      },
+      include: {
+        payment: true,
+        room: {
+          include: {
+            boardingHouse: true,
+          },
+        },
+        post: {
+          include: {
+            postedByUser: true,
+          },
+        },
+      },
+    });
+
+    if (!deposit) {
+      throw new NotFoundException(`Khoản đặt cọc không tồn tại hoặc không khớp với tin đăng`);
+    }
+
+    // Idempotency: if already paid, return success immediately
+    if (deposit.status === DepositStatus.paid) {
+      return {
+        success: true,
+        depositId: deposit.id,
+        status: 'paid',
+        message: 'Khoản đặt cọc này đã được thanh toán thành công trước đó.',
+      };
+    }
+
+    if (deposit.status !== DepositStatus.pending) {
+      throw new BadRequestException(
+        `Không thể xác nhận khoản đặt cọc có trạng thái: ${deposit.status}`,
+      );
+    }
+
+    if (!deposit.payment) {
+      throw new BadRequestException(
+        'Không tìm thấy thông tin giao dịch thanh toán của khoản cọc này.',
+      );
+    }
+
+    const payer = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { userIdentification: true },
+    });
+
+    // Execute atomic transaction (UC-PU-04 Step 5 + Rule 4 AuditLog)
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Payment.status = 'success'
+      await tx.payment.update({
+        where: { id: deposit.payment!.id },
+        data: {
+          status: PaymentStatus.success,
+          paidAt: new Date(),
+          transactionRef: dto.transactionRef || deposit.payment!.transactionRef,
+        },
+      });
+
+      // 2. Deposit.status = 'paid'
+      await tx.deposit.update({
+        where: { id: deposit.id },
+        data: {
+          status: DepositStatus.paid,
+        },
+      });
+
+      // 3. Room.status = 'deposited'
+      await tx.room.update({
+        where: { id: deposit.roomId },
+        data: {
+          status: RoomStatus.deposited,
+        },
+      });
+
+      // 4. AuditLog for PAYMENT (Rule 4)
+      await tx.auditLog.create({
+        data: {
+          action: AuditLogAction.payment,
+          entityType: 'PAYMENT',
+          entityId: deposit.payment!.id,
+          userId,
+          boardingHouseId: deposit.boardingHouseId,
+          ipAddress: '127.0.0.1',
+          newValue: {
+            status: PaymentStatus.success,
+            amount: Number(deposit.amount),
+            transactionRef: dto.transactionRef || deposit.payment!.transactionRef,
+          },
+        },
+      });
+
+      // 5. AuditLog for DEPOSIT (Rule 4)
+      await tx.auditLog.create({
+        data: {
+          action: AuditLogAction.update,
+          entityType: 'DEPOSIT',
+          entityId: deposit.id,
+          userId,
+          boardingHouseId: deposit.boardingHouseId,
+          ipAddress: '127.0.0.1',
+          newValue: {
+            status: DepositStatus.paid,
+            amount: Number(deposit.amount),
+          },
+        },
+      });
+    });
+
+    // 6. Notify the landlord outside transaction (UC-PU-04 Step 6)
+    if (deposit.post?.postedBy) {
+      const payerName =
+        payer?.userIdentification?.fullName ||
+        payer?.username ||
+        'Khách thuê';
+      const roomNumber = deposit.room?.roomNumber || '';
+      const houseName = deposit.room?.boardingHouse?.name || 'Nhà trọ';
+      const formattedAmount = Number(deposit.amount).toLocaleString('vi-VN');
+
+      await this.prisma.notification
+        .create({
+          data: {
+            senderId: userId,
+            receiverId: deposit.post.postedBy,
+            boardingHouseId: deposit.boardingHouseId,
+            type: 'deposit_received',
+            content: `Khách thuê ${payerName} vừa đặt cọc giữ chỗ phòng ${roomNumber} (${houseName}) với số tiền ${formattedAmount} VND. Bạn có thể tiến hành lập hợp đồng thuê (UC-L-04 Flow A).`,
+            isRead: false,
+          },
+        })
+        .catch((err) => {
+          this.logger.warn(`Could not dispatch notification to landlord: ${err.message}`);
+        });
+    }
+
+    this.logger.log(
+      `UC-PU-04: Deposit ${deposit.id} marked paid, payment marked success, room marked deposited, landlord notified.`,
+    );
+
+    return {
+      success: true,
       depositId: deposit.id,
-      postId,
-      message: 'Deposit placed successfully. We will contact you to confirm shortly.',
+      status: 'paid',
+      message: 'Đặt cọc giữ chỗ thành công! Chủ nhà trọ đã được thông báo để tạo hợp đồng.',
     };
   }
 
