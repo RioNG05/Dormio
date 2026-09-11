@@ -97,6 +97,14 @@ export class BrowsePostsQueryDto {
   ward?: string;
 
   @ApiPropertyOptional({
+    description: 'Filter by property / boarding house name',
+    example: 'Dormio Premier Quận 1',
+  })
+  @IsOptional()
+  @IsString()
+  property?: string;
+
+  @ApiPropertyOptional({
     description: 'Minimum deposit amount in VND (inclusive)',
     example: 500000,
   })

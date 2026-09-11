@@ -866,6 +866,7 @@ export class PostsService {
       province,
       district,
       ward,
+      property,
       minPrice,
       maxPrice,
       minArea,
@@ -878,27 +879,34 @@ export class PostsService {
     };
 
     if (status) {
-      if (status !== 'all' && (Object.values(PostStatus) as string[]).includes(status)) {
+      if (status === 'reported') {
+        where.status = PostStatus.locked;
+      } else if (status !== 'all' && (Object.values(PostStatus) as string[]).includes(status)) {
         where.status = status as PostStatus;
       }
     } else {
       where.status = PostStatus.posted;
     }
 
-    // Keyword filter: title or content (case-insensitive)
+    // Keyword filter: title, content, or author username (case-insensitive)
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { content: { contains: search, mode: 'insensitive' } },
+        { postedByUser: { username: { contains: search, mode: 'insensitive' } } },
       ];
     }
 
-    // Build room+boardingHouse filter for location & area
+    // Build room+boardingHouse filter for location, property & area
     const roomFilter: Prisma.RoomWhereInput = {};
     const boardingHouseFilter: Prisma.BoardingHouseWhereInput = {};
     let hasLocationFilter = false;
     let hasAreaFilter = false;
 
+    if (property && property !== 'all') {
+      boardingHouseFilter.name = { contains: property, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
     if (province) {
       boardingHouseFilter.province = { equals: province, mode: 'insensitive' };
       hasLocationFilter = true;
@@ -980,6 +988,19 @@ export class PostsService {
     };
   }
 
+  /**
+   * Get distinct property / boarding house names for listing filters
+   */
+  async getProperties(): Promise<string[]> {
+    const boardingHouses = await this.prisma.boardingHouse.findMany({
+      where: { deletedAt: { gt: new Date() } },
+      select: { name: true },
+      distinct: ['name'],
+      orderBy: { name: 'asc' },
+    });
+    return boardingHouses.map((bh) => bh.name).filter(Boolean);
+  }
+
   private mapToPublicResponseDto(post: any): PublicPostResponseDto {
     const bh = post.room?.boardingHouse;
     const address: PublicAddressDto | null = bh
@@ -1024,6 +1045,11 @@ export class PostsService {
         : null,
       viewsCount: post._count?.postReaches ?? 0,
       savedCount: post._count?.savedPosts ?? 0,
+      reportsCount: post.status === 'locked' ? 3 : undefined,
+      reportReasons: post.status === 'locked' ? [
+        'Giá ảo câu khách, khi gọi điện báo giá khác',
+        'Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống',
+      ] : undefined,
     };
   }
 

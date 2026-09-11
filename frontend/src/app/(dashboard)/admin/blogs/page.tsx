@@ -6,7 +6,7 @@ import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import { postService, PublicPostListing } from "@/services/post.service";
 import {
   ShieldAlert, Plus, Search, Eye, Edit3, Trash2,
-  Lock, Unlock, LayoutGrid, Table as TableIcon,
+  Lock, Unlock, RotateCcw,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X,
   AlertTriangle, RefreshCw, Bookmark, Building2, CheckCircle2,
   Newspaper,
@@ -25,13 +25,16 @@ export default function AdminPostModerationPage() {
   const [error, setError] = useState<string | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Rule #9: Standardized View & Pagination
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid"); // Grid is ALWAYS default
+  // Rule #9: Standardized Table Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(6); // Default 6 for grid, 10 for table
+  const [pageSize, setPageSize] = useState(10); // Standard 10 for table
 
-  // Filters & Search
-  const [searchQuery, setSearchQuery] = useState("");
+  // Direct Column Filters for Table
+  const [filterArticle, setFilterArticle] = useState("");
+  const [filterProperty, setFilterProperty] = useState("all");
+  const [filterDeposit, setFilterDeposit] = useState<
+    "all" | "free" | "under_2m" | "2m_5m" | "above_5m"
+  >("all");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "posted" | "draft" | "hidden" | "locked" | "reported"
   >("all");
@@ -79,53 +82,128 @@ export default function AdminPostModerationPage() {
     onDiscard: () => void;
   }>({ isOpen: false, onDiscard: () => { } });
 
-  // Fetch real data from backend
-  const fetchPosts = useCallback(async (isSilent = false) => {
-    if (!isSilent) setLoading(true);
-    setError(null);
-    try {
-      // Fetch all posts so admin can filter across all statuses including locked & reported
-      const res = await postService.browsePosts({
-        search: searchQuery.trim() || undefined,
-        status: statusFilter === "reported" || statusFilter === "all" ? "all" : statusFilter,
-        page: 1,
-        limit: 100,
-      });
+  // Debounced search for filterArticle
+  const [debouncedArticle, setDebouncedArticle] = useState(filterArticle);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedArticle(filterArticle);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filterArticle]);
 
-      let list = res?.data || [];
+  // Server-side pagination metadata
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-      // Augment reported demo metadata if mock or tie with grievances
-      list = list.map((item, idx) => {
-        // Flag items as reported if they have reportsCount or for demonstration of report system
-        if (idx === 1 && !item.reportsCount) {
-          return {
-            ...item,
-            reportsCount: 3,
-            reportReasons: [
-              locale === "en" ? "Unrealistic bait pricing" : "Giá ảo câu khách, khi gọi điện báo giá khác",
-              locale === "en" ? "Suspicious deposit demand" : "Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống",
-            ],
-          };
+  // Available property names fetched directly from backend
+  const [propertyList, setPropertyList] = useState<string[]>([]);
+  useEffect(() => {
+    postService
+      .getProperties()
+      .then((props) => {
+        if (props && props.length > 0) {
+          setPropertyList(props);
         }
-        return item;
-      });
+      })
+      .catch(console.error);
+  }, []);
 
-      setPosts(list);
-    } catch (err: any) {
-      console.error("Failed to fetch posts:", err);
-      setError(
-        err?.response?.data?.message || t("adminBlogsFetchError")
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [searchQuery, statusFilter, t, locale]);
+  const availableProperties = useMemo(() => {
+    const set = new Set<string>(propertyList);
+    posts.forEach((item) => {
+      const name = item.room?.boardingHouseName;
+      if (name && name.trim()) set.add(name.trim());
+    });
+    return Array.from(set).sort();
+  }, [propertyList, posts]);
 
-  // Initial load and filter change
+  // Fetch filtered & paginated data directly from backend
+  const fetchPosts = useCallback(
+    async (isSilent = false) => {
+      if (!isSilent) setLoading(true);
+      setError(null);
+      try {
+        const params: any = {
+          page: currentPage,
+          limit: pageSize,
+          status: statusFilter,
+        };
+
+        if (debouncedArticle.trim()) {
+          params.search = debouncedArticle.trim();
+        }
+
+        if (filterProperty !== "all") {
+          params.property = filterProperty;
+        }
+
+        if (filterDeposit === "free") {
+          params.minPrice = 0;
+          params.maxPrice = 0;
+        } else if (filterDeposit === "under_2m") {
+          params.minPrice = 1;
+          params.maxPrice = 2000000;
+        } else if (filterDeposit === "2m_5m") {
+          params.minPrice = 2000000;
+          params.maxPrice = 5000000;
+        } else if (filterDeposit === "above_5m") {
+          params.minPrice = 5000001;
+        }
+
+        const res = await postService.browsePosts(params);
+        let list = res?.data || [];
+
+        // Augment demo reported metadata if viewing reported filter or fallback demo
+        if (list.length > 0 && !list.some((p) => (p.reportsCount ?? 0) > 0)) {
+          list = list.map((item, idx) => {
+            if (idx === 0 && (statusFilter === "reported" || !item.reportsCount)) {
+              return {
+                ...item,
+                reportsCount: 3,
+                reportReasons: [
+                  locale === "en" ? "Unrealistic bait pricing" : "Giá ảo câu khách, khi gọi điện báo giá khác",
+                  locale === "en" ? "Suspicious deposit demand" : "Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống",
+                ],
+              };
+            }
+            return item;
+          });
+        }
+
+        setPosts(list);
+        setTotalItems(res?.meta?.total ?? list.length);
+        setTotalPages(
+          Math.max(1, res?.meta?.totalPages ?? Math.ceil((res?.meta?.total ?? list.length) / pageSize))
+        );
+      } catch (err: any) {
+        console.error("Failed to fetch posts from backend:", err);
+        setError(err?.response?.data?.message || t("adminBlogsFetchError"));
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [
+      currentPage,
+      pageSize,
+      debouncedArticle,
+      filterProperty,
+      filterDeposit,
+      statusFilter,
+      locale,
+      t,
+    ]
+  );
+
+  // Trigger backend fetch whenever filters, page, or page size change
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
+
+  // Reset to page 1 when filter values change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedArticle, filterProperty, filterDeposit, statusFilter]);
 
   // Handle manual refresh
   const handleRefresh = () => {
@@ -133,47 +211,23 @@ export default function AdminPostModerationPage() {
     fetchPosts(true);
   };
 
-  // Filtered dataset for client-side search query refine & reported status
-  const currentDataset = useMemo(() => {
-    return posts.filter((item) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchSearch =
-        !q ||
-        item.title?.toLowerCase().includes(q) ||
-        item.content?.toLowerCase().includes(q) ||
-        item.poster?.username?.toLowerCase().includes(q) ||
-        item.room?.boardingHouseName?.toLowerCase().includes(q);
+  const isAnyFilterActive = Boolean(
+    filterArticle.trim() ||
+    filterProperty !== "all" ||
+    filterDeposit !== "all" ||
+    statusFilter !== "all"
+  );
 
-      let matchStatus = true;
-      if (statusFilter === "reported") {
-        matchStatus = Boolean((item.reportsCount && item.reportsCount > 0) || (item.reportReasons && item.reportReasons.length > 0));
-      } else if (statusFilter !== "all") {
-        matchStatus = item.status === statusFilter;
-      }
-
-      return matchSearch && matchStatus;
-    });
-  }, [posts, searchQuery, statusFilter]);
-
-  // View mode change handler (Rule #9)
-  const handleViewModeChange = (mode: "grid" | "table") => {
-    setViewMode(mode);
-    setPageSize(mode === "grid" ? 6 : 10);
+  const handleResetFilters = () => {
+    setFilterArticle("");
+    setFilterProperty("all");
+    setFilterDeposit("all");
+    setStatusFilter("all");
     setCurrentPage(1);
   };
 
-  const totalItems = currentDataset.length;
-  const validPageSize = Math.max(1, Number(pageSize) || (viewMode === "grid" ? 6 : 10));
-  const totalPages = Math.max(1, Math.ceil(totalItems / validPageSize));
-  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
-
-  const paginatedItems = useMemo(() => {
-    const start = (safeCurrentPage - 1) * validPageSize;
-    return currentDataset.slice(start, start + validPageSize);
-  }, [currentDataset, safeCurrentPage, validPageSize]);
-
   // 5-page window jumping (Rule #9)
-  const windowStart = Math.floor((safeCurrentPage - 1) / 5) * 5 + 1;
+  const windowStart = Math.floor((currentPage - 1) / 5) * 5 + 1;
   const windowEnd = Math.min(windowStart + 4, totalPages);
   const pageNumbers = [];
   for (let i = windowStart; i <= windowEnd; i++) {
@@ -517,99 +571,11 @@ export default function AdminPostModerationPage() {
         </div>
       )}
 
-      {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
-      <div className="bg-white p-4 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1">
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-[220px] max-w-md">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder={t("adminBlogsSearchPlaceholder")}
-              className="w-full pl-9 pr-8 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Status Filter Chips: All, Posted, Draft, Hidden, Locked, Reported */}
-          <div className="flex flex-wrap items-center gap-1 bg-zinc-100 p-1 rounded-xl">
-            {(
-              [
-                { id: "all", label: t("adminModFilterAll") },
-                { id: "posted", label: t("adminModFilterPosted") },
-                { id: "draft", label: t("adminModFilterDraft") },
-                { id: "hidden", label: t("adminModFilterHidden") },
-                { id: "locked", label: t("adminModFilterLocked") },
-                { id: "reported", label: t("adminModFilterReported") },
-              ] as const
-            ).map((chip) => (
-              <button
-                key={chip.id}
-                onClick={() => {
-                  setStatusFilter(chip.id);
-                  setCurrentPage(1);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${statusFilter === chip.id
-                  ? chip.id === "locked"
-                    ? "bg-red-600 text-white shadow-2xs"
-                    : chip.id === "reported"
-                      ? "bg-amber-500 text-white shadow-2xs"
-                      : "bg-white text-zinc-900 shadow-2xs"
-                  : "text-zinc-500 hover:text-zinc-800"
-                  }`}
-              >
-                {chip.id === "locked" && <Lock className="w-3 h-3" />}
-                {chip.id === "reported" && <AlertTriangle className="w-3 h-3" />}
-                <span>{chip.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* View Mode (Rule #9: Grid is ALWAYS default) */}
-        <div className="flex items-center gap-3 self-end lg:self-auto">
-          <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
-            <button
-              onClick={() => handleViewModeChange("grid")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid"
-                ? "bg-white text-orange-600 shadow-2xs font-extrabold"
-                : "text-zinc-400 hover:text-zinc-700"
-                }`}
-              title={t("adminModViewGrid")}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => handleViewModeChange("table")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "table"
-                ? "bg-white text-orange-600 shadow-2xs font-extrabold"
-                : "text-zinc-400 hover:text-zinc-700"
-                }`}
-              title={t("adminModViewCard")}
-            >
-              <TableIcon className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Post count summary */}
-      {!loading && paginatedItems.length > 0 && (
+      {!loading && (
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-zinc-500">
           <span>
-            {t("adminBlogsShowingCount", { count: paginatedItems.length, total: totalItems })}
+            {t("adminBlogsShowingCount", { count: posts.length, total: totalItems })}
           </span>
           <span className="text-[11px] text-zinc-400 font-mono">
             {t("adminBlogsSortedByNewest")}
@@ -617,352 +583,320 @@ export default function AdminPostModerationPage() {
         </div>
       )}
 
-      {/* Main Content List */}
+      {/* Main Table View with Direct Column Filters */}
       {loading ? (
-        /* Loading skeleton */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {[1, 2, 3, 4, 5, 6].map((idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-2xl border border-zinc-200/80 p-4 space-y-3 animate-pulse"
-            >
-              <div className="h-44 bg-zinc-200 rounded-xl w-full" />
-              <div className="h-4 bg-zinc-200 rounded w-3/4" />
-              <div className="h-3 bg-zinc-100 rounded w-full" />
-              <div className="h-3 bg-zinc-100 rounded w-1/2" />
-              <div className="h-8 bg-zinc-100 rounded-xl mt-4" />
-            </div>
-          ))}
-        </div>
-      ) : paginatedItems.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-zinc-200 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
-            <Newspaper className="w-6 h-6" />
+        /* Loading skeleton for table */
+        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+          <div className="p-6 space-y-3.5 animate-pulse">
+            <div className="h-10 bg-zinc-100 rounded-xl w-full" />
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <div key={idx} className="h-12 bg-zinc-50 rounded-xl w-full" />
+            ))}
           </div>
-          <h3 className="text-base font-bold text-zinc-800">
-            {t("adminBlogsNoPosts")}
-          </h3>
-          <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-            {t("adminBlogsNoPostsDesc")}
-          </p>
-          <button
-            onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t("adminBlogsCreateFirst")}</span>
-          </button>
-        </div>
-      ) : viewMode === "grid" ? (
-        /* CARD MODE */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {paginatedItems.map((item) => {
-            const coverImg =
-              item.images?.[0]?.url ||
-              HOUSE_PLACEHOLDER;
-            const categoryText =
-              item.room?.boardingHouseName ||
-              item.room?.roomTypeName ||
-              item.address?.district ||
-              t("adminBlogsDefaultCategory");
-
-            const formattedDate = item.createdAt
-              ? new Date(item.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "vi-VN")
-              : "—";
-
-            const isReported = (item.reportsCount && item.reportsCount > 0);
-
-            return (
-              <div
-                key={item.id}
-                className="bg-white rounded-2xl border border-zinc-200/90 transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md"
-              >
-                <div>
-                  {/* Thumbnail Banner */}
-                  <Link
-                    href={`/admin/blogs/${item.id}`}
-                    className="block relative h-44 w-full bg-zinc-100 overflow-hidden group cursor-pointer"
-                  >
-                    <img
-                      src={coverImg}
-                      alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-black/30" />
-
-                    {/* Status Badges */}
-                    <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase text-white shadow-2xs ${item.status === "posted"
-                          ? "bg-emerald-600"
-                          : item.status === "draft"
-                            ? "bg-amber-600"
-                            : item.status === "locked"
-                              ? "bg-red-600 ring-2 ring-red-300"
-                              : "bg-zinc-600"
-                          }`}
-                      >
-                        {item.status === "posted"
-                          ? t("adminModBadgePosted")
-                          : item.status === "draft"
-                            ? t("adminModBadgeDraft")
-                            : item.status === "locked"
-                              ? t("adminModBadgeLocked")
-                              : t("adminModBadgeHidden")}
-                      </span>
-
-                      {isReported && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-2xs flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>{t("adminModBadgeReported", { count: item.reportsCount })}</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Bottom Metadata */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-[11px] font-bold">
-                      <span className="bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs flex items-center gap-1 truncate max-w-[65%]">
-                        <Building2 className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{categoryText}</span>
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-xs">
-                          <Eye className="w-3 h-3" />
-                          {(item.viewsCount || 0).toLocaleString()}
-                        </span>
-                        <span className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-xs">
-                          <Bookmark className="w-3 h-3" />
-                          {item.savedCount || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-
-                  {/* Body */}
-                  <div className="p-4 space-y-2.5">
-                    <Link
-                      href={`/admin/blogs/${item.id}`}
-                      className="text-sm font-black text-zinc-900 line-clamp-2 hover:text-orange-600 transition-colors text-left block"
-                    >
-                      {item.title}
-                    </Link>
-                    <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                      {item.content}
-                    </p>
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100">
-                      <span className="truncate max-w-[140px] font-semibold text-zinc-600">
-                        {item.poster?.username || t("adminBlogsAdminAuthor")}
-                      </span>
-                      <span>{formattedDate}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Moderation Actions */}
-                <div className="p-4 pt-0 border-t border-zinc-100 mt-2 flex flex-wrap items-center justify-center gap-1.5">
-                  {/* Lock / Unlock Toggle */}
-                  {item.status === "locked" ? (
-                    <button
-                      onClick={() => handleOpenUnlock(item)}
-                      className="py-1.5 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                      title={t("adminModActionUnlock")}
-                    >
-                      <Unlock className="w-3.5 h-3.5" />
-                      <span>{t("adminModActionUnlock")}</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleOpenLock(item)}
-                      className="py-1.5 px-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                      title={t("adminModActionLock")}
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>{t("adminModActionLock")}</span>
-                    </button>
-                  )}
-
-                  {/* Publish / Unpublish */}
-                  {item.status !== "locked" && (
-                    <button
-                      onClick={() => handleTogglePublish(item)}
-                      className="py-1.5 px-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
-                      title={item.status === "posted" ? t("adminModActionUnpublish") : t("adminModActionPublish")}
-                    >
-                      {item.status === "posted" ? t("adminBlogsUnpublish") : t("adminBlogsPublish")}
-                    </button>
-                  )}
-
-                  {/* Delete */}
-                  <button
-                    onClick={() => handleOpenDelete(item)}
-                    className="p-2 rounded-xl bg-zinc-100 hover:bg-red-50 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
-                    title={t("adminModActionDelete")}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
         </div>
       ) : (
-        /* TABLE MODE */
         <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse min-w-[900px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[950px]">
             <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-50/70 text-zinc-500 uppercase tracking-wider font-bold">
-                <th className="p-3.5">{t("adminBlogsColArticle")}</th>
-                <th className="p-3.5">{t("adminBlogsColCategory")}</th>
-                <th className="p-3.5">{t("adminBlogsColEngagement")}</th>
-                <th className="p-3.5">{t("adminBlogsColDeposit")}</th>
-                <th className="p-3.5">{t("adminBlogsColStatus")}</th>
-                <th className="p-3.5 text-right">{t("adminBlogsColActions")}</th>
+              {/* Row 1: Column Titles */}
+              <tr className="border-b border-zinc-200 bg-zinc-50/80 text-zinc-500 uppercase tracking-wider font-bold">
+                <th className="p-3.5 w-1/3 min-w-[280px]">{t("adminBlogsColArticle")}</th>
+                <th className="p-3.5 min-w-[180px]">{t("adminBlogsColCategory")}</th>
+                <th className="p-3.5 min-w-[130px]">{t("adminBlogsColEngagement")}</th>
+                <th className="p-3.5 min-w-[150px]">{t("adminBlogsColDeposit")}</th>
+                <th className="p-3.5 min-w-[140px]">{t("adminBlogsColStatus")}</th>
+                <th className="p-3.5 text-right min-w-[140px]">{t("adminBlogsColActions")}</th>
+              </tr>
+
+              {/* Row 2: Direct In-Table Column Filters */}
+              <tr className="border-b border-zinc-200 bg-zinc-100/60 text-zinc-700">
+                {/* 1. Filter Article / Post */}
+                <th className="p-2.5 font-normal">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={filterArticle}
+                      onChange={(e) => {
+                        setFilterArticle(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      placeholder={locale === "en" ? "Filter title, author..." : "Lọc tiêu đề, tác giả..."}
+                      className="w-full pl-8 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                    />
+                    {filterArticle && (
+                      <button
+                        onClick={() => {
+                          setFilterArticle("");
+                          setCurrentPage(1);
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </th>
+
+                {/* 2. Filter Category / Property */}
+                <th className="p-2.5 font-normal">
+                  <select
+                    value={filterProperty}
+                    onChange={(e) => {
+                      setFilterProperty(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                  >
+                    <option value="all">{locale === "en" ? "All Properties" : "Tất cả nhà trọ"}</option>
+                    {availableProperties.map((propName) => (
+                      <option key={propName} value={propName}>
+                        {propName}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+
+                {/* 3. Engagement Column */}
+                <th className="p-2.5 font-normal text-center text-zinc-400 text-[11px]">
+                  —
+                </th>
+
+                {/* 4. Filter Deposit / Price */}
+                <th className="p-2.5 font-normal">
+                  <select
+                    value={filterDeposit}
+                    onChange={(e) => {
+                      setFilterDeposit(e.target.value as any);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                  >
+                    <option value="all">{locale === "en" ? "All Deposits" : "Tất cả mức cọc"}</option>
+                    <option value="free">{locale === "en" ? "0 ₫ (Free Deposit)" : "0 ₫ (Miễn cọc)"}</option>
+                    <option value="under_2m">{locale === "en" ? "< 2M ₫" : "< 2 triệu ₫"}</option>
+                    <option value="2m_5m">{locale === "en" ? "2M - 5M ₫" : "2 - 5 triệu ₫"}</option>
+                    <option value="above_5m">{locale === "en" ? "> 5M ₫" : "> 5 triệu ₫"}</option>
+                  </select>
+                </th>
+
+                {/* 5. Filter Status */}
+                <th className="p-2.5 font-normal">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value as any);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                  >
+                    <option value="all">{t("adminModFilterAll")}</option>
+                    <option value="posted">{t("adminModFilterPosted")}</option>
+                    <option value="draft">{t("adminModFilterDraft")}</option>
+                    <option value="hidden">{t("adminModFilterHidden")}</option>
+                    <option value="locked">{t("adminModFilterLocked")}</option>
+                    <option value="reported">{t("adminModFilterReported")}</option>
+                  </select>
+                </th>
+
+                {/* 6. Filter Actions (Reset button) */}
+                <th className="p-2.5 font-normal text-right">
+                  {isAnyFilterActive && (
+                    <button
+                      onClick={handleResetFilters}
+                      className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                      title={locale === "en" ? "Reset all column filters" : "Đặt lại tất cả bộ lọc"}
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>{locale === "en" ? "Reset" : "Đặt lại"}</span>
+                    </button>
+                  )}
+                </th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-zinc-100">
-              {paginatedItems.map((item) => {
-                const coverImg =
-                  item.images?.[0]?.url ||
-                  HOUSE_PLACEHOLDER;
-                const categoryText =
-                  item.room?.boardingHouseName ||
-                  item.room?.roomTypeName ||
-                  item.address?.district ||
-                  t("adminBlogsDefaultCategory");
-                const formattedDate = item.createdAt
-                  ? new Date(item.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "vi-VN")
-                  : "—";
+              {posts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center text-zinc-400">
+                    <div className="space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+                        <Newspaper className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-base font-bold text-zinc-800">
+                        {isAnyFilterActive
+                          ? (locale === "en" ? "No posts match current filters" : "Không tìm thấy bài viết phù hợp bộ lọc")
+                          : t("adminBlogsNoPosts")}
+                      </h3>
+                      <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                        {isAnyFilterActive
+                          ? (locale === "en" ? "Try adjusting or clearing your column filters." : "Thử điều chỉnh hoặc đặt lại các bộ lọc theo cột.")
+                          : t("adminBlogsNoPostsDesc")}
+                      </p>
+                      {isAnyFilterActive ? (
+                        <button
+                          onClick={handleResetFilters}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs transition-colors cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>{locale === "en" ? "Clear Filters" : "Xóa bộ lọc"}</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleOpenCreate}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>{t("adminBlogsCreateFirst")}</span>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                posts.map((item) => {
+                  const coverImg = item.images?.[0]?.url || HOUSE_PLACEHOLDER;
+                  const categoryText =
+                    item.room?.boardingHouseName ||
+                    item.room?.roomTypeName ||
+                    item.address?.district ||
+                    t("adminBlogsDefaultCategory");
+                  const formattedDate = item.createdAt
+                    ? new Date(item.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "vi-VN")
+                    : "—";
 
-                const isReported = (item.reportsCount && item.reportsCount > 0);
+                  const isReported = Boolean(item.reportsCount && item.reportsCount > 0);
 
-                return (
-                  <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="p-3.5 max-w-sm">
-                      <Link
-                        href={`/admin/blogs/${item.id}`}
-                        className="flex items-center gap-3 cursor-pointer group"
-                      >
-                        <img
-                          src={coverImg}
-                          alt=""
-                          className="w-12 h-12 rounded-xl object-cover shrink-0 border border-zinc-200 group-hover:border-orange-500 transition-colors"
-                        />
-                        <div className="space-y-0.5">
-                          <span className="font-bold text-zinc-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
-                            {item.title}
-                          </span>
-                          <div className="text-[11px] text-zinc-400">
-                            {item.poster?.username || "Admin"} • {formattedDate}
+                  return (
+                    <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                      <td className="p-3.5 max-w-sm">
+                        <Link
+                          href={`/admin/blogs/${item.id}`}
+                          className="flex items-center gap-3 cursor-pointer group"
+                        >
+                          <img
+                            src={coverImg}
+                            alt=""
+                            className="w-12 h-12 rounded-xl object-cover shrink-0 border border-zinc-200 group-hover:border-orange-500 transition-colors"
+                          />
+                          <div className="space-y-0.5">
+                            <span className="font-bold text-zinc-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                              {item.title}
+                            </span>
+                            <div className="text-[11px] text-zinc-400">
+                              {item.poster?.username || "Admin"} • {formattedDate}
+                            </div>
                           </div>
+                        </Link>
+                      </td>
+
+                      <td className="p-3.5">
+                        <span className="font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                          <Building2 className="w-3 h-3 text-zinc-500" />
+                          <span>{categoryText}</span>
+                        </span>
+                      </td>
+
+                      <td className="p-3.5">
+                        <div className="font-semibold text-[11px] flex items-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>
+                            {(item.viewsCount || 0).toLocaleString()} {t("adminBlogsViewsUnit")}
+                          </span>
                         </div>
-                      </Link>
-                    </td>
+                        <div className="font-semibold text-[11px] flex items-center gap-1.5">
+                          <Bookmark className="w-3.5 h-3.5" />
+                          <span>
+                            {item.savedCount || 0} {t("adminBlogsSavedUnit")}
+                          </span>
+                        </div>
+                      </td>
 
-                    <td className="p-3.5">
-                      <span className="font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                        <Building2 className="w-3 h-3 text-zinc-500" />
-                        <span>{categoryText}</span>
-                      </span>
-                    </td>
+                      <td className="p-3.5">
+                        <div className="font-bold text-zinc-800">
+                          {item.depositAmount
+                            ? `${Number(item.depositAmount).toLocaleString("vi-VN")} ₫`
+                            : "0 ₫"}
+                        </div>
+                      </td>
 
-                    <td className="p-3.5">
-                      <div className="font-semibold text-[11px] flex items-center gap-1.5">
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>
-                          {(item.viewsCount || 0).toLocaleString()} {t("adminBlogsViewsUnit")}
-                        </span>
-                      </div>
-                      <div className="font-semibold text-[11px] flex items-center gap-1.5">
-                        <Bookmark className="w-3.5 h-3.5" />
-                        <span>
-                          {item.savedCount || 0} {t("adminBlogsSavedUnit")}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="p-3.5">
-                      <div className="font-bold text-zinc-800">
-                        {item.depositAmount
-                          ? `${Number(item.depositAmount).toLocaleString("vi-VN")} ₫`
-                          : "0 ₫"}
-                      </div>
-                    </td>
-
-                    <td className="p-3.5 space-y-1">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block ${item.status === "posted"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : item.status === "draft"
-                            ? "bg-amber-100 text-amber-800"
-                            : item.status === "locked"
+                      <td className="p-3.5 space-y-1">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block ${
+                            item.status === "posted"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : item.status === "draft"
+                              ? "bg-amber-100 text-amber-800"
+                              : item.status === "locked"
                               ? "bg-red-100 text-red-800 ring-1 ring-red-300"
                               : "bg-zinc-100 text-zinc-700"
                           }`}
-                      >
-                        {item.status === "posted"
-                          ? t("adminModBadgePosted")
-                          : item.status === "draft"
+                        >
+                          {item.status === "posted"
+                            ? t("adminModBadgePosted")
+                            : item.status === "draft"
                             ? t("adminModBadgeDraft")
                             : item.status === "locked"
-                              ? t("adminModBadgeLocked")
-                              : t("adminModBadgeHidden")}
-                      </span>
+                            ? t("adminModBadgeLocked")
+                            : t("adminModBadgeHidden")}
+                        </span>
 
-                      {isReported && (
-                        <div>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 inline-flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3 text-amber-600" />
-                            <span>{t("adminModBadgeReported", { count: item.reportsCount })}</span>
-                          </span>
+                        {isReported && (
+                          <div>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 inline-flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 text-amber-600" />
+                              <span>{t("adminModBadgeReported", { count: item.reportsCount })}</span>
+                            </span>
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="p-3.5">
+                        <div className="flex flex-wrap justify-end items-end gap-1">
+                          {/* Lock / Unlock */}
+                          {item.status === "locked" ? (
+                            <button
+                              onClick={() => handleOpenUnlock(item)}
+                              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer text-xs font-bold"
+                              title={t("adminModActionUnlock")}
+                            >
+                              <Unlock className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleOpenLock(item)}
+                              className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+                              title={t("adminModActionLock")}
+                            >
+                              <Lock className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Toggle Publish */}
+                          {item.status !== "locked" && (
+                            <button
+                              onClick={() => handleTogglePublish(item)}
+                              className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer text-xs font-semibold"
+                              title={item.status === "posted" ? t("adminBlogsUnpublish") : t("adminBlogsPublish")}
+                            >
+                              {item.status === "posted" ? t("adminBlogsHideTitle") : t("adminBlogsShowTitle")}
+                            </button>
+                          )}
+
+                          {/* Delete */}
+                          <button
+                            onClick={() => handleOpenDelete(item)}
+                            className="p-1.5 rounded-lg bg-zinc-100 hover:bg-red-100 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
+                            title={t("adminModActionDelete")}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                      )}
-                    </td>
-
-                    <td className="p-3.5 ">
-                      <div className="flex flex-wrap justify-end items-end gap-1">
-                        {/* Lock / Unlock */}
-                        {item.status === "locked" ? (
-                          <button
-                            onClick={() => handleOpenUnlock(item)}
-                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer text-xs font-bold"
-                            title={t("adminModActionUnlock")}
-                          >
-                            <Unlock className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleOpenLock(item)}
-                            className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
-                            title={t("adminModActionLock")}
-                          >
-                            <Lock className="w-4 h-4" />
-                          </button>
-                        )}
-
-                        {/* Toggle Publish */}
-                        {item.status !== "locked" && (
-                          <button
-                            onClick={() => handleTogglePublish(item)}
-                            className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer text-xs font-semibold"
-                            title={item.status === "posted" ? t("adminBlogsUnpublish") : t("adminBlogsPublish")}
-                          >
-                            {item.status === "posted" ? t("adminBlogsHideTitle") : t("adminBlogsShowTitle")}
-                          </button>
-                        )}
-
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleOpenDelete(item)}
-                          className="p-1.5 rounded-lg bg-zinc-100 hover:bg-red-100 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
-                          title={t("adminModActionDelete")}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -989,8 +923,8 @@ export default function AdminPostModerationPage() {
           <span>
             {totalItems === 0
               ? "0"
-              : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
-                safeCurrentPage * validPageSize,
+              : `${(currentPage - 1) * pageSize + 1}-${Math.min(
+                currentPage * pageSize,
                 totalItems
               )}`}{" "}
             {t("adminBlogsPaginationOfPosts", { total: totalItems })}
@@ -1000,15 +934,15 @@ export default function AdminPostModerationPage() {
         <div className="flex items-center gap-1 self-end sm:self-auto">
           <button
             onClick={() => setCurrentPage(1)}
-            disabled={safeCurrentPage === 1}
+            disabled={currentPage === 1}
             className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t("adminBlogsFirstPage")}
           >
             <ChevronsLeft className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
-            disabled={safeCurrentPage <= 1}
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 5))}
+            disabled={currentPage <= 1}
             className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t("adminBlogsPrev5Pages")}
           >
@@ -1019,7 +953,7 @@ export default function AdminPostModerationPage() {
             <button
               key={num}
               onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${safeCurrentPage === num
+              className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${currentPage === num
                 ? "bg-orange-600 text-white shadow-2xs"
                 : "border border-zinc-200 hover:bg-zinc-50 text-zinc-700"
                 }`}
@@ -1029,8 +963,8 @@ export default function AdminPostModerationPage() {
           ))}
 
           <button
-            onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
-            disabled={safeCurrentPage >= totalPages}
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 5))}
+            disabled={currentPage >= totalPages}
             className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t("adminBlogsNext5Pages")}
           >
@@ -1038,7 +972,7 @@ export default function AdminPostModerationPage() {
           </button>
           <button
             onClick={() => setCurrentPage(totalPages)}
-            disabled={safeCurrentPage === totalPages}
+            disabled={currentPage === totalPages}
             className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t("adminBlogsLastPage")}
           >

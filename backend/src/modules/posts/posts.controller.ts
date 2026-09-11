@@ -183,6 +183,22 @@ export class PostsController {
     return this.postsService.getSavedPosts(user.id);
   }
 
+  @Public()
+  @Get('properties')
+  @ApiOperation({
+    summary: 'Get distinct property / boarding house names for listing filters',
+    description: 'Returns an array of unique active boarding house names for dropdown filter menus.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of unique property names',
+    type: [String],
+  })
+  async getProperties(): Promise<string[]> {
+    this.logger.log('GET /posts/properties called');
+    return this.postsService.getProperties();
+  }
+
   // ─── UC-PU-01: Public Browse & Filter Listings ────────────────────────────
 
   @Public()

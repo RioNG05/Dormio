@@ -94,6 +94,7 @@ export interface BrowsePostsParams {
   province?: string;
   district?: string;
   ward?: string;
+  property?: string;
   minPrice?: number;
   maxPrice?: number;
   minArea?: number;
@@ -201,6 +202,7 @@ export const postService = {
     if (params?.province) queryParams.province = params.province;
     if (params?.district) queryParams.district = params.district;
     if (params?.ward) queryParams.ward = params.ward;
+    if (params?.property && params.property !== "all") queryParams.property = params.property;
     if (params?.minPrice !== undefined) queryParams.minPrice = String(params.minPrice);
     if (params?.maxPrice !== undefined) queryParams.maxPrice = String(params.maxPrice);
     if (params?.minArea !== undefined) queryParams.minArea = String(params.minArea);
@@ -215,6 +217,19 @@ export const postService = {
       return (res as { success: boolean; data: PaginatedPublicPostsResponse }).data;
     }
     return res as PaginatedPublicPostsResponse;
+  },
+
+  /**
+   * Get distinct property / boarding house names for listing filters
+   */
+  async getProperties(): Promise<string[]> {
+    const res = await api.get<{ success: boolean; data: string[] } | string[]>(
+      "/v1/posts/properties"
+    );
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: string[] }).data;
+    }
+    return (res as string[]) || [];
   },
 
   /**
