@@ -27,7 +27,7 @@ A SaaS platform for Vietnamese boarding house management with two main modules:
 - `docs/spec/02-bhms-staff.md` — UC-S-01, UC-S-02 (schedule, timekeeping)
 - `docs/spec/03-bhms-tenant.md` — UC-T-01 → UC-T-07 (notifications, payments, OCR, grievances)
 - `docs/spec/04-bhrp.md` — UC-P-01/02, UC-PU-01 → UC-PU-05 (listing, deposit, chat)
-- `docs/spec/05-admin.md` — UC-A-01 → UC-A-05 (analytics, grievances, mass notifications)
+- `docs/spec/06-admin.md` — UC-A-01 → UC-A-06 (analytics, grievances, mass notifications, platform revenue)
 - `docs/spec/06-appendices.md` — media storage, payment types, schema gaps
 
 ### Code
