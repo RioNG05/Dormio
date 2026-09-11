@@ -11,7 +11,9 @@ import {
   HttpCode,
   Logger,
   ParseUUIDPipe,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -20,11 +22,13 @@ import {
   ApiBearerAuth,
   ApiHeader,
   ApiResponse,
+  ApiProduces,
 } from '@nestjs/swagger';
 import { ContractsService } from './contracts.service';
 import { CreateContractPlatformDto } from './dto/create-contract-platform.dto';
 import { CreateContractDirectDto } from './dto/create-contract-direct.dto';
 import { QueryContractsDto } from './dto/query-contracts.dto';
+import { ExportContractResponseDto } from './dto/export-contract-response.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -235,5 +239,152 @@ export class LandlordContractsController {
       id,
     );
     return { success: true, data };
+  }
+
+  // ─── POST /api/v1/landlord/contracts/:id/export ────────────────────────────
+
+  @Post(':id/export')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Export Contract (UC-L-15)',
+    description:
+      'Renders the unified contract template, persists a new ContractDocument entry, logs AuditLog, and returns document download and print URLs.',
+  })
+  @ApiCreatedResponse({
+    type: ExportContractResponseDto,
+    description: 'Contract document exported and created successfully',
+  })
+  async exportContract(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    this.logger.log(
+      `POST /landlord/contracts/${id}/export called by landlord ${user?.id} for house ${boardingHouseId}`,
+    );
+    const data = await this.contractsService.exportContract(
+      boardingHouseId,
+      id,
+      user.id,
+    );
+    return { success: true, data };
+  }
+
+  // ─── GET /api/v1/landlord/contracts/:id/print ──────────────────────────────
+
+  @Get(':id/print')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Print Contract Template HTML (UC-L-15)',
+    description:
+      'Direct-print trigger: renders the identical server-side contract template formatted for A4 print. Supports ?autoPrint=true to trigger print dialog on load.',
+  })
+  @ApiProduces('text/html')
+  @ApiOkResponse({
+    description: 'Returns rendered HTML page ready for printing',
+  })
+  async printContract(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Query('autoPrint') autoPrint: string,
+    @CurrentUser() user: JwtPayload,
+    @Res() res: Response,
+  ) {
+    this.logger.log(
+      `GET /landlord/contracts/${id}/print (autoPrint=${autoPrint}) called by landlord ${user?.id} for house ${boardingHouseId}`,
+    );
+    const isAutoPrint = autoPrint === 'true' || autoPrint === '1';
+    const html = await this.contractsService.getContractPrintHtml(
+      boardingHouseId,
+      id,
+      isAutoPrint,
+      true,
+    );
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  }
+
+  // ─── GET /api/v1/landlord/contracts/:id/documents ──────────────────────────
+
+  @Get(':id/documents')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'List Contract Documents (UC-L-15)',
+    description: 'Retrieves all generated ContractDocument records for this contract.',
+  })
+  @ApiOkResponse({
+    description: 'List of contract documents retrieved successfully',
+  })
+  async getContractDocuments(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    this.logger.log(
+      `GET /landlord/contracts/${id}/documents called by landlord ${user?.id} for house ${boardingHouseId}`,
+    );
+    const data = await this.contractsService.getContractDocuments(
+      boardingHouseId,
+      id,
+    );
+    return { success: true, data };
+  }
+
+  // ─── GET /api/v1/landlord/contracts/:id/documents/:documentId/download ─────
+
+  @Get(':id/documents/:documentId/download')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Download Contract Document (UC-L-15)',
+    description:
+      'Downloadable-file trigger: streams the rendered contract document as a downloadable HTML file.',
+  })
+  @ApiOkResponse({
+    description: 'File download stream',
+  })
+  async downloadContractDocument(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('documentId', new ParseUUIDPipe({ version: '4' })) documentId: string,
+    @CurrentUser() user: JwtPayload,
+    @Res() res: Response,
+  ) {
+    this.logger.log(
+      `GET /landlord/contracts/${id}/documents/${documentId}/download called by landlord ${user?.id} for house ${boardingHouseId}`,
+    );
+    const { filename, html } =
+      await this.contractsService.getContractDocumentDownload(
+        boardingHouseId,
+        id,
+        documentId,
+      );
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(html);
   }
 }
