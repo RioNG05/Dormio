@@ -241,4 +241,88 @@ export async function getPropertyAnalytics(
   return response.data || (response as unknown as BoardingHouseOverview);
 }
 
+// ─── UC-L-24: Multi-Property Reports & Portfolio Analytics ───────────────────
+
+export interface MultiPropertyPortfolioSummary {
+  totalProperties: number;
+  totalRooms: number;
+  occupiedRooms: number;
+  vacantRooms: number;
+  depositRooms: number;
+  maintenanceRooms: number;
+  occupancyRate: string;
+  currentMonthRevenue: string;
+  currentMonthExpenses: string;
+  netProfit: string;
+  unpaidDebt: string;
+  unpaidInvoicesCount: number;
+  paidInvoicesCount: number;
+  collectionRate: string;
+}
+
+export interface MultiPropertyBreakdown {
+  id: string;
+  name: string;
+  address: string;
+  totalRooms: number;
+  occupiedRooms: number;
+  vacantRooms: number;
+  occupancyRate: string;
+  currentMonthRevenue: string;
+  currentMonthExpenses: string;
+  netProfit: string;
+  unpaidDebt: string;
+  unpaidInvoicesCount: number;
+  expiringContractsCount: number;
+}
+
+export interface MultiPropertyExpiringContract {
+  id: string;
+  propertyName: string;
+  room: string;
+  tenant: string;
+  phone: string;
+  daysLeft: number;
+  endDate: string;
+}
+
+export interface MultiPropertyOverview {
+  portfolioSummary: MultiPropertyPortfolioSummary;
+  propertiesBreakdown: MultiPropertyBreakdown[];
+  revenueChart: OverviewRevenueMonth[];
+  occupancyChart: OverviewOccupancyMonth[];
+  expiringContracts: MultiPropertyExpiringContract[];
+}
+
+export interface AiStrategyActionStep {
+  dayRange: string;
+  title: string;
+  description: string;
+}
+
+export interface AiStrategyResponse {
+  title: string;
+  executiveSummary: string;
+  pricingRecommendations: string[];
+  marketingCampaigns: string[];
+  operationalOptimizations: string[];
+  actionPlan30Days: AiStrategyActionStep[];
+  createdAt: string;
+}
+
+export async function getMultiPropertyOverview(): Promise<MultiPropertyOverview> {
+  const response = await api.get<{ success: boolean; data: MultiPropertyOverview }>(
+    '/v1/boarding-houses/multi-property/overview',
+  );
+  return response.data || (response as unknown as MultiPropertyOverview);
+}
+
+export async function generateMultiPropertyAiStrategy(): Promise<AiStrategyResponse> {
+  const response = await api.post<{ success: boolean; data: AiStrategyResponse }>(
+    '/v1/boarding-houses/multi-property/ai-strategy',
+    {},
+  );
+  return response.data || (response as unknown as AiStrategyResponse);
+}
+
 
