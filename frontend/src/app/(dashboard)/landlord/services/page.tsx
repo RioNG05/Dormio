@@ -1,197 +1,68 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Wrench, Plus, Zap, Droplets, Wifi, Trash2, ShieldCheck,
-  CarFront, Search, Building2, Edit3, Settings2, Info,
+  CarFront, Search, Edit3, Info,
   UploadCloud, FileSpreadsheet, AlertTriangle, AlertCircle,
-  CheckCircle2, DollarSign, Tag, Flame, Tv, Waves, Box,
-  ChevronDown, LayoutGrid, List, Home, Users, Check, X, History,
-  Layers, ArrowUpRight, Clock, MapPin
+  CheckCircle2, Flame, Tv, Waves, Box,
+  LayoutGrid, List, Home, X, Clock, MapPin, RefreshCw, Loader2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-
-export interface TierRate {
-  name: string;
-  from: number;
-  to: number | null; // null = vô hạn
-  price: number;
-}
-
-export interface PriceHistory {
-  date: string;
-  oldPrice: string;
-  newPrice: string;
-  reason: string;
-}
-
-export interface ServiceItem {
-  id: string;
-  name: string;
-  type: "Theo chỉ số đồng hồ" | "Cố định theo phòng" | "Cố định theo người" | "Theo số lượng / Đăng ký" | "Miễn phí" | string;
-  unit: string;
-  price: string;
-  numericPrice: number;
-  pricingMethod: "flat" | "tiered"; // Cố định vs Bậc thang
-  tieredRates?: TierRate[];
-  iconName: string;
-  color: string;
-  bg: string;
-  isActive: boolean;
-  isMandatory: boolean; // Bắt buộc hay Tùy chọn
-  appliedRoomsCount: number;
-  priceHistory: PriceHistory[];
-  note?: string;
-}
-
-const initialServices: ServiceItem[] = [
-  {
-    id: "SRV-01",
-    name: "Điện sinh hoạt",
-    type: "Theo chỉ số đồng hồ",
-    unit: "kWh",
-    price: "3.500 ₫",
-    numericPrice: 3500,
-    pricingMethod: "flat",
-    iconName: "Zap",
-    color: "text-amber-500",
-    bg: "bg-amber-50 border-amber-200/80",
-    isActive: true,
-    isMandatory: true,
-    appliedRoomsCount: 20,
-    priceHistory: [
-      { date: "01/01/2026", oldPrice: "3.200 ₫", newPrice: "3.500 ₫", reason: "Điều chỉnh theo giá điện EVN đầu năm" },
-      { date: "01/06/2025", oldPrice: "3.000 ₫", newPrice: "3.200 ₫", reason: "Tăng nhẹ chi phí vận hành công tơ" }
-    ],
-    note: "Chốt chỉ số vào ngày 25 hàng tháng. Giá công tơ riêng."
-  },
-  {
-    id: "SRV-02",
-    name: "Nước sinh hoạt",
-    type: "Theo chỉ số đồng hồ",
-    unit: "m³",
-    price: "25.000 ₫",
-    numericPrice: 25000,
-    pricingMethod: "flat",
-    iconName: "Droplets",
-    color: "text-blue-500",
-    bg: "bg-blue-50 border-blue-200/80",
-    isActive: true,
-    isMandatory: true,
-    appliedRoomsCount: 20,
-    priceHistory: [
-      { date: "01/01/2026", oldPrice: "22.000 ₫", newPrice: "25.000 ₫", reason: "Điều chỉnh theo đơn giá nước sạch thành phố" }
-    ],
-    note: "Tính theo số khối (m³) trên đồng hồ từng phòng."
-  },
-  {
-    id: "SRV-03",
-    name: "Internet / Wifi tốc độ cao",
-    type: "Cố định theo phòng",
-    unit: "Phòng/Tháng",
-    price: "100.000 ₫",
-    numericPrice: 100000,
-    pricingMethod: "flat",
-    iconName: "Wifi",
-    color: "text-indigo-500",
-    bg: "bg-indigo-50 border-indigo-200/80",
-    isActive: true,
-    isMandatory: false,
-    appliedRoomsCount: 18,
-    priceHistory: [
-      { date: "01/03/2025", oldPrice: "80.000 ₫", newPrice: "100.000 ₫", reason: "Nâng cấp đường truyền băng thông 300Mbps" }
-    ],
-    note: "Gói mạng doanh nghiệp 300Mbps, phủ sóng toàn tầng."
-  },
-  {
-    id: "SRV-04",
-    name: "Dịch vụ Vệ sinh & Thu gom rác",
-    type: "Cố định theo người",
-    unit: "Người/Tháng",
-    price: "30.000 ₫",
-    numericPrice: 30000,
-    pricingMethod: "flat",
-    iconName: "Trash2",
-    color: "text-emerald-500",
-    bg: "bg-emerald-50 border-emerald-200/80",
-    isActive: true,
-    isMandatory: true,
-    appliedRoomsCount: 20,
-    priceHistory: [],
-    note: "Thu dọn rác sinh hoạt và lau dọn hành lang 3 lần/tuần."
-  },
-  {
-    id: "SRV-05",
-    name: "Phí gửi xe máy",
-    type: "Theo số lượng / Đăng ký",
-    unit: "Xe/Tháng",
-    price: "120.000 ₫",
-    numericPrice: 120000,
-    pricingMethod: "flat",
-    iconName: "CarFront",
-    color: "text-purple-500",
-    bg: "bg-purple-50 border-purple-200/80",
-    isActive: true,
-    isMandatory: false,
-    appliedRoomsCount: 15,
-    priceHistory: [],
-    note: "Quản lý bằng thẻ từ xe máy, camera an ninh 24/7."
-  },
-  {
-    id: "SRV-06",
-    name: "Phí An ninh & Thang máy",
-    type: "Cố định theo phòng",
-    unit: "Phòng/Tháng",
-    price: "50.000 ₫",
-    numericPrice: 50000,
-    pricingMethod: "flat",
-    iconName: "ShieldCheck",
-    color: "text-rose-500",
-    bg: "bg-rose-50 border-rose-200/80",
-    isActive: true,
-    isMandatory: true,
-    appliedRoomsCount: 20,
-    priceHistory: [],
-    note: "Bảo trì thang máy nhập khẩu & bảo vệ camera 24/24."
-  }
-];
+import {
+  serviceService,
+  ServiceItem,
+  ServicesSummary,
+  ServiceAssignedRoom
+} from "@/services/service.service";
 
 export default function ServicesPage() {
   const { activeBuilding } = useAuth();
 
-  const [services, setServices] = useState<ServiceItem[]>(initialServices);
+  // Data States
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [summary, setSummary] = useState<ServicesSummary>({
+    totalServices: 0,
+    meteredCount: 0,
+    roomFixedCount: 0,
+    otherCount: 0,
+    activeCount: 0,
+    inactiveCount: 0,
+  });
+  const [totalItems, setTotalItems] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filters & View Mode
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState(""); // "" | "metered" | "room" | "person" | "other"
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Pagination States
+  // Pagination States (Rule #9: Grid default 6, Table 10)
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
 
-  // Building prefix helper
-  const buildingPrefix = activeBuilding.id === "vinahouse" ? "B2" : "B1";
-
-  // Modal States
+  // Add / Edit Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
   // Form Fields
   const [formName, setFormName] = useState("");
-  const [formType, setFormType] = useState<string>("Theo chỉ số đồng hồ");
+  const [formPrice, setFormPrice] = useState<number | string>(0);
   const [formUnit, setFormUnit] = useState("kWh");
-  const [formPrice, setFormPrice] = useState("3.500 ₫");
-  const [formPricingMethod, setFormPricingMethod] = useState<"flat" | "tiered">("flat");
-  const [formIcon, setFormIcon] = useState("Zap");
-  const [formIsMandatory, setFormIsMandatory] = useState(true);
-  const [formNote, setFormNote] = useState("");
-  const [formChangeReason, setFormChangeReason] = useState("");
+  const [formIsMetered, setFormIsMetered] = useState(false);
+  const [formAutoApplied, setFormAutoApplied] = useState(true);
+  const [formStatus, setFormStatus] = useState<"active" | "inactive">("active");
 
   // Rooms Applied Modal State
   const [roomsModalService, setRoomsModalService] = useState<ServiceItem | null>(null);
+  const [serviceRooms, setServiceRooms] = useState<ServiceAssignedRoom[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
 
-  // Price History Modal State
-  const [historyModalService, setHistoryModalService] = useState<ServiceItem | null>(null);
+  // Delete Confirmation Modal State
+  const [deleteTarget, setDeleteTarget] = useState<ServiceItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Alert & Confirm Modals
   const [alertModal, setAlertModal] = useState<{
@@ -203,7 +74,7 @@ export default function ServicesPage() {
     isOpen: false,
     title: "Thông báo",
     message: "",
-    type: "info"
+    type: "info",
   });
 
   const [confirmModal, setConfirmModal] = useState<{
@@ -213,10 +84,91 @@ export default function ServicesPage() {
     confirmText?: string;
     cancelText?: string;
     onConfirm: () => void;
-  }>({ isOpen: false, title: "", message: "", onConfirm: () => { } });
+  }>({ isOpen: false, title: "", message: "", onConfirm: () => {} });
 
-  const showAlert = (message: string, type: "warning" | "error" | "success" | "info" = "warning", title: string = "Thông báo") => {
+  const showAlert = (
+    message: string,
+    type: "warning" | "error" | "success" | "info" = "info",
+    title: string = "Thông báo",
+  ) => {
     setAlertModal({ isOpen: true, title, message, type });
+  };
+
+  // Helper to determine service visual representation
+  const getServiceVisuals = (name: string, isMetered: boolean, unit: string) => {
+    const lowerName = name.toLowerCase();
+    const lowerUnit = unit.toLowerCase();
+
+    if (lowerName.includes("điện") || lowerName.includes("dien")) {
+      return {
+        iconName: "Zap",
+        color: "text-amber-500",
+        bg: "bg-amber-50 border-amber-200/80",
+        typeLabel: "Theo chỉ số đồng hồ",
+      };
+    }
+    if (lowerName.includes("nước") || lowerName.includes("nuoc")) {
+      return {
+        iconName: "Droplets",
+        color: "text-blue-500",
+        bg: "bg-blue-50 border-blue-200/80",
+        typeLabel: "Theo chỉ số đồng hồ",
+      };
+    }
+    if (lowerName.includes("wifi") || lowerName.includes("mạng") || lowerName.includes("internet")) {
+      return {
+        iconName: "Wifi",
+        color: "text-indigo-500",
+        bg: "bg-indigo-50 border-indigo-200/80",
+        typeLabel: "Cố định theo phòng",
+      };
+    }
+    if (lowerName.includes("rác") || lowerName.includes("vệ sinh") || lowerName.includes("rac")) {
+      return {
+        iconName: "Trash2",
+        color: "text-emerald-500",
+        bg: "bg-emerald-50 border-emerald-200/80",
+        typeLabel: lowerUnit.includes("người") ? "Cố định theo người" : "Cố định theo phòng",
+      };
+    }
+    if (lowerName.includes("xe") || lowerName.includes("gửi xe") || lowerName.includes("bãi xe")) {
+      return {
+        iconName: "CarFront",
+        color: "text-purple-500",
+        bg: "bg-purple-50 border-purple-200/80",
+        typeLabel: "Theo số lượng / Đăng ký",
+      };
+    }
+    if (lowerName.includes("an ninh") || lowerName.includes("thang máy") || lowerName.includes("bảo vệ")) {
+      return {
+        iconName: "ShieldCheck",
+        color: "text-rose-500",
+        bg: "bg-rose-50 border-rose-200/80",
+        typeLabel: "Cố định theo phòng",
+      };
+    }
+    if (lowerName.includes("gas") || lowerName.includes("bếp")) {
+      return {
+        iconName: "Flame",
+        color: "text-orange-500",
+        bg: "bg-orange-50 border-orange-200/80",
+        typeLabel: isMetered ? "Theo chỉ số đồng hồ" : "Cố định theo phòng",
+      };
+    }
+
+    // Generic fallback
+    let typeLabel = "Cố định";
+    if (isMetered) typeLabel = "Theo chỉ số đồng hồ";
+    else if (lowerUnit.includes("phòng") || lowerUnit.includes("phong")) typeLabel = "Cố định theo phòng";
+    else if (lowerUnit.includes("người") || lowerUnit.includes("nguoi")) typeLabel = "Cố định theo người";
+    else if (lowerUnit.includes("xe") || lowerUnit.includes("chiếc")) typeLabel = "Theo số lượng / Đăng ký";
+
+    return {
+      iconName: "Wrench",
+      color: "text-[#2AC1BC]",
+      bg: "bg-teal-50 border-teal-200/80",
+      typeLabel,
+    };
   };
 
   const renderIcon = (iconName: string, className = "w-6 h-6") => {
@@ -230,40 +182,81 @@ export default function ServicesPage() {
       case "Flame": return <Flame className={className} />;
       case "Tv": return <Tv className={className} />;
       case "Waves": return <Waves className={className} />;
-      default: return <Box className={className} />;
+      default: return <Wrench className={className} />;
     }
   };
 
+  // Fetch Services from Backend
+  const fetchServices = useCallback(async () => {
+    if (!activeBuilding?.id) return;
+    setIsLoading(true);
+    try {
+      let isMeteredParam: boolean | undefined = undefined;
+      if (typeFilter === "metered") isMeteredParam = true;
+      if (typeFilter === "room" || typeFilter === "person" || typeFilter === "other") isMeteredParam = false;
+
+      const response = await serviceService.getServices({
+        search: searchQuery.trim() || undefined,
+        isMetered: isMeteredParam,
+        page: currentPage,
+        limit: itemsPerPage,
+      });
+
+      setServices(response.items);
+      setSummary(response.summary);
+      setTotalItems(response.meta.total);
+    } catch (err: any) {
+      showAlert(err?.message || "Không thể tải danh sách dịch vụ", "error", "Lỗi tải dữ liệu");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeBuilding?.id, searchQuery, typeFilter, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
+
+  // Fetch Rooms for Assigned Modal
+  const handleOpenRoomsModal = async (service: ServiceItem) => {
+    setRoomsModalService(service);
+    setIsLoadingRooms(true);
+    try {
+      const res = await serviceService.getServiceRooms(service.id);
+      setServiceRooms(res.rooms);
+    } catch (err: any) {
+      showAlert(err?.message || "Không thể tải danh sách phòng áp dụng", "error");
+    } finally {
+      setIsLoadingRooms(false);
+    }
+  };
+
+  // Add Modal Open
   const handleOpenAddModal = () => {
     setSelectedService(null);
     setFormName("");
-    setFormType("Theo chỉ số đồng hồ");
+    setFormPrice(0);
     setFormUnit("kWh");
-    setFormPrice("3.500 ₫");
-    setFormPricingMethod("flat");
-    setFormIcon("Zap");
-    setFormIsMandatory(true);
-    setFormNote("");
-    setFormChangeReason("");
+    setFormIsMetered(true);
+    setFormAutoApplied(true);
+    setFormStatus("active");
     setIsDirty(false);
     setIsModalOpen(true);
   };
 
+  // Edit Modal Open
   const handleOpenEditModal = (srv: ServiceItem) => {
     setSelectedService(srv);
     setFormName(srv.name);
-    setFormType(srv.type);
+    setFormPrice(srv.numericPrice);
     setFormUnit(srv.unit);
-    setFormPrice(srv.price);
-    setFormPricingMethod(srv.pricingMethod);
-    setFormIcon(srv.iconName);
-    setFormIsMandatory(srv.isMandatory);
-    setFormNote(srv.note || "");
-    setFormChangeReason("");
+    setFormIsMetered(srv.isMetered);
+    setFormAutoApplied(srv.autoApplied);
+    setFormStatus(srv.status);
     setIsDirty(false);
     setIsModalOpen(true);
   };
 
+  // Modal Close with Rule #10 Confirm Modal on Dirty Draft
   const handleCloseModal = () => {
     if (isDirty) {
       setConfirmModal({
@@ -271,122 +264,115 @@ export default function ServicesPage() {
         title: "Xác nhận đóng form",
         message: "Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng và hủy các thông tin đã nhập?",
         confirmText: "Hủy thay đổi & Đóng",
-        cancelText: "Tiếp tục sửa",
+        cancelText: "Tiếp tục chỉnh sửa",
         onConfirm: () => {
           setIsModalOpen(false);
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-          setTimeout(() => setIsDirty(false), 200);
-        }
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+          setIsDirty(false);
+        },
       });
     } else {
       setIsModalOpen(false);
     }
   };
 
-  const handleSaveService = () => {
+  // Save (Create or Update) Service
+  const handleSaveService = async () => {
     if (!formName.trim()) {
       showAlert("Vui lòng nhập Tên dịch vụ!", "warning", "Thiếu thông tin");
       return;
     }
 
-    const numPrice = parseInt(formPrice.replace(/\D/g, "")) || 0;
-    const formattedPrice = numPrice > 0 ? `${numPrice.toLocaleString("vi-VN")} ₫` : formPrice;
-
-    let iconColor = "text-amber-500";
-    let iconBg = "bg-amber-50 border-amber-200/80";
-
-    if (formIcon === "Droplets") { iconColor = "text-blue-500"; iconBg = "bg-blue-50 border-blue-200/80"; }
-    else if (formIcon === "Wifi") { iconColor = "text-indigo-500"; iconBg = "bg-indigo-50 border-indigo-200/80"; }
-    else if (formIcon === "Trash2") { iconColor = "text-emerald-500"; iconBg = "bg-emerald-50 border-emerald-200/80"; }
-    else if (formIcon === "CarFront") { iconColor = "text-purple-500"; iconBg = "bg-purple-50 border-purple-200/80"; }
-    else if (formIcon === "ShieldCheck") { iconColor = "text-rose-500"; iconBg = "bg-rose-50 border-rose-200/80"; }
-
-    const todayStr = new Date().toLocaleDateString("vi-VN");
-
-    if (selectedService) {
-      // Check if price changed -> record audit log
-      let updatedHistory = [...selectedService.priceHistory];
-      if (selectedService.price !== formattedPrice) {
-        updatedHistory.unshift({
-          date: todayStr,
-          oldPrice: selectedService.price,
-          newPrice: formattedPrice,
-          reason: formChangeReason.trim() || "Cập nhật đơn giá định kỳ"
-        });
-      }
-
-      setServices(prev => prev.map(s => s.id === selectedService.id ? {
-        ...s,
-        name: formName.trim(),
-        type: formType,
-        unit: formUnit.trim(),
-        price: formattedPrice,
-        numericPrice: numPrice,
-        pricingMethod: formPricingMethod,
-        iconName: formIcon,
-        color: iconColor,
-        bg: iconBg,
-        isMandatory: formIsMandatory,
-        priceHistory: updatedHistory,
-        note: formNote.trim()
-      } : s));
-      showAlert("Đã cập nhật dịch vụ thành công!", "success", "Cập nhật thành công");
-    } else {
-      const newId = `SRV-${String(services.length + 1).padStart(2, '0')}`;
-      const newService: ServiceItem = {
-        id: newId,
-        name: formName.trim(),
-        type: formType,
-        unit: formUnit.trim(),
-        price: formattedPrice,
-        numericPrice: numPrice,
-        pricingMethod: formPricingMethod,
-        iconName: formIcon,
-        color: iconColor,
-        bg: iconBg,
-        isActive: true,
-        isMandatory: formIsMandatory,
-        appliedRoomsCount: 20,
-        priceHistory: [
-          { date: todayStr, oldPrice: "Tạo mới", newPrice: formattedPrice, reason: "Khởi tạo đơn giá ban đầu" }
-        ],
-        note: formNote.trim()
-      };
-      setServices(prev => [newService, ...prev]);
-      showAlert("Đã thêm dịch vụ mới thành công!", "success", "Thêm thành công");
+    const priceNum = typeof formPrice === "number" ? formPrice : parseInt(String(formPrice).replace(/\D/g, ""), 10) || 0;
+    if (priceNum < 0) {
+      showAlert("Đơn giá không được nhỏ hơn 0!", "warning", "Dữ liệu không hợp lệ");
+      return;
     }
 
-    setIsModalOpen(false);
-    setIsDirty(false);
-  };
+    if (!formUnit.trim()) {
+      showAlert("Vui lòng nhập Đơn vị tính (VD: kWh, m³, phòng/tháng)!", "warning", "Thiếu thông tin");
+      return;
+    }
 
-  const handleToggleActive = (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setServices(prev => prev.map(s => {
-      if (s.id === id) {
-        const nextState = !s.isActive;
-        showAlert(`Đã ${nextState ? 'KÍCH HOẠT' : 'TẠM DỪNG'} dịch vụ [${s.name}]`, nextState ? "success" : "info", "Cập nhật trạng thái");
-        return { ...s, isActive: nextState };
+    setIsSubmitting(true);
+    try {
+      if (selectedService) {
+        await serviceService.updateService(selectedService.id, {
+          name: formName.trim(),
+          price: priceNum,
+          unit: formUnit.trim(),
+          isMetered: formIsMetered,
+          autoApplied: formAutoApplied,
+          status: formStatus,
+        });
+        showAlert("Đã cập nhật dịch vụ thành công!", "success", "Thành công");
+      } else {
+        await serviceService.createService({
+          name: formName.trim(),
+          price: priceNum,
+          unit: formUnit.trim(),
+          isMetered: formIsMetered,
+          autoApplied: formAutoApplied,
+          status: formStatus,
+        });
+        showAlert("Đã thêm dịch vụ mới thành công!", "success", "Thành công");
       }
-      return s;
-    }));
+
+      setIsModalOpen(false);
+      setIsDirty(false);
+      fetchServices();
+    } catch (err: any) {
+      showAlert(err?.message || "Thao tác thất bại", "error", "Lỗi");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.unit.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === "" || service.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  // Toggle Service Active Status
+  const handleToggleActive = async (srv: ServiceItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextStatus = srv.status === "active" ? "inactive" : "active";
 
-  const totalPages = Math.ceil(filteredServices.length / itemsPerPage) || 1;
-  const paginatedServices = filteredServices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    try {
+      await serviceService.updateService(srv.id, { status: nextStatus });
+      showAlert(
+        `Đã ${nextStatus === "active" ? "KÍCH HOẠT" : "TẠM DỪNG"} dịch vụ [${srv.name}]`,
+        nextStatus === "active" ? "success" : "info",
+        "Cập nhật trạng thái",
+      );
+      // Optimistic update local state
+      setServices((prev) =>
+        prev.map((s) => (s.id === srv.id ? { ...s, status: nextStatus } : s)),
+      );
+      setSummary((prev) => ({
+        ...prev,
+        activeCount: nextStatus === "active" ? prev.activeCount + 1 : prev.activeCount - 1,
+        inactiveCount: nextStatus === "inactive" ? prev.inactiveCount + 1 : prev.inactiveCount - 1,
+      }));
+    } catch (err: any) {
+      showAlert(err?.message || "Không thể cập nhật trạng thái", "error");
+      fetchServices();
+    }
+  };
 
-  const meteredCount = services.filter(s => s.type === "Theo chỉ số đồng hồ").length;
-  const roomFixedCount = services.filter(s => s.type === "Cố định theo phòng").length;
-  const personFixedCount = services.filter(s => s.type === "Cố định theo người" || s.type === "Theo số lượng / Đăng ký").length;
-  const activeCount = services.filter(s => s.isActive).length;
+  // Delete Service
+  const handleDeleteService = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await serviceService.deleteService(deleteTarget.id);
+      showAlert(`Đã xóa dịch vụ [${deleteTarget.name}] thành công!`, "success", "Xóa thành công");
+      setDeleteTarget(null);
+      fetchServices();
+    } catch (err: any) {
+      showAlert(err?.message || "Không thể xóa dịch vụ này", "error", "Lỗi xóa dịch vụ");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Calculation for pagination
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
@@ -414,6 +400,13 @@ export default function ServicesPage() {
             <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
           </button>
           <button
+            onClick={fetchServices}
+            className="cursor-pointer px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+            title="Làm mới dữ liệu"
+          >
+            <RefreshCw className={`w-4 h-4 text-zinc-500 ${isLoading ? "animate-spin" : ""}`} /> Làm mới
+          </button>
+          <button
             onClick={handleOpenAddModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
@@ -422,7 +415,7 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* DARK HERO BANNER CARD (IDENTICAL TO ASSETS PAGE HERO BANNER) */}
+      {/* DARK HERO BANNER CARD */}
       <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
           <Wrench className="w-48 sm:w-64 h-48 sm:h-64" />
@@ -432,23 +425,27 @@ export default function ServicesPage() {
           <div className="space-y-2.5 max-w-xl w-full">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                {activeBuilding.name}
+                {activeBuilding?.name || "Tòa nhà"}
               </h2>
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
               <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
+                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
+                  {activeBuilding?.address || "Chưa thiết lập địa chỉ"}
+                </span>
               </div>
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-              >
-                <span>Xem Bản Đồ</span> &rarr;
-              </a>
+              {activeBuilding?.address && (
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <span>Xem Bản Đồ</span> &rarr;
+                </a>
+              )}
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
@@ -461,7 +458,7 @@ export default function ServicesPage() {
               <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng dịch vụ</span>
-                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{services.length}</span>
+                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{summary.totalServices}</span>
               </div>
             </div>
 
@@ -469,7 +466,7 @@ export default function ServicesPage() {
               <Zap className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Theo đồng hồ</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{meteredCount}</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{summary.meteredCount}</span>
               </div>
             </div>
 
@@ -477,7 +474,7 @@ export default function ServicesPage() {
               <Wifi className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Cố định phòng</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{roomFixedCount}</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{summary.roomFixedCount}</span>
               </div>
             </div>
 
@@ -485,7 +482,7 @@ export default function ServicesPage() {
               <CarFront className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Theo người/xe</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{personFixedCount}</span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{summary.otherCount}</span>
               </div>
             </div>
           </div>
@@ -500,22 +497,25 @@ export default function ServicesPage() {
         <div className="space-y-0.5 text-xs">
           <h3 className="font-extrabold text-zinc-900">Quy tắc tính bảng giá dịch vụ tòa nhà</h3>
           <p className="text-zinc-600 leading-relaxed font-medium">
-            Đơn giá mặc định bên dưới áp dụng trực tiếp cho tất cả các phòng thuộc <strong className="text-zinc-800">{activeBuilding.name}</strong>. Các dịch vụ <span className="text-rose-600 font-bold">Bắt buộc</span> sẽ tự động thu hàng tháng, dịch vụ <span className="text-indigo-600 font-bold">Tùy chọn</span> có thể tùy chỉnh theo nhu cầu thực tế của từng khách thuê.
+            Đơn giá bên dưới áp dụng trực tiếp cho các phòng thuộc <strong className="text-zinc-800">{activeBuilding?.name || "tòa nhà"}</strong>. Các dịch vụ <span className="text-rose-600 font-bold">Bắt buộc</span> sẽ tự động tính vào hóa đơn hàng tháng, dịch vụ <span className="text-indigo-600 font-bold">Tùy chọn</span> có thể linh hoạt đăng ký theo từng phòng.
           </p>
         </div>
       </div>
 
-      {/* FILTER & TOOLBAR BAR (FIXED FOR 100% MOBILE RESPONSIVENESS) */}
+      {/* FILTER & TOOLBAR BAR */}
       <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 sm:p-4 shadow-2xs space-y-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Search Bar - Full Width on Mobile */}
+          {/* Search Bar */}
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               type="text"
               placeholder="Tìm theo tên dịch vụ..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
             />
           </div>
@@ -525,17 +525,31 @@ export default function ServicesPage() {
             <span className="text-xs text-zinc-400 font-semibold sm:hidden">Chế độ xem:</span>
             <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200">
               <button
-                onClick={() => { setViewMode("grid"); setItemsPerPage(6); setCurrentPage(1); }}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                onClick={() => {
+                  setViewMode("grid");
+                  setItemsPerPage(6);
+                  setCurrentPage(1);
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === "grid"
+                    ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold"
+                    : "text-zinc-500 hover:text-zinc-900"
+                }`}
                 title="Xem dạng thẻ (Grid)"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
-                onClick={() => { setViewMode("list"); setItemsPerPage(10); setCurrentPage(1); }}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                onClick={() => {
+                  setViewMode("list");
+                  setItemsPerPage(10);
+                  setCurrentPage(1);
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === "list"
+                    ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold"
+                    : "text-zinc-500 hover:text-zinc-900"
+                }`}
                 title="Xem dạng bảng (List)"
               >
                 <List className="w-4 h-4" />
@@ -544,22 +558,24 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        {/* Category Pills (Flex Wrap on Mobile so nothing overflows off screen) */}
+        {/* Category Pills */}
         <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-100">
           {[
             { label: "Tất cả dịch vụ", val: "" },
-            { label: "Theo đồng hồ", val: "Theo chỉ số đồng hồ" },
-            { label: "Cố định theo phòng", val: "Cố định theo phòng" },
-            { label: "Cố định theo người", val: "Cố định theo người" },
-            { label: "Theo số lượng / Xe", val: "Theo số lượng / Đăng ký" }
-          ].map(tab => (
+            { label: "Theo đồng hồ", val: "metered" },
+            { label: "Cố định", val: "room" },
+          ].map((tab) => (
             <button
               key={tab.val}
-              onClick={() => setTypeFilter(tab.val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${typeFilter === tab.val
-                ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
-                }`}
+              onClick={() => {
+                setTypeFilter(tab.val);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                typeFilter === tab.val
+                  ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
+              }`}
             >
               {tab.label}
             </button>
@@ -567,114 +583,132 @@ export default function ServicesPage() {
         </div>
       </div>
 
+      {/* Loading Indicator */}
+      {isLoading && (
+        <div className="py-12 flex flex-col items-center justify-center space-y-2">
+          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <p className="text-xs text-zinc-500 font-medium">Đang tải danh sách dịch vụ...</p>
+        </div>
+      )}
+
       {/* CONTENT DISPLAY: GRID OR LIST VIEW */}
-      {viewMode === "grid" ? (
+      {!isLoading && viewMode === "grid" ? (
         /* GRID VIEW CARDS */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filteredServices.length > 0 ? (
-            paginatedServices.map((service) => (
-              <div
-                key={service.id}
-                className={`bg-white border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${service.isActive ? "border-zinc-200/90" : "border-zinc-200 opacity-70 bg-zinc-50/50"
+          {services.length > 0 ? (
+            services.map((service) => {
+              const visual = getServiceVisuals(service.name, service.isMetered, service.unit);
+              const isActive = service.status === "active";
+              const formattedPrice = `${service.numericPrice.toLocaleString("vi-VN")} ₫`;
+
+              return (
+                <div
+                  key={service.id}
+                  className={`bg-white border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${
+                    isActive ? "border-zinc-200/90" : "border-zinc-200 opacity-70 bg-zinc-50/50"
                   }`}
-              >
-                <div className="space-y-3.5">
-                  {/* Top Header Row */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-11 sm:w-12 h-11 sm:h-12 rounded-2xl flex items-center justify-center border shadow-2xs shrink-0 ${service.bg} ${service.color}`}>
-                        {renderIcon(service.iconName, "w-5 sm:w-6 h-5 sm:h-6")}
-                      </div>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] font-black text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/30">
-                            {service.id}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${service.isMandatory ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                            }`}>
-                            {service.isMandatory ? "Bắt buộc" : "Tùy chọn"}
-                          </span>
+                >
+                  <div className="space-y-3.5">
+                    {/* Top Header Row */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-11 sm:w-12 h-11 sm:h-12 rounded-2xl flex items-center justify-center border shadow-2xs shrink-0 ${visual.bg} ${visual.color}`}>
+                          {renderIcon(visual.iconName, "w-5 sm:w-6 h-5 sm:h-6")}
                         </div>
-                        <h3 className="font-black text-zinc-900 text-base sm:text-lg mt-1">{service.name}</h3>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[10px] font-black text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/30">
+                              {service.id.substring(0, 8).toUpperCase()}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
+                                service.autoApplied
+                                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                                  : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                              }`}
+                            >
+                              {service.autoApplied ? "Bắt buộc" : "Tùy chọn"}
+                            </span>
+                          </div>
+                          <h3 className="font-black text-zinc-900 text-base sm:text-lg mt-1">{service.name}</h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* STATUS TOGGLE WITH SWITCH */}
+                    <div className="flex items-center justify-between p-3 bg-zinc-50 rounded-2xl border border-zinc-200/80">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-extrabold text-zinc-700 block">Trạng thái áp dụng:</span>
+                        <span className={`text-[11px] font-bold block ${isActive ? "text-emerald-600" : "text-zinc-400"}`}>
+                          {isActive ? "Đang Bật (Tính phí vào hóa đơn)" : "Đã Tắt (Tạm ngưng thu phí)"}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleActive(service, e)}
+                        className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          isActive ? "bg-[#2AC1BC]" : "bg-zinc-300"
+                        }`}
+                        title={isActive ? "Click để Tắt dịch vụ" : "Click để Bật dịch vụ"}
+                      >
+                        <span className="sr-only">Chuyển trạng thái áp dụng</span>
+                        <span
+                          className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            isActive ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Service Specification Table */}
+                    <div className="p-3.5 bg-zinc-50/80 rounded-2xl space-y-2 text-xs border border-zinc-100">
+                      <div className="flex justify-between items-center text-zinc-600">
+                        <span className="text-zinc-400 font-medium">Hình thức thu:</span>
+                        <span className="font-bold text-zinc-900 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
+                          {visual.typeLabel}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-zinc-600">
+                        <span className="text-zinc-400 font-medium">Đơn vị tính:</span>
+                        <span className="font-bold text-zinc-800">{service.unit}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-zinc-600 pt-1 border-t border-zinc-200/60">
+                        <span className="text-zinc-400 font-medium">Đơn giá mặc định:</span>
+                        <span className="font-black text-emerald-600 text-base sm:text-lg">{formattedPrice}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* PROFESIONAL & MINIMAL STATUS TOGGLE WITH EXPLICIT STATE NOTE & SWITCH BUTTON */}
-                  <div className="flex items-center justify-between p-3 bg-zinc-50 rounded-2xl border border-zinc-200/80">
-                    <div className="space-y-0.5">
-                      <span className="text-xs font-extrabold text-zinc-700 block">Trạng thái áp dụng:</span>
-                      <span className={`text-[11px] font-bold block ${service.isActive ? "text-emerald-600" : "text-zinc-400"}`}>
-                        {service.isActive ? "Đang Bật (Tính phí vào hóa đơn)" : "Đã Tắt (Tạm ngưng thu phí)"}
-                      </span>
-                    </div>
-
+                  {/* Footer Action Controls */}
+                  <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5 text-xs">
                     <button
-                      type="button"
-                      onClick={(e) => handleToggleActive(service.id, e)}
-                      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${service.isActive ? "bg-[#2AC1BC]" : "bg-zinc-300"
-                        }`}
-                      title={service.isActive ? "Click để Tắt dịch vụ" : "Click để Bật dịch vụ"}
+                      onClick={() => handleOpenRoomsModal(service)}
+                      className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer text-[11px]"
+                      title="Xem danh sách phòng áp dụng"
                     >
-                      <span className="sr-only">Chuyển trạng thái áp dụng</span>
-                      <span
-                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${service.isActive ? "translate-x-5" : "translate-x-0"
-                          }`}
-                      />
+                      <Home className="w-3.5 h-3.5 text-[#2AC1BC]" /> {service.appliedRoomsCount} phòng
                     </button>
-                  </div>
 
-                  {/* Service Specification Table */}
-                  <div className="p-3.5 bg-zinc-50/80 rounded-2xl space-y-2 text-xs border border-zinc-100">
-                    <div className="flex justify-between items-center text-zinc-600">
-                      <span className="text-zinc-400 font-medium">Hình thức thu:</span>
-                      <span className="font-bold text-zinc-900 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
-                        {service.type}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-zinc-600">
-                      <span className="text-zinc-400 font-medium">Đơn vị tính:</span>
-                      <span className="font-bold text-zinc-800">{service.unit}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-zinc-600 pt-1 border-t border-zinc-200/60">
-                      <span className="text-zinc-400 font-medium">Đơn giá mặc định:</span>
-                      <span className="font-black text-emerald-600 text-base sm:text-lg">{service.price}</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEditModal(service)}
+                        className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-[#2AC1BC]/30 text-[11px]"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Sửa
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(service)}
+                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-rose-200 text-[11px]"
+                        title="Xóa dịch vụ"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-
-                  {service.note && (
-                    <p className="text-[11px] text-zinc-500 font-medium leading-relaxed italic bg-zinc-50/60 p-2.5 rounded-xl border border-zinc-100">
-                      "{service.note}"
-                    </p>
-                  )}
                 </div>
-
-                {/* Footer Action Controls */}
-                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5 text-xs">
-                  <button
-                    onClick={() => setRoomsModalService(service)}
-                    className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer text-[11px]"
-                  >
-                    <Home className="w-3.5 h-3.5 text-[#2AC1BC]" /> {service.appliedRoomsCount} phòng
-                  </button>
-
-                  <button
-                    onClick={() => setHistoryModalService(service)}
-                    className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer text-[11px]"
-                    title="Xem lịch sử điều chỉnh giá"
-                  >
-                    <History className="w-3.5 h-3.5 text-amber-500" /> Lịch sử giá
-                  </button>
-
-                  <button
-                    onClick={() => handleOpenEditModal(service)}
-                    className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-[#2AC1BC]/30 text-[11px]"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" /> Sửa
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-full py-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-zinc-200 border-dashed p-6 text-center space-y-2">
               <Wrench className="w-12 h-12 text-zinc-300 mb-1" />
@@ -683,113 +717,126 @@ export default function ServicesPage() {
             </div>
           )}
         </div>
-      ) : (
+      ) : !isLoading ? (
         /* LIST VIEW TABLE */
         <div className="bg-white border border-zinc-200/80 rounded-2xl sm:rounded-3xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left min-w-[900px]">
               <thead className="bg-zinc-50 text-zinc-500 uppercase font-extrabold border-b border-zinc-200 whitespace-nowrap">
                 <tr>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[200px]">
-                    Mã / Dịch vụ
-                  </th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[200px]">Mã / Dịch vụ</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[170px]">Hình thức</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">Đơn vị</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">Đơn giá</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">Quy định</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[130px]">Phòng áp dụng</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[140px]">Trạng thái</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[110px] text-right">Thao tác</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[120px] text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-medium">
-                {filteredServices.length === 0 ? (
+                {services.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
                       Không tìm thấy dịch vụ nào
                     </td>
                   </tr>
                 ) : (
-                  paginatedServices.map((service) => (
-                    <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors">
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${service.bg} ${service.color}`}>
-                            {renderIcon(service.iconName, "w-4.5 h-4.5")}
+                  services.map((service) => {
+                    const visual = getServiceVisuals(service.name, service.isMetered, service.unit);
+                    const isActive = service.status === "active";
+                    const formattedPrice = `${service.numericPrice.toLocaleString("vi-VN")} ₫`;
+
+                    return (
+                      <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors">
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${visual.bg} ${visual.color}`}>
+                              {renderIcon(visual.iconName, "w-4.5 h-4.5")}
+                            </div>
+                            <div>
+                              <span className="font-black text-zinc-900 block text-xs sm:text-sm whitespace-nowrap">{service.name}</span>
+                              <span className="text-[10px] font-mono text-[#2AC1BC] font-bold block">
+                                {service.id.substring(0, 8).toUpperCase()}
+                              </span>
+                            </div>
                           </div>
-                          <div>
-                            <span className="font-black text-zinc-900 block text-xs sm:text-sm whitespace-nowrap">{service.name}</span>
-                            <span className="text-[10px] font-mono text-[#2AC1BC] font-bold block">{service.id}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <span className="font-bold text-zinc-800 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200 inline-block">
-                          {service.type}
-                        </span>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 font-bold text-zinc-700 whitespace-nowrap">{service.unit}</td>
-                      <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 text-sm whitespace-nowrap">{service.price}</td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold border inline-block whitespace-nowrap ${service.isMandatory ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          }`}>
-                          {service.isMandatory ? "Bắt buộc" : "Tùy chọn"}
-                        </span>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => setRoomsModalService(service)}
-                          className="font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5" /> {service.appliedRoomsCount} phòng
-                        </button>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => handleToggleActive(service.id, e)}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${service.isActive ? "bg-[#2AC1BC]" : "bg-zinc-300"
-                              }`}
-                            title={service.isActive ? "Click để Tắt" : "Click để Bật"}
-                          >
-                            <span
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-2xs ring-0 transition duration-200 ease-in-out ${service.isActive ? "translate-x-5" : "translate-x-0"
-                                }`}
-                            />
-                          </button>
-                          <span className={`text-xs font-bold ${service.isActive ? "text-emerald-600 font-black" : "text-zinc-400"}`}>
-                            {service.isActive ? "Đang Bật" : "Đã Tắt"}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <span className="font-bold text-zinc-800 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200 inline-block">
+                            {visual.typeLabel}
                           </span>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setHistoryModalService(service)}
-                            className="p-1.5 bg-zinc-100 text-zinc-700 rounded-lg hover:bg-zinc-200 transition-colors cursor-pointer"
-                            title="Lịch sử thay đổi đơn giá"
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-700 whitespace-nowrap">{service.unit}</td>
+                        <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 text-sm whitespace-nowrap">{formattedPrice}</td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold border inline-block whitespace-nowrap ${
+                              service.autoApplied
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                            }`}
                           >
-                            <History className="w-3.5 h-3.5 text-amber-500" />
-                          </button>
+                            {service.autoApplied ? "Bắt buộc" : "Tùy chọn"}
+                          </span>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <button
-                            onClick={() => handleOpenEditModal(service)}
-                            className="px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleOpenRoomsModal(service)}
+                            className="font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
                           >
-                            <Edit3 className="w-3 h-3 text-[#2AC1BC]" /> Sửa
+                            <Home className="w-3.5 h-3.5" /> {service.appliedRoomsCount} phòng
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleActive(service, e)}
+                              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                isActive ? "bg-[#2AC1BC]" : "bg-zinc-300"
+                              }`}
+                              title={isActive ? "Click để Tắt" : "Click để Bật"}
+                            >
+                              <span
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-2xs ring-0 transition duration-200 ease-in-out ${
+                                  isActive ? "translate-x-5" : "translate-x-0"
+                                }`}
+                              />
+                            </button>
+                            <span className={`text-xs font-bold ${isActive ? "text-emerald-600 font-black" : "text-zinc-400"}`}>
+                              {isActive ? "Đang Bật" : "Đã Tắt"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleOpenEditModal(service)}
+                              className="px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <Edit3 className="w-3 h-3 text-[#2AC1BC]" /> Sửa
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget(service)}
+                              className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                              title="Xóa dịch vụ"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
+      {/* Standardized Dormio Pagination Footer (Rule #9) */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
           <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
@@ -797,11 +844,11 @@ export default function ServicesPage() {
             <input
               type="number"
               min={1}
-              max={500}
+              max={100}
               value={itemsPerPage || ""}
               onChange={(e) => {
-                const val = parseInt(e.target.value);
-                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
+                const val = parseInt(e.target.value, 10);
+                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : Math.min(val, 100));
                 setCurrentPage(1);
               }}
               className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
@@ -812,9 +859,17 @@ export default function ServicesPage() {
           <span className="hidden sm:inline text-zinc-300">|</span>
 
           <div>
-            <span className="font-extrabold text-zinc-800">{filteredServices.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(currentPage * itemsPerPage, filteredServices.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{filteredServices.length}</span> dịch vụ
+            <span className="font-extrabold text-zinc-800">
+              {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
+            </span>{" "}
+            -{" "}
+            <span className="font-extrabold text-zinc-800">
+              {Math.min(currentPage * itemsPerPage, totalItems)}
+            </span>{" "}
+            trên tổng số <span className="font-extrabold text-zinc-800">{totalItems}</span> dịch vụ
           </div>
         </div>
+
         {(() => {
           const windowSize = 5;
           const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
@@ -830,7 +885,7 @@ export default function ServicesPage() {
               >
                 &larr; Trước
               </button>
-              {visiblePages.map(page => (
+              {visiblePages.map((page) => (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
@@ -869,7 +924,7 @@ export default function ServicesPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-base sm:text-lg text-zinc-900">
-                    {selectedService ? `Chỉnh sửa dịch vụ [${selectedService.id}]` : "Thêm dịch vụ tiện ích mới"}
+                    {selectedService ? `Chỉnh sửa dịch vụ [${selectedService.name}]` : "Thêm dịch vụ tiện ích mới"}
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium">Thiết lập đơn giá mặc định và hình thức thu phí</p>
                 </div>
@@ -895,25 +950,22 @@ export default function ServicesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">Hình thức thu phí</label>
+                  <label className="block font-extrabold text-zinc-700 mb-1">Hình thức đo lường</label>
                   <select
-                    value={formType}
-                    onChange={(e) => { setFormType(e.target.value); setIsDirty(true); }}
+                    value={formIsMetered ? "metered" : "fixed"}
+                    onChange={(e) => { setFormIsMetered(e.target.value === "metered"); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="Theo chỉ số đồng hồ">Theo chỉ số đồng hồ (Điện, Nước)</option>
-                    <option value="Cố định theo phòng">Cố định theo phòng (Wifi, Vệ sinh...)</option>
-                    <option value="Cố định theo người">Cố định theo người (Rác, Nước...)</option>
-                    <option value="Theo số lượng / Đăng ký">Theo số lượng / Đăng ký (Gửi xe)</option>
-                    <option value="Miễn phí">Miễn phí / Tùy chọn</option>
+                    <option value="metered">Theo chỉ số đồng hồ (Điện, Nước)</option>
+                    <option value="fixed">Cố định / Theo phòng / Theo người</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block font-extrabold text-zinc-700 mb-1">Quy định áp dụng</label>
                   <select
-                    value={formIsMandatory ? "mandatory" : "optional"}
-                    onChange={(e) => { setFormIsMandatory(e.target.value === "mandatory"); setIsDirty(true); }}
+                    value={formAutoApplied ? "mandatory" : "optional"}
+                    onChange={(e) => { setFormAutoApplied(e.target.value === "mandatory"); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
                   >
                     <option value="mandatory">Bắt buộc tất cả các phòng</option>
@@ -924,10 +976,12 @@ export default function ServicesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">Đơn vị tính</label>
+                  <label className="block font-extrabold text-zinc-700 mb-1">
+                    Đơn vị tính <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    placeholder="VD: kWh, m³, Phòng/Tháng, Xe/Tháng..."
+                    placeholder="VD: kWh, m³, phòng/tháng, xe/tháng..."
                     value={formUnit}
                     onChange={(e) => { setFormUnit(e.target.value); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
@@ -935,66 +989,49 @@ export default function ServicesPage() {
                 </div>
 
                 <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">Đơn giá mặc định (VNĐ)</label>
+                  <label className="block font-extrabold text-zinc-700 mb-1">
+                    Đơn giá mặc định (VNĐ) <span className="text-rose-500">*</span>
+                  </label>
                   <input
-                    type="text"
-                    placeholder="VD: 3.500 ₫, 100.000 ₫..."
+                    type="number"
+                    min={0}
+                    step={100}
+                    placeholder="VD: 3500, 100000..."
                     value={formPrice}
-                    onChange={(e) => { setFormPrice(e.target.value); setIsDirty(true); }}
+                    onChange={(e) => { setFormPrice(e.target.value === "" ? "" : Number(e.target.value)); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
                   />
                 </div>
               </div>
 
-              {selectedService && selectedService.price !== formPrice && (
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 space-y-1 animate-in fade-in">
-                  <label className="block font-extrabold text-amber-900 text-xs">Lý do điều chỉnh giá (Lưu nhật ký đối soát)</label>
-                  <input
-                    type="text"
-                    placeholder="VD: Tăng theo giá EVN, điều chỉnh đơn giá nước sạch..."
-                    value={formChangeReason}
-                    onChange={(e) => setFormChangeReason(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs font-semibold bg-white border border-amber-300 rounded-lg focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              )}
-
               <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">Biểu tượng hiển thị</label>
+                <label className="block font-extrabold text-zinc-700 mb-1">Trạng thái áp dụng</label>
                 <select
-                  value={formIcon}
-                  onChange={(e) => { setFormIcon(e.target.value); setIsDirty(true); }}
+                  value={formStatus}
+                  onChange={(e) => { setFormStatus(e.target.value as "active" | "inactive"); setIsDirty(true); }}
                   className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
                 >
-                  <option value="Zap">Zap (Tương ứng Điện)</option>
-                  <option value="Droplets">Droplets (Tương ứng Nước)</option>
-                  <option value="Wifi">Wifi (Tương ứng Internet)</option>
-                  <option value="Trash2">Trash2 (Tương ứng Rác/Vệ sinh)</option>
-                  <option value="CarFront">CarFront (Tương ứng Gửi xe)</option>
-                  <option value="ShieldCheck">ShieldCheck (Tương ứng An ninh/Bảo vệ)</option>
-                  <option value="Flame">Flame (Tương ứng Gas/Bếp)</option>
-                  <option value="Tv">Tv (Tương ứng Truyền hình/Cáp)</option>
-                  <option value="Waves">Waves (Tương ứng Hồ bơi/Sinh hoạt)</option>
+                  <option value="active">Đang áp dụng (Hoạt động)</option>
+                  <option value="inactive">Tạm ngưng thu phí</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">Ghi chú / Quy định thu phí</label>
-                <textarea
-                  rows={2}
-                  placeholder="VD: Chốt số điện nước ngày 25 hàng tháng. Giá công tơ riêng..."
-                  value={formNote}
-                  onChange={(e) => { setFormNote(e.target.value); setIsDirty(true); }}
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all resize-none"
-                />
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
-              <button onClick={handleCloseModal} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
+              >
                 Hủy bỏ
               </button>
-              <button onClick={handleSaveService} className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
+              <button
+                type="button"
+                onClick={handleSaveService}
+                disabled={isSubmitting}
+                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Lưu dịch vụ
               </button>
             </div>
@@ -1011,12 +1048,14 @@ export default function ServicesPage() {
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${roomsModalService.bg} ${roomsModalService.color}`}>
-                  {renderIcon(roomsModalService.iconName, "w-5 h-5")}
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border bg-teal-50 border-teal-200 text-[#2AC1BC]">
+                  <Wrench className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-black text-base text-zinc-900">{roomsModalService.name}</h3>
-                  <span className="text-xs text-zinc-400 font-medium">Đang áp dụng cho {roomsModalService.appliedRoomsCount} phòng</span>
+                  <span className="text-xs text-zinc-400 font-medium">
+                    Đang áp dụng cho {serviceRooms.length} phòng
+                  </span>
                 </div>
               </div>
               <button onClick={() => setRoomsModalService(null)} className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer">
@@ -1026,21 +1065,37 @@ export default function ServicesPage() {
 
             <div className="space-y-2 text-xs">
               <div className="p-3 bg-zinc-50 rounded-xl space-y-1 border border-zinc-100">
-                <span className="text-zinc-500 font-bold block">Đơn giá thu: <strong className="text-emerald-600 text-sm">{roomsModalService.price}</strong> / {roomsModalService.unit}</span>
-                <span className="text-zinc-400 block font-medium">Hình thức: {roomsModalService.type}</span>
+                <span className="text-zinc-500 font-bold block">
+                  Đơn giá: <strong className="text-emerald-600 text-sm">{roomsModalService.numericPrice.toLocaleString("vi-VN")} ₫</strong> / {roomsModalService.unit}
+                </span>
+                <span className="text-zinc-400 block font-medium">
+                  Loại: {roomsModalService.isMetered ? "Theo chỉ số đồng hồ" : "Cố định"} ({roomsModalService.autoApplied ? "Bắt buộc" : "Tùy chọn"})
+                </span>
               </div>
 
               <span className="font-extrabold text-zinc-700 block pt-2">Danh sách phòng đang tính phí:</span>
-              <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
-                {Array.from({ length: roomsModalService.appliedRoomsCount }, (_, i) => {
-                  const roomNum = 101 + i;
-                  return (
-                    <div key={roomNum} className="p-2 bg-zinc-50 border border-zinc-200/80 rounded-xl text-center font-bold text-zinc-800 text-xs">
-                      P.{roomNum}
+
+              {isLoadingRooms ? (
+                <div className="py-8 flex justify-center items-center">
+                  <Loader2 className="w-6 h-6 text-[#2AC1BC] animate-spin" />
+                </div>
+              ) : serviceRooms.length === 0 ? (
+                <div className="py-6 text-center text-zinc-400 text-xs">
+                  Chưa có phòng nào được gán dịch vụ này.
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
+                  {serviceRooms.map((room) => (
+                    <div
+                      key={room.id}
+                      className="p-2 bg-zinc-50 border border-zinc-200/80 rounded-xl text-center font-bold text-zinc-800 text-xs"
+                      title={`Tầng ${room.floor} - Trạng thái: ${room.status}`}
+                    >
+                      P.{room.roomNumber}
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button
@@ -1053,66 +1108,47 @@ export default function ServicesPage() {
         </div>
       )}
 
-      {/* PRICE HISTORY AUDIT LOG MODAL */}
-      {historyModalService && (
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteTarget && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={(e) => { if (e.target === e.currentTarget) setHistoryModalService(null); }}
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2.5 bg-amber-50 text-amber-500 rounded-xl border border-amber-200">
-                  <History className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-zinc-900">Lịch sử thay đổi đơn giá</h3>
-                  <span className="text-xs text-zinc-400 font-medium">{historyModalService.name} ({historyModalService.id})</span>
-                </div>
-              </div>
-              <button onClick={() => setHistoryModalService(null)} className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
+            <div className="w-14 h-14 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
+              <Trash2 className="w-7 h-7" />
             </div>
 
-            {historyModalService.priceHistory.length === 0 ? (
-              <div className="p-6 text-center text-zinc-400 text-xs space-y-1">
-                <Clock className="w-8 h-8 text-zinc-300 mx-auto mb-1" />
-                <p className="font-bold text-zinc-600">Chưa có lịch sử điều chỉnh giá</p>
-                <p className="text-[11px] text-zinc-400">Đơn giá dịch vụ này chưa từng thay đổi kể từ khi tạo.</p>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-64 overflow-y-auto pr-1 text-xs">
-                {historyModalService.priceHistory.map((item, idx) => (
-                  <div key={idx} className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200/60 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-zinc-400" /> {item.date}
-                      </span>
-                      <div className="flex items-center gap-1 font-black">
-                        <span className="text-zinc-400 line-through text-[11px]">{item.oldPrice}</span>
-                        <span className="text-emerald-600 text-xs">➔ {item.newPrice}</span>
-                      </div>
-                    </div>
-                    <p className="text-zinc-700 font-bold text-[11px] leading-relaxed">
-                      Lý do: <span className="font-normal italic text-zinc-600">"{item.reason}"</span>
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-zinc-900 tracking-tight">Xác nhận xóa dịch vụ</h3>
+              <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+                Bạn có chắc chắn muốn xóa dịch vụ <strong className="text-zinc-800">[{deleteTarget.name}]</strong>? Dịch vụ sẽ bị hủy liên kết khỏi tất cả các phòng.
+              </p>
+            </div>
 
-            <button
-              onClick={() => setHistoryModalService(null)}
-              className="w-full py-2.5 bg-zinc-100 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
-            >
-              Đóng lịch sử
-            </button>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteService}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 px-4 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-500/30 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Xác nhận xóa
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* CONFIRM MODAL */}
+      {/* CONFIRM MODAL (RULE #10) */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
@@ -1120,7 +1156,7 @@ export default function ServicesPage() {
         confirmText={confirmModal.confirmText}
         cancelText={confirmModal.cancelText}
         onConfirm={confirmModal.onConfirm}
-        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
 
       {/* ALERT MODAL */}
@@ -1129,7 +1165,7 @@ export default function ServicesPage() {
         title={alertModal.title}
         message={alertModal.message}
         type={alertModal.type}
-        onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setAlertModal((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
   );
@@ -1142,7 +1178,7 @@ function ConfirmModal({
   confirmText = "Hủy thay đổi & Đóng",
   cancelText = "Tiếp tục chỉnh sửa",
   onConfirm,
-  onCancel
+  onCancel,
 }: {
   isOpen: boolean;
   title: string;
@@ -1160,18 +1196,15 @@ function ConfirmModal({
       onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
     >
       <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-        {/* Warning Amber Icon Badge */}
         <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
           <AlertTriangle className="w-7 h-7" />
         </div>
 
-        {/* Header Title & Subtitle */}
         <div className="space-y-2">
           <h3 className="text-xl font-black text-zinc-900 tracking-tight">{title}</h3>
           <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">{message}</p>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center justify-center gap-3 pt-2">
           <button
             type="button"
@@ -1198,7 +1231,7 @@ function AlertModal({
   title,
   message,
   type = "info",
-  onClose
+  onClose,
 }: {
   isOpen: boolean;
   title: string;
@@ -1212,23 +1245,23 @@ function AlertModal({
     warning: {
       bgColor: "bg-amber-500/10 text-amber-600 border-amber-200",
       icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
-      btnColor: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
+      btnColor: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20",
     },
     error: {
       bgColor: "bg-rose-500/10 text-rose-600 border-rose-200",
       icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
-      btnColor: "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20"
+      btnColor: "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20",
     },
     success: {
       bgColor: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
       icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
-      btnColor: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+      btnColor: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20",
     },
     info: {
       bgColor: "bg-orange-50 text-[#FF6B35] border-orange-200",
       icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
-      btnColor: "bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20"
-    }
+      btnColor: "bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20",
+    },
   }[type];
 
   return (
