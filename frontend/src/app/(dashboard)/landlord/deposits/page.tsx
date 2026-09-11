@@ -468,7 +468,7 @@ function DepositsContent() {
           {/* Left Title, Address Pill with Map button, and Description */}
           <div className="space-y-3 max-w-xl">
             <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding?.name || (currentLocale === "en" ? "Loading boarding house..." : "Đang tải nhà trọ...")}
+              {activeBuilding?.name || t("landlordDepositsLoadingBuilding")}
             </h2>
 
             {/* Address Pill with Integrated Map Link */}
@@ -990,7 +990,7 @@ function DepositsContent() {
               }}
               className="w-14 px-2 py-1 bg-white border border-zinc-200 rounded-lg font-bold text-center text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
             />
-            <span>{isEn ? "/ page" : "/ trang"}</span>
+            <span>{t("landlordDepositsPerPage")}</span>
             <span className="text-zinc-300">|</span>
             <span>
               {startIndex + 1}-{endIndex} {t("landlordDepositsOf")} {totalItems} {t("landlordDepositsItems")}
@@ -1248,14 +1248,9 @@ function DepositsContent() {
                       <option value="">{t("landlordInvoicesSelectRoomPlaceholder")}</option>
                       {availableRooms.map((room) => {
                         const isAvail = room.status === "available";
-                        const roomStatusLabel = isAvail
-                          ? (isEn ? "Available - Can deposit" : "Trống - Có thể cọc")
-                          : room.status === "deposited"
-                            ? (isEn ? "Deposited" : "Đã cọc")
-                            : (isEn ? "Rented" : "Đang thuê");
                         return (
                           <option key={room.id} value={room.id} disabled={!isAvail}>
-                            {t("landlordContractsRoomPrefix").replace("{room}", String(room.roomNumber))} - {room.roomType?.name || (currentLocale === "en" ? "Room" : "Phòng")} (
+                            {t("landlordContractsRoomPrefix").replace("{room}", String(room.roomNumber))} - {room.roomType?.name || (isEn ? "Room" : "Phòng")} (
                             {isAvail ? t("landlordDepositsRoomStatusAvailable") : room.status === "deposited" ? t("landlordDepositsRoomStatusDeposited") : t("landlordDepositsRoomStatusRented")})
                           </option>
                         );
@@ -1332,7 +1327,7 @@ function DepositsContent() {
                       setNewDepositForm({ ...newDepositForm, amount: e.target.value });
                       setIsFormDirty(true);
                     }}
-                    placeholder={isEn ? "e.g. 1000000" : "Ví dụ: 1000000"}
+                    placeholder={t("landlordDepositsAmountPlaceholder")}
                     className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
@@ -1631,7 +1626,7 @@ function DepositsContent() {
                       setUpgradeForm({ ...upgradeForm, targetContractAmount: e.target.value });
                       setIsFormDirty(true);
                     }}
-                    placeholder={isEn ? "Enter target contract deposit amount..." : "Nhập số tiền cọc hợp đồng..."}
+                    placeholder={t("landlordDepositsTargetAmountPlaceholder")}
                     className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-amber-500 text-sm"
                   />
                 </div>

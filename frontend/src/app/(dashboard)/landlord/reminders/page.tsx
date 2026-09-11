@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useLanguage } from "@/context/LanguageContext";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import {
   announcementService,
   LandlordAnnouncementItem,
@@ -41,6 +41,8 @@ export default function RemindersPage() {
   const { activeBuilding } = useAuth();
   const { locale } = useLanguage();
   const isEn = locale === "en";
+  const t = useTranslations("landlord");
+  const tCommon = useTranslations("common");
 
   const [activeTab, setActiveTab] = useState<"reminders" | "notifications">("reminders");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -116,7 +118,6 @@ export default function RemindersPage() {
       if (saved) {
         setTasks(JSON.parse(saved));
       } else {
-        // Initial clean state if no tasks created yet
         setTasks([]);
       }
     } catch {
@@ -251,7 +252,7 @@ export default function RemindersPage() {
     setNotifTitle("");
     setNotifContent("");
     setNotifCategory("Điện nước");
-    setNotifTargetScope(activeBuilding?.name || "Toàn bộ tòa nhà");
+    setNotifTargetScope(activeBuilding?.name || (isEn ? "Entire building" : "Toàn bộ tòa nhà"));
     setNotifChannel("Thông báo hệ thống");
     setIsNotifModalOpen(false);
   };
@@ -308,7 +309,7 @@ export default function RemindersPage() {
         title: notifTitle.trim(),
         content: notifContent.trim(),
         category: notifCategory,
-        targetScope: notifTargetScope || activeBuilding.name || "Toàn bộ tòa nhà",
+        targetScope: notifTargetScope || activeBuilding.name || (isEn ? "Entire building" : "Toàn bộ tòa nhà"),
         channel: notifChannel,
       });
 
@@ -371,7 +372,6 @@ export default function RemindersPage() {
   const pendingCount = useMemo(() => tasks.filter(t => t.status === "Chờ xử lý" || t.status === "Đang thực hiện").length, [tasks]);
   const overdueCount = useMemo(() => tasks.filter(t => t.status === "Quá hạn" || t.priority === "Gấp").length, [tasks]);
   const totalNotifsSent = notifSummary.totalAnnouncements;
-  const avgReadRate = notifSummary.totalTargetTenants > 0 ? 85 : 0;
 
   if (!isMounted) return null;
 
@@ -388,29 +388,29 @@ export default function RemindersPage() {
           <div className="space-y-3 max-w-xl w-full">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                {activeBuilding.name}
+                {activeBuilding?.name || t("landlordRemindersActiveBuildingSelect")}
               </h1>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-              <div className="flex items-center gap-2 min-w-0">
-                <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
+            {activeBuilding?.address && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
+                <div className="flex items-center gap-2 min-w-0">
+                  <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                  <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
+                </div>
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <span>{tCommon("viewMap")}</span> &rarr;
+                </a>
               </div>
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-              >
-                <span>{isEn ? "View Map" : "Xem Bản Đồ"}</span> &rarr;
-              </a>
-            </div>
+            )}
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              {isEn
-                ? "Assign duties to staff and broadcast urgent notices and utility schedules directly to resident mobile apps (UC-L-13)."
-                : "Phân công việc cho nhân viên tòa nhà và phát sóng thông báo khẩn, lịch cúp điện nước đến ứng dụng khách thuê (UC-L-13)."}
+              {t("landlordRemindersHeroSubtitle")}
             </p>
           </div>
 
@@ -420,7 +420,7 @@ export default function RemindersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
               <Clock3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{isEn ? "Pending" : "Chờ làm"}</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordRemindersPendingTasks")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{pendingCount}</span>
               </div>
             </div>
@@ -429,7 +429,7 @@ export default function RemindersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <ShieldAlert className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{isEn ? "Urgent" : "Gấp"}</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordRemindersHighPriority")}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{overdueCount}</span>
               </div>
             </div>
@@ -438,7 +438,7 @@ export default function RemindersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
               <Send className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{isEn ? "Broadcasts" : "TB đã gửi"}</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordRemindersStatTotalNotifs")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{totalNotifsSent}</span>
               </div>
             </div>
@@ -447,7 +447,7 @@ export default function RemindersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{isEn ? "Residents" : "Cư dân"}</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordRemindersStatReachedTenants")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{notifSummary.totalTargetTenants}</span>
               </div>
             </div>
@@ -467,7 +467,7 @@ export default function RemindersPage() {
               }`}
           >
             <BellRing className="w-4 h-4" />
-            <span>{isEn ? "Reminders & Tasks" : "Nhắc nhở & Công việc"}</span>
+            <span>{t("landlordRemindersTabTasks")}</span>
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-extrabold ${activeTab === "reminders" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
               }`}>
               {tasks.length}
@@ -482,7 +482,7 @@ export default function RemindersPage() {
               }`}
           >
             <Send className="w-4 h-4" />
-            <span>{isEn ? "Broadcast Notices" : "Thông báo cư dân"}</span>
+            <span>{t("landlordRemindersTabNotifications")}</span>
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-extrabold ${activeTab === "notifications" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-700"
               }`}>
               {notifTotal}
@@ -509,7 +509,7 @@ export default function RemindersPage() {
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>{isEn ? "Assign Staff Task" : "Giao việc nhân viên"}</span>
+              <span>{t("landlordRemindersAssignTaskBtn")}</span>
             </button>
           ) : (
             <button
@@ -517,7 +517,7 @@ export default function RemindersPage() {
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>{isEn ? "New Announcement (UC-L-13)" : "Phát thông báo mới (UC-L-13)"}</span>
+              <span>{t("landlordRemindersBroadcastNoticeBtn")}</span>
             </button>
           )}
         </div>
@@ -530,11 +530,7 @@ export default function RemindersPage() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <input
             type="text"
-            placeholder={
-              activeTab === "reminders"
-                ? (isEn ? "Search tasks, assignee, room..." : "Tìm tiêu đề việc, nhân viên, phòng...")
-                : (isEn ? "Search notices, content, target..." : "Tìm thông báo, nội dung, đối tượng...")
-            }
+            placeholder={t("landlordRemindersSearchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50/70 border border-zinc-200/80 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
@@ -558,21 +554,21 @@ export default function RemindersPage() {
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="text-xs font-bold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
             >
-              <option value="">{isEn ? "All Categories" : "Tất cả danh mục"}</option>
+              <option value="">{t("landlordRemindersFilterAllCategories")}</option>
               {activeTab === "reminders" ? (
                 <>
-                  <option value="Bảo trì">{isEn ? "Maintenance" : "Bảo trì"}</option>
-                  <option value="Thu tiền">{isEn ? "Payment / Rent" : "Thu tiền"}</option>
-                  <option value="Kiểm tra">{isEn ? "Inspection" : "Kiểm tra"}</option>
-                  <option value="Vệ sinh">{isEn ? "Cleaning" : "Vệ sinh"}</option>
-                  <option value="Khác">{isEn ? "Other" : "Khác"}</option>
+                  <option value="Bảo trì">{t("landlordRemindersCatMaintenance")}</option>
+                  <option value="Thu tiền">{t("landlordRemindersCatRent")}</option>
+                  <option value="Kiểm tra">{t("landlordRemindersCatInspection")}</option>
+                  <option value="Vệ sinh">{t("landlordRemindersCatCleaning")}</option>
+                  <option value="Khác">{t("landlordRemindersCatOther")}</option>
                 </>
               ) : (
                 <>
-                  <option value="Điện nước">{isEn ? "Utilities" : "Điện nước"}</option>
-                  <option value="Tiền nhà">{isEn ? "Rent & Billing" : "Tiền nhà"}</option>
-                  <option value="Nội quy">{isEn ? "House Rules" : "Nội quy"}</option>
-                  <option value="Khẩn cấp">{isEn ? "Emergency" : "Khẩn cấp"}</option>
+                  <option value="Điện nước">{t("landlordRemindersNotifCatUtilities")}</option>
+                  <option value="Tiền nhà">{t("landlordRemindersNotifCatRent")}</option>
+                  <option value="Nội quy">{t("landlordRemindersNotifCatRules")}</option>
+                  <option value="Khẩn cấp">{t("landlordRemindersNotifCatEmergency")}</option>
                 </>
               )}
             </select>
@@ -589,10 +585,10 @@ export default function RemindersPage() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="text-xs font-bold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                 >
-                  <option value="">{isEn ? "All Statuses" : "Tất cả trạng thái"}</option>
-                  <option value="Chờ xử lý">{isEn ? "Pending / In Progress" : "Chờ xử lý / Đang làm"}</option>
-                  <option value="Đã hoàn thành">{isEn ? "Completed" : "Đã hoàn thành"}</option>
-                  <option value="Quá hạn">{isEn ? "Overdue" : "Quá hạn"}</option>
+                  <option value="">{t("landlordRemindersFilterAllStatuses")}</option>
+                  <option value="Chờ xử lý">{t("landlordRemindersStatusPending")}</option>
+                  <option value="Đã hoàn thành">{t("landlordRemindersStatusCompleted")}</option>
+                  <option value="Quá hạn">{t("landlordRemindersStatusOverdue")}</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -604,10 +600,10 @@ export default function RemindersPage() {
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="text-xs font-bold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                 >
-                  <option value="">{isEn ? "All Priorities" : "Tất cả mức độ"}</option>
-                  <option value="Gấp">{isEn ? "Urgent / High" : "Gấp"}</option>
-                  <option value="Trung bình">{isEn ? "Medium" : "Trung bình"}</option>
-                  <option value="Thấp">{isEn ? "Low" : "Thấp"}</option>
+                  <option value="">{t("landlordRemindersFilterAllPriorities")}</option>
+                  <option value="Gấp">{t("landlordRemindersPriorityUrgent")}</option>
+                  <option value="Trung bình">{t("landlordRemindersPriorityMedium")}</option>
+                  <option value="Thấp">{t("landlordRemindersPriorityLow")}</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -618,14 +614,14 @@ export default function RemindersPage() {
           <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200/80">
             <button
               onClick={() => { setViewMode("grid"); setItemsPerPage(6); }}
-              title={isEn ? "Grid View (Default)" : "Chế độ lưới (Mặc định)"}
+              title={t("landlordRemindersViewGrid")}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"}`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
               onClick={() => { setViewMode("list"); setItemsPerPage(10); }}
-              title={isEn ? "List / Table View" : "Chế độ danh sách"}
+              title={t("landlordRemindersViewList")}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-700"}`}
             >
               <List className="w-4 h-4" />
@@ -643,18 +639,16 @@ export default function RemindersPage() {
                 <BellRing className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-zinc-800">
-                {isEn ? "No tasks found" : "Không có công việc nào"}
+                {t("landlordRemindersEmptyTasksTitle")}
               </h3>
               <p className="text-xs text-zinc-500 mt-1 max-w-sm">
-                {isEn
-                  ? "Assign duties to technicians, security, or accountants to track progress."
-                  : "Giao nhiệm vụ cho nhân viên kỹ thuật, bảo vệ hoặc kế toán để theo dõi tiến độ."}
+                {t("landlordRemindersEmptyTasksDesc")}
               </p>
               <button
                 onClick={() => setIsTaskModalOpen(true)}
                 className="mt-4 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <Plus className="w-4 h-4" /> {isEn ? "Create First Task" : "Tạo việc đầu tiên"}
+                <Plus className="w-4 h-4" /> {t("landlordRemindersBtnNewTask")}
               </button>
             </div>
           ) : viewMode === "grid" ? (
@@ -686,7 +680,7 @@ export default function RemindersPage() {
                               task.priority === "Trung bình" ? "bg-amber-500/15 text-amber-600 border border-amber-500/20" :
                                 "bg-zinc-100 text-zinc-600 border border-zinc-200"
                               }`}>
-                              {task.priority === "Gấp" ? (isEn ? "Urgent" : "Gấp") : task.priority === "Trung bình" ? (isEn ? "Medium" : "Bình thường") : (isEn ? "Low" : "Thấp")}
+                              {task.priority === "Gấp" ? t("landlordRemindersPriorityUrgent") : task.priority === "Trung bình" ? t("landlordRemindersPriorityMedium") : t("landlordRemindersPriorityLow")}
                             </span>
 
                             {task.room && (
@@ -754,7 +748,7 @@ export default function RemindersPage() {
                             }`}
                         >
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>{isCompleted ? (isEn ? "Done" : "Đã xong") : (isEn ? "Mark Done" : "Xác nhận")}</span>
+                          <span>{isCompleted ? t("landlordRemindersStatusCompleted") : t("landlordRemindersMarkDone")}</span>
                         </button>
                       </div>
                     </div>
@@ -766,7 +760,7 @@ export default function RemindersPage() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-200/80 bg-white p-4 rounded-2xl border">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                    <span>{isEn ? "Showing" : "Hiển thị"}</span>
+                    <span>{t("landlordRemindersPaginationShowing")}</span>
                     <input
                       type="number"
                       min={1}
@@ -779,13 +773,13 @@ export default function RemindersPage() {
                       }}
                       className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
                     />
-                    <span>{isEn ? "/ page" : "/ trang"}</span>
+                    <span>{t("landlordRemindersPaginationPerPage")}</span>
                   </div>
 
                   <span className="hidden sm:inline text-zinc-300">|</span>
 
                   <div>
-                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> {isEn ? "of" : "trên tổng số"} <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> {isEn ? "tasks" : "công việc"}
+                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> {t("landlordRemindersPaginationOfTotal")} <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> {t("landlordRemindersPaginationTasks")}
                   </div>
                 </div>
                 {(() => {
@@ -801,7 +795,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.max(windowStart - windowSize, 1))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        &larr; {isEn ? "Prev" : "Trước"}
+                        &larr; {t("landlordRemindersPaginationPrev")}
                       </button>
                       {visiblePages.map(page => (
                         <button
@@ -820,7 +814,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.min(windowStart + windowSize, totalTaskPages))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        {isEn ? "Next" : "Sau"} &rarr;
+                        {t("landlordRemindersPaginationNext")} &rarr;
                       </button>
                     </div>
                   );
@@ -835,12 +829,12 @@ export default function RemindersPage() {
                   <table className="w-full text-xs text-left border-collapse min-w-[850px]">
                     <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
                       <tr>
-                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Task Title" : "Tiêu đề công việc"}</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Category" : "Phân loại"}</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Assignee" : "Nhân viên phụ trách"}</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Priority" : "Mức ưu tiên"}</th>
-                        <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Deadline" : "Hạn xong"}</th>
-                        <th className="px-4 py-3.5 text-right whitespace-nowrap">{isEn ? "Status / Action" : "Trạng thái / Thao tác"}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersFieldTitle")}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersFieldCategory")}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersFieldAssigneeStaff")}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersFieldPriority")}</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersFieldDueDate")}</th>
+                        <th className="px-4 py-3.5 text-right whitespace-nowrap">{t("landlordRemindersColActions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100 font-medium">
@@ -875,7 +869,7 @@ export default function RemindersPage() {
                                 task.priority === "Trung bình" ? "bg-amber-50 text-amber-600 border border-amber-200" :
                                   "bg-zinc-100 text-zinc-600"
                                 }`}>
-                                {task.priority === "Gấp" ? (isEn ? "Urgent" : "Gấp") : task.priority === "Trung bình" ? (isEn ? "Medium" : "Bình thường") : (isEn ? "Low" : "Thấp")}
+                                {task.priority === "Gấp" ? t("landlordRemindersPriorityUrgent") : task.priority === "Trung bình" ? t("landlordRemindersPriorityMedium") : t("landlordRemindersPriorityLow")}
                               </span>
                             </td>
                             <td className="px-4 py-3.5 whitespace-nowrap">
@@ -895,7 +889,7 @@ export default function RemindersPage() {
                                     : "bg-zinc-100 text-zinc-700 hover:bg-[#2AC1BC] hover:text-white"
                                     }`}
                                 >
-                                  {isCompleted ? (isEn ? "✓ Done" : "✓ Đã xong") : (isEn ? "Complete" : "Xong")}
+                                  {isCompleted ? `✓ ${t("landlordRemindersStatusCompleted")}` : t("landlordRemindersMarkDone")}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteTask(task.id)}
@@ -918,7 +912,7 @@ export default function RemindersPage() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                    <span>{isEn ? "Showing" : "Hiển thị"}</span>
+                    <span>{t("landlordRemindersPaginationShowing")}</span>
                     <input
                       type="number"
                       min={1}
@@ -931,13 +925,13 @@ export default function RemindersPage() {
                       }}
                       className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
                     />
-                    <span>{isEn ? "/ page" : "/ trang"}</span>
+                    <span>{t("landlordRemindersPaginationPerPage")}</span>
                   </div>
 
                   <span className="hidden sm:inline text-zinc-300">|</span>
 
                   <div>
-                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> {isEn ? "of" : "trên tổng số"} <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> {isEn ? "tasks" : "công việc"}
+                    <span className="font-extrabold text-zinc-800">{(taskPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(taskPage * ITEMS_PER_PAGE, filteredTasks.length)}</span> {t("landlordRemindersPaginationOfTotal")} <span className="font-extrabold text-zinc-800">{filteredTasks.length}</span> {t("landlordRemindersPaginationTasks")}
                   </div>
                 </div>
                 {(() => {
@@ -953,7 +947,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.max(windowStart - windowSize, 1))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        &larr; {isEn ? "Prev" : "Trước"}
+                        &larr; {t("landlordRemindersPaginationPrev")}
                       </button>
                       {visiblePages.map(page => (
                         <button
@@ -972,7 +966,7 @@ export default function RemindersPage() {
                         onClick={() => setTaskPage(Math.min(windowStart + windowSize, totalTaskPages))}
                         className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        {isEn ? "Next" : "Sau"} &rarr;
+                        {t("landlordRemindersPaginationNext")} &rarr;
                       </button>
                     </div>
                   );
@@ -989,7 +983,7 @@ export default function RemindersPage() {
           {isLoadingNotifs ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-zinc-200 text-center">
               <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-              <p className="text-xs font-bold text-zinc-600">{isEn ? "Loading announcements..." : "Đang tải thông báo..."}</p>
+              <p className="text-xs font-bold text-zinc-600">{t("landlordRemindersLoadingNotifs")}</p>
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border border-zinc-200 border-dashed text-center">
@@ -997,18 +991,16 @@ export default function RemindersPage() {
                 <Send className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-zinc-800">
-                {isEn ? "No broadcast announcements yet" : "Chưa có thông báo phát sóng nào"}
+                {t("landlordRemindersEmptyNotifsTitle")}
               </h3>
               <p className="text-xs text-zinc-500 mt-1 max-w-sm">
-                {isEn
-                  ? "Publish urgent notices, electricity and water schedules, or fee reminders directly to tenants."
-                  : "Phát sóng thông báo sự cố, lịch điện nước hoặc nhắc nhở nội quy tới toàn bộ khách thuê."}
+                {t("landlordRemindersEmptyNotifsDesc")}
               </p>
               <button
                 onClick={() => setIsNotifModalOpen(true)}
                 className="mt-4 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm shadow-[#2AC1BC]/20"
               >
-                <Plus className="w-4 h-4" /> {isEn ? "Create First Announcement" : "Tạo thông báo đầu tiên"}
+                <Plus className="w-4 h-4" /> {t("landlordRemindersCreateFirstNotif")}
               </button>
             </div>
           ) : viewMode === "grid" ? (
@@ -1087,7 +1079,7 @@ export default function RemindersPage() {
                         onClick={(e) => { e.stopPropagation(); setSelectedNotifDetail(notif); }}
                         className="w-full px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                       >
-                        <Eye className="w-3.5 h-3.5" /> {isEn ? "View Details" : "Xem chi tiết"}
+                        <Eye className="w-3.5 h-3.5" /> {t("landlordRemindersViewDetails")}
                       </button>
                     </div>
                   </div>
@@ -1100,12 +1092,12 @@ export default function RemindersPage() {
                 <table className="w-full text-xs text-left border-collapse min-w-[950px]">
                   <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
                     <tr>
-                      <th className="px-4 py-3.5 whitespace-nowrap w-80">{isEn ? "Category & Title" : "Phân loại & Tiêu đề"}</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Target Audience" : "Đối tượng nhận"}</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Channel" : "Kênh gửi"}</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Read Rate" : "Tỷ lệ đã đọc"}</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">{isEn ? "Sent At" : "Thời gian đăng"}</th>
-                      <th className="px-4 py-3.5 text-right whitespace-nowrap">{isEn ? "Actions" : "Hành động"}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap w-80">{t("landlordRemindersColCategoryTitle")}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersColTargetAudience")}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersColChannel")}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersColReadRate")}</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">{t("landlordRemindersColSentAt")}</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">{t("landlordRemindersColActions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
@@ -1163,7 +1155,7 @@ export default function RemindersPage() {
                                 onClick={() => setSelectedNotifDetail(notif)}
                                 className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
                               >
-                                <Eye className="w-3.5 h-3.5" /> {isEn ? "View" : "Xem"}
+                                <Eye className="w-3.5 h-3.5" /> {t("landlordRemindersViewDetails")}
                               </button>
                               <button
                                 onClick={() => setDeletingNotifId(notif.id)}
@@ -1187,7 +1179,7 @@ export default function RemindersPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
             <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
               <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                <span>{isEn ? "Showing" : "Hiển thị"}</span>
+                <span>{t("landlordRemindersPaginationShowing")}</span>
                 <input
                   type="number"
                   min={1}
@@ -1200,13 +1192,13 @@ export default function RemindersPage() {
                   }}
                   className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
                 />
-                <span>{isEn ? "/ page" : "/ trang"}</span>
+                <span>{t("landlordRemindersPaginationPerPage")}</span>
               </div>
 
               <span className="hidden sm:inline text-zinc-300">|</span>
 
               <div>
-                <span className="font-extrabold text-zinc-800">{(notifPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(notifPage * ITEMS_PER_PAGE, notifTotal)}</span> {isEn ? "of" : "trên tổng số"} <span className="font-extrabold text-zinc-800">{notifTotal}</span> {isEn ? "announcements" : "thông báo"}
+                <span className="font-extrabold text-zinc-800">{(notifPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(notifPage * ITEMS_PER_PAGE, notifTotal)}</span> {t("landlordRemindersPaginationOfTotal")} <span className="font-extrabold text-zinc-800">{notifTotal}</span> {t("landlordRemindersPaginationAnnouncements")}
               </div>
             </div>
             {(() => {
@@ -1222,7 +1214,7 @@ export default function RemindersPage() {
                     onClick={() => setNotifPage(Math.max(windowStart - windowSize, 1))}
                     className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                   >
-                    &larr; {isEn ? "Prev" : "Trước"}
+                    &larr; {t("landlordRemindersPaginationPrev")}
                   </button>
                   {visiblePages.map(page => (
                     <button
@@ -1241,7 +1233,7 @@ export default function RemindersPage() {
                     onClick={() => setNotifPage(Math.min(windowStart + windowSize, notifTotalPages))}
                     className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                   >
-                    {isEn ? "Next" : "Sau"} &rarr;
+                    {t("landlordRemindersPaginationNext")} &rarr;
                   </button>
                 </div>
               );
@@ -1263,8 +1255,8 @@ export default function RemindersPage() {
                   <BellRing className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-white">{isEn ? "Assign Staff Task" : "Giao việc cho nhân viên"}</h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">{isEn ? "Create duties and assign responsibilities" : "Tạo nhắc nhở và phân công nhiệm vụ cụ thể"}</p>
+                  <h2 className="text-lg font-black tracking-tight text-white">{t("landlordRemindersTaskModalHeader")}</h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">{t("landlordRemindersModalTaskSubtitle")}</p>
                 </div>
               </div>
               <button
@@ -1279,12 +1271,12 @@ export default function RemindersPage() {
               {/* Task Title */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                  {isEn ? "Task Title" : "Tên công việc"} <span className="text-rose-500">*</span>
+                  {t("landlordRemindersFieldTitle")} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={isEn ? "e.g. Check air conditioner leaking in Room 102" : "VD: Kiểm tra máy lạnh rò nước phòng 102"}
+                  placeholder={t("landlordRemindersFieldTaskTitlePlaceholder")}
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -1294,7 +1286,7 @@ export default function RemindersPage() {
               {/* Assignee & Room */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Assignee" : "Nhân viên phụ trách"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldAssignee")}</label>
                   <select
                     value={taskAssignee}
                     onChange={(e) => setTaskAssignee(e.target.value)}
@@ -1307,10 +1299,10 @@ export default function RemindersPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Target Room" : "Phòng liên quan"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldRoom")}</label>
                   <input
                     type="text"
-                    placeholder={isEn ? "e.g. 101, 202 or Corridor" : "VD: 101, 202 hoặc Hành lang"}
+                    placeholder={t("landlordRemindersFieldRoomPlaceholder")}
                     value={taskRoom}
                     onChange={(e) => setTaskRoom(e.target.value)}
                     className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-all"
@@ -1321,30 +1313,30 @@ export default function RemindersPage() {
               {/* Category & Priority */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Category" : "Phân loại"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldCategory")}</label>
                   <select
                     value={taskCategory}
                     onChange={(e) => setTaskCategory(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                   >
-                    <option value="Bảo trì">{isEn ? "Maintenance / Repairs" : "Bảo trì / Sửa chữa"}</option>
-                    <option value="Thu tiền">{isEn ? "Rent / Deposit Collection" : "Thu tiền nhà / Cọc"}</option>
-                    <option value="Kiểm tra">{isEn ? "Meter Reading / Inspection" : "Kiểm tra / Chốt số"}</option>
-                    <option value="Vệ sinh">{isEn ? "Cleaning / Pest Control" : "Vệ sinh / Xịt muỗi"}</option>
-                    <option value="Khác">{isEn ? "Other" : "Khác"}</option>
+                    <option value="Bảo trì">{t("landlordRemindersCatMaintenance")}</option>
+                    <option value="Thu tiền">{t("landlordRemindersCatRent")}</option>
+                    <option value="Kiểm tra">{t("landlordRemindersCatInspection")}</option>
+                    <option value="Vệ sinh">{t("landlordRemindersCatCleaning")}</option>
+                    <option value="Khác">{t("landlordRemindersCatOther")}</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Priority" : "Mức độ ưu tiên"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldPriority")}</label>
                   <select
                     value={taskPriority}
                     onChange={(e) => setTaskPriority(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                   >
-                    <option value="Gấp">{isEn ? "Urgent / High" : "Gấp / Ưu tiên"}</option>
-                    <option value="Trung bình">{isEn ? "Normal" : "Bình thường"}</option>
-                    <option value="Thấp">{isEn ? "Low" : "Thấp"}</option>
+                    <option value="Gấp">{t("landlordRemindersPriorityUrgent")}</option>
+                    <option value="Trung bình">{t("landlordRemindersPriorityMedium")}</option>
+                    <option value="Thấp">{t("landlordRemindersPriorityLow")}</option>
                   </select>
                 </div>
               </div>
@@ -1352,7 +1344,7 @@ export default function RemindersPage() {
               {/* Due Date & Time */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Due Date" : "Ngày hoàn thành"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldDueDate")}</label>
                   <input
                     type="date"
                     value={taskDueDate}
@@ -1361,7 +1353,7 @@ export default function RemindersPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Due Time" : "Giờ hẹn xong"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldDueTime")}</label>
                   <input
                     type="time"
                     value={taskDueTime}
@@ -1373,10 +1365,10 @@ export default function RemindersPage() {
 
               {/* Notes */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Detailed Notes" : "Ghi chú chi tiết"}</label>
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldNotes")}</label>
                 <textarea
                   rows={3}
-                  placeholder={isEn ? "Describe task requirements..." : "Mô tả cụ thể yêu cầu công việc..."}
+                  placeholder={t("landlordRemindersFieldNotesPlaceholder")}
                   value={taskNotes}
                   onChange={(e) => setTaskNotes(e.target.value)}
                   className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
@@ -1390,13 +1382,13 @@ export default function RemindersPage() {
                   onClick={requestCloseTaskModal}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  {isEn ? "Cancel" : "Hủy bỏ"}
+                  {t("landlordRemindersBtnCancel")}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  <Check className="w-4 h-4" /> {isEn ? "Create Task" : "Tạo công việc mới"}
+                  <Check className="w-4 h-4" /> {t("landlordRemindersBtnSubmitTask")}
                 </button>
               </div>
             </form>
@@ -1417,8 +1409,8 @@ export default function RemindersPage() {
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-white">{isEn ? "Broadcast Announcement (UC-L-13)" : "Soạn thông báo khách thuê (UC-L-13)"}</h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">{isEn ? "Broadcast instant notices to all tenants' mobile app" : "Phát sóng thông báo đến ứng dụng di động khách thuê"}</p>
+                  <h2 className="text-lg font-black tracking-tight text-white">{t("landlordRemindersNotifModalHeader")}</h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">{t("landlordRemindersModalNotifSubtitle")}</p>
                 </div>
               </div>
               <button
@@ -1433,7 +1425,7 @@ export default function RemindersPage() {
               {/* Quick Template Picker */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" /> {isEn ? "Choose Quick Template" : "Chọn mẫu thông báo nhanh"}
+                  <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordRemindersSelectTemplate")}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {notificationTemplates.map((tmpl) => (
@@ -1457,7 +1449,7 @@ export default function RemindersPage() {
               {/* Title */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                  {isEn ? "Announcement Title" : "Tiêu đề thông báo"} <span className="text-rose-500">*</span>
+                  {t("landlordRemindersFieldTitle")} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1472,18 +1464,18 @@ export default function RemindersPage() {
               {/* Target & Channel */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Target Scope" : "Đối tượng nhận"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldTargetScope")}</label>
                   <input
                     type="text"
                     value={notifTargetScope}
                     onChange={(e) => setNotifTargetScope(e.target.value)}
-                    placeholder={isEn ? "Entire building or selected floors" : "Toàn bộ tòa nhà hoặc các tầng"}
+                    placeholder={t("landlordRemindersFieldTargetScopePlaceholder")}
                     className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Broadcast Channel" : "Kênh phát sóng"}</label>
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldChannelLabel")}</label>
                   <select
                     value={notifChannel}
                     onChange={(e) => setNotifChannel(e.target.value)}
@@ -1498,28 +1490,28 @@ export default function RemindersPage() {
 
               {/* Category */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{isEn ? "Category" : "Phân loại"}</label>
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{t("landlordRemindersFieldCategory")}</label>
                 <select
                   value={notifCategory}
                   onChange={(e) => setNotifCategory(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                 >
-                  <option value="Điện nước">{isEn ? "Utilities (Electricity & Water)" : "Điện nước"}</option>
-                  <option value="Tiền nhà">{isEn ? "Rent & Billing Settlement" : "Tiền nhà & Hóa đơn"}</option>
-                  <option value="Nội quy">{isEn ? "House Rules & Order" : "Nội quy & Trật tự"}</option>
-                  <option value="Khẩn cấp">{isEn ? "Urgent / Emergency" : "Khẩn cấp"}</option>
+                  <option value="Điện nước">{t("landlordRemindersNotifCatUtilities")}</option>
+                  <option value="Tiền nhà">{t("landlordRemindersNotifCatRent")}</option>
+                  <option value="Nội quy">{t("landlordRemindersNotifCatRules")}</option>
+                  <option value="Khẩn cấp">{t("landlordRemindersNotifCatEmergency")}</option>
                 </select>
               </div>
 
               {/* Content */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                  {isEn ? "Detailed Announcement Content" : "Nội dung chi tiết"} <span className="text-rose-500">*</span>
+                  {t("landlordRemindersFieldContent")} <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   rows={5}
                   required
-                  placeholder={isEn ? "Enter full announcement text to broadcast to tenants..." : "Nhập nội dung đầy đủ gửi đến khách thuê..."}
+                  placeholder={t("landlordRemindersFieldContentPlaceholder")}
                   value={notifContent}
                   onChange={(e) => setNotifContent(e.target.value)}
                   className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
@@ -1534,7 +1526,7 @@ export default function RemindersPage() {
                   disabled={isSubmittingNotif}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {isEn ? "Cancel" : "Hủy bỏ"}
+                  {t("landlordRemindersBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1544,12 +1536,12 @@ export default function RemindersPage() {
                   {isSubmittingNotif ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{isEn ? "Broadcasting..." : "Đang phát sóng..."}</span>
+                      <span>{t("landlordRemindersBroadcasting")}</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span>{isEn ? "Broadcast Announcement" : "Phát sóng thông báo ngay"}</span>
+                      <span>{t("landlordRemindersBtnSendNotif")}</span>
                     </>
                   )}
                 </button>
@@ -1571,7 +1563,7 @@ export default function RemindersPage() {
                 <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase">
                   {selectedNotifDetail.category}
                 </span>
-                <h3 className="text-sm font-bold text-white">{isEn ? "Announcement Details" : "Chi tiết thông báo"}</h3>
+                <h3 className="text-sm font-bold text-white">{t("landlordRemindersDetailTitle")}</h3>
               </div>
               <button
                 onClick={() => setSelectedNotifDetail(null)}
@@ -1585,9 +1577,9 @@ export default function RemindersPage() {
               <div>
                 <h2 className="text-base font-black text-zinc-900 leading-snug mb-1">{selectedNotifDetail.title}</h2>
                 <div className="flex items-center gap-3 text-zinc-400 text-[11px] font-bold">
-                  <span>{isEn ? "Sent at" : "Gửi lúc"}: {selectedNotifDetail.sentAt}</span>
+                  <span>{t("landlordRemindersDetailSentAt", { time: selectedNotifDetail.sentAt })}</span>
                   <span>•</span>
-                  <span>{isEn ? "Channel" : "Kênh"}: {selectedNotifDetail.channel}</span>
+                  <span>{t("landlordRemindersDetailChannel", { channel: selectedNotifDetail.channel })}</span>
                 </div>
               </div>
 
@@ -1598,10 +1590,10 @@ export default function RemindersPage() {
               <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-blue-600" />
-                  <span className="text-zinc-700 font-bold">{isEn ? "Target Reach" : "Cư dân tiếp cận"}</span>
+                  <span className="text-zinc-700 font-bold">{t("landlordRemindersDetailTargetReach")}</span>
                 </div>
                 <span className="font-black text-blue-600 text-sm">
-                  {selectedNotifDetail.totalTarget} {isEn ? "Residents" : "Cư dân"}
+                  {t("landlordRemindersDetailResidentsUnit", { count: selectedNotifDetail.totalTarget })}
                 </span>
               </div>
             </div>
@@ -1614,14 +1606,14 @@ export default function RemindersPage() {
                 }}
                 className="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <Trash2 className="w-4 h-4" /> {isEn ? "Delete Announcement" : "Xóa thông báo"}
+                <Trash2 className="w-4 h-4" /> {t("landlordRemindersDetailDelete")}
               </button>
 
               <button
                 onClick={() => setSelectedNotifDetail(null)}
                 className="px-5 py-2 text-xs font-bold text-white bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
               >
-                {isEn ? "Close" : "Đóng"}
+                {t("landlordRemindersDetailClose")}
               </button>
             </div>
           </div>
@@ -1641,12 +1633,10 @@ export default function RemindersPage() {
 
             <div className="space-y-2">
               <h3 className="text-xl font-black text-zinc-900 tracking-tight">
-                {isEn ? "Delete Announcement" : "Xác nhận xóa thông báo"}
+                {t("landlordRemindersConfirmDeleteTitle")}
               </h3>
               <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-                {isEn
-                  ? "Are you sure you want to delete this broadcast notice? This action cannot be undone."
-                  : "Bạn có chắc chắn muốn xóa thông báo này? Hành động này không thể hoàn tác."}
+                {t("landlordRemindersConfirmDeleteDesc")}
               </p>
             </div>
 
@@ -1657,7 +1647,7 @@ export default function RemindersPage() {
                 onClick={() => setDeletingNotifId(null)}
                 className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
               >
-                {isEn ? "Cancel" : "Hủy bỏ"}
+                {t("landlordRemindersBtnCancel")}
               </button>
               <button
                 type="button"
@@ -1666,7 +1656,7 @@ export default function RemindersPage() {
                 className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 {isDeletingNotif ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                <span>{isEn ? "Delete" : "Xác nhận xóa"}</span>
+                <span>{t("landlordRemindersDeleteAction")}</span>
               </button>
             </div>
           </div>
@@ -1688,12 +1678,10 @@ export default function RemindersPage() {
             {/* Header Title & Subtitle */}
             <div className="space-y-2">
               <h3 className="text-xl font-black text-zinc-900 tracking-tight">
-                {isEn ? "Confirm Discard Changes" : "Xác nhận đóng form"}
+                {t("landlordRemindersConfirmDiscardTitle")}
               </h3>
               <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-                {isEn
-                  ? "You have unsaved changes. Are you sure you want to discard your draft?"
-                  : "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?"}
+                {t("landlordRemindersConfirmDiscardDesc")}
               </p>
             </div>
 
@@ -1704,7 +1692,7 @@ export default function RemindersPage() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
               >
-                {isEn ? "Continue Editing" : "Tiếp tục chỉnh sửa"}
+                {t("landlordRemindersConfirmKeepEditing")}
               </button>
               <button
                 type="button"
@@ -1715,7 +1703,7 @@ export default function RemindersPage() {
                 }}
                 className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
               >
-                {isEn ? "Discard & Close" : "Hủy thay đổi & Đóng"}
+                {t("landlordRemindersConfirmDiscardClose")}
               </button>
             </div>
           </div>

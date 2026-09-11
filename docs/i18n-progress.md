@@ -61,11 +61,11 @@
 ### A. Shared Dashboard Shell — 100% COMPLETED:
 1. `layout.tsx` (Multi-role Sidebar for Landlord, Staff, Admin, Tenant; Property Switcher; User Profile Footer; Dynamic Document Titles)
 
-### B. Phân Hệ Landlord Dashboard (Chỉ triển khai phạm vi UC-L-01 -> UC-L-11 đã có kết nối backend)
+### B. Phân Hệ Landlord Dashboard (Mở rộng phạm vi UC-L-01 -> UC-L-17 theo tiến độ Backend mới nhất):
 
-> **LƯU Ý ĐẶC BIỆT THEO YÊU CẦU DỰ ÁN**: Thành viên nhóm chỉ mới làm backend đến **UC-L-11** và đang code tiếp các UC sau trên nhánh riêng. Để tránh merge conflict, **tạm hoãn toàn bộ các trang thuộc UC-L-12 trở đi** (sẽ quay lại sau khi merge backend mới).
+> **CẬP NHẬT TIẾN ĐỘ**: Backend đã hoàn thiện và merge thành công đến **UC-L-17**. Tiến hành thiết lập đa ngôn ngữ toàn diện cho các trang từ UC-L-12 đến UC-L-17.
 
-#### Các trang trong phạm vi UC-L-01 -> UC-L-11:
+#### Các trang đã hoàn thành (UC-L-01 -> UC-L-12):
 1. **Landlord Overview / Dashboard Home** (`frontend/src/app/(dashboard)/landlord/page.tsx`) — **100% COMPLETED** [UC-L-01]
 2. **Rooms Management** (`frontend/src/app/(dashboard)/landlord/rooms/page.tsx`) — **100% COMPLETED** [UC-L-02, UC-L-03]
 3. **Boarding House Setup 3-Step Wizard** (`frontend/src/app/(dashboard)/landlord/setup/page.tsx`) — **100% COMPLETED** [UC-L-01 Wizard]
@@ -76,13 +76,97 @@
 8. **Real-time Messages / Chat** (`frontend/src/app/(dashboard)/landlord/messages/page.tsx`) — **100% COMPLETED** [UC-L-11]
 9. **Customers & External Tenant Link** (`frontend/src/app/(dashboard)/landlord/customers/page.tsx`) — **100% COMPLETED** [Customer list & external tenant link]
 10. **Customer Detail & ID Cards** (`frontend/src/app/(dashboard)/landlord/customers/[id]/page.tsx`) — **100% COMPLETED** [Customer profile, ID documents, stay history & edit modal]
-- **Trạng thái phân hệ Landlord**: **100% HOÀN THÀNH TOÀN BỘ 10 TRANG THEO YÊU CẦU** (Tổng cộng từ điển đạt **3.413 keys**, parity 1:1, 0 lỗi TypeScript, 0 duplicate keys).
+11. **Rental Listings & BHRP Quota** (`frontend/src/app/(dashboard)/landlord/listings/page.tsx`) — **100% COMPLETED** [UC-L-12]
+    - Bản địa hóa toàn bộ giao diện quản lý tin đăng sàn phòng trọ trực tuyến BHRP.
+    - Hero banner: thông tin gói thuê (`quotaLandlord`, `quotaBroker`), hạn mức reset 00:00 hàng ngày, số tin miễn phí hôm nay, lượt trả phí tích lũy, tổng tin đã đăng.
+    - Bộ lọc trạng thái (Đang hiển thị, Bản nháp, Tạm ẩn), ô tìm kiếm tin đăng.
+    - Hỗ trợ song song 2 chế độ hiển thị: Lưới (Grid view mặc định) và Bảng (Table view) theo Quy tắc số 9.
+    - Thao tác chuyển đổi trạng thái tin đăng (Tạm ẩn tin / Đăng lại) kèm thông báo toast đa ngôn ngữ.
+    - Phân trang chuẩn hóa theo Quy tắc số 9 (Nhập số/trang, window jumping 5 trang).
+    - Parity từ điển đạt **3.763 keys** (1:1 giữa `vi.ts` và `en.ts`, 0 lỗi chênh lệch, 0 lỗi TypeScript).
+12. **Broadcast Announcements & Staff Tasks** (`frontend/src/app/(dashboard)/landlord/reminders/page.tsx`) — **100% COMPLETED** [UC-L-13]
+    - Đa ngôn ngữ hóa toàn diện phân hệ quản lý thông báo cư dân và công việc vận hành nội bộ.
+    - Hero banner: tiêu đề tòa nhà, địa chỉ, nút xem bản đồ Google Maps, phụ đề giới thiệu.
+    - 4 Thẻ thống kê thời gian thực: Công việc chờ xử lý (`pendingTasks`), Mức độ khẩn cấp (`highPriority`), Tổng thông báo phát sóng (`statTotalNotifs`), Cư dân tiếp cận (`statReachedTenants`).
+    - Thanh điều hướng phân đoạn (Segmented Navigation): Chuyển tab Nhắc việc vận hành vs Thông báo cư dân kèm số lượng thời gian thực.
+    - Nút tác vụ chính: "Giao việc nhân viên" / "Phát thông báo mới (UC-L-13)".
+    - Bộ tìm kiếm và lọc danh mục, trạng thái, mức độ ưu tiên song ngữ.
+    - Hỗ trợ đầy đủ 2 chế độ hiển thị song song theo Quy tắc số 9: Dạng Lưới (Grid view mặc định) và Dạng Bảng (Table view).
+    - Tab Nhắc việc vận hành: thẻ công việc (phân loại, phòng, nhân viên phụ trách, hạn hoàn thành, nút đổi trạng thái hoàn thành, xóa việc).
+    - Tab Thông báo cư dân (Backend thật UC-L-13): thanh tiến độ tỷ lệ đã đọc theo %, đối tượng tiếp cận, kênh phát sóng (Hệ thống, Zalo OA, SMS), nút xem chi tiết và xóa thông báo.
+    - Chuẩn hóa phân trang theo Quy tắc số 9 (Nhập số/trang, window jumping 5 trang).
+    - Modal 1: Giao việc cho nhân viên tòa nhà (tiêu đề, nhân viên, phòng, danh mục, mức ưu tiên, hạn hoàn thành, ghi chú chi tiết).
+    - Modal 2: Soạn & Phát sóng thông báo khách thuê (chọn mẫu nhanh, tiêu đề, phạm vi tiếp cận, kênh gửi, danh mục, nội dung).
+    - Modal 3: Chi tiết thông báo phát sóng (thời gian gửi, kênh, số cư dân tiếp cận, xóa, đóng).
+    - Modal 4: Xác nhận xóa thông báo.
+    - Modal 5 (Quy tắc số 10): Hộp thoại Pop-up xác nhận thoát khi có dữ liệu chưa lưu ("Xác nhận đóng form", "Tiếp tục chỉnh sửa", "Hủy thay đổi & Đóng").
+    - Parity từ điển đạt **3.823 keys** (1:1 giữa `vi.ts` và `en.ts`, 0 lỗi chênh lệch, 0 lỗi TypeScript).
 
-#### Các trang tạm hoãn (Thuộc UC-L-12 trở đi, tránh merge conflict):
-- `listings/page.tsx` [UC-L-12 — AI Rental Post Suggestions]
-- `reminders/page.tsx` [UC-L-13 — Broadcast Announcements]
-- `debts/page.tsx` [UC-L-16 — Debt Tracking]
-- `expenses/page.tsx` [UC-L-17 — Expense Management]
+13. **Deposit Management & Conversion** (`frontend/src/app/(dashboard)/landlord/deposits/page.tsx`) — **100% COMPLETED** [UC-L-10 & UC-L-14]
+    - Bản địa hóa toàn diện phân hệ quản lý tiền cọc giữ chỗ và cọc hợp đồng bảo chứng thuê phòng.
+    - Hero banner: tiêu đề tòa nhà (`landlordDepositsLoadingBuilding`), địa chỉ, liên kết Google Maps, phụ đề nghiệp vụ, bảo chứng Dormio Escrow.
+    - 4 Thẻ thống kê tài chính: Tiền cọc đang giữ (`statHeld`), Tiền cọc đã hoàn (`statRefunded`), Tiền cọc đã khấu trừ (`statDeducted`), Số cọc đã nâng cấp hợp đồng (`statUpgraded`).
+    - Phân đoạn loại cọc (Segment Filter): Cọc Giữ Chỗ Xem Phòng (`hold`) vs Cọc Hợp Đồng Thuê (`contract`) kèm số lượng đếm thời gian thực.
+    - Bộ lọc trạng thái (Tất cả, Đang giữ, Đã hoàn, Đã khấu trừ) và thanh tìm kiếm đa năng.
+    - Hỗ trợ đầy đủ 2 chế độ hiển thị song song theo Quy tắc số 9: Dạng Lưới (Grid view mặc định) và Dạng Bảng (Table view).
+    - Thẻ phiếu cọc: mã cọc, số tiền định dạng song ngữ, loại cọc, phòng, ngày cọc, hạn chốt HĐ, trạng thái, các nút tác vụ (Chi tiết, Nâng cọc HĐ, Hoàn/Khấu trừ).
+    - Chuẩn hóa phân trang theo Quy tắc số 9 (Nhập số/trang, window jumping 5 trang).
+    - Modal 1: Lập phiếu thu cọc giữ chỗ mới (chọn phòng khả dụng, loại cọc, họ tên khách, SĐT, số tiền cọc, hạn giữ chỗ, phương thức thanh toán tiền mặt/VietQR, ghi chú).
+    - Modal 2: Chi tiết khoản đặt cọc (mã biên lai, tiền cọc ban đầu, tiền cọc hiện giữ, số tiền hoàn trả/khấu trừ, lịch sử nâng cấp, thông tin khách thuê).
+    - Modal 3: Xử lý Hoàn cọc & Khấu trừ (tùy chọn hoàn 100%, trừ 50%, khấu trừ 100% mất cọc, số tiền khấu trừ tùy chỉnh, lý do vi phạm).
+    - Modal 4: Nâng cấp cọc giữ chỗ lên cọc hợp đồng (tự động tính số tiền cần thu bổ sung, nhập mục tiêu cọc HĐ, cam kết chuyển đổi bảo đảm).
+    - Modal 5 (Quy tắc số 10): Hộp thoại Pop-up xác nhận đóng khi có thay đổi chưa lưu ("Xác nhận đóng form", "Tiếp tục chỉnh sửa", "Hủy thay đổi & Đóng").
+    - Parity từ điển đạt **3.826 keys** (1:1 giữa `vi.ts` và `en.ts`, 0 lỗi chênh lệch, 0 lỗi TypeScript).
+
+14. **Contract Document Export & Preview** (`frontend/src/components/landlord/ContractPreviewModal.tsx` & `contracts/page.tsx`) — **100% COMPLETED** [UC-L-15]
+    - Bản địa hóa toàn diện cửa sổ xem trước, xuất và in ấn hợp đồng thuê phòng chuẩn hóa theo A4.
+    - Tiêu đề modal song ngữ kèm số phòng (`landlordContractsExportTitle`), đại diện thuê (`landlordContractsExportRep`), mã hợp đồng.
+    - Tác vụ in ấn trực tiếp (`landlordContractsExportPrintBtn`, `landlordContractsExportPrintTooltip`) từ khung nội dung iframe chuẩn mẫu hệ thống.
+    - Tác vụ xuất lưu trữ hệ thống & tải xuống (`landlordContractsExportExportBtn`, `landlordContractsExportExporting`, `landlordContractsExportExportTooltip`) kết nối backend `exportContract(buildingId, contractId)`.
+    - Trạng thái đang tải mẫu hệ thống (`landlordContractsExportPreparing`) và xử lý lỗi tải mẫu (`landlordContractsExportErrorTitle`).
+    - Khung tài liệu dự phòng (Fallback Contract HTML) song ngữ linh hoạt theo ngôn ngữ hiển thị hiện tại.
+    - Chân modal: hiển thị định dạng tiêu chuẩn A4 (`landlordContractsExportFormatStandard`), nút tải tệp HTML riêng biệt (`landlordContractsExportDownloadHtml`), nút đóng.
+    - Các thông báo toast kết quả: tải xuống thành công (`toastDownloadSuccess`), xuất và lưu thành công (`toastExportSuccess`), thông báo lỗi (`toastExportFailed`).
+    - Parity từ điển đạt **3.843 keys** (1:1 giữa `vi.ts` và `en.ts`, 0 lỗi chênh lệch, 0 lỗi TypeScript).
+
+15. **Overdue Rental Debt Tracking & Reminders** (`frontend/src/app/(dashboard)/landlord/debts/page.tsx`) — **100% COMPLETED** [UC-L-16]
+    - Bản địa hóa toàn diện phân hệ sổ công nợ tiền phòng, phân nhóm thời gian nợ và nhắc nợ đa kênh.
+    - Tiêu đề trang (`landlordDebtsTitle`), phụ đề nghiệp vụ (`landlordDebtsSubtitle`), nút đồng bộ hạn nợ (`landlordDebtsSyncBtn`, `landlordDebtsSyncTooltip`, `landlordDebtsSyncing`), nút xuất dữ liệu Excel/CSV (`landlordDebtsExportExcel`, `landlordDebtsExportNoData`).
+    - 4 Thẻ KPI tài chính: Tổng tiền nợ (`landlordDebtsTotalDebt`), Nợ quá hạn (`landlordDebtsOverdueDebt`, `landlordDebtsOverdueNotice`), Nợ xấu ≥3 tháng (`landlordDebtsBadDebt3Months`, `landlordDebtsBadDebtRooms`), Số phòng nợ (`landlordDebtsDebtorRooms`, `landlordDebtsAtBuilding`).
+    - Bộ lọc & điều khiển: Ô tìm kiếm đa năng (`landlordDebtsSearchPlaceholder`), bộ lọc thời gian nợ (`all`, `overdue`, `1_month`, `2_months`, `bad_debt`), sắp xếp (`debt_desc`, `aging_desc`, `room_asc`), nút chuyển đổi chế độ Lưới vs Bảng.
+    - Trạng thái tải dữ liệu (`landlordDebtsLoadingTitle`, `landlordDebtsLoadingDesc`) và trạng thái danh sách trống (`landlordDebtsEmptyFilteredTitle`, `landlordDebtsEmptyFilteredDesc`, `landlordDebtsEmptyAllPaidDesc`, `landlordDebtsClearFilter`).
+    - Hỗ trợ đầy đủ 2 chế độ hiển thị song song theo Quy tắc số 9: Dạng Lưới (Grid view mặc định) và Dạng Bảng (Table view).
+    - Thẻ nợ dạng Lưới & dòng dạng Bảng: nhãn trạng thái nợ đa màu, số phòng, tầng, họ tên khách thuê, số điện thoại, số kỳ nợ, tổng tiền nợ, tiền nợ quá hạn, nợ từ ngày, nút xem hóa đơn, nút gửi nhắc nợ.
+    - Chuẩn hóa phân trang theo Quy tắc số 9 (Nhập số/trang, window jumping 5 trang: `Hiển thị [X] / trang | X-Y trên Z phòng nợ`).
+    - Modal 1: Danh sách hóa đơn nợ theo phòng (tổng dư nợ cần thanh toán, số kỳ hóa đơn, chi tiết từng kỳ, hạn thanh toán, nút thu tiền ngay, nút đóng).
+    - Modal 2: Gửi thông báo nhắc nợ (khách nhận, số điện thoại, ghi chú thêm từ chủ trọ tùy chọn, nội dung tin nhắn mẫu song ngữ, nút sao chép Zalo/SMS, nút gửi qua App Dormio).
+    - Modal 3: Ghi nhận thu tiền mặt/chuyển khoản (số tiền thu theo kỳ, phương thức tiền mặt hoặc chuyển khoản ngoài, ghi chú thanh toán, nút xác nhận thu tiền).
+    - Modal 4 (Quy tắc số 10): Hộp thoại Pop-up xác nhận đóng khi có thay đổi chưa lưu ("Xác nhận đóng form", "Tiếp tục chỉnh sửa", "Hủy thay đổi & Đóng").
+    - Parity từ điển đạt **3.935 keys** (1:1 giữa `vi.ts` và `en.ts`, 0 lỗi chênh lệch, 0 lỗi TypeScript).
+
+16. **Operating Expense Management** (`frontend/src/app/(dashboard)/landlord/expenses/page.tsx`) — **100% COMPLETED** [UC-L-17]
+    - Bản địa hóa toàn diện phân hệ quản lý chi phí vận hành, bảo trì thiết bị và hóa đơn tòa nhà.
+    - Tiêu đề trang (`landlordExpensesTitle`), phụ đề nghiệp vụ (`landlordExpensesSubtitle`), nút tải lại danh sách (`landlordExpensesReload`), nút xuất Excel/CSV (`landlordExpensesExportExcel`, `landlordExpensesAlertNoDataExport`), nút thêm khoản chi mới (`landlordExpensesAddNew`).
+    - Dark Hero Summary Banner: Tiêu đề tòa nhà (`landlordExpensesBuildingFallback`), địa chỉ với biểu tượng MapPin, phụ đề ngân sách (`landlordExpensesHeroSubtitle`), 3 thẻ tài chính định dạng số tiền lớn thông minh (`TỔNG CHI PHÍ` - `formatLargeMoney`, `ĐÃ THANH TOÁN`, `CHỜ THANH TOÁN`).
+    - Thanh bộ lọc & điều khiển: Thanh cuộn danh mục (`Bảo trì & Sửa chữa`, `Điện nước & Dịch vụ`, `Vệ sinh & An ninh`, `Trang thiết bị`, `Chi phí khác`, `Tất cả danh mục ({count})`), ô tìm kiếm đa năng (`landlordExpensesSearchPlaceholder`), nút chuyển đổi chế độ Lưới vs Bảng, 4 pill lọc trạng thái (`Tất cả`, `Đã thanh toán`, `Chờ thanh toán`, `Đã hủy`).
+    - Trạng thái tải dữ liệu (`landlordExpensesLoading`) và trạng thái danh sách rỗng (`landlordExpensesNotFound`, `landlordExpensesNotFoundDesc`).
+    - Hỗ trợ đầy đủ 2 chế độ hiển thị song song theo Quy tắc số 9: Dạng Lưới (Grid view mặc định: 6 mục/trang) và Dạng Bảng (Table view: 10 mục/trang).
+    - Thẻ chi phí dạng Lưới & dòng bảng dạng Bảng: nhãn trạng thái đa màu sắc, mã chi phí, danh mục, tên khoản chi, số tiền chi âm nổi bật, phạm vi áp dụng (Toàn tòa nhà hoặc Tên phòng), ngày ghi nhận, nút xem chi tiết, nút đánh dấu đã trả, biểu tượng khóa đối với khoản chi đã thanh toán (đảm bảo tính minh bạch sổ sách).
+    - Chuẩn hóa phân trang theo Quy tắc số 9 (Nhập số/trang, window jumping 5 trang: `Hiển thị [X] / trang | X-Y trên Z khoản chi`).
+    - Modal 1: Chi tiết khoản chi (Header mã chi phí, Financial highlight card, tên khoản chi, phạm vi áp dụng, trạng thái thanh toán, ghi chú chi tiết, nút đóng, nút đánh dấu đã trả, nút khóa sửa / chỉnh sửa).
+    - Modal 2: Thêm mới & Chỉnh sửa khoản chi phí (Tên khoản chi, danh mục, số tiền, phạm vi áp dụng toàn tòa / phòng cụ thể, chọn phòng khả dụng từ API, trạng thái thanh toán, ngày ghi nhận, ghi chú bổ sung, nút hủy, nút lưu/cập nhật).
+    - Modal 3 (Quy tắc số 10): Pop-up xác nhận thoát khi có thay đổi chưa lưu ("Xác nhận đóng form?", "Tiếp tục nhập", "Hủy & Đóng").
+    - Modal 4: Pop-up xác nhận xóa khoản chi (tên và mã khoản chi, nút hủy bỏ, nút xóa).
+    - Modal 5: Pop-up thông báo khoản chi đã khóa sửa/xóa do đã thanh toán để bảo toàn sổ sách kế toán.
+    - Parity từ điển đạt **3.984 keys** (1:1 giữa `vi.ts` và `en.ts`, 0 lỗi chênh lệch, 0 lỗi TypeScript).
+
+---
+
+#### Tổng kết tiến độ phân hệ Landlord Dashboard (UC-L-01 -> UC-L-17):
+- **Đã hoàn thành 100%** toàn bộ 16 màn hình & modal nghiệp vụ từ **UC-L-01 đến UC-L-17** theo đúng tiến độ của backend!
+- Tất cả các trang tuân thủ tuyệt đối **Quy tắc số 9** (Mặc định Grid view, song song Table view, phân trang chuẩn hóa với window jumping 5 trang) và **Quy tắc số 10** (Pop-up xác nhận đóng form khi có thay đổi draft chưa lưu).
+
+#### Các trang tiếp theo khi backend hoàn thiện (Thuộc UC-L-18 trở đi):
 - `services/page.tsx` [UC-L-18 — Custom Service Management]
 - `workforce/page.tsx` [UC-L-19, UC-L-20 — Staff Onboarding & Management]
 - `reports/page.tsx` [UC-L-24 — Advanced Multi-Property Reports]

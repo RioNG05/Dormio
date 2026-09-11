@@ -33,8 +33,12 @@ import {
   PostListing,
   PostQuotaStatus,
 } from "@/services/post.service";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function ListingsPage() {
+  const t = useTranslations("landlord");
+  const { currentLocale } = useLanguage();
+
   // View mode: Standardized to Grid view as default
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
@@ -101,8 +105,14 @@ export default function ListingsPage() {
             id: "post-demo-1",
             postedBy: "user-1",
             roomId: "room-101",
-            title: "Cho thuê phòng Studio cao cấp Quận 1 - Full nội thất, ban công riêng",
-            content: "Toà nhà Dormio Premier 123 Nguyễn Huệ, an ninh 24/7, giờ giấc tự do, bếp riêng...",
+            title:
+              currentLocale === "en"
+                ? "Studio apartment for rent in District 1 - Fully furnished, private balcony"
+                : "Cho thuê phòng Studio cao cấp Quận 1 - Full nội thất, ban công riêng",
+            content:
+              currentLocale === "en"
+                ? "Dormio Premier Building 123 Nguyen Hue, 24/7 security, free hours, private kitchen..."
+                : "Toà nhà Dormio Premier 123 Nguyễn Huệ, an ninh 24/7, giờ giấc tự do, bếp riêng...",
             depositAmount: 3500000,
             status: "posted",
             sourceType: "free_quote",
@@ -127,8 +137,14 @@ export default function ListingsPage() {
             id: "post-demo-2",
             postedBy: "user-1",
             roomId: "room-202",
-            title: "Phòng trọ sinh viên tiện nghi gần ĐH Quốc Gia Cầu Giấy, giá cực tốt",
-            content: "Phòng mới xây 100%, đầy đủ máy lạnh, nước nóng, khoá vân tay, wifi tốc độ cao.",
+            title:
+              currentLocale === "en"
+                ? "Student room near VNU Cau Giay with amenities, great price"
+                : "Phòng trọ sinh viên tiện nghi gần ĐH Quốc Gia Cầu Giấy, giá cực tốt",
+            content:
+              currentLocale === "en"
+                ? "100% newly built, full AC, water heater, smart lock, high speed wifi."
+                : "Phòng mới xây 100%, đầy đủ máy lạnh, nước nóng, khoá vân tay, wifi tốc độ cao.",
             depositAmount: 2000000,
             status: "posted",
             sourceType: "purchased",
@@ -145,7 +161,7 @@ export default function ListingsPage() {
               roomNumber: "202",
               floor: 2,
               area: 22,
-              roomTypeName: "Tiêu chuẩn",
+              roomTypeName: currentLocale === "en" ? "Standard" : "Tiêu chuẩn",
               boardingHouseName: "Dormio Campus Cầu Giấy",
             },
           },
@@ -176,12 +192,12 @@ export default function ListingsPage() {
       await postService.updatePostStatus(item.id, newStatus);
       showToast(
         newStatus === "posted"
-          ? `Đã hiển thị lại tin đăng "${item.title}"`
-          : `Đã tạm ẩn tin đăng "${item.title}"`
+          ? t("landlordListingsToastShowSuccess", { title: item.title })
+          : t("landlordListingsToastHideSuccess", { title: item.title })
       );
       loadData();
     } catch (err: any) {
-      showToast(err.message || "Không thể cập nhật trạng thái tin", "error");
+      showToast(err.message || t("landlordListingsToastStatusError"), "error");
     }
   };
 
@@ -222,9 +238,9 @@ export default function ListingsPage() {
       {/* Top Header & Action */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Quản lý tin đăng (BHRP)</h1>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{t("landlordListingsPageTitle")}</h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            Đăng tin và quản lý các bài cho thuê phòng trống trên nền tảng Dormio
+            {t("landlordListingsPageSubtitle")}
           </p>
         </div>
 
@@ -233,7 +249,7 @@ export default function ListingsPage() {
             href="/landlord/listings/create"
             className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Đăng tin phòng trống mới
+            <Plus className="w-4 h-4" /> {t("landlordListingsNewListingBtn")}
           </Link>
         </div>
       </div>
@@ -248,15 +264,15 @@ export default function ListingsPage() {
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-wider backdrop-blur-md">
-                {quota?.isLandlord ? `Chủ trọ · Gói ${quota.planName || "Free"}` : "Môi giới (Leasing Agent)"}
+                {quota?.isLandlord ? t("landlordListingsQuotaLandlord", { plan: quota.planName || "Free" }) : t("landlordListingsQuotaBroker")}
               </span>
-              <span className="text-xs text-zinc-400">· Hạn mức tự động reset mỗi 00:00 hàng ngày</span>
+              <span className="text-xs text-zinc-400">{t("landlordListingsQuotaResetNotice")}</span>
             </div>
             <h2 className="text-xl md:text-3xl font-black tracking-tight text-white">
-              Sàn phòng trọ trực tuyến BHRP
+              {t("landlordListingsBhrpBannerTitle")}
             </h2>
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Tiếp cận khách thuê đang tìm phòng, nhận cọc giữ chỗ trực tuyến và tự động đồng bộ sang hợp đồng cho thuê.
+              {t("landlordListingsBhrpBannerDesc")}
             </p>
           </div>
 
@@ -265,7 +281,7 @@ export default function ListingsPage() {
             <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
               <Coins className="w-5 h-5 text-[#FF6B35] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tin miễn phí hôm nay</span>
+                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">{t("landlordListingsFreeToday")}</span>
                 <span className="font-black text-white text-base leading-none mt-1">
                   {quota ? `${quota.freePostsRemainingToday} / ${quota.dailyPostQuota}` : "1 / 1"}
                 </span>
@@ -275,9 +291,9 @@ export default function ListingsPage() {
             <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
               <Sparkles className="w-5 h-5 text-[#2ac1bc] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Lượt trả phí tích lũy</span>
+                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">{t("landlordListingsPaidCredits")}</span>
                 <span className="font-black text-[#2ac1bc] text-base leading-none mt-1">
-                  {quota?.purchasedCreditsAvailable ?? 0} tin
+                  {t("landlordListingsPaidUnit", { count: quota?.purchasedCreditsAvailable ?? 0 })}
                 </span>
               </div>
             </div>
@@ -285,9 +301,9 @@ export default function ListingsPage() {
             <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
               <Eye className="w-5 h-5 text-blue-400 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">Tổng tin đã đăng</span>
+                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">{t("landlordListingsTotalPublished")}</span>
                 <span className="font-black text-white text-base leading-none mt-1">
-                  {totalItems} tin
+                  {t("landlordListingsPaidUnit", { count: totalItems })}
                 </span>
               </div>
             </div>
@@ -303,7 +319,7 @@ export default function ListingsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm theo tiêu đề, nội dung..."
+            placeholder={t("landlordListingsSearchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
           />
         </form>
@@ -319,10 +335,10 @@ export default function ListingsPage() {
               }}
               className="rounded-xl border border-zinc-200 pl-3 pr-8 py-2 text-xs font-semibold text-zinc-700 bg-zinc-50/50 hover:bg-white focus:outline-none focus:border-[#FF6B35] transition-colors appearance-none cursor-pointer"
             >
-              <option value="">-- Tất cả trạng thái --</option>
-              <option value="posted">Đang hiển thị</option>
-              <option value="draft">Bản nháp</option>
-              <option value="hidden">Tạm ẩn</option>
+              <option value="">{t("landlordListingsFilterAllStatus")}</option>
+              <option value="posted">{t("landlordListingsStatusPosted")}</option>
+              <option value="draft">{t("landlordListingsStatusDraft")}</option>
+              <option value="hidden">{t("landlordListingsStatusHidden")}</option>
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
           </div>
@@ -342,7 +358,7 @@ export default function ListingsPage() {
                   : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" /> Lưới
+              <LayoutGrid className="w-3.5 h-3.5" /> {t("landlordListingsViewGrid")}
             </button>
             <button
               type="button"
@@ -357,7 +373,7 @@ export default function ListingsPage() {
                   : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
-              <List className="w-3.5 h-3.5" /> Danh sách
+              <List className="w-3.5 h-3.5" /> {t("landlordListingsViewList")}
             </button>
           </div>
         </div>
@@ -367,7 +383,7 @@ export default function ListingsPage() {
       {isLoading ? (
         <div className="bg-white border border-zinc-200 rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-3">
           <Loader2 className="w-8 h-8 text-[#FF6B35] animate-spin" />
-          <span className="text-xs font-bold text-zinc-500">Đang tải danh sách tin đăng...</span>
+          <span className="text-xs font-bold text-zinc-500">{t("landlordListingsLoading")}</span>
         </div>
       ) : listings.length === 0 ? (
         /* Empty State */
@@ -376,16 +392,16 @@ export default function ListingsPage() {
             <ImageIcon className="w-8 h-8" />
           </div>
           <div className="space-y-1 max-w-sm">
-            <h3 className="text-base font-black text-zinc-900">Chưa có tin đăng nào</h3>
+            <h3 className="text-base font-black text-zinc-900">{t("landlordListingsEmptyTitle")}</h3>
             <p className="text-xs text-zinc-500">
-              Hãy đăng bài cho thuê các phòng đang trống để tiếp cận khách thuê trên sàn BHRP.
+              {t("landlordListingsEmptyDesc")}
             </p>
           </div>
           <Link
             href="/landlord/listings/create"
             className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Đăng tin đầu tiên
+            <Plus className="w-4 h-4" /> {t("landlordListingsCreateFirstBtn")}
           </Link>
         </div>
       ) : viewMode === "grid" ? (
@@ -424,18 +440,18 @@ export default function ListingsPage() {
                       }`}
                     >
                       {item.status === "posted"
-                        ? "Đang hiển thị"
+                        ? t("landlordListingsStatusPosted")
                         : item.status === "draft"
-                        ? "Bản nháp"
-                        : "Đã tạm ẩn"}
+                        ? t("landlordListingsStatusDraft")
+                        : t("landlordListingsStatusHidden")}
                     </span>
                     <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-black/60 text-white backdrop-blur-md">
-                      {item.sourceType === "free_quote" ? "Miễn phí" : "Trả phí"}
+                      {item.sourceType === "free_quote" ? t("landlordListingsSourceFree") : t("landlordListingsSourcePaid")}
                     </span>
                   </div>
 
                   <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-xl text-white text-[10px] font-bold flex items-center gap-1.5">
-                    <Eye className="w-3 h-3 text-[#2ac1bc]" /> {item.viewsCount} lượt xem
+                    <Eye className="w-3 h-3 text-[#2ac1bc]" /> {t("landlordListingsViewsBadge", { count: item.viewsCount })}
                   </div>
                 </div>
 
@@ -444,9 +460,14 @@ export default function ListingsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs text-zinc-500">
                       <span className="font-bold text-zinc-700">
-                        {item.room ? `Phòng ${item.room.roomNumber} · ${item.room.boardingHouseName || "Khu trọ"}` : "Tin tự do"}
+                        {item.room
+                          ? t("landlordListingsRoomLabel", {
+                              room: item.room.roomNumber,
+                              house: item.room.boardingHouseName || t("landlordListingsRoomFallback"),
+                            })
+                          : t("landlordListingsUnlinkedRoom")}
                       </span>
-                      <span>{new Date(item.createdAt).toLocaleDateString("vi-VN")}</span>
+                      <span>{new Date(item.createdAt).toLocaleDateString(currentLocale === "vi" ? "vi-VN" : "en-US")}</span>
                     </div>
 
                     <h3 className="text-base font-black text-zinc-900 line-clamp-2 leading-snug group-hover:text-[#FF6B35] transition-colors">
@@ -461,9 +482,9 @@ export default function ListingsPage() {
                   {/* Financial & Controls */}
                   <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
                     <div>
-                      <div className="text-[10px] font-bold uppercase text-zinc-400">Tiền cọc giữ chỗ</div>
+                      <div className="text-[10px] font-bold uppercase text-zinc-400">{t("landlordListingsDepositHolding")}</div>
                       <div className="text-sm font-black text-[#FF6B35]">
-                        {Number(item.depositAmount).toLocaleString("vi-VN")} ₫
+                        {Number(item.depositAmount).toLocaleString(currentLocale === "vi" ? "vi-VN" : "en-US")} ₫
                       </div>
                     </div>
 
@@ -476,15 +497,15 @@ export default function ListingsPage() {
                             ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                             : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                         }`}
-                        title={item.status === "posted" ? "Tạm ẩn tin đăng" : "Hiển thị lại tin đăng"}
+                        title={item.status === "posted" ? t("landlordListingsTitleHide") : t("landlordListingsTitleShow")}
                       >
                         {item.status === "posted" ? (
                           <>
-                            <EyeOff className="w-3.5 h-3.5" /> Ẩn tin
+                            <EyeOff className="w-3.5 h-3.5" /> {t("landlordListingsBtnToggleHide")}
                           </>
                         ) : (
                           <>
-                            <Eye className="w-3.5 h-3.5" /> Đăng lại
+                            <Eye className="w-3.5 h-3.5" /> {t("landlordListingsActionRepublish")}
                           </>
                         )}
                       </button>
@@ -502,13 +523,13 @@ export default function ListingsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-zinc-50 border-b border-zinc-200 text-[11px] font-black uppercase text-zinc-500 tracking-wider">
-                  <th className="px-6 py-4">Tin đăng</th>
-                  <th className="px-6 py-4">Phòng liên kết</th>
-                  <th className="px-6 py-4">Tiền cọc</th>
-                  <th className="px-6 py-4">Hạn mức</th>
-                  <th className="px-6 py-4">Lượt xem</th>
-                  <th className="px-6 py-4">Trạng thái</th>
-                  <th className="px-6 py-4 text-right">Thao tác</th>
+                  <th className="px-6 py-4">{t("landlordListingsColListing")}</th>
+                  <th className="px-6 py-4">{t("landlordListingsColLinkedRoom")}</th>
+                  <th className="px-6 py-4">{t("landlordListingsColDeposit")}</th>
+                  <th className="px-6 py-4">{t("landlordListingsColQuota")}</th>
+                  <th className="px-6 py-4">{t("landlordListingsColViews")}</th>
+                  <th className="px-6 py-4">{t("landlordListingsColStatus")}</th>
+                  <th className="px-6 py-4 text-right">{t("landlordListingsColActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 text-xs">
@@ -519,14 +540,14 @@ export default function ListingsPage() {
                       <div className="text-[11px] text-zinc-400 mt-0.5 line-clamp-1">{item.content}</div>
                     </td>
                     <td className="px-6 py-4 font-bold text-zinc-700">
-                      {item.room ? `P.${item.room.roomNumber} (${item.room.boardingHouseName || "Khu trọ"})` : "—"}
+                      {item.room ? `P.${item.room.roomNumber} (${item.room.boardingHouseName || t("landlordListingsRoomFallback")})` : "—"}
                     </td>
                     <td className="px-6 py-4 font-black text-[#FF6B35]">
-                      {Number(item.depositAmount).toLocaleString("vi-VN")} ₫
+                      {Number(item.depositAmount).toLocaleString(currentLocale === "vi" ? "vi-VN" : "en-US")} ₫
                     </td>
                     <td className="px-6 py-4">
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-zinc-100 text-zinc-700">
-                        {item.sourceType === "free_quote" ? "Miễn phí" : "Trả phí"}
+                        {item.sourceType === "free_quote" ? t("landlordListingsSourceFree") : t("landlordListingsSourcePaid")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-zinc-600 font-bold">{item.viewsCount}</td>
@@ -541,10 +562,10 @@ export default function ListingsPage() {
                         }`}
                       >
                         {item.status === "posted"
-                          ? "Đang hiển thị"
+                          ? t("landlordListingsStatusPosted")
                           : item.status === "draft"
-                          ? "Bản nháp"
-                          : "Tạm ẩn"}
+                          ? t("landlordListingsStatusDraft")
+                          : t("landlordListingsStatusHidden")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -553,7 +574,7 @@ export default function ListingsPage() {
                         onClick={() => handleToggleStatus(item)}
                         className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold transition-colors cursor-pointer"
                       >
-                        {item.status === "posted" ? "Ẩn tin" : "Hiển thị"}
+                        {item.status === "posted" ? t("landlordListingsBtnToggleHide") : t("landlordListingsBtnToggleShow")}
                       </button>
                     </td>
                   </tr>
@@ -569,7 +590,7 @@ export default function ListingsPage() {
         <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
           {/* Items per page and range display */}
           <div className="flex items-center gap-2 text-zinc-600">
-            <span>Hiển thị</span>
+            <span>{t("landlordListingsItemsPerPage")}</span>
             <input
               type="number"
               min={1}
@@ -582,9 +603,9 @@ export default function ListingsPage() {
               }}
               className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg focus:outline-none focus:border-[#FF6B35]"
             />
-            <span>/ trang | </span>
+            <span>{t("landlordListingsPerPageUnit")} | </span>
             <span className="font-bold text-zinc-900">
-              {startIndex}-{endIndex} trên {totalItems} mục
+              {startIndex}-{endIndex} {t("landlordListingsPaginationOf")} {totalItems} {t("landlordListingsPaginationItems")}
             </span>
           </div>
 
@@ -595,7 +616,7 @@ export default function ListingsPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               className="p-2 border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-              title="Trang trước"
+              title={t("landlordListingsPaginationPrev")}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -646,7 +667,7 @@ export default function ListingsPage() {
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               className="p-2 border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-              title="Trang tiếp"
+              title={t("landlordListingsPaginationNext")}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
