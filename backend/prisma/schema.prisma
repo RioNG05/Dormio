@@ -576,6 +576,8 @@ model SavedPost {
   savedBy     String   @db.Uuid
   savedByUser User     @relation(fields: [savedBy], references: [id])
   createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([postId, savedBy])
 }
 
 model PostReach {

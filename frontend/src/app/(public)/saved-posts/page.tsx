@@ -1,74 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Heart, Trash2, ArrowRight, Sparkles, MapPin, Minimize2, Scale, QrCode,
-  CheckCircle2, X, Check, Share2, Lock, ShieldCheck, Phone
+  Heart,
+  Trash2,
+  ArrowRight,
+  Sparkles,
+  MapPin,
+  Minimize2,
+  Scale,
+  QrCode,
+  CheckCircle2,
+  X,
+  Check,
+  Share2,
+  Lock,
+  ShieldCheck,
+  Phone,
+  Building2,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import { formatCurrency } from "@/utils";
+import { postService, type PublicPostListing } from "@/services/post.service";
 
-interface SavedRoomItem {
-  id: string;
-  titleVi: string;
-  titleEn: string;
-  price: number;
-  depositAmount: number;
-  area: number;
-  addressVi: string;
-  addressEn: string;
-  image: string;
-  amenitiesVi: string[];
-  amenitiesEn: string[];
-  landlord: { name: string; phone: string };
-}
-
-const INITIAL_SAVED_ROOMS: SavedRoomItem[] = [
-  {
-    id: "1",
-    titleVi: "Phòng Studio Ban Công Nguyễn Huệ Quận 1 - View Đẹp",
-    titleEn: "Studio Room with Balcony Nguyen Hue Dist 1 - Nice View",
-    price: 4500000,
-    depositAmount: 1000000,
-    area: 25,
-    addressVi: "123 Nguyễn Huệ, Bến Nghé, Quận 1, TP. HCM",
-    addressEn: "123 Nguyen Hue, Ben Nghe, District 1, HCMC",
-    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-    amenitiesVi: ["Ban công", "Máy lạnh Inverter", "Tủ lạnh", "Bếp riêng", "Wifi free", "Khóa vân tay"],
-    amenitiesEn: ["Balcony", "Inverter AC", "Refrigerator", "Private Kitchen", "Free Wifi", "Smart Lock"],
-    landlord: { name: "Nguyễn Văn Rio", phone: "0901.234.567" }
-  },
-  {
-    id: "2",
-    titleVi: "Phòng Đơn Cao Cấp Tầng 1 Full Nội Thất Trung Tâm Q1",
-    titleEn: "Premium Single Room 1st Floor Fully Furnished Central D1",
-    price: 4000000,
-    depositAmount: 500000,
-    area: 22,
-    addressVi: "125 Nguyễn Huệ, Bến Nghé, Quận 1, TP. HCM",
-    addressEn: "125 Nguyen Hue, Ben Nghe, District 1, HCMC",
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-    amenitiesVi: ["Máy lạnh", "Tủ lạnh", "Nóng lạnh", "Giờ tự do", "Bảo vệ 24/7"],
-    amenitiesEn: ["Air conditioner", "Refrigerator", "Water heater", "No curfew", "24/7 Security"],
-    landlord: { name: "Trần Thị Lan", phone: "0987.654.321" }
-  },
-  {
-    id: "3",
-    titleVi: "Phòng Đôi Sinh Viên Cầu Giấy Gần FTU Ngoại Thương",
-    titleEn: "Student Double Room Cau Giay Near Foreign Trade University",
-    price: 3200000,
-    depositAmount: 0,
-    area: 24,
-    addressVi: "45 Chùa Láng, Đống Đa, Hà Nội",
-    addressEn: "45 Chua Lang, Dong Da, Hanoi",
-    image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
-    amenitiesVi: ["Wifi tốc độ cao", "Nóng lạnh", "Ban công", "Chỗ để xe"],
-    amenitiesEn: ["High-speed Wifi", "Water heater", "Balcony", "Parking space"],
-    landlord: { name: "Lê Hoàng Nam", phone: "0912.345.678" }
-  }
-];
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
 
 export default function SavedPostsPage() {
   const t = useTranslations("guest");
@@ -76,11 +36,52 @@ export default function SavedPostsPage() {
   const isEn = currentLocale === "en";
   const { isLoggedIn } = useAuth();
 
-  const [savedRooms, setSavedRooms] = useState<SavedRoomItem[]>(INITIAL_SAVED_ROOMS);
+  const [savedRooms, setSavedRooms] = useState<PublicPostListing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
 
   // Selected Room IDs for Side-by-Side Comparison
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+
+  // Fetch saved rooms on mount if authenticated
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setIsLoading(false);
+      return;
+    }
+    let isMounted = true;
+    setIsLoading(true);
+    postService
+      .getSavedPosts()
+      .then((posts) => {
+        if (isMounted) {
+          setSavedRooms(posts);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch saved posts:", err);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoggedIn]);
+
+  // Auto clear toast
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   const toggleSelectCompare = (id: string) => {
     setSelectedForCompare((prev) =>
@@ -88,12 +89,45 @@ export default function SavedPostsPage() {
     );
   };
 
-  const removeSaved = (id: string) => {
+  const removeSaved = async (id: string) => {
+    const previous = [...savedRooms];
     setSavedRooms((prev) => prev.filter((room) => room.id !== id));
     setSelectedForCompare((prev) => prev.filter((item) => item !== id));
+
+    try {
+      await postService.unsavePost(id);
+      setToastMessage({
+        type: "success",
+        text: t("guestSavedPostsRemoveSuccess"),
+      });
+    } catch (err) {
+      console.error("Failed to remove saved post:", err);
+      setSavedRooms(previous);
+      setToastMessage({
+        type: "error",
+        text: t("guestSavedPostsRemoveError"),
+      });
+    }
   };
 
-  const selectedRoomsData = savedRooms.filter((r) => selectedForCompare.includes(r.id));
+  const formatAddress = (
+    addr?: PublicPostListing["address"],
+    fallbackName?: string
+  ): string => {
+    if (!addr) return fallbackName || "";
+    const parts = [
+      addr.houseNumber,
+      addr.street,
+      addr.ward,
+      addr.district,
+      addr.province,
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : fallbackName || "";
+  };
+
+  const selectedRoomsData = savedRooms.filter((r) =>
+    selectedForCompare.includes(r.id)
+  );
 
   // IF USER IS NOT LOGGED IN, SHOW LOGIN PROMPT LOCK SCREEN
   if (!isLoggedIn) {
@@ -104,7 +138,8 @@ export default function SavedPostsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
           <div className="relative z-10 max-w-4xl mx-auto space-y-4">
             <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> {t("guestSavedPostsMemberBadge")}
+              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />{" "}
+              {t("guestSavedPostsMemberBadge")}
             </span>
 
             <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
@@ -124,7 +159,9 @@ export default function SavedPostsPage() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-zinc-900">{t("guestSavedPostsLockTitle")}</h2>
+            <h2 className="text-2xl font-black text-zinc-900">
+              {t("guestSavedPostsLockTitle")}
+            </h2>
             <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-md mx-auto">
               {t("guestSavedPostsLockDesc")}
             </p>
@@ -149,6 +186,24 @@ export default function SavedPostsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-20 right-4 z-50 animate-in fade-in slide-in-from-top-3 duration-300">
+          <div
+            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-xs font-bold text-white ${
+              toastMessage.type === "success"
+                ? "bg-emerald-600"
+                : toastMessage.type === "error"
+                ? "bg-rose-600"
+                : "bg-blue-600"
+            }`}
+          >
+            {toastMessage.type === "success" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+            {toastMessage.type === "error" && <AlertCircle className="w-4 h-4 shrink-0" />}
+            <span>{toastMessage.text}</span>
+          </div>
+        </div>
+      )}
 
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
@@ -173,7 +228,30 @@ export default function SavedPostsPage() {
 
       {/* Main Content Area */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 w-full">
-        {savedRooms.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-3xl border border-zinc-200/80 overflow-hidden shadow-sm animate-pulse flex flex-col justify-between"
+              >
+                <div className="aspect-[16/9] bg-zinc-200" />
+                <div className="p-6 space-y-4">
+                  <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                  <div className="h-4 bg-zinc-100 rounded w-1/2" />
+                  <div className="pt-3 border-t border-zinc-100 flex justify-between">
+                    <div className="h-6 bg-zinc-200 rounded w-1/3" />
+                    <div className="h-4 bg-zinc-100 rounded w-1/4" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <div className="h-9 bg-zinc-100 rounded-xl" />
+                    <div className="h-9 bg-zinc-200 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : savedRooms.length === 0 ? (
           <div className="text-center py-20 bg-zinc-50 rounded-3xl border border-zinc-200/80 space-y-4 max-w-xl mx-auto">
             <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
               <Heart className="w-8 h-8" />
@@ -195,10 +273,15 @@ export default function SavedPostsPage() {
                   {selectedForCompare.length}
                 </span>
                 <span className="hidden sm:inline">
-                  {t("guestSavedPostsSelectedInfo", { savedCount: savedRooms.length, compareCount: selectedForCompare.length })}
+                  {t("guestSavedPostsSelectedInfo", {
+                    savedCount: savedRooms.length,
+                    compareCount: selectedForCompare.length,
+                  })}
                 </span>
                 <span className="sm:hidden text-white font-bold">
-                  {t("guestSavedPostsSelectedMobile", { compareCount: selectedForCompare.length })}
+                  {t("guestSavedPostsSelectedMobile", {
+                    compareCount: selectedForCompare.length,
+                  })}
                 </span>
               </div>
 
@@ -208,7 +291,8 @@ export default function SavedPostsPage() {
                 disabled={selectedForCompare.length === 0}
                 className="px-6 py-3 bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] to-[#FF6B35] disabled:opacity-40 hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#2AC1BC]/20 flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shrink-0"
               >
-                <Scale className="w-4 h-4" /> {t("guestSavedPostsCompareBtn", { count: selectedForCompare.length })} &rarr;
+                <Scale className="w-4 h-4" />{" "}
+                {t("guestSavedPostsCompareBtn", { count: selectedForCompare.length })} &rarr;
               </button>
             </div>
 
@@ -216,17 +300,21 @@ export default function SavedPostsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {savedRooms.map((room) => {
                 const isSelected = selectedForCompare.includes(room.id);
-                const roomTitle = isEn ? room.titleEn : room.titleVi;
-                const roomAddress = isEn ? room.addressEn : room.addressVi;
-                const roomAmenities = isEn ? room.amenitiesEn : room.amenitiesVi;
+                const roomTitle = room.title;
+                const roomAddress = formatAddress(
+                  room.address,
+                  room.room?.boardingHouseName
+                );
+                const roomImg = room.images?.[0]?.url || FALLBACK_IMAGE;
 
                 return (
                   <div
                     key={room.id}
-                    className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col justify-between group relative ${isSelected
-                      ? "border-[#2AC1BC] shadow-lg ring-2 ring-[#2AC1BC]/20"
-                      : "border-zinc-200/80 shadow-sm hover:shadow-md"
-                      }`}
+                    className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col justify-between group relative ${
+                      isSelected
+                        ? "border-[#2AC1BC] shadow-lg ring-2 ring-[#2AC1BC]/20"
+                        : "border-zinc-200/80 shadow-sm hover:shadow-md"
+                    }`}
                   >
                     {/* Checkbox Selector for Compare */}
                     <div
@@ -236,17 +324,24 @@ export default function SavedPostsPage() {
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => { }} // handled by div click
+                        onChange={() => {}} // handled by div click
                         className="w-4 h-4 accent-[#2AC1BC] cursor-pointer"
                       />
-                      <span>{isSelected ? t("guestSavedPostsSelectedCompare") : t("guestSavedPostsSelectCompare")}</span>
+                      <span>
+                        {isSelected
+                          ? t("guestSavedPostsSelectedCompare")
+                          : t("guestSavedPostsSelectCompare")}
+                      </span>
                     </div>
 
                     {/* Image */}
                     <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100">
                       <img
-                        src={room.image}
+                        src={roomImg}
                         alt={roomTitle}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE;
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <button
@@ -265,26 +360,39 @@ export default function SavedPostsPage() {
                             {roomTitle}
                           </h3>
                         </Link>
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(roomAddress)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
-                          title={t("guestSavedPostsMapTitle")}
-                        >
-                          <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                          <span className="truncate">{roomAddress}</span>
-                        </a>
+                        {roomAddress && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                              roomAddress
+                            )}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
+                            title={t("guestSavedPostsMapTitle")}
+                          >
+                            <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                            <span className="truncate">{roomAddress}</span>
+                          </a>
+                        )}
                       </div>
 
                       <div className="pt-3 border-t border-zinc-100 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xl font-black text-rose-500">{formatCurrency(room.price, currentLocale)}</span>
-                          <span className="text-xs text-zinc-700 font-bold">{room.area} m²</span>
+                          <span className="text-xl font-black text-rose-500">
+                            {formatCurrency(room.depositAmount, currentLocale)}
+                          </span>
+                          {room.room?.area && (
+                            <span className="text-xs text-zinc-700 font-bold">
+                              {room.room.area} m²
+                            </span>
+                          )}
                         </div>
 
                         <span className="text-[11px] font-bold text-zinc-500 block">
-                          {t("guestSavedPostsDepositLabel")} {room.depositAmount > 0 ? formatCurrency(room.depositAmount, currentLocale) : t("guestSavedPostsFreeDepositShort")}
+                          {t("guestSavedPostsDepositLabel")}{" "}
+                          {room.depositAmount > 0
+                            ? formatCurrency(room.depositAmount, currentLocale)
+                            : t("guestSavedPostsFreeDepositShort")}
                         </span>
 
                         <div className="grid grid-cols-2 gap-2 pt-2">
@@ -312,14 +420,19 @@ export default function SavedPostsPage() {
       {/* Interactive Side-by-Side Comparison Modal */}
       {isCompareModalOpen && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setIsCompareModalOpen(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsCompareModalOpen(false);
+          }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
           <div className="bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-8 shadow-2xl space-y-6 border border-zinc-100 relative max-h-[90vh] overflow-y-auto cursor-default">
             <div className="flex justify-between items-center pb-4 border-b border-zinc-100">
               <div>
                 <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-[#2AC1BC]" /> {t("guestSavedPostsModalTitle", { count: selectedRoomsData.length })}
+                  <Scale className="w-5 h-5 text-[#2AC1BC]" />{" "}
+                  {t("guestSavedPostsModalTitle", {
+                    count: selectedRoomsData.length,
+                  })}
                 </h3>
                 <p className="text-xs text-zinc-500 font-medium mt-0.5">
                   {t("guestSavedPostsModalSub")}
@@ -338,14 +451,26 @@ export default function SavedPostsPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-200">
-                    <th className="p-3 text-xs font-black text-zinc-400 uppercase w-44">{t("guestSavedPostsColCriteria")}</th>
+                    <th className="p-3 text-xs font-black text-zinc-400 uppercase w-44">
+                      {t("guestSavedPostsColCriteria")}
+                    </th>
                     {selectedRoomsData.map((room) => {
-                      const title = isEn ? room.titleEn : room.titleVi;
+                      const title = room.title;
+                      const img = room.images?.[0]?.url || FALLBACK_IMAGE;
                       return (
                         <th key={room.id} className="p-3 min-w-[220px]">
                           <div className="space-y-2">
-                            <img src={room.image} alt={title} className="w-full h-28 object-cover rounded-xl border border-zinc-200" />
-                            <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-2">{title}</h4>
+                            <img
+                              src={img}
+                              alt={title}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE;
+                              }}
+                              className="w-full h-28 object-cover rounded-xl border border-zinc-200"
+                            />
+                            <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-2">
+                              {title}
+                            </h4>
                           </div>
                         </th>
                       );
@@ -354,64 +479,80 @@ export default function SavedPostsPage() {
                 </thead>
                 <tbody className="divide-y divide-zinc-100 text-xs font-semibold">
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowPrice")}</td>
+                    <td className="p-3 font-bold text-zinc-500">
+                      {t("guestSavedPostsRowPrice")}
+                    </td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 font-black text-rose-500 text-sm">
-                        {formatCurrency(room.price, currentLocale)}
+                        {formatCurrency(room.depositAmount, currentLocale)}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowDeposit")}</td>
+                    <td className="p-3 font-bold text-zinc-500">
+                      {t("guestSavedPostsRowDeposit")}
+                    </td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 font-bold text-zinc-900">
-                        {room.depositAmount > 0 ? formatCurrency(room.depositAmount, currentLocale) : <span className="text-emerald-600 font-black">{t("guestSavedPostsFreeDeposit")}</span>}
+                        {room.depositAmount > 0 ? (
+                          formatCurrency(room.depositAmount, currentLocale)
+                        ) : (
+                          <span className="text-emerald-600 font-black">
+                            {t("guestSavedPostsFreeDeposit")}
+                          </span>
+                        )}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowArea")}</td>
+                    <td className="p-3 font-bold text-zinc-500">
+                      {t("guestSavedPostsRowArea")}
+                    </td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-800 font-extrabold">
-                        {room.area} m²
+                        {room.room?.area ? `${room.room.area} m²` : "—"}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowAddress")}</td>
+                    <td className="p-3 font-bold text-zinc-500">
+                      {t("guestSavedPostsRowAddress")}
+                    </td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-600">
-                        {isEn ? room.addressEn : room.addressVi}
+                        {formatAddress(
+                          room.address,
+                          room.room?.boardingHouseName
+                        ) || "—"}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowAmenities")}</td>
-                    {selectedRoomsData.map((room) => {
-                      const amenities = isEn ? room.amenitiesEn : room.amenitiesVi;
-                      return (
-                        <td key={room.id} className="p-3">
-                          <div className="flex flex-wrap gap-1">
-                            {amenities.map((item, idx) => (
-                              <span key={idx} className="px-2 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-md text-[10px] font-bold">
-                                {item}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowLandlord")}</td>
+                    <td className="p-3 font-bold text-zinc-500">
+                      {t("guestSavedPostsRoomTypePlaceholder")}
+                    </td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3 text-zinc-700 font-bold">
-                        {room.landlord.name} ({room.landlord.phone})
+                        {room.room?.boardingHouseName
+                          ? `${room.room.boardingHouseName} - P.${room.room.roomNumber}`
+                          : room.room?.roomTypeName || t("guestSavedPostsRoomTypePlaceholder")}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t("guestSavedPostsRowAction")}</td>
+                    <td className="p-3 font-bold text-zinc-500">
+                      {t("guestSavedPostsRowLandlord")}
+                    </td>
+                    {selectedRoomsData.map((room) => (
+                      <td key={room.id} className="p-3 text-zinc-700 font-bold">
+                        {room.poster?.username || t("guestSavedPostsLandlordPlaceholder")}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-bold text-zinc-500">
+                      {t("guestSavedPostsRowAction")}
+                    </td>
                     {selectedRoomsData.map((room) => (
                       <td key={room.id} className="p-3">
                         <Link href={`/rooms/${room.id}`}>
@@ -428,7 +569,6 @@ export default function SavedPostsPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

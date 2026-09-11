@@ -49,6 +49,23 @@ export interface PublicPoster {
   avatarUrl?: string | null;
 }
 
+/**
+ * UC-PU-02: Public Poster Profile Response
+ */
+export interface PosterProfileResponse {
+  id: string;
+  username?: string | null;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  status: string;
+  createdAt: string;
+  postCount: number;
+  phoneNumber?: string | null;
+  email?: string | null;
+  hasActiveConversation: boolean;
+  activeListings: PublicPostListing[];
+}
+
 /** Public listing item for UC-PU-01 browse endpoint */
 export interface PublicPostListing {
   id: string;
@@ -242,7 +259,20 @@ export const postService = {
   },
 
   /**
-   * UC-PU-02: Get a single public post detail by ID (no auth required)
+   * UC-PU-02: Get public poster profile by ID (no auth required, privacy-guarded contact)
+   */
+  async getPosterProfile(id: string): Promise<PosterProfileResponse> {
+    const res = await api.get<
+      { success: boolean; data: PosterProfileResponse } | PosterProfileResponse
+    >(`/v1/posts/posters/${id}`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PosterProfileResponse }).data;
+    }
+    return res as PosterProfileResponse;
+  },
+
+  /**
+   * Get a single public post detail by ID (no auth required)
    * Returns full post info including images, room, address and poster (no phone/email).
    */
   async getPublicPostById(id: string): Promise<PublicPostListing> {
@@ -384,6 +414,19 @@ export const postService = {
       return (res as { success: boolean; data: string[] }).data;
     }
     return (res as string[]) || [];
+  },
+
+  /**
+   * UC-PU-03: Get all saved rental listings for current user (requires auth)
+   */
+  async getSavedPosts(): Promise<PublicPostListing[]> {
+    const res = await api.get<
+      { success: boolean; data: PublicPostListing[] } | PublicPostListing[]
+    >("/v1/posts/saved/all");
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PublicPostListing[] }).data;
+    }
+    return (res as PublicPostListing[]) || [];
   },
 
   /**

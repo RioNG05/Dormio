@@ -7,7 +7,7 @@ import {
   ArrowLeft, MapPin, Minimize2,
   Phone, QrCode, CheckCircle2, AlertCircle, Info, X, Sparkles, Lock, Calculator,
   Heart, Share2, Copy, Check, ExternalLink, User, Building2,
-  ChevronLeft, ChevronRight, ImageIcon,
+  ChevronLeft, ChevronRight, ImageIcon, MessageSquare, Loader2,
 } from "lucide-react";
 import { formatCurrency } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -16,6 +16,7 @@ import {
   postService,
   type PublicPostListing,
 } from "@/services/post.service";
+import { getOrCreateConversation } from "@/services/message.service";
 
 const DEFAULT_ROOM_IMAGE = "/house-placeholder.jpg";
 
@@ -118,7 +119,7 @@ export default function RoomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { currentLocale } = useLanguage();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const tGuest = useTranslations("guest");
 
   // Data state
@@ -137,6 +138,7 @@ export default function RoomDetailPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isStartingChat, setIsStartingChat] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     type: "success" | "error" | "info";
     text: string;
@@ -197,6 +199,45 @@ export default function RoomDetailPage() {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!isLoggedIn) {
+      router.push(`/login?redirect=/rooms/${id}`);
+      return;
+    }
+    if (!post?.poster) return;
+
+    if (user?.id === post.poster.id) {
+      setToastMessage({
+        type: "error",
+        text: tGuest("guestRoomDetailCannotMessageSelf"),
+      });
+      return;
+    }
+
+    try {
+      setIsStartingChat(true);
+      const initialMessage = `Xin chào, tôi quan tâm đến bài đăng "${post.title}". Phòng này còn trống không ạ?`;
+      const conv = await getOrCreateConversation(post.poster.id, initialMessage);
+      const convId = conv?.id;
+      if (convId) {
+        router.push(`/messages?conversationId=${convId}`);
+      } else {
+        router.push("/messages");
+      }
+    } catch (err: any) {
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể tạo cuộc trò chuyện";
+      setToastMessage({
+        type: "error",
+        text: errMsg,
+      });
+    } finally {
+      setIsStartingChat(false);
     }
   };
 
@@ -622,8 +663,23 @@ export default function RoomDetailPage() {
 
                 {post.poster && (
                   <button
+                    onClick={handleStartChat}
+                    disabled={isStartingChat}
+                    className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#23A9A4] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#2AC1BC]/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  >
+                    {isStartingChat ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <MessageSquare className="w-4 h-4" />
+                    )}
+                    {tGuest("guestRoomDetailChatBtn")}
+                  </button>
+                )}
+
+                {post.poster && (
+                  <button
                     onClick={() => alert(tGuest("guestRoomDetailCallBtn"))}
-                    className="w-full py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Phone className="w-4 h-4 text-[#2AC1BC]" /> {tGuest("guestRoomDetailCallBtn")}
                   </button>
@@ -636,27 +692,31 @@ export default function RoomDetailPage() {
                   <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">
                     {tGuest("guestRoomDetailLandlordTitle")}
                   </span>
-                  <div className="flex items-center gap-3">
+                  <Link
+                    href={`/landlords/${post.poster.id}`}
+                    className="flex items-center gap-3 p-2.5 -mx-2.5 rounded-2xl hover:bg-zinc-50 border border-transparent hover:border-zinc-200/80 transition-all group cursor-pointer"
+                    title="Xem hồ sơ người đăng"
+                  >
                     {post.poster.avatarUrl ? (
                       <img
                         src={post.poster.avatarUrl}
                         alt={post.poster.username ?? ""}
-                        className="w-12 h-12 rounded-full object-cover border border-zinc-200"
+                        className="w-12 h-12 rounded-full object-cover border border-zinc-200 group-hover:scale-105 transition-transform"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-lg border border-[#2AC1BC]/20">
+                      <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-lg border border-[#2AC1BC]/20 group-hover:scale-105 transition-transform">
                         {posterInitial}
                       </div>
                     )}
-                    <div>
-                      <h4 className="font-extrabold text-sm text-zinc-900">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-extrabold text-sm text-zinc-900 group-hover:text-[#2AC1BC] transition-colors truncate">
                         {post.poster.username ?? tGuest("guestRoomsDefaultLandlord")}
                       </h4>
-                      <span className="text-xs font-semibold text-zinc-500">
+                      <span className="text-xs font-semibold text-zinc-500 block">
                         {tGuest("guestRoomDetailVerifiedBadge")}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               )}
             </div>

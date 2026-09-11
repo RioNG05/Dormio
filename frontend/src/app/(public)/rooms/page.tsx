@@ -685,7 +685,12 @@ export default function RoomsPage() {
 
                           {/* Poster info */}
                           {listing.poster && (
-                            <div className="flex items-center gap-2">
+                            <Link
+                              href={`/landlords/${listing.poster.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-2 hover:text-[#2AC1BC] transition-colors w-fit z-10 cursor-pointer group/poster"
+                              title="Xem hồ sơ người đăng"
+                            >
                               {listing.poster.avatarUrl ? (
                                 <img
                                   src={listing.poster.avatarUrl}
@@ -697,10 +702,10 @@ export default function RoomsPage() {
                                   <User className="w-3.5 h-3.5 text-zinc-400" />
                                 </div>
                               )}
-                              <span className="text-xs text-zinc-500 font-semibold">
+                              <span className="text-xs text-zinc-500 font-semibold group-hover/poster:text-[#2AC1BC] transition-colors">
                                 {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
                               </span>
-                            </div>
+                            </Link>
                           )}
 
                           {/* Price + actions */}

@@ -18,9 +18,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { postService, PostQuotaStatus } from "@/services/post.service";
+import { useAuth } from "@/context/AuthContext";
+import { getRooms, type RoomItem } from "@/services/room.service";
+import { getMyBoardingHouses } from "@/services/boarding-house.service";
 
 export default function CreateListingPage() {
   const router = useRouter();
+  const { buildings: authBuildings, activeBuildingId } = useAuth();
 
   // Form states
   const [title, setTitle] = useState("");
@@ -32,7 +36,12 @@ export default function CreateListingPage() {
     "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
   ]);
   const [newImageUrl, setNewImageUrl] = useState("");
-  const [status, setStatus] = useState<"posted" | "draft">("posted");
+
+  // Boarding House & Rooms states
+  const [landlordBuildings, setLandlordBuildings] = useState<any[]>(authBuildings || []);
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>("");
+  const [rooms, setRooms] = useState<RoomItem[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
 
   // UI / Logic states
   const [isDirty, setIsDirty] = useState(false);
@@ -70,6 +79,87 @@ export default function CreateListingPage() {
     }
     fetchQuota();
   }, []);
+
+  // Sync landlord boarding houses from AuthContext or fetch from API
+  useEffect(() => {
+    if (authBuildings && authBuildings.length > 0) {
+      setLandlordBuildings(authBuildings);
+      if (!selectedBuildingId) {
+        setSelectedBuildingId(activeBuildingId || authBuildings[0].id);
+      }
+    } else {
+      getMyBoardingHouses({ silent: true })
+        .then((data) => {
+          if (data && data.length > 0) {
+            setLandlordBuildings(data);
+            if (!selectedBuildingId) {
+              setSelectedBuildingId(activeBuildingId || data[0].id);
+            }
+          }
+        })
+        .catch((err) => {
+          console.warn("Could not load boarding houses:", err);
+        });
+    }
+  }, [authBuildings, activeBuildingId, selectedBuildingId]);
+
+  // Fetch real rooms of selected boarding house from backend API
+  useEffect(() => {
+    if (!selectedBuildingId) {
+      setRooms([]);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingRooms(true);
+
+    getRooms(selectedBuildingId, { limit: 100 })
+      .then((res) => {
+        if (!isMounted) return;
+        const fetchedRooms = res?.data || [];
+        setRooms(fetchedRooms);
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch rooms for house:", err);
+        if (isMounted) {
+          setRooms([]);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingRooms(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedBuildingId]);
+
+  const handleBuildingChange = (bId: string) => {
+    setSelectedBuildingId(bId);
+    setRoomId(""); // Reset room selection when building changes
+    setIsDirty(true);
+  };
+
+  const handleRoomChange = (rId: string) => {
+    setRoomId(rId);
+    setIsDirty(true);
+    setErrorMessage(null);
+
+    // Smart pre-fill: if user selects a room and title is empty, prefill title
+    if (rId) {
+      const room = rooms.find((r) => r.id === rId);
+      const house = landlordBuildings.find((b) => b.id === selectedBuildingId);
+      if (room && (!title.trim() || title.startsWith("Cho thuê phòng"))) {
+        setTitle(
+          `Cho thuê phòng ${room.roomNumber} - ${house?.name || "Khu trọ"}`
+        );
+      }
+    }
+  };
+
+  const selectedRoom = rooms.find((r) => r.id === roomId);
 
   const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<any>>, value: any) => {
     setter(value);
@@ -202,7 +292,7 @@ export default function CreateListingPage() {
 
       {/* Main Form */}
       <div className="bg-white p-8 rounded-3xl border border-zinc-200 shadow-sm space-y-8">
-        
+
         {/* 1. Basic Info */}
         <div className="space-y-6">
           <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
@@ -227,57 +317,144 @@ export default function CreateListingPage() {
               <span className="text-xs text-zinc-400">Tối thiểu 5 ký tự</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-zinc-700">
-                  Phòng liên kết {quota?.isLandlord ? "(Tùy chọn cho Chủ trọ)" : "(Không áp dụng cho Môi giới)"}
-                </label>
-                {quota?.isLandlord === false ? (
-                  <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center gap-3">
-                    <Building2 className="w-5 h-5 text-zinc-400 shrink-0" />
-                    <div>
-                      <span className="text-xs font-bold text-zinc-700">Tài khoản Môi giới (Leasing Agent)</span>
-                      <p className="text-[11px] text-zinc-500">Đăng tin cho thuê tổng quan không liên kết phòng cụ thể.</p>
-                    </div>
+            {quota?.isLandlord === false ? (
+              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl flex items-center gap-3">
+                <Building2 className="w-5 h-5 text-zinc-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-bold text-zinc-700">Tài khoản Môi giới (Leasing Agent)</span>
+                  <p className="text-[11px] text-zinc-500">Đăng tin cho thuê tổng quan không liên kết phòng cụ thể.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Boarding House and Linked Room selectors */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-zinc-50/70 rounded-2xl border border-zinc-200/80">
+                  {/* Select Boarding House */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4 text-[#2AC1BC]" />
+                      Tòa nhà / Nhà trọ
+                    </label>
+
+                    {landlordBuildings.length === 0 ? (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                        Chưa có nhà trọ nào.{" "}
+                        <Link href="/landlord/properties/create" className="underline font-bold">
+                          Tạo nhà trọ mới
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <select
+                          value={selectedBuildingId}
+                          onChange={(e) => handleBuildingChange(e.target.value)}
+                          className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white cursor-pointer"
+                        >
+                          {landlordBuildings.map((b) => (
+                            <option key={b.id} value={b.id}>
+                              {b.name} {b.address ? `(${b.address})` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <span className="text-xs text-zinc-400">
+                      Chọn nhà trọ sở hữu để hiển thị các phòng khả dụng.
+                    </span>
                   </div>
-                ) : (
-                  <>
+
+                  {/* Select Room */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-bold text-zinc-700">
+                        Phòng liên kết
+                      </label>
+                      {isLoadingRooms && (
+                        <span className="text-xs text-[#2AC1BC] flex items-center gap-1 font-semibold">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Đang tải phòng...
+                        </span>
+                      )}
+                    </div>
+
                     <div className="relative">
-                      <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                       <select
                         value={roomId}
-                        onChange={(e) => handleFieldChange(setRoomId, e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white appearance-none cursor-pointer"
+                        onChange={(e) => handleRoomChange(e.target.value)}
+                        disabled={isLoadingRooms || !selectedBuildingId}
+                        className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white cursor-pointer disabled:opacity-50"
                       >
                         <option value="">-- Đăng tin chung (không gắn phòng) --</option>
-                        <option value="11111111-1111-1111-1111-111111111111">Phòng 101 - Dormio Premier Quận 1</option>
-                        <option value="22222222-2222-2222-2222-222222222222">Phòng 201 - Dormio Premier Quận 1</option>
-                        <option value="33333333-3333-3333-3333-333333333333">Phòng 301 - Dormio Premier Quận 1 (Duplex)</option>
+                        {rooms.map((room) => {
+                          const typeName = room.roomType?.name || "Tiêu chuẩn";
+                          const areaStr = room.area ? ` • ${room.area}m²` : "";
+                          const statusMap: Record<string, string> = {
+                            available: "Trống",
+                            deposited: "Đã cọc",
+                            occupied: "Đang thuê",
+                            maintainace: "Bảo trì",
+                          };
+                          const statusLabel = statusMap[room.status] || room.status;
+
+                          return (
+                            <option key={room.id} value={room.id}>
+                              Phòng {room.roomNumber} (Tầng {room.floor}) - {typeName}{areaStr} [{statusLabel}]
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
-                    <span className="text-xs text-zinc-400">Nếu chọn phòng, hệ thống sẽ tự động xác thực quyền sở hữu của bạn.</span>
-                  </>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-zinc-700">
-                  Số tiền cọc giữ chỗ (VND) <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="100000"
-                  value={depositAmount}
-                  onChange={(e) => handleFieldChange(setDepositAmount, e.target.value)}
-                  placeholder="VD: 3500000"
-                  className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
-                />
-                <span className="text-xs text-zinc-400">
-                  Số tiền cọc trực tuyến hiển thị cho khách thuê đặt giữ chỗ trên BHRP (UC-PU-04).
-                </span>
+                    {rooms.length === 0 && !isLoadingRooms && selectedBuildingId && (
+                      <span className="text-xs text-amber-600 block">
+                        Tòa nhà này hiện chưa có phòng nào.{" "}
+                        <Link href="/landlord/rooms" className="underline font-bold">
+                          Thêm phòng ngay
+                        </Link>
+                      </span>
+                    )}
+
+                    {selectedRoom && (
+                      <div className="p-3 bg-white border border-zinc-200 rounded-xl text-xs space-y-1 mt-2 shadow-xs animate-in fade-in duration-200">
+                        <div className="flex justify-between font-bold text-zinc-800">
+                          <span>Phòng {selectedRoom.roomNumber}</span>
+                          <span className="text-[#2AC1BC] font-extrabold">
+                            {selectedRoom.roomType?.name || "Tiêu chuẩn"}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-zinc-500 text-[11px]">
+                          <span>Tầng: {selectedRoom.floor}</span>
+                          {selectedRoom.area && <span>Diện tích: {selectedRoom.area} m²</span>}
+                          {selectedRoom.maxOccupants && <span>Sức chứa: {selectedRoom.maxOccupants} người</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    <span className="text-xs text-zinc-400 block">
+                      Khi liên kết phòng, người thuê có thể xem diện tích, tầng và tiện ích thực tế của phòng.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Deposit Amount */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700">
+                    Số tiền cọc giữ chỗ (VND) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="100000"
+                    value={depositAmount}
+                    onChange={(e) => handleFieldChange(setDepositAmount, e.target.value)}
+                    placeholder="VD: 3500000"
+                    className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
+                  />
+                  <span className="text-xs text-zinc-400">
+                    Số tiền cọc trực tuyến hiển thị cho khách thuê đặt giữ chỗ trên sàn BHRP (UC-PU-04).
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
