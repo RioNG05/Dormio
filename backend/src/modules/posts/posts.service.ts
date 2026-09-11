@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -1035,5 +1036,176 @@ export class PostsService {
       postId,
       message: 'Deposit placed successfully. We will contact you to confirm shortly.',
     };
+  }
+
+  /**
+   * UC-PU-03: Save a rental listing for the authenticated user (idempotent).
+   */
+  async savePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException(
+        'User account not found or expired. Please log in again.',
+      );
+    }
+
+    const existing = await this.prisma.savedPost.findFirst({
+      where: { postId, savedBy: userId },
+    });
+
+    if (!existing) {
+      try {
+        await this.prisma.savedPost.create({
+          data: {
+            postId,
+            savedBy: userId,
+          },
+        });
+        this.logger.log(`User ${userId} saved post ${postId}`);
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2003'
+        ) {
+          throw new UnauthorizedException(
+            'User account not found or expired. Please log in again.',
+          );
+        }
+        throw err;
+      }
+    }
+
+    const savedCount = await this.prisma.savedPost.count({
+      where: { postId },
+    });
+
+    return { saved: true, savedCount };
+  }
+
+  /**
+   * UC-PU-03: Unsave a rental listing for the authenticated user (idempotent).
+   */
+  async unsavePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    await this.prisma.savedPost.deleteMany({
+      where: { postId, savedBy: userId },
+    });
+    this.logger.log(`User ${userId} unsaved post ${postId}`);
+
+    const savedCount = await this.prisma.savedPost.count({
+      where: { postId },
+    });
+
+    return { saved: false, savedCount };
+  }
+
+  /**
+   * UC-PU-03: Toggle save/bookmark for a rental listing.
+   */
+  async toggleSavePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException(
+        'User account not found or expired. Please log in again.',
+      );
+    }
+
+    const existing = await this.prisma.savedPost.findFirst({
+      where: { postId, savedBy: userId },
+    });
+
+    if (existing) {
+      await this.prisma.savedPost.deleteMany({
+        where: { postId, savedBy: userId },
+      });
+      this.logger.log(`User ${userId} toggled post ${postId} -> unsaved`);
+      const savedCount = await this.prisma.savedPost.count({
+        where: { postId },
+      });
+      return { saved: false, savedCount };
+    } else {
+      try {
+        await this.prisma.savedPost.create({
+          data: {
+            postId,
+            savedBy: userId,
+          },
+        });
+        this.logger.log(`User ${userId} toggled post ${postId} -> saved`);
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2003'
+        ) {
+          throw new UnauthorizedException(
+            'User account not found or expired. Please log in again.',
+          );
+        }
+        throw err;
+      }
+      const savedCount = await this.prisma.savedPost.count({
+        where: { postId },
+      });
+      return { saved: true, savedCount };
+    }
+  }
+
+  /**
+   * UC-PU-03: Get all saved post IDs for the authenticated user.
+   */
+  async getSavedPostIds(userId: string): Promise<string[]> {
+    const saved = await this.prisma.savedPost.findMany({
+      where: { savedBy: userId },
+      select: { postId: true },
+    });
+    return saved.map((s) => s.postId);
+  }
+
+  /**
+   * UC-PU-03: Check if a post is saved by the authenticated user.
+   */
+  async isPostSaved(userId: string, postId: string): Promise<boolean> {
+    const count = await this.prisma.savedPost.count({
+      where: { postId, savedBy: userId },
+    });
+    return count > 0;
   }
 }

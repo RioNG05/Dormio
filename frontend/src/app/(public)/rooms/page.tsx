@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   MapPin,
@@ -10,6 +11,8 @@ import {
   Sparkles,
   ChevronDown,
   CheckCircle2,
+  AlertCircle,
+  Info,
   Eye,
   QrCode,
   X,
@@ -20,9 +23,11 @@ import {
   Copy,
   Check,
   User,
+  VectorPolygon,
 } from "lucide-react";
 import { formatVND } from "@/utils";
 import { useTranslations } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   postService,
   type PublicPostListing,
@@ -96,11 +101,10 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
         <button
           key={p}
           onClick={() => onPageChange(p)}
-          className={`w-8 h-8 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-            p === page
-              ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30"
-              : "text-zinc-600 hover:bg-zinc-100"
-          }`}
+          className={`w-8 h-8 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${p === page
+            ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30"
+            : "text-zinc-600 hover:bg-zinc-100"
+            }`}
         >
           {p}
         </button>
@@ -119,6 +123,8 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
 // ─── Main page component ──────────────────────────────────────────────────────
 export default function RoomsPage() {
   const t = useTranslations("guest");
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -156,6 +162,37 @@ export default function RoomsPage() {
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [shareModalRoom, setShareModalRoom] = useState<PublicPostListing | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+
+  // Auto-dismiss toast notification
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
+
+  // Load saved post IDs for authenticated user
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setSavedIds([]);
+      return;
+    }
+    let isMounted = true;
+    postService
+      .getSavedPostIds()
+      .then((ids) => {
+        if (isMounted) setSavedIds(ids);
+      })
+      .catch(() => {
+        // Silently catch error if user is unauthenticated or network fails
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoggedIn]);
 
   // Fetch listings from API
   const fetchListings = useCallback(async (filters: BrowsePostsParams, page: number) => {
@@ -211,8 +248,62 @@ export default function RoomsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleSave = (id: string) => {
-    setSavedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  const toggleSave = async (id: string) => {
+    if (!isLoggedIn) {
+      setToastMessage({
+        type: "info",
+        text: t("guestRoomsSaveLoginRequired"),
+      });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+      return;
+    }
+
+    const isCurrentlySaved = savedIds.includes(id);
+    // Optimistic UI update
+    setSavedIds((prev) =>
+      isCurrentlySaved ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+
+    try {
+      if (isCurrentlySaved) {
+        await postService.unsavePost(id);
+        setToastMessage({
+          type: "success",
+          text: t("guestRoomsUnsaveSuccess"),
+        });
+      } else {
+        await postService.savePost(id);
+        setToastMessage({
+          type: "success",
+          text: t("guestRoomsSaveSuccess"),
+        });
+      }
+    } catch (err: any) {
+      // Revert optimistic update
+      setSavedIds((prev) =>
+        isCurrentlySaved ? [...prev, id] : prev.filter((i) => i !== id)
+      );
+      const isAuthError =
+        err?.message?.includes("401") ||
+        err?.message?.includes("expired") ||
+        err?.message?.includes("log in");
+      if (isAuthError) {
+        setToastMessage({
+          type: "info",
+          text: t("guestRoomsSessionExpired"),
+        });
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
+      } else {
+        setToastMessage({
+          type: "error",
+          text: err?.message || t("guestRoomsSaveError"),
+        });
+      }
+    }
   };
 
   const handleCopyShareLink = (room: PublicPostListing) => {
@@ -395,18 +486,16 @@ export default function RoomsPage() {
                 <button
                   id="view-list-btn"
                   onClick={() => setViewMode("list")}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    viewMode === "list" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+                    }`}
                 >
                   <Filter className="w-3.5 h-3.5" /> {t("guestRoomsListView")}
                 </button>
                 <button
                   id="view-map-btn"
                   onClick={() => setViewMode("map")}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    viewMode === "map" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "map" ? "bg-[#2AC1BC] text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+                    }`}
                 >
                   <MapPin className="w-3.5 h-3.5" /> {t("guestRoomsMapView")}
                 </button>
@@ -427,15 +516,14 @@ export default function RoomsPage() {
                   <div
                     key={listing.id}
                     onClick={() => setQuickViewRoom(listing)}
-                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group animate-bounce ${
-                      idx === 0
-                        ? "top-1/3 left-1/3"
-                        : idx === 1
+                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group animate-bounce ${idx === 0
+                      ? "top-1/3 left-1/3"
+                      : idx === 1
                         ? "top-1/2 left-2/3"
                         : idx === 2
-                        ? "top-2/3 left-1/2"
-                        : "top-1/4 left-3/4"
-                    }`}
+                          ? "top-2/3 left-1/2"
+                          : "top-1/4 left-3/4"
+                      }`}
                   >
                     <div className="px-3 py-1.5 bg-[#FF6B35] text-white text-xs font-black rounded-full shadow-2xl flex items-center gap-1 group-hover:scale-110 transition-transform">
                       <MapPin className="w-3.5 h-3.5" /> {formatVND(listing.depositAmount)}
@@ -517,18 +605,25 @@ export default function RoomsPage() {
                           {/* Save Wishlist Button & Share Button */}
                           <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
                             <button
-                              onClick={() => toggleSave(listing.id)}
-                              className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-md ${
-                                isSaved
-                                  ? "bg-rose-500 text-white"
-                                  : "bg-zinc-900/70 text-white hover:bg-rose-500"
-                              }`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSave(listing.id);
+                              }}
+                              className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-md ${isSaved
+                                ? "bg-rose-500 text-white"
+                                : "bg-zinc-900/70 text-white hover:bg-rose-500"
+                                }`}
                               title={isSaved ? t("guestRoomsSaved") : t("guestRoomsSave")}
                             >
                               <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
                             </button>
                             <button
-                              onClick={() => setShareModalRoom(listing)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShareModalRoom(listing);
+                              }}
                               className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-[#2AC1BC] backdrop-blur-md transition-all cursor-pointer shadow-md"
                               title={t("guestRoomsShareTitle")}
                             >
@@ -546,26 +641,12 @@ export default function RoomsPage() {
                         </div>
 
                         {/* Details column */}
-                        <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs text-[#2AC1BC] font-bold uppercase tracking-wider">
-                                {listing.poster?.username ??
-                                  listing.room?.boardingHouseName ??
-                                  t("guestRoomsDefaultLandlord")}
-                              </span>
-                              {listing.room?.area && (
-                                <span className="text-xs text-zinc-400 font-medium">
-                                  {listing.room.area} m²
-                                </span>
-                              )}
-                            </div>
+                        <Link href={`/rooms/${listing.id}`}>
+                          <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
 
-                            <Link href={`/rooms/${listing.id}`}>
-                              <h3 className="font-extrabold text-zinc-900 text-lg leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
-                                {listing.title}
-                              </h3>
-                            </Link>
+                            <h3 className="font-extrabold text-zinc-900 text-lg leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1 mb-2">
+                              {listing.title}
+                            </h3>
 
                             {address && (
                               <a
@@ -580,66 +661,62 @@ export default function RoomsPage() {
                               </a>
                             )}
 
+                            {listing.room?.area && (
+                              <span className="text-xs text-zinc-400 font-medium flex gap-1">
+                                <VectorPolygon className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                {listing.room.area} m²
+                              </span>
+                            )}
+
                             <p className="text-xs text-zinc-500 font-medium leading-relaxed line-clamp-2 pt-1">
                               {listing.content}
                             </p>
-                          </div>
 
-                          {/* Poster info */}
-                          {listing.poster && (
-                            <div className="flex items-center gap-2">
-                              {listing.poster.avatarUrl ? (
-                                <img
-                                  src={listing.poster.avatarUrl}
-                                  alt={listing.poster.username ?? ""}
-                                  className="w-6 h-6 rounded-full object-cover border border-zinc-200"
-                                />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200">
-                                  <User className="w-3.5 h-3.5 text-zinc-400" />
-                                </div>
-                              )}
-                              <span className="text-xs text-zinc-500 font-semibold">
-                                {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
-                              </span>
-                            </div>
-                          )}
+                            {/* Poster info */}
+                            {listing.poster && (
+                              <div className="flex items-center gap-2">
+                                {listing.poster.avatarUrl ? (
+                                  <img
+                                    src={listing.poster.avatarUrl}
+                                    alt={listing.poster.username ?? ""}
+                                    className="w-6 h-6 rounded-full object-cover border border-zinc-200"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200">
+                                    <User className="w-3.5 h-3.5 text-zinc-400" />
+                                  </div>
+                                )}
+                                <span className="text-xs text-zinc-500 font-semibold">
+                                  {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
+                                </span>
+                              </div>
+                            )}
 
-                          {/* Price + actions */}
-                          <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="whitespace-nowrap">
-                              <span className="text-2xl font-black text-rose-500">
-                                {formatVND(listing.depositAmount)}
-                              </span>
-                              <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsMonth")}</span>
-                              <span className="text-[11px] font-bold text-zinc-500 block">
-                                {t("guestRoomsDepositLabel")}{" "}
-                                {listing.depositAmount > 0
-                                  ? formatVND(listing.depositAmount)
-                                  : t("guestRoomsFreeDeposit")}
-                              </span>
-                            </div>
+                            {/* Price + actions */}
+                            <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="whitespace-nowrap">
+                                <span className="text-2xl font-black text-rose-500">
+                                  {formatVND(listing.depositAmount)}
+                                </span>
+                                <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsMonth")}</span>
+                                <span className="text-[11px] font-bold text-zinc-500 block">
+                                  {t("guestRoomsDepositLabel")}{" "}
+                                  {listing.depositAmount > 0
+                                    ? formatVND(listing.depositAmount)
+                                    : t("guestRoomsFreeDeposit")}
+                                </span>
+                              </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
-                              <button
-                                id={`deposit-btn-${listing.id}`}
-                                onClick={() => {
-                                  setDepositRoom(listing);
-                                  setDepositStep("form");
-                                }}
-                                className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-bold rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
-                              >
-                                <Sparkles className="w-3.5 h-3.5" /> {t("guestRoomsDepositBtn")}
-                              </button>
-
-                              <Link href={`/rooms/${listing.id}`}>
-                                <button className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0">
-                                  {t("guestRoomsDetailBtn")}
-                                </button>
-                              </Link>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Link href={`/rooms/${listing.id}`}>
+                                  <button className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0">
+                                    {t("guestRoomsDetailBtn")}
+                                  </button>
+                                </Link>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       </div>
                     );
                   })}
@@ -806,176 +883,35 @@ export default function RoomsPage() {
           </div>
         </div>
       )}
-
-      {/* ─── Deposit Modal ────────────────────────────────────────────────────── */}
-      {depositRoom && (
-        <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setDepositRoom(null);
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-zinc-100 max-h-[90vh] overflow-y-auto cursor-default">
-            <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-              <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-[#2AC1BC]" /> {t("guestRoomsEscrowModalTitle")}
-              </h3>
-              <button
-                onClick={() => setDepositRoom(null)}
-                className="p-1 hover:bg-zinc-100 rounded-xl text-zinc-400 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Clear 3-Step Escrow Guarantee Process Banner */}
-            <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-4 rounded-2xl text-white space-y-3 border border-zinc-800">
-              <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">
-                {t("guestRoomsEscrowTitle")}
-              </span>
-              <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
-                  <span className="w-5 h-5 rounded-full bg-[#2AC1BC] text-white font-black inline-flex items-center justify-center">
-                    1
-                  </span>
-                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep1")}</p>
-                </div>
-                <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
-                  <span className="w-5 h-5 rounded-full bg-amber-400 text-zinc-900 font-black inline-flex items-center justify-center">
-                    2
-                  </span>
-                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep2")}</p>
-                </div>
-                <div className="bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50 space-y-1">
-                  <span className="w-5 h-5 rounded-full bg-emerald-400 text-zinc-900 font-black inline-flex items-center justify-center">
-                    3
-                  </span>
-                  <p className="font-bold text-zinc-200">{t("guestRoomsEscrowStep3")}</p>
-                </div>
-              </div>
-              <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-center">
-                {t("guestRoomsEscrowNote")}
-              </p>
-            </div>
-
-            {depositStep === "form" && (
-              <div className="space-y-4">
-                <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1.5">
-                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">
-                    {t("guestRoomsSelectedRoom")}
-                  </span>
-                  <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">
-                    {depositRoom.title}
-                  </h4>
-
-                  {depositRoom.depositAmount > 0 ? (
-                    <div className="text-xs font-black text-rose-500">
-                      {t("guestRoomsDepositLabel")} {formatVND(depositRoom.depositAmount)}
-                    </div>
-                  ) : (
-                    <div className="text-xs font-black text-emerald-600">
-                      {t("guestRoomsFreeDepositNote")}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
-                      {t("guestRoomsTenantNameLabel")}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t("guestRoomsTenantNamePlaceholder")}
-                      value={tenantName}
-                      onChange={(e) => setTenantName(e.target.value)}
-                      className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
-                      {t("guestRoomsTenantPhoneLabel")}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t("guestRoomsTenantPhonePlaceholder")}
-                      value={tenantPhone}
-                      onChange={(e) => setTenantPhone(e.target.value)}
-                      className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setDepositStep("qr")}
-                  disabled={!tenantName || !tenantPhone}
-                  className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
-                >
-                  {t("guestRoomsConfirmQrBtn")} →
-                </button>
-              </div>
+      {/* ─── Toast Feedback Notification ──────────────────────────────────── */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div
+            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${
+              toastMessage.type === "success"
+                ? "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
+                : toastMessage.type === "error"
+                ? "bg-rose-500 text-white border-rose-400 shadow-rose-950/25"
+                : "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
+            }`}
+          >
+            {toastMessage.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+            ) : toastMessage.type === "error" ? (
+              <AlertCircle className="w-4 h-4 text-white shrink-0" />
+            ) : (
+              <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
             )}
-
-            {depositStep === "qr" && (
-              <div className="text-center space-y-4">
-                <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl inline-block">
-                  <QrCode className="w-44 h-44 mx-auto text-zinc-900" />
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs text-zinc-500 font-semibold block">
-                    {t("guestRoomsQrAmountLabel")}
-                  </span>
-                  <span className="text-2xl font-black text-rose-600">
-                    {depositRoom.depositAmount > 0
-                      ? formatVND(depositRoom.depositAmount)
-                      : t("guestRoomsFreeDeposit")}
-                  </span>
-                  <p className="text-[11px] text-zinc-400 font-medium">
-                    {t("guestRoomsQrContentLabel")}{" "}
-                    <span className="font-extrabold text-zinc-800">
-                      COC {tenantPhone} #{depositRoom.id.slice(0, 8)}
-                    </span>
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setDepositStep("success")}
-                  className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer"
-                >
-                  {t("guestRoomsConfirmTransferBtn")}
-                </button>
-              </div>
-            )}
-
-            {depositStep === "success" && (
-              <div className="text-center space-y-4 py-4">
-                <div className="w-14 h-14 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-zinc-900">
-                    {t("guestRoomsSuccessTitle")}
-                  </h4>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    {t("guestRoomsSuccessDesc", {
-                      name: depositRoom.poster?.username ?? t("guestRoomsDefaultLandlord"),
-                    })}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setDepositRoom(null)}
-                  className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
-                >
-                  {t("guestRoomsCloseModal")}
-                </button>
-              </div>
-            )}
+            <span>{toastMessage.text}</span>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="ml-2 p-1 hover:bg-white/20 rounded-lg text-zinc-300 hover:text-white cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}
-
     </div>
   );
 }

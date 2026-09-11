@@ -333,4 +333,69 @@ export const postService = {
     }
     return res as SinglePostAnalytics;
   },
+
+  /**
+   * UC-PU-03: Save/bookmark a rental listing (requires auth)
+   */
+  async savePost(id: string): Promise<{ saved: boolean; savedCount: number }> {
+    const res = await api.post<
+      { success: boolean; data: { saved: boolean; savedCount: number } } | { saved: boolean; savedCount: number }
+    >(`/v1/posts/${id}/save`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { saved: boolean; savedCount: number } }).data;
+    }
+    return res as { saved: boolean; savedCount: number };
+  },
+
+  /**
+   * UC-PU-03: Unsave/remove bookmark for a rental listing (requires auth)
+   */
+  async unsavePost(id: string): Promise<{ saved: boolean; savedCount: number }> {
+    const res = await api.delete<
+      { success: boolean; data: { saved: boolean; savedCount: number } } | { saved: boolean; savedCount: number }
+    >(`/v1/posts/${id}/save`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { saved: boolean; savedCount: number } }).data;
+    }
+    return res as { saved: boolean; savedCount: number };
+  },
+
+  /**
+   * UC-PU-03: Toggle save/bookmark status for a rental listing (requires auth)
+   */
+  async toggleSavePost(id: string): Promise<{ saved: boolean; savedCount: number }> {
+    const res = await api.post<
+      { success: boolean; data: { saved: boolean; savedCount: number } } | { saved: boolean; savedCount: number }
+    >(`/v1/posts/${id}/toggle-save`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { saved: boolean; savedCount: number } }).data;
+    }
+    return res as { saved: boolean; savedCount: number };
+  },
+
+  /**
+   * UC-PU-03: Get all saved post IDs for current user (requires auth)
+   */
+  async getSavedPostIds(): Promise<string[]> {
+    const res = await api.get<{ success: boolean; data: string[] } | string[]>(
+      "/v1/posts/saved/ids"
+    );
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: string[] }).data;
+    }
+    return (res as string[]) || [];
+  },
+
+  /**
+   * UC-PU-03: Check if a post is bookmarked by current user (requires auth)
+   */
+  async isPostSaved(id: string): Promise<boolean> {
+    const res = await api.get<
+      { success: boolean; data: { isSaved: boolean } } | { isSaved: boolean }
+    >(`/v1/posts/${id}/is-saved`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { isSaved: boolean } }).data.isSaved;
+    }
+    return (res as { isSaved: boolean })?.isSaved ?? false;
+  },
 };

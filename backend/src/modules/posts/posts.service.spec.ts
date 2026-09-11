@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from './posts.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   PostStatus,
   SourceType,
@@ -42,6 +46,17 @@ describe('PostsService', () => {
     room: {
       findUnique: jest.fn(),
     },
+    savedPost: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      deleteMany: jest.fn(),
+      count: jest.fn(),
+    },
+    user: {
+      findUnique: jest.fn(),
+      count: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
@@ -56,6 +71,7 @@ describe('PostsService', () => {
     }).compile();
 
     service = module.get<PostsService>(PostsService);
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-uuid-1' });
   });
 
   describe('checkQuota', () => {
@@ -445,6 +461,105 @@ describe('PostsService', () => {
       expect(result.totalViews).toEqual(8);
       expect(result.totalUniqueViewers).toEqual(2);
       expect(result.dailyTrends).toHaveLength(7);
+    });
+  });
+
+  describe('UC-PU-03: Save / Bookmark Listings', () => {
+    const userId = 'user-uuid-1';
+    const postId = 'post-uuid-1';
+
+    it('should save a post if not already saved', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
+      mockPrisma.savedPost.findFirst.mockResolvedValue(null);
+      mockPrisma.savedPost.create.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId });
+      mockPrisma.savedPost.count.mockResolvedValue(1);
+
+      const result = await service.savePost(userId, postId);
+
+      expect(result).toEqual({ saved: true, savedCount: 1 });
+      expect(mockPrisma.savedPost.create).toHaveBeenCalledWith({
+        data: { postId, savedBy: userId },
+      });
+    });
+
+    it('should unsave a post if bookmarked', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
+      mockPrisma.savedPost.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.savedPost.count.mockResolvedValue(0);
+
+      const result = await service.unsavePost(userId, postId);
+
+      expect(result).toEqual({ saved: false, savedCount: 0 });
+      expect(mockPrisma.savedPost.deleteMany).toHaveBeenCalledWith({
+        where: { postId, savedBy: userId },
+      });
+    });
+
+    it('should toggle save from unsaved to saved', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
+      mockPrisma.savedPost.findFirst.mockResolvedValue(null);
+      mockPrisma.savedPost.create.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId });
+      mockPrisma.savedPost.count.mockResolvedValue(5);
+
+      const result = await service.toggleSavePost(userId, postId);
+
+      expect(result).toEqual({ saved: true, savedCount: 5 });
+      expect(mockPrisma.savedPost.create).toHaveBeenCalled();
+    });
+
+    it('should toggle save from saved to unsaved', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
+      mockPrisma.savedPost.findFirst.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId });
+      mockPrisma.savedPost.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.savedPost.count.mockResolvedValue(4);
+
+      const result = await service.toggleSavePost(userId, postId);
+
+      expect(result).toEqual({ saved: false, savedCount: 4 });
+      expect(mockPrisma.savedPost.deleteMany).toHaveBeenCalled();
+    });
+
+    it('should return all saved post IDs for user', async () => {
+      mockPrisma.savedPost.findMany.mockResolvedValue([
+        { postId: 'post-1' },
+        { postId: 'post-2' },
+      ]);
+
+      const result = await service.getSavedPostIds(userId);
+
+      expect(result).toEqual(['post-1', 'post-2']);
+      expect(mockPrisma.savedPost.findMany).toHaveBeenCalledWith({
+        where: { savedBy: userId },
+        select: { postId: true },
+      });
+    });
+
+    it('should check if a post is saved', async () => {
+      mockPrisma.savedPost.count.mockResolvedValue(1);
+
+      const result = await service.isPostSaved(userId, postId);
+
+      expect(result).toBe(true);
+      expect(mockPrisma.savedPost.count).toHaveBeenCalledWith({
+        where: { postId, savedBy: userId },
+      });
+    });
+
+    it('should throw NotFoundException if post does not exist', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(null);
+
+      await expect(service.savePost(userId, postId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw UnauthorizedException if user does not exist in DB', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.savePost(userId, postId)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

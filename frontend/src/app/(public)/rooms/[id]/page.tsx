@@ -5,12 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, MapPin, Minimize2,
-  Phone, QrCode, CheckCircle2, X, Sparkles, Lock, Calculator,
+  Phone, QrCode, CheckCircle2, AlertCircle, Info, X, Sparkles, Lock, Calculator,
   Heart, Share2, Copy, Check, ExternalLink, User, Building2,
   ChevronLeft, ChevronRight, ImageIcon,
 } from "lucide-react";
 import { formatCurrency } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   postService,
   type PublicPostListing,
@@ -117,6 +118,7 @@ export default function RoomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { currentLocale } = useLanguage();
+  const { isLoggedIn } = useAuth();
   const tGuest = useTranslations("guest");
 
   // Data state
@@ -135,12 +137,41 @@ export default function RoomDetailPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+
+  // Auto-dismiss toast notification
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   // Utility Calculator State
   const [peopleCount, setPeopleCount] = useState(1);
   const [electricityKwh, setElectricityKwh] = useState(0);
   const [waterM3, setWaterM3] = useState(0);
   const [isCalcOpen, setIsCalcOpen] = useState(false);
+
+  // Load bookmark status for authenticated user
+  useEffect(() => {
+    if (!id || !isLoggedIn) {
+      setIsSaved(false);
+      return;
+    }
+    let isMounted = true;
+    postService
+      .isPostSaved(id)
+      .then((saved) => {
+        if (isMounted) setIsSaved(saved);
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isLoggedIn]);
 
   // Fetch post data
   const fetchPost = useCallback(async () => {
@@ -166,6 +197,76 @@ export default function RoomDetailPage() {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (!isLoggedIn) {
+      setToastMessage({
+        type: "info",
+        text: tGuest("guestRoomDetailSaveLoginRequired"),
+      });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+      return;
+    }
+    if (!post) return;
+
+    const nextSaved = !isSaved;
+    setIsSaved(nextSaved);
+    // Optimistic saved count update
+    setPost((prev) =>
+      prev
+        ? {
+            ...prev,
+            savedCount: Math.max(0, prev.savedCount + (nextSaved ? 1 : -1)),
+          }
+        : null
+    );
+
+    try {
+      const res = nextSaved
+        ? await postService.savePost(post.id)
+        : await postService.unsavePost(post.id);
+      setPost((prev) =>
+        prev ? { ...prev, savedCount: res.savedCount } : null
+      );
+      setToastMessage({
+        type: "success",
+        text: nextSaved
+          ? tGuest("guestRoomDetailSaveSuccess")
+          : tGuest("guestRoomDetailUnsaveSuccess"),
+      });
+    } catch (err: any) {
+      // Revert optimistic update
+      setIsSaved(!nextSaved);
+      setPost((prev) =>
+        prev
+          ? {
+              ...prev,
+              savedCount: Math.max(0, prev.savedCount + (nextSaved ? -1 : 1)),
+            }
+          : null
+      );
+      const isAuthError =
+        err?.message?.includes("401") ||
+        err?.message?.includes("expired") ||
+        err?.message?.includes("log in");
+      if (isAuthError) {
+        setToastMessage({
+          type: "info",
+          text: tGuest("guestRoomDetailSessionExpired"),
+        });
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
+      } else {
+        setToastMessage({
+          type: "error",
+          text: err?.message || tGuest("guestRoomDetailSaveError"),
+        });
+      }
     }
   };
 
@@ -258,7 +359,7 @@ export default function RoomDetailPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsSaved(!isSaved)}
+              onClick={handleToggleSave}
               className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
                 isSaved ? "bg-rose-500 text-white" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
               }`}
@@ -790,6 +891,36 @@ export default function RoomDetailPage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Toast Feedback Notification ──────────────────────────────────── */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div
+            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${
+              toastMessage.type === "success"
+                ? "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
+                : toastMessage.type === "error"
+                ? "bg-rose-500 text-white border-rose-400 shadow-rose-950/25"
+                : "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
+            }`}
+          >
+            {toastMessage.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+            ) : toastMessage.type === "error" ? (
+              <AlertCircle className="w-4 h-4 text-white shrink-0" />
+            ) : (
+              <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+            )}
+            <span>{toastMessage.text}</span>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="ml-2 p-1 hover:bg-white/20 rounded-lg text-zinc-300 hover:text-white cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}

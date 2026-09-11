@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -114,6 +115,25 @@ export class PostsController {
       `GET /posts/my-listings called by user ${user.id} with page=${query.page}, limit=${query.limit}`,
     );
     return this.postsService.getMyPosts(user.id, query);
+  }
+
+  // ─── UC-PU-03: Saved / Bookmarked Posts ───────────────────────────────────
+
+  @Get('saved/ids')
+  @ApiOperation({
+    summary: 'UC-PU-03: Get all saved post IDs for current user',
+    description: 'Returns an array of post UUIDs that the current authenticated user has bookmarked.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of bookmarked post IDs',
+    type: [String],
+  })
+  async getSavedPostIds(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<string[]> {
+    this.logger.log(`GET /posts/saved/ids called by user ${user.id}`);
+    return this.postsService.getSavedPostIds(user.id);
   }
 
   // ─── UC-PU-01: Public Browse & Filter Listings ────────────────────────────
@@ -310,5 +330,111 @@ export class PostsController {
       `PATCH /posts/${id}/status to ${status} called by user ${user.id}`,
     );
     return this.postsService.updatePostStatus(user.id, id, status);
+  }
+
+  // ─── UC-PU-03: Save/Bookmark Listing Endpoints ───────────────────────────
+
+  @Get(':id/is-saved')
+  @ApiOperation({
+    summary: 'UC-PU-03: Check if a post is saved by current user',
+    description: 'Returns whether the specified post is in the authenticated user’s bookmarked list.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bookmark status of the post',
+    schema: {
+      type: 'object',
+      properties: {
+        isSaved: { type: 'boolean', example: true },
+      },
+    },
+  })
+  async isPostSaved(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ isSaved: boolean }> {
+    this.logger.log(`GET /posts/${id}/is-saved called by user ${user.id}`);
+    const isSaved = await this.postsService.isPostSaved(user.id, id);
+    return { isSaved };
+  }
+
+  @Post(':id/save')
+  @ApiOperation({
+    summary: 'UC-PU-03: Save/bookmark a rental listing',
+    description: 'Bookmarks the post for the current authenticated user (idempotent).',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Post saved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        saved: { type: 'boolean', example: true },
+        savedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async savePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    this.logger.log(`POST /posts/${id}/save called by user ${user.id}`);
+    return this.postsService.savePost(user.id, id);
+  }
+
+  @Delete(':id/save')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'UC-PU-03: Unsave/remove bookmark for a rental listing',
+    description: 'Removes the bookmark for the current authenticated user (idempotent).',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Post unsaved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        saved: { type: 'boolean', example: false },
+        savedCount: { type: 'number', example: 4 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async unsavePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    this.logger.log(`DELETE /posts/${id}/save called by user ${user.id}`);
+    return this.postsService.unsavePost(user.id, id);
+  }
+
+  @Post(':id/toggle-save')
+  @ApiOperation({
+    summary: 'UC-PU-03: Toggle save/bookmark for a rental listing',
+    description: 'Toggles the bookmark status for the current authenticated user.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bookmark status toggled',
+    schema: {
+      type: 'object',
+      properties: {
+        saved: { type: 'boolean', example: true },
+        savedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async toggleSavePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    this.logger.log(`POST /posts/${id}/toggle-save called by user ${user.id}`);
+    return this.postsService.toggleSavePost(user.id, id);
   }
 }
