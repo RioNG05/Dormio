@@ -417,6 +417,19 @@ export const postService = {
   },
 
   /**
+   * UC-PU-03: Get all saved rental listings for current user (requires auth)
+   */
+  async getSavedPosts(): Promise<PublicPostListing[]> {
+    const res = await api.get<
+      { success: boolean; data: PublicPostListing[] } | PublicPostListing[]
+    >("/v1/posts/saved/all");
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PublicPostListing[] }).data;
+    }
+    return (res as PublicPostListing[]) || [];
+  },
+
+  /**
    * UC-PU-03: Check if a post is bookmarked by current user (requires auth)
    */
   async isPostSaved(id: string): Promise<boolean> {

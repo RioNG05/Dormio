@@ -1201,6 +1201,46 @@ export class PostsService {
   }
 
   /**
+   * UC-PU-03: Retrieve all saved rental listings for the authenticated user.
+   */
+  async getSavedPosts(userId: string): Promise<PublicPostResponseDto[]> {
+    const savedRecords = await this.prisma.savedPost.findMany({
+      where: { savedBy: userId },
+      include: {
+        post: {
+          include: {
+            postImages: true,
+            room: {
+              include: {
+                roomType: true,
+                boardingHouse: true,
+              },
+            },
+            postedByUser: {
+              select: {
+                id: true,
+                username: true,
+                avatarUrl: true,
+              },
+            },
+            _count: {
+              select: {
+                postReaches: true,
+                savedPosts: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return savedRecords
+      .filter((s) => s.post != null)
+      .map((s) => this.mapToPublicResponseDto(s.post));
+  }
+
+  /**
    * UC-PU-03: Check if a post is saved by the authenticated user.
    */
   async isPostSaved(userId: string, postId: string): Promise<boolean> {

@@ -156,6 +156,24 @@ export class PostsController {
     return this.postsService.getSavedPostIds(user.id);
   }
 
+  @Get('saved/all')
+  @ApiOperation({
+    summary: 'UC-PU-03: Get all saved rental listings for current user',
+    description:
+      'Returns full public post details for all listings bookmarked by the current authenticated user.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of bookmarked public listings',
+    type: [PublicPostResponseDto],
+  })
+  async getSavedPosts(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<PublicPostResponseDto[]> {
+    this.logger.log(`GET /posts/saved/all called by user ${user.id}`);
+    return this.postsService.getSavedPosts(user.id);
+  }
+
   // ─── UC-PU-01: Public Browse & Filter Listings ────────────────────────────
 
   @Public()

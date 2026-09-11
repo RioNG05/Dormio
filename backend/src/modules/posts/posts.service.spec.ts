@@ -537,6 +537,60 @@ describe('PostsService', () => {
       });
     });
 
+    it('should return full saved posts for user', async () => {
+      const mockPost = {
+        id: 'post-1',
+        title: 'Room 101',
+        content: 'Nice room',
+        depositAmount: 1000000,
+        status: 'posted',
+        createdAt: new Date(),
+        postImages: [{ id: 'img-1', url: 'https://example.com/img.jpg' }],
+        room: {
+          id: 'room-1',
+          roomNumber: '101',
+          floor: 1,
+          area: 25,
+          roomType: { name: 'Single' },
+          boardingHouse: {
+            name: 'House A',
+            province: 'Hanoi',
+            district: 'Cau Giay',
+            ward: 'Dich Vong',
+            street: 'Duy Tan',
+            houseNumber: '10',
+          },
+        },
+        postedByUser: {
+          id: 'landlord-1',
+          username: 'landlord_bob',
+          avatarUrl: null,
+        },
+        _count: { postReaches: 12, savedPosts: 4 },
+      };
+
+      mockPrisma.savedPost.findMany.mockResolvedValue([
+        {
+          id: 'saved-1',
+          postId: 'post-1',
+          savedBy: userId,
+          createdAt: new Date(),
+          post: mockPost,
+        },
+      ]);
+
+      const result = await service.getSavedPosts(userId);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('post-1');
+      expect(result[0].title).toBe('Room 101');
+      expect(result[0].room?.roomNumber).toBe('101');
+      expect(result[0].room?.boardingHouseName).toBe('House A');
+      expect(result[0].address?.province).toBe('Hanoi');
+      expect(result[0].viewsCount).toBe(12);
+      expect(result[0].savedCount).toBe(4);
+    });
+
     it('should check if a post is saved', async () => {
       mockPrisma.savedPost.count.mockResolvedValue(1);
 

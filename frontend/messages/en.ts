@@ -905,6 +905,11 @@ const en = {
     guestSavedPostsTitle2: "Compare & Deposit",
     guestSavedPostsViewAndDeposit: "View & Deposit",
     guestSavedPostsViewDetails: "View Details",
+    guestSavedPostsLoading: "Loading saved rooms...",
+    guestSavedPostsRemoveSuccess: "Removed room from saved list",
+    guestSavedPostsRemoveError: "Failed to remove saved room",
+    guestSavedPostsLandlordPlaceholder: "Landlord",
+    guestSavedPostsRoomTypePlaceholder: "Room",
 
     // --- Poster / Landlord public profile (UC-PU-02) ---
     guestPosterProfileTitle: "Poster Profile",

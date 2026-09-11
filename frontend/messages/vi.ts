@@ -905,6 +905,11 @@ const vi = {
     guestSavedPostsTitle2: "So Sánh & Đặt Cọc",
     guestSavedPostsViewAndDeposit: "Xem & Đặt Cọc ",
     guestSavedPostsViewDetails: "Xem Chi Tiết",
+    guestSavedPostsLoading: "Đang tải danh sách phòng đã lưu...",
+    guestSavedPostsRemoveSuccess: "Đã xóa phòng khỏi danh sách đã lưu",
+    guestSavedPostsRemoveError: "Không thể xóa phòng đã lưu",
+    guestSavedPostsLandlordPlaceholder: "Chủ nhà",
+    guestSavedPostsRoomTypePlaceholder: "Phòng trọ",
 
     // --- Poster / Landlord public profile (UC-PU-02) ---
     guestPosterProfileTitle: "Hồ Sơ Người Đăng Tin",
