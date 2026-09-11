@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   UseGuards,
   Logger,
@@ -31,7 +32,7 @@ export class UsersController {
 
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('identification')
+  @Get(['identification', 'me/identification'])
   @ApiOperation({
     summary: 'Get user identity verification details (UC-PU-04 Gate)',
     description:
@@ -56,7 +57,8 @@ export class UsersController {
     return this.usersService.getIdentification(user.id);
   }
 
-  @Post('identification')
+  @Post(['identification', 'me/identification'])
+  @Put(['identification', 'me/identification'])
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Submit or update user identity verification (UC-PU-04 Gate)',

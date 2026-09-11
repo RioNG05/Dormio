@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft, ShieldCheck, Lock, Loader2, AlertCircle,
   UserCheck, QrCode, CheckCircle2, Copy, Check, Info,
-  AlertTriangle, MessageSquare, CreditCard,
+  AlertTriangle, MessageSquare, CreditCard, ArrowRight,
 } from "lucide-react";
 import { formatCurrency } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -35,7 +35,14 @@ function SkeletonDeposit() {
 
 // ─── Step types ───────────────────────────────────────────────────────────────
 const STEPS = ["identity_gate", "confirm_amount", "qr_payment", "success"] as const;
-type DepositStep = "loading" | "login_required" | typeof STEPS[number];
+type DepositStep =
+  | "loading"
+  | "login_required"
+  | "check_identity"
+  | "identity_gate"
+  | "confirm_amount"
+  | "qr_payment"
+  | "success";
 
 // ─── Phone validation ─────────────────────────────────────────────────────────
 const PHONE_REGEX = /^(03|05|07|08|09)[0-9]{8}$/;
@@ -110,29 +117,53 @@ export default function DepositPage() {
 
   useEffect(() => { fetchPost(); }, [fetchPost]);
 
+  const [isCheckingIdentity, setIsCheckingIdentity] = useState(true);
+  const [identityCheckResult, setIdentityCheckResult] = useState<{
+    checked: boolean;
+    hasId: boolean;
+    idData: UserIdentification | null;
+  }>({ checked: false, hasId: false, idData: null });
+
+  // Auto-advance from check_identity to confirm_amount if verified
+  useEffect(() => {
+    if (depositStep === "check_identity" && identityCheckResult.checked && identityCheckResult.hasId) {
+      const timer = setTimeout(() => {
+        setDepositStep("confirm_amount");
+      }, 2200);
+      return () => clearTimeout(timer);
+    }
+  }, [depositStep, identityCheckResult]);
+
   // ─── Init deposit flow ─────────────────────────────────────────────────────
   const initDepositFlow = useCallback(async (loadedPost: PublicPostListing) => {
     if (!isLoggedIn) {
       setDepositStep("login_required");
       return;
     }
-    setDepositStep("loading");
+    setDepositStep("check_identity");
+    setIsCheckingIdentity(true);
     try {
       const idRes = await userService.getIdentification();
-      if (idRes?.hasIdentification && idRes?.userIdentification) {
-        setVerifiedIdData(idRes.userIdentification);
-        setTenantName(idRes.userIdentification.fullName);
-        setTenantPhone(user?.phone || "");
+      const idData = idRes?.userIdentification || idRes?.identification;
+      if (idRes?.hasIdentification && idData) {
+        setVerifiedIdData(idData);
+        setTenantName(idData.fullName || user?.name || (user as any)?.username || "");
+        setTenantPhone(user?.phone || (user as any)?.phoneNumber || "");
         setDepositAmountInput(Number(loadedPost.depositAmount ?? 0));
-        setDepositStep("confirm_amount");
+        setIdentityCheckResult({ checked: true, hasId: true, idData });
       } else {
-        setIdFullName(user?.name || "");
+        const fallbackName = user?.name || (user as any)?.username || "";
+        setIdFullName(fallbackName);
+        setTenantName(fallbackName);
+        setTenantPhone(user?.phone || (user as any)?.phoneNumber || "");
         setDepositAmountInput(Number(loadedPost.depositAmount ?? 0));
-        setDepositStep("identity_gate");
+        setIdentityCheckResult({ checked: true, hasId: false, idData: null });
       }
     } catch {
       setDepositAmountInput(Number(loadedPost.depositAmount ?? 0));
-      setDepositStep("identity_gate");
+      setIdentityCheckResult({ checked: true, hasId: false, idData: null });
+    } finally {
+      setIsCheckingIdentity(false);
     }
   }, [isLoggedIn, user]);
 
@@ -187,8 +218,8 @@ export default function DepositPage() {
         cardFrontUrl: idCardFrontUrl.trim() || undefined, cardBackUrl: idCardBackUrl.trim() || undefined,
       });
       setVerifiedIdData(saved);
-      setTenantName(saved.fullName);
-      setTenantPhone(user?.phone || "");
+      setTenantName(saved.fullName || idFullName || user?.name || (user as any)?.username || "");
+      setTenantPhone(user?.phone || (user as any)?.phoneNumber || "");
       setDepositStep("confirm_amount");
       setToastMessage({ type: "success", text: "Xác minh danh tính thành công!" });
     } catch (err: any) {
@@ -207,8 +238,9 @@ export default function DepositPage() {
     try {
       const instruction = await postService.initiatePlatformDeposit(post.id, {
         amount: depositAmountInput > 0 ? depositAmountInput : Number(post.depositAmount ?? 0),
-        tenantName: tenantName.trim(), tenantPhone: tenantPhone.trim(),
-        note: depositNote.trim() || undefined,
+        tenantName: (tenantName || "").trim(),
+        tenantPhone: (tenantPhone || "").trim(),
+        note: (depositNote || "").trim() || undefined,
       });
       setDepositInstruction(instruction);
       setDepositStep("qr_payment");
@@ -236,15 +268,19 @@ export default function DepositPage() {
   };
 
   const hasUnsavedChanges = () => {
-    if (depositStep === "success") return false;
+    if (depositStep === "success" || depositStep === "check_identity") return false;
     if (depositStep === "identity_gate") return !!(idNumber || idFullName || idDob || idPlaceOfOrigin || idPlaceOfResidence);
-    if (depositStep === "confirm_amount") return !!(depositNote || (tenantName && tenantName !== verifiedIdData?.fullName));
+    if (depositStep === "confirm_amount") return !!(depositNote || ((tenantName || "").trim() && tenantName !== verifiedIdData?.fullName));
     if (depositStep === "qr_payment") return true;
     return false;
   };
 
   const handleBack = () => {
     if (depositStep === "success") { router.push(`/rooms/${id}`); return; }
+    if (depositStep === "identity_gate" && verifiedIdData) {
+      setDepositStep("confirm_amount");
+      return;
+    }
     if (hasUnsavedChanges()) { setIsDiscardConfirmOpen(true); } else { router.push(`/rooms/${id}`); }
   };
 
@@ -260,7 +296,11 @@ export default function DepositPage() {
 
   // ─── Derived ──────────────────────────────────────────────────────────────
   const depositAmount = Number(post?.depositAmount ?? 0);
-  const activeStepIndex = STEPS.indexOf(depositStep as typeof STEPS[number]);
+  const isIdentityPassed = !!verifiedIdData;
+  const activeStepIndex =
+    depositStep === "check_identity"
+      ? (identityCheckResult.hasId ? 1 : 0)
+      : STEPS.indexOf(depositStep as typeof STEPS[number]);
 
   // ─── Render guards ─────────────────────────────────────────────────────────
   if (isLoadingPost) return <SkeletonDeposit />;
@@ -326,20 +366,20 @@ export default function DepositPage() {
         {activeStepIndex >= 0 && (
           <div className="flex items-center">
             {STEPS.map((s, i) => {
-              const done = i < activeStepIndex;
-              const active = i === activeStepIndex;
+              const done = (i < activeStepIndex) || (s === "identity_gate" && isIdentityPassed && depositStep !== "identity_gate");
+              const active = i === activeStepIndex && !done;
               return (
                 <React.Fragment key={s}>
                   <div className="flex flex-col items-center gap-1">
                     <span className={`w-6 h-6 rounded-full text-[10px] font-black inline-flex items-center justify-center transition-colors ${done ? "bg-[#2AC1BC] text-white" : active ? "bg-zinc-900 text-white" : "bg-zinc-200 text-zinc-400"}`}>
                       {done ? <Check className="w-3 h-3" /> : i + 1}
                     </span>
-                    <span className={`text-[9px] font-bold text-center leading-tight w-14 ${i <= activeStepIndex ? "text-zinc-700" : "text-zinc-300"}`}>
+                    <span className={`text-[9px] font-bold text-center leading-tight w-14 ${i <= activeStepIndex || done ? "text-zinc-700" : "text-zinc-300"}`}>
                       {stepLabels[s]}
                     </span>
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div className={`h-px flex-1 mb-4 mx-1 transition-colors ${i < activeStepIndex ? "bg-[#2AC1BC]" : "bg-zinc-200"}`} />
+                    <div className={`h-px flex-1 mb-4 mx-1 transition-colors ${i < activeStepIndex || done ? "bg-[#2AC1BC]" : "bg-zinc-200"}`} />
                   )}
                 </React.Fragment>
               );
@@ -360,27 +400,133 @@ export default function DepositPage() {
             </div>
           </div>
 
-          {/* Loading */}
-          {depositStep === "loading" && (
-            <div className="py-12 text-center space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC] mx-auto" />
-              <p className="text-xs font-bold text-zinc-600">Đang kiểm tra hồ sơ định danh công dân...</p>
-            </div>
-          )}
+          {/* Check Identity Step */}
+          {depositStep === "check_identity" && (
+            <div className="space-y-4">
+              {isCheckingIdentity ? (
+                <div className="py-12 text-center space-y-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC] mx-auto" />
+                  <p className="text-xs font-bold text-zinc-700">Đang kiểm tra hồ sơ định danh công dân...</p>
+                  <p className="text-[11px] text-zinc-400">Hệ thống đang đối soát trạng thái CCCD/CMND trên Dormio</p>
+                </div>
+              ) : identityCheckResult.hasId && identityCheckResult.idData ? (
+                /* User already has identification -> Pass Step 1 */
+                <div className="space-y-4 text-center py-2 animate-in fade-in duration-300">
+                  <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border-2 border-emerald-200 flex items-center justify-center mx-auto">
+                    <ShieldCheck className="w-9 h-9" />
+                  </div>
 
-          {/* Login Required */}
-          {depositStep === "login_required" && (
-            <div className="py-6 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200">
-                <Lock className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="text-sm font-extrabold text-zinc-900">Yêu cầu đăng nhập</h2>
-                <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">{tGuest("guestDepositLoginRequired")}</p>
-              </div>
-              <button onClick={() => router.push(`/login?redirect=/rooms/${id}/deposit`)} className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">
-                {tGuest("guestDepositLoginBtn")} →
-              </button>
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-black rounded-full mb-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>ĐÃ XÁC MINH DANH TÍNH</span>
+                    </div>
+                    <h2 className="text-base font-black text-zinc-900">
+                      Hồ sơ định danh công dân hợp lệ
+                    </h2>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
+                      Tài khoản của bạn đã hoàn tất định danh công dân. Hệ thống tự động <strong>bỏ qua Bước 1 (Xác minh danh tính)</strong> để chuyển sang Bước 2 (Xác nhận cọc).
+                    </p>
+                  </div>
+
+                  <div className="bg-zinc-50 rounded-2xl border border-zinc-200/80 p-4 text-xs text-left space-y-2.5">
+                    <div className="flex justify-between items-center pb-2 border-b border-zinc-200/80">
+                      <span className="text-zinc-500 font-bold">Họ và tên người thuê:</span>
+                      <span className="font-extrabold text-zinc-900 uppercase">
+                        {identityCheckResult.idData.fullName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-zinc-200/80">
+                      <span className="text-zinc-500 font-bold">Số CCCD / CMND:</span>
+                      <span className="font-mono font-black text-emerald-700">
+                        •••• •••• {identityCheckResult.idData.identityNumber.slice(-4)}
+                      </span>
+                    </div>
+                    {identityCheckResult.idData.dateOfBirth && (
+                      <div className="flex justify-between items-center pb-2 border-b border-zinc-200/80">
+                        <span className="text-zinc-500 font-bold">Ngày sinh:</span>
+                        <span className="font-semibold text-zinc-700">
+                          {new Date(identityCheckResult.idData.dateOfBirth).toLocaleDateString("vi-VN")}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-500 font-bold">Bảo chứng Dormio:</span>
+                      <span className="font-black text-emerald-600 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Đạt chuẩn Escrow
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 space-y-2">
+                    <button
+                      onClick={() => setDepositStep("confirm_amount")}
+                      className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <span>Bỏ qua Bước 1 & Đến Bước 2 (Xác nhận cọc)</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (identityCheckResult.idData) {
+                          setIdNumber(identityCheckResult.idData.identityNumber || "");
+                          setIdFullName(identityCheckResult.idData.fullName || "");
+                          if (identityCheckResult.idData.dateOfBirth) {
+                            setIdDob(identityCheckResult.idData.dateOfBirth.slice(0, 10));
+                          }
+                          setIdGender(identityCheckResult.idData.gender || "male");
+                          setIdNationality(identityCheckResult.idData.nationality || "Việt Nam");
+                        }
+                        setDepositStep("identity_gate");
+                      }}
+                      className="text-[11px] text-zinc-400 hover:text-zinc-700 font-semibold underline block mx-auto cursor-pointer"
+                    >
+                      Xem hoặc cập nhật lại thông tin CCCD
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* User DOES NOT have identification */
+                <div className="space-y-4 text-center py-2 animate-in fade-in duration-300">
+                  <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 border-2 border-amber-200 flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-8 h-8" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 text-[11px] font-black rounded-full mb-1">
+                      <span>CHƯA CÓ THÔNG TIN ĐỊNH DANH</span>
+                    </div>
+                    <h2 className="text-base font-black text-zinc-900">
+                      Yêu cầu xác minh danh tính công dân
+                    </h2>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
+                      Để bảo vệ quyền lợi tiền cọc theo cơ chế <strong>Dormio Escrow (UC-PU-04)</strong>, bạn cần hoàn tất thông tin CCCD/CMND chính chủ ở <strong>Bước 1</strong>.
+                    </p>
+                  </div>
+
+                  <div className="bg-amber-50/60 rounded-2xl border border-amber-200 p-4 text-xs text-left space-y-1.5 text-amber-900">
+                    <div className="font-extrabold flex items-center gap-1.5 text-amber-800">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Quyền lợi khi hoàn tất Bước 1:</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-amber-700">
+                      <li>Tiền cọc được giữ an toàn trong tài khoản trung gian Dormio.</li>
+                      <li>Hợp đồng thuê phòng được tạo tự động với thông tin pháp lý chính xác.</li>
+                      <li>Được bảo vệ quyền lợi hoàn cọc 100% nếu chủ nhà vi phạm thỏa thuận.</li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setDepositStep("identity_gate")}
+                      className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <span>Bắt đầu Bước 1: Xác minh CCCD</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -466,16 +612,29 @@ export default function DepositPage() {
           {depositStep === "confirm_amount" && (
             <div className="space-y-4">
               <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-emerald-800">
-                  <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="flex items-center gap-2.5 text-emerald-800">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <UserCheck className="w-4 h-4" />
+                  </div>
                   <div>
-                    <span className="font-black block">{tGuest("guestDepositVerifiedNotice")} {verifiedIdData?.fullName || tenantName}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-black text-emerald-950">
+                        {tGuest("guestDepositVerifiedNotice")} {verifiedIdData?.fullName || tenantName}
+                      </span>
+                      <span className="px-2 py-0.5 bg-emerald-200/80 text-emerald-900 rounded-full font-black text-[9px]">
+                        ĐÃ BỎ QUA BƯỚC 1
+                      </span>
+                    </div>
                     {verifiedIdData?.identityNumber && (
-                      <span className="text-[10px] text-emerald-600 font-mono">CCCD: •••• •••• {verifiedIdData.identityNumber.slice(-4)}</span>
+                      <span className="text-[10px] text-emerald-700 font-mono">
+                        CCCD: •••• •••• {verifiedIdData.identityNumber.slice(-4)} (Đã xác minh chính chủ)
+                      </span>
                     )}
                   </div>
                 </div>
-                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-black text-[10px]">ĐÃ XÁC THỰC</span>
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-black text-[10px]">
+                  ĐÃ XÁC THỰC
+                </span>
               </div>
 
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1.5">
@@ -520,8 +679,17 @@ export default function DepositPage() {
                 </div>
               )}
 
-              <button onClick={handleInitiateDeposit} disabled={isSubmittingDeposit || !tenantName.trim() || !tenantPhone || !!phoneError || !isPhoneValid(tenantPhone)}
-                className="w-full py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-2 mt-2">
+              <button
+                onClick={handleInitiateDeposit}
+                disabled={
+                  isSubmittingDeposit ||
+                  !(tenantName || "").trim() ||
+                  !tenantPhone ||
+                  !!phoneError ||
+                  !isPhoneValid(tenantPhone)
+                }
+                className="w-full py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-2 mt-2"
+              >
                 {isSubmittingDeposit ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Đang tạo lệnh chuyển khoản...</span></> : <><QrCode className="w-4 h-4" /><span>{tGuest("guestRoomDetailConfirmQrBtn")}</span></>}
               </button>
             </div>
