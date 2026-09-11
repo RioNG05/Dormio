@@ -928,7 +928,8 @@ const vi = {
     guestPosterProfileCall: "Gọi ngay",
     guestPosterProfileCopy: "Sao chép",
     guestPosterProfileCopied: "Đã sao chép",
-    guestPosterProfileChatLoading: "Đang mở đoạn chat..."
+    guestPosterProfileChatLoading: "Đang mở đoạn chat...",
+    guestPosterProfileCannotMessageSelf: "Không thể tự nhắn tin cho chính mình"
   },
 
   // ==========================================================================

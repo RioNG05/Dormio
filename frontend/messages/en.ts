@@ -928,7 +928,8 @@ const en = {
     guestPosterProfileCall: "Call Now",
     guestPosterProfileCopy: "Copy",
     guestPosterProfileCopied: "Copied",
-    guestPosterProfileChatLoading: "Opening conversation..."
+    guestPosterProfileChatLoading: "Opening conversation...",
+    guestPosterProfileCannotMessageSelf: "Cannot message yourself"
   },
 
   // ==========================================================================
