@@ -24,8 +24,13 @@ import {
   ConfirmReadingsResponse,
 } from "@/services/meter-reading.service";
 import Link from "next/link";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { formatCurrency } from "@/utils";
 
 export default function TenantMeterReadingsPage() {
+  const t = useTranslations("tenantPortal");
+  const { locale } = useLanguage();
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ActiveMeteredServicesResponse | null>(null);
   const [readingsState, setReadingsState] = useState<
@@ -85,7 +90,7 @@ export default function TenantMeterReadingsPage() {
           meteredServices: [
             {
               serviceId: "srv-elec-demo",
-              serviceName: "Điện sinh hoạt",
+              serviceName: locale === "en" ? "Electricity" : "Điện sinh hoạt",
               unitPrice: 3500,
               unit: "kWh",
               currentReading: null,
@@ -98,7 +103,7 @@ export default function TenantMeterReadingsPage() {
             },
             {
               serviceId: "srv-water-demo",
-              serviceName: "Nước sinh hoạt",
+              serviceName: locale === "en" ? "Domestic Water" : "Nước sinh hoạt",
               unitPrice: 25000,
               unit: "m³",
               currentReading: null,
@@ -250,7 +255,7 @@ export default function TenantMeterReadingsPage() {
 
     const parsed = parseFloat(currentState.draftValue);
     if (isNaN(parsed) || parsed < 0) {
-      alert("Vui lòng nhập số hợp lệ lớn hơn hoặc bằng 0");
+      alert(t("invalidNumberError"));
       return;
     }
 
@@ -344,7 +349,7 @@ export default function TenantMeterReadingsPage() {
         items: [
           {
             id: "rent-1",
-            title: "Tiền phòng",
+            title: t("roomRent"),
             quantity: 1,
             unitPrice: rentAmount,
             amount: rentAmount,
@@ -375,7 +380,7 @@ export default function TenantMeterReadingsPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-sm font-medium text-slate-500">
-          Đang tải thông tin dịch vụ đồng hồ điện nước...
+          {t("loadingMeterServices")}
         </p>
       </div>
     );
@@ -389,15 +394,13 @@ export default function TenantMeterReadingsPage() {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-teal-100 text-xs font-semibold uppercase tracking-wider mb-2">
               <Gauge className="w-3.5 h-3.5" />
-              Chu kỳ thanh toán kỳ này
+              {t("currentBillingCycleBadge")}
             </div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Nhập chỉ số điện nước — {data?.roomNumber || "Phòng trọ"}
+              {t("meterReadingsTitle", { room: data?.roomNumber || t("roomNumber") })}
             </h1>
             <p className="text-teal-100 text-sm mt-1 max-w-xl">
-              Chụp ảnh đồng hồ điện và nước. Hệ thống tự động nhận diện chỉ số
-              bằng công nghệ OCR thông minh, cho phép bạn kiểm tra và điều chỉnh
-              trước khi lập hóa đơn.
+              {t("meterReadingsDesc")}
             </p>
           </div>
 
@@ -407,10 +410,10 @@ export default function TenantMeterReadingsPage() {
             </div>
             <div>
               <div className="text-xs text-teal-100 font-medium">
-                Hạn chốt chỉ số
+                {t("meterClosingDeadline")}
               </div>
               <div className="text-lg font-bold">
-                Ngày {data?.monthlyPaymentDate || 5} hàng tháng
+                {t("monthlyClosingDate", { day: data?.monthlyPaymentDate || 5 })}
               </div>
             </div>
           </div>
@@ -435,14 +438,14 @@ export default function TenantMeterReadingsPage() {
             </div>
             <div>
               <h3 className="font-semibold text-slate-800 text-sm">
-                Tiến độ nhập chỉ số kỳ này
+                {t("meterInputProgress")}
               </h3>
               <p className="text-xs text-slate-500">
                 {isReadyToConfirm
-                  ? "Tất cả chỉ số đã sẵn sàng! Bạn có thể xác nhận để lập hóa đơn ngay."
-                  : `Cần nhập thêm ${
-                      servicesList.length - completedCount
-                    } chỉ số để tạo hóa đơn.`}
+                  ? t("allMetersReady")
+                  : t("metersRemainingCount", {
+                      count: servicesList.length - completedCount,
+                    })}
               </p>
             </div>
           </div>
@@ -458,12 +461,12 @@ export default function TenantMeterReadingsPage() {
               {isReadyToConfirm ? (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Đã hoàn thành
+                  {t("completedStatus")}
                 </>
               ) : (
                 <>
                   <Clock className="w-3.5 h-3.5" />
-                  Đang chờ nhập
+                  {t("pendingInputStatus")}
                 </>
               )}
             </span>
@@ -497,11 +500,10 @@ export default function TenantMeterReadingsPage() {
               <Check className="w-6 h-6" />
             </div>
             <h3 className="font-semibold text-slate-800">
-              Không có dịch vụ đồng hồ đo
+              {t("noMeteredServicesTitle")}
             </h3>
             <p className="text-sm text-slate-500 max-w-md mx-auto">
-              Phòng của bạn không có dịch vụ nào tính theo chỉ số đồng hồ. Hóa
-              đơn sẽ được tạo tự động vào ngày đến hạn.
+              {t("noMeteredServicesDesc")}
             </p>
           </div>
         ) : (
@@ -543,9 +545,9 @@ export default function TenantMeterReadingsPage() {
                       </h3>
                       <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
                         <span>
-                          Đơn giá:{" "}
+                          {t("unitPriceLabel")}{" "}
                           <strong className="text-slate-700">
-                            {service.unitPrice.toLocaleString("vi-VN")} đ /{" "}
+                            {formatCurrency(service.unitPrice, locale)} /{" "}
                             {service.unit}
                           </strong>
                         </span>
@@ -553,10 +555,10 @@ export default function TenantMeterReadingsPage() {
                           <>
                             <span>•</span>
                             <span>
-                              Kỳ trước:{" "}
+                              {t("previousCycleLabel")}{" "}
                               <strong className="text-slate-700">
                                 {service.previousReading.readingValue.toLocaleString(
-                                  "vi-VN",
+                                  locale === "en" ? "en-US" : "vi-VN",
                                 )}{" "}
                                 {service.unit}
                               </strong>
@@ -572,12 +574,15 @@ export default function TenantMeterReadingsPage() {
                     {state.readingValue !== null ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        Đã nhập: {state.readingValue} {service.unit}
+                        {t("readingRecorded", {
+                          value: state.readingValue.toLocaleString(locale === "en" ? "en-US" : "vi-VN"),
+                          unit: service.unit,
+                        })}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
                         <Clock className="w-3.5 h-3.5" />
-                        Chưa có chỉ số
+                        {t("noReadingYet")}
                       </span>
                     )}
                   </div>
@@ -605,7 +610,7 @@ export default function TenantMeterReadingsPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={state.imageUrl}
-                          alt={`Đồng hồ ${service.serviceName}`}
+                          alt={t("meterImageAlt", { name: service.serviceName })}
                           className="w-full h-full object-cover"
                         />
 
@@ -616,7 +621,7 @@ export default function TenantMeterReadingsPage() {
                               <Sparkles className="w-8 h-8 text-teal-300 animate-spin" />
                             </div>
                             <span className="text-xs font-semibold tracking-wide animate-pulse">
-                              Đang nhận diện chỉ số OCR...
+                              {t("ocrScanning")}
                             </span>
                           </div>
                         )}
@@ -632,7 +637,7 @@ export default function TenantMeterReadingsPage() {
                             className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-md transition-all opacity-90 hover:opacity-100 shadow"
                           >
                             <Camera className="w-3.5 h-3.5" />
-                            Chụp lại
+                            {t("retakePhoto")}
                           </button>
                         )}
                       </div>
@@ -647,10 +652,10 @@ export default function TenantMeterReadingsPage() {
                           <Camera className="w-6 h-6" />
                         </div>
                         <span className="text-sm font-semibold text-slate-700 group-hover:text-teal-700">
-                          Chụp ảnh đồng hồ {service.serviceName.toLowerCase()}
+                          {t("takeMeterPhoto", { name: service.serviceName })}
                         </span>
                         <span className="text-xs text-slate-400 mt-0.5">
-                          Hỗ trợ ảnh chụp camera hoặc tải tệp
+                          {t("cameraOrFileSupport")}
                         </span>
                       </button>
                     )}
@@ -662,7 +667,7 @@ export default function TenantMeterReadingsPage() {
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-                          Chỉ số đồng hồ ({service.unit})
+                          {t("meterReadingLabelWithUnit", { unit: service.unit })}
                         </label>
 
                         {state.readingValue !== null && !state.isEditing && (
@@ -678,7 +683,7 @@ export default function TenantMeterReadingsPage() {
                             }
                             className="text-xs text-teal-600 hover:text-teal-700 font-semibold hover:underline"
                           >
-                            Chỉnh sửa thủ công
+                            {t("manualEditBtn")}
                           </button>
                         )}
                       </div>
@@ -689,7 +694,7 @@ export default function TenantMeterReadingsPage() {
                             <input
                               type="number"
                               step="any"
-                              placeholder="Nhập chỉ số đồng hồ..."
+                              placeholder={t("enterMeterReadingPlaceholder")}
                               value={state.draftValue}
                               onChange={(e) =>
                                 setReadingsState((prev) => ({
@@ -713,21 +718,21 @@ export default function TenantMeterReadingsPage() {
                             }
                             className="bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm px-4 py-2.5 h-auto rounded-lg"
                           >
-                            Lưu
+                            {t("btnSaveReading")}
                           </Button>
                         </div>
                       ) : (
                         <div className="flex items-baseline justify-between bg-white border border-emerald-200 rounded-lg px-4 py-3">
                           <div>
                             <span className="text-2xl font-black text-slate-900 tracking-tight">
-                              {state.readingValue.toLocaleString("vi-VN")}
+                              {state.readingValue.toLocaleString(locale === "en" ? "en-US" : "vi-VN")}
                             </span>
                             <span className="text-xs font-semibold text-slate-500 ml-1.5">
                               {service.unit}
                             </span>
                           </div>
                           <span className="text-xs text-emerald-700 bg-emerald-50 font-medium px-2 py-0.5 rounded">
-                            Chỉ số hợp lệ ✓
+                            {t("validReadingBadge")}
                           </span>
                         </div>
                       )}
@@ -736,18 +741,18 @@ export default function TenantMeterReadingsPage() {
                       {consumption !== null && (
                         <div className="pt-2 border-t border-slate-200/60 grid grid-cols-2 gap-2 text-xs">
                           <div>
-                            <span className="text-slate-500">Lượng tiêu thụ:</span>
+                            <span className="text-slate-500">{t("consumptionLabel")}</span>
                             <div className="font-bold text-slate-800 text-sm mt-0.5">
-                              {consumption.toLocaleString("vi-VN")}{" "}
+                              {consumption.toLocaleString(locale === "en" ? "en-US" : "vi-VN")}{" "}
                               {service.unit}
                             </div>
                           </div>
                           <div className="text-right">
                             <span className="text-slate-500">
-                              Tạm tính dịch vụ:
+                              {t("estimatedCostLabel")}
                             </span>
                             <div className="font-bold text-teal-700 text-sm mt-0.5">
-                              {estimatedCost?.toLocaleString("vi-VN")} đ
+                              {estimatedCost !== null ? formatCurrency(estimatedCost, locale) : "-"}
                             </div>
                           </div>
                         </div>
@@ -767,8 +772,7 @@ export default function TenantMeterReadingsPage() {
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Info className="w-4 h-4 text-teal-600 shrink-0" />
             <span>
-              Sau khi xác nhận, hóa đơn tháng này sẽ được tạo với chỉ số đã
-              nhập và không thể tự chỉnh sửa.
+              {t("confirmWarningNotice")}
             </span>
           </div>
 
@@ -781,7 +785,7 @@ export default function TenantMeterReadingsPage() {
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
-            Xác nhận & xem hóa đơn
+            {t("confirmAndViewInvoiceBtn")}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -797,7 +801,7 @@ export default function TenantMeterReadingsPage() {
                   <FileCheck className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900">
-                  Xác nhận chỉ số điện nước
+                  {t("confirmMeterModalTitle")}
                 </h3>
               </div>
               <button
@@ -809,9 +813,7 @@ export default function TenantMeterReadingsPage() {
             </div>
 
             <p className="text-sm text-slate-600">
-              Vui lòng kiểm tra lại bảng tóm tắt chỉ số bên dưới. Hệ thống sẽ
-              tiến hành tạo hóa đơn tháng này cho phòng{" "}
-              <strong>{data?.roomNumber}</strong>:
+              {t("confirmMeterModalDesc", { room: data?.roomNumber || "" })}
             </p>
 
             {/* Summary Table */}
@@ -819,10 +821,10 @@ export default function TenantMeterReadingsPage() {
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-100/80 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-200">
                   <tr>
-                    <th className="px-3.5 py-2.5">Dịch vụ</th>
-                    <th className="px-3 py-2.5 text-center">Chỉ số cũ</th>
-                    <th className="px-3 py-2.5 text-center">Chỉ số mới</th>
-                    <th className="px-3.5 py-2.5 text-right">Tiêu thụ</th>
+                    <th className="px-3.5 py-2.5">{t("tableHeaderService")}</th>
+                    <th className="px-3 py-2.5 text-center">{t("tableHeaderOldReading")}</th>
+                    <th className="px-3 py-2.5 text-center">{t("tableHeaderNewReading")}</th>
+                    <th className="px-3.5 py-2.5 text-right">{t("tableHeaderConsumption")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -862,7 +864,7 @@ export default function TenantMeterReadingsPage() {
                 disabled={isSubmitting}
                 className="border-slate-300 text-slate-700 hover:bg-slate-100"
               >
-                Tiếp tục chỉnh sửa
+                {t("btnContinueEditing")}
               </Button>
 
               <Button
@@ -873,12 +875,12 @@ export default function TenantMeterReadingsPage() {
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Đang lập hóa đơn...</span>
+                    <span>{t("generatingInvoice")}</span>
                   </div>
                 ) : (
                   <>
                     <Check className="w-4 h-4 mr-1.5" />
-                    Xác nhận & Lập hóa đơn
+                    {t("btnConfirmAndGenerate")}
                   </>
                 )}
               </Button>
@@ -896,34 +898,32 @@ export default function TenantMeterReadingsPage() {
                 <Receipt className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-bold text-slate-900">
-                Hóa đơn đã được khởi tạo!
+                {t("invoiceGeneratedSuccessTitle")}
               </h3>
               <p className="text-xs text-slate-500">
-                Chỉ số đã được ghi nhận và khóa vào hóa đơn mã{" "}
-                <strong className="text-slate-700">
-                  {generatedInvoice.invoiceId}
-                </strong>
+                {t("invoiceGeneratedSuccessDesc", { id: generatedInvoice.invoiceId })}
               </p>
             </div>
 
             {/* Total Amount Box */}
             <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-4 text-center">
               <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">
-                Tổng tiền cần thanh toán
+                {t("totalAmountDue")}
               </span>
               <div className="text-3xl font-black text-teal-800 mt-1">
-                {generatedInvoice.totalAmount.toLocaleString("vi-VN")} đ
+                {formatCurrency(generatedInvoice.totalAmount, locale)}
               </div>
               <span className="text-xs text-slate-500 mt-1 block">
-                Hạn thanh toán:{" "}
-                {new Date(generatedInvoice.dueDate).toLocaleDateString("vi-VN")}
+                {t("invoiceDueDateLabel", {
+                  date: new Date(generatedInvoice.dueDate).toLocaleDateString(locale === "en" ? "en-US" : "vi-VN"),
+                })}
               </span>
             </div>
 
             {/* Invoice Line Items */}
             <div className="border border-slate-200 rounded-xl overflow-hidden">
               <div className="bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Chi tiết khoản thu
+                {t("invoiceLineItemsTitle")}
               </div>
               <div className="divide-y divide-slate-100">
                 {generatedInvoice.items.map((item) => (
@@ -935,7 +935,7 @@ export default function TenantMeterReadingsPage() {
                       {item.title}
                     </span>
                     <span className="font-bold text-slate-900">
-                      {item.amount.toLocaleString("vi-VN")} đ
+                      {formatCurrency(item.amount, locale)}
                     </span>
                   </div>
                 ))}
@@ -948,14 +948,14 @@ export default function TenantMeterReadingsPage() {
                 href="/tenant/invoices"
                 className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-xs text-center transition-all"
               >
-                Xem danh sách hóa đơn
+                {t("viewInvoicesListBtn")}
               </Link>
 
               <Link
                 href="/tenant/invoices"
                 className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs text-center transition-all shadow"
               >
-                Thanh toán ngay (VietQR)
+                {t("payNowVietQrBtn")}
               </Link>
             </div>
           </div>

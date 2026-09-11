@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
   ConversationItem,
   MessageItem,
@@ -82,6 +83,8 @@ function MessagesContent() {
   const { user, activeBuilding } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("landlord");
+  const { currentLocale } = useLanguage();
 
   const urlRoom = searchParams.get("room") || searchParams.get("search") || "";
   const urlTenant = searchParams.get("tenant") || "";
@@ -135,10 +138,10 @@ function MessagesContent() {
 
   // Preset Smart Quick Replies
   const quickReplies = [
-    "Đã nhận thông tin, BQL sẽ kiểm tra ngay nhé!",
-    "Đã báo thợ kỹ thuật sang hỗ trợ cho em rồi.",
-    "Hóa đơn đã chốt trên ứng dụng, em kiểm tra nhé.",
-    "Dạ phòng vẫn còn trống, anh/chị có thể xem ngay.",
+    t("landlordMessagesQuick1"),
+    t("landlordMessagesQuick2"),
+    t("landlordMessagesQuick3"),
+    t("landlordMessagesQuick4"),
   ];
 
   // 1. Mount & load initial conversations & contacts
@@ -324,10 +327,14 @@ function MessagesContent() {
           const autoKey = `${match.id}_${urlInvId || urlDepId || urlType || "auto"}`;
           if (!autoSentKeysRef.current[autoKey]) {
             autoSentKeysRef.current[autoKey] = true;
-            const roomLabel = match.participant.roomName || "phòng của bạn";
+            const roomLabel = match.participant.roomName || t("landlordMessagesYourRoom");
             if (urlInvId) {
               const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
-              const autoMsgContent = `📌 THÔNG BÁO HÓA ĐƠN THÁNG ${urlPeriod || "NÀY"}: Ban quản lý gửi thông báo thanh toán tiền ${roomLabel}. Tổng tiền: ${formattedAmount}. Quý khách vui lòng kiểm tra chi tiết hóa đơn (mã ${urlInvId}) hoặc quét mã VietQR để hoàn tất thanh toán.`;
+              const autoMsgContent = t("landlordMessagesAutoInvoiceNotice")
+                .replace("{period}", urlPeriod || (currentLocale === "en" ? "CURRENT" : "NÀY"))
+                .replace("{room}", roomLabel)
+                .replace("{amount}", formattedAmount)
+                .replace("{invId}", urlInvId);
               sendMessage(match.id, { content: autoMsgContent })
                 .then((savedMsg) => {
                   setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
@@ -335,7 +342,10 @@ function MessagesContent() {
                 .catch(console.error);
             } else if (urlType === "upgrade" || urlDepId) {
               const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "2.500.000 ₫";
-              const autoMsgContent = `💳 THÔNG BÁO THU BỔ SUNG & NÂNG CỌC HỢP ĐỒNG: Ban quản lý gửi thông báo thu tiền cọc bổ sung cho ${roomLabel} (${match.participant.fullName}). Số tiền cần thanh toán: +${formattedAmount}. Quý khách vui lòng quét mã VietQR để hoàn tất nâng cọc hợp đồng.`;
+              const autoMsgContent = t("landlordMessagesAutoDepositNotice")
+                .replace("{room}", roomLabel)
+                .replace("{tenant}", match.participant.fullName)
+                .replace("{amount}", formattedAmount);
               sendMessage(match.id, { content: autoMsgContent })
                 .then((savedMsg) => {
                   setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
@@ -418,7 +428,7 @@ function MessagesContent() {
     setIsSending(true);
     try {
       const payload = {
-        content: text || "Đính kèm tệp tin",
+        content: text || t("landlordMessagesDefaultAttachmentText"),
         attachments: pendingAttachments.map((att, idx) => ({
           type: att.type,
           url: att.url,
@@ -534,7 +544,7 @@ function MessagesContent() {
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm tên, phòng, SĐT..."
+                placeholder={t("landlordMessagesSearchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -543,7 +553,7 @@ function MessagesContent() {
             <button
               onClick={() => setShowNewChatModal(true)}
               className="p-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
-              title="Cuộc trò chuyện mới"
+              title={t("landlordMessagesTooltipNewChat")}
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -559,7 +569,7 @@ function MessagesContent() {
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
             >
-              Tất cả ({conversations.length})
+              {t("landlordMessagesAll").replace("{count}", String(conversations.length))}
             </button>
 
             <button
@@ -570,7 +580,7 @@ function MessagesContent() {
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
             >
-              Chưa đọc ({conversations.filter((c) => c.unreadCount > 0).length})
+              {t("landlordMessagesUnread").replace("{count}", String(conversations.filter((c) => c.unreadCount > 0).length))}
             </button>
 
             <button
@@ -581,7 +591,7 @@ function MessagesContent() {
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
             >
-              Đã đọc ({conversations.filter((c) => c.unreadCount === 0).length})
+              {t("landlordMessagesRead").replace("{count}", String(conversations.filter((c) => c.unreadCount === 0).length))}
             </button>
 
             <button
@@ -592,7 +602,7 @@ function MessagesContent() {
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
             >
-              Khách thuê ({conversations.filter((c) => c.participant.role === "tenant").length})
+              {t("landlordMessagesTenant").replace("{count}", String(conversations.filter((c) => c.participant.role === "tenant").length))}
             </button>
 
             <button
@@ -603,7 +613,7 @@ function MessagesContent() {
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
             >
-              Khách mới ({conversations.filter((c) => c.participant.role !== "tenant").length})
+              {t("landlordMessagesTabNewGuests").replace("{count}", String(conversations.filter((c) => c.participant.role !== "tenant").length))}
             </button>
           </div>
         </div>
@@ -613,18 +623,18 @@ function MessagesContent() {
           {isLoadingConversations ? (
             <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-              <span>Đang tải danh sách cuộc trò chuyện...</span>
+              <span>{t("landlordMessagesLoadingConversations")}</span>
             </div>
           ) : filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-2">
               <MessageSquare className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
-              <p>Không tìm thấy cuộc trò chuyện nào.</p>
+              <p>{t("landlordMessagesEmptyConversations")}</p>
               {contacts.length > 0 && (
                 <button
                   onClick={() => setShowNewChatModal(true)}
                   className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] hover:text-white text-[#2AC1BC] font-extrabold rounded-xl text-xs transition-all cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Bắt đầu trò chuyện với khách thuê
+                  <Plus className="w-3.5 h-3.5" /> {t("landlordMessagesBtnStartChat")}
                 </button>
               )}
             </div>
@@ -681,11 +691,11 @@ function MessagesContent() {
                       </span>
                       {isTenant ? (
                         <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                          Khách thuê
+                          {t("landlordMessagesRoleTenant")}
                         </span>
                       ) : (
                         <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
-                          Khách mới
+                          {t("landlordMessagesRoleGuest")}
                         </span>
                       )}
                     </div>
@@ -698,7 +708,7 @@ function MessagesContent() {
                             : "font-medium text-zinc-500"
                         }`}
                       >
-                        {chat.lastMessage?.content || "Chưa có tin nhắn"}
+                        {chat.lastMessage?.content || t("landlordMessagesNoMessageYet")}
                       </p>
                       {chat.unreadCount > 0 && (
                         <span className="w-4 h-4 rounded-full bg-[#2AC1BC] text-white text-[10px] font-black flex items-center justify-center shrink-0">
@@ -729,7 +739,7 @@ function MessagesContent() {
                 <button
                   onClick={() => setMobileShowChat(false)}
                   className="lg:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
-                  title="Quay lại danh sách"
+                  title={t("landlordMessagesTooltipBackToList")}
                 >
                   <ArrowLeft className="w-5 h-5 text-zinc-700" />
                 </button>
@@ -755,7 +765,7 @@ function MessagesContent() {
                   </div>
                   <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-zinc-400 truncate">
                     {activeChat.participant.phoneNumber && (
-                      <span>SĐT: {activeChat.participant.phoneNumber}</span>
+                      <span>{t("landlordMessagesPhonePrefix")} {activeChat.participant.phoneNumber}</span>
                     )}
                     {activeChat.participant.boardingHouseName && (
                       <span className="hidden sm:inline">
@@ -772,7 +782,7 @@ function MessagesContent() {
                   <a
                     href={`tel:${activeChat.participant.phoneNumber}`}
                     className="p-1.5 sm:p-2 hover:bg-zinc-100 text-zinc-600 rounded-xl transition-colors cursor-pointer"
-                    title="Gọi điện"
+                    title={t("landlordMessagesTooltipCall")}
                   >
                     <Phone className="w-4 h-4" />
                   </a>
@@ -785,7 +795,7 @@ function MessagesContent() {
                     }}
                     className="hidden md:flex items-center gap-1 px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                   >
-                    <FileText className="w-3.5 h-3.5" /> Hợp đồng
+                    <FileText className="w-3.5 h-3.5" /> {t("landlordMessagesBtnContract")}
                   </button>
                 )}
                 <button
@@ -795,7 +805,7 @@ function MessagesContent() {
                       ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
                       : "hover:bg-zinc-100 text-zinc-600"
                   }`}
-                  title="Thông tin chi tiết"
+                  title={t("landlordMessagesTooltipInfo")}
                 >
                   <Info className="w-4.5 h-4.5" />
                 </button>
@@ -807,14 +817,14 @@ function MessagesContent() {
               {isLoadingMessages ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-                  <span>Đang tải tin nhắn...</span>
+                  <span>{t("landlordMessagesLoadingMessages")}</span>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-2">
                   <MessageSquare className="w-10 h-10 mx-auto text-zinc-300 stroke-1" />
-                  <p>Chưa có tin nhắn nào trong cuộc trò chuyện này.</p>
+                  <p>{t("landlordMessagesEmptyChatTitle")}</p>
                   <p className="text-[11px] font-semibold text-zinc-400">
-                    Hãy gửi tin nhắn đầu tiên để bắt đầu trao đổi!
+                    {t("landlordMessagesEmptyChatDesc")}
                   </p>
                 </div>
               ) : (
@@ -830,7 +840,7 @@ function MessagesContent() {
                         className="max-w-md mx-auto my-3 p-3.5 bg-white border border-[#2AC1BC]/30 rounded-2xl shadow-2xs text-center space-y-2"
                       >
                         <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#2AC1BC]">
-                          <Sparkles className="w-4 h-4" /> Thông báo từ hệ thống Dormio
+                          <Sparkles className="w-4 h-4" /> {t("landlordMessagesSystemNoticeBadge")}
                         </div>
                         <p className="text-xs text-zinc-700 font-semibold leading-relaxed">
                           {msg.content}
@@ -869,7 +879,7 @@ function MessagesContent() {
                                   >
                                     <img
                                       src={att.url}
-                                      alt="Hình ảnh đính kèm"
+                                      alt={t("landlordMessagesAttachmentAlt")}
                                       className="w-full max-h-60 object-cover"
                                     />
                                   </div>
@@ -890,7 +900,7 @@ function MessagesContent() {
 
                                   <File className="w-4 h-4 shrink-0" />
                                   <span className="truncate flex-1">
-                                    {att.url.split("/").pop() || "Tệp đính kèm"}
+                                    {att.url.split("/").pop() || t("landlordMessagesDefaultAttachment")}
                                   </span>
                                   <Download className="w-3.5 h-3.5 shrink-0" />
                                 </a>
@@ -907,7 +917,7 @@ function MessagesContent() {
                       >
                         <span>{formatMessageTime(msg.sentAt)}</span>
                         {isMe && (
-                          <span title={msg.readAt ? "Đã xem" : "Đã gửi"}>
+                          <span title={msg.readAt ? t("landlordMessagesStatusSeen") : t("landlordMessagesStatusSent")}>
                             <CheckCheck
                               className={`w-3 h-3 ${
                                 msg.readAt ? "text-[#2AC1BC]" : "text-zinc-300"
@@ -945,7 +955,7 @@ function MessagesContent() {
             {pendingAttachments.length > 0 && (
               <div className="px-4 py-2 bg-zinc-50 border-t border-zinc-200 flex items-center gap-2 overflow-x-auto">
                 <span className="text-[10px] font-extrabold text-zinc-500 uppercase shrink-0">
-                  Đính kèm ({pendingAttachments.length}):
+                  {t("landlordMessagesAttachmentsCount").replace("{count}", String(pendingAttachments.length))}
                 </span>
                 {pendingAttachments.map((att, index) => (
                   <div
@@ -1002,7 +1012,7 @@ function MessagesContent() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-                  title="Đính kèm tệp"
+                  title={t("landlordMessagesTooltipAttachFile")}
                 >
                   <Paperclip className="w-4.5 h-4.5" />
                 </button>
@@ -1010,7 +1020,7 @@ function MessagesContent() {
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-                  title="Gửi hình ảnh"
+                  title={t("landlordMessagesTooltipSendImage")}
                 >
                   <ImageIcon className="w-4.5 h-4.5" />
                 </button>
@@ -1018,9 +1028,7 @@ function MessagesContent() {
                 <div className="flex-1 relative">
                   <input
                     type="text"
-                    placeholder={`Soạn tin nhắn gửi đến ${
-                      activeChat.participant.roomName || activeChat.participant.fullName
-                    }...`}
+                    placeholder={t("landlordMessagesComposePlaceholder").replace("{name}", activeChat.participant.roomName || activeChat.participant.fullName)}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     disabled={isSending}
@@ -1043,7 +1051,7 @@ function MessagesContent() {
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>Gửi</span> <Send className="w-3.5 h-3.5" />
+                      <span>{t("landlordMessagesSendBtn")}</span> <Send className="w-3.5 h-3.5" />
                     </>
                   )}
                 </button>
@@ -1053,16 +1061,16 @@ function MessagesContent() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400 space-y-3">
             <MessageSquare className="w-12 h-12 text-zinc-300 stroke-1" />
-            <h3 className="font-extrabold text-sm text-zinc-700">Chưa chọn cuộc trò chuyện</h3>
+            <h3 className="font-extrabold text-sm text-zinc-700">{t("landlordMessagesNoChatSelectedTitle")}</h3>
             <p className="text-xs max-w-sm">
-              Chọn một cuộc hội thoại từ danh sách bên trái hoặc nhấn nút "+" để bắt đầu nhắn tin với khách thuê.
+              {t("landlordMessagesNoChatSelectedDesc")}
             </p>
             {contacts.length > 0 && (
               <button
                 onClick={() => setShowNewChatModal(true)}
                 className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-bold rounded-xl text-xs transition-all cursor-pointer shadow-xs"
               >
-                Bắt đầu trò chuyện
+                {t("landlordMessagesBtnStartChatAction")}
               </button>
             )}
           </div>
@@ -1083,7 +1091,7 @@ function MessagesContent() {
           {/* Panel Header */}
           <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
             <h3 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> Thông tin chi tiết
+              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesDrawerTitle")}
             </h3>
             <button
               onClick={() => setShowRightDrawer(false)}
@@ -1106,13 +1114,13 @@ function MessagesContent() {
               <div>
                 <h4 className="font-black text-sm text-zinc-900">{activeChat.participant.fullName}</h4>
                 <p className="text-zinc-500 text-[11px] font-semibold mt-0.5">
-                  {activeChat.participant.phoneNumber || "Chưa cập nhật SĐT"}
+                  {activeChat.participant.phoneNumber || t("landlordMessagesNoPhone")}
                 </p>
               </div>
 
               <div className="pt-2 flex justify-center">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" /> Tài khoản Dormio
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" /> {t("landlordMessagesDormioAccount")}
                 </span>
               </div>
             </div>
@@ -1121,18 +1129,18 @@ function MessagesContent() {
             <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl space-y-3 shadow-2xs">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
                 <span className="font-extrabold text-sm text-[#2AC1BC]">
-                  {activeChat.participant.roomName || "Chưa gắn phòng"}
+                  {activeChat.participant.roomName || t("landlordMessagesNoRoom")}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100">
-                  {activeChat.participant.boardingHouseName || activeBuilding?.name || "Tòa nhà"}
+                  {activeChat.participant.boardingHouseName || activeBuilding?.name || (currentLocale === "en" ? "Building" : "Tòa nhà")}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 font-semibold">Vai trò:</span>
+                  <span className="text-zinc-500 font-semibold">{t("landlordMessagesRoleLabel")}</span>
                   <span className="font-extrabold text-zinc-900">
-                    {activeChat.participant.role === "tenant" ? "Khách thuê" : "Khách xem phòng"}
+                    {activeChat.participant.role === "tenant" ? t("landlordMessagesRoleTenant") : t("landlordMessagesRoleProspect")}
                   </span>
                 </div>
               </div>
@@ -1149,7 +1157,7 @@ function MessagesContent() {
                   className="w-full p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
                 >
                   <span className="flex items-center gap-2">
-                    <DoorOpen className="w-4 h-4 text-[#2AC1BC]" /> Xem Chi Tiết {activeChat.participant.roomName}
+                    <DoorOpen className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesViewRoomDetail").replace("{room}", activeChat.participant.roomName || "")}
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
                 </button>
@@ -1162,7 +1170,7 @@ function MessagesContent() {
                   className="w-full p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
                 >
                   <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#2AC1BC]" /> Xem Hợp Đồng {activeChat.participant.roomName}
+                    <FileText className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesViewContract").replace("{room}", activeChat.participant.roomName || "")}
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
                 </button>
@@ -1173,7 +1181,7 @@ function MessagesContent() {
             <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl space-y-3 shadow-2xs">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
                 <span className="font-extrabold text-xs text-zinc-900 flex items-center gap-1.5">
-                  <FileImage className="w-4 h-4 text-[#2AC1BC]" /> Lưu trữ Hình ảnh & Tệp
+                  <FileImage className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesMediaStorageTitle")}
                 </span>
                 <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-zinc-100 text-zinc-600 rounded-md">
                   {activeChatMedia.total}
@@ -1238,7 +1246,7 @@ function MessagesContent() {
               ) : (
                 <div className="py-4 text-center text-[11px] font-bold text-zinc-400 space-y-1">
                   <FileImage className="w-6 h-6 mx-auto text-zinc-300 stroke-1" />
-                  <p>Chưa có hình ảnh/tệp nào được gửi</p>
+                  <p>{t("landlordMessagesNoMedia")}</p>
                 </div>
               )}
             </div>
@@ -1257,9 +1265,9 @@ function MessagesContent() {
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[85vh]">
             <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between">
               <div>
-                <h3 className="font-extrabold text-sm text-zinc-900">Bắt đầu cuộc trò chuyện mới</h3>
+                <h3 className="font-extrabold text-sm text-zinc-900">{t("landlordMessagesNewModalTitle")}</h3>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  Chọn khách thuê từ danh sách phòng để bắt đầu nhắn tin
+                  {t("landlordMessagesNewModalSub")}
                 </p>
               </div>
               <button
@@ -1275,7 +1283,7 @@ function MessagesContent() {
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   type="text"
-                  placeholder="Tìm theo tên, số phòng hoặc số điện thoại..."
+                  placeholder={t("landlordMessagesNewModalSearch")}
                   value={newChatSearch}
                   onChange={(e) => setNewChatSearch(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -1287,14 +1295,14 @@ function MessagesContent() {
               {isCreatingChat ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
-                  <span>Đang mở cuộc trò chuyện...</span>
+                  <span>{t("landlordMessagesOpeningChat")}</span>
                 </div>
               ) : filteredContacts.length === 0 ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-1">
                   <User className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
-                  <p>Không tìm thấy khách thuê phù hợp.</p>
+                  <p>{t("landlordMessagesNoContactsTitle")}</p>
                   <p className="text-[10px] text-zinc-400">
-                    Khách thuê sẽ xuất hiện khi có hợp đồng đang hiệu lực.
+                    {t("landlordMessagesNoContactsDesc")}
                   </p>
                 </div>
               ) : (
@@ -1325,7 +1333,7 @@ function MessagesContent() {
                           )}
                         </div>
                         <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
-                          {contact.phoneNumber || "Chưa có SĐT"} • {contact.boardingHouseName || "Tòa nhà"}
+                          {contact.phoneNumber || t("landlordDepositsNoPhoneShort")} • {contact.boardingHouseName || (currentLocale === "en" ? "Building" : "Tòa nhà")}
                         </p>
                       </div>
                     </div>
@@ -1352,17 +1360,17 @@ function MessagesContent() {
               <div className="p-2 bg-amber-50 rounded-xl">
                 <AlertCircle className="w-5 h-5" />
               </div>
-              <h4 className="font-extrabold text-sm text-zinc-900">Xác nhận đóng form</h4>
+              <h4 className="font-extrabold text-sm text-zinc-900">{t("landlordMessagesConfirmCloseTitle")}</h4>
             </div>
             <p className="text-xs text-zinc-600 leading-relaxed">
-              Bạn có nội dung tìm kiếm chưa hoàn tất. Bạn có chắc muốn hủy bỏ và đóng form không?
+              {t("landlordMessagesConfirmCloseDesc")}
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowCloseModalConfirm(false)}
                 className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordMessagesConfirmCloseKeep")}
               </button>
               <button
                 onClick={() => {
@@ -1372,7 +1380,7 @@ function MessagesContent() {
                 }}
                 className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordMessagesConfirmCloseDiscard")}
               </button>
             </div>
           </div>
@@ -1396,7 +1404,7 @@ function MessagesContent() {
             </button>
             <img
               src={previewImage}
-              alt="Xem trước hình ảnh"
+              alt={t("landlordMessagesImagePreviewAlt")}
               className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
             />
           </div>
@@ -1406,15 +1414,18 @@ function MessagesContent() {
   );
 }
 
+function LandlordMessagesFallback() {
+  const t = useTranslations("landlord");
+  return (
+    <div className="p-8 text-center text-xs font-bold text-zinc-400">
+      {t("landlordMessagesLoadingMessages")}
+    </div>
+  );
+}
+
 export default function LandlordMessagesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 text-center text-xs font-bold text-zinc-400">
-          Đang tải tin nhắn...
-        </div>
-      }
-    >
+    <Suspense fallback={<LandlordMessagesFallback />}>
       <MessagesContent />
     </Suspense>
   );

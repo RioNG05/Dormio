@@ -105,7 +105,7 @@ export default function TenantRoomDetailPage() {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
         <div className="w-8 h-8 border-2 border-[#2AC1BC] border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs text-zinc-500 font-medium">Đang tải thông tin phòng...</span>
+        <span className="text-xs text-zinc-500 font-medium">{t("tenantLoadingRoomDetails")}</span>
       </div>
     );
   }
@@ -117,12 +117,10 @@ export default function TenantRoomDetailPage() {
           <Home className="w-8 h-8" />
         </div>
         <h2 className="text-lg sm:text-xl font-black text-zinc-900">
-          {locale === "en" ? "Room tenancy not found" : "Không tìm thấy thông tin phòng thuê"}
+          {t("tenantRoomNotFoundTitle")}
         </h2>
         <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto">
-          {locale === "en"
-            ? "You currently do not have an active room contract or the room ID is invalid."
-            : "Tài khoản của bạn hiện chưa được liên kết với hợp đồng phòng thuê nào có hiệu lực trên hệ thống."}
+          {t("tenantRoomNotFoundDesc")}
         </p>
         <div className="pt-4">
           <Link
@@ -130,7 +128,7 @@ export default function TenantRoomDetailPage() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold transition-all shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{locale === "en" ? "Back to Dashboard" : "Quay lại Trang Người Thuê"}</span>
+            <span>{t("tenantBackToDashboard")}</span>
           </Link>
         </div>
       </div>
@@ -140,11 +138,11 @@ export default function TenantRoomDetailPage() {
   const room = tenancyData.room;
   const house = tenancyData.boardingHouse || {
     id: "bh-unknown",
-    name: "Tòa nhà trọ",
-    address: "Địa chỉ phòng",
+    name: t("tenantFallbackBuildingName"),
+    address: t("tenantFallbackAddress"),
     landlord: {
-      name: "Chủ nhà trọ",
-      phoneNumber: "Chưa cập nhật",
+      name: t("tenantFallbackLandlord"),
+      phoneNumber: t("tenantFallbackNotUpdated"),
     },
   };
   const contract = tenancyData.contract || {
@@ -175,11 +173,11 @@ export default function TenantRoomDetailPage() {
           className="inline-flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 transition-colors bg-white px-3.5 py-2 rounded-xl border border-zinc-200/80 shadow-sm"
         >
           <ArrowLeft className="w-4 h-4 text-[#2AC1BC]" />
-          <span>{locale === "en" ? "Back to Dashboard" : "Quay lại Dashboard"}</span>
+          <span>{t("tenantBackToDashboard")}</span>
         </Link>
         <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-200 flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          {locale === "en" ? "Active Tenancy" : "Đang thuê hiệu lực"}
+          {t("tenantActiveTenancyBadge")}
         </span>
       </div>
 
@@ -193,7 +191,7 @@ export default function TenantRoomDetailPage() {
                 {room.roomTypeName || "Studio"}
               </span>
               <span className="text-xs text-zinc-400 font-semibold">
-                {locale === "en" ? `Floor ${room.floor}` : `Tầng ${room.floor}`}
+                {t("tenantFloorLabel", { floor: room.floor })}
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight flex items-center gap-3">
@@ -208,13 +206,13 @@ export default function TenantRoomDetailPage() {
 
           <div className="bg-white/10 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 space-y-1 sm:text-right shrink-0">
             <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-              {locale === "en" ? "Monthly Rent" : "Giá thuê hàng tháng"}
+              {t("tenantMonthlyRent")}
             </span>
             <div className="text-2xl sm:text-3xl font-black text-[#2AC1BC]">
               {formatCurrency(contract.rentPrice)}
             </div>
             <span className="text-[11px] text-zinc-400 block font-medium">
-              {locale === "en" ? `Due on day ${contract.monthlyPaymentDate} each month` : `Hạn đóng ngày ${contract.monthlyPaymentDate} hàng tháng`}
+              {t("tenantRentDueOnDay", { day: contract.monthlyPaymentDate })}
             </span>
           </div>
         </div>
@@ -229,7 +227,7 @@ export default function TenantRoomDetailPage() {
             <div className="border-b border-zinc-100 pb-3 flex items-center justify-between">
               <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wide flex items-center gap-2">
                 <Home className="w-4 h-4 text-[#2AC1BC]" />
-                {locale === "en" ? "Room Specifications" : "Thông số phòng"}
+                {t("tenantRoomSpecifications")}
               </h3>
               <span className="text-xs font-bold text-zinc-500">ID: {room.id}</span>
             </div>
@@ -237,25 +235,25 @@ export default function TenantRoomDetailPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                  {locale === "en" ? "Floor Area" : "Diện tích"}
+                  {t("tenantFloorArea")}
                 </span>
                 <span className="text-sm font-black text-zinc-900 block">{room.area || 25} m²</span>
               </div>
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                  {locale === "en" ? "Max Occupants" : "Số người ở tối đa"}
+                  {t("tenantMaxOccupants")}
                 </span>
-                <span className="text-sm font-black text-zinc-900 block">{room.maxOccupants || 2} người</span>
+                <span className="text-sm font-black text-zinc-900 block">{t("tenantOccupantsCount", { count: room.maxOccupants || 2 })}</span>
               </div>
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                  {locale === "en" ? "Floor Level" : "Tầng"}
+                  {t("tenantFloorLevel")}
                 </span>
-                <span className="text-sm font-black text-zinc-900 block">Tầng {room.floor}</span>
+                <span className="text-sm font-black text-zinc-900 block">{t("tenantFloorLabel", { floor: room.floor })}</span>
               </div>
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                  {locale === "en" ? "Security Deposit" : "Tiền cọc"}
+                  {t("tenantDeposit")}
                 </span>
                 <span className="text-sm font-black text-emerald-600 block">{formatCurrency(contract.depositAmount)}</span>
               </div>
@@ -267,9 +265,9 @@ export default function TenantRoomDetailPage() {
             <div className="border-b border-zinc-100 pb-3 flex items-center justify-between">
               <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wide flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#2AC1BC]" />
-                {locale === "en" ? "Registered Utility Services" : "Dịch vụ phòng đang sử dụng"}
+                {t("tenantRegisteredServices")}
               </h3>
-              <span className="text-xs text-zinc-400 font-semibold">{services.length} dịch vụ</span>
+              <span className="text-xs text-zinc-400 font-semibold">{t("tenantActiveServices", { count: services.length })}</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -282,7 +280,7 @@ export default function TenantRoomDetailPage() {
                     <div>
                       <p className="text-xs font-bold text-zinc-800">{svc.name}</p>
                       <span className="text-[10px] text-zinc-400 font-medium">
-                        {svc.isMetered ? (locale === "en" ? "Metered usage" : "Theo chỉ số công tơ") : (locale === "en" ? "Fixed rate" : "Cố định")}
+                        {svc.isMetered ? t("tenantServiceMetered") : t("tenantServiceFixed")}
                       </span>
                     </div>
                   </div>
@@ -301,15 +299,15 @@ export default function TenantRoomDetailPage() {
           {/* Landlord Contact Card */}
           <div className="bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-sm space-y-4">
             <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider">
-              {locale === "en" ? "Building Landlord" : "Chủ Nhà Trọ"}
+              {t("tenantRoleLandlord")}
             </h3>
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#2AC1BC] to-teal-400 text-white font-black text-base flex items-center justify-center shadow-md shadow-[#2AC1BC]/20">
                 {(house.landlord?.name || "C").charAt(0)}
               </div>
               <div className="space-y-0.5">
-                <h4 className="text-sm font-black text-zinc-900">{house.landlord?.name || "Chủ nhà trọ"}</h4>
-                <p className="text-xs text-zinc-500 font-medium">{house.landlord?.phoneNumber || "Chưa cập nhật"}</p>
+                <h4 className="text-sm font-black text-zinc-900">{house.landlord?.name || t("tenantFallbackLandlord")}</h4>
+                <p className="text-xs text-zinc-500 font-medium">{house.landlord?.phoneNumber || t("tenantFallbackNotUpdated")}</p>
               </div>
             </div>
 
@@ -319,35 +317,35 @@ export default function TenantRoomDetailPage() {
                 className="w-full py-2.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/20 flex items-center justify-center gap-2 transition-all"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>{locale === "en" ? "Call Landlord" : "Gọi điện cho chủ trọ"}</span>
+                <span>{t("tenantCallLandlord")}</span>
               </a>
               <Link
                 href="/tenant/messages"
                 className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-all"
               >
-                <span>{locale === "en" ? "Chat in Portal" : "Nhắn tin qua hệ thống"}</span>
+                <span>{t("tenantChatInPortal")}</span>
               </Link>
             </div>
           </div>
 
           {/* Quick Navigation Links */}
-          <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-200/80 space-y-3">
+          <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-200/80 shadow-sm space-y-3">
             <h4 className="text-xs font-bold text-zinc-700">
-              {locale === "en" ? "Related Actions" : "Thao tác liên quan"}
+              {t("tenantRelatedActions")}
             </h4>
             <div className="space-y-2">
               <Link
                 href="/tenant/invoices"
                 className="flex items-center justify-between p-3 bg-white rounded-xl border border-zinc-200/60 hover:border-[#2AC1BC] text-xs font-bold text-zinc-700 hover:text-[#2AC1BC] transition-colors"
               >
-                <span>{locale === "en" ? "View Monthly Invoices" : "Xem hóa đơn tiền phòng"}</span>
+                <span>{t("tenantViewMonthlyInvoices")}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
               </Link>
               <Link
                 href="/tenant/complaints"
                 className="flex items-center justify-between p-3 bg-white rounded-xl border border-zinc-200/60 hover:border-[#2AC1BC] text-xs font-bold text-zinc-700 hover:text-[#2AC1BC] transition-colors"
               >
-                <span>{locale === "en" ? "Report an Issue / Repair" : "Gửi yêu cầu sửa chữa phòng"}</span>
+                <span>{t("tenantReportIssueOrRepair")}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
               </Link>
             </div>

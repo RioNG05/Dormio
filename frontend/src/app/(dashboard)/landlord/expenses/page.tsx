@@ -8,7 +8,6 @@ import {
   Wallet,
   LayoutGrid,
   List,
-  Calendar,
   Check,
   X,
   AlertTriangle,
@@ -25,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import {
   expenseService,
   ExpenseItem,
@@ -33,19 +33,11 @@ import {
 } from "@/services/expense.service";
 import { getRooms, RoomItem } from "@/services/room.service";
 
-// Large Money Formatter Helper
-const formatLargeMoney = (amount: number): string => {
-  if (amount >= 1_000_000_000) {
-    return `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, "")} Tỷ ₫`;
-  }
-  if (amount >= 1_000_000) {
-    return `${(amount / 1_000_000).toFixed(2).replace(/\.00$/, "")}M ₫`;
-  }
-  return `${amount.toLocaleString("vi-VN")} ₫`;
-};
-
 export default function ExpensesPage() {
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
 
   const [isMounted, setIsMounted] = useState(false);
   const [expensesList, setExpensesList] = useState<ExpenseItem[]>([]);
@@ -98,39 +90,83 @@ export default function ExpensesPage() {
   const [isFormDirty, setIsFormDirty] = useState<boolean>(false);
   const [confirmCloseTarget, setConfirmCloseTarget] = useState<"create" | "edit" | null>(null);
 
+  // Large Money Formatter Helper
+  const formatLargeMoney = (amount: number): string => {
+    if (amount >= 1_000_000_000) {
+      return isEn
+        ? `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, "")}B ₫`
+        : `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, "")} Tỷ ₫`;
+    }
+    if (amount >= 1_000_000) {
+      return `${(amount / 1_000_000).toFixed(2).replace(/\.00$/, "")}M ₫`;
+    }
+    return isEn ? `${amount.toLocaleString("en-US")} ₫` : `${amount.toLocaleString("vi-VN")} ₫`;
+  };
+
+  const formatCurrency = (amt: number) => {
+    return isEn ? `${amt.toLocaleString("en-US")} ₫` : `${amt.toLocaleString("vi-VN")} ₫`;
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(isEn ? "en-US" : "vi-VN");
+  };
+
+  const getCategoryLabel = (cat: string) => {
+    switch (cat) {
+      case "Bảo trì & Sửa chữa":
+        return t("landlordExpensesCatMaintenance");
+      case "Điện nước & Dịch vụ":
+        return t("landlordExpensesCatUtilities");
+      case "Vệ sinh & An ninh":
+        return t("landlordExpensesCatCleaning");
+      case "Trang thiết bị":
+        return t("landlordExpensesCatEquipment");
+      case "Chi phí khác":
+        return t("landlordExpensesCatOther");
+      default:
+        return cat;
+    }
+  };
+
+  const getScopeLabel = (exp: ExpenseItem) => {
+    if (!exp.roomId || exp.roomName === "Toàn tòa nhà") {
+      return t("landlordExpensesPropertyWide");
+    }
+    return exp.roomName;
+  };
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Update default pageSize on viewMode change per Rule #9
+  // Update pageSize on viewMode change per Rule #9
   useEffect(() => {
-    setPageSize(viewMode === "grid" ? 6 : 10);
+    const defaultSize = viewMode === "grid" ? 6 : 10;
+    setPageSize(defaultSize);
     setCurrentPage(1);
   }, [viewMode]);
 
-  // Load available rooms for active building
+  // Load Rooms list for dropdown
   useEffect(() => {
     if (!activeBuilding?.id) return;
-    getRooms(activeBuilding.id)
+    getRooms(activeBuilding.id, { limit: 100 })
       .then((res) => {
-        if (res?.data) {
+        if (res && res.data) {
           setAvailableRooms(res.data);
         }
       })
-      .catch((err) => {
-        console.error("Failed to load rooms:", err);
-      });
+      .catch((err) => console.error("Failed to load rooms:", err));
   }, [activeBuilding?.id]);
 
-  // Fetch expenses from API (UC-L-17)
+  // Fetch Expenses List & Summary (UC-L-17)
   const fetchExpenses = useCallback(async () => {
     if (!activeBuilding?.id) return;
     try {
       setIsLoading(true);
       const res = await expenseService.getExpenses(activeBuilding.id, {
         search: searchTerm,
-        category: activeCategoryTab,
-        status: activeStatusTab,
+        category: activeCategoryTab === "all" ? undefined : activeCategoryTab,
+        status: activeStatusTab === "all" ? undefined : activeStatusTab,
         page: currentPage,
         limit: pageSize,
       });
@@ -141,7 +177,7 @@ export default function ExpensesPage() {
         setTotalRecords(res.meta.total || 0);
       }
     } catch (err) {
-      console.error("Failed to load expenses:", err);
+      console.error("Failed to fetch expenses:", err);
     } finally {
       setIsLoading(false);
     }
@@ -224,7 +260,7 @@ export default function ExpensesPage() {
   const handleCreateExpense = async () => {
     if (!activeBuilding?.id) return;
     if (!expenseForm.name.trim() || !expenseForm.amount || Number(expenseForm.amount) <= 0) {
-      alert("Vui lòng điền đầy đủ Tên khoản chi và Số tiền hợp lệ.");
+      alert(t("landlordExpensesAlertValidation"));
       return;
     }
 
@@ -245,7 +281,7 @@ export default function ExpensesPage() {
       resetForm();
       await fetchExpenses();
     } catch (err: unknown) {
-      alert((err as Error)?.message || "Không thể tạo khoản chi phí.");
+      alert((err as Error)?.message || t("landlordExpensesAlertCreateFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -255,7 +291,7 @@ export default function ExpensesPage() {
   const handleUpdateExpense = async () => {
     if (!activeBuilding?.id || !editingExpense) return;
     if (!expenseForm.name.trim() || !expenseForm.amount || Number(expenseForm.amount) <= 0) {
-      alert("Vui lòng điền đầy đủ Tên khoản chi và Số tiền hợp lệ.");
+      alert(t("landlordExpensesAlertValidation"));
       return;
     }
 
@@ -276,7 +312,7 @@ export default function ExpensesPage() {
       resetForm();
       await fetchExpenses();
     } catch (err: unknown) {
-      alert((err as Error)?.message || "Không thể cập nhật khoản chi.");
+      alert((err as Error)?.message || t("landlordExpensesAlertUpdateFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -295,7 +331,7 @@ export default function ExpensesPage() {
       }
       await fetchExpenses();
     } catch (err: unknown) {
-      alert((err as Error)?.message || "Không thể cập nhật trạng thái thanh toán.");
+      alert((err as Error)?.message || t("landlordExpensesAlertPaymentFailed"));
     }
   };
 
@@ -316,35 +352,50 @@ export default function ExpensesPage() {
       setDeletingExpenseTarget(null);
       await fetchExpenses();
     } catch (err: unknown) {
-      alert((err as Error)?.message || "Không thể xóa khoản chi phí.");
+      alert((err as Error)?.message || t("landlordExpensesAlertDeleteFailed"));
     }
   };
 
   // Export CSV
   const handleExportCSV = () => {
     if (expensesList.length === 0) {
-      alert("Không có dữ liệu chi phí để xuất.");
+      alert(t("landlordExpensesAlertNoDataExport"));
       return;
     }
 
-    const headers = [
-      "Mã Chi Phí",
-      "Tên Khoản Chi",
-      "Danh Mục",
-      "Phạm Vi",
-      "Số Tiền (VND)",
-      "Trạng Thái",
-      "Ngày Chi",
-      "Ghi Chú",
-    ];
+    const headers = isEn
+      ? [
+          "Expense Code",
+          "Expense Title",
+          "Category",
+          "Scope",
+          "Amount (VND)",
+          "Status",
+          "Paid Date",
+          "Notes",
+        ]
+      : [
+          "Mã Chi Phí",
+          "Tên Khoản Chi",
+          "Danh Mục",
+          "Phạm Vi",
+          "Số Tiền (VND)",
+          "Trạng Thái",
+          "Ngày Chi",
+          "Ghi Chú",
+        ];
 
     const rows = expensesList.map((exp) => [
       exp.code,
       exp.name,
-      exp.category,
-      exp.roomName,
+      getCategoryLabel(exp.category),
+      getScopeLabel(exp),
       exp.amount,
-      exp.status === "paid" ? "Đã thanh toán" : exp.status === "pending" ? "Chờ thanh toán" : "Đã hủy",
+      exp.status === "paid"
+        ? isEn ? "Paid" : "Đã thanh toán"
+        : exp.status === "pending"
+        ? isEn ? "Pending" : "Chờ thanh toán"
+        : isEn ? "Canceled" : "Đã hủy",
       exp.paidAt ? exp.paidAt.split("T")[0] : "",
       exp.description || "",
     ]);
@@ -382,20 +433,20 @@ export default function ExpensesPage() {
     if (status === "paid") {
       return (
         <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-[#2AC1BC]/15 text-[#0d6e6b] border border-[#2AC1BC]/30 flex items-center gap-1 shrink-0">
-          <Check className="w-3 h-3" /> Đã thanh toán
+          <Check className="w-3 h-3" /> {t("landlordExpensesStatusPaid")}
         </span>
       );
     }
     if (status === "pending") {
       return (
         <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 shrink-0">
-          <Clock className="w-3 h-3 text-amber-500" /> Chờ thanh toán
+          <Clock className="w-3 h-3 text-amber-500" /> {t("landlordExpensesStatusPending")}
         </span>
       );
     }
     return (
       <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-zinc-100 text-zinc-500 border border-zinc-200 flex items-center gap-1 shrink-0">
-        <X className="w-3 h-3" /> Đã hủy
+        <X className="w-3 h-3" /> {t("landlordExpensesStatusCanceled")}
       </span>
     );
   };
@@ -408,10 +459,10 @@ export default function ExpensesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-[#2AC1BC]" /> Quản Lý Chi Phí Vận Hành
+            <Wallet className="w-6 h-6 text-[#2AC1BC]" /> {t("landlordExpensesTitle")}
           </h1>
           <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            Theo dõi hóa đơn dịch vụ, chi phí bảo trì &amp; mua sắm thiết bị tòa nhà (UC-L-17).
+            {t("landlordExpensesSubtitle")}
           </p>
         </div>
 
@@ -422,7 +473,7 @@ export default function ExpensesPage() {
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-[#2AC1BC]" : ""}`} />
-            <span>Tải lại</span>
+            <span>{t("landlordExpensesReload")}</span>
           </button>
 
           <button
@@ -430,7 +481,7 @@ export default function ExpensesPage() {
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>Xuất Excel</span>
+            <span>{t("landlordExpensesExportExcel")}</span>
           </button>
 
           <button
@@ -440,7 +491,7 @@ export default function ExpensesPage() {
             }}
             className="flex items-center justify-center gap-2 px-4 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap active:scale-95"
           >
-            <Plus className="w-4 h-4 shrink-0" /> Thêm Khoản Chi Mới
+            <Plus className="w-4 h-4 shrink-0" /> {t("landlordExpensesAddNew")}
           </button>
         </div>
       </div>
@@ -455,7 +506,7 @@ export default function ExpensesPage() {
           {/* Left Title, Address Pill */}
           <div className="space-y-3 max-w-xl">
             <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding?.name || "Tòa Nhà"}
+              {activeBuilding?.name || (isEn ? "Building" : "Tòa Nhà")}
             </h2>
 
             {activeBuilding?.address && (
@@ -468,7 +519,7 @@ export default function ExpensesPage() {
             )}
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Kiểm soát ngân sách chi phí vận hành, bảo trì thiết bị và hóa đơn phát sinh minh bạch cho tòa nhà.
+              {t("landlordExpensesHeroSubtitle")}
             </p>
           </div>
 
@@ -480,7 +531,7 @@ export default function ExpensesPage() {
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">
-                    TỔNG CHI PHÍ
+                    {t("landlordExpensesTotalExpenses")}
                   </span>
                   <span className="font-black text-rose-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(summary.totalAmount)}
@@ -493,7 +544,7 @@ export default function ExpensesPage() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] uppercase font-extrabold text-[#2AC1BC] tracking-wider whitespace-nowrap">
-                    ĐÃ THANH TOÁN
+                    {t("landlordExpensesPaidExpenses")}
                   </span>
                   <span className="font-black text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(summary.paidAmount)}
@@ -506,7 +557,7 @@ export default function ExpensesPage() {
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">
-                    CHỜ THANH TOÁN
+                    {t("landlordExpensesPendingExpenses")}
                   </span>
                   <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
                     {formatLargeMoney(summary.pendingAmount)}
@@ -523,7 +574,7 @@ export default function ExpensesPage() {
         {/* Category Switcher Horizontal Scroll */}
         <div className="overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 flex items-center gap-1.5 border-b border-zinc-100 pb-3">
           <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
-            Danh mục:
+            {t("landlordExpensesCategoryColon")}
           </span>
           {categoriesList.map((cat) => (
             <button
@@ -538,7 +589,9 @@ export default function ExpensesPage() {
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
               }`}
             >
-              {cat === "all" ? `Tất cả danh mục (${summary.totalCount})` : cat}
+              {cat === "all"
+                ? t("landlordExpensesAllCategoriesWithCount", { count: summary.totalCount })
+                : getCategoryLabel(cat)}
             </button>
           ))}
         </div>
@@ -550,7 +603,7 @@ export default function ExpensesPage() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm mã chi phí, tên khoản chi, phòng, ghi chú..."
+              placeholder={t("landlordExpensesSearchPlaceholder")}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -580,7 +633,7 @@ export default function ExpensesPage() {
                   ? "bg-white text-zinc-900 shadow-sm"
                   : "text-zinc-500 hover:text-zinc-900"
               }`}
-              title="Dạng Lưới (Grid)"
+              title={t("landlordExpensesViewGrid")}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
             </button>
@@ -591,7 +644,7 @@ export default function ExpensesPage() {
                   ? "bg-white text-zinc-900 shadow-sm"
                   : "text-zinc-500 hover:text-zinc-900"
               }`}
-              title="Dạng Bảng (Table)"
+              title={t("landlordExpensesViewTable")}
             >
               <List className="w-3.5 h-3.5" />
             </button>
@@ -611,7 +664,7 @@ export default function ExpensesPage() {
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
             }`}
           >
-            Tất cả
+            {t("landlordExpensesAllStatuses")}
           </button>
           <button
             onClick={() => {
@@ -624,7 +677,7 @@ export default function ExpensesPage() {
                 : "bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20"
             }`}
           >
-            Đã thanh toán
+            {t("landlordExpensesStatusPaid")}
           </button>
           <button
             onClick={() => {
@@ -637,7 +690,7 @@ export default function ExpensesPage() {
                 : "bg-amber-50 text-amber-700 hover:bg-amber-100"
             }`}
           >
-            Chờ thanh toán
+            {t("landlordExpensesStatusPending")}
           </button>
           <button
             onClick={() => {
@@ -650,7 +703,7 @@ export default function ExpensesPage() {
                 : "bg-rose-50 text-rose-700 hover:bg-rose-100"
             }`}
           >
-            Đã hủy
+            {t("landlordExpensesStatusCanceled")}
           </button>
         </div>
       </div>
@@ -659,16 +712,16 @@ export default function ExpensesPage() {
       {isLoading ? (
         <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-          <p className="text-sm font-bold text-zinc-700">Đang tải danh sách chi phí...</p>
+          <p className="text-sm font-bold text-zinc-700">{t("landlordExpensesLoading")}</p>
         </div>
       ) : expensesList.length === 0 ? (
         <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
           <Wallet className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
           <h3 className="font-extrabold text-sm text-zinc-800">
-            Không tìm thấy khoản chi phí nào phù hợp
+            {t("landlordExpensesNotFound")}
           </h3>
           <p className="text-xs text-zinc-400">
-            Thử chọn danh mục khác, nhập cụm từ tìm kiếm mới hoặc tạo khoản chi phí đầu tiên.
+            {t("landlordExpensesNotFoundDesc")}
           </p>
           <button
             onClick={() => {
@@ -677,7 +730,7 @@ export default function ExpensesPage() {
             }}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl transition-all"
           >
-            <Plus className="w-4 h-4" /> Thêm khoản chi mới
+            <Plus className="w-4 h-4" /> {t("landlordExpensesAddNew")}
           </button>
         </div>
       ) : viewMode === "grid" ? (
@@ -700,7 +753,7 @@ export default function ExpensesPage() {
 
                 <div>
                   <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-zinc-100 text-zinc-700 border border-zinc-200 inline-block mb-1.5">
-                    {exp.category}
+                    {getCategoryLabel(exp.category)}
                   </span>
                   <h4 className="font-black text-sm text-zinc-900 leading-snug line-clamp-2">
                     {exp.name}
@@ -710,23 +763,23 @@ export default function ExpensesPage() {
                 {/* Amount Highlight */}
                 <div className="p-3 bg-rose-50/50 border border-rose-100 rounded-xl flex items-center justify-between">
                   <span className="text-[11px] font-extrabold text-rose-800 uppercase">
-                    Số tiền chi
+                    {t("landlordExpensesExpenseAmount")}
                   </span>
                   <span className="text-base font-black text-rose-600 whitespace-nowrap">
-                    -{exp.amount.toLocaleString("vi-VN")} ₫
+                    -{formatCurrency(exp.amount)}
                   </span>
                 </div>
 
                 {/* Scope & Date Meta */}
                 <div className="space-y-1.5 text-xs text-zinc-600 font-medium">
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">Phạm vi:</span>
-                    <span className="font-extrabold text-zinc-800">{exp.roomName}</span>
+                    <span className="text-zinc-400">{t("landlordExpensesScopeColon")}</span>
+                    <span className="font-extrabold text-zinc-800">{getScopeLabel(exp)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">Ngày ghi nhận:</span>
+                    <span className="text-zinc-400">{t("landlordExpensesDateColon")}</span>
                     <span className="font-semibold text-zinc-700">
-                      {new Date(exp.paidAt).toLocaleDateString("vi-VN")}
+                      {formatDate(exp.paidAt)}
                     </span>
                   </div>
                 </div>
@@ -738,16 +791,16 @@ export default function ExpensesPage() {
                   onClick={() => setSelectedExpense(exp)}
                   className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex-1 text-center"
                 >
-                  Xem chi tiết
+                  {t("landlordExpensesViewDetail")}
                 </button>
 
                 {exp.status === "pending" && (
                   <button
                     onClick={() => handleMarkAsPaid(exp.id)}
                     className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl transition-all cursor-pointer whitespace-nowrap shadow-sm"
-                    title="Đánh dấu đã thanh toán"
+                    title={t("landlordExpensesMarkPaid")}
                   >
-                    Đã trả
+                    {t("landlordExpensesMarkPaid")}
                   </button>
                 )}
 
@@ -756,7 +809,7 @@ export default function ExpensesPage() {
                     <button
                       onClick={() => openEditModal(exp)}
                       className="p-1.5 text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
-                      title="Khoản chi đã thanh toán - Click để xem chi tiết khóa"
+                      title={t("landlordExpensesLockedTooltip")}
                     >
                       <Lock className="w-4 h-4 text-amber-500" />
                     </button>
@@ -764,7 +817,7 @@ export default function ExpensesPage() {
                     <button
                       onClick={() => openEditModal(exp)}
                       className="p-1.5 text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
-                      title="Chỉnh sửa"
+                      title={t("landlordExpensesEditTooltip")}
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
@@ -772,7 +825,7 @@ export default function ExpensesPage() {
                   <button
                     onClick={() => handleDeleteExpense(exp)}
                     className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
-                    title="Xóa khoản chi"
+                    title={t("landlordExpensesDeleteTooltip")}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -788,13 +841,13 @@ export default function ExpensesPage() {
             <table className="w-full text-left border-collapse text-xs min-w-[720px]">
               <thead>
                 <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-extrabold uppercase tracking-wider text-[10px] whitespace-nowrap">
-                  <th className="py-3 px-3.5 sm:px-4 min-w-[130px]">Mã Chi Phí</th>
-                  <th className="py-3 px-3.5 sm:px-4 min-w-[220px]">Tên &amp; Danh Mục</th>
-                  <th className="py-3 px-3.5 sm:px-4 min-w-[120px]">Phạm Vi</th>
-                  <th className="py-3 px-3.5 sm:px-4 min-w-[110px]">Ngày Ghi Nhận</th>
-                  <th className="py-3 px-3.5 sm:px-4 min-w-[130px]">Số Tiền</th>
-                  <th className="py-3 px-3.5 sm:px-4 min-w-[120px]">Trạng Thái</th>
-                  <th className="py-3 px-3.5 sm:px-4 min-w-[110px] text-right">Thao Tác</th>
+                  <th className="py-3 px-3.5 sm:px-4 min-w-[130px]">{t("landlordExpensesCode")}</th>
+                  <th className="py-3 px-3.5 sm:px-4 min-w-[220px]">{t("landlordExpensesNameAndCategory")}</th>
+                  <th className="py-3 px-3.5 sm:px-4 min-w-[120px]">{t("landlordExpensesScope")}</th>
+                  <th className="py-3 px-3.5 sm:px-4 min-w-[110px]">{t("landlordExpensesDate")}</th>
+                  <th className="py-3 px-3.5 sm:px-4 min-w-[130px]">{t("landlordExpensesAmount")}</th>
+                  <th className="py-3 px-3.5 sm:px-4 min-w-[120px]">{t("landlordExpensesStatus")}</th>
+                  <th className="py-3 px-3.5 sm:px-4 min-w-[110px] text-right">{t("landlordExpensesActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-semibold text-zinc-700">
@@ -813,21 +866,21 @@ export default function ExpensesPage() {
                           {exp.name}
                         </div>
                         <span className="text-[10px] text-zinc-400 font-medium block mt-0.5">
-                          {exp.category}
+                          {getCategoryLabel(exp.category)}
                         </span>
                       </div>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 font-bold text-zinc-800 whitespace-nowrap">
-                      {exp.roomName}
+                      {getScopeLabel(exp)}
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 text-zinc-600 whitespace-nowrap">
-                      {new Date(exp.paidAt).toLocaleDateString("vi-VN")}
+                      {formatDate(exp.paidAt)}
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 font-black text-rose-600 whitespace-nowrap">
-                      -{exp.amount.toLocaleString("vi-VN")} ₫
+                      -{formatCurrency(exp.amount)}
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 whitespace-nowrap">
@@ -840,13 +893,13 @@ export default function ExpensesPage() {
                           onClick={() => setSelectedExpense(exp)}
                           className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-[11px] font-bold rounded-lg cursor-pointer transition-all"
                         >
-                          Chi tiết
+                          {t("landlordExpensesDetailBtn")}
                         </button>
                         {exp.status === "paid" ? (
                           <button
                             onClick={() => openEditModal(exp)}
                             className="p-1 text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
-                            title="Khoản chi đã thanh toán - Click để xem chi tiết khóa"
+                            title={t("landlordExpensesLockedTooltip")}
                           >
                             <Lock className="w-3.5 h-3.5 text-amber-500" />
                           </button>
@@ -854,7 +907,7 @@ export default function ExpensesPage() {
                           <button
                             onClick={() => openEditModal(exp)}
                             className="p-1 text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
-                            title="Chỉnh sửa"
+                            title={t("landlordExpensesEditTooltip")}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -863,7 +916,7 @@ export default function ExpensesPage() {
                           <button
                             onClick={() => openEditModal(exp)}
                             className="p-1 text-zinc-300 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
-                            title="Khoản chi đã thanh toán - Đã khóa không thể xóa"
+                            title={t("landlordExpensesLockedDeleteTooltip")}
                           >
                             <Trash2 className="w-3.5 h-3.5 text-zinc-300 hover:text-amber-500" />
                           </button>
@@ -871,7 +924,7 @@ export default function ExpensesPage() {
                           <button
                             onClick={() => handleDeleteExpense(exp)}
                             className="p-1 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
-                            title="Xóa khoản chi"
+                            title={t("landlordExpensesDeleteTooltip")}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -890,7 +943,7 @@ export default function ExpensesPage() {
       {expensesList.length > 0 && (
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-sm">
           <div className="flex items-center gap-2 text-zinc-500 font-medium">
-            <span>Hiển thị</span>
+            <span>{t("landlordExpensesPaginationShowing")}</span>
             <input
               type="number"
               min={1}
@@ -905,10 +958,10 @@ export default function ExpensesPage() {
               }}
               className="w-14 px-2 py-1 text-center font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2AC1BC]"
             />
-            <span>/ trang</span>
+            <span>{t("landlordExpensesPaginationPerPage")}</span>
             <span className="text-zinc-300">|</span>
             <span>
-              {startIndex} - {endIndex} trên <span className="font-bold text-zinc-800">{totalRecords}</span> khoản chi
+              {startIndex} - {endIndex} {t("landlordExpensesPaginationOf")} <span className="font-bold text-zinc-800">{totalRecords}</span> {t("landlordExpensesPaginationItems")}
             </span>
           </div>
 
@@ -917,6 +970,7 @@ export default function ExpensesPage() {
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage <= 1}
               className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              title={t("landlordExpensesPaginationPrev")}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -942,6 +996,7 @@ export default function ExpensesPage() {
               onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={currentPage >= totalPages}
               className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              title={t("landlordExpensesPaginationNext")}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -966,10 +1021,10 @@ export default function ExpensesPage() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-black text-sm sm:text-base text-zinc-900 truncate">
-                    Chi Tiết Khoản Chi {selectedExpense.code}
+                    {t("landlordExpensesDetailTitle", { code: selectedExpense.code })}
                   </h3>
                   <p className="text-[11px] sm:text-xs text-zinc-500 font-semibold truncate">
-                    {selectedExpense.category}
+                    {getCategoryLabel(selectedExpense.category)}
                   </p>
                 </div>
               </div>
@@ -988,23 +1043,22 @@ export default function ExpensesPage() {
               <div className="p-4 sm:p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#0f5351] text-white rounded-2xl sm:rounded-3xl space-y-3 shadow-xl">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 whitespace-nowrap">
-                    Số Tiền Thanh Toán
+                    {t("landlordExpensesPaymentAmountLabel")}
                   </span>
                   <span className="text-xs text-zinc-300 font-semibold whitespace-nowrap">
-                    Ngày:{" "}
+                    {t("landlordExpensesPaymentDateLabel")}{" "}
                     <strong className="text-white font-black whitespace-nowrap">
-                      {new Date(selectedExpense.paidAt).toLocaleDateString("vi-VN")}
+                      {formatDate(selectedExpense.paidAt)}
                     </strong>
                   </span>
                 </div>
 
                 <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-[#2AC1BC] tracking-tight whitespace-nowrap">
-                  <span>-{selectedExpense.amount.toLocaleString("vi-VN")}</span>
-                  <span className="text-xl sm:text-2xl font-bold">₫</span>
+                  <span>-{formatCurrency(selectedExpense.amount)}</span>
                 </div>
 
                 <div className="pt-2.5 border-t border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-center justify-between gap-2">
-                  <span className="shrink-0">Tên khoản chi:</span>
+                  <span className="shrink-0">{t("landlordExpensesNameColon")}</span>
                   <strong className="text-white font-black text-right line-clamp-1">
                     {selectedExpense.name}
                   </strong>
@@ -1014,20 +1068,20 @@ export default function ExpensesPage() {
               {/* Expense Details Breakdown Card */}
               <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-zinc-600 gap-2">
-                  <span className="font-semibold text-zinc-500 shrink-0">Phạm vi áp dụng:</span>
+                  <span className="font-semibold text-zinc-500 shrink-0">{t("landlordExpensesScopeColon")}</span>
                   <span className="font-black text-zinc-900 truncate">
-                    {selectedExpense.roomName}
+                    {getScopeLabel(selectedExpense)}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-600 border-t border-zinc-200/60 pt-2 gap-2">
-                  <span className="font-semibold text-zinc-500 shrink-0">Trạng thái thanh toán:</span>
+                  <span className="font-semibold text-zinc-500 shrink-0">{t("landlordExpensesStatusColon")}</span>
                   <div className="shrink-0">{renderStatusBadge(selectedExpense.status)}</div>
                 </div>
 
                 {selectedExpense.description && (
                   <div className="border-t border-zinc-200/60 pt-2.5 space-y-1">
-                    <span className="font-extrabold text-zinc-700 block">Ghi chú chi tiết:</span>
+                    <span className="font-extrabold text-zinc-700 block">{t("landlordExpensesDescriptionLabel")}</span>
                     <p className="text-zinc-600 leading-relaxed bg-white p-3 rounded-xl border border-zinc-200/80">
                       {selectedExpense.description}
                     </p>
@@ -1043,7 +1097,7 @@ export default function ExpensesPage() {
                 onClick={() => setSelectedExpense(null)}
                 className="w-full sm:w-auto px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer text-center whitespace-nowrap"
               >
-                Đóng
+                {t("landlordExpensesCloseBtn")}
               </button>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -1053,7 +1107,7 @@ export default function ExpensesPage() {
                     onClick={() => handleMarkAsPaid(selectedExpense.id)}
                     className="w-full sm:w-auto px-4 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
-                    <Check className="w-4 h-4 shrink-0" /> Đã Thanh Toán
+                    <Check className="w-4 h-4 shrink-0" /> {t("landlordExpensesStatusPaid")}
                   </button>
                 )}
 
@@ -1061,9 +1115,9 @@ export default function ExpensesPage() {
                   <button
                     onClick={() => openEditModal(selectedExpense)}
                     className="w-full sm:w-auto px-4 py-2.5 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 text-xs font-bold rounded-xl cursor-pointer flex items-center justify-center gap-1.5 border border-amber-200 transition-all whitespace-nowrap"
-                    title="Khoản chi đã thanh toán - Click để xem lý do khóa"
+                    title={t("landlordExpensesLockedTooltip")}
                   >
-                    <Lock className="w-4 h-4 text-amber-600 shrink-0" /> Đã Khóa Sửa
+                    <Lock className="w-4 h-4 text-amber-600 shrink-0" /> {t("landlordExpensesLockedBtn")}
                   </button>
                 ) : (
                   <button
@@ -1075,7 +1129,7 @@ export default function ExpensesPage() {
                     }}
                     className="w-full sm:w-auto px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
-                    <Edit3 className="w-4 h-4 shrink-0" /> Chỉnh Sửa
+                    <Edit3 className="w-4 h-4 shrink-0" /> {t("landlordExpensesEditBtn")}
                   </button>
                 )}
               </div>
@@ -1102,10 +1156,10 @@ export default function ExpensesPage() {
                 <div>
                   <h3 className="font-black text-base text-zinc-900">
                     {showCreateModal
-                      ? "Thêm Khoản Chi Phí Mới"
-                      : `Chỉnh Sửa Khoản Chi ${editingExpense?.code}`}
+                      ? t("landlordExpensesCreateTitle")
+                      : t("landlordExpensesEditTitleWithCode", { code: editingExpense?.code || "" })}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">Ghi nhận chi phí vận hành tòa nhà</p>
+                  <p className="text-xs text-zinc-500 font-semibold">{t("landlordExpensesFormSubtitle")}</p>
                 </div>
               </div>
 
@@ -1121,7 +1175,7 @@ export default function ExpensesPage() {
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
               <div>
                 <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  Tên Khoản Chi *
+                  {t("landlordExpensesNameLabel")}
                 </label>
                 <input
                   type="text"
@@ -1130,7 +1184,7 @@ export default function ExpensesPage() {
                     setExpenseForm({ ...expenseForm, name: e.target.value });
                     setIsFormDirty(true);
                   }}
-                  placeholder="Ví dụ: Thay bóng đèn hành lang Tầng 2, Phí thu gom rác..."
+                  placeholder={t("landlordExpensesExpenseNamePlaceholder")}
                   className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs"
                 />
               </div>
@@ -1138,7 +1192,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Danh Mục Chi *
+                    {t("landlordExpensesCategoryLabel")}
                   </label>
                   <select
                     value={expenseForm.category}
@@ -1148,17 +1202,17 @@ export default function ExpensesPage() {
                     }}
                     className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
                   >
-                    <option value="Bảo trì & Sửa chữa">Bảo trì &amp; Sửa chữa</option>
-                    <option value="Điện nước & Dịch vụ">Điện nước &amp; Dịch vụ</option>
-                    <option value="Vệ sinh & An ninh">Vệ sinh &amp; An ninh</option>
-                    <option value="Trang thiết bị">Trang thiết bị</option>
-                    <option value="Chi phí khác">Chi phí khác</option>
+                    <option value="Bảo trì & Sửa chữa">{t("landlordExpensesCatMaintenance")}</option>
+                    <option value="Điện nước & Dịch vụ">{t("landlordExpensesCatUtilities")}</option>
+                    <option value="Vệ sinh & An ninh">{t("landlordExpensesCatCleaning")}</option>
+                    <option value="Trang thiết bị">{t("landlordExpensesCatEquipment")}</option>
+                    <option value="Chi phí khác">{t("landlordExpensesCatOther")}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Số Tiền (VNĐ) *
+                    {t("landlordExpensesAmountLabel")}
                   </label>
                   <input
                     type="number"
@@ -1176,7 +1230,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Phạm Vi Áp Dụng *
+                    {t("landlordExpensesScopeLabel")}
                   </label>
                   <select
                     value={expenseForm.roomScope}
@@ -1191,15 +1245,15 @@ export default function ExpensesPage() {
                     }}
                     className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
                   >
-                    <option value="property">Toàn tòa nhà (Chi phí chung)</option>
-                    <option value="room">Phòng cụ thể</option>
+                    <option value="property">{t("landlordExpensesEntirePropertyOption")}</option>
+                    <option value="room">{t("landlordExpensesSpecificRoom")}</option>
                   </select>
                 </div>
 
                 {expenseForm.roomScope === "room" ? (
                   <div>
                     <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                      Chọn Phòng *
+                      {t("landlordExpensesSelectRoomLabel")}
                     </label>
                     <select
                       value={expenseForm.roomId}
@@ -1209,10 +1263,10 @@ export default function ExpensesPage() {
                       }}
                       className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
                     >
-                      <option value="">-- Chọn phòng --</option>
+                      <option value="">{t("landlordExpensesSelectRoomPlaceholder")}</option>
                       {availableRooms.map((r) => (
                         <option key={r.id} value={r.id}>
-                          Phòng {r.roomNumber} (Tầng {r.floor})
+                          {t("landlordExpensesRoomFloorOption", { room: r.roomNumber, floor: r.floor })}
                         </option>
                       ))}
                     </select>
@@ -1220,7 +1274,7 @@ export default function ExpensesPage() {
                 ) : (
                   <div>
                     <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                      Trạng Thái Thanh Toán *
+                      {t("landlordExpensesPaymentStatusLabel")}
                     </label>
                     <select
                       value={expenseForm.status}
@@ -1230,8 +1284,8 @@ export default function ExpensesPage() {
                       }}
                       className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
                     >
-                      <option value="paid">Đã thanh toán (Paid)</option>
-                      <option value="pending">Chờ thanh toán (Pending)</option>
+                      <option value="paid">{t("landlordExpensesOptionPaid")}</option>
+                      <option value="pending">{t("landlordExpensesOptionPending")}</option>
                     </select>
                   </div>
                 )}
@@ -1240,7 +1294,7 @@ export default function ExpensesPage() {
               {expenseForm.roomScope === "room" && (
                 <div>
                   <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    Trạng Thái Thanh Toán *
+                    {t("landlordExpensesPaymentStatusLabel")}
                   </label>
                   <select
                     value={expenseForm.status}
@@ -1250,15 +1304,15 @@ export default function ExpensesPage() {
                     }}
                     className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
                   >
-                    <option value="paid">Đã thanh toán (Paid)</option>
-                    <option value="pending">Chờ thanh toán (Pending)</option>
+                    <option value="paid">{t("landlordExpensesOptionPaid")}</option>
+                    <option value="pending">{t("landlordExpensesOptionPending")}</option>
                   </select>
                 </div>
               )}
 
               <div>
                 <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  Ngày Ghi Nhận / Thanh Toán *
+                  {t("landlordExpensesDateLabel")}
                 </label>
                 <input
                   type="date"
@@ -1273,7 +1327,7 @@ export default function ExpensesPage() {
 
               <div>
                 <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  Ghi Chú Bổ Sung
+                  {t("landlordExpensesNoteLabel")}
                 </label>
                 <textarea
                   rows={2}
@@ -1282,7 +1336,7 @@ export default function ExpensesPage() {
                     setExpenseForm({ ...expenseForm, description: e.target.value });
                     setIsFormDirty(true);
                   }}
-                  placeholder="Ghi chú thêm về đơn vị cung cấp, mã hóa đơn hoặc lý do phát sinh chi phí..."
+                  placeholder={t("landlordExpensesDescriptionPlaceholder")}
                   className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC] text-xs"
                 />
               </div>
@@ -1295,7 +1349,7 @@ export default function ExpensesPage() {
                 onClick={() => requestCloseModal(showCreateModal ? "create" : "edit")}
                 className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer text-center"
               >
-                Hủy
+                {t("landlordExpensesCancelBtn")}
               </button>
               <button
                 type="button"
@@ -1308,7 +1362,7 @@ export default function ExpensesPage() {
                 ) : (
                   <Check className="w-4 h-4" />
                 )}
-                <span>{showCreateModal ? "Lưu Khoản Chi Phí" : "Cập Nhật Khoản Chi"}</span>
+                <span>{showCreateModal ? t("landlordExpensesSaveExpense") : t("landlordExpensesUpdateExpense")}</span>
               </button>
             </div>
           </div>
@@ -1323,9 +1377,9 @@ export default function ExpensesPage() {
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-black text-base text-zinc-900">Xác nhận đóng form?</h4>
+              <h4 className="font-black text-base text-zinc-900">{t("landlordExpensesFormCloseTitle")}</h4>
               <p className="text-xs text-zinc-500 font-medium mt-1">
-                Các thông tin chi phí vừa nhập chưa được lưu. Bạn có chắc muốn hủy bỏ không?
+                {t("landlordExpensesFormCloseDesc")}
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
@@ -1333,14 +1387,14 @@ export default function ExpensesPage() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                Tiếp tục nhập
+                {t("landlordExpensesContinueTyping")}
               </button>
 
               <button
                 onClick={handleConfirmCloseModal}
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
               >
-                Hủy &amp; Đóng
+                {t("landlordExpensesDiscardAndClose")}
               </button>
             </div>
           </div>
@@ -1360,12 +1414,12 @@ export default function ExpensesPage() {
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-black text-base text-zinc-900">Xác nhận xóa khoản chi?</h4>
+              <h4 className="font-black text-base text-zinc-900">{t("landlordExpensesDeleteConfirmTitle")}</h4>
               <p className="text-xs text-zinc-500 font-medium mt-1.5 leading-relaxed">
-                Bạn có chắc muốn xóa khoản chi{" "}
-                <strong className="text-zinc-900 font-extrabold">{deletingExpenseTarget.name}</strong> (
-                <span className="text-rose-600 font-bold">{deletingExpenseTarget.code}</span>)? Thao tác này
-                không thể hoàn tác.
+                {t("landlordExpensesDeleteConfirmDesc", {
+                  name: deletingExpenseTarget.name,
+                  code: deletingExpenseTarget.code,
+                })}
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
@@ -1373,14 +1427,14 @@ export default function ExpensesPage() {
                 onClick={() => setDeletingExpenseTarget(null)}
                 className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                Hủy bỏ
+                {t("landlordExpensesCancelBtn")}
               </button>
 
               <button
                 onClick={confirmDeleteExpense}
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
               >
-                Xóa khoản chi
+                {t("landlordExpensesDeleteBtn")}
               </button>
             </div>
           </div>
@@ -1400,12 +1454,12 @@ export default function ExpensesPage() {
               <Lock className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-black text-base text-zinc-900">Khoản chi đã được khóa</h4>
+              <h4 className="font-black text-base text-zinc-900">{t("landlordExpensesLockedTitle")}</h4>
               <p className="text-xs text-zinc-500 font-medium mt-1.5 leading-relaxed">
-                Khoản chi{" "}
-                <strong className="text-zinc-900 font-extrabold">{lockedExpenseTarget.name}</strong> (
-                <span className="text-[#2AC1BC] font-bold">{lockedExpenseTarget.code}</span>) đã thanh toán
-                hoàn tất nên hệ thống khóa tính năng chỉnh sửa để đảm bảo tính minh bạch sổ sách.
+                {t("landlordExpensesLockedDesc", {
+                  name: lockedExpenseTarget.name,
+                  code: lockedExpenseTarget.code,
+                })}
               </p>
             </div>
             <div className="pt-2">
@@ -1413,7 +1467,7 @@ export default function ExpensesPage() {
                 onClick={() => setLockedExpenseTarget(null)}
                 className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
               >
-                Đã hiểu
+                {t("landlordExpensesUnderstand")}
               </button>
             </div>
           </div>

@@ -154,7 +154,7 @@ export default function TenantOverviewPage() {
     if (!dateStr) return "";
     try {
       const date = new Date(dateStr);
-      return new Intl.DateTimeFormat("vi-VN", {
+      return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -181,13 +181,13 @@ export default function TenantOverviewPage() {
       return {
         roomNumber: room.roomNumber,
         roomType: room.roomTypeName || "Studio",
-        buildingName: boardingHouse?.name || "Tòa nhà trọ",
-        address: boardingHouse?.address || "Chưa cập nhật địa chỉ",
-        landlord: boardingHouse?.landlord?.name || "Chủ nhà trọ",
-        landlordIdCard: "Chưa cập nhật",
-        landlordBank: "Chưa cập nhật",
-        tenantName: "Khách thuê",
-        tenantIdCard: "Chưa cập nhật",
+        buildingName: boardingHouse?.name || t("fallbackBuildingName"),
+        address: boardingHouse?.address || t("fallbackAddress"),
+        landlord: boardingHouse?.landlord?.name || t("fallbackLandlord"),
+        landlordIdCard: t("fallbackNotUpdated"),
+        landlordBank: t("fallbackNotUpdated"),
+        tenantName: t("fallbackTenant"),
+        tenantIdCard: t("fallbackNotUpdated"),
         phone: boardingHouse?.landlord?.phoneNumber || "",
         phoneDisplay: formatPhoneDisplay(boardingHouse?.landlord?.phoneNumber || ""),
         hotline: "1900 8899",
@@ -203,18 +203,18 @@ export default function TenantOverviewPage() {
         roomImage:
           "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
         amenities: [
-          locale === "en" ? "Inverter AC" : "Máy lạnh Inverter",
-          locale === "en" ? "180L Refrigerator" : "Tủ lạnh",
-          locale === "en" ? "Hot Water Shower" : "Bình nóng lạnh",
-          locale === "en" ? "Private Balcony" : "Ban công thoáng mát",
-          locale === "en" ? "Smart Fingerprint Lock" : "Khóa từ vân tay",
-          locale === "en" ? "Kitchen Counter" : "Kệ bếp nấu ăn riêng",
+          t("amenityAc"),
+          t("amenityFridge"),
+          t("amenityWaterHeater"),
+          t("amenityBalcony"),
+          t("amenitySmartLock"),
+          t("amenityKitchen"),
         ],
       };
     }
 
     return null;
-  }, [tenancyData, locale]);
+  }, [tenancyData, locale, t]);
 
   // Service helper
   const getServiceIconAndColor = (name: string) => {
@@ -244,10 +244,10 @@ export default function TenantOverviewPage() {
         const style = getServiceIconAndColor(svc.name);
         return {
           name: svc.name,
-          price: `${Number(svc.price).toLocaleString("vi-VN")} ₫ / ${svc.unit || "tháng"}`,
+          price: `${Number(svc.price).toLocaleString(locale === "en" ? "en-US" : "vi-VN")} ₫ / ${svc.unit || t("perMonth")}`,
           type: svc.isMetered
-            ? locale === "en" ? "Metered reading" : "Theo chỉ số công tơ"
-            : locale === "en" ? "Fixed monthly" : "Cố định hàng tháng",
+            ? t("serviceMetered")
+            : t("serviceFixed"),
           icon: style.icon,
           color: style.color,
           bg: style.bg,
@@ -256,7 +256,7 @@ export default function TenantOverviewPage() {
     }
 
     return [];
-  }, [tenancyData, locale]);
+  }, [tenancyData, locale, t]);
 
   // Announcements list (from backend only)
   const allAnnouncements = useMemo(() => {
@@ -265,7 +265,7 @@ export default function TenantOverviewPage() {
         id: item.id || String(idx),
         title: item.title,
         date: formatDateStr(item.createdAt),
-        tag: item.isNew ? (locale === "en" ? "New" : "Mới") : (locale === "en" ? "Notice" : "Tin tức"),
+        tag: item.isNew ? t("noticeTagNew") : t("noticeTagNotice"),
         color: item.isNew ? "bg-rose-100 text-rose-700 border-rose-200" : "bg-teal-100 text-teal-700 border-teal-200",
         content: item.content,
         isNew: item.isNew,
@@ -273,7 +273,7 @@ export default function TenantOverviewPage() {
     }
 
     return [];
-  }, [tenancyData, locale]);
+  }, [tenancyData, locale, t]);
 
   // Pagination for announcements (4 items per page)
   const itemsPerPage = 4;
@@ -304,7 +304,7 @@ export default function TenantOverviewPage() {
           ) : (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-xs font-bold mb-2">
               <span className="w-2 h-2 rounded-full bg-zinc-400" />
-              <span>{locale === "en" ? "No Active Room" : "Chưa có hợp đồng phòng"}</span>
+              <span>{t("noActiveRoom")}</span>
             </div>
           )}
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
@@ -550,17 +550,15 @@ export default function TenantOverviewPage() {
               <Building className="w-8 h-8" />
             </div>
             <h3 className="text-base font-black text-zinc-900">
-              {locale === "en" ? "No Active Tenancy Contract" : "Chưa có hợp đồng thuê phòng hiệu lực"}
+              {t("noActiveContractTitle")}
             </h3>
             <p className="text-xs text-zinc-500 max-w-md mx-auto">
-              {locale === "en"
-                ? "Your account is not linked to any active room contract on the Dormio platform. Please contact your landlord to activate your contract."
-                : "Tài khoản của bạn chưa được liên kết với phòng trọ hoặc hợp đồng nào đang có hiệu lực trên hệ thống Dormio. Vui lòng liên hệ chủ trọ để kích hoạt hợp đồng."}
+              {t("noActiveContractDesc")}
             </p>
             <div className="flex items-center justify-center gap-3 pt-2">
               <Link href="/rooms">
                 <Button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer">
-                  {locale === "en" ? "Explore Boarding Houses" : "Tìm phòng trọ trên Dormio"}
+                  {t("exploreHousesBtn")}
                 </Button>
               </Link>
             </div>
@@ -586,7 +584,7 @@ export default function TenantOverviewPage() {
           {services.length === 0 ? (
             <div className="py-8 text-center text-xs text-zinc-400 space-y-1">
               <Sparkles className="w-8 h-8 mx-auto text-zinc-300 mb-2" />
-              <p className="font-semibold">{locale === "en" ? "No utility services registered" : "Chưa có dịch vụ nào được thiết lập"}</p>
+              <p className="font-semibold">{t("noServices")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -639,11 +637,9 @@ export default function TenantOverviewPage() {
             {allAnnouncements.length === 0 ? (
               <div className="p-8 text-center text-xs text-zinc-400 space-y-2">
                 <Speaker className="w-8 h-8 mx-auto text-zinc-300" />
-                <p className="font-semibold text-zinc-600">{locale === "en" ? "No announcements yet" : "Chưa có thông báo mới"}</p>
+                <p className="font-semibold text-zinc-600">{t("noAnnouncementsTitle")}</p>
                 <p className="text-[11px] text-zinc-400">
-                  {locale === "en"
-                    ? "Notices from building management will appear here."
-                    : "Các thông báo từ ban quản lý tòa nhà sẽ xuất hiện tại đây."}
+                  {t("noAnnouncementsDesc")}
                 </p>
               </div>
             ) : (
@@ -678,15 +674,14 @@ export default function TenantOverviewPage() {
                 {/* Pagination Controls - 4 items per page */}
                 <div className="px-4 py-2.5 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50 rounded-b-3xl">
                   <div className="text-[11px] font-semibold text-zinc-400">
-                    {locale === "en"
-                      ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                          currentPage * itemsPerPage,
-                          allAnnouncements.length
-                        )} of ${allAnnouncements.length}`
-                      : `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
-                          currentPage * itemsPerPage,
-                          allAnnouncements.length
-                        )} trên ${allAnnouncements.length}`}
+                    {t("showingRange", {
+                      from: (currentPage - 1) * itemsPerPage + 1,
+                      to: Math.min(
+                        currentPage * itemsPerPage,
+                        allAnnouncements.length
+                      ),
+                      total: allAnnouncements.length,
+                    })}
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -830,7 +825,7 @@ export default function TenantOverviewPage() {
                   </div>
                 </div>
                 <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-emerald-200/60 text-emerald-900 text-[10px] font-black uppercase">
-                  Verified
+                  {t("verified")}
                 </span>
               </div>
 
@@ -921,7 +916,7 @@ export default function TenantOverviewPage() {
                 <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-zinc-700">
                     <FileText className="w-4 h-4 text-[#2AC1BC]" />
-                    <span>File hợp đồng đính kèm từ hệ thống</span>
+                    <span>{t("contractAttachedFile")}</span>
                   </div>
                   <a
                     href={roomInfo.documentUrl}
@@ -930,7 +925,7 @@ export default function TenantOverviewPage() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl text-xs font-bold text-[#2AC1BC] transition-colors cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Tải về</span>
+                    <span>{t("contractDownload")}</span>
                   </a>
                 </div>
               )}

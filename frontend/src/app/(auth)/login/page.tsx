@@ -7,6 +7,7 @@ import {
   Phone, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Loader2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "@/context/LanguageContext";
 import { api } from "@/services/api";
 
 interface LoginApiResponse {
@@ -22,6 +23,7 @@ interface LoginApiResponse {
 }
 
 export default function LoginPage() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const { loginWithToken } = useAuth();
 
@@ -51,7 +53,7 @@ export default function LoginPage() {
       const { token, user, mustChangePassword } = authData || {};
 
       if (!token || !user) {
-        throw new Error("Không thể xác thực thông tin tài khoản.");
+        throw new Error(t("authLoginErrCannotVerify"));
       }
 
       // Map role from backend to frontend (poster → tenant for display)
@@ -79,9 +81,9 @@ export default function LoginPage() {
         router.push("/tenant");
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Đã xảy ra lỗi. Vui lòng thử lại.";
+      const message = err instanceof Error ? err.message : t("authLoginErrGeneric");
       if (message.includes("invalid_credentials") || message.includes("401")) {
-        setError("Số điện thoại / email hoặc mật khẩu không đúng.");
+        setError(t("authLoginErrInvalidCredentials"));
       } else {
         setError(message);
       }
@@ -96,14 +98,14 @@ export default function LoginPage() {
       {/* Top Header & Badge */}
       <div className="space-y-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> ĐĂNG NHẬP HỆ THỐNG
+          <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t("authLoginBadge")}
         </span>
 
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-          Chào mừng quay trở lại!
+          {t("authLoginWelcomeTitle")}
         </h1>
         <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-          Đăng nhập để truy cập Bảng điều khiển quản lý và dữ liệu phòng trọ.
+          {t("authLoginWelcomeDesc")}
         </p>
       </div>
 
@@ -116,7 +118,7 @@ export default function LoginPage() {
             method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Phone className="w-3.5 h-3.5" /> Số điện thoại
+          <Phone className="w-3.5 h-3.5" /> {t("authLoginMethodPhone")}
         </button>
         <button
           type="button"
@@ -125,7 +127,7 @@ export default function LoginPage() {
             method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          <Mail className="w-3.5 h-3.5" /> Địa chỉ Email
+          <Mail className="w-3.5 h-3.5" /> {t("authLoginMethodEmail")}
         </button>
       </div>
 
@@ -135,7 +137,7 @@ export default function LoginPage() {
         {/* Phone or Email input */}
         <div className="space-y-1">
           <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">
-            {method === "phone" ? "SỐ ĐIỆN THOẠI *" : "ĐỊA CHỈ EMAIL *"}
+            {method === "phone" ? t("authLoginPhoneLabel") : t("authLoginEmailLabel")}
           </label>
           <div className="relative">
             {method === "phone" ? (
@@ -157,9 +159,9 @@ export default function LoginPage() {
         {/* Password Field & Forgot Link */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">MẬT KHẨU *</label>
+            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("authLoginPasswordLabel")}</label>
             <Link href="/forgot-password" className="text-xs font-extrabold text-[#2AC1BC] hover:underline">
-              Quên mật khẩu?
+              {t("authForgotPassword")}
             </Link>
           </div>
 
@@ -197,9 +199,9 @@ export default function LoginPage() {
           className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
         >
           {isLoading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Đang đăng nhập...</>
+            <><Loader2 className="w-4 h-4 animate-spin" /> {t("authLoginLoading")}</>
           ) : (
-            <><span>Đăng nhập hệ thống</span><ArrowRight className="w-4 h-4" /></>
+            <><span>{t("authLoginSubmitBtn")}</span><ArrowRight className="w-4 h-4" /></>
           )}
         </button>
 
@@ -208,8 +210,8 @@ export default function LoginPage() {
       {/* Demo Accounts Quick-Fill Helper */}
       <div className="p-3.5 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
         <div className="flex items-center justify-between text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider">
-          <span>Tài khoản mẫu thử nghiệm</span>
-          <span className="text-[10px] text-zinc-400 font-semibold">(Nhấn để điền)</span>
+          <span>{t("authLoginDemoTitle")}</span>
+          <span className="text-[10px] text-zinc-400 font-semibold">{t("authLoginDemoClickHint")}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
           <button
@@ -223,7 +225,7 @@ export default function LoginPage() {
             className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
           >
             <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
-              <span>🏢 Chủ trọ (Võ Minh Trí)</span>
+              <span>{t("authLoginDemoLandlordTri")}</span>
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               0933445566 • Secret@123
@@ -241,7 +243,7 @@ export default function LoginPage() {
             className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
           >
             <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
-              <span>🏢 Chủ trọ (Nguyễn Phương Hà)</span>
+              <span>{t("authLoginDemoLandlordHa")}</span>
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               0877719399 • Secret@123
@@ -259,7 +261,7 @@ export default function LoginPage() {
             className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
           >
             <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
-              <span>🏠 Khách thuê (Trần Thị Thuỳ Dung - Có HĐ & HĐơn)</span>
+              <span>{t("authLoginDemoTenantDung")}</span>
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               0912345678 • Secret@123
@@ -277,7 +279,7 @@ export default function LoginPage() {
             className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
           >
             <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
-              <span>🏠 Khách thuê (Lê Hoàng Nam - Phòng 301)</span>
+              <span>{t("authLoginDemoTenantNam")}</span>
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               0987654321 • Secret@123
@@ -295,7 +297,7 @@ export default function LoginPage() {
             className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
           >
             <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
-              <span>🛡️ Quản trị viên (Admin)</span>
+              <span>{t("authLoginDemoAdmin")}</span>
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               0344265925 • 88888888
@@ -306,12 +308,11 @@ export default function LoginPage() {
 
       {/* Bottom Auth Navigation Link */}
       <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-        Chưa có tài khoản?{" "}
+        {t("authNoAccount")}{" "}
         <Link href="/register" className="font-extrabold text-[#2AC1BC] hover:underline">
-          Đăng ký ngay
+          {t("authRegisterNow")}
         </Link>
       </div>
-
 
     </div>
   );
