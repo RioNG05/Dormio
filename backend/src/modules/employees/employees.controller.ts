@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Logger,
@@ -29,6 +30,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
+import { AssignRoleDto } from './dto/assign-role.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { OnboardStaffDto } from './dto/onboard-staff.dto';
 import { QueryStaffDto } from './dto/query-staff.dto';
@@ -39,6 +41,7 @@ import {
   StaffItemDto,
   StaffListResponseDto,
 } from './dto/staff-response.dto';
+import { UpdatePositionDto } from './dto/update-position.dto';
 import { UpdateStaffStatusDto } from './dto/update-staff-status.dto';
 import { EmployeesService } from './employees.service';
 
@@ -221,5 +224,132 @@ export class EmployeesController {
       dto,
       ipAddress,
     );
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'UC-L-20: Get staff member assignment detail',
+    description:
+      'Retrieves complete staff assignment profile, position duties, and contact information.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Employee assignment UUID',
+    example: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+  })
+  @ApiOkResponse({
+    type: StaffItemDto,
+    description: 'Staff member details',
+  })
+  @ApiResponse({ status: 404, description: 'Staff member assignment not found' })
+  async getStaffDetail(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) assignmentId: string,
+  ): Promise<StaffItemDto> {
+    this.logger.log(
+      `getStaffDetail assignment=${assignmentId} house=${boardingHouseId}`,
+    );
+    return this.employeesService.getStaffDetail(boardingHouseId, assignmentId);
+  }
+
+  @Patch(':id/role')
+  @ApiOperation({
+    summary: 'UC-L-20 Step 3: Assign or re-assign role to staff member',
+    description:
+      'Re-assigns staff member to an existing or newly created JobPosition and updates static duty expectations.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Employee assignment UUID',
+    example: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+  })
+  @ApiBody({ type: AssignRoleDto })
+  @ApiOkResponse({
+    type: StaffItemDto,
+    description: 'Updated staff member record with newly assigned position',
+  })
+  @ApiResponse({ status: 404, description: 'Staff member assignment not found' })
+  async assignRole(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) assignmentId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: AssignRoleDto,
+    @Req() req: Request,
+  ): Promise<StaffItemDto> {
+    const ipAddress =
+      (req.headers['x-forwarded-for'] as string) ||
+      req.socket.remoteAddress ||
+      '127.0.0.1';
+
+    this.logger.log(
+      `assignRole assignment=${assignmentId} position=${dto.positionId || dto.newPositionName} by landlord=${user.id}`,
+    );
+
+    return this.employeesService.assignRole(
+      boardingHouseId,
+      assignmentId,
+      user.id,
+      dto,
+      ipAddress,
+    );
+  }
+
+  @Patch('positions/:id')
+  @ApiOperation({
+    summary: 'UC-L-20: Update job position name and duty list description',
+    description:
+      'Updates the title and duty list of a job position (displayed in staff tasks in UC-S-01).',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Job position UUID',
+    example: 'c6f9e8a0-2f3b-4e1a-9f5e-7a8b9c0d1e2f',
+  })
+  @ApiBody({ type: UpdatePositionDto })
+  @ApiOkResponse({
+    type: JobPositionDto,
+    description: 'Updated job position record',
+  })
+  @ApiResponse({ status: 404, description: 'Job position not found' })
+  @ApiResponse({ status: 409, description: 'Duplicate position name' })
+  async updateJobPosition(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) positionId: string,
+    @Body() dto: UpdatePositionDto,
+  ): Promise<JobPositionDto> {
+    this.logger.log(
+      `updateJobPosition position=${positionId} house=${boardingHouseId}`,
+    );
+    return this.employeesService.updateJobPosition(
+      boardingHouseId,
+      positionId,
+      dto,
+    );
+  }
+
+  @Delete('positions/:id')
+  @ApiOperation({
+    summary: 'UC-L-20: Delete an unused job position',
+    description:
+      'Deletes a job position. Fails with 400 if any active staff are currently assigned to this position.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Job position UUID',
+    example: 'c6f9e8a0-2f3b-4e1a-9f5e-7a8b9c0d1e2f',
+  })
+  @ApiOkResponse({
+    description: 'Position successfully deleted',
+  })
+  @ApiResponse({ status: 400, description: 'Position has active staff assigned' })
+  @ApiResponse({ status: 404, description: 'Job position not found' })
+  async deleteJobPosition(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) positionId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    this.logger.log(
+      `deleteJobPosition position=${positionId} house=${boardingHouseId}`,
+    );
+    return this.employeesService.deleteJobPosition(boardingHouseId, positionId);
   }
 }

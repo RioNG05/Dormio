@@ -184,4 +184,78 @@ export const staffService = {
       },
     );
   },
+
+  /**
+   * Get single staff assignment detail (UC-L-20)
+   */
+  async getStaffDetail(
+    buildingId: string,
+    assignmentId: string,
+  ): Promise<StaffItem> {
+    return api.get<StaffItem>(`/v1/landlord/staff/${assignmentId}`, {
+      headers: {
+        'X-Boarding-House-Id': buildingId,
+      },
+    });
+  },
+
+  /**
+   * Assign or re-assign role to staff member (UC-L-20 Step 3)
+   */
+  async assignRole(
+    buildingId: string,
+    assignmentId: string,
+    payload: {
+      positionId?: string;
+      newPositionName?: string;
+      newPositionDescription?: string;
+    },
+  ): Promise<StaffItem> {
+    return api.patch<StaffItem>(
+      `/v1/landlord/staff/${assignmentId}/role`,
+      payload,
+      {
+        headers: {
+          'X-Boarding-House-Id': buildingId,
+        },
+      },
+    );
+  },
+
+  /**
+   * Update job position title and duties description (UC-L-20)
+   */
+  async updatePosition(
+    buildingId: string,
+    positionId: string,
+    payload: { name?: string; description?: string },
+  ): Promise<JobPosition> {
+    return api.patch<JobPosition>(
+      `/v1/landlord/staff/positions/${positionId}`,
+      payload,
+      {
+        headers: {
+          'X-Boarding-House-Id': buildingId,
+        },
+      },
+    );
+  },
+
+  /**
+   * Delete an unused job position (UC-L-20)
+   */
+  async deletePosition(
+    buildingId: string,
+    positionId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    return api.delete<{ success: boolean; message: string }>(
+      `/v1/landlord/staff/positions/${positionId}`,
+      {
+        headers: {
+          'X-Boarding-House-Id': buildingId,
+        },
+      },
+    );
+  },
 };
+

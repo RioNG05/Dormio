@@ -28,6 +28,10 @@ import {
   RefreshCw,
   Power,
   ExternalLink,
+  Edit3,
+  Trash2,
+  FileText,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -66,8 +70,14 @@ export default function WorkforcePage() {
   // Modal states
   const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAssignRoleModalOpen, setIsAssignRoleModalOpen] = useState(false);
+  const [isPositionsModalOpen, setIsPositionsModalOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffItem | null>(null);
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
+  const [pendingCloseTarget, setPendingCloseTarget] = useState<
+    "onboard" | "assignRole" | "positions" | null
+  >(null);
+
   const [credentialModal, setCredentialModal] = useState<{
     isOpen: boolean;
     name: string;
@@ -94,7 +104,7 @@ export default function WorkforcePage() {
   } | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Form input fields
+  // Form input fields for Onboarding
   const [fullNameInput, setFullNameInput] = useState("");
   const [selectedPositionId, setSelectedPositionId] = useState("");
   const [isCreatingNewPosition, setIsCreatingNewPosition] = useState(false);
@@ -107,6 +117,22 @@ export default function WorkforcePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [copiedPassword, setCopiedPassword] = useState(false);
+
+  // Form states for Assign Role (UC-L-20 Step 3)
+  const [assignTargetPositionId, setAssignTargetPositionId] = useState("");
+  const [isAssignCreatingNew, setIsAssignCreatingNew] = useState(false);
+  const [assignNewPosName, setAssignNewPosName] = useState("");
+  const [assignNewPosDesc, setAssignNewPosDesc] = useState("");
+  const [isAssignSubmitting, setIsAssignSubmitting] = useState(false);
+  const [assignError, setAssignError] = useState("");
+
+  // Position Management state (CRUD)
+  const [editingPosition, setEditingPosition] = useState<JobPosition | null>(null);
+  const [posFormName, setPosFormName] = useState("");
+  const [posFormDesc, setPosFormDesc] = useState("");
+  const [posErrorMessage, setPosErrorMessage] = useState("");
+  const [isPosSubmitting, setIsPosSubmitting] = useState(false);
+  const [isAddingPositionInline, setIsAddingPositionInline] = useState(false);
 
   // Load staff list & positions
   const fetchStaffData = useCallback(async () => {
@@ -126,12 +152,14 @@ export default function WorkforcePage() {
 
       if (staffRes?.success) {
         setStaffList(staffRes.data || []);
-        setSummary(staffRes.summary || {
-          totalStaff: 0,
-          activeStaff: 0,
-          inactiveStaff: 0,
-          positionsCount: 0,
-        });
+        setSummary(
+          staffRes.summary || {
+            totalStaff: 0,
+            activeStaff: 0,
+            inactiveStaff: 0,
+            positionsCount: 0,
+          }
+        );
         setTotalItems(staffRes.meta?.total || 0);
       }
 
@@ -145,7 +173,15 @@ export default function WorkforcePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [buildingId, currentPage, pageSize, searchQuery, statusFilter, positionFilter, selectedPositionId]);
+  }, [
+    buildingId,
+    currentPage,
+    pageSize,
+    searchQuery,
+    statusFilter,
+    positionFilter,
+    selectedPositionId,
+  ]);
 
   useEffect(() => {
     fetchStaffData();
@@ -196,19 +232,40 @@ export default function WorkforcePage() {
     }
   };
 
-  const handleAttemptCloseModal = () => {
+  const handleAttemptCloseModal = (target: "onboard" | "assignRole" | "positions") => {
     if (formDirty) {
+      setPendingCloseTarget(target);
       setIsConfirmCloseOpen(true);
     } else {
-      setIsOnboardModalOpen(false);
-      resetOnboardForm();
+      if (target === "onboard") {
+        setIsOnboardModalOpen(false);
+        resetOnboardForm();
+      } else if (target === "assignRole") {
+        setIsAssignRoleModalOpen(false);
+        setAssignError("");
+      } else if (target === "positions") {
+        setIsPositionsModalOpen(false);
+        setEditingPosition(null);
+        setIsAddingPositionInline(false);
+      }
     }
   };
 
   const handleConfirmClose = () => {
     setIsConfirmCloseOpen(false);
-    setIsOnboardModalOpen(false);
-    resetOnboardForm();
+    if (pendingCloseTarget === "onboard") {
+      setIsOnboardModalOpen(false);
+      resetOnboardForm();
+    } else if (pendingCloseTarget === "assignRole") {
+      setIsAssignRoleModalOpen(false);
+      setAssignError("");
+    } else if (pendingCloseTarget === "positions") {
+      setIsPositionsModalOpen(false);
+      setEditingPosition(null);
+      setIsAddingPositionInline(false);
+    }
+    setPendingCloseTarget(null);
+    setFormDirty(false);
   };
 
   // Submit Onboard Staff (UC-L-19)
@@ -270,7 +327,6 @@ export default function WorkforcePage() {
         resetOnboardForm();
         await fetchStaffData();
 
-        // If new user was created with a temporary password, show credential dialog
         if (res.isNewUser && res.generatedPassword) {
           setCredentialModal({
             isOpen: true,
@@ -291,7 +347,53 @@ export default function WorkforcePage() {
     }
   };
 
-  // Toggle Staff Status (UC-L-20)
+  // Assign / Re-assign Role (UC-L-20 Step 3)
+  const handleOpenAssignRoleModal = (staff: StaffItem) => {
+    setSelectedStaff(staff);
+    setAssignTargetPositionId(staff.positionId);
+    setIsAssignCreatingNew(false);
+    setAssignNewPosName("");
+    setAssignNewPosDesc("");
+    setAssignError("");
+    setFormDirty(false);
+    setIsAssignRoleModalOpen(true);
+  };
+
+  const handleSaveAssignRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStaff || !buildingId) return;
+
+    if (isAssignCreatingNew && !assignNewPosName.trim()) {
+      setAssignError("Vui lòng nhập tên vị trí mới.");
+      return;
+    }
+
+    setIsAssignSubmitting(true);
+    setAssignError("");
+
+    try {
+      const payload: any = {};
+      if (isAssignCreatingNew) {
+        payload.newPositionName = assignNewPosName.trim();
+        payload.newPositionDescription = assignNewPosDesc.trim() || undefined;
+      } else {
+        payload.positionId = assignTargetPositionId;
+      }
+
+      await staffService.assignRole(buildingId, selectedStaff.assignmentId, payload);
+      setIsAssignRoleModalOpen(false);
+      setFormDirty(false);
+      await fetchStaffData();
+    } catch (err: any) {
+      setAssignError(
+        err?.response?.data?.message || err?.message || "Không thể phân công vai trò."
+      );
+    } finally {
+      setIsAssignSubmitting(false);
+    }
+  };
+
+  // Toggle Staff Status (UC-L-20 Step 2 & 4)
   const handleToggleStatus = async (staff: StaffItem) => {
     const nextStatus = staff.status === "active" ? "inactive" : "active";
     const confirmMsg =
@@ -311,13 +413,67 @@ export default function WorkforcePage() {
     }
   };
 
+  // Manage Positions Actions (CRUD)
+  const handleSavePosition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!posFormName.trim()) {
+      setPosErrorMessage("Tên vị trí không được để trống.");
+      return;
+    }
+
+    setIsPosSubmitting(true);
+    setPosErrorMessage("");
+    try {
+      if (editingPosition) {
+        await staffService.updatePosition(buildingId, editingPosition.id, {
+          name: posFormName.trim(),
+          description: posFormDesc.trim() || undefined,
+        });
+      } else {
+        await staffService.createPosition(buildingId, {
+          name: posFormName.trim(),
+          description: posFormDesc.trim() || undefined,
+        });
+      }
+
+      setEditingPosition(null);
+      setIsAddingPositionInline(false);
+      setPosFormName("");
+      setPosFormDesc("");
+      setFormDirty(false);
+      await fetchStaffData();
+    } catch (err: any) {
+      setPosErrorMessage(
+        err?.response?.data?.message || err?.message || "Lỗi lưu vị trí công việc"
+      );
+    } finally {
+      setIsPosSubmitting(false);
+    }
+  };
+
+  const handleDeletePosition = async (pos: JobPosition) => {
+    if (
+      !window.confirm(
+        `Xác nhận xóa vị trí công việc "${pos.name}"? Thao tác này không thể hoàn tác.`
+      )
+    )
+      return;
+
+    try {
+      await staffService.deletePosition(buildingId, pos.id);
+      await fetchStaffData();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Không thể xóa vị trí này.");
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedPassword(true);
     setTimeout(() => setCopiedPassword(false), 2500);
   };
 
-  // Pagination calculation
+  // Pagination calculations (Rule #9)
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
   const windowSize = 5;
   const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
@@ -333,22 +489,39 @@ export default function WorkforcePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
-            Nhân sự tòa nhà
+            Quản lý nhân sự
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            Quản lý đội ngũ nhân viên, phân quyền vai trò và hồ sơ làm việc (UC-L-19, UC-L-20)
+            Phân công vai trò, quản lý vị trí công việc và hồ sơ nhân sự (UC-L-19, UC-L-20)
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            resetOnboardForm();
-            setIsOnboardModalOpen(true);
-          }}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" /> Thêm nhân viên mới
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => {
+              setEditingPosition(null);
+              setIsAddingPositionInline(false);
+              setPosFormName("");
+              setPosFormDesc("");
+              setPosErrorMessage("");
+              setIsPositionsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl shadow-2xs transition-all cursor-pointer shrink-0"
+          >
+            <Briefcase className="w-4 h-4 text-[#2AC1BC]" />
+            <span>Quản lý vị trí ({positions.length})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              resetOnboardForm();
+              setIsOnboardModalOpen(true);
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" /> Thêm nhân viên mới
+          </button>
+        </div>
       </div>
 
       {/* Dark Hero Stats Banner */}
@@ -364,10 +537,10 @@ export default function WorkforcePage() {
               <span>{activeBuilding?.name || "Chưa chọn tòa nhà"}</span>
             </div>
             <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              Đội ngũ nhân sự & phân công
+              Đội ngũ nhân sự & vai trò
             </h2>
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Dễ dàng thêm mới nhân viên qua số điện thoại, tự động cấp tài khoản bảo mật và phân quyền vai trò.
+              Dễ dàng phân quyền vai trò (Bảo vệ, Vệ sinh, Quản lý), cập nhật trạng thái làm việc và quy định nhiệm vụ công việc.
             </p>
           </div>
 
@@ -431,7 +604,7 @@ export default function WorkforcePage() {
 
           <div className="flex flex-wrap items-center justify-between md:justify-end gap-2.5">
             {/* Position filter */}
-            <div className="relative min-w-[160px]">
+            <div className="relative min-w-[170px]">
               <select
                 value={positionFilter}
                 onChange={(e) => {
@@ -613,6 +786,14 @@ export default function WorkforcePage() {
                         </strong>
                       </span>
                     </div>
+                    {staff.positionDescription && (
+                      <div className="flex items-start gap-2 text-[11px] text-zinc-500 bg-zinc-50 p-2 rounded-xl">
+                        <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                        <span className="line-clamp-2 italic">
+                          {staff.positionDescription}
+                        </span>
+                      </div>
+                    )}
                     {staff.mustChangePassword && (
                       <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 font-semibold">
                         <AlertCircle className="w-3 h-3 shrink-0" />
@@ -622,21 +803,30 @@ export default function WorkforcePage() {
                   </div>
                 </div>
 
-                {/* Card Footer Actions */}
-                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => {
-                      setSelectedStaff(staff);
-                      setIsDetailModalOpen(true);
-                    }}
-                    className="text-xs font-bold text-zinc-600 hover:text-zinc-900 px-3 py-1.5 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
-                  >
-                    Xem chi tiết
-                  </button>
+                {/* Card Footer Actions: Assign Role & Toggle Status */}
+                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setSelectedStaff(staff);
+                        setIsDetailModalOpen(true);
+                      }}
+                      className="text-xs font-bold text-zinc-600 hover:text-zinc-900 px-2.5 py-1.5 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                    >
+                      Chi tiết
+                    </button>
+                    <button
+                      onClick={() => handleOpenAssignRoleModal(staff)}
+                      className="text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+                      title="Đổi vai trò & nhiệm vụ"
+                    >
+                      <Edit3 className="w-3 h-3" /> Đổi vai trò
+                    </button>
+                  </div>
 
                   <button
                     onClick={() => handleToggleStatus(staff)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isActive
                         ? "text-rose-600 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/60"
                         : "text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30"
@@ -658,7 +848,7 @@ export default function WorkforcePage() {
               <thead className="bg-zinc-50/80 text-zinc-500 uppercase font-bold border-b border-zinc-200">
                 <tr>
                   <th className="px-6 py-3.5">Nhân viên</th>
-                  <th className="px-6 py-3.5">Vị trí</th>
+                  <th className="px-6 py-3.5">Vị trí & Nhiệm vụ</th>
                   <th className="px-6 py-3.5">Số điện thoại</th>
                   <th className="px-6 py-3.5">Ngày tham gia</th>
                   <th className="px-6 py-3.5">Trạng thái</th>
@@ -685,10 +875,17 @@ export default function WorkforcePage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-zinc-800">
-                        <span className="px-2.5 py-1 bg-zinc-100 rounded-lg text-zinc-700">
-                          {staff.positionName}
-                        </span>
+                      <td className="px-6 py-4">
+                        <div>
+                          <span className="font-bold text-zinc-900">
+                            {staff.positionName}
+                          </span>
+                          {staff.positionDescription && (
+                            <p className="text-[11px] text-zinc-400 line-clamp-1 italic">
+                              {staff.positionDescription}
+                            </p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 font-bold text-zinc-900">
                         {staff.phoneNumber}
@@ -708,7 +905,14 @@ export default function WorkforcePage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleOpenAssignRoleModal(staff)}
+                            className="px-2.5 py-1 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-lg transition-colors cursor-pointer"
+                            title="Đổi vai trò & nhiệm vụ"
+                          >
+                            Đổi vai trò
+                          </button>
                           <button
                             onClick={() => {
                               setSelectedStaff(staff);
@@ -813,7 +1017,7 @@ export default function WorkforcePage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) handleAttemptCloseModal();
+            if (e.target === e.currentTarget) handleAttemptCloseModal("onboard");
           }}
         >
           <div
@@ -821,7 +1025,6 @@ export default function WorkforcePage() {
             onInput={() => setFormDirty(true)}
             onChange={() => setFormDirty(true)}
           >
-            {/* Modal Header */}
             <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
@@ -832,20 +1035,19 @@ export default function WorkforcePage() {
                     Thêm nhân viên mới
                   </h3>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    Quy trình kiểm tra số điện thoại và phân công vai trò (UC-L-19)
+                    Kiểm tra số điện thoại và phân công vai trò (UC-L-19)
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={handleAttemptCloseModal}
+                onClick={() => handleAttemptCloseModal("onboard")}
                 className="p-1.5 rounded-xl hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Form */}
             <form onSubmit={handleSubmitOnboard} className="flex flex-col flex-1 overflow-hidden">
               <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
                 {errorMessage && (
@@ -855,7 +1057,7 @@ export default function WorkforcePage() {
                   </div>
                 )}
 
-                {/* Section 1: Phone lookup */}
+                {/* Phone lookup */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
                     <span>Số điện thoại nhân viên</span>
@@ -902,7 +1104,7 @@ export default function WorkforcePage() {
                   </p>
                 </div>
 
-                {/* Section 2: User Status (Found vs New) */}
+                {/* Found user */}
                 {hasSearched && foundUser && (
                   <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-2.5">
                     <div className="flex items-center gap-2 text-emerald-800 text-xs font-extrabold">
@@ -936,6 +1138,7 @@ export default function WorkforcePage() {
                   </div>
                 )}
 
+                {/* New user prompt */}
                 {hasSearched && !foundUser && (
                   <div className="p-4 rounded-2xl bg-orange-50/80 border border-orange-200/80 space-y-3">
                     <div className="flex items-center gap-2 text-orange-800 text-xs font-extrabold">
@@ -969,7 +1172,7 @@ export default function WorkforcePage() {
                   </div>
                 )}
 
-                {/* Section 3: Job Position selection */}
+                {/* Job Position selection */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
@@ -1023,11 +1226,11 @@ export default function WorkforcePage() {
                       </div>
                       <div>
                         <label className="text-[11px] font-bold text-zinc-600">
-                          Mô tả nhiệm vụ (hiển thị cho nhân viên xem)
+                          Mô tả nhiệm vụ tĩnh (duties list cho nhân viên)
                         </label>
                         <input
                           type="text"
-                          placeholder="VD: Sửa chữa đường ống, kiểm tra đồng hồ điện"
+                          placeholder="VD: Kiểm tra đồng hồ, sửa chữa sự cố phòng trọ"
                           value={newPositionDesc}
                           onChange={(e) => {
                             setNewPositionDesc(e.target.value);
@@ -1040,7 +1243,7 @@ export default function WorkforcePage() {
                   )}
                 </div>
 
-                {/* Section 4: Start Date & Notes */}
+                {/* Start Date & Notes */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-700">
@@ -1063,7 +1266,7 @@ export default function WorkforcePage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="VD: Nhân viên ca ngày"
+                      placeholder="VD: Thử việc ca ngày"
                       value={noteInput}
                       onChange={(e) => {
                         setNoteInput(e.target.value);
@@ -1079,7 +1282,7 @@ export default function WorkforcePage() {
               <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50/60">
                 <button
                   type="button"
-                  onClick={handleAttemptCloseModal}
+                  onClick={() => handleAttemptCloseModal("onboard")}
                   className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                 >
                   Hủy bỏ
@@ -1100,6 +1303,393 @@ export default function WorkforcePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: ASSIGN / RE-ASSIGN ROLE (UC-L-20 Step 3) */}
+      {/* ========================================================================= */}
+      {isAssignRoleModalOpen && selectedStaff && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleAttemptCloseModal("assignRole");
+          }}
+        >
+          <div
+            className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]"
+            onInput={() => setFormDirty(true)}
+            onChange={() => setFormDirty(true)}
+          >
+            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-zinc-900 text-base">
+                    Phân công lại vai trò
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 font-semibold">
+                    Đổi vị trí và cập nhật danh sách nhiệm vụ công việc (UC-L-20)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleAttemptCloseModal("assignRole")}
+                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAssignRole} className="p-6 space-y-4">
+              {assignError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span>{assignError}</span>
+                </div>
+              )}
+
+              {/* Staff Member Card Header */}
+              <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
+                  {selectedStaff.fullName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-xs font-extrabold text-zinc-900">
+                    {selectedStaff.fullName}
+                  </h4>
+                  <p className="text-[11px] text-zinc-500">
+                    SĐT: {selectedStaff.phoneNumber} • Hiện tại:{" "}
+                    <strong className="text-[#2AC1BC]">{selectedStaff.positionName}</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Role Selection */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-zinc-700">
+                    Chọn vai trò mới <span className="text-rose-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsAssignCreatingNew(!isAssignCreatingNew)}
+                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer"
+                  >
+                    {isAssignCreatingNew ? "Chọn vị trí có sẵn" : "+ Tạo vị trí mới"}
+                  </button>
+                </div>
+
+                {!isAssignCreatingNew ? (
+                  <div className="relative">
+                    <select
+                      value={assignTargetPositionId}
+                      onChange={(e) => {
+                        setAssignTargetPositionId(e.target.value);
+                        setFormDirty(true);
+                      }}
+                      className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] appearance-none cursor-pointer"
+                    >
+                      {positions.map((pos) => (
+                        <option key={pos.id} value={pos.id}>
+                          {pos.name} {pos.description ? `— ${pos.description}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                  </div>
+                ) : (
+                  <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+                    <div>
+                      <label className="text-[11px] font-bold text-zinc-600">
+                        Tên vị trí mới <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="VD: Quản lý kỹ thuật"
+                        value={assignNewPosName}
+                        onChange={(e) => {
+                          setAssignNewPosName(e.target.value);
+                          setFormDirty(true);
+                        }}
+                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-zinc-600">
+                        Mô tả nhiệm vụ công việc
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Kiểm tra camera, hệ thống PCCC"
+                        value={assignNewPosDesc}
+                        onChange={(e) => {
+                          setAssignNewPosDesc(e.target.value);
+                          setFormDirty(true);
+                        }}
+                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Position Duty Description Preview */}
+              {!isAssignCreatingNew && (
+                <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900 space-y-1">
+                  <span className="font-bold block text-[11px] uppercase tracking-wider text-blue-700">
+                    Mô tả nhiệm vụ được giao:
+                  </span>
+                  <p className="italic text-zinc-700">
+                    {positions.find((p) => p.id === assignTargetPositionId)?.description ||
+                      "Chưa có mô tả nhiệm vụ chi tiết cho vị trí này."}
+                  </p>
+                </div>
+              )}
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100">
+                <button
+                  type="button"
+                  onClick={() => handleAttemptCloseModal("assignRole")}
+                  className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={isAssignSubmitting}
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-50 rounded-xl transition-all shadow-md shadow-[#2AC1BC]/20 cursor-pointer flex items-center gap-2"
+                >
+                  {isAssignSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang cập nhật...</span>
+                    </>
+                  ) : (
+                    <span>Xác nhận đổi vai trò</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: MANAGE JOB POSITIONS (CRUD) */}
+      {/* ========================================================================= */}
+      {isPositionsModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleAttemptCloseModal("positions");
+          }}
+        >
+          <div
+            className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]"
+            onInput={() => setFormDirty(true)}
+            onChange={() => setFormDirty(true)}
+          >
+            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-zinc-900 text-base">
+                    Quản lý vị trí & nhiệm vụ công việc
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 font-semibold">
+                    Cấu hình vai trò và mô tả nhiệm vụ tĩnh cho nhân viên tòa nhà
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleAttemptCloseModal("positions")}
+                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+              {posErrorMessage && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span>{posErrorMessage}</span>
+                </div>
+              )}
+
+              {/* Inline Form to Add / Edit Position */}
+              {(isAddingPositionInline || editingPosition) && (
+                <form
+                  onSubmit={handleSavePosition}
+                  className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black text-zinc-900">
+                      {editingPosition ? "Chỉnh sửa vị trí công việc" : "Thêm vị trí mới"}
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingPosition(null);
+                        setIsAddingPositionInline(false);
+                      }}
+                      className="text-[11px] text-zinc-400 hover:text-zinc-700 font-bold"
+                    >
+                      Đóng form
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-zinc-700">
+                        Tên vị trí <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="VD: Trưởng ban Quản lý"
+                        value={posFormName}
+                        onChange={(e) => {
+                          setPosFormName(e.target.value);
+                          setFormDirty(true);
+                        }}
+                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-zinc-700">
+                        Nhiệm vụ & trách nhiệm (duties list)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Kiểm tra hành lang, thu gom rác chung"
+                        value={posFormDesc}
+                        onChange={(e) => {
+                          setPosFormDesc(e.target.value);
+                          setFormDirty(true);
+                        }}
+                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingPosition(null);
+                        setIsAddingPositionInline(false);
+                      }}
+                      className="px-3 py-1.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isPosSubmitting}
+                      className="px-4 py-1.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-xs"
+                    >
+                      {isPosSubmitting ? "Đang lưu..." : "Lưu vị trí"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Positions List */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider">
+                    Danh sách các vị trí ({positions.length})
+                  </span>
+                  {!isAddingPositionInline && !editingPosition && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingPositionInline(true);
+                        setEditingPosition(null);
+                        setPosFormName("");
+                        setPosFormDesc("");
+                      }}
+                      className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Thêm vị trí mới
+                    </button>
+                  )}
+                </div>
+
+                <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden bg-white">
+                  {positions.map((pos) => (
+                    <div
+                      key={pos.id}
+                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50/80 transition-colors"
+                    >
+                      <div className="space-y-0.5 max-w-md">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-zinc-900 text-xs sm:text-sm">
+                            {pos.name}
+                          </span>
+                          <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded-full text-[10px] font-bold">
+                            {pos.staffCount || 0} nhân sự
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-500 italic">
+                          {pos.description || "Chưa có mô tả nhiệm vụ"}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingPosition(pos);
+                            setIsAddingPositionInline(false);
+                            setPosFormName(pos.name);
+                            setPosFormDesc(pos.description || "");
+                          }}
+                          className="p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                          title="Sửa vị trí"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePosition(pos)}
+                          disabled={(pos.staffCount || 0) > 0}
+                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer"
+                          title={
+                            (pos.staffCount || 0) > 0
+                              ? "Không thể xóa vì đang có nhân viên đảm nhận"
+                              : "Xóa vị trí"
+                          }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
+              <button
+                type="button"
+                onClick={() => handleAttemptCloseModal("positions")}
+                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1261,10 +1851,19 @@ export default function WorkforcePage() {
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => {
+                  handleOpenAssignRoleModal(selectedStaff);
+                  setIsDetailModalOpen(false);
+                }}
+                className="px-3.5 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-xl transition-colors cursor-pointer"
+              >
+                Đổi vai trò
+              </button>
+              <button
+                onClick={() => {
                   handleToggleStatus(selectedStaff);
                   setIsDetailModalOpen(false);
                 }}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
+                className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
                 {selectedStaff.status === "active" ? "Chuyển sang Đã nghỉ" : "Kích hoạt lại"}
               </button>
@@ -1299,7 +1898,7 @@ export default function WorkforcePage() {
                 Xác nhận đóng form
               </h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Bạn có thông tin phân công nhân viên chưa lưu. Nếu đóng bây giờ, các thay đổi sẽ bị hủy bỏ.
+                Bạn có thông tin chưa được lưu. Nếu đóng bây giờ, các thay đổi sẽ bị hủy bỏ.
               </p>
             </div>
 

@@ -40,6 +40,8 @@ describe('EmployeesService', () => {
         count: jest.fn(),
         create: jest.fn(),
         createMany: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
       },
       auditLog: {
         create: jest.fn(),
@@ -382,6 +384,146 @@ describe('EmployeesService', () => {
           entityType: 'EMPLOYEE_ASSIGNMENT',
         }),
       });
+    });
+  });
+
+  describe('getStaffDetail', () => {
+    it('should throw NotFoundException if staff not found', async () => {
+      mockPrisma.employeeAssignment.findFirst.mockResolvedValue(null);
+      await expect(
+        service.getStaffDetail(mockBoardingHouseId, 'missing-id'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should return staff details when found', async () => {
+      mockPrisma.employeeAssignment.findFirst.mockResolvedValue({
+        id: mockAssignmentId,
+        employeeId: mockEmployeeId,
+        positionId: mockPositionId,
+        boardingHouseId: mockBoardingHouseId,
+        status: AssignmentStatus.active,
+        joinedAt: new Date(),
+        leftAt: null,
+        createdAt: new Date(),
+        position: { name: 'Bảo vệ', description: 'Trực cổng' },
+        employee: {
+          user: {
+            id: mockUserId,
+            username: 'Nguyễn Văn Bảo',
+            phoneNumber: '0901234567',
+            email: 'bao@dormio.vn',
+            avatarUrl: null,
+            role: UserRole.employee,
+            mustChangePassword: false,
+          },
+        },
+      });
+
+      const res = await service.getStaffDetail(mockBoardingHouseId, mockAssignmentId);
+      expect(res.fullName).toBe('Nguyễn Văn Bảo');
+      expect(res.positionName).toBe('Bảo vệ');
+    });
+  });
+
+  describe('assignRole (UC-L-20 Step 3)', () => {
+    it('should re-assign existing job position and create AuditLog', async () => {
+      const newPosId = 'pos-new-555';
+      mockPrisma.employeeAssignment.findFirst.mockResolvedValue({
+        id: mockAssignmentId,
+        positionId: mockPositionId,
+        position: { id: mockPositionId, name: 'Bảo vệ' },
+      });
+      mockPrisma.jobPosition.findFirst.mockResolvedValue({
+        id: newPosId,
+        name: 'Quản lý tòa nhà',
+      });
+      mockPrisma.employeeAssignment.update.mockResolvedValue({
+        id: mockAssignmentId,
+        employeeId: mockEmployeeId,
+        positionId: newPosId,
+        boardingHouseId: mockBoardingHouseId,
+        status: AssignmentStatus.active,
+        joinedAt: new Date(),
+        leftAt: null,
+        createdAt: new Date(),
+        position: { name: 'Quản lý tòa nhà', description: 'Vận hành' },
+        employee: {
+          user: {
+            id: mockUserId,
+            username: 'Nguyễn Văn Bảo',
+            phoneNumber: '0901234567',
+            email: null,
+            avatarUrl: null,
+            role: UserRole.employee,
+            mustChangePassword: false,
+          },
+        },
+      });
+
+      const res = await service.assignRole(
+        mockBoardingHouseId,
+        mockAssignmentId,
+        mockLandlordId,
+        { positionId: newPosId },
+      );
+
+      expect(res.positionName).toBe('Quản lý tòa nhà');
+      expect(mockPrisma.employeeAssignment.update).toHaveBeenCalled();
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: AuditLogAction.update,
+          entityType: 'EMPLOYEE_ASSIGNMENT',
+        }),
+      });
+    });
+  });
+
+  describe('updateJobPosition & deleteJobPosition', () => {
+    it('should update job position name and description', async () => {
+      mockPrisma.jobPosition.findFirst
+        .mockResolvedValueOnce({ id: mockPositionId, name: 'Bảo vệ' }) // existing
+        .mockResolvedValueOnce(null); // duplicate check
+
+      mockPrisma.jobPosition.update.mockResolvedValue({
+        id: mockPositionId,
+        name: 'Trưởng ban Bảo vệ',
+        description: 'Phụ trách an ninh',
+        createdAt: new Date(),
+        _count: { employeeAssignments: 1 },
+      });
+
+      const res = await service.updateJobPosition(
+        mockBoardingHouseId,
+        mockPositionId,
+        { name: 'Trưởng ban Bảo vệ', description: 'Phụ trách an ninh' },
+      );
+
+      expect(res.name).toBe('Trưởng ban Bảo vệ');
+    });
+
+    it('should throw BadRequestException when deleting a position with active staff', async () => {
+      mockPrisma.jobPosition.findFirst.mockResolvedValue({
+        id: mockPositionId,
+        name: 'Bảo vệ',
+        _count: { employeeAssignments: 2 },
+      });
+
+      await expect(
+        service.deleteJobPosition(mockBoardingHouseId, mockPositionId),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should delete position when no staff are assigned', async () => {
+      mockPrisma.jobPosition.findFirst.mockResolvedValue({
+        id: mockPositionId,
+        name: 'Tạp vụ ca đêm',
+        _count: { employeeAssignments: 0 },
+      });
+      mockPrisma.jobPosition.delete.mockResolvedValue({ id: mockPositionId });
+
+      const res = await service.deleteJobPosition(mockBoardingHouseId, mockPositionId);
+      expect(res.success).toBe(true);
+      expect(mockPrisma.jobPosition.delete).toHaveBeenCalled();
     });
   });
 });

@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { AssignmentStatus, AuditLogAction, UserRole } from '@prisma';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { AssignRoleDto } from './dto/assign-role.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { OnboardStaffDto } from './dto/onboard-staff.dto';
 import { QueryStaffDto } from './dto/query-staff.dto';
@@ -20,6 +21,7 @@ import {
   StaffListResponseDto,
   StaffSummaryDto,
 } from './dto/staff-response.dto';
+import { UpdatePositionDto } from './dto/update-position.dto';
 import { UpdateStaffStatusDto } from './dto/update-staff-status.dto';
 
 const BCRYPT_ROUNDS = 10;
@@ -654,4 +656,284 @@ export class EmployeesService {
       mustChangePassword: updated.employee.user.mustChangePassword,
     };
   }
+
+  /**
+   * UC-L-20: Get single staff assignment details
+   */
+  async getStaffDetail(
+    boardingHouseId: string,
+    assignmentId: string,
+  ): Promise<StaffItemDto> {
+    const assignment = await this.prisma.employeeAssignment.findFirst({
+      where: {
+        id: assignmentId,
+        boardingHouseId,
+      },
+      include: {
+        position: true,
+        employee: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+                email: true,
+                avatarUrl: true,
+                role: true,
+                mustChangePassword: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên');
+    }
+
+    return {
+      assignmentId: assignment.id,
+      employeeId: assignment.employeeId,
+      userId: assignment.employee.user.id,
+      fullName: assignment.employee.user.username || 'Chưa cập nhật tên',
+      phoneNumber: assignment.employee.user.phoneNumber,
+      email: assignment.employee.user.email,
+      avatarUrl: assignment.employee.user.avatarUrl,
+      positionId: assignment.positionId,
+      positionName: assignment.position.name,
+      positionDescription: assignment.position.description,
+      status: assignment.status,
+      joinedAt: assignment.joinedAt,
+      leftAt: assignment.leftAt,
+      createdAt: assignment.createdAt,
+      userRole: assignment.employee.user.role,
+      mustChangePassword: assignment.employee.user.mustChangePassword,
+    };
+  }
+
+  /**
+   * UC-L-20 Step 3: Assign/Re-assign role and static duties list to staff member
+   */
+  async assignRole(
+    boardingHouseId: string,
+    assignmentId: string,
+    currentUserId: string,
+    dto: AssignRoleDto,
+    ipAddress = '127.0.0.1',
+  ): Promise<StaffItemDto> {
+    const existing = await this.prisma.employeeAssignment.findFirst({
+      where: {
+        id: assignmentId,
+        boardingHouseId,
+      },
+      include: {
+        position: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên');
+    }
+
+    let targetPositionId = dto.positionId;
+
+    // Inline position creation if requested
+    if (!targetPositionId && dto.newPositionName?.trim()) {
+      const createdPos = await this.createJobPosition(boardingHouseId, {
+        name: dto.newPositionName.trim(),
+        description: dto.newPositionDescription?.trim(),
+      });
+      targetPositionId = createdPos.id;
+    }
+
+    if (!targetPositionId) {
+      throw new BadRequestException('Vui lòng chọn hoặc nhập tên vị trí công việc mới');
+    }
+
+    const targetPosition = await this.prisma.jobPosition.findFirst({
+      where: {
+        id: targetPositionId,
+        boardingHouseId,
+      },
+    });
+
+    if (!targetPosition) {
+      throw new BadRequestException('Vị trí công việc không hợp lệ cho nhà trọ này');
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const res = await tx.employeeAssignment.update({
+        where: { id: assignmentId },
+        data: {
+          positionId: targetPosition.id,
+        },
+        include: {
+          position: true,
+          employee: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+
+      // AuditLog (Rule 4)
+      await tx.auditLog.create({
+        data: {
+          userId: currentUserId,
+          boardingHouseId,
+          action: AuditLogAction.update,
+          entityType: 'EMPLOYEE_ASSIGNMENT',
+          entityId: assignmentId,
+          oldValue: {
+            positionId: existing.positionId,
+            positionName: existing.position.name,
+          },
+          newValue: {
+            positionId: targetPosition.id,
+            positionName: targetPosition.name,
+          },
+          ipAddress,
+        },
+      });
+
+      return res;
+    });
+
+    this.logger.log(
+      `Re-assigned role for staff assignment ${assignmentId}: newPosition=${targetPosition.name}`,
+    );
+
+    return {
+      assignmentId: updated.id,
+      employeeId: updated.employeeId,
+      userId: updated.employee.user.id,
+      fullName: updated.employee.user.username || 'Chưa cập nhật tên',
+      phoneNumber: updated.employee.user.phoneNumber,
+      email: updated.employee.user.email,
+      avatarUrl: updated.employee.user.avatarUrl,
+      positionId: updated.positionId,
+      positionName: updated.position.name,
+      positionDescription: updated.position.description,
+      status: updated.status,
+      joinedAt: updated.joinedAt,
+      leftAt: updated.leftAt,
+      createdAt: updated.createdAt,
+      userRole: updated.employee.user.role,
+      mustChangePassword: updated.employee.user.mustChangePassword,
+    };
+  }
+
+  /**
+   * UC-L-20: Update job position name and static duties description
+   */
+  async updateJobPosition(
+    boardingHouseId: string,
+    positionId: string,
+    dto: UpdatePositionDto,
+  ): Promise<JobPositionDto> {
+    const existing = await this.prisma.jobPosition.findFirst({
+      where: {
+        id: positionId,
+        boardingHouseId,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Không tìm thấy vị trí công việc này');
+    }
+
+    if (dto.name && dto.name.trim() !== existing.name) {
+      const duplicate = await this.prisma.jobPosition.findFirst({
+        where: {
+          boardingHouseId,
+          name: { equals: dto.name.trim(), mode: 'insensitive' },
+          id: { not: positionId },
+        },
+      });
+      if (duplicate) {
+        throw new ConflictException(
+          `Vị trí công việc "${dto.name.trim()}" đã tồn tại tại nhà trọ này`,
+        );
+      }
+    }
+
+    const updated = await this.prisma.jobPosition.update({
+      where: { id: positionId },
+      data: {
+        name: dto.name?.trim() || existing.name,
+        description:
+          dto.description !== undefined
+            ? dto.description?.trim() || null
+            : existing.description,
+      },
+      include: {
+        _count: {
+          select: {
+            employeeAssignments: {
+              where: { status: AssignmentStatus.active },
+            },
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Updated job position ${positionId} for house ${boardingHouseId}`);
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      staffCount: updated._count.employeeAssignments,
+      createdAt: updated.createdAt,
+    };
+  }
+
+  /**
+   * UC-L-20: Delete job position (protected if active staff are assigned)
+   */
+  async deleteJobPosition(
+    boardingHouseId: string,
+    positionId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const existing = await this.prisma.jobPosition.findFirst({
+      where: {
+        id: positionId,
+        boardingHouseId,
+      },
+      include: {
+        _count: {
+          select: {
+            employeeAssignments: {
+              where: { status: AssignmentStatus.active },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Không tìm thấy vị trí công việc này');
+    }
+
+    if (existing._count.employeeAssignments > 0) {
+      throw new BadRequestException(
+        `Không thể xóa vị trí "${existing.name}" vì đang có ${existing._count.employeeAssignments} nhân viên đảm nhận. Vui lòng chuyển vị trí của nhân viên trước.`,
+      );
+    }
+
+    await this.prisma.jobPosition.delete({
+      where: { id: positionId },
+    });
+
+    this.logger.log(`Deleted job position ${positionId} from house ${boardingHouseId}`);
+
+    return {
+      success: true,
+      message: `Đã xóa vị trí công việc "${existing.name}" thành công`,
+    };
+  }
 }
+
