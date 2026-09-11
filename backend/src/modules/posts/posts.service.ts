@@ -14,6 +14,7 @@ import {
   PaginatedPublicPostsResponseDto,
   PostQuotaDto,
   PostResponseDto,
+  PosterProfileResponseDto,
   PublicAddressDto,
   PublicPostResponseDto,
 } from './dto/post-response.dto';
@@ -1208,4 +1209,124 @@ export class PostsService {
     });
     return count > 0;
   }
+
+  /**
+   * UC-PU-02: View Poster Profile
+   *
+   * SPEC RULES:
+   * Tier: Free · No auth required
+   * Public subset of User: avatarUrl, username, status, createdAt, COUNT(Post WHERE postedBy=user.id).
+   * Never expose phoneNumber/email here unless the viewer is authenticated and has an active
+   * Conversation with this poster (or is the poster themselves) — enforced explicitly in query/DTO.
+   */
+  async getPosterProfile(
+    posterId: string,
+    viewerId: string | null,
+  ): Promise<PosterProfileResponseDto> {
+    this.logger.log(
+      `getPosterProfile called for posterId=${posterId}, viewerId=${viewerId ?? 'anonymous'}`,
+    );
+
+    // 1. Fetch poster info
+    const poster = await this.prisma.user.findUnique({
+      where: { id: posterId },
+      select: {
+        id: true,
+        username: true,
+        avatarUrl: true,
+        bio: true,
+        status: true,
+        createdAt: true,
+        phoneNumber: true,
+        email: true,
+      },
+    });
+
+    if (!poster) {
+      throw new NotFoundException(`Poster with ID ${posterId} not found`);
+    }
+
+    // 2. Check if viewer is allowed to see contact info
+    let canViewContact = false;
+    let hasActiveConversation = false;
+
+    if (viewerId) {
+      if (viewerId === posterId) {
+        canViewContact = true;
+      } else {
+        const activeConversation = await this.prisma.conversation.findFirst({
+          where: {
+            deletedAt: null,
+            OR: [
+              { user1Id: viewerId, user2Id: posterId },
+              { user1Id: posterId, user2Id: viewerId },
+            ],
+          },
+        });
+        if (activeConversation) {
+          hasActiveConversation = true;
+          canViewContact = true;
+        }
+      }
+    }
+
+    // 3. Count public listings
+    const postCount = await this.prisma.post.count({
+      where: {
+        postedBy: posterId,
+        status: PostStatus.posted,
+      },
+    });
+
+    // 4. Fetch active public listings for this poster
+    const rawPosts = await this.prisma.post.findMany({
+      where: {
+        postedBy: posterId,
+        status: PostStatus.posted,
+      },
+      include: {
+        postImages: true,
+        room: {
+          include: {
+            roomType: true,
+            boardingHouse: true,
+          },
+        },
+        postedByUser: {
+          select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            postReaches: true,
+            savedPosts: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const activeListings = rawPosts.map((post) =>
+      this.mapToPublicResponseDto(post),
+    );
+
+    // 5. Build DTO with explicit privacy enforcement
+    return {
+      id: poster.id,
+      username: poster.username,
+      avatarUrl: poster.avatarUrl,
+      bio: poster.bio,
+      status: poster.status,
+      createdAt: poster.createdAt,
+      postCount,
+      phoneNumber: canViewContact ? poster.phoneNumber : undefined,
+      email: canViewContact ? poster.email : undefined,
+      hasActiveConversation,
+      activeListings,
+    };
+  }
 }
+

@@ -904,7 +904,31 @@ const vi = {
     guestSavedPostsTitle1: "Danh Sách Yêu Thích",
     guestSavedPostsTitle2: "So Sánh & Đặt Cọc",
     guestSavedPostsViewAndDeposit: "Xem & Đặt Cọc ",
-    guestSavedPostsViewDetails: "Xem Chi Tiết"
+    guestSavedPostsViewDetails: "Xem Chi Tiết",
+
+    // --- Poster / Landlord public profile (UC-PU-02) ---
+    guestPosterProfileTitle: "Hồ Sơ Người Đăng Tin",
+    guestPosterProfileSubtitle: "Thông tin chủ nhà & danh sách các phòng trọ đang cho thuê công khai",
+    guestPosterProfileVerified: "Chính chủ xác thực",
+    guestPosterProfileMemberSince: "Thành viên từ {date}",
+    guestPosterProfileTotalListings: "{count} bài đăng cho thuê",
+    guestPosterProfileBio: "Giới thiệu",
+    guestPosterProfileDefaultBio: "Chưa có thông tin giới thiệu chi tiết.",
+    guestPosterProfileContactTitle: "Thông tin liên hệ",
+    guestPosterProfileContactProtectedTitle: "Thông tin liên hệ được bảo vệ",
+    guestPosterProfileContactProtectedDesc: "Theo chính sách bảo mật của Dormio, số điện thoại và email chỉ hiển thị sau khi bạn bắt đầu cuộc trò chuyện với người đăng này.",
+    guestPosterProfileStartChatBtn: "Bắt đầu nhắn tin với chủ nhà",
+    guestPosterProfileLoginToContact: "Đăng nhập để liên hệ",
+    guestPosterProfilePhone: "Số điện thoại",
+    guestPosterProfileEmail: "Email",
+    guestPosterProfileActiveListingsTitle: "Danh Sách Phòng Trọ Đang Cho Thuê",
+    guestPosterProfileNoListings: "Chủ nhà hiện chưa có bài đăng cho thuê nào khác.",
+    guestPosterProfileBackToRooms: "Quay lại danh sách phòng",
+    guestPosterProfileErrorFetch: "Không thể tải hồ sơ người đăng tin. Vui lòng thử lại sau.",
+    guestPosterProfileCall: "Gọi ngay",
+    guestPosterProfileCopy: "Sao chép",
+    guestPosterProfileCopied: "Đã sao chép",
+    guestPosterProfileChatLoading: "Đang mở đoạn chat..."
   },
 
   // ==========================================================================

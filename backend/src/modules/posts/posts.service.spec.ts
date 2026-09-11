@@ -57,6 +57,9 @@ describe('PostsService', () => {
       findUnique: jest.fn(),
       count: jest.fn(),
     },
+    conversation: {
+      findFirst: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
@@ -560,6 +563,97 @@ describe('PostsService', () => {
       await expect(service.savePost(userId, postId)).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('UC-PU-02: View Poster Profile', () => {
+    const posterId = 'poster-123';
+    const viewerId = 'viewer-456';
+    const mockPoster = {
+      id: posterId,
+      username: 'Landlord Rio',
+      avatarUrl: 'https://example.com/avatar.jpg',
+      bio: 'Trusted landlord in Hanoi',
+      status: 'active',
+      createdAt: new Date('2026-01-01'),
+      phoneNumber: '0901234567',
+      email: 'rio@dormio.vn',
+    };
+
+    it('should throw NotFoundException if poster does not exist', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.getPosterProfile(posterId, null)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should return public profile without phone/email for unauthenticated viewer', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
+      mockPrisma.post.count.mockResolvedValue(3);
+      mockPrisma.post.findMany.mockResolvedValue([]);
+
+      const result = await service.getPosterProfile(posterId, null);
+
+      expect(result.id).toBe(posterId);
+      expect(result.username).toBe('Landlord Rio');
+      expect(result.avatarUrl).toBe('https://example.com/avatar.jpg');
+      expect(result.bio).toBe('Trusted landlord in Hanoi');
+      expect(result.postCount).toBe(3);
+      expect(result.phoneNumber).toBeUndefined();
+      expect(result.email).toBeUndefined();
+      expect(result.hasActiveConversation).toBe(false);
+      expect(mockPrisma.conversation.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('should withhold phone/email for authenticated viewer without active conversation', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
+      mockPrisma.conversation.findFirst.mockResolvedValue(null);
+      mockPrisma.post.count.mockResolvedValue(2);
+      mockPrisma.post.findMany.mockResolvedValue([]);
+
+      const result = await service.getPosterProfile(posterId, viewerId);
+
+      expect(result.id).toBe(posterId);
+      expect(result.phoneNumber).toBeUndefined();
+      expect(result.email).toBeUndefined();
+      expect(result.hasActiveConversation).toBe(false);
+      expect(mockPrisma.conversation.findFirst).toHaveBeenCalledWith({
+        where: {
+          deletedAt: null,
+          OR: [
+            { user1Id: viewerId, user2Id: posterId },
+            { user1Id: posterId, user2Id: viewerId },
+          ],
+        },
+      });
+    });
+
+    it('should expose phone/email for authenticated viewer with active conversation', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
+      mockPrisma.conversation.findFirst.mockResolvedValue({ id: 'conv-1' });
+      mockPrisma.post.count.mockResolvedValue(2);
+      mockPrisma.post.findMany.mockResolvedValue([]);
+
+      const result = await service.getPosterProfile(posterId, viewerId);
+
+      expect(result.id).toBe(posterId);
+      expect(result.phoneNumber).toBe('0901234567');
+      expect(result.email).toBe('rio@dormio.vn');
+      expect(result.hasActiveConversation).toBe(true);
+    });
+
+    it('should expose phone/email when poster views their own profile', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
+      mockPrisma.post.count.mockResolvedValue(2);
+      mockPrisma.post.findMany.mockResolvedValue([]);
+
+      const result = await service.getPosterProfile(posterId, posterId);
+
+      expect(result.id).toBe(posterId);
+      expect(result.phoneNumber).toBe('0901234567');
+      expect(result.email).toBe('rio@dormio.vn');
+      expect(mockPrisma.conversation.findFirst).not.toHaveBeenCalled();
     });
   });
 });

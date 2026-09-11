@@ -904,7 +904,31 @@ const en = {
     guestSavedPostsTitle1: "Favorites List,",
     guestSavedPostsTitle2: "Compare & Deposit",
     guestSavedPostsViewAndDeposit: "View & Deposit",
-    guestSavedPostsViewDetails: "View Details"
+    guestSavedPostsViewDetails: "View Details",
+
+    // --- Poster / Landlord public profile (UC-PU-02) ---
+    guestPosterProfileTitle: "Poster Profile",
+    guestPosterProfileSubtitle: "Landlord information & publicly available rental rooms",
+    guestPosterProfileVerified: "Verified Landlord",
+    guestPosterProfileMemberSince: "Member since {date}",
+    guestPosterProfileTotalListings: "{count} rental listings",
+    guestPosterProfileBio: "About",
+    guestPosterProfileDefaultBio: "No bio provided yet.",
+    guestPosterProfileContactTitle: "Contact Information",
+    guestPosterProfileContactProtectedTitle: "Contact Information Protected",
+    guestPosterProfileContactProtectedDesc: "Under Dormio privacy policy, phone and email are only displayed after initiating a conversation with this poster.",
+    guestPosterProfileStartChatBtn: "Message Landlord",
+    guestPosterProfileLoginToContact: "Log in to contact",
+    guestPosterProfilePhone: "Phone Number",
+    guestPosterProfileEmail: "Email",
+    guestPosterProfileActiveListingsTitle: "Active Rental Listings",
+    guestPosterProfileNoListings: "No active rental listings available at this moment.",
+    guestPosterProfileBackToRooms: "Back to listings",
+    guestPosterProfileErrorFetch: "Unable to load poster profile. Please try again later.",
+    guestPosterProfileCall: "Call Now",
+    guestPosterProfileCopy: "Copy",
+    guestPosterProfileCopied: "Copied",
+    guestPosterProfileChatLoading: "Opening conversation..."
   },
 
   // ==========================================================================

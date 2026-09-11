@@ -636,27 +636,31 @@ export default function RoomDetailPage() {
                   <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">
                     {tGuest("guestRoomDetailLandlordTitle")}
                   </span>
-                  <div className="flex items-center gap-3">
+                  <Link
+                    href={`/landlords/${post.poster.id}`}
+                    className="flex items-center gap-3 p-2.5 -mx-2.5 rounded-2xl hover:bg-zinc-50 border border-transparent hover:border-zinc-200/80 transition-all group cursor-pointer"
+                    title="Xem hồ sơ người đăng"
+                  >
                     {post.poster.avatarUrl ? (
                       <img
                         src={post.poster.avatarUrl}
                         alt={post.poster.username ?? ""}
-                        className="w-12 h-12 rounded-full object-cover border border-zinc-200"
+                        className="w-12 h-12 rounded-full object-cover border border-zinc-200 group-hover:scale-105 transition-transform"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-lg border border-[#2AC1BC]/20">
+                      <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-lg border border-[#2AC1BC]/20 group-hover:scale-105 transition-transform">
                         {posterInitial}
                       </div>
                     )}
-                    <div>
-                      <h4 className="font-extrabold text-sm text-zinc-900">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-extrabold text-sm text-zinc-900 group-hover:text-[#2AC1BC] transition-colors truncate">
                         {post.poster.username ?? tGuest("guestRoomsDefaultLandlord")}
                       </h4>
-                      <span className="text-xs font-semibold text-zinc-500">
+                      <span className="text-xs font-semibold text-zinc-500 block">
                         {tGuest("guestRoomDetailVerifiedBadge")}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               )}
             </div>

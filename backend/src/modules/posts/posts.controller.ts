@@ -11,7 +11,9 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -29,6 +31,7 @@ import {
   PaginatedPublicPostsResponseDto,
   PostQuotaDto,
   PostResponseDto,
+  PosterProfileResponseDto,
   PublicPostResponseDto,
 } from './dto/post-response.dto';
 import {
@@ -46,7 +49,24 @@ import { PostStatus } from '@prisma';
 export class PostsController {
   private readonly logger = new Logger(PostsController.name);
 
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  private extractViewerId(req: any): string | null {
+    try {
+      const authHeader = req?.headers?.authorization || req?.headers?.Authorization;
+      if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
+        return null;
+      }
+      const token = authHeader.substring(7).trim();
+      const payload = this.jwtService.verify<JwtPayload>(token);
+      return payload?.id ?? null;
+    } catch {
+      return null;
+    }
+  }
 
   @Post()
   @ApiOperation({
@@ -190,9 +210,36 @@ export class PostsController {
   }
 
   @Public()
+  @Get('posters/:id')
+  @ApiOperation({
+    summary: 'UC-PU-02: View poster profile',
+    description:
+      'Returns public subset of User (avatarUrl, username, status, createdAt, postCount, activeListings). ' +
+      'Phone and email are strictly withheld unless viewer is authenticated and has an active conversation with this poster.',
+  })
+  @ApiParam({ name: 'id', description: 'Poster User UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Poster public profile with active listings and privacy-guarded contact info',
+    type: PosterProfileResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Poster not found',
+  })
+  async getPosterProfile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+  ): Promise<PosterProfileResponseDto> {
+    this.logger.log(`GET /posts/posters/${id} called`);
+    const viewerId = this.extractViewerId(req);
+    return this.postsService.getPosterProfile(id, viewerId);
+  }
+
+  @Public()
   @Get('browse/:id')
   @ApiOperation({
-    summary: 'UC-PU-02: Get a single public post detail by ID',
+    summary: 'UC-PU-01: Get a single public post detail by ID',
     description:
       'Returns full public post details. No authentication required. ' +
       'Only posts with status=posted are returned. Poster phone/email are never exposed.',

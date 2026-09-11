@@ -220,3 +220,5 @@ export class PaginatedPublicPostsResponseDto {
   };
 }
 
+export { PosterProfileResponseDto } from './poster-profile-response.dto';
+
