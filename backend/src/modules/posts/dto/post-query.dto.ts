@@ -65,6 +65,14 @@ export class BrowsePostsQueryDto {
   search?: string;
 
   @ApiPropertyOptional({
+    description: 'Filter by listing status (draft, posted, hidden, or all)',
+    example: 'posted',
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({
     description: 'Filter by province (exact match on BoardingHouse.province)',
     example: 'Hà Nội',
   })

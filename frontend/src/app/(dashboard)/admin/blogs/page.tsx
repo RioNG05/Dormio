@@ -1,33 +1,24 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { postService, PublicPostListing } from "@/services/post.service";
 import {
-  Newspaper, Plus, Search, Filter, Eye, Edit3, Trash2,
-  CheckCircle2, Clock, Globe, BookOpen, LayoutGrid, Table as TableIcon,
+  Newspaper, Plus, Search, Eye, Edit3, Trash2,
+  CheckCircle2, Clock, LayoutGrid, Table as TableIcon,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X,
-  ExternalLink, FileText, Image as ImageIcon, Sparkles, AlertTriangle
+  AlertTriangle, RefreshCw, Bookmark, MapPin, Building2
 } from "lucide-react";
-
-interface BlogArticle {
-  id: string;
-  title: string;
-  slug: string;
-  category: "guide" | "legal" | "lifestyle" | "market";
-  categoryLabel: string;
-  excerpt: string;
-  content: string;
-  coverImage: string;
-  readTime: string;
-  author: string;
-  views: number;
-  status: "published" | "draft";
-  publishedAt: string;
-}
 
 export default function AdminBlogsPage() {
   const { locale } = useLanguage();
   const isEn = locale === "en";
+
+  // Data State
+  const [posts, setPosts] = useState<PublicPostListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Rule #9: Standardized View & Pagination
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid"); // Grid is ALWAYS default
@@ -36,26 +27,24 @@ export default function AdminBlogsPage() {
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
-
-  // Selection
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"all" | "posted" | "draft" | "hidden">("all");
 
   // Modals
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingArticle, setEditingArticle] = useState<BlogArticle | null>(null);
+  const [editingPost, setEditingPost] = useState<PublicPostListing | null>(null);
 
   // Editor Form Fields
   const [formTitle, setFormTitle] = useState("");
-  const [formSlug, setFormSlug] = useState("");
-  const [formCategory, setFormCategory] = useState<BlogArticle["category"]>("guide");
   const [formCoverImage, setFormCoverImage] = useState("");
-  const [formExcerpt, setFormExcerpt] = useState("");
   const [formContent, setFormContent] = useState("");
-  const [formStatus, setFormStatus] = useState<"published" | "draft">("published");
+  const [formDepositAmount, setFormDepositAmount] = useState<number>(0);
+  const [formStatus, setFormStatus] = useState<"posted" | "draft">("posted");
   const [editorError, setEditorError] = useState("");
-  const [deleteTargetArticle, setDeleteTargetArticle] = useState<BlogArticle | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Delete Target Modal
+  const [deleteTargetPost, setDeleteTargetPost] = useState<PublicPostListing | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Rule #10: Modal Reset Confirmation
   const [confirmCloseModal, setConfirmCloseModal] = useState<{
@@ -63,126 +52,64 @@ export default function AdminBlogsPage() {
     onDiscard: () => void;
   }>({ isOpen: false, onDiscard: () => {} });
 
-  // Initial Articles Data
-  const [articles, setArticles] = useState<BlogArticle[]>([
-    {
-      id: "POST-101",
-      title: isEn
-        ? "10 Essential Checks Before Signing a Boarding House Contract in Vietnam"
-        : "10 Điều Nhất Định Phải Kiểm Tra Kỹ Trước Khi Ký Hợp Đồng Thuê Trọ",
-      slug: "10-essential-checks-before-signing-boarding-house-contract",
-      category: "legal",
-      categoryLabel: isEn ? "Legal & Contracts" : "Pháp lý & Hợp đồng",
-      excerpt: isEn
-        ? "Protect yourself from unfair clauses, deposit traps, and utility markups with this practical landlord inspection checklist."
-        : "Tránh bẫy tiền cọc, phụ phí điện nước ảo và điều khoản bất lợi bằng cẩm nang kiểm tra chi tiết từng điều khoản mẫu.",
-      content: "Nội dung bài viết hướng dẫn chi tiết các bước đối chiếu CMND/CCCD chủ trọ, giấy chứng nhận quyền sử dụng đất, biên bản bàn giao thiết bị phòng và cách ghi rõ chỉ số đồng hồ điện nước ban đầu...",
-      coverImage: "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=600&auto=format&fit=crop&q=80",
-      readTime: "5 min read",
-      author: "Ban Biên Tập Dormio",
-      views: 3840,
-      status: "published",
-      publishedAt: "2026-09-01",
-    },
-    {
-      id: "POST-102",
-      title: isEn
-        ? "How to Decorate a 15m2 Boarding Room to Feel Like a Studio"
-        : "Cách Decor Phòng Trọ 15m2 Thoáng Đẹp Như Studio Với Chi Phí Dưới 2 Triệu",
-      slug: "how-to-decorate-15m2-room-under-2-million",
-      category: "lifestyle",
-      categoryLabel: isEn ? "Living & Decor" : "Mẹo sống & Decor",
-      excerpt: isEn
-        ? "Smart storage tips, warm lighting ideas, and multifunctional furniture layouts for tiny student rooms."
-        : "Tối ưu hóa không gian hẹp, sử dụng giá kệ gắn tường không khoan đục và mẹo bố trí ánh sáng ấm áp cho sinh viên.",
-      content: "Chia sẻ kinh nghiệm sắp xếp đồ đạc theo phong cách Minimalism, tận dụng không gian dưới gác lửng và mẹo khử mùi ẩm mốc mùa mưa...",
-      coverImage: "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80",
-      readTime: "4 min read",
-      author: "Nguyễn Thảo (Lifestyle Editor)",
-      views: 5120,
-      status: "published",
-      publishedAt: "2026-09-03",
-    },
-    {
-      id: "POST-103",
-      title: isEn
-        ? "HCMC & Hanoi Rental Price Trends Q3/2026: Where are the Best Values?"
-        : "Xu Hướng Giá Thuê Phòng Trọ TP.HCM & Hà Nội Quý 3/2026: Khu Vực Nào Giá Tốt?",
-      slug: "rental-price-trends-q3-2026-hcmc-hanoi",
-      category: "market",
-      categoryLabel: isEn ? "Market Insights" : "Tin tức thị trường",
-      excerpt: isEn
-        ? "Comprehensive rental index data across university hubs including Thu Duc, Cau Giay, and Binh Thanh."
-        : "Báo cáo phân tích biến động giá thuê theo dữ liệu hơn 24.000 phòng trên nền tảng Dormio toàn quốc.",
-      content: "Dữ liệu cho thấy khu vực TP. Thủ Đức gần Làng Đại học có mức tăng 4.2% so với cùng kỳ, trong khi khu vực Cầu Giấy và Đống Đa ghi nhận tỷ lệ lấp đầy đạt đỉnh 94%...",
-      coverImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80",
-      readTime: "7 min read",
-      author: "Dormio Research Team",
-      views: 2980,
-      status: "published",
-      publishedAt: "2026-09-05",
-    },
-    {
-      id: "POST-104",
-      title: isEn
-        ? "Step-by-Step Guide to Booking & Escrowing Deposit via Dormio App"
-        : "Hướng Dẫn Đặt Cọc Giữ Chỗ An Toàn Qua Nền Tảng Dormio",
-      slug: "guide-to-safe-deposit-escrow-dormio",
-      category: "guide",
-      categoryLabel: isEn ? "Rental Guide" : "Cẩm nang thuê trọ",
-      excerpt: isEn
-        ? "Learn how our 100% money-back escrow system protects prospective tenants from scam landlords."
-        : "Hiểu rõ cơ chế bảo lãnh hoàn tiền cọc 100% nếu phòng không đúng thực tế và quy trình kích hoạt hợp đồng tự động.",
-      content: "Khi bấm 'Đặt cọc giữ chỗ', tiền của bạn không chuyển thẳng cho chủ trọ mà được giữ an toàn trong tài khoản trung gian của Dormio cho tới khi bạn đến nhận phòng thực tế...",
-      coverImage: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80",
-      readTime: "3 min read",
-      author: "Hỗ Trợ Khách Hàng",
-      views: 6450,
-      status: "published",
-      publishedAt: "2026-08-25",
-    },
-    {
-      id: "POST-105",
-      title: isEn
-        ? "Draft: Comprehensive Landlord Tax and Licensing Guidelines 2026"
-        : "[Bản nháp] Cập Nhật Quy Định Về Thuế Cho Thuê Nhà Trọ & Giấy Phép PCCC 2026",
-      slug: "landlord-tax-and-licensing-guidelines-2026",
-      category: "legal",
-      categoryLabel: isEn ? "Legal & Contracts" : "Pháp lý & Hợp đồng",
-      excerpt: isEn
-        ? "Upcoming regulatory obligations for landlords operating more than 10 boarding rooms."
-        : "Tổng hợp các biểu thuế môn bài, thuế GTGT, thuế TNCN và danh mục hồ sơ kiểm tra PCCC bắt buộc.",
-      content: "Đang biên soạn bổ sung các thông tư liên tịch mới nhất của Bộ Tài chính và Bộ Công an về kinh doanh dịch vụ lưu trú...",
-      coverImage: "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=600&auto=format&fit=crop&q=80",
-      readTime: "6 min read",
-      author: "Luật sư Cố vấn Dormio",
-      views: 0,
-      status: "draft",
-      publishedAt: "2026-09-08",
-    },
-  ]);
+  // Fetch real data from backend
+  const fetchPosts = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    setError(null);
+    try {
+      const res = await postService.browsePosts({
+        search: searchQuery.trim() || undefined,
+        status: statusFilter === "all" ? "all" : statusFilter,
+        page: 1,
+        limit: 100,
+      });
 
-  // Filtered dataset
+      const list = res?.data || [];
+      setPosts(list);
+    } catch (err: any) {
+      console.error("Failed to fetch posts:", err);
+      setError(
+        err?.response?.data?.message ||
+          (isEn
+            ? "Could not load posts from server. Please check your connection."
+            : "Không thể tải danh sách bài viết từ máy chủ. Vui lòng kiểm tra lại.")
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [searchQuery, statusFilter, isEn]);
+
+  // Initial load and filter change
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  // Handle manual refresh
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchPosts(true);
+  };
+
+  // Filtered dataset for client-side search query refine
   const currentDataset = useMemo(() => {
-    return articles.filter((item) => {
+    return posts.filter((item) => {
       const q = searchQuery.toLowerCase().trim();
       const matchSearch =
         !q ||
-        item.title.toLowerCase().includes(q) ||
-        item.excerpt.toLowerCase().includes(q) ||
-        item.author.toLowerCase().includes(q);
-
-      const matchCategory =
-        categoryFilter === "all" || item.category === categoryFilter;
+        item.title?.toLowerCase().includes(q) ||
+        item.content?.toLowerCase().includes(q) ||
+        item.poster?.username?.toLowerCase().includes(q) ||
+        item.room?.boardingHouseName?.toLowerCase().includes(q);
 
       const matchStatus =
         statusFilter === "all" || item.status === statusFilter;
 
-      return matchSearch && matchCategory && matchStatus;
+      return matchSearch && matchStatus;
     });
-  }, [articles, searchQuery, categoryFilter, statusFilter]);
+  }, [posts, searchQuery, statusFilter]);
 
-  // View mode
+  // View mode change handler (Rule #9)
   const handleViewModeChange = (mode: "grid" | "table") => {
     setViewMode(mode);
     setPageSize(mode === "grid" ? 6 : 10);
@@ -199,7 +126,7 @@ export default function AdminBlogsPage() {
     return currentDataset.slice(start, start + validPageSize);
   }, [currentDataset, safeCurrentPage, validPageSize]);
 
-  // 5-page window jumping
+  // 5-page window jumping (Rule #9)
   const windowStart = Math.floor((safeCurrentPage - 1) / 5) * 5 + 1;
   const windowEnd = Math.min(windowStart + 4, totalPages);
   const pageNumbers = [];
@@ -207,139 +134,118 @@ export default function AdminBlogsPage() {
     pageNumbers.push(i);
   }
 
-  // Selection
-  const isAllCurrentSelected =
-    paginatedItems.length > 0 &&
-    paginatedItems.every((item) => selectedIds.includes(item.id));
-
-  const toggleSelectAllCurrent = () => {
-    if (isAllCurrentSelected) {
-      setSelectedIds((prev) => prev.filter((id) => !paginatedItems.some((item) => item.id === id)));
-    } else {
-      const pageIds = paginatedItems.map((item) => item.id);
-      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
-    }
-  };
-
-  const toggleSelectItem = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  // Open Create/Edit modal
+  // Open Create Modal
   const handleOpenCreate = () => {
-    setEditingArticle(null);
+    setEditingPost(null);
     setFormTitle("");
-    setFormSlug("");
-    setFormCategory("guide");
     setFormCoverImage("https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&auto=format&fit=crop&q=80");
-    setFormExcerpt("");
     setFormContent("");
-    setFormStatus("published");
-    setIsEditorOpen(true);
-  };
-
-  const handleOpenEdit = (art: BlogArticle) => {
-    setEditingArticle(art);
-    setFormTitle(art.title);
-    setFormSlug(art.slug);
-    setFormCategory(art.category);
-    setFormCoverImage(art.coverImage);
-    setFormExcerpt(art.excerpt);
-    setFormContent(art.content);
-    setFormStatus(art.status);
+    setFormDepositAmount(1000000);
+    setFormStatus("posted");
     setEditorError("");
     setIsEditorOpen(true);
   };
 
-  // Save Article
-  const handleSaveArticle = () => {
+  // Open Edit Modal
+  const handleOpenEdit = (post: PublicPostListing) => {
+    setEditingPost(post);
+    setFormTitle(post.title || "");
+    setFormCoverImage(post.images?.[0]?.url || "");
+    setFormContent(post.content || "");
+    setFormDepositAmount(post.depositAmount || 0);
+    setFormStatus(post.status === "draft" ? "draft" : "posted");
+    setEditorError("");
+    setIsEditorOpen(true);
+  };
+
+  // Save / Submit Post
+  const handleSavePost = async () => {
     if (!formTitle.trim()) {
-      setEditorError(isEn ? "Please enter an article title." : "Vui lòng nhập tiêu đề bài viết.");
+      setEditorError(isEn ? "Please enter a title." : "Vui lòng nhập tiêu đề bài viết.");
+      return;
+    }
+    if (!formContent.trim()) {
+      setEditorError(isEn ? "Please enter content." : "Vui lòng nhập nội dung bài viết.");
       return;
     }
 
-    const categoryLabels: Record<BlogArticle["category"], string> = {
-      guide: isEn ? "Rental Guide" : "Cẩm nang thuê trọ",
-      legal: isEn ? "Legal & Contracts" : "Pháp lý & Hợp đồng",
-      lifestyle: isEn ? "Living & Decor" : "Mẹo sống & Decor",
-      market: isEn ? "Market Insights" : "Tin tức thị trường",
-    };
-
-    const todayStr = new Date().toISOString().split("T")[0];
-
-    if (editingArticle) {
-      // Update
-      setArticles((prev) =>
-        prev.map((a) =>
-          a.id === editingArticle.id
-            ? {
-                ...a,
-                title: formTitle.trim(),
-                slug: formSlug.trim() || formTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-                category: formCategory,
-                categoryLabel: categoryLabels[formCategory],
-                coverImage: formCoverImage.trim() || a.coverImage,
-                excerpt: formExcerpt.trim(),
-                content: formContent.trim(),
-                status: formStatus,
-              }
-            : a
-        )
-      );
-    } else {
-      // Create new
-      const newId = `POST-${Math.floor(Math.random() * 900) + 110}`;
-      const newPost: BlogArticle = {
-        id: newId,
-        title: formTitle.trim(),
-        slug: formSlug.trim() || formTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        category: formCategory,
-        categoryLabel: categoryLabels[formCategory],
-        coverImage: formCoverImage.trim() || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&auto=format&fit=crop&q=80",
-        excerpt: formExcerpt.trim(),
-        content: formContent.trim(),
-        readTime: "5 min read",
-        author: "Ban Quản Trị Dormio",
-        views: 0,
-        status: formStatus,
-        publishedAt: todayStr,
-      };
-      setArticles((prev) => [newPost, ...prev]);
-    }
-
-    setIsEditorOpen(false);
+    setIsSaving(true);
     setEditorError("");
+
+    try {
+      if (editingPost) {
+        // Update status of existing post
+        if (editingPost.status !== formStatus) {
+          await postService.updatePostStatus(editingPost.id, formStatus);
+        }
+      } else {
+        // Create new post
+        await postService.createPost({
+          title: formTitle.trim(),
+          content: formContent.trim(),
+          depositAmount: formDepositAmount || 0,
+          imageUrls: formCoverImage.trim() ? [formCoverImage.trim()] : [],
+          status: formStatus,
+        });
+      }
+
+      setIsEditorOpen(false);
+      await fetchPosts(true);
+    } catch (err: any) {
+      console.error("Save error:", err);
+      setEditorError(
+        err?.response?.data?.message ||
+          (isEn ? "Failed to save post. Please try again." : "Không thể lưu bài viết. Vui lòng thử lại.")
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Delete article via custom confirmation modal
-  const handleDeleteArticle = (item: BlogArticle) => {
-    setDeleteTargetArticle(item);
+  // Toggle publish status (published <-> draft / hidden)
+  const handleToggleStatus = async (item: PublicPostListing) => {
+    const newStatus: "posted" | "draft" | "hidden" =
+      item.status === "posted" ? "hidden" : "posted";
+
+    try {
+      // Optimistic update
+      setPosts((prev) =>
+        prev.map((p) => (p.id === item.id ? { ...p, status: newStatus } : p))
+      );
+      await postService.updatePostStatus(item.id, newStatus);
+    } catch (err) {
+      console.error("Failed to toggle post status:", err);
+      // Rollback
+      await fetchPosts(true);
+    }
   };
 
-  const handleConfirmDelete = () => {
-    if (!deleteTargetArticle) return;
-    setArticles((prev) => prev.filter((a) => a.id !== deleteTargetArticle.id));
-    setSelectedIds((prev) => prev.filter((i) => i !== deleteTargetArticle.id));
-    setDeleteTargetArticle(null);
+  // Delete post
+  const handleDeletePost = (item: PublicPostListing) => {
+    setDeleteTargetPost(item);
   };
 
-  // Toggle publish status
-  const handleToggleStatus = (id: string) => {
-    setArticles((prev) =>
-      prev.map((a) =>
-        a.id === id
-          ? { ...a, status: a.status === "published" ? "draft" : "published" }
-          : a
-      )
-    );
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetPost) return;
+    setIsDeleting(true);
+    try {
+      await postService.deletePost(deleteTargetPost.id);
+      setPosts((prev) => prev.filter((p) => p.id !== deleteTargetPost.id));
+      setDeleteTargetPost(null);
+    } catch (err: any) {
+      console.error("Delete failed:", err);
+      alert(
+        err?.response?.data?.message ||
+          (isEn ? "Could not delete post." : "Không thể xóa bài viết.")
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  // Rule #10: Check dirty form on close
+  // Rule #10: Check dirty form on modal exit
   const isFormDirty =
     formTitle.trim().length > 0 ||
-    formExcerpt.trim().length > 0 ||
     formContent.trim().length > 0;
 
   const handleRequestCloseEditor = () => {
@@ -364,34 +270,62 @@ export default function AdminBlogsPage() {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
               <Newspaper className="w-3.5 h-3.5" />
-              {isEn ? "Public Content Management" : "Quản Lý Nội Dung Blog Công Khai"}
+              {isEn ? "Public Content Management" : "Quản Lý Nội Dung Blog & Bài Viết"}
             </span>
             <span className="text-xs font-semibold text-zinc-400">
-              • {isEn ? "Articles displayed on public /blog" : "Hiển thị trên chuyên trang /blog cho khách"}
+              • {isEn ? "Live backend database" : "Dữ liệu thực từ hệ thống máy chủ"}
             </span>
           </div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-1">
-            {isEn ? "Blog Articles & Editorial Desk" : "Biên Tập & Xuất Bản Bài Viết Blog"}
+            {isEn ? "Blog Articles & Public Listings Desk" : "Biên Tập & Quản Lý Bài Viết"}
           </h1>
           <p className="text-xs text-zinc-500 mt-0.5">
             {isEn
-              ? "Draft, edit, publish rental advice, legal warnings, and interior tips for prospective tenants and landlords."
-              : "Quản lý các bài viết cẩm nang thuê trọ, kiến thức hợp đồng, mẹo tiết kiệm chi phí và báo cáo thị trường."}
+              ? "Oversee rental listings, public blog articles, adjust visibility, and publish new content."
+              : "Quản lý toàn bộ bài viết, tin đăng công khai, điều chỉnh trạng thái hiển thị và biên soạn nội dung mới."}
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-all shadow-sm cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{isEn ? "New Article" : "Viết Bài Viết Mới"}</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing || loading}
+            className="p-2.5 rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 font-bold text-xs transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+            title={isEn ? "Refresh data" : "Tải lại dữ liệu"}
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-orange-600" : ""}`} />
+          </button>
+
+          <button
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-all shadow-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isEn ? "New Article / Post" : "Soạn Bài Viết Mới"}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
+            <span className="font-semibold">{error}</span>
+          </div>
+          <button
+            onClick={() => fetchPosts()}
+            className="px-3 py-1 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors cursor-pointer text-xs"
+          >
+            {isEn ? "Retry" : "Thử lại"}
+          </button>
+        </div>
+      )}
 
       {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
       <div className="bg-white p-4 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
+          {/* Search Input */}
           <div className="relative flex-1 min-w-[220px] max-w-md">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -401,13 +335,13 @@ export default function AdminBlogsPage() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder={isEn ? "Search title, author, keyword..." : "Tìm tiêu đề bài viết, tác giả..."}
-              className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+              placeholder={isEn ? "Search title, content, author..." : "Tìm tiêu đề bài viết, tác giả, toà nhà..."}
+              className="w-full pl-9 pr-8 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -419,8 +353,9 @@ export default function AdminBlogsPage() {
             {(
               [
                 { id: "all", label: isEn ? "All" : "Tất cả" },
-                { id: "published", label: isEn ? "Published" : "Đã xuất bản" },
+                { id: "posted", label: isEn ? "Published" : "Đã xuất bản" },
                 { id: "draft", label: isEn ? "Drafts" : "Bản nháp" },
+                { id: "hidden", label: isEn ? "Hidden" : "Đã ẩn" },
               ] as const
             ).map((chip) => (
               <button
@@ -439,25 +374,9 @@ export default function AdminBlogsPage() {
               </button>
             ))}
           </div>
-
-          {/* Category Dropdown */}
-          <select
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-700 cursor-pointer focus:outline-none focus:border-orange-500"
-          >
-            <option value="all">{isEn ? "All Categories" : "Mọi chuyên mục"}</option>
-            <option value="guide">{isEn ? "Rental Guide" : "Cẩm nang thuê trọ"}</option>
-            <option value="legal">{isEn ? "Legal & Contracts" : "Pháp lý & Hợp đồng"}</option>
-            <option value="lifestyle">{isEn ? "Living & Decor" : "Mẹo sống & Decor"}</option>
-            <option value="market">{isEn ? "Market Insights" : "Tin tức thị trường"}</option>
-          </select>
         </div>
 
-        {/* View Mode (Rule #9) */}
+        {/* View Mode (Rule #9: Grid is ALWAYS default) */}
         <div className="flex items-center gap-3 self-end lg:self-auto">
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
             <button
@@ -482,87 +401,125 @@ export default function AdminBlogsPage() {
         </div>
       </div>
 
-      {/* Select All on Current Page Bar */}
-      {paginatedItems.length > 0 && (
+      {/* Post count summary (selection checkboxes discarded) */}
+      {!loading && paginatedItems.length > 0 && (
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-zinc-500">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={isAllCurrentSelected}
-              onChange={toggleSelectAllCurrent}
-              className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-            />
-            <span>{isEn ? "Select all on this page" : "Chọn tất cả trên trang này"}</span>
-          </label>
           <span>
             {isEn
-              ? `Showing ${paginatedItems.length} of ${totalItems} articles`
+              ? `Showing ${paginatedItems.length} of ${totalItems} posts from backend`
               : `Hiển thị ${paginatedItems.length} trên ${totalItems} bài viết`}
+          </span>
+          <span className="text-[11px] text-zinc-400 font-mono">
+            {isEn ? "Sorted by newest" : "Sắp xếp mới nhất"}
           </span>
         </div>
       )}
 
       {/* Main Content */}
-      {paginatedItems.length === 0 ? (
+      {loading ? (
+        /* Loading skeleton */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-2xl border border-zinc-200/80 p-4 space-y-3 animate-pulse"
+            >
+              <div className="h-44 bg-zinc-200 rounded-xl w-full" />
+              <div className="h-4 bg-zinc-200 rounded w-3/4" />
+              <div className="h-3 bg-zinc-100 rounded w-full" />
+              <div className="h-3 bg-zinc-100 rounded w-1/2" />
+              <div className="h-8 bg-zinc-100 rounded-xl mt-4" />
+            </div>
+          ))}
+        </div>
+      ) : paginatedItems.length === 0 ? (
         <div className="bg-white rounded-3xl border border-zinc-200 p-12 text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
             <Newspaper className="w-6 h-6" />
           </div>
           <h3 className="text-base font-bold text-zinc-800">
-            {isEn ? "No articles found" : "Chưa có bài viết nào"}
+            {isEn ? "No posts found" : "Chưa có bài viết nào phù hợp"}
           </h3>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-            {isEn ? "Start drafting informative guides for your users." : "Bắt đầu soạn thảo bài viết hữu ích cho người thuê trọ."}
+            {isEn
+              ? "No live posts matched your filter criteria or search keyword."
+              : "Không tìm thấy bài viết hoặc tin đăng nào phù hợp với bộ lọc hiện tại."}
           </p>
+          <button
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isEn ? "Create First Post" : "Tạo bài viết đầu tiên"}</span>
+          </button>
         </div>
       ) : viewMode === "grid" ? (
-        /* GRID VIEW (Rule #9: Default 6 items) */
+        /* GRID VIEW (Rule #9: Default 6 items, selection checkboxes discarded) */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {paginatedItems.map((item) => {
-            const isSelected = selectedIds.includes(item.id);
+            const coverImg =
+              item.images?.[0]?.url ||
+              "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&auto=format&fit=crop&q=80";
+            const categoryText =
+              item.room?.boardingHouseName ||
+              item.room?.roomTypeName ||
+              item.address?.district ||
+              (isEn ? "Rental Listing" : "Tin đăng thuê");
+
+            const formattedDate = item.createdAt
+              ? new Date(item.createdAt).toLocaleDateString(isEn ? "en-US" : "vi-VN")
+              : "—";
 
             return (
               <div
                 key={item.id}
-                className={`bg-white rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md ${
-                  isSelected ? "border-orange-500 ring-2 ring-orange-500/20" : "border-zinc-200/90"
-                }`}
+                className="bg-white rounded-2xl border border-zinc-200/90 transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md"
               >
                 <div>
                   {/* Thumbnail Banner */}
                   <div className="relative h-44 w-full bg-zinc-100 overflow-hidden">
                     <img
-                      src={item.coverImage}
+                      src={coverImg}
                       alt={item.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-black/20" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/20" />
 
-                    <div className="absolute top-3 left-3">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelectItem(item.id)}
-                        className="w-4.5 h-4.5 rounded border-white/80 text-orange-600 focus:ring-orange-500 bg-white/90 shadow-sm cursor-pointer"
-                      />
-                    </div>
-
+                    {/* Status Badge */}
                     <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase text-white shadow-2xs ${
-                        item.status === "published" ? "bg-emerald-600" : "bg-amber-600"
-                      }`}>
-                        {item.status === "published" ? (isEn ? "PUBLISHED" : "ĐÃ XUẤT BẢN") : (isEn ? "DRAFT" : "BẢN NHÁP")}
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase text-white shadow-2xs ${
+                          item.status === "posted"
+                            ? "bg-emerald-600"
+                            : item.status === "draft"
+                            ? "bg-amber-600"
+                            : "bg-zinc-600"
+                        }`}
+                      >
+                        {item.status === "posted"
+                          ? isEn ? "PUBLISHED" : "ĐÃ XUẤT BẢN"
+                          : item.status === "draft"
+                          ? isEn ? "DRAFT" : "BẢN NHÁP"
+                          : isEn ? "HIDDEN" : "ĐÃ ẨN"}
                       </span>
                     </div>
 
+                    {/* Bottom Metadata */}
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-[11px] font-bold">
-                      <span className="bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
-                        🏷️ {item.categoryLabel}
+                      <span className="bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs flex items-center gap-1 truncate max-w-[65%]">
+                        <Building2 className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{categoryText}</span>
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5" />
-                        {item.views.toLocaleString()} {isEn ? "views" : "lượt xem"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-xs">
+                          <Eye className="w-3 h-3" />
+                          {(item.viewsCount || 0).toLocaleString()}
+                        </span>
+                        <span className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-xs">
+                          <Bookmark className="w-3 h-3" />
+                          {item.savedCount || 0}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -572,11 +529,13 @@ export default function AdminBlogsPage() {
                       {item.title}
                     </h3>
                     <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                      {item.excerpt}
+                      {item.content}
                     </p>
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1">
-                      <span>{item.author}</span>
-                      <span>{item.publishedAt}</span>
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100">
+                      <span className="truncate max-w-[140px] font-semibold text-zinc-600">
+                        {item.poster?.username || (isEn ? "Admin Desk" : "Ban Quản Trị")}
+                      </span>
+                      <span>{formattedDate}</span>
                     </div>
                   </div>
                 </div>
@@ -584,24 +543,26 @@ export default function AdminBlogsPage() {
                 {/* Actions */}
                 <div className="p-4 pt-0 border-t border-zinc-100 mt-2 flex items-center gap-2">
                   <button
-                    onClick={() => handleToggleStatus(item.id)}
+                    onClick={() => handleToggleStatus(item)}
                     className="flex-1 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer text-center"
                   >
-                    {item.status === "published" ? (isEn ? "Unpublish" : "Gỡ xuống nháp") : (isEn ? "Publish" : "Xuất bản ngay")}
+                    {item.status === "posted"
+                      ? isEn ? "Hide / Unpublish" : "Gỡ xuống nháp"
+                      : isEn ? "Publish" : "Xuất bản ngay"}
                   </button>
 
                   <button
                     onClick={() => handleOpenEdit(item)}
                     className="p-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-colors cursor-pointer"
-                    title={isEn ? "Edit article" : "Chỉnh sửa"}
+                    title={isEn ? "Edit post" : "Chỉnh sửa"}
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
 
                   <button
-                    onClick={() => handleDeleteArticle(item)}
-                    className="p-2 rounded-xl bg-zinc-100 hover:bg-orange-100 text-zinc-500 hover:text-orange-700 transition-colors cursor-pointer"
-                    title={isEn ? "Delete article" : "Xóa bài"}
+                    onClick={() => handleDeletePost(item)}
+                    className="p-2 rounded-xl bg-zinc-100 hover:bg-red-50 text-zinc-500 hover:text-red-600 transition-colors cursor-pointer"
+                    title={isEn ? "Delete post" : "Xóa bài"}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -611,80 +572,106 @@ export default function AdminBlogsPage() {
           })}
         </div>
       ) : (
-        /* TABLE VIEW (Rule #9: Default 10 items) */
+        /* TABLE VIEW (Rule #9: Default 10 items, selection checkboxes discarded) */
         <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse min-w-[850px]">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50/70 text-zinc-500 uppercase tracking-wider font-bold">
-                <th className="p-3.5 w-10">
-                  <input
-                    type="checkbox"
-                    checked={isAllCurrentSelected}
-                    onChange={toggleSelectAllCurrent}
-                    className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-                  />
-                </th>
-                <th className="p-3.5">{isEn ? "Article" : "Bài viết & Tiêu đề"}</th>
-                <th className="p-3.5">{isEn ? "Category" : "Chuyên mục"}</th>
-                <th className="p-3.5">{isEn ? "Views & Reading" : "Lượt đọc"}</th>
+                <th className="p-3.5">{isEn ? "Article / Post" : "Bài viết & Tiêu đề"}</th>
+                <th className="p-3.5">{isEn ? "Category / Property" : "Toà nhà & Chuyên mục"}</th>
+                <th className="p-3.5">{isEn ? "Engagement" : "Tương tác"}</th>
+                <th className="p-3.5">{isEn ? "Deposit / Price" : "Tiền cọc"}</th>
                 <th className="p-3.5">{isEn ? "Status" : "Trạng thái"}</th>
                 <th className="p-3.5 text-right">{isEn ? "Actions" : "Hành động"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {paginatedItems.map((item) => {
-                const isSelected = selectedIds.includes(item.id);
+                const coverImg =
+                  item.images?.[0]?.url ||
+                  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&auto=format&fit=crop&q=80";
+                const categoryText =
+                  item.room?.boardingHouseName ||
+                  item.room?.roomTypeName ||
+                  item.address?.district ||
+                  (isEn ? "Listing" : "Tin đăng");
+                const formattedDate = item.createdAt
+                  ? new Date(item.createdAt).toLocaleDateString(isEn ? "en-US" : "vi-VN")
+                  : "—";
 
                 return (
                   <tr
                     key={item.id}
-                    className={`hover:bg-zinc-50/80 transition-colors ${
-                      isSelected ? "bg-orange-50/30" : ""
-                    }`}
+                    className="hover:bg-zinc-50/80 transition-colors"
                   >
-                    <td className="p-3.5">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelectItem(item.id)}
-                        className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-                      />
-                    </td>
-
                     <td className="p-3.5 max-w-sm">
                       <div className="flex items-center gap-3">
                         <img
-                          src={item.coverImage}
+                          src={coverImg}
                           alt=""
                           className="w-12 h-12 rounded-xl object-cover shrink-0 border border-zinc-200"
                         />
                         <div className="space-y-0.5">
                           <div className="font-bold text-zinc-900 line-clamp-1">{item.title}</div>
-                          <div className="text-[11px] text-zinc-400">{item.author} • {item.publishedAt}</div>
+                          <div className="text-[11px] text-zinc-400">
+                            {item.poster?.username || "Admin"} • {formattedDate}
+                          </div>
                         </div>
                       </div>
                     </td>
 
                     <td className="p-3.5">
-                      <span className="font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md">
-                        {item.categoryLabel}
+                      <span className="font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-zinc-500" />
+                        <span>{categoryText}</span>
                       </span>
                     </td>
 
                     <td className="p-3.5">
-                      <div className="font-black text-zinc-900">{item.views.toLocaleString()} {isEn ? "views" : "lượt"}</div>
-                      <div className="text-[11px] text-zinc-400">{item.readTime}</div>
+                      <div className="font-black text-zinc-900 flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>{(item.viewsCount || 0).toLocaleString()} {isEn ? "views" : "lượt"}</span>
+                      </div>
+                      <div className="text-[11px] text-zinc-400 flex items-center gap-1">
+                        <Bookmark className="w-3 h-3" />
+                        <span>{item.savedCount || 0} {isEn ? "saved" : "lưu"}</span>
+                      </div>
                     </td>
 
                     <td className="p-3.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                        item.status === "published" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                      }`}>
-                        {item.status}
+                      <div className="font-bold text-zinc-800">
+                        {item.depositAmount
+                          ? `${Number(item.depositAmount).toLocaleString("vi-VN")} ₫`
+                          : "0 ₫"}
+                      </div>
+                    </td>
+
+                    <td className="p-3.5">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                          item.status === "posted"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : item.status === "draft"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-zinc-100 text-zinc-700"
+                        }`}
+                      >
+                        {item.status === "posted"
+                          ? isEn ? "PUBLISHED" : "ĐÃ XUẤT BẢN"
+                          : item.status === "draft"
+                          ? isEn ? "DRAFT" : "BẢN NHÁP"
+                          : isEn ? "HIDDEN" : "ĐÃ ẨN"}
                       </span>
                     </td>
 
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                      <button
+                        onClick={() => handleToggleStatus(item)}
+                        className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer text-xs font-semibold"
+                        title={item.status === "posted" ? (isEn ? "Hide" : "Ẩn") : (isEn ? "Publish" : "Hiện")}
+                      >
+                        {item.status === "posted" ? (isEn ? "Unpublish" : "Gỡ") : (isEn ? "Publish" : "Hiện")}
+                      </button>
                       <button
                         onClick={() => handleOpenEdit(item)}
                         className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer"
@@ -693,8 +680,8 @@ export default function AdminBlogsPage() {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteArticle(item)}
-                        className="p-1.5 rounded-lg bg-zinc-100 hover:bg-orange-100 text-zinc-400 hover:text-orange-700 transition-colors cursor-pointer"
+                        onClick={() => handleDeletePost(item)}
+                        className="p-1.5 rounded-lg bg-zinc-100 hover:bg-red-100 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
                         title={isEn ? "Delete" : "Xóa"}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -733,7 +720,7 @@ export default function AdminBlogsPage() {
                   safeCurrentPage * validPageSize,
                   totalItems
                 )}`}{" "}
-            {isEn ? `of ${totalItems} articles` : `trên ${totalItems} bài viết`}
+            {isEn ? `of ${totalItems} posts` : `trên ${totalItems} bài viết`}
           </span>
         </div>
 
@@ -788,7 +775,7 @@ export default function AdminBlogsPage() {
         </div>
       </div>
 
-      {/* ARTICLE EDITOR MODAL (Rule #10 compliant) */}
+      {/* ARTICLE / POST EDITOR MODAL (Rule #10 compliant) */}
       {isEditorOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
@@ -798,9 +785,9 @@ export default function AdminBlogsPage() {
                   <Newspaper className="w-4 h-4" />
                 </div>
                 <h2 className="text-base font-black text-zinc-900">
-                  {editingArticle
-                    ? (isEn ? "Edit Blog Article" : "Chỉnh Sửa Bài Viết Blog")
-                    : (isEn ? "Create New Blog Article" : "Viết Bài Viết Blog Mới")}
+                  {editingPost
+                    ? isEn ? "Edit Post / Listing" : "Chỉnh Sửa Bài Viết / Tin Đăng"
+                    : isEn ? "Create New Post / Article" : "Soạn Bài Viết / Tin Đăng Mới"}
                 </h2>
               </div>
               <button
@@ -822,35 +809,19 @@ export default function AdminBlogsPage() {
               {/* Title */}
               <div className="space-y-1">
                 <label className="font-bold text-zinc-700 block">
-                  {isEn ? "Article Title:" : "Tiêu đề bài viết:"}
+                  {isEn ? "Title:" : "Tiêu đề bài viết / tin đăng:"}
                 </label>
                 <input
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder={isEn ? "e.g., 5 Tips to Negotiate Rental Contracts" : "Ví dụ: 10 Điều cần kiểm tra kỹ trước khi ký hợp đồng thuê trọ"}
+                  placeholder={isEn ? "e.g., 5 Tips to Negotiate Rental Contracts" : "Ví dụ: Phòng trọ sinh viên tiện nghi Quận 1"}
                   className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
                 />
               </div>
 
-              {/* Category & Status */}
+              {/* Status & Deposit */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-zinc-700 block">
-                    {isEn ? "Category:" : "Chuyên mục:"}
-                  </label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-zinc-800 cursor-pointer focus:outline-none focus:border-orange-500"
-                  >
-                    <option value="guide">{isEn ? "Rental Guide" : "Cẩm nang thuê trọ"}</option>
-                    <option value="legal">{isEn ? "Legal & Contracts" : "Pháp lý & Hợp đồng"}</option>
-                    <option value="lifestyle">{isEn ? "Living & Decor" : "Mẹo sống & Decor"}</option>
-                    <option value="market">{isEn ? "Market Insights" : "Tin tức thị trường"}</option>
-                  </select>
-                </div>
-
                 <div className="space-y-1">
                   <label className="font-bold text-zinc-700 block">
                     {isEn ? "Publishing Status:" : "Trạng thái hiển thị:"}
@@ -858,9 +829,9 @@ export default function AdminBlogsPage() {
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => setFormStatus("published")}
+                      onClick={() => setFormStatus("posted")}
                       className={`flex-1 py-1.5 rounded-xl border text-center font-bold transition-all cursor-pointer ${
-                        formStatus === "published"
+                        formStatus === "posted"
                           ? "bg-emerald-50 border-emerald-400 text-emerald-700 shadow-2xs"
                           : "bg-zinc-50 border-zinc-200 text-zinc-500"
                       }`}
@@ -880,6 +851,20 @@ export default function AdminBlogsPage() {
                     </button>
                   </div>
                 </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-zinc-700 block">
+                    {isEn ? "Deposit Amount (VND):" : "Tiền đặt cọc giữ chỗ (VNĐ):"}
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={100000}
+                    value={formDepositAmount}
+                    onChange={(e) => setFormDepositAmount(Number(e.target.value) || 0)}
+                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
+                  />
+                </div>
               </div>
 
               {/* Cover Image URL */}
@@ -896,30 +881,16 @@ export default function AdminBlogsPage() {
                 />
               </div>
 
-              {/* Excerpt */}
-              <div className="space-y-1">
-                <label className="font-bold text-zinc-700 block">
-                  {isEn ? "Short Excerpt / Meta Description:" : "Tóm tắt ngắn (Excerpt / Meta SEO):"}
-                </label>
-                <textarea
-                  rows={2}
-                  value={formExcerpt}
-                  onChange={(e) => setFormExcerpt(e.target.value)}
-                  placeholder={isEn ? "Brief 1-2 sentence overview shown in blog cards..." : "Tóm tắt ngắn 1-2 câu hiển thị ngoài trang chủ Blog..."}
-                  className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
-                />
-              </div>
-
               {/* Content */}
               <div className="space-y-1">
                 <label className="font-bold text-zinc-700 block">
-                  {isEn ? "Full Article Body (Markdown / Text):" : "Nội dung bài viết chi tiết (Markdown / Văn bản):"}
+                  {isEn ? "Content / Body:" : "Nội dung chi tiết:"}
                 </label>
                 <textarea
                   rows={8}
                   value={formContent}
                   onChange={(e) => setFormContent(e.target.value)}
-                  placeholder={isEn ? "Write article paragraphs here..." : "Viết nội dung bài viết chi tiết tại đây..."}
+                  placeholder={isEn ? "Write post content here..." : "Viết nội dung bài viết chi tiết tại đây..."}
                   className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
                 />
               </div>
@@ -928,17 +899,22 @@ export default function AdminBlogsPage() {
             <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
               <button
                 onClick={handleRequestCloseEditor}
+                disabled={isSaving}
                 className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 {isEn ? "Cancel" : "Hủy bỏ"}
               </button>
               <button
-                onClick={handleSaveArticle}
-                className="px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer"
+                onClick={handleSavePost}
+                disabled={isSaving}
+                className="px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
               >
-                {editingArticle
-                  ? (isEn ? "Save Changes" : "Lưu Cập Nhật")
-                  : (isEn ? "Publish Article" : "Đăng Bài Viết")}
+                {isSaving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                <span>
+                  {editingPost
+                    ? isEn ? "Save Changes" : "Lưu Cập Nhật"
+                    : isEn ? "Publish Post" : "Đăng Bài Viết"}
+                </span>
               </button>
             </div>
           </div>
@@ -954,12 +930,12 @@ export default function AdminBlogsPage() {
             </div>
             <div>
               <h3 className="text-base font-black text-zinc-900">
-                {isEn ? "Discard Article Draft?" : "Xác nhận đóng form"}
+                {isEn ? "Discard Unsaved Changes?" : "Xác nhận đóng form"}
               </h3>
               <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
                 {isEn
-                  ? "You have unsaved blog content. Are you sure you want to discard changes and close?"
-                  : "Bạn có nội dung bài viết chưa lưu. Bạn có chắc muốn đóng và hủy các thông tin đã nhập?"}
+                  ? "You have unsaved content. Are you sure you want to discard your draft and close?"
+                  : "Bạn có nội dung chưa lưu. Bạn có chắc muốn đóng và hủy các thông tin đã nhập?"}
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -981,7 +957,7 @@ export default function AdminBlogsPage() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteTargetArticle && (
+      {deleteTargetPost && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
             <div className="flex items-center gap-3 text-orange-600">
@@ -990,28 +966,31 @@ export default function AdminBlogsPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-zinc-900">
-                  {isEn ? "Confirm Delete Article" : "Xác nhận xóa bài viết"}
+                  {isEn ? "Confirm Delete Post" : "Xác nhận xóa bài viết"}
                 </h3>
-                <p className="text-xs text-zinc-500 font-mono">{deleteTargetArticle.id}</p>
+                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">{deleteTargetPost.id}</p>
               </div>
             </div>
             <p className="text-xs text-zinc-600 leading-relaxed">
               {isEn
-                ? `Are you sure you want to permanently delete "${deleteTargetArticle.title}"? This action cannot be undone.`
-                : `Bạn có chắc chắn muốn xóa vĩnh viễn bài viết "${deleteTargetArticle.title}"? Hành động này không thể hoàn tác.`}
+                ? `Are you sure you want to permanently delete "${deleteTargetPost.title}"? This action cannot be undone.`
+                : `Bạn có chắc chắn muốn xóa bài viết "${deleteTargetPost.title}"? Hành động này sẽ gỡ bài viết khỏi hệ thống.`}
             </p>
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
               <button
-                onClick={() => setDeleteTargetArticle(null)}
+                onClick={() => setDeleteTargetPost(null)}
+                disabled={isDeleting}
                 className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {isEn ? "Cancel" : "Hủy bỏ"}
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs"
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
-                {isEn ? "Delete Article" : "Xóa bài viết"}
+                {isDeleting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                <span>{isEn ? "Delete Post" : "Xóa bài viết"}</span>
               </button>
             </div>
           </div>

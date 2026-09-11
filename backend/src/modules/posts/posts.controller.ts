@@ -433,9 +433,37 @@ export class PostsController {
     @Body('status') status: PostStatus,
   ): Promise<PostResponseDto> {
     this.logger.log(
-      `PATCH /posts/${id}/status to ${status} called by user ${user.id}`,
+      `PATCH /posts/${id}/status to ${status} called by user ${user.id} (${user.role})`,
     );
-    return this.postsService.updatePostStatus(user.id, id, status);
+    return this.postsService.updatePostStatus(user.id, id, status, user.role);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete or archive a rental listing',
+    description: 'Soft deletes the post. Requires author ownership or Admin role.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Post deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Bài viết/tin đăng đã được xóa thành công' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'User is not authorized to delete this post' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async deletePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ success: boolean; message: string }> {
+    this.logger.log(`DELETE /posts/${id} called by user ${user.id} (${user.role})`);
+    return this.postsService.deletePost(user.id, id, user.role);
   }
 
   // ─── UC-PU-03: Save/Bookmark Listing Endpoints ───────────────────────────

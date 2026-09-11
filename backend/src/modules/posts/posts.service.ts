@@ -37,6 +37,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   AuditLogAction,
+  UserRole,
 } from '@prisma';
 import {
   CreatePlatformDepositDto,
@@ -442,6 +443,7 @@ export class PostsService {
     userId: string,
     postId: string,
     status: PostStatus,
+    userRole?: UserRole,
   ): Promise<PostResponseDto> {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
@@ -451,7 +453,7 @@ export class PostsService {
       throw new NotFoundException(`Listing with ID ${postId} was not found`);
     }
 
-    if (post.postedBy !== userId) {
+    if (userRole !== UserRole.admin && post.postedBy !== userId) {
       throw new ForbiddenException(
         'You do not have permission to change the status of this listing',
       );
@@ -463,6 +465,43 @@ export class PostsService {
     });
 
     return this.getPostById(userId, postId);
+  }
+
+  /**
+   * Delete or archive a rental listing (admin or author)
+   */
+  async deletePost(
+    userId: string,
+    postId: string,
+    userRole?: UserRole,
+  ): Promise<{ success: boolean; message: string }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+    }
+
+    if (userRole !== UserRole.admin && post.postedBy !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this listing',
+      );
+    }
+
+    // Soft delete by setting deletedAt to current time and hiding post
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        deletedAt: new Date(),
+        status: PostStatus.hidden,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Bài viết/tin đăng đã được xóa thành công',
+    };
   }
 
   /**
@@ -740,6 +779,7 @@ export class PostsService {
       page = 1,
       limit = 12,
       search,
+      status,
       province,
       district,
       ward,
@@ -751,8 +791,16 @@ export class PostsService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.PostWhereInput = {
-      status: PostStatus.posted,
+      deletedAt: { gt: new Date() },
     };
+
+    if (status) {
+      if (status !== 'all' && (Object.values(PostStatus) as string[]).includes(status)) {
+        where.status = status as PostStatus;
+      }
+    } else {
+      where.status = PostStatus.posted;
+    }
 
     // Keyword filter: title or content (case-insensitive)
     if (search) {

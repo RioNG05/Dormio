@@ -86,6 +86,7 @@ export interface PublicPostListing {
 
 export interface BrowsePostsParams {
   search?: string;
+  status?: string;
   province?: string;
   district?: string;
   ward?: string;
@@ -184,6 +185,7 @@ export const postService = {
   ): Promise<PaginatedPublicPostsResponse> {
     const queryParams: Record<string, string> = {};
     if (params?.search) queryParams.search = params.search;
+    if (params?.status) queryParams.status = params.status;
     if (params?.province) queryParams.province = params.province;
     if (params?.district) queryParams.district = params.district;
     if (params?.ward) queryParams.ward = params.ward;
@@ -329,6 +331,14 @@ export const postService = {
       return (res as { success: boolean; data: PostListing }).data;
     }
     return res as PostListing;
+  },
+
+  /**
+   * Delete or archive a rental listing (requires auth, author or admin)
+   */
+  async deletePost(id: string): Promise<{ success: boolean; message: string }> {
+    const res = await api.delete<{ success: boolean; message: string }>(`/v1/posts/${id}`);
+    return res;
   },
 
   /**
