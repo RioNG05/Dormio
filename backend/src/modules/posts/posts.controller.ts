@@ -8,6 +8,8 @@ import {
   Query,
   Logger,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -15,9 +17,11 @@ import {
   ApiResponse,
   ApiTags,
   ApiParam,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { CreatePlatformDepositDto } from './dto/create-platform-deposit.dto';
 import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
@@ -188,6 +192,38 @@ export class PostsController {
   ): Promise<PublicPostResponseDto> {
     this.logger.log(`GET /posts/browse/${id} called (public)`);
     return this.postsService.getPublicPostById(id);
+  }
+
+  @Public()
+  @Post('browse/:id/deposit')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'UC-PU-04: Place a platform deposit on a rental listing',
+    description:
+      'Creates a platform DEPOSIT record for the given post, marks the linked room as deposited, ' +
+      'and hides the post from search results. No authentication required. ' +
+      'Tenant is identified by tenantName + tenantPhone.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiCreatedResponse({
+    description: 'Platform deposit created — post hidden and room marked deposited',
+    schema: {
+      type: 'object',
+      properties: {
+        depositId: { type: 'string', example: 'uuid' },
+        postId: { type: 'string', example: 'uuid' },
+        message: { type: 'string', example: 'Đặt cọc thành công!' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Post is not available for deposit (hidden, room occupied, or already deposited)' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async createPlatformDeposit(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreatePlatformDepositDto,
+  ): Promise<{ depositId: string; postId: string; message: string }> {
+    this.logger.log(`POST /posts/browse/${id}/deposit called by tenant ${dto.tenantPhone}`);
+    return this.postsService.createPlatformDeposit(id, dto);
   }
 
   @Get(':id')

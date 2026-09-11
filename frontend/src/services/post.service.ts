@@ -256,6 +256,20 @@ export const postService = {
   },
 
   /**
+   * UC-PU-04: Place a platform deposit on a rental listing (no auth required).
+   * Creates a DEPOSIT record, marks the room as deposited and hides the post.
+   */
+  async submitPlatformDeposit(
+    postId: string,
+    payload: { tenantName: string; tenantPhone: string; note?: string }
+  ): Promise<{ depositId: string; postId: string; message: string }> {
+    return api.post<{ depositId: string; postId: string; message: string }>(
+      `/v1/posts/browse/${postId}/deposit`,
+      payload
+    );
+  },
+
+  /**
    * Get post details by ID
    */
   async getPostById(id: string): Promise<PostListing> {

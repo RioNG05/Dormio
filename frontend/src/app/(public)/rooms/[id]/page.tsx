@@ -129,6 +129,9 @@ export default function RoomDetailPage() {
   const [depositStep, setDepositStep] = useState<"form" | "qr" | "success">("form");
   const [tenantName, setTenantName] = useState("");
   const [tenantPhone, setTenantPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [isSubmittingDeposit, setIsSubmittingDeposit] = useState(false);
+  const [depositErrorMsg, setDepositErrorMsg] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -163,6 +166,47 @@ export default function RoomDetailPage() {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Vietnamese mobile phone validation: 10 digits starting with 03x/05x/07x/08x/09x
+  const PHONE_REGEX = /^(03|05|07|08|09)[0-9]{8}$/;
+  const isPhoneValid = (phone: string) => PHONE_REGEX.test(phone.replace(/\s/g, ""));
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setTenantPhone(val);
+    // Clear error while user is still typing (only show error once they've entered ≥ 3 chars)
+    if (phoneError && val.length < 3) setPhoneError("");
+  };
+
+  const handlePhoneBlur = () => {
+    if (!tenantPhone) return;
+    if (!isPhoneValid(tenantPhone)) {
+      setPhoneError("Số điện thoại không hợp lệ. Vui lòng nhập số di động Việt Nam (10 số, bắt đầu 03/05/07/08/09).");
+    } else {
+      setPhoneError("");
+    }
+  };
+
+  const handleConfirmDeposit = async () => {
+    if (!post || isSubmittingDeposit) return;
+    setIsSubmittingDeposit(true);
+    setDepositErrorMsg("");
+    try {
+      await postService.submitPlatformDeposit(post.id, {
+        tenantName: tenantName.trim(),
+        tenantPhone: tenantPhone.trim(),
+      });
+      setDepositStep("success");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Đặt cọc thất bại. Vui lòng thử lại sau.";
+      setDepositErrorMsg(typeof msg === "string" ? msg : JSON.stringify(msg));
+    } finally {
+      setIsSubmittingDeposit(false);
     }
   };
 
@@ -636,18 +680,44 @@ export default function RoomDetailPage() {
                       {tGuest("guestRoomDetailTenantPhoneLabel")}
                     </label>
                     <input
-                      type="text"
+                      type="tel"
                       placeholder={tGuest("guestRoomDetailTenantPhonePlaceholder")}
                       value={tenantPhone}
-                      onChange={(e) => setTenantPhone(e.target.value)}
-                      className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
+                      onChange={handlePhoneChange}
+                      onBlur={handlePhoneBlur}
+                      maxLength={11}
+                      className={`w-full mt-1 px-4 py-2.5 text-xs font-semibold border rounded-xl focus:outline-none transition-colors ${
+                        phoneError
+                          ? "border-rose-400 bg-rose-50 focus:border-rose-500"
+                          : tenantPhone && isPhoneValid(tenantPhone)
+                          ? "border-emerald-400 bg-emerald-50 focus:border-emerald-500"
+                          : "border-zinc-200 focus:border-[#2AC1BC]"
+                      }`}
                     />
+                    {phoneError && (
+                      <p className="mt-1.5 text-[11px] text-rose-500 font-semibold flex items-start gap-1">
+                        <span className="shrink-0 mt-0.5">⚠</span>
+                        <span>{phoneError}</span>
+                      </p>
+                    )}
+                    {!phoneError && tenantPhone && isPhoneValid(tenantPhone) && (
+                      <p className="mt-1.5 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        Số điện thoại hợp lệ
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <button
-                  onClick={() => setDepositStep("qr")}
-                  disabled={!tenantName || !tenantPhone}
+                  onClick={() => {
+                    if (!isPhoneValid(tenantPhone)) {
+                      setPhoneError("Số điện thoại không hợp lệ. Vui lòng nhập số di động Việt Nam (10 số, bắt đầu 03/05/07/08/09).");
+                      return;
+                    }
+                    setDepositStep("qr");
+                  }}
+                  disabled={!tenantName.trim() || !tenantPhone || !!phoneError || !isPhoneValid(tenantPhone)}
                   className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
                 >
                   {tGuest("guestRoomDetailConfirmQrBtn")} →
@@ -672,11 +742,29 @@ export default function RoomDetailPage() {
                   </p>
                 </div>
 
+                {depositErrorMsg && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-600 font-semibold flex items-start gap-2">
+                    <span className="shrink-0 mt-0.5">⚠</span>
+                    <span>{depositErrorMsg}</span>
+                  </div>
+                )}
+
                 <button
-                  onClick={() => setDepositStep("success")}
-                  className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer"
+                  onClick={handleConfirmDeposit}
+                  disabled={isSubmittingDeposit}
+                  className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] disabled:opacity-60 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {tGuest("guestRoomDetailConfirmTransferBtn")}
+                  {isSubmittingDeposit ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    tGuest("guestRoomDetailConfirmTransferBtn")
+                  )}
                 </button>
               </div>
             )}
