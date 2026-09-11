@@ -134,6 +134,23 @@ export enum MessageAttachmentType {
   file = 'file',
 }
 
+export enum AssignmentStatus {
+  active = 'active',
+  inactive = 'inactive',
+}
+
+export enum ScheduleStatus {
+  scheduled = 'scheduled',
+  canceled = 'canceled',
+}
+
+export enum AttendanceStatus {
+  not_yet = 'not_yet',
+  on_time = 'on_time',
+  late = 'late',
+  absent = 'absent',
+}
+
 export class Decimal {
   private val: number;
   constructor(value: number | string) {
