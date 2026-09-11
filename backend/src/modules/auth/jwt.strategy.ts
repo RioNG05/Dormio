@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UserRole } from '@prisma';
+import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload } from './types/jwt-payload.type';
 
 interface RawJwtPayload {
@@ -15,11 +16,15 @@ interface RawJwtPayload {
 /**
  * Passport JWT strategy.
  * Extracts token from Authorization: Bearer <token>.
+ * Validates user existence and status in the database.
  * The return value is attached to `req.user` as JwtPayload.
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -28,10 +33,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: RawJwtPayload): JwtPayload {
+  async validate(payload: RawJwtPayload): Promise<JwtPayload> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, role: true, status: true },
+    });
+
+    if (!user || user.status === 'banned') {
+      throw new UnauthorizedException(
+        'User account not found or deactivated. Please log in again.',
+      );
+    }
+
     return {
-      id: payload.sub,
-      role: payload.role,
+      id: user.id,
+      role: user.role,
     };
   }
 }

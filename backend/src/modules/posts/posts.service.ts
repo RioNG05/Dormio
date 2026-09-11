@@ -4,14 +4,18 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { PostQueryDto } from './dto/post-query.dto';
+import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
+  PaginatedPublicPostsResponseDto,
   PostQuotaDto,
   PostResponseDto,
+  PublicAddressDto,
+  PublicPostResponseDto,
 } from './dto/post-response.dto';
 import {
   DailyReachPointDto,
@@ -23,10 +27,13 @@ import {
   PostStatus,
   SourceType,
   PostPurchaseStatus,
-  SubscriptionPackage,
   SubscriptionStatus,
   Prisma,
+  DepositType,
+  DepositStatus,
+  RoomStatus,
 } from '@prisma';
+import { CreatePlatformDepositDto } from './dto/create-platform-deposit.dto';
 
 export const BASE_DAILY_FREE_POST_QUOTA = 3;
 
@@ -39,7 +46,7 @@ export interface QuotaAllocation {
 export class PostsService {
   private readonly logger = new Logger(PostsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Check if user is a landlord by checking ownership of at least one boarding house.
@@ -504,15 +511,15 @@ export class PostsService {
     const reachRecords =
       postIds.length > 0
         ? await this.prisma.postReach.findMany({
-            where: {
-              postId: { in: postIds },
-              viewedAt: { gte: startDate },
-            },
-            select: {
-              viewedAt: true,
-              viewedBy: true,
-            },
-          })
+          where: {
+            postId: { in: postIds },
+            viewedAt: { gte: startDate },
+          },
+          select: {
+            viewedAt: true,
+            viewedBy: true,
+          },
+        })
         : [];
 
     const dailyTrends = this.buildDailyTrendMap(reachRecords, validDays);
@@ -668,6 +675,217 @@ export class PostsService {
     return result;
   }
 
+  /**
+   * UC-PU-02: Get a single public post detail by ID (no auth required)
+   *
+   * Returns full PublicPostResponseDto. Throws NotFoundException if not found or not posted.
+   */
+  async getPublicPostById(postId: string): Promise<PublicPostResponseDto> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId, status: PostStatus.posted },
+      include: {
+        postImages: true,
+        room: {
+          include: {
+            roomType: true,
+            boardingHouse: true,
+          },
+        },
+        postedByUser: {
+          select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+            // IMPORTANT: never select phoneNumber/email in public response (UC-PU-02 rule)
+          },
+        },
+        _count: {
+          select: {
+            postReaches: true,
+            savedPosts: true,
+          },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Public listing with ID ${postId} was not found or is not available`);
+    }
+
+    this.logger.log(`Public post detail fetched: ${postId}`);
+    return this.mapToPublicResponseDto(post);
+  }
+
+  /**
+   * UC-PU-01: Browse & Filter Listings (public, no auth required)
+   *
+   * Filters: status=posted, keyword (title|content), province, district, ward,
+   * minPrice/maxPrice (depositAmount), minArea/maxArea (room.area).
+   * Location filters use structured BoardingHouse address fields — NOT free-text.
+   */
+  async browsePosts(
+    query: BrowsePostsQueryDto,
+  ): Promise<PaginatedPublicPostsResponseDto> {
+    const {
+      page = 1,
+      limit = 12,
+      search,
+      province,
+      district,
+      ward,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+    } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.PostWhereInput = {
+      status: PostStatus.posted,
+    };
+
+    // Keyword filter: title or content (case-insensitive)
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Build room+boardingHouse filter for location & area
+    const roomFilter: Prisma.RoomWhereInput = {};
+    const boardingHouseFilter: Prisma.BoardingHouseWhereInput = {};
+    let hasLocationFilter = false;
+    let hasAreaFilter = false;
+
+    if (province) {
+      boardingHouseFilter.province = { equals: province, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
+    if (district) {
+      boardingHouseFilter.district = { equals: district, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
+    if (ward) {
+      boardingHouseFilter.ward = { equals: ward, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
+    if (hasLocationFilter) {
+      roomFilter.boardingHouse = boardingHouseFilter;
+    }
+
+    if (minArea !== undefined || maxArea !== undefined) {
+      const areaFilter: { gte?: string; lte?: string } = {};
+      if (minArea !== undefined) areaFilter.gte = String(minArea);
+      if (maxArea !== undefined) areaFilter.lte = String(maxArea);
+      roomFilter.area = areaFilter as Prisma.RoomWhereInput['area'];
+      hasAreaFilter = true;
+    }
+
+    if (hasLocationFilter || hasAreaFilter) {
+      // Posts without a linked room are excluded when area/location filters are active
+      where.room = roomFilter;
+    }
+
+    // Price filter on depositAmount (Decimal field — use string values for Prisma Decimal comparison)
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const priceFilter: { gte?: string; lte?: string } = {};
+      if (minPrice !== undefined) priceFilter.gte = String(minPrice);
+      if (maxPrice !== undefined) priceFilter.lte = String(maxPrice);
+      where.depositAmount = priceFilter as Prisma.PostWhereInput['depositAmount'];
+    }
+
+    const [total, posts] = await Promise.all([
+      this.prisma.post.count({ where }),
+      this.prisma.post.findMany({
+        where,
+        include: {
+          postImages: true,
+          room: {
+            include: {
+              roomType: true,
+              boardingHouse: true,
+            },
+          },
+          postedByUser: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+              // IMPORTANT: never select phoneNumber/email in public response (UC-PU-02 rule)
+            },
+          },
+          _count: {
+            select: {
+              postReaches: true,
+              savedPosts: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data: posts.map((post) => this.mapToPublicResponseDto(post)),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  private mapToPublicResponseDto(post: any): PublicPostResponseDto {
+    const bh = post.room?.boardingHouse;
+    const address: PublicAddressDto | null = bh
+      ? {
+        province: bh.province,
+        district: bh.district,
+        ward: bh.ward,
+        street: bh.street,
+        houseNumber: bh.houseNumber,
+      }
+      : null;
+
+    return {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      depositAmount: Number(post.depositAmount),
+      status: post.status,
+      createdAt: post.createdAt,
+      images: (post.postImages || []).map((img: any) => ({
+        id: img.id,
+        url: img.url,
+      })),
+      room: post.room
+        ? {
+          id: post.room.id,
+          roomNumber: post.room.roomNumber,
+          floor: post.room.floor,
+          area: post.room.area ? Number(post.room.area) : undefined,
+          roomTypeName: post.room.roomType?.name,
+          boardingHouseName: post.room.boardingHouse?.name,
+          boardingHouseId: post.room.boardingHouseId,
+        }
+        : null,
+      address,
+      poster: post.postedByUser
+        ? {
+          id: post.postedByUser.id,
+          username: post.postedByUser.username,
+          avatarUrl: post.postedByUser.avatarUrl,
+        }
+        : null,
+      viewsCount: post._count?.postReaches ?? 0,
+      savedCount: post._count?.savedPosts ?? 0,
+    };
+  }
+
   private mapToResponseDto(post: any): PostResponseDto {
     return {
       id: post.id,
@@ -688,16 +906,306 @@ export class PostsService {
       })),
       room: post.room
         ? {
-            id: post.room.id,
-            roomNumber: post.room.roomNumber,
-            floor: post.room.floor,
-            area: post.room.area ? Number(post.room.area) : undefined,
-            roomTypeName: post.room.roomType?.name,
-            boardingHouseName: post.room.boardingHouse?.name,
-            boardingHouseId: post.room.boardingHouseId,
-          }
+          id: post.room.id,
+          roomNumber: post.room.roomNumber,
+          floor: post.room.floor,
+          area: post.room.area ? Number(post.room.area) : undefined,
+          roomTypeName: post.room.roomType?.name,
+          boardingHouseName: post.room.boardingHouse?.name,
+          boardingHouseId: post.room.boardingHouseId,
+        }
         : null,
       viewsCount: post._count?.postReaches ?? 0,
     };
+  }
+
+  /**
+   * UC-PU-04: Platform Deposit — public user places a deposit on a rental listing.
+   *
+   * Atomically (single transaction):
+   *  1. Validates post exists and status === posted
+   *  2. If post has a linked room: validates room is available, sets room.status = deposited
+   *  3. Creates DEPOSIT row (type=platform, status=pending, recordedManually=false)
+   *  4. Hides the post (post.status = hidden) so it no longer appears in browse results
+   *
+   * No authentication required — tenant is identified only by tenantName + tenantPhone.
+   */
+  async createPlatformDeposit(
+    postId: string,
+    dto: CreatePlatformDepositDto,
+  ): Promise<{ depositId: string; postId: string; message: string }> {
+    this.logger.log(
+      `UC-PU-04: Platform deposit on post ${postId} by tenant ${dto.tenantPhone}`,
+    );
+
+    // 1. Load post with room + boarding house
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        room: {
+          include: {
+            boardingHouse: true,
+          },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${postId} was not found`);
+    }
+
+    if (post.status !== PostStatus.posted) {
+      throw new BadRequestException(
+        'This listing is no longer accepting deposits (hidden or not yet published)',
+      );
+    }
+
+    // Guard: post must have a linked room (Deposit.roomId is non-nullable)
+    if (!post.roomId || !post.room) {
+      throw new BadRequestException(
+        'This listing is not linked to a specific room and does not support online deposits. Please contact the landlord directly.',
+      );
+    }
+
+    // 2. Validate room is available
+    if (post.room.status !== RoomStatus.available) {
+      throw new BadRequestException(
+        'This room is no longer available. Please choose another listing.',
+      );
+    }
+
+    // Guard: no active platform deposit already pending for this post
+    const existing = await this.prisma.deposit.findFirst({
+      where: {
+        postId,
+        status: { in: [DepositStatus.pending, DepositStatus.paid] },
+      },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        'This room already has an active deposit from another tenant. Please choose another listing.',
+      );
+    }
+
+    // 3. Serialize tenant info into note field
+    const notePayload = JSON.stringify({
+      tenantName: dto.tenantName.trim(),
+      tenantPhone: dto.tenantPhone.trim(),
+      note: dto.note?.trim() ?? null,
+    });
+
+    // 4. Atomic transaction
+    const deposit = await this.prisma.$transaction(async (tx) => {
+      // 4a. Create DEPOSIT row (type=platform, status=pending — awaiting webhook confirmation)
+      const dep = await tx.deposit.create({
+        data: {
+          roomId: post.roomId!,
+          boardingHouseId: post.room!.boardingHouseId,
+          postId,
+          contractId: null,
+          type: DepositType.platform,
+          amount: new Prisma.Decimal(Number(post.depositAmount)),
+          status: DepositStatus.pending,
+          recordedManually: false,
+          recordedBy: null,
+          note: notePayload,
+        },
+      });
+
+      // 4b. Mark the linked room as deposited (no longer available)
+      await tx.room.update({
+        where: { id: post.roomId! },
+        data: { status: RoomStatus.deposited },
+      });
+
+      // 4c. Hide the post so it no longer appears in browse / search results
+      await tx.post.update({
+        where: { id: postId },
+        data: { status: PostStatus.hidden },
+      });
+
+      return dep;
+    });
+
+    this.logger.log(
+      `UC-PU-04: Deposit ${deposit.id} created for post ${postId}. Post hidden, room marked deposited.`,
+    );
+
+    return {
+      depositId: deposit.id,
+      postId,
+      message: 'Deposit placed successfully. We will contact you to confirm shortly.',
+    };
+  }
+
+  /**
+   * UC-PU-03: Save a rental listing for the authenticated user (idempotent).
+   */
+  async savePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException(
+        'User account not found or expired. Please log in again.',
+      );
+    }
+
+    const existing = await this.prisma.savedPost.findFirst({
+      where: { postId, savedBy: userId },
+    });
+
+    if (!existing) {
+      try {
+        await this.prisma.savedPost.create({
+          data: {
+            postId,
+            savedBy: userId,
+          },
+        });
+        this.logger.log(`User ${userId} saved post ${postId}`);
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2003'
+        ) {
+          throw new UnauthorizedException(
+            'User account not found or expired. Please log in again.',
+          );
+        }
+        throw err;
+      }
+    }
+
+    const savedCount = await this.prisma.savedPost.count({
+      where: { postId },
+    });
+
+    return { saved: true, savedCount };
+  }
+
+  /**
+   * UC-PU-03: Unsave a rental listing for the authenticated user (idempotent).
+   */
+  async unsavePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    await this.prisma.savedPost.deleteMany({
+      where: { postId, savedBy: userId },
+    });
+    this.logger.log(`User ${userId} unsaved post ${postId}`);
+
+    const savedCount = await this.prisma.savedPost.count({
+      where: { postId },
+    });
+
+    return { saved: false, savedCount };
+  }
+
+  /**
+   * UC-PU-03: Toggle save/bookmark for a rental listing.
+   */
+  async toggleSavePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException(
+        'User account not found or expired. Please log in again.',
+      );
+    }
+
+    const existing = await this.prisma.savedPost.findFirst({
+      where: { postId, savedBy: userId },
+    });
+
+    if (existing) {
+      await this.prisma.savedPost.deleteMany({
+        where: { postId, savedBy: userId },
+      });
+      this.logger.log(`User ${userId} toggled post ${postId} -> unsaved`);
+      const savedCount = await this.prisma.savedPost.count({
+        where: { postId },
+      });
+      return { saved: false, savedCount };
+    } else {
+      try {
+        await this.prisma.savedPost.create({
+          data: {
+            postId,
+            savedBy: userId,
+          },
+        });
+        this.logger.log(`User ${userId} toggled post ${postId} -> saved`);
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2003'
+        ) {
+          throw new UnauthorizedException(
+            'User account not found or expired. Please log in again.',
+          );
+        }
+        throw err;
+      }
+      const savedCount = await this.prisma.savedPost.count({
+        where: { postId },
+      });
+      return { saved: true, savedCount };
+    }
+  }
+
+  /**
+   * UC-PU-03: Get all saved post IDs for the authenticated user.
+   */
+  async getSavedPostIds(userId: string): Promise<string[]> {
+    const saved = await this.prisma.savedPost.findMany({
+      where: { savedBy: userId },
+      select: { postId: true },
+    });
+    return saved.map((s) => s.postId);
+  }
+
+  /**
+   * UC-PU-03: Check if a post is saved by the authenticated user.
+   */
+  async isPostSaved(userId: string, postId: string): Promise<boolean> {
+    const count = await this.prisma.savedPost.count({
+      where: { postId, savedBy: userId },
+    });
+    return count > 0;
   }
 }

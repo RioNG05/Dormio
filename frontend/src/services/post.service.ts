@@ -33,6 +33,61 @@ export interface PostListing {
   viewsCount: number;
 }
 
+/** Public address derived from BoardingHouse (UC-PU-01) */
+export interface PublicAddress {
+  province?: string | null;
+  district?: string | null;
+  ward?: string | null;
+  street?: string | null;
+  houseNumber?: string | null;
+}
+
+/** Public poster subset — phone/email never exposed (UC-PU-02 rule) */
+export interface PublicPoster {
+  id: string;
+  username?: string | null;
+  avatarUrl?: string | null;
+}
+
+/** Public listing item for UC-PU-01 browse endpoint */
+export interface PublicPostListing {
+  id: string;
+  title: string;
+  content: string;
+  depositAmount: number;
+  status: string;
+  createdAt: string;
+  images: PostImage[];
+  room?: PostRoom | null;
+  address?: PublicAddress | null;
+  poster?: PublicPoster | null;
+  viewsCount: number;
+  savedCount: number;
+}
+
+export interface BrowsePostsParams {
+  search?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minArea?: number;
+  maxArea?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedPublicPostsResponse {
+  data: PublicPostListing[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export interface PostQuotaStatus {
   isLandlord: boolean;
   planName: string;
@@ -102,6 +157,34 @@ export interface SinglePostAnalytics {
 
 export const postService = {
   /**
+   * UC-PU-01: Browse & filter public rental listings (no auth required)
+   * Location filters use structured BoardingHouse address fields — NOT free-text.
+   */
+  async browsePosts(
+    params?: BrowsePostsParams
+  ): Promise<PaginatedPublicPostsResponse> {
+    const queryParams: Record<string, string> = {};
+    if (params?.search) queryParams.search = params.search;
+    if (params?.province) queryParams.province = params.province;
+    if (params?.district) queryParams.district = params.district;
+    if (params?.ward) queryParams.ward = params.ward;
+    if (params?.minPrice !== undefined) queryParams.minPrice = String(params.minPrice);
+    if (params?.maxPrice !== undefined) queryParams.maxPrice = String(params.maxPrice);
+    if (params?.minArea !== undefined) queryParams.minArea = String(params.minArea);
+    if (params?.maxArea !== undefined) queryParams.maxArea = String(params.maxArea);
+    if (params?.page) queryParams.page = String(params.page);
+    if (params?.limit) queryParams.limit = String(params.limit);
+
+    const res = await api.get<
+      { success: boolean; data: PaginatedPublicPostsResponse } | PaginatedPublicPostsResponse
+    >("/v1/posts/browse", { params: queryParams });
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PaginatedPublicPostsResponse }).data;
+    }
+    return res as PaginatedPublicPostsResponse;
+  },
+
+  /**
    * Check remaining posting quota for today and available purchased credits
    */
   async getQuota(): Promise<PostQuotaStatus> {
@@ -113,6 +196,7 @@ export const postService = {
     }
     return res as PostQuotaStatus;
   },
+
 
   /**
    * UC-P-01: Publish a new rental listing
@@ -155,6 +239,34 @@ export const postService = {
       return (res as { success: boolean; data: PaginatedPostsResponse }).data;
     }
     return res as PaginatedPostsResponse;
+  },
+
+  /**
+   * UC-PU-02: Get a single public post detail by ID (no auth required)
+   * Returns full post info including images, room, address and poster (no phone/email).
+   */
+  async getPublicPostById(id: string): Promise<PublicPostListing> {
+    const res = await api.get<
+      { success: boolean; data: PublicPostListing } | PublicPostListing
+    >(`/v1/posts/browse/${id}`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PublicPostListing }).data;
+    }
+    return res as PublicPostListing;
+  },
+
+  /**
+   * UC-PU-04: Place a platform deposit on a rental listing (no auth required).
+   * Creates a DEPOSIT record, marks the room as deposited and hides the post.
+   */
+  async submitPlatformDeposit(
+    postId: string,
+    payload: { tenantName: string; tenantPhone: string; note?: string }
+  ): Promise<{ depositId: string; postId: string; message: string }> {
+    return api.post<{ depositId: string; postId: string; message: string }>(
+      `/v1/posts/browse/${postId}/deposit`,
+      payload
+    );
   },
 
   /**
@@ -220,5 +332,70 @@ export const postService = {
       return (res as { success: boolean; data: SinglePostAnalytics }).data;
     }
     return res as SinglePostAnalytics;
+  },
+
+  /**
+   * UC-PU-03: Save/bookmark a rental listing (requires auth)
+   */
+  async savePost(id: string): Promise<{ saved: boolean; savedCount: number }> {
+    const res = await api.post<
+      { success: boolean; data: { saved: boolean; savedCount: number } } | { saved: boolean; savedCount: number }
+    >(`/v1/posts/${id}/save`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { saved: boolean; savedCount: number } }).data;
+    }
+    return res as { saved: boolean; savedCount: number };
+  },
+
+  /**
+   * UC-PU-03: Unsave/remove bookmark for a rental listing (requires auth)
+   */
+  async unsavePost(id: string): Promise<{ saved: boolean; savedCount: number }> {
+    const res = await api.delete<
+      { success: boolean; data: { saved: boolean; savedCount: number } } | { saved: boolean; savedCount: number }
+    >(`/v1/posts/${id}/save`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { saved: boolean; savedCount: number } }).data;
+    }
+    return res as { saved: boolean; savedCount: number };
+  },
+
+  /**
+   * UC-PU-03: Toggle save/bookmark status for a rental listing (requires auth)
+   */
+  async toggleSavePost(id: string): Promise<{ saved: boolean; savedCount: number }> {
+    const res = await api.post<
+      { success: boolean; data: { saved: boolean; savedCount: number } } | { saved: boolean; savedCount: number }
+    >(`/v1/posts/${id}/toggle-save`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { saved: boolean; savedCount: number } }).data;
+    }
+    return res as { saved: boolean; savedCount: number };
+  },
+
+  /**
+   * UC-PU-03: Get all saved post IDs for current user (requires auth)
+   */
+  async getSavedPostIds(): Promise<string[]> {
+    const res = await api.get<{ success: boolean; data: string[] } | string[]>(
+      "/v1/posts/saved/ids"
+    );
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: string[] }).data;
+    }
+    return (res as string[]) || [];
+  },
+
+  /**
+   * UC-PU-03: Check if a post is bookmarked by current user (requires auth)
+   */
+  async isPostSaved(id: string): Promise<boolean> {
+    const res = await api.get<
+      { success: boolean; data: { isSaved: boolean } } | { isSaved: boolean }
+    >(`/v1/posts/${id}/is-saved`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: { isSaved: boolean } }).data.isSaved;
+    }
+    return (res as { isSaved: boolean })?.isSaved ?? false;
   },
 };

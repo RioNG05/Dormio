@@ -3,11 +3,14 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
   Logger,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -15,20 +18,25 @@ import {
   ApiResponse,
   ApiTags,
   ApiParam,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { PostQueryDto } from './dto/post-query.dto';
+import { CreatePlatformDepositDto } from './dto/create-platform-deposit.dto';
+import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
+  PaginatedPublicPostsResponseDto,
   PostQuotaDto,
   PostResponseDto,
+  PublicPostResponseDto,
 } from './dto/post-response.dto';
 import {
   PosterAnalyticsOverviewDto,
   SinglePostAnalyticsDto,
 } from './dto/post-analytics.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { PostStatus } from '@prisma';
 
@@ -109,6 +117,54 @@ export class PostsController {
     return this.postsService.getMyPosts(user.id, query);
   }
 
+  // ─── UC-PU-03: Saved / Bookmarked Posts ───────────────────────────────────
+
+  @Get('saved/ids')
+  @ApiOperation({
+    summary: 'UC-PU-03: Get all saved post IDs for current user',
+    description: 'Returns an array of post UUIDs that the current authenticated user has bookmarked.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of bookmarked post IDs',
+    type: [String],
+  })
+  async getSavedPostIds(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<string[]> {
+    this.logger.log(`GET /posts/saved/ids called by user ${user.id}`);
+    return this.postsService.getSavedPostIds(user.id);
+  }
+
+  // ─── UC-PU-01: Public Browse & Filter Listings ────────────────────────────
+
+  @Public()
+  @Get('browse')
+  @ApiOperation({
+    summary: 'UC-PU-01: Browse & filter public rental listings',
+    description:
+      'Returns paginated rental listings with status=posted. No authentication required. ' +
+      'Location filters target structured address fields (province, district, ward) on BoardingHouse, ' +
+      'not free-text address search. Price filter applies to depositAmount.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated public listing results',
+    type: PaginatedPublicPostsResponseDto,
+  })
+  async browsePosts(
+    @Query() query: BrowsePostsQueryDto,
+  ): Promise<PaginatedPublicPostsResponseDto> {
+    this.logger.log(
+      `GET /posts/browse called (public) — search="${query.search ?? ''}", province="${query.province ?? ''}", ` +
+      `district="${query.district ?? ''}", ward="${query.ward ?? ''}", ` +
+      `price=[${query.minPrice ?? '-'}, ${query.maxPrice ?? '-'}], ` +
+      `area=[${query.minArea ?? '-'}, ${query.maxArea ?? '-'}], ` +
+      `page=${query.page ?? 1}, limit=${query.limit ?? 12}`,
+    );
+    return this.postsService.browsePosts(query);
+  }
+
   @Get('analytics/overview')
   @ApiOperation({
     summary: 'UC-P-02: Get aggregate poster analytics dashboard overview',
@@ -131,6 +187,63 @@ export class PostsController {
       user.id,
       days ? Number(days) : 14,
     );
+  }
+
+  @Public()
+  @Get('browse/:id')
+  @ApiOperation({
+    summary: 'UC-PU-02: Get a single public post detail by ID',
+    description:
+      'Returns full public post details. No authentication required. ' +
+      'Only posts with status=posted are returned. Poster phone/email are never exposed.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Public post detail',
+    type: PublicPostResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Post not found or not publicly available',
+  })
+  async getPublicPostById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<PublicPostResponseDto> {
+    this.logger.log(`GET /posts/browse/${id} called (public)`);
+    return this.postsService.getPublicPostById(id);
+  }
+
+  @Public()
+  @Post('browse/:id/deposit')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'UC-PU-04: Place a platform deposit on a rental listing',
+    description:
+      'Creates a platform DEPOSIT record for the given post, marks the linked room as deposited, ' +
+      'and hides the post from search results. No authentication required. ' +
+      'Tenant is identified by tenantName + tenantPhone.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiCreatedResponse({
+    description: 'Platform deposit created — post hidden and room marked deposited',
+    schema: {
+      type: 'object',
+      properties: {
+        depositId: { type: 'string', example: 'uuid' },
+        postId: { type: 'string', example: 'uuid' },
+        message: { type: 'string', example: 'Đặt cọc thành công!' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Post is not available for deposit (hidden, room occupied, or already deposited)' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async createPlatformDeposit(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreatePlatformDepositDto,
+  ): Promise<{ depositId: string; postId: string; message: string }> {
+    this.logger.log(`POST /posts/browse/${id}/deposit called by tenant ${dto.tenantPhone}`);
+    return this.postsService.createPlatformDeposit(id, dto);
   }
 
   @Get(':id')
@@ -217,5 +330,111 @@ export class PostsController {
       `PATCH /posts/${id}/status to ${status} called by user ${user.id}`,
     );
     return this.postsService.updatePostStatus(user.id, id, status);
+  }
+
+  // ─── UC-PU-03: Save/Bookmark Listing Endpoints ───────────────────────────
+
+  @Get(':id/is-saved')
+  @ApiOperation({
+    summary: 'UC-PU-03: Check if a post is saved by current user',
+    description: 'Returns whether the specified post is in the authenticated user’s bookmarked list.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bookmark status of the post',
+    schema: {
+      type: 'object',
+      properties: {
+        isSaved: { type: 'boolean', example: true },
+      },
+    },
+  })
+  async isPostSaved(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ isSaved: boolean }> {
+    this.logger.log(`GET /posts/${id}/is-saved called by user ${user.id}`);
+    const isSaved = await this.postsService.isPostSaved(user.id, id);
+    return { isSaved };
+  }
+
+  @Post(':id/save')
+  @ApiOperation({
+    summary: 'UC-PU-03: Save/bookmark a rental listing',
+    description: 'Bookmarks the post for the current authenticated user (idempotent).',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Post saved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        saved: { type: 'boolean', example: true },
+        savedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async savePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    this.logger.log(`POST /posts/${id}/save called by user ${user.id}`);
+    return this.postsService.savePost(user.id, id);
+  }
+
+  @Delete(':id/save')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'UC-PU-03: Unsave/remove bookmark for a rental listing',
+    description: 'Removes the bookmark for the current authenticated user (idempotent).',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Post unsaved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        saved: { type: 'boolean', example: false },
+        savedCount: { type: 'number', example: 4 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async unsavePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    this.logger.log(`DELETE /posts/${id}/save called by user ${user.id}`);
+    return this.postsService.unsavePost(user.id, id);
+  }
+
+  @Post(':id/toggle-save')
+  @ApiOperation({
+    summary: 'UC-PU-03: Toggle save/bookmark for a rental listing',
+    description: 'Toggles the bookmark status for the current authenticated user.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bookmark status toggled',
+    schema: {
+      type: 'object',
+      properties: {
+        saved: { type: 'boolean', example: true },
+        savedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async toggleSavePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ saved: boolean; savedCount: number }> {
+    this.logger.log(`POST /posts/${id}/toggle-save called by user ${user.id}`);
+    return this.postsService.toggleSavePost(user.id, id);
   }
 }

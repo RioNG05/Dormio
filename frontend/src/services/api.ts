@@ -64,6 +64,12 @@ class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
+        if (response.status === 401 && typeof window !== "undefined") {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("dormio_logged_in");
+          localStorage.removeItem("dormio_user_id");
+          localStorage.removeItem("dormio_user_role");
+        }
         const errorData = await response.json().catch(() => ({}));
         let message = "";
         if (typeof errorData.message === "string" && errorData.message.trim()) {
