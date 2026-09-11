@@ -74,8 +74,11 @@ export class PaginationMetaDto {
 }
 
 export class ServicesListResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean;
+
   @ApiProperty({ type: [ServiceItemDto] })
-  items: ServiceItemDto[];
+  data: ServiceItemDto[];
 
   @ApiProperty({ type: ServicesSummaryDto })
   summary: ServicesSummaryDto;
@@ -99,15 +102,25 @@ export class ServiceAssignedRoomDto {
 }
 
 export class ServiceRoomsResponseDto {
-  @ApiProperty({ example: '8f7a6344-7ff5-4e78-bc40-5494d6e9f1a2' })
-  serviceId: string;
+  @ApiProperty({ example: true })
+  success: boolean;
 
-  @ApiProperty({ example: 'Điện sinh hoạt' })
-  serviceName: string;
-
-  @ApiProperty({ example: 5 })
-  appliedRoomsCount: number;
-
-  @ApiProperty({ type: [ServiceAssignedRoomDto] })
-  rooms: ServiceAssignedRoomDto[];
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      serviceId: { type: 'string', example: '8f7a6344-7ff5-4e78-bc40-5494d6e9f1a2' },
+      serviceName: { type: 'string', example: 'Điện sinh hoạt' },
+      appliedRoomsCount: { type: 'number', example: 5 },
+      rooms: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/ServiceAssignedRoomDto' },
+      },
+    },
+  })
+  data: {
+    serviceId: string;
+    serviceName: string;
+    appliedRoomsCount: number;
+    rooms: ServiceAssignedRoomDto[];
+  };
 }

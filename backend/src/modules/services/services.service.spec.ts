@@ -82,9 +82,9 @@ describe('ServicesService', () => {
         limit: 10,
       });
 
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0].name).toBe('Điện sinh hoạt');
-      expect(result.items[0].appliedRoomsCount).toBe(5);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].name).toBe('Điện sinh hoạt');
+      expect(result.data[0].appliedRoomsCount).toBe(5);
       expect(result.summary.totalServices).toBe(3);
       expect(result.summary.meteredCount).toBe(1);
       expect(result.summary.roomFixedCount).toBe(1);
@@ -255,10 +255,10 @@ describe('ServicesService', () => {
 
       const result = await service.getServiceRooms(mockBoardingHouseId, mockServiceId);
 
-      expect(result.serviceId).toBe(mockServiceId);
-      expect(result.appliedRoomsCount).toBe(2);
-      expect(result.rooms[0].roomNumber).toBe('101');
-      expect(result.rooms[1].roomNumber).toBe('102');
+      expect(result.data.serviceId).toBe(mockServiceId);
+      expect(result.data.appliedRoomsCount).toBe(2);
+      expect(result.data.rooms[0].roomNumber).toBe('101');
+      expect(result.data.rooms[1].roomNumber).toBe('102');
     });
   });
 });

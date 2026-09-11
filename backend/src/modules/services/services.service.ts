@@ -124,7 +124,8 @@ export class ServicesService {
     const items = services.map((s) => this.mapToItemDto(s, s._count.roomServices));
 
     return {
-      items,
+      success: true,
+      data: items,
       summary,
       meta: {
         page,
@@ -394,10 +395,13 @@ export class ServicesService {
     }));
 
     return {
-      serviceId: service.id,
-      serviceName: service.name,
-      appliedRoomsCount: rooms.length,
-      rooms,
+      success: true,
+      data: {
+        serviceId: service.id,
+        serviceName: service.name,
+        appliedRoomsCount: rooms.length,
+        rooms,
+      },
     };
   }
 

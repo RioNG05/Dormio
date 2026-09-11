@@ -195,16 +195,18 @@ export default function ServicesPage() {
       if (typeFilter === "metered") isMeteredParam = true;
       if (typeFilter === "room" || typeFilter === "person" || typeFilter === "other") isMeteredParam = false;
 
-      const response = await serviceService.getServices({
+      const response = await serviceService.getServices(activeBuilding.id, {
         search: searchQuery.trim() || undefined,
         isMetered: isMeteredParam,
         page: currentPage,
         limit: itemsPerPage,
       });
 
-      setServices(response.items);
-      setSummary(response.summary);
-      setTotalItems(response.meta.total);
+      if (response && response.success) {
+        setServices(response.data || []);
+        setSummary(response.summary);
+        setTotalItems(response.meta.total);
+      }
     } catch (err: any) {
       showAlert(err?.message || "Không thể tải danh sách dịch vụ", "error", "Lỗi tải dữ liệu");
     } finally {
@@ -218,11 +220,14 @@ export default function ServicesPage() {
 
   // Fetch Rooms for Assigned Modal
   const handleOpenRoomsModal = async (service: ServiceItem) => {
+    if (!activeBuilding?.id) return;
     setRoomsModalService(service);
     setIsLoadingRooms(true);
     try {
-      const res = await serviceService.getServiceRooms(service.id);
-      setServiceRooms(res.rooms);
+      const res = await serviceService.getServiceRooms(activeBuilding.id, service.id);
+      if (res && res.success && res.data) {
+        setServiceRooms(res.data.rooms || []);
+      }
     } catch (err: any) {
       showAlert(err?.message || "Không thể tải danh sách phòng áp dụng", "error");
     } finally {
@@ -296,8 +301,9 @@ export default function ServicesPage() {
 
     setIsSubmitting(true);
     try {
+      if (!activeBuilding?.id) return;
       if (selectedService) {
-        await serviceService.updateService(selectedService.id, {
+        await serviceService.updateService(activeBuilding.id, selectedService.id, {
           name: formName.trim(),
           price: priceNum,
           unit: formUnit.trim(),
@@ -307,7 +313,7 @@ export default function ServicesPage() {
         });
         showAlert("Đã cập nhật dịch vụ thành công!", "success", "Thành công");
       } else {
-        await serviceService.createService({
+        await serviceService.createService(activeBuilding.id, {
           name: formName.trim(),
           price: priceNum,
           unit: formUnit.trim(),
@@ -331,10 +337,11 @@ export default function ServicesPage() {
   // Toggle Service Active Status
   const handleToggleActive = async (srv: ServiceItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (!activeBuilding?.id) return;
     const nextStatus = srv.status === "active" ? "inactive" : "active";
 
     try {
-      await serviceService.updateService(srv.id, { status: nextStatus });
+      await serviceService.updateService(activeBuilding.id, srv.id, { status: nextStatus });
       showAlert(
         `Đã ${nextStatus === "active" ? "KÍCH HOẠT" : "TẠM DỪNG"} dịch vụ [${srv.name}]`,
         nextStatus === "active" ? "success" : "info",
@@ -357,10 +364,10 @@ export default function ServicesPage() {
 
   // Delete Service
   const handleDeleteService = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !activeBuilding?.id) return;
     setIsDeleting(true);
     try {
-      await serviceService.deleteService(deleteTarget.id);
+      await serviceService.deleteService(activeBuilding.id, deleteTarget.id);
       showAlert(`Đã xóa dịch vụ [${deleteTarget.name}] thành công!`, "success", "Xóa thành công");
       setDeleteTarget(null);
       fetchServices();
