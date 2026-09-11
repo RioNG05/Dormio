@@ -29,6 +29,8 @@ import {
   type BrowsePostsParams,
 } from "@/services/post.service";
 
+const DEFAULT_ROOM_IMAGE = "/house-placeholder.jpg";
+
 // ─── Helper: build full address string from structured fields ─────────────────
 function buildAddressString(listing: PublicPostListing): string {
   const addr = listing.address;
@@ -489,9 +491,7 @@ export default function RoomsPage() {
                   !error &&
                   listings.map((listing) => {
                     const isSaved = savedIds.includes(listing.id);
-                    const imageUrl =
-                      listing.images[0]?.url ??
-                      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
+                    const imageUrl = listing.images?.[0]?.url || DEFAULT_ROOM_IMAGE;
                     const address = buildAddressString(listing);
 
                     return (
@@ -504,6 +504,9 @@ export default function RoomsPage() {
                           <img
                             src={imageUrl}
                             alt={listing.title}
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE;
+                            }}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
 
@@ -721,11 +724,11 @@ export default function RoomsPage() {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="md:w-1/2 aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-100">
                 <img
-                  src={
-                    quickViewRoom.images[0]?.url ??
-                    "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80"
-                  }
+                  src={quickViewRoom.images?.[0]?.url || DEFAULT_ROOM_IMAGE}
                   alt={quickViewRoom.title}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE;
+                  }}
                   className="w-full h-full object-cover"
                 />
               </div>

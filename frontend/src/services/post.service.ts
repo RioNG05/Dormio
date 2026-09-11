@@ -242,6 +242,20 @@ export const postService = {
   },
 
   /**
+   * UC-PU-02: Get a single public post detail by ID (no auth required)
+   * Returns full post info including images, room, address and poster (no phone/email).
+   */
+  async getPublicPostById(id: string): Promise<PublicPostListing> {
+    const res = await api.get<
+      { success: boolean; data: PublicPostListing } | PublicPostListing
+    >(`/v1/posts/browse/${id}`);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PublicPostListing }).data;
+    }
+    return res as PublicPostListing;
+  },
+
+  /**
    * Get post details by ID
    */
   async getPostById(id: string): Promise<PostListing> {

@@ -672,6 +672,47 @@ export class PostsService {
   }
 
   /**
+   * UC-PU-02: Get a single public post detail by ID (no auth required)
+   *
+   * Returns full PublicPostResponseDto. Throws NotFoundException if not found or not posted.
+   */
+  async getPublicPostById(postId: string): Promise<PublicPostResponseDto> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId, status: PostStatus.posted },
+      include: {
+        postImages: true,
+        room: {
+          include: {
+            roomType: true,
+            boardingHouse: true,
+          },
+        },
+        postedByUser: {
+          select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+            // IMPORTANT: never select phoneNumber/email in public response (UC-PU-02 rule)
+          },
+        },
+        _count: {
+          select: {
+            postReaches: true,
+            savedPosts: true,
+          },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Public listing with ID ${postId} was not found or is not available`);
+    }
+
+    this.logger.log(`Public post detail fetched: ${postId}`);
+    return this.mapToPublicResponseDto(post);
+  }
+
+  /**
    * UC-PU-01: Browse & Filter Listings (public, no auth required)
    *
    * Filters: status=posted, keyword (title|content), province, district, ward,

@@ -24,6 +24,7 @@ import {
   PaginatedPublicPostsResponseDto,
   PostQuotaDto,
   PostResponseDto,
+  PublicPostResponseDto,
 } from './dto/post-response.dto';
 import {
   PosterAnalyticsOverviewDto,
@@ -162,6 +163,31 @@ export class PostsController {
       user.id,
       days ? Number(days) : 14,
     );
+  }
+
+  @Public()
+  @Get('browse/:id')
+  @ApiOperation({
+    summary: 'UC-PU-02: Get a single public post detail by ID',
+    description:
+      'Returns full public post details. No authentication required. ' +
+      'Only posts with status=posted are returned. Poster phone/email are never exposed.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Public post detail',
+    type: PublicPostResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Post not found or not publicly available',
+  })
+  async getPublicPostById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<PublicPostResponseDto> {
+    this.logger.log(`GET /posts/browse/${id} called (public)`);
+    return this.postsService.getPublicPostById(id);
   }
 
   @Get(':id')
