@@ -395,6 +395,12 @@ const en = {
     guestMessagesSend: "Send",
     guestMessagesSubtitle: "Chat directly with boarding house landlords on Dormio Platform",
     guestMessagesTitle: "Messages & Chat",
+    guestMessagesEmptyList: "No conversations yet",
+    guestMessagesEmptyListSub: "Contact landlords from room listings to start chatting.",
+    guestMessagesSelectToChat: "Select a conversation to start messaging",
+    guestMessagesLockTitle: "Account Login Required",
+    guestMessagesLockDesc: "Direct messaging is available for logged in members. Please log in to chat with landlords.",
+    guestMessagesLoginBtn: "Log in now",
 
     // --- Public rental post analytics (app/(public)/posts/analytics) ---
     guestPostsAnalyticsBackHome: "Back to home",
@@ -704,6 +710,8 @@ const en = {
     guestRoomDetailCalcSub: "Adjust occupants & utility consumption to estimate total monthly cost.",
     guestRoomDetailCalcTitle: "Monthly Living Cost Estimation Tool",
     guestRoomDetailCallBtn: "Call to Schedule Viewing",
+    guestRoomDetailChatBtn: "Chat with Landlord",
+    guestRoomDetailCannotMessageSelf: "Cannot message yourself",
     guestRoomDetailCloseModal: "Close Window",
     guestRoomDetailConfirmQrBtn: "Confirm & Proceed to VietQR Code",
     guestRoomDetailConfirmTransferBtn: "I have completed VietQR transfer",

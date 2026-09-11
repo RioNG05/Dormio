@@ -395,6 +395,12 @@ const vi = {
     guestMessagesSend: "Gửi",
     guestMessagesSubtitle: "Trò chuyện trực tiếp với chủ nhà trọ trên Dormio Platform",
     guestMessagesTitle: "Tin nhắn & Trao đổi",
+    guestMessagesEmptyList: "Chưa có cuộc trò chuyện nào",
+    guestMessagesEmptyListSub: "Hãy liên hệ chủ nhà từ trang phòng trọ để bắt đầu trao đổi.",
+    guestMessagesSelectToChat: "Chọn một cuộc trò chuyện để bắt đầu nhắn tin",
+    guestMessagesLockTitle: "Yêu Cầu Đăng Nhập Tài Khoản",
+    guestMessagesLockDesc: "Tính năng nhắn tin trực tiếp chỉ dành cho thành viên đã đăng nhập. Vui lòng đăng nhập để trao đổi với chủ nhà.",
+    guestMessagesLoginBtn: "Đăng nhập ngay",
 
     // --- Public rental post analytics (app/(public)/posts/analytics) ---
     guestPostsAnalyticsBackHome: "Quay lại trang chủ",
@@ -704,6 +710,8 @@ const vi = {
     guestRoomDetailCalcSub: "Tùy chỉnh số lượng người ở & điện nước tiêu thụ để tính số tiền thực tế cần chi trả.",
     guestRoomDetailCalcTitle: "Công cụ ước tính tổng chi phí sinh hoạt hàng tháng",
     guestRoomDetailCallBtn: "Gọi Điện Hẹn Xem Phòng",
+    guestRoomDetailChatBtn: "Nhắn Tin Cho Chủ Nhà",
+    guestRoomDetailCannotMessageSelf: "Bạn không thể nhắn tin cho chính mình",
     guestRoomDetailCloseModal: "Đóng cửa sổ",
     guestRoomDetailConfirmQrBtn: "Xác nhận & Chuyển sang quét mã VietQR ",
     guestRoomDetailConfirmTransferBtn: "Tôi đã hoàn tất chuyển khoản VietQR",
