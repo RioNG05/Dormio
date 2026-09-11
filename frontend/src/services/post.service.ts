@@ -23,7 +23,7 @@ export interface PostListing {
   title: string;
   content: string;
   depositAmount: number;
-  status: "draft" | "posted" | "hidden";
+  status: "draft" | "posted" | "hidden" | "locked";
   sourceType: "free_quote" | "purchased";
   postPurchaseId?: string | null;
   resultedContractId?: string | null;
@@ -82,6 +82,10 @@ export interface PublicPostListing {
   poster?: PublicPoster | null;
   viewsCount: number;
   savedCount: number;
+  reportsCount?: number;
+  reportReasons?: string[];
+  lockReason?: string;
+  lockedAt?: string;
 }
 
 export interface BrowsePostsParams {
@@ -127,6 +131,14 @@ export interface CreatePostPayload {
   depositAmount: number;
   imageUrls?: string[];
   status?: "draft" | "posted";
+}
+
+export interface UpdatePostPayload {
+  title?: string;
+  content?: string;
+  depositAmount?: number;
+  imageUrls?: string[];
+  status?: "draft" | "posted" | "hidden" | "locked";
 }
 
 export interface PaginatedPostsResponse {
@@ -317,11 +329,11 @@ export const postService = {
   },
 
   /**
-   * Update post status (e.g. pause/hidden or draft to posted)
+   * Update post status (e.g. pause/hidden, publish draft, or lock)
    */
   async updatePostStatus(
     id: string,
-    status: "draft" | "posted" | "hidden"
+    status: "draft" | "posted" | "hidden" | "locked"
   ): Promise<PostListing> {
     const res = await api.patch<{ success: boolean; data: PostListing } | PostListing>(
       `/v1/posts/${id}/status`,
@@ -334,10 +346,34 @@ export const postService = {
   },
 
   /**
-   * Delete or archive a rental listing (requires auth, author or admin)
+   * Update post listing content (title, content, deposit, images, status)
    */
-  async deletePost(id: string): Promise<{ success: boolean; message: string }> {
-    const res = await api.delete<{ success: boolean; message: string }>(`/v1/posts/${id}`);
+  async updatePost(
+    id: string,
+    payload: UpdatePostPayload
+  ): Promise<PostListing> {
+    const res = await api.patch<{ success: boolean; data: PostListing } | PostListing>(
+      `/v1/posts/${id}`,
+      payload
+    );
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PostListing }).data;
+    }
+    return res as PostListing;
+  },
+
+  /**
+   * Delete or archive a rental listing (requires auth, author or admin).
+   * Supports an optional or mandatory deletion reason to notify the author.
+   */
+  async deletePost(
+    id: string,
+    reason?: string
+  ): Promise<{ success: boolean; message: string }> {
+    const res = await api.delete<{ success: boolean; message: string }>(`/v1/posts/${id}`, {
+      body: reason ? JSON.stringify({ reason }) : undefined,
+      params: reason ? { reason } : undefined,
+    });
     return res;
   },
 

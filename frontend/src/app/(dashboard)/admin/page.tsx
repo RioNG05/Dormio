@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
       icon: ShieldAlert,
       color: "text-amber-600 bg-amber-50 border-amber-100",
       badge: `${reportedItemsVal} ${isEn ? "Items" : "Mục"}`,
-      link: "/admin/moderation",
+      link: "/admin/blogs",
     },
   ];
 
@@ -404,7 +404,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
               <Link
-                href="/admin/moderation"
+                href="/admin/blogs"
                 className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <span>{isEn ? "Inspect (12)" : "Kiểm duyệt (12)"}</span>
@@ -436,7 +436,7 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <Link
-                    href="/admin/moderation"
+                    href="/admin/blogs"
                     className="shrink-0 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-md text-center cursor-pointer whitespace-nowrap"
                   >
                     {isEn ? "Inspect & Lock" : "Kiểm tra & Khóa"}
@@ -461,21 +461,21 @@ export default function AdminDashboardPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
-            href="/admin/moderation"
+            href="/admin/boarding-houses"
             className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <ShieldCheck className="w-5 h-5" />
+                  <Building2 className="w-5 h-5" />
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? "Content & House Moderation" : "Kiểm Duyệt & Giám Sát"}
+                {isEn ? "Boarding House Moderation" : "Kiểm Duyệt Nhà Trọ"}
               </h3>
               <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn ? "Inspect & lock fraudulent listings and properties" : "Kiểm tra từng tin đăng, khóa các cơ sở gian lận"}
+                {isEn ? "Inspect room capacities, occupancy & lock fraudulent houses" : "Thẩm định cơ sở, tỷ lệ lấp đầy, khóa nhà trọ vi phạm"}
               </p>
             </div>
           </Link>
@@ -532,10 +532,10 @@ export default function AdminDashboardPage() {
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? "Public Blog Management" : "Quản Lý Bài Viết Blog"}
+                {isEn ? "Blog & Post Moderation" : "Kiểm Duyệt Bài Viết"}
               </h3>
               <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn ? "Draft & publish tips and legal advice articles" : "Xuất bản bài viết cẩm nang thuê trọ, mẹo kinh doanh"}
+                {isEn ? "Inspect, edit, lock, publish & delete public rental posts" : "Kiểm tra, khóa tin, xuất bản và xóa bài đăng vi phạm"}
               </p>
             </div>
           </Link>

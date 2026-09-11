@@ -96,6 +96,7 @@ enum PostStatus {
   draft
   posted
   hidden
+  locked
 }
 
 enum SourceType {

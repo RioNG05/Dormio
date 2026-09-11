@@ -46,8 +46,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const adminMenus = [
     { name: tNav("adminOverview"), href: "/admin", icon: LayoutDashboard },
     { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
-    { name: tNav("adminBlogs"), href: "/admin/blogs", icon: Newspaper },
-    { name: tNav("adminModeration"), href: "/admin/moderation", icon: ShieldCheck },
+    { name: tNav("adminPostModeration"), href: "/admin/blogs", icon: ShieldCheck },
+    { name: tNav("adminHouseModeration"), href: "/admin/boarding-houses", icon: Building2 },
     { name: tNav("adminGrievances"), href: "/admin/grievances", icon: AlertTriangle },
     { name: tNav("adminNotifications"), href: "/admin/notifications", icon: Megaphone },
   ];
@@ -284,14 +284,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       } else if (isAdmin) {
         if (pathname === "/admin") {
           pageTitle = "Tổng Quan Quản Trị Hệ Thống — Dormio Admin";
-        } else if (pathname?.startsWith("/admin/moderation")) {
-          pageTitle = "Kiểm Duyệt Tin Đăng & Nhà Trọ — Dormio Admin";
+        } else if (pathname?.startsWith("/admin/boarding-houses")) {
+          pageTitle = "Kiểm Duyệt & Giám Sát Nhà Trọ — Dormio Admin";
+        } else if (pathname?.startsWith("/admin/blogs")) {
+          pageTitle = "Kiểm Duyệt Bài Viết & Tin Đăng — Dormio Admin";
         } else if (pathname?.startsWith("/admin/grievances")) {
           pageTitle = "Xử Lý Khiếu Nại Khách Thuê — Dormio Admin";
         } else if (pathname?.startsWith("/admin/notifications")) {
           pageTitle = "Gửi Thông Báo Hàng Loạt — Dormio Admin";
-        } else if (pathname?.startsWith("/admin/blogs")) {
-          pageTitle = "Quản Lý Bài Viết Blog — Dormio Admin";
         } else if (pathname?.startsWith("/admin/analytics")) {
           pageTitle = "Báo Cáo Thống Kê Nền Tảng — Dormio Admin";
         } else {

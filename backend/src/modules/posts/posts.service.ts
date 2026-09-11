@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
@@ -468,15 +469,76 @@ export class PostsService {
   }
 
   /**
-   * Delete or archive a rental listing (admin or author)
+   * Update rental listing content (title, content, deposit, images, status)
+   */
+  async updatePost(
+    userId: string,
+    postId: string,
+    dto: UpdatePostDto,
+    userRole?: UserRole,
+  ): Promise<PostResponseDto> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { postImages: true },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+    }
+
+    if (userRole !== UserRole.admin && post.postedBy !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to edit this listing',
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      const data: Prisma.PostUpdateInput = {};
+      if (dto.title) data.title = dto.title;
+      if (dto.content) data.content = dto.content;
+      if (dto.depositAmount !== undefined) {
+        data.depositAmount = new Prisma.Decimal(dto.depositAmount);
+      }
+      if (dto.status) data.status = dto.status;
+
+      await tx.post.update({
+        where: { id: postId },
+        data,
+      });
+
+      if (dto.imageUrls && dto.imageUrls.length > 0) {
+        await tx.postImage.deleteMany({ where: { postId } });
+        await tx.postImage.createMany({
+          data: dto.imageUrls.map((url) => ({
+            postId,
+            url,
+          })),
+        });
+      }
+    });
+
+    return this.getPostById(userId, postId);
+  }
+
+  /**
+   * Delete or archive a rental listing (admin or author).
+   * If deleted by admin, automatically notifies the author including the provided reason.
    */
   async deletePost(
     userId: string,
     postId: string,
     userRole?: UserRole,
+    reason?: string,
   ): Promise<{ success: boolean; message: string }> {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
+      include: {
+        room: {
+          select: {
+            boardingHouseId: true,
+          },
+        },
+      },
     });
 
     if (!post) {
@@ -497,6 +559,27 @@ export class PostsService {
         status: PostStatus.hidden,
       },
     });
+
+    // If deleted by admin, notify the author
+    if (userRole === UserRole.admin) {
+      const deleteReason =
+        reason?.trim() || 'Vi phạm tiêu chuẩn cộng đồng hoặc thông tin phòng không chính xác';
+
+      await this.prisma.notification.create({
+        data: {
+          senderId: userId,
+          receiverId: post.postedBy,
+          boardingHouseId: post.room?.boardingHouseId ?? null,
+          type: 'post_deleted',
+          content: `Bài viết "${post.title}" của bạn đã bị quản trị viên xóa. Lý do: ${deleteReason}`,
+          isRead: false,
+        },
+      });
+
+      this.logger.log(
+        `Admin ${userId} deleted post ${postId} with reason: "${deleteReason}". Notification dispatched to author ${post.postedBy}.`,
+      );
+    }
 
     return {
       success: true,
