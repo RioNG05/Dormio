@@ -11,6 +11,11 @@ import { TenancyDetailsDto } from './dto/tenancy-details.dto';
 import { CreateContractPlatformDto } from './dto/create-contract-platform.dto';
 import { CreateContractDirectDto } from './dto/create-contract-direct.dto';
 import { QueryContractsDto } from './dto/query-contracts.dto';
+import { ExportContractResponseDto } from './dto/export-contract-response.dto';
+import {
+  ContractTemplateRenderer,
+  ContractTemplateData,
+} from './contract-template.renderer';
 import { Prisma } from '@prisma';
 import { randomUUID } from 'crypto';
 
@@ -892,13 +897,32 @@ export class ContractsService {
         unit: rs.service.unit,
         isMetered: rs.service.isMetered,
       })),
-      announcements: announcements.map((item) => ({
-        id: item.id,
-        title: item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content,
-        content: item.content,
-        createdAt: item.createdAt,
-        isNew: item.createdAt >= threeDaysAgo,
-      })),
+      announcements: announcements.map((item) => {
+        let title = item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content;
+        let content = item.content;
+
+        try {
+          if (item.content.trim().startsWith('{')) {
+            const parsed = JSON.parse(item.content);
+            if (parsed.title) title = parsed.title;
+            if (parsed.content) content = parsed.content;
+          } else if (item.content.includes('\n')) {
+            const lines = item.content.split('\n');
+            title = lines[0]?.trim() || title;
+            content = lines.slice(1).join('\n').trim() || content;
+          }
+        } catch {
+          // Fallback to raw content
+        }
+
+        return {
+          id: item.id,
+          title,
+          content,
+          createdAt: item.createdAt,
+          isNew: item.createdAt >= threeDaysAgo,
+        };
+      }),
     };
   }
 
@@ -919,6 +943,344 @@ export class ContractsService {
     contractId: string;
   }): Promise<void> {
     await this.notificationsService.createOnboardingNotification(params);
+  }
+
+  // ─── UC-L-15: Export Contracts ─────────────────────────────────────────────
+
+  /**
+   * Loads full aggregate data required to render the contract template.
+   *
+   * @param boardingHouseId Active Boarding House context
+   * @param contractId Contract UUID
+   * @returns Formatted ContractTemplateData
+   */
+  async getContractTemplateData(
+    boardingHouseId: string,
+    contractId: string,
+  ): Promise<ContractTemplateData> {
+    const contract = await this.prisma.contract.findFirst({
+      where: {
+        id: contractId,
+        room: {
+          boardingHouseId,
+        },
+      },
+      include: {
+        room: {
+          include: {
+            roomType: true,
+            roomServices: {
+              include: {
+                service: true,
+              },
+            },
+            boardingHouse: {
+              include: {
+                owner: true,
+              },
+            },
+          },
+        },
+        tenantContracts: {
+          include: {
+            tenant: {
+              include: {
+                userIdentification: true,
+              },
+            },
+          },
+        },
+        deposit: true,
+        contractDocuments: true,
+      },
+    });
+
+    if (!contract) {
+      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.');
+    }
+
+    const primaryTenantContract =
+      contract.tenantContracts.find((tc) => tc.isPrimary) ||
+      contract.tenantContracts[0];
+
+    if (!primaryTenantContract) {
+      throw new BadRequestException('Hợp đồng chưa có thông tin đại diện người thuê.');
+    }
+
+    const primaryTenant = primaryTenantContract.tenant;
+    const coTenants = contract.tenantContracts
+      .filter((tc) => tc.id !== primaryTenantContract.id)
+      .map((tc) => ({
+        id: tc.tenant.id,
+        fullName:
+          tc.tenant.userIdentification?.fullName ||
+          tc.tenant.username ||
+          'Người ở cùng',
+        phoneNumber: tc.tenant.phoneNumber,
+      }));
+
+    const bh = contract.room.boardingHouse;
+    const formattedAddress = this.formatAddress(bh);
+
+    return {
+      contract: {
+        id: contract.id,
+        startDate: contract.startDate,
+        endDate: contract.endDate,
+        rentPrice: Number(contract.rentPrice),
+        monthlyPaymentDate: contract.monthlyPaymentDate,
+        rentPaymentCycle: 1,
+        status: contract.status,
+        note: contract.note,
+        createdAt: contract.createdAt,
+      },
+      boardingHouse: {
+        id: bh.id,
+        name: bh.name,
+        address: formattedAddress,
+        owner: {
+          id: bh.owner.id,
+          fullName:
+            bh.owner.username ||
+            'Chủ nhà trọ',
+          phoneNumber: bh.owner.phoneNumber || '',
+          email: bh.owner.email,
+        },
+      },
+      room: {
+        id: contract.room.id,
+        roomNumber: contract.room.roomNumber,
+        floor: contract.room.floor,
+        area: contract.room.area ? Number(contract.room.area) : null,
+        maxOccupants: contract.room.maxOccupants,
+        roomTypeName: contract.room.roomType?.name,
+        services: contract.room.roomServices.map((rs) => ({
+          name: rs.service.name,
+          price: Number(rs.service.price),
+          unit: rs.service.unit,
+          isMetered: rs.service.isMetered,
+        })),
+      },
+      primaryTenant: {
+        id: primaryTenant.id,
+        fullName:
+          primaryTenant.userIdentification?.fullName ||
+          primaryTenant.username ||
+          'Khách thuê',
+        phoneNumber: primaryTenant.phoneNumber,
+        email: primaryTenant.email,
+        identification: primaryTenant.userIdentification
+          ? {
+              identityNumber: primaryTenant.userIdentification.identityNumber,
+              dateOfBirth: primaryTenant.userIdentification.dateOfBirth,
+              gender: primaryTenant.userIdentification.gender,
+              placeOfOrigin:
+                typeof primaryTenant.userIdentification.placeOfOrigin === 'string'
+                  ? primaryTenant.userIdentification.placeOfOrigin
+                  : primaryTenant.userIdentification.placeOfOrigin
+                    ? JSON.stringify(primaryTenant.userIdentification.placeOfOrigin)
+                    : null,
+              placeOfResidence:
+                typeof primaryTenant.userIdentification.placeOfResidence === 'string'
+                  ? primaryTenant.userIdentification.placeOfResidence
+                  : primaryTenant.userIdentification.placeOfResidence
+                    ? JSON.stringify(primaryTenant.userIdentification.placeOfResidence)
+                    : null,
+              issueDate: primaryTenant.userIdentification.issueDate,
+            }
+          : null,
+      },
+      coTenants,
+      deposit: contract.deposit
+        ? {
+            amount: Number(contract.deposit.amount),
+            status: contract.deposit.status,
+            type: contract.deposit.type,
+            paidAt: contract.deposit.createdAt,
+          }
+        : null,
+    };
+  }
+
+  /**
+   * Generates the rendered HTML string for direct print or browser display.
+   *
+   * @param boardingHouseId Active Boarding House context
+   * @param contractId Contract UUID
+   * @param autoPrint If true, includes auto-print JavaScript hook
+   * @param includeToolbar If true, includes interactive print/save toolbar
+   * @returns Complete HTML markup
+   */
+  async getContractPrintHtml(
+    boardingHouseId: string,
+    contractId: string,
+    autoPrint: boolean = false,
+    includeToolbar: boolean = true,
+  ): Promise<string> {
+    const templateData = await this.getContractTemplateData(
+      boardingHouseId,
+      contractId,
+    );
+    return ContractTemplateRenderer.render({
+      ...templateData,
+      options: {
+        autoPrint,
+        includeToolbar,
+      },
+    });
+  }
+
+  /**
+   * Exports contract: renders the contract template, creates a ContractDocument entry,
+   * writes an AuditLog, and returns document access metadata.
+   *
+   * @param boardingHouseId Active Boarding House context
+   * @param contractId Target contract ID
+   * @param landlordId Landlord performing export
+   * @returns Exported document response metadata
+   */
+  async exportContract(
+    boardingHouseId: string,
+    contractId: string,
+    landlordId: string,
+  ): Promise<ExportContractResponseDto> {
+    const templateData = await this.getContractTemplateData(
+      boardingHouseId,
+      contractId,
+    );
+
+    const renderedHtml = ContractTemplateRenderer.render({
+      ...templateData,
+      options: {
+        autoPrint: false,
+        includeToolbar: true,
+      },
+    });
+
+    const docStoragePath = `contracts/${contractId}/export_${Date.now()}.html`;
+
+    const [document] = await this.prisma.$transaction(async (tx) => {
+      const doc = await tx.contractDocument.create({
+        data: {
+          contractId,
+          url: docStoragePath,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          action: 'create',
+          entityType: 'CONTRACT',
+          entityId: contractId,
+          boardingHouseId,
+          userId: landlordId,
+          ipAddress: '127.0.0.1',
+          newValue: {
+            documentId: doc.id,
+            url: doc.url,
+            exportedAt: doc.createdAt,
+          },
+        },
+      });
+
+      return [doc];
+    });
+
+    return {
+      documentId: document.id,
+      contractId,
+      url: document.url,
+      downloadUrl: `/api/v1/landlord/contracts/${contractId}/documents/${document.id}/download`,
+      printUrl: `/api/v1/landlord/contracts/${contractId}/print?autoPrint=true`,
+      createdAt: document.createdAt,
+      html: renderedHtml,
+    };
+  }
+
+  /**
+   * Retrieves list of all ContractDocuments generated for a contract.
+   *
+   * @param boardingHouseId Active Boarding House context
+   * @param contractId Contract UUID
+   */
+  async getContractDocuments(
+    boardingHouseId: string,
+    contractId: string,
+  ) {
+    const contract = await this.prisma.contract.findFirst({
+      where: {
+        id: contractId,
+        room: {
+          boardingHouseId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!contract) {
+      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.');
+    }
+
+    const docs = await this.prisma.contractDocument.findMany({
+      where: { contractId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return docs.map((d) => ({
+      id: d.id,
+      contractId: d.contractId,
+      url: d.url,
+      downloadUrl: `/api/v1/landlord/contracts/${contractId}/documents/${d.id}/download`,
+      printUrl: `/api/v1/landlord/contracts/${contractId}/print?autoPrint=true`,
+      createdAt: d.createdAt,
+    }));
+  }
+
+  /**
+   * Provides the download payload for a specific contract document.
+   *
+   * @param boardingHouseId Active Boarding House context
+   * @param contractId Contract UUID
+   * @param documentId Contract document UUID
+   */
+  async getContractDocumentDownload(
+    boardingHouseId: string,
+    contractId: string,
+    documentId: string,
+  ): Promise<{ filename: string; html: string }> {
+    const templateData = await this.getContractTemplateData(
+      boardingHouseId,
+      contractId,
+    );
+
+    const doc = await this.prisma.contractDocument.findFirst({
+      where: {
+        id: documentId,
+        contractId,
+      },
+    });
+
+    if (!doc) {
+      throw new NotFoundException('Tài liệu hợp đồng không tồn tại.');
+    }
+
+    const renderedHtml = ContractTemplateRenderer.render({
+      ...templateData,
+      options: {
+        autoPrint: false,
+        includeToolbar: false,
+      },
+    });
+
+    const roomNumber = templateData.room.roomNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `Hop-dong-phong-${roomNumber}-${contractId.substring(0, 8)}.html`;
+
+    return {
+      filename,
+      html: renderedHtml,
+    };
   }
 
   // ─── Helper methods ─────────────────────────────────────────────────────────

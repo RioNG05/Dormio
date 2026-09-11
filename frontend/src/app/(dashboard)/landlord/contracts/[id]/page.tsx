@@ -10,12 +10,17 @@ import {
 } from "lucide-react";
 import { getContractById, Contract, ContractMember, ContractServiceItem } from "../data";
 import { generateMockCustomers, Customer } from "../../customers/data";
+import { useAuth } from "@/context/AuthContext";
+import { getContractById as getContractByIdApi } from "@/services/contract.service";
+import ContractPreviewModal from "@/components/landlord/ContractPreviewModal";
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const { activeBuilding } = useAuth();
   const [contract, setContract] = useState<Contract | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   // Modals
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
@@ -59,8 +64,69 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     setIsMounted(true);
     setExistingCustomers(generateMockCustomers());
-    if (resolvedParams.id) {
-      const found = getContractById(decodeURIComponent(resolvedParams.id));
+    const contractId = resolvedParams.id ? decodeURIComponent(resolvedParams.id) : '';
+    if (!contractId) return;
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(contractId);
+
+    if (activeBuilding?.id && isUuid) {
+      getContractByIdApi(activeBuilding.id, contractId)
+        .then((res) => {
+          if (res?.data) {
+            const d = res.data;
+            const mappedContract: Contract = {
+              id: d.id,
+              building: activeBuilding.id,
+              buildingName: activeBuilding.name,
+              buildingSeq: 1,
+              room: d.room?.roomNumber || '—',
+              roomType: d.room?.roomTypeName || 'Tiêu chuẩn',
+              tenant: d.tenant?.fullName || 'Khách thuê',
+              tenantPhone: d.tenant?.phoneNumber || '—',
+              tenantCccd: d.tenant?.userIdentification?.identityNumber || '—',
+              tenantId: d.tenant?.id || '',
+              startDate: new Date(d.startDate).toLocaleDateString('vi-VN'),
+              endDate: new Date(d.endDate).toLocaleDateString('vi-VN'),
+              signDate: new Date(d.createdAt).toLocaleDateString('vi-VN'),
+              isOverdue: new Date(d.endDate) < new Date() && d.status !== 'canceled',
+              price: `${Number(d.rentPrice).toLocaleString('vi-VN')} ₫`,
+              priceNumber: Number(d.rentPrice),
+              deposit: `${Number(d.deposit?.amount || d.rentPrice).toLocaleString('vi-VN')} ₫`,
+              depositNumber: Number(d.deposit?.amount || d.rentPrice),
+              paymentDate: `${d.monthlyPaymentDate}`,
+              paymentStatus: 'Đã thu đủ',
+              status: d.status === 'active' ? 'Đang hiệu lực' : d.status === 'canceled' ? 'Đã chấm dứt' : 'Quá hạn',
+              history: [],
+              members: [],
+              services: (d.room?.services || []).map((s: any, idx: number) => ({
+                id: idx + 1,
+                name: s.name,
+                type: 'Dịch vụ',
+                price: s.price,
+                unit: s.unit,
+                applied: true,
+              })),
+            };
+            setContract(mappedContract);
+            setEditPrice(mappedContract.price);
+            setEditDeposit(mappedContract.deposit);
+            setEditPaymentDate(mappedContract.paymentDate || "5");
+            setEditEndDate(mappedContract.endDate);
+            return;
+          }
+        })
+        .catch(() => {
+          const found = getContractById(contractId);
+          setContract(found);
+          if (found) {
+            setEditPrice(found.price);
+            setEditDeposit(found.deposit);
+            setEditPaymentDate(found.paymentDate || "5");
+            setEditEndDate(found.endDate);
+          }
+        });
+    } else {
+      const found = getContractById(contractId);
       setContract(found);
       if (found) {
         setEditPrice(found.price);
@@ -69,7 +135,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         setEditEndDate(found.endDate);
       }
     }
-  }, [resolvedParams.id]);
+  }, [resolvedParams.id, activeBuilding?.id]);
 
   const handleSelectExistingCustomer = (idStr: string) => {
     setSelectedCustomerId(idStr);
@@ -284,10 +350,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </button>
 
           <button
-            onClick={() => alert("Xuất Hợp đồng bản PDF thành công!")}
+            onClick={() => setIsPreviewModalOpen(true)}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+            title="Xem trước và In hợp đồng"
           >
-            <Printer className="w-3.5 h-3.5" /> In PDF
+            <Printer className="w-3.5 h-3.5 text-[#2AC1BC]" /> In / Xuất HĐ
           </button>
 
           <button
@@ -982,6 +1049,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
         </div>
+      )}
+
+      {/* UC-L-15: Contract Preview & Export Modal */}
+      {isPreviewModalOpen && activeBuilding?.id && contract && (
+        <ContractPreviewModal
+          isOpen={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+          buildingId={activeBuilding.id}
+          contractId={contract.id}
+          roomNumber={contract.room}
+          tenantName={contract.tenant}
+        />
       )}
     </div>
   );

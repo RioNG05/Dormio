@@ -29,6 +29,12 @@ import {
   LandlordInvoicesListResponseDto,
   LandlordInvoiceItemDto,
 } from './dto/landlord-invoices-response.dto';
+import { QueryLandlordDebtsDto } from './dto/query-landlord-debts.dto';
+import {
+  LandlordDebtsResponseDto,
+  SendDebtReminderDto,
+  DebtReminderResponseDto,
+} from './dto/landlord-debts-response.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -78,6 +84,111 @@ export class LandlordInvoicesController {
       boardingHouseId,
       query,
       user.id,
+    );
+  }
+
+  // ─── GET /api/v1/landlord/invoices/debts ────────────────────────────────────
+
+  @Get('debts')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'List Room Debts Ledger (UC-L-16)',
+    description:
+      'Retrieves the outstanding debt ledger grouped by room with aging calculation (NOW() - dueDate), debt metrics, filtering by duration/aging brackets, and search.',
+  })
+  @ApiOkResponse({
+    description: 'Room debt ledger retrieved successfully',
+    type: LandlordDebtsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'User is not authorized for this boarding house',
+  })
+  async getDebts(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Query() query: QueryLandlordDebtsDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<LandlordDebtsResponseDto> {
+    this.logger.log(
+      `GET /landlord/invoices/debts called by user ${user?.id} for house ${boardingHouseId} (duration=${query.duration}, search=${query.search}, page=${query.page})`,
+    );
+    return this.invoicesService.getLandlordDebts(
+      boardingHouseId,
+      query,
+      user.id,
+    );
+  }
+
+  // ─── POST /api/v1/landlord/invoices/debts/flip-overdue ──────────────────────
+
+  @Post('debts/flip-overdue')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Trigger Overdue Status Flip Job (UC-L-16)',
+    description:
+      'Manually triggers flipping unpaid invoices past their due date without paid payment to overdue status.',
+  })
+  @ApiOkResponse({
+    description: 'Overdue invoices updated successfully',
+  })
+  async triggerFlipOverdue(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    this.logger.log(
+      `POST /landlord/invoices/debts/flip-overdue called by user ${user?.id} for house ${boardingHouseId}`,
+    );
+    const result = await this.invoicesService.flipOverdueInvoices(boardingHouseId);
+    return { success: true, updatedCount: result.count };
+  }
+
+  // ─── POST /api/v1/landlord/invoices/debts/remind ────────────────────────────
+
+  @Post('debts/remind')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Send Debt Reminder to Tenant (UC-L-16)',
+    description:
+      'Dispatches an in-app and async push/SMS reminder to the primary tenant of an indebted room and generates copyable Zalo/SMS reminder text.',
+  })
+  @ApiOkResponse({
+    description: 'Debt reminder dispatched successfully',
+    type: DebtReminderResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Room not found in this boarding house',
+  })
+  async sendDebtReminder(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Body() dto: SendDebtReminderDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<DebtReminderResponseDto> {
+    this.logger.log(
+      `POST /landlord/invoices/debts/remind called by user ${user?.id} for room ${dto.roomId} in house ${boardingHouseId}`,
+    );
+    return this.invoicesService.sendDebtReminder(
+      boardingHouseId,
+      user.id,
+      dto,
     );
   }
 
