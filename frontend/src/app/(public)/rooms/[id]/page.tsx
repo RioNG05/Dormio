@@ -8,6 +8,7 @@ import {
   Phone, QrCode, CheckCircle2, AlertCircle, Info, X, Sparkles, Lock, Calculator,
   Heart, Share2, Copy, Check, ExternalLink, User, Building2,
   ChevronLeft, ChevronRight, ImageIcon, MessageSquare, Loader2,
+  ShieldCheck, AlertTriangle, FileText, CreditCard, UserCheck, ArrowRight,
 } from "lucide-react";
 import { formatCurrency } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -127,14 +128,8 @@ export default function RoomDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // UI state
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
-  const [depositStep, setDepositStep] = useState<"form" | "qr" | "success">("form");
-  const [tenantName, setTenantName] = useState("");
-  const [tenantPhone, setTenantPhone] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-  const [isSubmittingDeposit, setIsSubmittingDeposit] = useState(false);
-  const [depositErrorMsg, setDepositErrorMsg] = useState("");
+
+
   const [isSaved, setIsSaved] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -311,46 +306,7 @@ export default function RoomDetailPage() {
     }
   };
 
-  // Vietnamese mobile phone validation: 10 digits starting with 03x/05x/07x/08x/09x
-  const PHONE_REGEX = /^(03|05|07|08|09)[0-9]{8}$/;
-  const isPhoneValid = (phone: string) => PHONE_REGEX.test(phone.replace(/\s/g, ""));
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setTenantPhone(val);
-    // Clear error while user is still typing (only show error once they've entered ≥ 3 chars)
-    if (phoneError && val.length < 3) setPhoneError("");
-  };
-
-  const handlePhoneBlur = () => {
-    if (!tenantPhone) return;
-    if (!isPhoneValid(tenantPhone)) {
-      setPhoneError("Số điện thoại không hợp lệ. Vui lòng nhập số di động Việt Nam (10 số, bắt đầu 03/05/07/08/09).");
-    } else {
-      setPhoneError("");
-    }
-  };
-
-  const handleConfirmDeposit = async () => {
-    if (!post || isSubmittingDeposit) return;
-    setIsSubmittingDeposit(true);
-    setDepositErrorMsg("");
-    try {
-      await postService.submitPlatformDeposit(post.id, {
-        tenantName: tenantName.trim(),
-        tenantPhone: tenantPhone.trim(),
-      });
-      setDepositStep("success");
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Đặt cọc thất bại. Vui lòng thử lại sau.";
-      setDepositErrorMsg(typeof msg === "string" ? msg : JSON.stringify(msg));
-    } finally {
-      setIsSubmittingDeposit(false);
-    }
-  };
 
   // Utility Cost Calculator Math (defaults use 3800/kWh, 25000/m³, 150000 service/person)
   const electricityRate = 3800;
@@ -467,7 +423,7 @@ export default function RoomDetailPage() {
 
             {post.room?.floor && (
               <span className="text-zinc-600 font-bold">
-                {tGuest("guestRoomDetailAreaLabel") === "Diện tích" ? "Tầng" : "Floor"}: {post.room.floor}
+                {tGuest("guestRoomDetailFloorLabel")}: {post.room.floor}
               </span>
             )}
           </div>
@@ -510,7 +466,7 @@ export default function RoomDetailPage() {
                   {post.room.floor && (
                     <div className="flex items-center gap-2.5 p-3.5 bg-white border border-zinc-200/80 rounded-2xl text-xs font-bold text-zinc-800 shadow-xs">
                       <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                      <span>Floor {post.room.floor}</span>
+                      <span>{tGuest("guestRoomDetailFloorLabel")}: {post.room.floor}</span>
                     </div>
                   )}
                   {post.room.boardingHouseName && (
@@ -654,12 +610,37 @@ export default function RoomDetailPage() {
               </div>
 
               <div className="space-y-3 pt-2">
-                <button
-                  onClick={() => { setIsDepositModalOpen(true); setDepositStep("form"); }}
-                  className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#FF6B35]/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" /> {tGuest("guestRoomDetailDepositBtn")}
-                </button>
+                {post.room?.status === "deposited" ? (
+                  <div className="w-full py-3.5 px-4 bg-amber-50 border border-amber-200 text-amber-800 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 text-center">
+                    <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>{tGuest("guestRoomDetailRoomDeposited")}</span>
+                  </div>
+                ) : post.room?.status === "occupied" ? (
+                  <div className="w-full py-3.5 px-4 bg-zinc-100 border border-zinc-200 text-zinc-500 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 text-center">
+                    <Lock className="w-4 h-4 text-zinc-400 shrink-0" />
+                    <span>{tGuest("guestRoomDetailRoomOccupied")}</span>
+                  </div>
+                ) : !post.room ? (
+                  <button
+                    onClick={() => {
+                      setToastMessage({
+                        type: "info",
+                        text: tGuest("guestRoomDetailUnlinkedInfo"),
+                      });
+                    }}
+                    className="w-full py-3.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                    <span>{tGuest("guestRoomDetailContactLandlord")}</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={`/rooms/${id}/deposit`}
+                    className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#FF6B35]/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4" /> {tGuest("guestRoomDetailDepositBtn")}
+                  </Link>
+                )}
 
                 {post.poster && (
                   <button
@@ -724,15 +705,15 @@ export default function RoomDetailPage() {
             {/* Post stats */}
             <div className="bg-zinc-50 rounded-2xl border border-zinc-200/80 p-4 space-y-2">
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-500 font-semibold">Lượt xem</span>
+                <span className="text-zinc-500 font-semibold">{tGuest("guestRoomDetailViewsLabel")}</span>
                 <span className="font-extrabold text-zinc-900">{post.viewsCount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-500 font-semibold">Đã lưu</span>
+                <span className="text-zinc-500 font-semibold">{tGuest("guestRoomDetailSavedCountLabel")}</span>
                 <span className="font-extrabold text-zinc-900">{post.savedCount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-500 font-semibold">Ngày đăng</span>
+                <span className="text-zinc-500 font-semibold">{tGuest("guestRoomDetailPostedDateLabel")}</span>
                 <span className="font-extrabold text-zinc-900">
                   {new Date(post.createdAt).toLocaleDateString("vi-VN")}
                 </span>
@@ -781,179 +762,7 @@ export default function RoomDetailPage() {
         </div>
       )}
 
-      {/* Deposit Modal */}
-      {isDepositModalOpen && (
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) setIsDepositModalOpen(false); }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-zinc-100 max-h-[90vh] overflow-y-auto cursor-default">
-            <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-              <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-[#2AC1BC]" /> {tGuest("guestRoomDetailModalTitle")}
-              </h3>
-              <button
-                onClick={() => setIsDepositModalOpen(false)}
-                className="p-1 hover:bg-zinc-100 rounded-xl text-zinc-400 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Escrow Explanation */}
-            <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-4 rounded-2xl text-white space-y-2 border border-zinc-800">
-              <span className="text-[10px] font-black text-[#2AC1BC] uppercase block">
-                {tGuest("guestRoomsEscrowTitle")}
-              </span>
-              <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
-                {tGuest("guestRoomDetailEscrowModalDesc")}
-              </p>
-            </div>
-
-            {depositStep === "form" && (
-              <div className="space-y-4">
-                <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
-                  <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">
-                    {tGuest("guestRoomDetailSelectedRoomLabel")}
-                  </span>
-                  <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-1">{post.title}</h4>
-                  <div className="text-xs font-bold text-rose-500">
-                    {tGuest("guestRoomDetailLandlordDepositLabel")} {formatCurrency(depositAmount, currentLocale)}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
-                      {tGuest("guestRoomDetailTenantNameLabel")}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={tGuest("guestRoomDetailTenantNamePlaceholder")}
-                      value={tenantName}
-                      onChange={(e) => setTenantName(e.target.value)}
-                      className="w-full mt-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-zinc-700 uppercase">
-                      {tGuest("guestRoomDetailTenantPhoneLabel")}
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder={tGuest("guestRoomDetailTenantPhonePlaceholder")}
-                      value={tenantPhone}
-                      onChange={handlePhoneChange}
-                      onBlur={handlePhoneBlur}
-                      maxLength={11}
-                      className={`w-full mt-1 px-4 py-2.5 text-xs font-semibold border rounded-xl focus:outline-none transition-colors ${
-                        phoneError
-                          ? "border-rose-400 bg-rose-50 focus:border-rose-500"
-                          : tenantPhone && isPhoneValid(tenantPhone)
-                          ? "border-emerald-400 bg-emerald-50 focus:border-emerald-500"
-                          : "border-zinc-200 focus:border-[#2AC1BC]"
-                      }`}
-                    />
-                    {phoneError && (
-                      <p className="mt-1.5 text-[11px] text-rose-500 font-semibold flex items-start gap-1">
-                        <span className="shrink-0 mt-0.5">⚠</span>
-                        <span>{phoneError}</span>
-                      </p>
-                    )}
-                    {!phoneError && tenantPhone && isPhoneValid(tenantPhone) && (
-                      <p className="mt-1.5 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                        Số điện thoại hợp lệ
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (!isPhoneValid(tenantPhone)) {
-                      setPhoneError("Số điện thoại không hợp lệ. Vui lòng nhập số di động Việt Nam (10 số, bắt đầu 03/05/07/08/09).");
-                      return;
-                    }
-                    setDepositStep("qr");
-                  }}
-                  disabled={!tenantName.trim() || !tenantPhone || !!phoneError || !isPhoneValid(tenantPhone)}
-                  className="w-full py-3 bg-[#FF6B35] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/25 hover:bg-[#ff5518] transition-all cursor-pointer mt-2"
-                >
-                  {tGuest("guestRoomDetailConfirmQrBtn")} →
-                </button>
-              </div>
-            )}
-
-            {depositStep === "qr" && (
-              <div className="text-center space-y-4">
-                <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl inline-block">
-                  <QrCode className="w-44 h-44 mx-auto text-zinc-900" />
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs text-zinc-500 font-semibold block">
-                    {tGuest("guestRoomDetailTransferAmountLabel")}
-                  </span>
-                  <span className="text-2xl font-black text-rose-600">{formatCurrency(depositAmount, currentLocale)}</span>
-                  <p className="text-[11px] text-zinc-400 font-medium">
-                    {tGuest("guestRoomDetailTransferContentLabel")}{" "}
-                    <span className="font-extrabold text-zinc-800">COC {tenantPhone} #{post.id.slice(0, 8)}</span>
-                  </p>
-                </div>
-
-                {depositErrorMsg && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-600 font-semibold flex items-start gap-2">
-                    <span className="shrink-0 mt-0.5">⚠</span>
-                    <span>{depositErrorMsg}</span>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleConfirmDeposit}
-                  disabled={isSubmittingDeposit}
-                  className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] disabled:opacity-60 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#2AC1BC]/25 transition-all cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {isSubmittingDeposit ? (
-                    <>
-                      <svg className="animate-spin w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                      </svg>
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    tGuest("guestRoomDetailConfirmTransferBtn")
-                  )}
-                </button>
-              </div>
-            )}
-
-            {depositStep === "success" && (
-              <div className="text-center space-y-4 py-4">
-                <div className="w-14 h-14 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-zinc-900">{tGuest("guestRoomDetailSuccessTitle")}</h4>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    {tGuest("guestRoomDetailSuccessDesc", {
-                      name: post.poster?.username ?? tGuest("guestRoomsDefaultLandlord"),
-                    })}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsDepositModalOpen(false)}
-                  className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
-                >
-                  {tGuest("guestRoomDetailCloseModal")}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ─── Toast Feedback Notification ──────────────────────────────────── */}
       {toastMessage && (

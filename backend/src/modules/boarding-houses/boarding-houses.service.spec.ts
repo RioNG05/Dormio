@@ -15,7 +15,7 @@ describe('BoardingHousesService', () => {
     },
   };
 
-  const mockPrisma = {
+  const mockPrisma: any = {
     $transaction: jest.fn(),
   };
 

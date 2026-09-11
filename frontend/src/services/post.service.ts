@@ -13,6 +13,7 @@ export interface PostRoom {
   roomTypeName?: string;
   boardingHouseName?: string;
   boardingHouseId?: string;
+  status?: string;
 }
 
 export interface PostListing {
@@ -69,6 +70,7 @@ export interface PosterProfileResponse {
 /** Public listing item for UC-PU-01 browse endpoint */
 export interface PublicPostListing {
   id: string;
+  roomId?: string | null;
   title: string;
   content: string;
   depositAmount: number;
@@ -441,4 +443,67 @@ export const postService = {
     }
     return (res as { isSaved: boolean })?.isSaved ?? false;
   },
+
+  /**
+   * UC-PU-04: Initiate platform deposit with VietQR instruction
+   */
+  async initiatePlatformDeposit(
+    postId: string,
+    payload: InitiatePlatformDepositPayload = {}
+  ): Promise<PlatformDepositInstruction> {
+    const res = await api.post<
+      { success: boolean; data: PlatformDepositInstruction } | PlatformDepositInstruction
+    >(`/v1/posts/browse/${postId}/deposit`, payload);
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PlatformDepositInstruction }).data;
+    }
+    return res as PlatformDepositInstruction;
+  },
+
+  /**
+   * UC-PU-04: Confirm platform deposit transaction
+   */
+  async confirmPlatformDeposit(
+    postId: string,
+    depositId: string,
+    transactionRef?: string
+  ): Promise<ConfirmPlatformDepositResponse> {
+    const res = await api.post<
+      { success: boolean; data: ConfirmPlatformDepositResponse } | ConfirmPlatformDepositResponse
+    >(`/v1/posts/browse/${postId}/deposit/confirm`, { depositId, transactionRef });
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: ConfirmPlatformDepositResponse }).data;
+    }
+    return res as ConfirmPlatformDepositResponse;
+  },
 };
+
+export interface InitiatePlatformDepositPayload {
+  amount?: number;
+  tenantName?: string;
+  tenantPhone?: string;
+  note?: string;
+}
+
+export interface PlatformDepositInstruction {
+  depositId: string;
+  paymentId: string;
+  postId: string;
+  roomId?: string;
+  amount: number;
+  transactionRef: string;
+  qrCodeUrl: string;
+  bankCode: string;
+  accountNumber: string;
+  accountName: string;
+  transferContent: string;
+  status: string;
+  message: string;
+}
+
+export interface ConfirmPlatformDepositResponse {
+  success: boolean;
+  depositId: string;
+  status: string;
+  message: string;
+}

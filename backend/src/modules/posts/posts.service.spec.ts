@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from './posts.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import {
+  BadRequestException,
   ForbiddenException,
   NotFoundException,
   UnauthorizedException,
@@ -52,6 +53,21 @@ describe('PostsService', () => {
       create: jest.fn(),
       deleteMany: jest.fn(),
       count: jest.fn(),
+    },
+    deposit: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    payment: {
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    notification: {
+      create: jest.fn().mockResolvedValue({}),
+    },
+    auditLog: {
+      create: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),
@@ -710,4 +726,197 @@ describe('PostsService', () => {
       expect(mockPrisma.conversation.findFirst).not.toHaveBeenCalled();
     });
   });
+
+  describe('UC-PU-04: Direct Online Deposit', () => {
+    const userId = 'tenant-user-1';
+    const postId = 'post-123';
+    const roomId = 'room-123';
+    const boardingHouseId = 'house-123';
+
+    const mockUserWithId = {
+      id: userId,
+      username: 'tenant_alice',
+      phoneNumber: '0912345678',
+      userIdentification: {
+        id: 'id-1',
+        fullName: 'Nguyễn Văn A',
+        identityNumber: '001202012345',
+      },
+    };
+
+    const mockPost = {
+      id: postId,
+      roomId,
+      depositAmount: 3500000,
+      status: 'posted',
+      postedBy: 'landlord-1',
+      room: {
+        id: roomId,
+        boardingHouseId,
+        roomNumber: '101',
+        status: 'available',
+        boardingHouse: {
+          id: boardingHouseId,
+          name: 'Dormio House',
+        },
+      },
+    };
+
+    describe('createPlatformDeposit', () => {
+      it('should throw ForbiddenException if user has no userIdentification (Identity Gate)', async () => {
+        mockPrisma.user.findUnique.mockResolvedValue({
+          id: userId,
+          userIdentification: null,
+        });
+
+        await expect(
+          service.createPlatformDeposit(userId, postId, {}),
+        ).rejects.toThrow(ForbiddenException);
+      });
+
+      it('should throw BadRequestException if post has no linked room', async () => {
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
+        mockPrisma.post.findUnique.mockResolvedValue({
+          ...mockPost,
+          roomId: null,
+          room: null,
+        });
+
+        await expect(
+          service.createPlatformDeposit(userId, postId, {}),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should throw BadRequestException if room is not available', async () => {
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
+        mockPrisma.post.findUnique.mockResolvedValue({
+          ...mockPost,
+          room: {
+            ...mockPost.room,
+            status: 'occupied',
+          },
+        });
+
+        await expect(
+          service.createPlatformDeposit(userId, postId, {}),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should successfully create pending Deposit and Payment with VietQR instruction', async () => {
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
+        mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+        mockPrisma.deposit.findFirst.mockResolvedValue(null);
+
+        const mockDep = { id: 'dep-1' };
+        const mockPay = { id: 'pay-1' };
+        mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+          return cb({
+            deposit: { create: jest.fn().mockResolvedValue(mockDep) },
+            payment: { create: jest.fn().mockResolvedValue(mockPay) },
+          });
+        });
+
+        const result = await service.createPlatformDeposit(userId, postId, {
+          amount: 3500000,
+        });
+
+        expect(result.depositId).toBe('dep-1');
+        expect(result.paymentId).toBe('pay-1');
+        expect(result.amount).toBe(3500000);
+        expect(result.status).toBe('pending');
+        expect(result.qrCodeUrl).toContain('vietqr.io');
+      });
+    });
+
+    describe('confirmPlatformDeposit', () => {
+      it('should throw NotFoundException if deposit not found', async () => {
+        mockPrisma.deposit.findFirst.mockResolvedValue(null);
+
+        await expect(
+          service.confirmPlatformDeposit(userId, postId, { depositId: 'non-existent' }),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should return idempotently if deposit is already paid', async () => {
+        mockPrisma.deposit.findFirst.mockResolvedValue({
+          id: 'dep-1',
+          postId,
+          status: 'paid',
+        });
+
+        const result = await service.confirmPlatformDeposit(userId, postId, {
+          depositId: 'dep-1',
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.status).toBe('paid');
+        expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      });
+
+      it('should mark payment success, deposit paid, room deposited, and notify landlord', async () => {
+        const mockDeposit = {
+          id: 'dep-1',
+          roomId,
+          boardingHouseId,
+          postId,
+          amount: 3500000,
+          status: 'pending',
+          payment: { id: 'pay-1', transactionRef: 'TXN-123' },
+          room: { roomNumber: '101', boardingHouse: { name: 'Dormio House' } },
+          post: { postedBy: 'landlord-1' },
+        };
+        mockPrisma.deposit.findFirst.mockResolvedValue(mockDeposit);
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
+
+        const txPaymentUpdate = jest.fn();
+        const txDepositUpdate = jest.fn();
+        const txRoomUpdate = jest.fn();
+        const txAuditLogCreate = jest.fn();
+
+        mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+          return cb({
+            payment: { update: txPaymentUpdate },
+            deposit: { update: txDepositUpdate },
+            room: { update: txRoomUpdate },
+            auditLog: { create: txAuditLogCreate },
+          });
+        });
+
+        const result = await service.confirmPlatformDeposit(userId, postId, {
+          depositId: 'dep-1',
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.status).toBe('paid');
+        expect(txPaymentUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { id: 'pay-1' },
+            data: expect.objectContaining({ status: 'success' }),
+          }),
+        );
+        expect(txDepositUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { id: 'dep-1' },
+            data: expect.objectContaining({ status: 'paid' }),
+          }),
+        );
+        expect(txRoomUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { id: roomId },
+            data: expect.objectContaining({ status: 'deposited' }),
+          }),
+        );
+        expect(txAuditLogCreate).toHaveBeenCalledTimes(2);
+        expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              receiverId: 'landlord-1',
+              type: 'deposit_received',
+            }),
+          }),
+        );
+      });
+    });
+  });
 });
+

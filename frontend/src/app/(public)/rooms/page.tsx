@@ -20,7 +20,7 @@ import {
   Copy,
   Check,
   User,
-  VectorPolygon,
+  Maximize2,
 } from "lucide-react";
 import { formatVND } from "@/utils";
 import { useTranslations } from "@/context/LanguageContext";
@@ -673,7 +673,7 @@ export default function RoomsPage() {
 
                             {listing.room?.area && (
                               <span className="text-xs text-zinc-400 font-medium flex gap-1 mt-1">
-                                <VectorPolygon className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                <Maximize2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
                                 {listing.room.area} m²
                               </span>
                             )}
