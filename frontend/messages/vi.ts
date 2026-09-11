@@ -772,6 +772,7 @@ const vi = {
 
     // --- Public rooms search & filter (app/(public)/rooms) ---
     guestRoomsAllCities: "Tất cả thành phố",
+    guestRoomsApplyFilter: "Áp dụng bộ lọc",
     guestRoomsBadge: "SÀN TÌM PHÒNG TRỌ BHRP • CẬP NHẬT 24/7",
     guestRoomsBadgeAvailable: "Mới trống",
     guestRoomsBadgeGoodPrice: "Giá tốt",

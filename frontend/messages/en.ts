@@ -772,6 +772,7 @@ const en = {
 
     // --- Public rooms search & filter (app/(public)/rooms) ---
     guestRoomsAllCities: "All Cities",
+    guestRoomsApplyFilter: "Apply Filters",
     guestRoomsBadge: "BHRP RENTAL LISTINGS • UPDATED 24/7",
     guestRoomsBadgeAvailable: "Newly Available",
     guestRoomsBadgeGoodPrice: "Good Price",

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,14 +9,11 @@ import {
   Filter,
   RotateCcw,
   Sparkles,
-  ChevronDown,
   CheckCircle2,
   AlertCircle,
   Info,
   Eye,
-  QrCode,
   X,
-  Lock,
   ArrowRight,
   Heart,
   Share2,
@@ -153,10 +150,6 @@ export default function RoomsPage() {
 
   // Modal state
   const [quickViewRoom, setQuickViewRoom] = useState<PublicPostListing | null>(null);
-  const [depositRoom, setDepositRoom] = useState<PublicPostListing | null>(null);
-  const [depositStep, setDepositStep] = useState<"form" | "qr" | "success">("form");
-  const [tenantName, setTenantName] = useState("");
-  const [tenantPhone, setTenantPhone] = useState("");
 
   // Save & share state
   const [savedIds, setSavedIds] = useState<string[]>([]);
@@ -589,14 +582,16 @@ export default function RoomsPage() {
                       >
                         {/* Left Image Column with Action Badges */}
                         <div className="relative md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 overflow-hidden bg-zinc-100">
-                          <img
-                            src={imageUrl}
-                            alt={listing.title}
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE;
-                            }}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
+                          <Link href={`/rooms/${listing.id}`}>
+                            <img
+                              src={imageUrl}
+                              alt={listing.title}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE;
+                              }}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          </Link>
 
                           <span className="absolute top-3 left-3 px-3 py-1 bg-zinc-950/80 backdrop-blur-md text-white font-extrabold text-[11px] rounded-full shadow-md">
                             {listing.room?.roomTypeName ?? t("guestRoomsBadgeAvailable")}
@@ -862,16 +857,6 @@ export default function RoomsPage() {
                 </div>
 
                 <div className="flex gap-2 pt-3">
-                  <button
-                    onClick={() => {
-                      setDepositRoom(quickViewRoom);
-                      setQuickViewRoom(null);
-                      setDepositStep("form");
-                    }}
-                    className="flex-1 py-3 bg-[#FF6B35] text-white rounded-xl font-extrabold text-xs shadow-md shadow-[#FF6B35]/20 hover:bg-[#ff5518] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Sparkles className="w-4 h-4" /> {t("guestRoomsDepositBtn")}
-                  </button>
                   <Link href={`/rooms/${quickViewRoom.id}`} className="flex-1">
                     <button className="w-full py-3 bg-zinc-900 text-white rounded-xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                       <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsDetailBtn")}
@@ -887,13 +872,12 @@ export default function RoomsPage() {
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <div
-            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${
-              toastMessage.type === "success"
-                ? "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
-                : toastMessage.type === "error"
+            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${toastMessage.type === "success"
+              ? "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
+              : toastMessage.type === "error"
                 ? "bg-rose-500 text-white border-rose-400 shadow-rose-950/25"
                 : "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
-            }`}
+              }`}
           >
             {toastMessage.type === "success" ? (
               <CheckCircle2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
