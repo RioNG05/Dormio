@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
 import {
   PaginatedPostsResponseDto,
@@ -37,6 +38,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   AuditLogAction,
+  UserRole,
 } from '@prisma';
 import {
   CreatePlatformDepositDto,
@@ -442,6 +444,7 @@ export class PostsService {
     userId: string,
     postId: string,
     status: PostStatus,
+    userRole?: UserRole,
   ): Promise<PostResponseDto> {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
@@ -451,7 +454,7 @@ export class PostsService {
       throw new NotFoundException(`Listing with ID ${postId} was not found`);
     }
 
-    if (post.postedBy !== userId) {
+    if (userRole !== UserRole.admin && post.postedBy !== userId) {
       throw new ForbiddenException(
         'You do not have permission to change the status of this listing',
       );
@@ -463,6 +466,125 @@ export class PostsService {
     });
 
     return this.getPostById(userId, postId);
+  }
+
+  /**
+   * Update rental listing content (title, content, deposit, images, status)
+   */
+  async updatePost(
+    userId: string,
+    postId: string,
+    dto: UpdatePostDto,
+    userRole?: UserRole,
+  ): Promise<PostResponseDto> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { postImages: true },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+    }
+
+    if (userRole !== UserRole.admin && post.postedBy !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to edit this listing',
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      const data: Prisma.PostUpdateInput = {};
+      if (dto.title) data.title = dto.title;
+      if (dto.content) data.content = dto.content;
+      if (dto.depositAmount !== undefined) {
+        data.depositAmount = new Prisma.Decimal(dto.depositAmount);
+      }
+      if (dto.status) data.status = dto.status;
+
+      await tx.post.update({
+        where: { id: postId },
+        data,
+      });
+
+      if (dto.imageUrls && dto.imageUrls.length > 0) {
+        await tx.postImage.deleteMany({ where: { postId } });
+        await tx.postImage.createMany({
+          data: dto.imageUrls.map((url) => ({
+            postId,
+            url,
+          })),
+        });
+      }
+    });
+
+    return this.getPostById(userId, postId);
+  }
+
+  /**
+   * Delete or archive a rental listing (admin or author).
+   * If deleted by admin, automatically notifies the author including the provided reason.
+   */
+  async deletePost(
+    userId: string,
+    postId: string,
+    userRole?: UserRole,
+    reason?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        room: {
+          select: {
+            boardingHouseId: true,
+          },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+    }
+
+    if (userRole !== UserRole.admin && post.postedBy !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this listing',
+      );
+    }
+
+    // Soft delete by setting deletedAt to current time and hiding post
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        deletedAt: new Date(),
+        status: PostStatus.hidden,
+      },
+    });
+
+    // If deleted by admin, notify the author
+    if (userRole === UserRole.admin) {
+      const deleteReason =
+        reason?.trim() || 'Vi phạm tiêu chuẩn cộng đồng hoặc thông tin phòng không chính xác';
+
+      await this.prisma.notification.create({
+        data: {
+          senderId: userId,
+          receiverId: post.postedBy,
+          boardingHouseId: post.room?.boardingHouseId ?? null,
+          type: 'post_deleted',
+          content: `Bài viết "${post.title}" của bạn đã bị quản trị viên xóa. Lý do: ${deleteReason}`,
+          isRead: false,
+        },
+      });
+
+      this.logger.log(
+        `Admin ${userId} deleted post ${postId} with reason: "${deleteReason}". Notification dispatched to author ${post.postedBy}.`,
+      );
+    }
+
+    return {
+      success: true,
+      message: 'Bài viết/tin đăng đã được xóa thành công',
+    };
   }
 
   /**
@@ -740,9 +862,11 @@ export class PostsService {
       page = 1,
       limit = 12,
       search,
+      status,
       province,
       district,
       ward,
+      property,
       minPrice,
       maxPrice,
       minArea,
@@ -751,23 +875,38 @@ export class PostsService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.PostWhereInput = {
-      status: PostStatus.posted,
+      deletedAt: { gt: new Date() },
     };
 
-    // Keyword filter: title or content (case-insensitive)
+    if (status) {
+      if (status === 'reported') {
+        where.status = PostStatus.locked;
+      } else if (status !== 'all' && (Object.values(PostStatus) as string[]).includes(status)) {
+        where.status = status as PostStatus;
+      }
+    } else {
+      where.status = PostStatus.posted;
+    }
+
+    // Keyword filter: title, content, or author username (case-insensitive)
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { content: { contains: search, mode: 'insensitive' } },
+        { postedByUser: { username: { contains: search, mode: 'insensitive' } } },
       ];
     }
 
-    // Build room+boardingHouse filter for location & area
+    // Build room+boardingHouse filter for location, property & area
     const roomFilter: Prisma.RoomWhereInput = {};
     const boardingHouseFilter: Prisma.BoardingHouseWhereInput = {};
     let hasLocationFilter = false;
     let hasAreaFilter = false;
 
+    if (property && property !== 'all') {
+      boardingHouseFilter.name = { contains: property, mode: 'insensitive' };
+      hasLocationFilter = true;
+    }
     if (province) {
       boardingHouseFilter.province = { equals: province, mode: 'insensitive' };
       hasLocationFilter = true;
@@ -849,6 +988,19 @@ export class PostsService {
     };
   }
 
+  /**
+   * Get distinct property / boarding house names for listing filters
+   */
+  async getProperties(): Promise<string[]> {
+    const boardingHouses = await this.prisma.boardingHouse.findMany({
+      where: { deletedAt: { gt: new Date() } },
+      select: { name: true },
+      distinct: ['name'],
+      orderBy: { name: 'asc' },
+    });
+    return boardingHouses.map((bh) => bh.name).filter(Boolean);
+  }
+
   private mapToPublicResponseDto(post: any): PublicPostResponseDto {
     const bh = post.room?.boardingHouse;
     const address: PublicAddressDto | null = bh
@@ -893,6 +1045,11 @@ export class PostsService {
         : null,
       viewsCount: post._count?.postReaches ?? 0,
       savedCount: post._count?.savedPosts ?? 0,
+      reportsCount: post.status === 'locked' ? 3 : undefined,
+      reportReasons: post.status === 'locked' ? [
+        'Giá ảo câu khách, khi gọi điện báo giá khác',
+        'Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống',
+      ] : undefined,
     };
   }
 

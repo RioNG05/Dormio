@@ -14,7 +14,7 @@
 | `03-bhms-tenant.md` | UC-T-01 → UC-T-07: Tenant notifications, meter-first billing, grievances |
 | `04-bhrp-poster.md` | UC-P-01, UC-P-02: Landlord acting as poster on the rental platform |
 | `05-bhrp-platform-user.md` | UC-PU-01 → UC-PU-05: Prospective tenant — browsing, identity + deposit, chat |
-| `06-admin.md` | UC-A-01 → UC-A-05: Admin analytics, grievance resolution, mass notifications |
+| `06-admin.md` | UC-A-01 → UC-A-06: Admin analytics, grievance resolution, mass notifications, platform revenue dashboard |
 
 ---
 

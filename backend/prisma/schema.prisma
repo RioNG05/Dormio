@@ -96,6 +96,7 @@ enum PostStatus {
   draft
   posted
   hidden
+  locked
 }
 
 enum SourceType {
@@ -181,6 +182,7 @@ enum AttendanceStatus {
 }
 
 enum NotifyChannel {
+  in_app
   zalo
   sms
   email

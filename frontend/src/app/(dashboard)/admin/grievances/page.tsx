@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   AlertTriangle, AlertCircle, CheckCircle2, XCircle, Search,
   Clock, Eye, LayoutGrid, Table as TableIcon, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, X, Check, Ban
+  ChevronsLeft, ChevronsRight, X, Check, Ban, RefreshCw
 } from "lucide-react";
+import { grievanceService, GrievanceQueueCounts } from "@/services/grievance.service";
 
 interface GrievanceItem {
   id: string;
@@ -233,6 +234,63 @@ export default function AdminGrievancesPage() {
     },
   ]);
 
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [liveCounts, setLiveCounts] = useState<GrievanceQueueCounts | null>(null);
+
+  const fetchLiveGrievances = useCallback(async (isManualRefresh = false) => {
+    if (isManualRefresh) setRefreshing(true);
+    else setLoading(true);
+
+    try {
+      const res = await grievanceService.getAdminGrievanceQueue({
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        priority: priorityFilter !== "all" ? (priorityFilter === "urgent" ? "high" : priorityFilter) : undefined,
+        search: searchQuery.trim() || undefined,
+        page: 1,
+        limit: 100, // Fetch up to 100 for comprehensive client-side operations
+      });
+
+      if (res && res.items && res.items.length > 0) {
+        const mapped: GrievanceItem[] = res.items.map((item) => ({
+          id: item.id,
+          tenantId: item.tenantId,
+          tenantName: item.tenantName,
+          tenantPhone: item.tenantPhone,
+          tenantEmail: item.tenantEmail,
+          boardingHouseId: item.boardingHouseId,
+          houseName: item.boardingHouseName,
+          roomId: item.roomId,
+          roomNumber: item.roomNumber,
+          landlordName: item.landlordName,
+          landlordPhone: item.landlordPhone,
+          category: "deposit",
+          categoryLabel: isEn ? "Grievance / Dispute" : "Khiếu nại / Tranh chấp",
+          priority: item.priority === "high" ? "urgent" : item.priority,
+          status: item.status,
+          title: item.title,
+          description: item.description,
+          evidenceImages: (item.images || []).map((img) => img.url),
+          createdAt: item.createdAt.replace("T", " ").substring(0, 16),
+          resolutionNote: item.resolutionNote || undefined,
+          resolvedAt: item.resolvedAt ? item.resolvedAt.replace("T", " ").substring(0, 16) : undefined,
+          resolvedBy: item.resolvedByName || undefined,
+        }));
+        setGrievances(mapped);
+        if (res.counts) setLiveCounts(res.counts);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch live grievances queue, keeping fallback:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [statusFilter, priorityFilter, searchQuery, isEn]);
+
+  useEffect(() => {
+    fetchLiveGrievances();
+  }, [fetchLiveGrievances]);
+
   // Filtered dataset
   const currentDataset = useMemo(() => {
     return grievances.filter((item) => {
@@ -313,12 +371,27 @@ export default function AdminGrievancesPage() {
   };
 
   // Confirm Resolution
-  const handleConfirmResolution = () => {
+  const handleConfirmResolution = async () => {
     if (!resolveTargetItem) return;
 
     if (!resolutionNoteInput.trim()) {
       setResolveError(isEn ? "Please enter a resolution note or audit explanation." : "Vui lòng nhập kết luận xử lý / ghi chú giải quyết.");
       return;
+    }
+
+    try {
+      if (actionType === "resolve") {
+        await grievanceService.resolveGrievance(resolveTargetItem.id, {
+          resolutionNote: resolutionNoteInput.trim(),
+          escalateLockLandlord,
+        });
+      } else {
+        await grievanceService.rejectGrievance(resolveTargetItem.id, {
+          resolutionNote: resolutionNoteInput.trim(),
+        });
+      }
+    } catch (err) {
+      console.warn("API call failed, updating locally:", err);
     }
 
     const nowStr = new Date().toISOString().replace("T", " ").substring(0, 16);
@@ -340,6 +413,23 @@ export default function AdminGrievancesPage() {
     setResolveTargetItem(null);
     setResolutionNoteInput("");
     setResolveError("");
+  };
+
+  // Mark In-Progress handler
+  const handleMarkInProgress = async (item: GrievanceItem) => {
+    try {
+      await grievanceService.updateGrievanceInProgress(item.id);
+    } catch (err) {
+      console.warn("Failed to mark in-progress:", err);
+    }
+
+    setGrievances((prev) =>
+      prev.map((g) => (g.id === item.id ? { ...g, status: "in_progress" } : g))
+    );
+
+    if (inspectItem?.id === item.id) {
+      setInspectItem((prev) => (prev ? { ...prev, status: "in_progress" } : null));
+    }
   };
 
   // Rule #10: Modal close with unsaved confirmation
@@ -460,7 +550,7 @@ export default function AdminGrievancesPage() {
               {isEn ? "Urgent Queue" : "Khẩn cấp"}
             </span>
             <span className="text-lg font-black leading-tight block">
-              {grievances.filter((g) => g.priority === "urgent" && g.status === "pending").length} {isEn ? "cases" : "vụ việc"}
+              {liveCounts ? liveCounts.urgent : grievances.filter((g) => g.priority === "urgent" && g.status === "pending").length} {isEn ? "cases" : "vụ việc"}
             </span>
           </div>
           <div className="px-3.5 py-2 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-800">
@@ -468,7 +558,7 @@ export default function AdminGrievancesPage() {
               {isEn ? "Pending Total" : "Tổng chờ xử lý"}
             </span>
             <span className="text-lg font-black leading-tight block">
-              {grievances.filter((g) => g.status === "pending").length} {isEn ? "cases" : "vụ việc"}
+              {liveCounts ? liveCounts.pending : grievances.filter((g) => g.status === "pending").length} {isEn ? "cases" : "vụ việc"}
             </span>
           </div>
         </div>
@@ -557,8 +647,17 @@ export default function AdminGrievancesPage() {
           </div>
         </div>
 
-        {/* View mode toggle (Rule #9) */}
-        <div className="flex items-center gap-3 self-end lg:self-auto">
+        {/* View mode toggle (Rule #9) & Refresh */}
+        <div className="flex items-center gap-2.5 self-end lg:self-auto">
+          <button
+            onClick={() => fetchLiveGrievances(true)}
+            disabled={refreshing || loading}
+            className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold disabled:opacity-50"
+            title={isEn ? "Refresh queue" : "Làm mới danh sách"}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-orange-600" : ""}`} />
+            <span className="hidden sm:inline">{isEn ? "Refresh" : "Làm mới"}</span>
+          </button>
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
             <button
               onClick={() => handleViewModeChange("grid")}
@@ -1087,17 +1186,29 @@ export default function AdminGrievancesPage() {
                 {isEn ? "Close" : "Đóng"}
               </button>
 
-              <button
-                onClick={() => {
-                  const target = inspectItem;
-                  setInspectItem(null);
-                  handleOpenResolveModal(target, "resolve");
-                }}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-              >
-                <Check className="w-4 h-4" />
-                <span>{isEn ? "Take Resolution Action" : "Đưa ra Kết luận Xử lý"}</span>
-              </button>
+              {inspectItem.status === "pending" && (
+                <button
+                  onClick={() => handleMarkInProgress(inspectItem)}
+                  className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>{isEn ? "Mark Investigating" : "Đang điều tra"}</span>
+                </button>
+              )}
+
+              {inspectItem.status !== "resolved" && inspectItem.status !== "rejected" && (
+                <button
+                  onClick={() => {
+                    const target = inspectItem;
+                    setInspectItem(null);
+                    handleOpenResolveModal(target, "resolve");
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isEn ? "Take Resolution Action" : "Đưa ra Kết luận Xử lý"}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

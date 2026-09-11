@@ -202,6 +202,12 @@ export class PublicPostResponseDto {
 
   @ApiProperty({ description: 'Total saved/bookmarked count' })
   savedCount: number;
+
+  @ApiPropertyOptional({ description: 'Number of reports or grievances against post' })
+  reportsCount?: number;
+
+  @ApiPropertyOptional({ description: 'List of report reasons or grievance notes' })
+  reportReasons?: string[];
 }
 
 export class PaginatedPublicPostsResponseDto {

@@ -23,6 +23,7 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { ServicesModule } from './modules/services/services.module';
 import { UsersModule } from './modules/users/users.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -84,6 +85,7 @@ import { AppService } from './app.service';
     ExpensesModule,
     ServicesModule,
     UsersModule,
+    AdminModule,
   ],
 
   controllers: [AppController],

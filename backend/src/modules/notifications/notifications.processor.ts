@@ -1,15 +1,16 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { NOTIFICATION_QUEUE } from './notifications.service';
+import { NOTIFICATION_QUEUE, NotificationsService } from './notifications.service';
 
 interface DispatchNotificationJobData {
-  notificationId: string;
-  type: string;
+  notificationId?: string;
+  type?: string;
   receiverId?: string;
   contractId?: string;
   boardingHouseId?: string;
   channel?: string;
+  massNotificationJobId?: string;
 }
 
 /**
@@ -18,16 +19,29 @@ interface DispatchNotificationJobData {
  * This is the ONLY place where 3rd-party API calls (SMS, Zalo, Email) should
  * live — never inside the HTTP request or DB transaction that created the
  * triggering record. (Global convention: no 3rd-party calls inside TX.)
- *
- * Current state: stub implementation — logs job data.
- * Real dispatch (SMS/Zalo/Email) should be added here when integrating
- * the messaging provider.
  */
 @Processor(NOTIFICATION_QUEUE)
 export class NotificationProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationProcessor.name);
 
+  constructor(
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationsService: NotificationsService,
+  ) {
+    super();
+  }
+
   async process(job: Job<DispatchNotificationJobData>): Promise<void> {
+    // ─── UC-A-05: Mass Notification Dispatcher ──────────────────────────────
+    if (job.name === 'dispatch-mass-notification') {
+      const jobId = job.data.massNotificationJobId;
+      this.logger.log(`[${job.name}] Processing mass notification dispatch — jobId=${jobId}`);
+      if (jobId) {
+        await this.notificationsService.processMassNotification(jobId);
+      }
+      return;
+    }
+
     const { notificationId, type, receiverId, contractId, boardingHouseId, channel } = job.data;
 
     if (job.name === 'dispatch-broadcast-announcement') {

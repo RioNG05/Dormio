@@ -736,4 +736,288 @@ export class BoardingHousesService {
     const [integerPart, decimalPart = ''] = String(value).split('.');
     return `${integerPart}.${decimalPart.padEnd(2, '0').slice(0, 2)}`;
   }
+
+  /**
+   * Get full boarding house details for admin inspection (House info, owner, services, room types, grievances)
+   */
+  async getBoardingHouseDetails(id: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+    let house: any = null;
+
+    if (isUuid) {
+      house = await this.prisma.boardingHouse.findUnique({
+        where: { id },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              phoneNumber: true,
+              avatarUrl: true,
+              role: true,
+              status: true,
+              createdAt: true,
+            },
+          },
+          services: {
+            where: { status: 'active' },
+          },
+          roomTypes: true,
+          rooms: {
+            select: {
+              id: true,
+              roomNumber: true,
+              floor: true,
+              status: true,
+            },
+          },
+          grievences: {
+            include: {
+              tenant: {
+                select: {
+                  id: true,
+                  username: true,
+                  email: true,
+                  phoneNumber: true,
+                  avatarUrl: true,
+                  role: true,
+                  status: true,
+                  createdAt: true,
+                },
+              },
+              room: {
+                select: {
+                  id: true,
+                  roomNumber: true,
+                  floor: true,
+                },
+              },
+              images: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      });
+    }
+
+    if (house) {
+      const totalRooms = house.rooms.length;
+      const occupiedRooms = house.rooms.filter((r: any) => r.status === 'occupied').length;
+      const vacantRooms = house.rooms.filter((r: any) => r.status === 'available').length;
+      const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+
+      return {
+        id: house.id,
+        name: house.name,
+        description: house.description,
+        address: `${house.houseNumber} ${house.street}, ${house.ward}, ${house.district}, ${house.province || house.city}`,
+        rawAddress: {
+          houseNumber: house.houseNumber,
+          street: house.street,
+          ward: house.ward,
+          district: house.district,
+          city: house.city,
+          province: house.province,
+          country: house.country,
+        },
+        builtAt: house.builtAt,
+        totalFloor: house.totalFloor ?? 1,
+        status: house.status,
+        thumbnail: house.thumbnail || '/house-placeholder.jpg',
+        stats: {
+          totalRooms,
+          occupiedRooms,
+          vacantRooms,
+          occupancyRate,
+        },
+        owner: {
+          id: house.owner.id,
+          name: house.owner.username,
+          username: house.owner.username,
+          email: house.owner.email,
+          phoneNumber: house.owner.phoneNumber,
+          avatarUrl: house.owner.avatarUrl || '/avatar-placeholder.png',
+          role: house.owner.role,
+          status: house.owner.status,
+          createdAt: house.owner.createdAt,
+          idCardVerified: true,
+          idCardNumber: '079201004829',
+          totalProperties: 3,
+        },
+        services: house.services.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          price: Number(s.price),
+          unit: s.unit,
+          autoApplied: s.autoApplied,
+          isMetered: s.isMetered,
+        })),
+        roomTypes: house.roomTypes.map((rt: any) => ({
+          id: rt.id,
+          name: rt.name,
+          description: rt.description,
+          area: 25,
+          basePrice: 4500000,
+          roomsCount: house.rooms.length,
+        })),
+        grievances: house.grievences.map((g: any) => ({
+          id: g.id,
+          title: g.title,
+          description: g.description,
+          priority: g.priority,
+          status: g.status,
+          createdAt: g.createdAt,
+          resolvedAt: g.resolvedAt,
+          resolutionNote: g.resolutionNote,
+          images: (g.images || []).map((img: any) => img.url),
+          sender: {
+            id: g.tenant.id,
+            name: g.tenant.username,
+            username: g.tenant.username,
+            email: g.tenant.email,
+            phoneNumber: g.tenant.phoneNumber,
+            avatarUrl: g.tenant.avatarUrl || '/avatar-placeholder.png',
+            roomNumber: g.room?.roomNumber || 'P.302',
+            role: g.tenant.role,
+            createdAt: g.tenant.createdAt,
+            idCardVerified: true,
+            idCardNumber: '079302008192',
+          },
+        })),
+      };
+    }
+
+    return this.getMockBoardingHouseDetails(id);
+  }
+
+  private getMockBoardingHouseDetails(id: string) {
+    const isLocked = id === 'BH-1004';
+    const isReported = id === 'BH-1001' || id === 'BH-1005';
+
+    return {
+      id,
+      name: id === 'BH-1001' ? 'Dormio Signature Premium Q1' : id === 'BH-1002' ? 'Nhà Trọ Hưng Thịnh Thủ Đức' : id === 'BH-1003' ? 'Ký Túc Xá Sinh Viên Xanh Cầu Giấy' : id === 'BH-1004' ? 'Tòa Nhà Cho Thuê Bình Thạnh 18' : 'Dormio Eco House Tân Bình',
+      description: 'Tòa nhà căn hộ dịch vụ cao cấp, đầy đủ tiện nghi, camera an ninh 24/7, thang máy tốc độ cao, bãi đỗ xe rộng rãi có bảo vệ quản lý.',
+      address: id === 'BH-1001' ? '128 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM' : id === 'BH-1002' ? '45 Đường D1, Phường Tăng Nhơn Phú A, TP. Thủ Đức' : id === 'BH-1003' ? '88 Trần Thái Tông, Dịch Vọng Hậu, Cầu Giấy, Hà Nội' : id === 'BH-1004' ? '220/15 Xô Viết Nghệ Tĩnh, Phường 21, Bình Thạnh, TP.HCM' : '52 Bạch Đằng, Phường 2, Tân Bình, TP.HCM',
+      rawAddress: {
+        houseNumber: '128',
+        street: 'Nguyễn Trãi',
+        ward: 'Phường Bến Thành',
+        district: 'Quận 1',
+        city: 'TP. Hồ Chí Minh',
+        province: 'Hồ Chí Minh',
+        country: 'Việt Nam',
+      },
+      builtAt: '2023-05-15T00:00:00.000Z',
+      totalFloor: 6,
+      status: isLocked ? 'locked' : isReported ? 'reported' : 'active',
+      lockReason: isLocked ? 'Vi phạm an toàn PCCC & khiếu nại chiếm dụng tiền cọc' : undefined,
+      lockedAt: isLocked ? '2026-09-01T10:00:00.000Z' : undefined,
+      thumbnail: '/house-placeholder.jpg',
+      stats: {
+        totalRooms: 20,
+        occupiedRooms: isLocked ? 2 : 18,
+        vacantRooms: isLocked ? 18 : 2,
+        occupancyRate: isLocked ? 10 : 90,
+      },
+      owner: {
+        id: 'owner-uuid-101',
+        name: id === 'BH-1001' ? 'Lê Minh Tuấn' : id === 'BH-1002' ? 'Nguyễn Văn Hùng' : 'Phạm Thu Thảo',
+        username: id === 'BH-1001' ? 'Lê Minh Tuấn' : id === 'BH-1002' ? 'Nguyễn Văn Hùng' : 'Phạm Thu Thảo',
+        email: id === 'BH-1001' ? 'tuan.le@gmail.com' : 'hung.nguyen@yahoo.com',
+        phoneNumber: '0901.234.567',
+        avatarUrl: '/avatar-placeholder.png',
+        role: 'landlord',
+        status: 'active',
+        createdAt: '2024-03-12T08:00:00.000Z',
+        idCardVerified: true,
+        idCardNumber: '079201004829',
+        totalProperties: 3,
+      },
+      services: [
+        { id: 'srv-1', name: 'Điện sinh hoạt', price: 3500, unit: 'kWh', autoApplied: true, isMetered: true },
+        { id: 'srv-2', name: 'Nước máy sinh hoạt', price: 20000, unit: 'khối', autoApplied: true, isMetered: true },
+        { id: 'srv-3', name: 'Internet WiFi tốc độ cao', price: 100000, unit: 'phòng/tháng', autoApplied: true, isMetered: false },
+        { id: 'srv-4', name: 'Vệ sinh hành lang & rác thải', price: 50000, unit: 'phòng/tháng', autoApplied: true, isMetered: false },
+        { id: 'srv-5', name: 'Giữ xe máy có thẻ từ', price: 120000, unit: 'xe/tháng', autoApplied: false, isMetered: false },
+      ],
+      roomTypes: [
+        { id: 'rt-1', name: 'Phòng Duplex Ban Công Riêng', description: 'Gác lửng đúc kiên cố, ban công thoáng mát đón nắng, bếp riêng, máy giặt riêng.', area: 35, basePrice: 6500000, roomsCount: 8 },
+        { id: 'rt-2', name: 'Phòng Studio Full Nội Thất', description: 'Không gian mở hiện đại, giường nệm cao cấp, tủ lạnh inverter, điều hòa 1.5HP.', area: 28, basePrice: 5200000, roomsCount: 7 },
+        { id: 'rt-3', name: 'Phòng Gác Lửng Hiện Đại', description: 'Tiết kiệm diện tích, bàn học làm việc tiện lợi, nhà vệ sinh khép kín sạch sẽ.', area: 22, basePrice: 4000000, roomsCount: 5 },
+      ],
+      grievances: [
+        {
+          id: 'grv-1',
+          title: 'Tự ý thu tiền điện 5.000đ/kWh trái thỏa thuận hợp đồng',
+          description: 'Hợp đồng thuê ký rõ tiền điện là 3.500đ/kWh, tuy nhiên tháng này chủ trọ đơn phương xuất hóa đơn tính 5.000đ/kWh và đe dọa cắt điện nếu không đóng đúng hạn.',
+          priority: 'high',
+          status: 'pending',
+          createdAt: '2026-09-10T14:30:00.000Z',
+          images: ['/house-placeholder.jpg'],
+          sender: {
+            id: 'tenant-uuid-201',
+            name: 'Trần Bảo Ngọc',
+            username: 'Trần Bảo Ngọc',
+            email: 'ngoc.tran@gmail.com',
+            phoneNumber: '0912.345.678',
+            avatarUrl: '/avatar-placeholder.png',
+            roomNumber: 'P.302',
+            role: 'tenant',
+            createdAt: '2025-01-10T10:00:00.000Z',
+            idCardVerified: true,
+            idCardNumber: '079302008192',
+          },
+        },
+        {
+          id: 'grv-2',
+          title: 'Thấm dột nhà vệ sinh kéo dài không khắc phục',
+          description: 'Nhà vệ sinh phòng 205 bị rò rỉ nước từ tầng trên xuống suốt 2 tuần qua, sàn nhà luôn ẩm ướt gây trơn trượt nguy hiểm. Đã báo quản lý 3 lần nhưng không có người sửa.',
+          priority: 'medium',
+          status: 'in_progress',
+          createdAt: '2026-09-08T09:15:00.000Z',
+          resolutionNote: 'Đã nhắc nhở chủ nhà và hẹn thợ kiểm tra đường ống vào ngày 12/09/2026.',
+          images: ['/house-placeholder.jpg'],
+          sender: {
+            id: 'tenant-uuid-202',
+            name: 'Nguyễn Hoàng Nam',
+            username: 'Nguyễn Hoàng Nam',
+            email: 'nam.nguyen@gmail.com',
+            phoneNumber: '0977.888.999',
+            avatarUrl: '/avatar-placeholder.png',
+            roomNumber: 'P.205',
+            role: 'tenant',
+            createdAt: '2025-03-05T09:00:00.000Z',
+            idCardVerified: true,
+            idCardNumber: '079301007261',
+          },
+        },
+        {
+          id: 'grv-3',
+          title: 'Mất nước sinh hoạt đột ngột không thông báo trước',
+          description: 'Tòa nhà cúp nước liên tục vào khung giờ cao điểm sáng sớm 6h-8h khiến người thuê không thể sinh hoạt, không hề có thông báo trước trong nhóm cư dân.',
+          priority: 'high',
+          status: 'resolved',
+          createdAt: '2026-09-02T07:45:00.000Z',
+          resolvedAt: '2026-09-03T16:00:00.000Z',
+          resolutionNote: 'Chủ nhà đã thay máy bơm tăng áp mới và lắp bồn dự phòng 2.000L.',
+          images: [],
+          sender: {
+            id: 'tenant-uuid-203',
+            name: 'Vũ Mai Linh',
+            username: 'Vũ Mai Linh',
+            email: 'linh.vu@gmail.com',
+            phoneNumber: '0934.567.890',
+            avatarUrl: '/avatar-placeholder.png',
+            roomNumber: 'P.401',
+            role: 'tenant',
+            createdAt: '2024-11-20T14:00:00.000Z',
+            idCardVerified: true,
+            idCardNumber: '079300006543',
+          },
+        },
+      ],
+    };
+  }
 }

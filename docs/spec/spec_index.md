@@ -23,7 +23,7 @@
 | [`spec/03-bhms-tenant.md`](./spec/03-bhms-tenant.md) | UC-T-01 → UC-T-07: Tenant notifications, payments, meter readings, grievances |
 | [`spec/04-bhrp-poster.md`](./spec/04-bhrp-poster.md) | UC-P-01, UC-P-02: Publishing listings (Leasing Agent vs Landlord — different room-linking & quota rules) and post reach analytics |
 | [`spec/05-bhrp-platform-user.md`](./spec/05-bhrp-platform-user.md) | UC-PU-01 → UC-PU-05: Prospective tenant — browsing, deposits, chat |
-| [`spec/06-admin.md`](./spec/06-admin.md) | UC-A-01 → UC-A-05: Admin analytics, grievance resolution, mass notifications |
+| [`spec/06-admin.md`](./spec/06-admin.md) | UC-A-01 → UC-A-06: Admin analytics, grievance resolution, mass notifications, platform revenue dashboard |
 | [`spec/07-auth-and-roles.md`](./spec/07-auth-and-roles.md) | **Read early** — role model (relationship-based authorization), registration/login, becoming a Landlord, staff/tenant onboarding with random password + OTP, contract confirm/reject |
 
 ---
@@ -112,6 +112,7 @@
 | UC | Title | Tier |
 |---|---|---|
 | UC-A-01/02/03 | Global Analytics (Users / Properties / Listings) | Free |
+| UC-A-06 | Platform Revenue Dashboard | Free |
 | UC-A-04 | Manage Grievances | Free |
 | UC-A-05 | Mass Notification Dispatcher | Free |
 

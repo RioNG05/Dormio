@@ -65,6 +65,14 @@ export class BrowsePostsQueryDto {
   search?: string;
 
   @ApiPropertyOptional({
+    description: 'Filter by listing status (draft, posted, hidden, or all)',
+    example: 'posted',
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({
     description: 'Filter by province (exact match on BoardingHouse.province)',
     example: 'Hà Nội',
   })
@@ -87,6 +95,14 @@ export class BrowsePostsQueryDto {
   @IsOptional()
   @IsString()
   ward?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by property / boarding house name',
+    example: 'Dormio Premier Quận 1',
+  })
+  @IsOptional()
+  @IsString()
+  property?: string;
 
   @ApiPropertyOptional({
     description: 'Minimum deposit amount in VND (inclusive)',
