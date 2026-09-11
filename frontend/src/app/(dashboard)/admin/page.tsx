@@ -8,19 +8,73 @@ import {
   Megaphone, Newspaper, TrendingUp, ArrowRight, ArrowUpRight,
   CheckCircle2, ShieldAlert, ChevronRight
 } from "lucide-react";
+import { adminAnalyticsService, AdminOverviewResponse } from "@/services/admin-analytics.service";
 
 export default function AdminDashboardPage() {
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
-  // Mock quick stats - carefully balanced to prevent text wrapping/dropping
+  const [liveOverview, setLiveOverview] = React.useState<AdminOverviewResponse | null>(null);
+
+  React.useEffect(() => {
+    adminAnalyticsService
+      .getAdminOverview()
+      .then((data) => setLiveOverview(data))
+      .catch((err) => console.warn("Failed to fetch live admin overview, using fallback:", err));
+  }, []);
+
+  const totalUsersVal = liveOverview
+    ? new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.totalUsers)
+    : "12,480";
+
+  const userSubtext = liveOverview
+    ? `${liveOverview.userRoles?.tenant || 0} ${isEn ? "Tenants" : "Khách"} • ${liveOverview.userRoles?.landlord || 0} ${isEn ? "Landlords" : "Chủ trọ"} • ${liveOverview.userRoles?.employee || 0} ${isEn ? "Staff" : "NV"}`
+    : isEn ? "8,920 Tenants • 3,140 Landlords • 420 Staff" : "8.920 Khách • 3.140 Chủ trọ • 420 NV";
+
+  const userGrowth = liveOverview
+    ? `${liveOverview.userGrowthRate >= 0 ? "+" : ""}${liveOverview.userGrowthRate}%`
+    : "+14.2%";
+
+  const totalHousesVal = liveOverview
+    ? new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.totalHouses)
+    : "1,850";
+
+  const propSubtext = liveOverview
+    ? `${new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.totalRooms)} ${isEn ? "rooms" : "phòng"} • ${liveOverview.occupancyRate}% ${isEn ? "Occupancy" : "lấp đầy"}`
+    : isEn ? "24,600 rooms • 88.5% Occupancy" : "24.600 phòng • 88.5% lấp đầy";
+
+  const propGrowth = liveOverview
+    ? `${liveOverview.propertyGrowthRate >= 0 ? "+" : ""}${liveOverview.propertyGrowthRate}%`
+    : "+8.6%";
+
+  const revenueVal = liveOverview
+    ? new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.platformRevenue)
+    : "148.500.000";
+
+  const revenueGrowth = liveOverview
+    ? `${liveOverview.revenueGrowthRate >= 0 ? "+" : ""}${liveOverview.revenueGrowthRate}%`
+    : "+22.4%";
+
+  const pendingGrv = liveOverview
+    ? String(liveOverview.pendingGrievancesCount)
+    : "7";
+
+  const urgentGrvText = liveOverview
+    ? `${liveOverview.urgentGrievancesCount} ${isEn ? "URGENT cases awaiting action" : "vụ việc KHẨN CẤP cần xử lý ngay"}`
+    : isEn ? "3 URGENT cases awaiting action" : "3 vụ việc KHẨN CẤP cần xử lý ngay";
+
+  const reportedItemsVal = liveOverview
+    ? String(liveOverview.reportedItemsCount)
+    : "12";
+
+  // Dynamic quick stats from live API with fallbacks
   const stats = [
     {
       id: "users",
       label: isEn ? "Total Users" : "Tổng người dùng",
-      value: "12,480",
-      subtext: isEn ? "8,920 Tenants • 3,140 Landlords • 420 Staff" : "8.920 Khách • 3.140 Chủ trọ • 420 NV",
-      growth: "+14.2%",
+      value: totalUsersVal,
+      subtext: userSubtext,
+      growth: userGrowth,
       isPositive: true,
       icon: Users,
       color: "text-blue-600 bg-blue-50 border-blue-100",
@@ -28,9 +82,9 @@ export default function AdminDashboardPage() {
     {
       id: "properties",
       label: isEn ? "Houses & Rooms" : "Nhà trọ & Phòng",
-      value: "1,850",
-      subtext: isEn ? "24,600 rooms • 88.5% Occupancy" : "24.600 phòng • 88.5% lấp đầy",
-      growth: "+8.6%",
+      value: totalHousesVal,
+      subtext: propSubtext,
+      growth: propGrowth,
       isPositive: true,
       icon: Building2,
       color: "text-emerald-600 bg-emerald-50 border-emerald-100",
@@ -38,10 +92,10 @@ export default function AdminDashboardPage() {
     {
       id: "revenue",
       label: isEn ? "Platform Revenue" : "Doanh thu nền tảng",
-      value: "148.500.000",
+      value: revenueVal,
       unit: "₫",
-      subtext: isEn ? "Deposit fees & Service packages" : "Phí cọc giữ chỗ & Gói dịch vụ",
-      growth: "+22.4%",
+      subtext: isEn ? "Subscription packages & Post credits" : "Gói dịch vụ chủ trọ & Lượt đăng tin",
+      growth: revenueGrowth,
       isPositive: true,
       icon: Wallet,
       color: "text-orange-600 bg-orange-50 border-orange-100",
@@ -49,25 +103,25 @@ export default function AdminDashboardPage() {
     {
       id: "grievances",
       label: isEn ? "Pending Grievances" : "Khiếu nại chờ xử lý",
-      value: "7",
-      subtext: isEn ? "3 URGENT cases awaiting action" : "3 vụ việc KHẨN CẤP cần xử lý ngay",
+      value: pendingGrv,
+      subtext: urgentGrvText,
       growth: isEn ? "Action needed" : "Cần can thiệp",
       isPositive: false,
       icon: AlertTriangle,
       color: "text-orange-600 bg-orange-50 border-orange-100",
-      badge: isEn ? "3 URGENT" : "3 KHẨN CẤP",
+      badge: liveOverview ? `${liveOverview.urgentGrievancesCount} ${isEn ? "URGENT" : "KHẨN CẤP"}` : isEn ? "3 URGENT" : "3 KHẨN CẤP",
       link: "/admin/grievances",
     },
     {
       id: "moderation",
       label: isEn ? "Reported Items" : "Vi phạm & Nghi vấn",
-      value: "12",
-      subtext: isEn ? "5 Fake prices • 4 Photo fraud • 3 Scam" : "5 Giá ảo • 4 Ảnh giả mạo • 3 Nghi vấn cọc",
+      value: reportedItemsVal,
+      subtext: isEn ? "Flagged rental listings" : "Tin đăng bị báo cáo / ẩn",
       growth: isEn ? "Needs review" : "Chờ kiểm tra",
       isPositive: false,
       icon: ShieldAlert,
       color: "text-amber-600 bg-amber-50 border-amber-100",
-      badge: isEn ? "12 Items" : "12 Mục",
+      badge: `${reportedItemsVal} ${isEn ? "Items" : "Mục"}`,
       link: "/admin/moderation",
     },
   ];
