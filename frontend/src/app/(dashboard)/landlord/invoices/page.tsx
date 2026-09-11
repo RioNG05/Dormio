@@ -67,23 +67,23 @@ function InvoicesContent() {
     roomId: "",
     roomName: "",
     tenantName: "",
-    period: "08/2026",
-    rentAmount: 3500000,
-    elecOld: 1318,
-    elecNew: 1418,
+    period: `${String(new Date().getMonth() + 1).padStart(2, "0")}/${new Date().getFullYear()}`,
+    rentAmount: 0,
+    elecOld: 0,
+    elecNew: 0,
     elecRate: 3500,
-    waterOld: 240,
-    waterNew: 252,
+    waterOld: 0,
+    waterNew: 0,
     waterRate: 15000,
     wifiFee: 100000,
     trashFee: 50000,
     discount: 0,
-    deadline: "2026-08-20",
+    deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
   });
   const [isCreateFormDirty, setIsCreateFormDirty] = useState(false);
 
   // Form State for AI OCR Modal
-  const [ocrMeterValue, setOcrMeterValue] = useState("1428");
+  const [ocrMeterValue, setOcrMeterValue] = useState("0");
   const [isOcrFormDirty, setIsOcrFormDirty] = useState(false);
 
   useEffect(() => {
@@ -109,6 +109,7 @@ function InvoicesContent() {
               ...prev,
               roomId: prev.roomId || first.id,
               roomName: prev.roomName || `Phòng ${first.roomNumber}`,
+              rentAmount: prev.rentAmount || 0,
             }));
           }
         }
@@ -232,6 +233,7 @@ function InvoicesContent() {
   };
 
   const handleOpenOcrModal = () => {
+    setOcrMeterValue(String(createForm.elecNew || createForm.elecOld || "0"));
     setIsOcrFormDirty(false);
     setIsOcrModalOpen(true);
   };
@@ -1236,14 +1238,15 @@ function InvoicesContent() {
               {/* Left Side: Photo with AI Bounding Box */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">1. Ảnh Chụp Đồng Hồ Phòng 102</span>
+                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">
+                    1. Ảnh Đồng Hồ {createForm.roomName || "Phòng"}
+                  </span>
                   <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-extrabold">
-                    AI Độ Chính Xác 99.4%
+                    AI Nhận Diện Tự Động
                   </span>
                 </div>
 
-                <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-amber-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
-                  {/* Mock Meter Screen Visual */}
+                <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
                   <div className="text-center space-y-2">
                     <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
                       {ocrMeterValue}
@@ -1251,7 +1254,9 @@ function InvoicesContent() {
                         OCR Box
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-400">Đồng hồ cơ khí 1 pha — Chụp lúc 08:30 hôm nay</p>
+                    <p className="text-[11px] text-zinc-400">
+                      Chỉ số đồng hồ điện — {createForm.roomName || "Đang chọn phòng"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1259,12 +1264,16 @@ function InvoicesContent() {
               {/* Right Side: AI Extracted Details & Inputs */}
               <div className="space-y-4 bg-zinc-50 p-5 rounded-2xl border border-zinc-200/80 flex flex-col justify-between">
                 <div className="space-y-4">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">2. Chi Tiết Tính Tiền Điện Tháng 8</span>
+                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">
+                    2. Chi Tiết Tính Tiền Điện Kỳ {createForm.period}
+                  </span>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-white rounded-xl border border-zinc-200">
                       <span className="text-[10px] font-extrabold text-zinc-400 block">CHỈ SỐ CŨ</span>
-                      <span className="text-base font-black text-zinc-800">1.318 kWh</span>
+                      <span className="text-base font-black text-zinc-800">
+                        {createForm.elecOld.toLocaleString("vi-VN")} kWh
+                      </span>
                     </div>
                     <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
                       <span className="text-[10px] font-extrabold text-amber-700 block">CHỈ SỐ MỚI (AI OCR)</span>
@@ -1283,16 +1292,24 @@ function InvoicesContent() {
                   <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2">
                     <div className="flex justify-between text-xs font-bold text-zinc-600">
                       <span>Sản lượng tiêu thụ:</span>
-                      <span className="text-zinc-900 font-black">{Math.max(0, parseInt(ocrMeterValue || "0") - 1318)} kWh</span>
+                      <span className="text-zinc-900 font-black">
+                        {Math.max(0, parseInt(ocrMeterValue || "0") - createForm.elecOld)} kWh
+                      </span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-600">
                       <span>Đơn giá điện:</span>
-                      <span className="text-zinc-900">3.500 ₫ / kWh</span>
+                      <span className="text-zinc-900">
+                        {createForm.elecRate.toLocaleString("vi-VN")} ₫ / kWh
+                      </span>
                     </div>
                     <div className="border-t border-zinc-100 pt-2 flex justify-between text-sm font-black text-zinc-900">
                       <span>Thành tiền điện:</span>
                       <span className="text-[#2AC1BC]">
-                        {((Math.max(0, parseInt(ocrMeterValue || "0") - 1318)) * 3500).toLocaleString("vi-VN")} ₫
+                        {(
+                          Math.max(0, parseInt(ocrMeterValue || "0") - createForm.elecOld) *
+                          createForm.elecRate
+                        ).toLocaleString("vi-VN")}{" "}
+                        ₫
                       </span>
                     </div>
                   </div>

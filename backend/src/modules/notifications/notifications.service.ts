@@ -41,6 +41,16 @@ export interface BillingDueNotificationParams extends BillingNotificationParams 
   hasMeteredServices: boolean;
 }
 
+export interface DebtReminderNotificationParams {
+  senderId: string;
+  receiverId: string;
+  boardingHouseId: string;
+  contractId?: string;
+  roomNumber: string;
+  totalDebtAmount: number;
+  customNote?: string;
+}
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -225,6 +235,55 @@ export class NotificationsService {
       receiverId,
       contractId,
       hasMeteredServices,
+    });
+  }
+
+  // ─── UC-L-16: Debt reminder notification ───────────────────────────────────
+
+  /**
+   * Creates a debt_reminder Notification and enqueues the async dispatch job.
+   *
+   * Triggered by the landlord when requesting payment for outstanding room debts.
+   * Must be called OUTSIDE any active $transaction.
+   */
+  async createDebtReminderNotification(
+    params: DebtReminderNotificationParams,
+  ): Promise<void> {
+    const {
+      senderId,
+      receiverId,
+      boardingHouseId,
+      contractId,
+      roomNumber,
+      totalDebtAmount,
+      customNote,
+    } = params;
+
+    const formattedAmount = totalDebtAmount.toLocaleString('vi-VN');
+    const content = customNote
+      ? `Nhắc nhở nợ tiền phòng ${roomNumber}: Số tiền còn nợ là ${formattedAmount} ₫. Lời nhắn từ chủ trọ: "${customNote}"`
+      : `Nhắc nhở nợ tiền phòng ${roomNumber}: Bạn đang có khoản nợ tiền phòng chưa thanh toán là ${formattedAmount} ₫. Vui lòng kiểm tra và thanh toán sớm.`;
+
+    const notification = await this.prisma.notification.create({
+      data: {
+        senderId,
+        receiverId,
+        boardingHouseId,
+        type: 'debt_reminder',
+        content,
+        isRead: false,
+      },
+    });
+
+    this.logger.log(
+      `debt_reminder notification created: ${notification.id} for tenant ${receiverId} in room ${roomNumber}`,
+    );
+
+    await this.notifQueue.add('dispatch-notification', {
+      notificationId: notification.id,
+      type: 'debt_reminder',
+      receiverId,
+      contractId,
     });
   }
 

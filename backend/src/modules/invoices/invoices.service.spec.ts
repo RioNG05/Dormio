@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('InvoicesService', () => {
   let service: InvoicesService;
@@ -187,6 +188,7 @@ describe('InvoicesService', () => {
       findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     payment: {
       findMany: jest.fn(),
@@ -210,6 +212,10 @@ describe('InvoicesService', () => {
     $transaction: jest.fn().mockImplementation(async (callback) => callback(mockPrisma)),
   };
 
+  const mockNotificationsService = {
+    createDebtReminderNotification: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -219,6 +225,10 @@ describe('InvoicesService', () => {
         {
           provide: PrismaService,
           useValue: mockPrisma,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
         },
       ],
     }).compile();
@@ -665,6 +675,232 @@ describe('InvoicesService', () => {
       expect(result.success).toBe(true);
       expect(result.paymentId).toBe('existing-pay-1');
       expect(mockPrisma.payment.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('UC-L-16: Debt Tracking', () => {
+    describe('flipOverdueInvoices', () => {
+      it('should flip unpaid invoices past dueDate to overdue', async () => {
+        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 3 });
+
+        const result = await service.flipOverdueInvoices('bh-uuid-1');
+
+        expect(result.count).toBe(3);
+        expect(mockPrisma.invoice.updateMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              status: 'unpaid',
+              room: { boardingHouseId: 'bh-uuid-1' },
+            }),
+            data: { status: 'overdue' },
+          }),
+        );
+      });
+    });
+
+    describe('getLandlordDebts', () => {
+      it('should group invoices by room, compute aging, and return ledger with summary metrics', async () => {
+        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 1 });
+
+        const pastDue = new Date();
+        pastDue.setDate(pastDue.getDate() - 45); // 45 days ago -> 2_months
+
+        const recentDue = new Date();
+        recentDue.setDate(recentDue.getDate() - 10); // 10 days ago -> 1_month
+
+        const mockDebtsDb = [
+          {
+            id: 'inv-debt-1',
+            roomId: 'room-101',
+            contractId: 'contract-1',
+            totalAmount: 4500000,
+            status: 'overdue',
+            dueDate: pastDue,
+            room: {
+              roomNumber: '101',
+              floor: 1,
+              boardingHouse: { id: 'bh-1', name: 'Nhà trọ Dormio' },
+            },
+            contract: {
+              tenantContracts: [
+                {
+                  tenant: {
+                    id: 'tenant-1',
+                    username: 'tuan123',
+                    phoneNumber: '0912345678',
+                    userIdentification: { fullName: 'Nguyễn Văn Tuấn' },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            id: 'inv-debt-2',
+            roomId: 'room-101',
+            contractId: 'contract-1',
+            totalAmount: 3500000,
+            status: 'overdue',
+            dueDate: recentDue,
+            room: {
+              roomNumber: '101',
+              floor: 1,
+              boardingHouse: { id: 'bh-1', name: 'Nhà trọ Dormio' },
+            },
+            contract: {
+              tenantContracts: [
+                {
+                  tenant: {
+                    id: 'tenant-1',
+                    username: 'tuan123',
+                    phoneNumber: '0912345678',
+                    userIdentification: { fullName: 'Nguyễn Văn Tuấn' },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            id: 'inv-debt-3',
+            roomId: 'room-102',
+            contractId: 'contract-2',
+            totalAmount: 3000000,
+            status: 'unpaid',
+            dueDate: recentDue,
+            room: {
+              roomNumber: '102',
+              floor: 1,
+              boardingHouse: { id: 'bh-1', name: 'Nhà trọ Dormio' },
+            },
+            contract: {
+              tenantContracts: [
+                {
+                  tenant: {
+                    id: 'tenant-2',
+                    username: 'linh456',
+                    phoneNumber: '0987654321',
+                    userIdentification: { fullName: 'Trần Thị Linh' },
+                  },
+                },
+              ],
+            },
+          },
+        ];
+
+        mockPrisma.invoice.findMany.mockResolvedValue(mockDebtsDb);
+
+        const result = await service.getLandlordDebts(
+          'bh-1',
+          { duration: 'all', page: 1, limit: 10, sortBy: 'debt_desc' },
+          'landlord-1',
+        );
+
+        expect(result.success).toBe(true);
+        expect(result.data.length).toBe(2); // 2 distinct rooms
+        expect(result.summary.debtorRoomsCount).toBe(2);
+        expect(result.summary.totalDebtAmount).toBe(11000000); // 4.5M + 3.5M + 3.0M
+        expect(result.summary.totalInvoicesCount).toBe(3);
+
+        // Room 101 has 8M debt, max aging 45 days -> 2_months
+        const room101 = result.data.find((r) => r.roomId === 'room-101');
+        expect(room101).toBeDefined();
+        expect(room101?.totalDebtAmount).toBe(8000000);
+        expect(room101?.agingCategory).toBe('2_months');
+        expect(room101?.invoicesCount).toBe(2);
+      });
+
+      it('should filter debts by duration bracket', async () => {
+        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 0 });
+
+        const pastDueBad = new Date();
+        pastDueBad.setDate(pastDueBad.getDate() - 75); // 75 days -> bad_debt
+
+        const recentDue = new Date();
+        recentDue.setDate(recentDue.getDate() - 10); // 10 days -> 1_month
+
+        mockPrisma.invoice.findMany.mockResolvedValue([
+          {
+            id: 'inv-bad',
+            roomId: 'room-bad',
+            contractId: 'c-bad',
+            totalAmount: 10000000,
+            status: 'overdue',
+            dueDate: pastDueBad,
+            room: { roomNumber: '201', floor: 2, boardingHouse: { id: 'bh-1', name: 'Nhà trọ' } },
+            contract: { tenantContracts: [] },
+          },
+          {
+            id: 'inv-ok',
+            roomId: 'room-ok',
+            contractId: 'c-ok',
+            totalAmount: 3000000,
+            status: 'overdue',
+            dueDate: recentDue,
+            room: { roomNumber: '202', floor: 2, boardingHouse: { id: 'bh-1', name: 'Nhà trọ' } },
+            contract: { tenantContracts: [] },
+          },
+        ]);
+
+        const result = await service.getLandlordDebts(
+          'bh-1',
+          { duration: 'bad_debt', page: 1, limit: 10 },
+          'landlord-1',
+        );
+
+        expect(result.data.length).toBe(1);
+        expect(result.data[0].roomId).toBe('room-bad');
+        expect(result.data[0].agingCategory).toBe('bad_debt');
+      });
+    });
+
+    describe('sendDebtReminder', () => {
+      it('should dispatch debt reminder notification to primary tenant', async () => {
+        mockPrisma.room.findFirst.mockResolvedValue({
+          id: 'room-101',
+          roomNumber: '101',
+          boardingHouseId: 'bh-1',
+          boardingHouse: { name: 'Dormio Tân Bình' },
+          contracts: [
+            {
+              id: 'contract-1',
+              status: 'active',
+              tenantContracts: [
+                {
+                  isPrimary: true,
+                  tenant: {
+                    id: 'tenant-1',
+                    username: 'tuan123',
+                    phoneNumber: '0912345678',
+                    userIdentification: { fullName: 'Nguyễn Văn Tuấn' },
+                  },
+                },
+              ],
+            },
+          ],
+        });
+
+        mockPrisma.invoice.findMany.mockResolvedValue([
+          { id: 'inv-1', totalAmount: 3500000 },
+        ]);
+
+        const result = await service.sendDebtReminder('bh-1', 'landlord-1', {
+          roomId: 'room-101',
+          note: 'Vui lòng thanh toán hôm nay',
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.tenantName).toBe('Nguyễn Văn Tuấn');
+        expect(result.totalDebtAmount).toBe(3500000);
+        expect(result.reminderText).toContain('Nguyễn Văn Tuấn');
+        expect(result.reminderText).toContain('3.500.000');
+        expect(mockNotificationsService.createDebtReminderNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            senderId: 'landlord-1',
+            receiverId: 'tenant-1',
+            roomNumber: '101',
+            totalDebtAmount: 3500000,
+          }),
+        );
+      });
     });
   });
 });

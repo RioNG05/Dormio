@@ -66,6 +66,74 @@ export interface LandlordInvoicesResponse {
   summary: LandlordInvoicesSummary;
 }
 
+export interface DebtInvoiceSummary {
+  id: string;
+  period: string;
+  totalAmount: number;
+  status: 'unpaid' | 'overdue';
+  dueDate: string;
+  agingDays: number;
+}
+
+export interface RoomDebtTenant {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+}
+
+export interface RoomDebtItem {
+  roomId: string;
+  roomNumber: string;
+  floor: number | null;
+  buildingName: string;
+  tenant: RoomDebtTenant | null;
+  contractId: string | null;
+  totalDebtAmount: number;
+  unpaidAmount: number;
+  overdueAmount: number;
+  oldestDueDate: string;
+  maxAgingDays: number;
+  agingCategory: 'current' | '1_month' | '2_months' | 'bad_debt';
+  invoicesCount: number;
+  invoices: DebtInvoiceSummary[];
+}
+
+export interface DebtsAgingDistribution {
+  under30Days: number;
+  under30DaysAmount: number;
+  from31To60Days: number;
+  from31To60DaysAmount: number;
+  over60Days: number;
+  over60DaysAmount: number;
+}
+
+export interface LandlordDebtsSummary {
+  totalDebtAmount: number;
+  overdueDebtAmount: number;
+  badDebtAmount: number;
+  debtorRoomsCount: number;
+  totalInvoicesCount: number;
+  agingDistribution: DebtsAgingDistribution;
+}
+
+export interface LandlordDebtsResponse {
+  success: boolean;
+  data: RoomDebtItem[];
+  meta: PaginationMeta;
+  summary: LandlordDebtsSummary;
+}
+
+export interface DebtReminderResponse {
+  success: boolean;
+  message: string;
+  tenantName: string;
+  tenantPhone: string;
+  roomNumber: string;
+  totalDebtAmount: number;
+  reminderText: string;
+}
+
 export interface CreateManualInvoicePayload {
   roomId: string;
   period: string;
@@ -165,6 +233,70 @@ export const landlordInvoiceService = {
     return api.post<{ success: boolean; message: string; paymentId: string }>(
       `/v1/landlord/invoices/${invoiceId}/pay`,
       payload,
+      {
+        headers: {
+          'X-Boarding-House-Id': buildingId,
+        },
+      },
+    );
+  },
+
+  /**
+   * Retrieves room debt ledger with summary metrics and aging calculation (UC-L-16)
+   */
+  async getLandlordDebts(
+    buildingId: string,
+    params?: {
+      search?: string;
+      duration?: 'all' | 'current' | 'overdue' | '1_month' | '2_months' | 'bad_debt';
+      sortBy?: 'debt_desc' | 'aging_desc' | 'room_asc';
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<LandlordDebtsResponse> {
+    const queryParams: Record<string, string> = {};
+    if (params?.search) queryParams.search = params.search;
+    if (params?.duration && params.duration !== 'all') queryParams.duration = params.duration;
+    if (params?.sortBy) queryParams.sortBy = params.sortBy;
+    if (params?.page) queryParams.page = String(params.page);
+    if (params?.limit) queryParams.limit = String(params.limit);
+
+    return api.get<LandlordDebtsResponse>(`/v1/landlord/invoices/debts`, {
+      headers: {
+        'X-Boarding-House-Id': buildingId,
+      },
+      params: queryParams,
+    });
+  },
+
+  /**
+   * Dispatches debt reminder to primary tenant of room (UC-L-16)
+   */
+  async sendDebtReminder(
+    buildingId: string,
+    roomId: string,
+    note?: string,
+  ): Promise<DebtReminderResponse> {
+    return api.post<DebtReminderResponse>(
+      `/v1/landlord/invoices/debts/remind`,
+      { roomId, note },
+      {
+        headers: {
+          'X-Boarding-House-Id': buildingId,
+        },
+      },
+    );
+  },
+
+  /**
+   * Triggers manual update of overdue status for unpaid invoices past due date (UC-L-16)
+   */
+  async flipOverdueInvoices(
+    buildingId: string,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return api.post<{ success: boolean; updatedCount: number }>(
+      `/v1/landlord/invoices/debts/flip-overdue`,
+      {},
       {
         headers: {
           'X-Boarding-House-Id': buildingId,
