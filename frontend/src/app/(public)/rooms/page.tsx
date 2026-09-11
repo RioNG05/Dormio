@@ -578,22 +578,27 @@ export default function RoomsPage() {
                     return (
                       <div
                         key={listing.id}
-                        className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col md:flex-row group"
+                        onClick={(e) => {
+                          if (e.ctrlKey || e.metaKey) {
+                            window.open(`/rooms/${listing.id}`, "_blank");
+                          } else {
+                            router.push(`/rooms/${listing.id}`);
+                          }
+                        }}
+                        className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col md:flex-row group cursor-pointer"
                       >
                         {/* Left Image Column with Action Badges */}
                         <div className="relative md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 overflow-hidden bg-zinc-100">
-                          <Link href={`/rooms/${listing.id}`}>
-                            <img
-                              src={imageUrl}
-                              alt={listing.title}
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE;
-                              }}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                          </Link>
+                          <img
+                            src={imageUrl}
+                            alt={listing.title}
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE;
+                            }}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
 
-                          <span className="absolute top-3 left-3 px-3 py-1 bg-zinc-950/80 backdrop-blur-md text-white font-extrabold text-[11px] rounded-full shadow-md">
+                          <span className="absolute top-3 left-3 px-3 py-1 bg-zinc-950/80 backdrop-blur-md text-white font-extrabold text-[11px] rounded-full shadow-md pointer-events-none">
                             {listing.room?.roomTypeName ?? t("guestRoomsBadgeAvailable")}
                           </span>
 
@@ -628,19 +633,28 @@ export default function RoomsPage() {
 
                           {/* Quick View Button overlay */}
                           <button
-                            onClick={() => setQuickViewRoom(listing)}
-                            className="absolute bottom-3 left-3 right-3 py-2 bg-white/95 hover:bg-white text-zinc-900 backdrop-blur-md text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setQuickViewRoom(listing);
+                            }}
+                            className="absolute bottom-3 left-3 right-3 py-2 bg-white/95 hover:bg-white text-zinc-900 backdrop-blur-md text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 cursor-pointer z-10"
                           >
                             <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsQuickView")}
                           </button>
                         </div>
 
                         {/* Details column */}
-                        <Link href={`/rooms/${listing.id}`}>
-                          <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-
+                        <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                          <div>
                             <h3 className="font-extrabold text-zinc-900 text-lg leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1 mb-2">
-                              {listing.title}
+                              <Link
+                                href={`/rooms/${listing.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="hover:text-[#2AC1BC] transition-colors"
+                              >
+                                {listing.title}
+                              </Link>
                             </h3>
 
                             {address && (
@@ -648,7 +662,8 @@ export default function RoomsPage() {
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors w-fit z-10"
                                 title={t("guestContactMaps")}
                               >
                                 <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
@@ -657,7 +672,7 @@ export default function RoomsPage() {
                             )}
 
                             {listing.room?.area && (
-                              <span className="text-xs text-zinc-400 font-medium flex gap-1">
+                              <span className="text-xs text-zinc-400 font-medium flex gap-1 mt-1">
                                 <VectorPolygon className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
                                 {listing.room.area} m²
                               </span>
@@ -666,52 +681,44 @@ export default function RoomsPage() {
                             <p className="text-xs text-zinc-500 font-medium leading-relaxed line-clamp-2 pt-1">
                               {listing.content}
                             </p>
+                          </div>
 
-                            {/* Poster info */}
-                            {listing.poster && (
-                              <div className="flex items-center gap-2">
-                                {listing.poster.avatarUrl ? (
-                                  <img
-                                    src={listing.poster.avatarUrl}
-                                    alt={listing.poster.username ?? ""}
-                                    className="w-6 h-6 rounded-full object-cover border border-zinc-200"
-                                  />
-                                ) : (
-                                  <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200">
-                                    <User className="w-3.5 h-3.5 text-zinc-400" />
-                                  </div>
-                                )}
-                                <span className="text-xs text-zinc-500 font-semibold">
-                                  {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
-                                </span>
-                              </div>
-                            )}
+                          {/* Poster info */}
+                          {listing.poster && (
+                            <div className="flex items-center gap-2">
+                              {listing.poster.avatarUrl ? (
+                                <img
+                                  src={listing.poster.avatarUrl}
+                                  alt={listing.poster.username ?? ""}
+                                  className="w-6 h-6 rounded-full object-cover border border-zinc-200"
+                                />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200">
+                                  <User className="w-3.5 h-3.5 text-zinc-400" />
+                                </div>
+                              )}
+                              <span className="text-xs text-zinc-500 font-semibold">
+                                {listing.poster.username ?? t("guestRoomsDefaultLandlord")}
+                              </span>
+                            </div>
+                          )}
 
-                            {/* Price + actions */}
-                            <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <div className="whitespace-nowrap">
-                                <span className="text-2xl font-black text-rose-500">
-                                  {formatVND(listing.depositAmount)}
-                                </span>
-                                <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsMonth")}</span>
-                                <span className="text-[11px] font-bold text-zinc-500 block">
-                                  {t("guestRoomsDepositLabel")}{" "}
-                                  {listing.depositAmount > 0
-                                    ? formatVND(listing.depositAmount)
-                                    : t("guestRoomsFreeDeposit")}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0">
-                                <Link href={`/rooms/${listing.id}`}>
-                                  <button className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0">
-                                    {t("guestRoomsDetailBtn")}
-                                  </button>
-                                </Link>
-                              </div>
+                          {/* Price + actions */}
+                          <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="whitespace-nowrap">
+                              <span className="text-2xl font-black text-rose-500">
+                                {formatVND(listing.depositAmount)}
+                              </span>
+                              <span className="text-xs text-zinc-400 font-normal"> {t("guestRoomsMonth")}</span>
+                              <span className="text-[11px] font-bold text-zinc-500 block">
+                                {t("guestRoomsDepositLabel")}{" "}
+                                {listing.depositAmount > 0
+                                  ? formatVND(listing.depositAmount)
+                                  : t("guestRoomsFreeDeposit")}
+                              </span>
                             </div>
                           </div>
-                        </Link>
+                        </div>
                       </div>
                     );
                   })}
@@ -857,10 +864,11 @@ export default function RoomsPage() {
                 </div>
 
                 <div className="flex gap-2 pt-3">
-                  <Link href={`/rooms/${quickViewRoom.id}`} className="flex-1">
-                    <button className="w-full py-3 bg-zinc-900 text-white rounded-xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                      <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsDetailBtn")}
-                    </button>
+                  <Link
+                    href={`/rooms/${quickViewRoom.id}`}
+                    className="flex-1 py-3 bg-zinc-900 text-white rounded-xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestRoomsDetailBtn")}
                   </Link>
                 </div>
               </div>
