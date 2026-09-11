@@ -45,11 +45,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const adminMenus = [
     { name: tNav("adminOverview"), href: "/admin", icon: LayoutDashboard },
+    { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
+    { name: tNav("adminBlogs"), href: "/admin/blogs", icon: Newspaper },
     { name: tNav("adminModeration"), href: "/admin/moderation", icon: ShieldCheck },
     { name: tNav("adminGrievances"), href: "/admin/grievances", icon: AlertTriangle },
     { name: tNav("adminNotifications"), href: "/admin/notifications", icon: Megaphone },
-    { name: tNav("adminBlogs"), href: "/admin/blogs", icon: Newspaper },
-    { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
   ];
 
   const landlordMenus = [
@@ -395,9 +395,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         className="group flex items-center gap-3 px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
         title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
       >
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${
-          isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
-        }`}>
+        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
+          }`}>
           {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
         </div>
         <div className="overflow-hidden flex-1 min-w-0">
@@ -502,9 +501,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <Link
             href={isTenant ? "/tenant/profile" : "/profile"}
-            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
-              isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
-            }`}
+            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
+              }`}
             title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
           >
             {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}

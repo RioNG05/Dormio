@@ -13,6 +13,7 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum AdminNotifyChannel {
+  in_app = 'in_app',
   zalo = 'zalo',
   sms = 'sms',
   email = 'email',

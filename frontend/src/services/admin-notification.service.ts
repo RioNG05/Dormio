@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export type AdminNotifyChannel = 'zalo' | 'sms' | 'email';
+export type AdminNotifyChannel = 'in_app' | 'zalo' | 'sms' | 'email';
 
 export type AdminNotifyTarget =
   | 'all_users'
@@ -81,16 +81,18 @@ export const adminNotificationService = {
       queryParams.limit = String(params.limit);
     }
 
-    return api.get<MassNotificationListResponse>('/v1/admin/notifications/mass', {
+    const res = await api.get<any>('/v1/admin/notifications/mass', {
       params: queryParams,
     });
+    return res?.data ?? res;
   },
 
   /**
    * UC-A-05: Retrieves single mass notification job detail.
    */
   async getMassNotificationJobById(id: string): Promise<MassNotificationItem> {
-    return api.get<MassNotificationItem>(`/v1/admin/notifications/mass/${id}`);
+    const res = await api.get<any>(`/v1/admin/notifications/mass/${id}`);
+    return res?.data ?? res;
   },
 
   /**
@@ -99,13 +101,15 @@ export const adminNotificationService = {
   async createMassNotificationJob(
     payload: CreateMassNotificationPayload,
   ): Promise<MassNotificationItem> {
-    return api.post<MassNotificationItem>('/v1/admin/notifications/mass', payload);
+    const res = await api.post<any>('/v1/admin/notifications/mass', payload);
+    return res?.data ?? res;
   },
 
   /**
    * UC-A-05: Retries a failed or stalled mass notification job.
    */
   async retryMassNotificationJob(id: string): Promise<MassNotificationItem> {
-    return api.post<MassNotificationItem>(`/v1/admin/notifications/mass/${id}/retry`, {});
+    const res = await api.post<any>(`/v1/admin/notifications/mass/${id}/retry`, {});
+    return res?.data ?? res;
   },
 };

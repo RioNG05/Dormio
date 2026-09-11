@@ -152,7 +152,7 @@ export default function AdminNotificationsPage() {
     else setLoading(true);
 
     try {
-      const res = await adminNotificationService.getMassNotificationJobs({
+      const rawRes: any = await adminNotificationService.getMassNotificationJobs({
         status: statusFilter !== "all" ? statusFilter : undefined,
         channel: channelFilter !== "all" ? channelFilter : undefined,
         search: searchQuery.trim() || undefined,
@@ -160,8 +160,10 @@ export default function AdminNotificationsPage() {
         limit: 100,
       });
 
-      if (res && res.items && res.items.length > 0) {
-        const mapped: NotificationCampaign[] = res.items.map((item) => ({
+      const res = rawRes?.data ?? rawRes;
+
+      if (res && Array.isArray(res.items)) {
+        const mapped: NotificationCampaign[] = res.items.map((item: any) => ({
           id: item.id,
           name: item.title,
           title: item.title,
@@ -174,7 +176,7 @@ export default function AdminNotificationsPage() {
           totalRecipients: item.totalRecipients,
           sentCount: item.sentCount,
           failedCount: item.failedCount,
-          createdAt: item.createdAt.replace("T", " ").substring(0, 16),
+          createdAt: item.createdAt ? item.createdAt.replace("T", " ").substring(0, 16) : "",
           createdBy: item.creatorName || "Admin Quản Trị",
         }));
         setCampaigns(mapped);
@@ -317,16 +319,20 @@ export default function AdminNotificationsPage() {
       return;
     }
 
-    const channelSelected = (composeChannels.find((c) => c === "email" || c === "sms" || c === "zalo") || "email") as any;
+    const channelsToSend = composeChannels.length > 0 ? composeChannels : ["in_app"];
 
     try {
-      await adminNotificationService.createMassNotificationJob({
-        channel: channelSelected,
-        targetType: composeTarget === "all_tenants" ? "all_users" : (composeTarget as any),
-        targetId: composeTarget === "specific_user" ? specificUserId.trim() : undefined,
-        title: composeTitle.trim(),
-        content: composeContent.trim(),
-      });
+      await Promise.all(
+        channelsToSend.map((ch) =>
+          adminNotificationService.createMassNotificationJob({
+            channel: ch as any,
+            targetType: composeTarget === "all_tenants" ? "all_users" : (composeTarget as any),
+            targetId: composeTarget === "specific_user" ? specificUserId.trim() : undefined,
+            title: composeTitle.trim(),
+            content: composeContent.trim(),
+          })
+        )
+      );
       await fetchLiveCampaigns(true);
     } catch (err) {
       console.warn("Failed to create mass notification on backend, saving locally:", err);

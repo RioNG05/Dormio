@@ -181,6 +181,7 @@ enum AttendanceStatus {
 }
 
 enum NotifyChannel {
+  in_app
   zalo
   sms
   email
