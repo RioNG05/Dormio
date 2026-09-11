@@ -9,7 +9,7 @@ import {
   ShieldCheck, Banknote, Sparkles, Building2, CheckCircle2, AlertTriangle, Users, Gauge
 } from "lucide-react";
 import { getContractById, Contract, ContractMember, ContractServiceItem } from "../data";
-import { generateMockCustomers, Customer } from "../../customers/data";
+import { Customer } from "../../customers/data";
 import { useAuth } from "@/context/AuthContext";
 import { getContractById as getContractByIdApi } from "@/services/contract.service";
 import ContractPreviewModal from "@/components/landlord/ContractPreviewModal";
@@ -63,7 +63,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   useEffect(() => {
     setIsMounted(true);
-    setExistingCustomers(generateMockCustomers());
+    setExistingCustomers([]);
     const contractId = resolvedParams.id ? decodeURIComponent(resolvedParams.id) : '';
     if (!contractId) return;
 

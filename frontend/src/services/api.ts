@@ -39,24 +39,46 @@ class ApiClient {
       url += `?${searchParams.toString()}`;
     }
 
-    // 2. Thiết lập headers mặc định (JSON và Authorization token từ localStorage nếu ở client-side)
-    const defaultHeaders: HeadersInit = {
-      "Content-Type": "application/json",
+    // 2. Thiết lập headers chuẩn hóa (lowercase keys để tránh duplicate khi merge)
+    const finalHeaders: Record<string, string> = {
+      "content-type": "application/json",
     };
 
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("auth_token");
       if (token) {
-        defaultHeaders["Authorization"] = `Bearer ${token}`;
+        finalHeaders["authorization"] = `Bearer ${token}`;
+      }
+
+      const activeHouseId = localStorage.getItem("dormio_active_building_id");
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (activeHouseId && UUID_REGEX.test(activeHouseId)) {
+        finalHeaders["x-boarding-house-id"] = activeHouseId;
+      }
+    }
+
+    // Merge custom headers overriding defaults with normalized lowercase keys
+    if (headers) {
+      if (headers instanceof Headers) {
+        headers.forEach((value, key) => {
+          finalHeaders[key.toLowerCase()] = value;
+        });
+      } else if (Array.isArray(headers)) {
+        headers.forEach(([key, value]) => {
+          finalHeaders[key.toLowerCase()] = value;
+        });
+      } else {
+        Object.entries(headers).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            finalHeaders[key.toLowerCase()] = String(value);
+          }
+        });
       }
     }
 
     const config: RequestInit = {
       method: "GET",
-      headers: {
-        ...defaultHeaders,
-        ...headers,
-      },
+      headers: finalHeaders,
       ...customOptions,
     };
 

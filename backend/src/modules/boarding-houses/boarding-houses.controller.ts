@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { ApiAuth } from '../../common/swagger';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { BoardingHousesService } from './boarding-houses.service';
@@ -54,7 +55,7 @@ export class BoardingHousesController {
 
   @Get(':id/overview')
   @ApiAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
   @ApiOperation({
     summary: 'Lấy dữ liệu tổng quan & phân tích kinh doanh nhà trọ (UC-L-01 & UC-L-08)',
     description:
@@ -74,7 +75,7 @@ export class BoardingHousesController {
 
   @Get(':id/analytics')
   @ApiAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
   @ApiOperation({
     summary: 'Báo cáo & Phân tích chuyên sâu nhà trọ (UC-L-08)',
     description:

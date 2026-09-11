@@ -75,7 +75,7 @@ export default function RoomsPage() {
   });
 
   // Single room form states (UC-L-03)
-  const [formBuilding, setFormBuilding] = useState("b1");
+  const [formBuilding, setFormBuilding] = useState("");
   const [formRoomNumber, setFormRoomNumber] = useState("");
   const [formRoomTypeId, setFormRoomTypeId] = useState("");
   const [formFloor, setFormFloor] = useState("1");
@@ -227,7 +227,7 @@ export default function RoomsPage() {
   // Open edit modal for an existing room
   const handleOpenEditModal = async (room: any) => {
     setSelectedRoomId(room.fullRoomId || room.id);
-    setFormBuilding(room.building || activeBuilding?.id || "b1");
+    setFormBuilding(room.building || activeBuilding?.id || "");
     setFormRoomNumber(room.id || "");
     setFormFloor(room.floor || "1");
     setFormArea(room.area ? String(room.area).replace(/[^\d.]/g, "") : "25");

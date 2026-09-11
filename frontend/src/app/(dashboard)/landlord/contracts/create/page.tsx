@@ -109,18 +109,8 @@ function CreateContractPage() {
   // Load rooms for the active building
   useEffect(() => {
     async function loadRooms() {
-      if (!activeBuilding?.id) return;
-
-      // If activeBuilding ID is not a real UUID (e.g. b1, b2, dormio), load mock rooms seamlessly
-      if (!UUID_REGEX.test(activeBuilding.id)) {
-        const mockRooms: RoomItem[] = [
-          { id: "101", roomNumber: "101", floor: 1, area: "25", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-1", name: "Studio" }, services: [] },
-          { id: "102", roomNumber: "102", floor: 1, area: "25", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-1", name: "Studio" }, services: [] },
-          { id: "103", roomNumber: "103", floor: 1, area: "28", status: "deposited", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-2", name: "1PN" }, services: [] },
-          { id: "201", roomNumber: "201", floor: 2, area: "30", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-2", name: "1PN" }, services: [] },
-          { id: "202", roomNumber: "202", floor: 2, area: "32", status: "available", boardingHouseId: activeBuilding.id, createdAt: new Date().toISOString(), roomType: { id: "rt-3", name: "2PN" }, services: [] },
-        ];
-        setRooms(mockRooms);
+      if (!activeBuilding?.id || !UUID_REGEX.test(activeBuilding.id)) {
+        setRooms([]);
         return;
       }
 
@@ -134,6 +124,7 @@ function CreateContractPage() {
         }
       } catch (err) {
         console.warn("Failed to load rooms from API:", err);
+        setRooms([]);
       } finally {
         setIsLoadingRooms(false);
       }
