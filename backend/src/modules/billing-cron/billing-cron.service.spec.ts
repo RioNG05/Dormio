@@ -3,6 +3,7 @@ import { BillingCronService } from './billing-cron.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InvoicesService } from '../invoices/invoices.service';
+import { DepositsService } from '../deposits/deposits.service';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,10 @@ const mockInvoicesService = {
   flipOverdueInvoices: jest.fn().mockResolvedValue({ count: 0 }),
 };
 
+const mockDepositsService = {
+  processAutoRefundPlatformDeposits: jest.fn().mockResolvedValue(0),
+};
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('BillingCronService', () => {
@@ -70,6 +75,7 @@ describe('BillingCronService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: InvoicesService, useValue: mockInvoicesService },
+        { provide: DepositsService, useValue: mockDepositsService },
       ],
     }).compile();
 

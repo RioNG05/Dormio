@@ -3,16 +3,19 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InvoicesService } from '../invoices/invoices.service';
+import { DepositsService } from '../deposits/deposits.service';
 
 /**
- * BillingCronService — UC-L-06 Part 1 / UC-T-02
+ * BillingCronService — UC-L-06 Part 1 / UC-T-02 / UC-PU-04 Step 7
  *
- * Runs daily at 06:00 and fires two batches of billing notifications:
+ * Runs daily at 06:00 and fires:
  *
  *  1. billing_reminder — for contracts where (monthlyPaymentDate - today) = 5 days
  *  2. billing_due      — for contracts where monthlyPaymentDate = today
  *     - If room has metered services: notifies tenant to submit meter readings (Part 1 Step 3).
  *     - If room has NO metered services: automatically generates flat-rate invoice immediately (Part 3).
+ *  3. flipOverdueInvoices — marks unpaid invoices past due as overdue.
+ *  4. processAutoRefundPlatformDeposits — auto-refunds platform deposits past hold period (UC-PU-04 Step 7).
  *
  * Each notification is written to the DB and enqueued in BullMQ individually
  * (no wrapping $transaction) so a single failure doesn't block the entire batch.
@@ -28,6 +31,7 @@ export class BillingCronService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly invoicesService: InvoicesService,
+    private readonly depositsService: DepositsService,
   ) {}
 
   // ─── Cron: daily at 06:00 ────────────────────────────────────────────────────
@@ -50,6 +54,7 @@ export class BillingCronService {
       this.processBillingReminders(dayReminder),
       this.processBillingDue(dayToday),
       this.invoicesService.flipOverdueInvoices(),
+      this.depositsService.processAutoRefundPlatformDeposits(),
     ]);
 
     this.logger.log('[BillingCron] Completed');

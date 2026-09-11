@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreateManualDepositDto } from './dto/create-manual-deposit.dto';
@@ -18,6 +19,9 @@ import {
   DepositType,
   RoomStatus,
   AuditLogAction,
+  PaymentType,
+  PaymentStatus,
+  PaymentMethod,
   Prisma,
 } from '@prisma';
 
@@ -34,6 +38,8 @@ interface DepositParsedMetadata {
 
 @Injectable()
 export class DepositsService {
+  private readonly logger = new Logger(DepositsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -624,5 +630,205 @@ export class DepositsService {
     });
 
     return this.formatDeposit(updated);
+  }
+
+  // ─── UC-PU-04 Step 7: Auto-Refund Platform Deposits ─────────────────────────
+
+  /**
+   * UC-PU-04 Step 7: Auto-refund job scanning paid platform deposits that have
+   * not been converted into an active contract within the hold period (or where
+   * the tenant rejected the contract, leaving status = 'canceled').
+   *
+   * 1. Scans Deposit WHERE type='platform' AND status='paid' AND (contractId IS NULL OR contract.status='canceled') AND createdAt < cutoff.
+   * 2. Calls gateway refund (or simulates success with original payment transactionRef).
+   * 3. Inserts NEW refund Payment (depositId = null) and links via originalPayment.refundPaymentId.
+   * 4. Updates Deposit.status = 'refund' (enum).
+   * 5. Resets Room.status = 'available' if no other active deposit or contract exists.
+   * 6. Writes AuditLog for both PAYMENT & DEPOSIT in the same transaction.
+   * 7. Outside transaction, notifies the tenant/payer.
+   *
+   * @param holdDaysConfig Optional override for hold period in days (defaults to env PLATFORM_DEPOSIT_HOLD_DAYS or 7)
+   * @returns Number of successfully auto-refunded deposits
+   */
+  async processAutoRefundPlatformDeposits(holdDaysConfig?: number): Promise<number> {
+    const holdDays =
+      holdDaysConfig ??
+      (process.env.PLATFORM_DEPOSIT_HOLD_DAYS
+        ? parseInt(process.env.PLATFORM_DEPOSIT_HOLD_DAYS, 10)
+        : 7);
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - holdDays);
+
+    this.logger.log(
+      `UC-PU-04 Step 7: Scanning platform deposits for auto-refund (holdDays=${holdDays}, cutoff=${cutoffDate.toISOString()})`,
+    );
+
+    const depositsToRefund = await this.prisma.deposit.findMany({
+      where: {
+        type: DepositType.platform,
+        status: DepositStatus.paid,
+        createdAt: { lte: cutoffDate },
+        OR: [
+          { contractId: null },
+          {
+            contract: {
+              status: 'canceled' as any,
+            },
+          },
+        ],
+      },
+      include: {
+        payment: true,
+        room: {
+          include: {
+            boardingHouse: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `UC-PU-04 Step 7: Found ${depositsToRefund.length} expired platform deposit(s) to refund`,
+    );
+
+    let refundedCount = 0;
+
+    for (const deposit of depositsToRefund) {
+      try {
+        const originalPayment = deposit.payment;
+        const refundTxnRef = `REF-${originalPayment?.transactionRef || Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+
+        await this.prisma.$transaction(async (tx) => {
+          // 1. Insert new refund Payment without depositId (Payment.depositId is @unique)
+          const refundPayment = await tx.payment.create({
+            data: {
+              payerId: originalPayment?.payerId || null,
+              type: PaymentType.refund,
+              status: PaymentStatus.success,
+              amount: deposit.amount,
+              method: originalPayment?.method || PaymentMethod.banking,
+              transactionRef: refundTxnRef,
+              receiptNumber: `REC-REF-${Date.now().toString().slice(-6)}`,
+              paidAt: new Date(),
+            },
+          });
+
+          // 2. Link original charge payment to the refund payment
+          if (originalPayment) {
+            await tx.payment.update({
+              where: { id: originalPayment.id },
+              data: {
+                refundPaymentId: refundPayment.id,
+              },
+            });
+          }
+
+          // 3. Update Deposit status to 'refund'
+          await tx.deposit.update({
+            where: { id: deposit.id },
+            data: {
+              status: DepositStatus.refund,
+            },
+          });
+
+          // 4. Check if Room should be restored to 'available'
+          const otherActiveDeposit = await tx.deposit.findFirst({
+            where: {
+              roomId: deposit.roomId,
+              id: { not: deposit.id },
+              status: { in: [DepositStatus.paid, DepositStatus.pending] },
+            },
+          });
+          const activeContract = await tx.contract.findFirst({
+            where: {
+              roomId: deposit.roomId,
+              status: 'active',
+            },
+          });
+
+          if (!otherActiveDeposit && !activeContract) {
+            await tx.room.update({
+              where: { id: deposit.roomId },
+              data: { status: RoomStatus.available },
+            });
+          }
+
+          // 5. AuditLog for PAYMENT (Rule #4)
+          await tx.auditLog.create({
+            data: {
+              action: AuditLogAction.payment,
+              entityType: 'PAYMENT',
+              entityId: refundPayment.id,
+              boardingHouseId: deposit.boardingHouseId,
+              userId: originalPayment?.payerId || deposit.boardingHouseId,
+              ipAddress: '127.0.0.1',
+              newValue: {
+                type: PaymentType.refund,
+                status: PaymentStatus.success,
+                amount: Number(deposit.amount),
+                originalPaymentId: originalPayment?.id,
+              },
+            },
+          });
+
+          // 6. AuditLog for DEPOSIT (Rule #4)
+          await tx.auditLog.create({
+            data: {
+              action: AuditLogAction.update,
+              entityType: 'DEPOSIT',
+              entityId: deposit.id,
+              boardingHouseId: deposit.boardingHouseId,
+              userId: originalPayment?.payerId || deposit.boardingHouseId,
+              ipAddress: '127.0.0.1',
+              newValue: {
+                status: DepositStatus.refund,
+                amount: Number(deposit.amount),
+                reason: 'Auto refund expired platform deposit (UC-PU-04 Step 7)',
+              },
+            },
+          });
+        });
+
+        refundedCount++;
+        this.logger.log(
+          `UC-PU-04 Step 7: Successfully auto-refunded platform deposit ${deposit.id}`,
+        );
+
+        // Outside transaction: notify tenant/payer
+        if (originalPayment?.payerId) {
+          const roomNumber = deposit.room?.roomNumber || '';
+          const formattedAmount = Number(deposit.amount).toLocaleString('vi-VN');
+          const senderId =
+            (deposit.room as any)?.boardingHouse?.ownerId ||
+            deposit.recordedBy ||
+            originalPayment.payerId;
+
+          await this.prisma.notification
+            .create({
+              data: {
+                senderId,
+                receiverId: originalPayment.payerId,
+                boardingHouseId: deposit.boardingHouseId,
+                type: 'deposit_refunded',
+                content: `Khoản đặt cọc giữ chỗ ${formattedAmount} VND cho phòng ${roomNumber} đã được hệ thống hoàn tiền tự động do hết hạn giữ chỗ mà không phát sinh hợp đồng thuê.`,
+                isRead: false,
+              },
+            })
+            .catch((err) => {
+              this.logger.warn(
+                `Could not send auto-refund notification to user ${originalPayment.payerId}: ${err.message}`,
+              );
+            });
+        }
+      } catch (err: any) {
+        this.logger.error(
+          `UC-PU-04 Step 7: Failed to auto-refund deposit ${deposit.id}: ${err.message}`,
+          err.stack,
+        );
+      }
+    }
+
+    return refundedCount;
   }
 }
