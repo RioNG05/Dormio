@@ -111,6 +111,7 @@ const vi = {
     searchQuick: "Tìm nhanh...",
     services: "Dịch vụ",
     settings: "Cài đặt",
+    shifts: "Ca mẫu",
     staff: "Nhân viên",
     staffBadge: "NHÂN VIÊN VẬN HÀNH",
     staffMockBuilding: "KTX HOLA • Khu A",

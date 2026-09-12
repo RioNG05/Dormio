@@ -23,6 +23,9 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { ServicesModule } from './modules/services/services.module';
 import { UsersModule } from './modules/users/users.module';
+import { EmployeesModule } from './modules/employees/employees.module';
+import { SchedulesModule } from './modules/schedules/schedules.module';
+import { AttendanceModule } from './modules/attendance/attendance.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -85,6 +88,9 @@ import { AppService } from './app.service';
     ExpensesModule,
     ServicesModule,
     UsersModule,
+    EmployeesModule,
+    SchedulesModule,
+    AttendanceModule,
     AdminModule,
   ],
 
@@ -121,4 +127,4 @@ import { AppService } from './app.service';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

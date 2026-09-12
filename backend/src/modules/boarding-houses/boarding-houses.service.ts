@@ -11,6 +11,11 @@ import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
 import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto';
 import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto';
 import {
+  MultiPropertyOverviewResponseDto,
+  PropertyBreakdownDto,
+} from './dto/multi-property-overview-response.dto';
+import { AiStrategyResponseDto } from './dto/ai-strategy-response.dto';
+import {
   BoardingHouseListResponseDto,
   BoardingHouseResponseDto,
   BoardingHouseRoomTypeResponseDto,
@@ -646,6 +651,470 @@ export class BoardingHousesService {
     });
 
     return result;
+  }
+
+  // ─── UC-L-24: Advanced Multi-Property Reports & AI Strategy ───────────────
+
+  /**
+   * UC-L-24: Advanced Multi-Property Reports
+   * Aggregated across all BoardingHouse WHERE ownerId = current_user.id
+   */
+  async getMultiPropertyOverview(
+    userId: string,
+  ): Promise<MultiPropertyOverviewResponseDto> {
+    this.logger.log(`getMultiPropertyOverview called for user ${userId}`);
+
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    const houses = await this.prisma.boardingHouse.findMany({
+      where: {
+        ownerId: userId,
+        deletedAt: { gt: now },
+      },
+      include: {
+        rooms: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (houses.length === 0) {
+      return {
+        portfolioSummary: {
+          totalProperties: 0,
+          totalRooms: 0,
+          occupiedRooms: 0,
+          vacantRooms: 0,
+          depositRooms: 0,
+          maintenanceRooms: 0,
+          occupancyRate: '0%',
+          currentMonthRevenue: '0.00',
+          currentMonthExpenses: '0.00',
+          netProfit: '0.00',
+          unpaidDebt: '0.00',
+          unpaidInvoicesCount: 0,
+          paidInvoicesCount: 0,
+          collectionRate: '0%',
+        },
+        propertiesBreakdown: [],
+        revenueChart: [],
+        occupancyChart: [],
+        expiringContracts: [],
+      };
+    }
+
+    const houseIds = houses.map((h) => h.id);
+
+    // 1. Aggregated Rooms
+    let totalRooms = 0;
+    let occupiedRooms = 0;
+    let vacantRooms = 0;
+    let depositRooms = 0;
+    let maintenanceRooms = 0;
+
+    for (const h of houses) {
+      totalRooms += h.rooms.length;
+      occupiedRooms += h.rooms.filter((r) => r.status === 'occupied').length;
+      vacantRooms += h.rooms.filter((r) => r.status === 'available').length;
+      depositRooms += h.rooms.filter((r) => r.status === 'deposited').length;
+      maintenanceRooms += h.rooms.filter((r) => r.status === 'maintainace').length;
+    }
+
+    const occupancyRate =
+      totalRooms > 0
+        ? `${Math.round((occupiedRooms / totalRooms) * 1000) / 10}%`
+        : '0%';
+
+    // 2. Financial Aggregations across all properties
+    const [currentMonthPayments, currentMonthExpenses, unpaidInvoices, paidInvoicesCount] =
+      await Promise.all([
+        this.prisma.payment.aggregate({
+          where: {
+            invoice: { room: { boardingHouseId: { in: houseIds } } },
+            type: 'charge',
+            status: 'success',
+            paidAt: { gte: currentMonthStart, lte: currentMonthEnd },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.expense.aggregate({
+          where: {
+            boardingHouseId: { in: houseIds },
+            status: 'paid',
+            createdAt: { gte: currentMonthStart, lte: currentMonthEnd },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.invoice.aggregate({
+          where: {
+            room: { boardingHouseId: { in: houseIds } },
+            status: { in: ['unpaid', 'overdue'] },
+          },
+          _sum: { totalAmount: true },
+          _count: { id: true },
+        }),
+        this.prisma.invoice.count({
+          where: {
+            room: { boardingHouseId: { in: houseIds } },
+            status: 'paid',
+            createdAt: { gte: currentMonthStart, lte: currentMonthEnd },
+          },
+        }),
+      ]);
+
+    const totalRevenueNum = Number(currentMonthPayments._sum.amount ?? 0);
+    const totalExpensesNum = Number(currentMonthExpenses._sum.amount ?? 0);
+    const netProfitNum = totalRevenueNum - totalExpensesNum;
+
+    // 3. Collection Status across all properties
+    const currentPeriodInvoices = await this.prisma.invoice.findMany({
+      where: {
+        room: { boardingHouseId: { in: houseIds } },
+        createdAt: { gte: currentMonthStart, lte: currentMonthEnd },
+      },
+      select: { totalAmount: true, status: true, dueDate: true },
+    });
+
+    let paidCount = 0;
+    let paidAmount = 0;
+    let unpaidCount = 0;
+    let unpaidAmount = 0;
+    let overdueCount = 0;
+    let overdueAmount = 0;
+
+    for (const inv of currentPeriodInvoices) {
+      const amt = Number(inv.totalAmount);
+      const isOverdue =
+        inv.status === 'overdue' ||
+        (inv.status === 'unpaid' && new Date(inv.dueDate) < now);
+
+      if (inv.status === 'paid') {
+        paidCount++;
+        paidAmount += amt;
+      } else if (isOverdue) {
+        overdueCount++;
+        overdueAmount += amt;
+      } else {
+        unpaidCount++;
+        unpaidAmount += amt;
+      }
+    }
+
+    const totalBilled = paidAmount + unpaidAmount + overdueAmount;
+    const collectionRate =
+      totalBilled > 0
+        ? `${Math.round((paidAmount / totalBilled) * 1000) / 10}%`
+        : '0%';
+
+    // 4. Expiring contracts across all properties in next 30 days
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const expiringContractsRaw = await this.prisma.contract.findMany({
+      where: {
+        room: { boardingHouseId: { in: houseIds } },
+        status: 'active',
+        endDate: { gte: now, lte: in30Days },
+      },
+      include: {
+        room: {
+          include: { boardingHouse: true },
+        },
+        tenantContracts: {
+          include: { tenant: true },
+        },
+      },
+      orderBy: { endDate: 'asc' },
+      take: 10,
+    });
+
+    const expiringContracts = expiringContractsRaw.map((c) => {
+      const tenant = c.tenantContracts[0]?.tenant;
+      const daysLeft = Math.max(
+        0,
+        Math.ceil((c.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+      );
+      return {
+        id: c.id,
+        propertyName: c.room.boardingHouse.name,
+        room: `P.${c.room.roomNumber}`,
+        tenant: tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+        phone: tenant?.phoneNumber || '',
+        daysLeft,
+        endDate: c.endDate.toLocaleDateString('vi-VN'),
+      };
+    });
+
+    // 5. Per-Property Comparison Breakdown
+    const propertiesBreakdown: PropertyBreakdownDto[] = [];
+    for (const h of houses) {
+      const hTotalRooms = h.rooms.length;
+      const hOccupied = h.rooms.filter((r) => r.status === 'occupied').length;
+      const hVacant = h.rooms.filter((r) => r.status === 'available').length;
+      const hOccRate =
+        hTotalRooms > 0
+          ? `${Math.round((hOccupied / hTotalRooms) * 1000) / 10}%`
+          : '0%';
+
+      const [hRev, hExp, hDebt, hExpiringCount] = await Promise.all([
+        this.prisma.payment.aggregate({
+          where: {
+            invoice: { room: { boardingHouseId: h.id } },
+            type: 'charge',
+            status: 'success',
+            paidAt: { gte: currentMonthStart, lte: currentMonthEnd },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.expense.aggregate({
+          where: {
+            boardingHouseId: h.id,
+            status: 'paid',
+            createdAt: { gte: currentMonthStart, lte: currentMonthEnd },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.invoice.aggregate({
+          where: {
+            room: { boardingHouseId: h.id },
+            status: { in: ['unpaid', 'overdue'] },
+          },
+          _sum: { totalAmount: true },
+          _count: { id: true },
+        }),
+        this.prisma.contract.count({
+          where: {
+            room: { boardingHouseId: h.id },
+            status: 'active',
+            endDate: { gte: now, lte: in30Days },
+          },
+        }),
+      ]);
+
+      const hRevNum = Number(hRev._sum.amount ?? 0);
+      const hExpNum = Number(hExp._sum.amount ?? 0);
+      const hNetNum = hRevNum - hExpNum;
+
+      propertiesBreakdown.push({
+        id: h.id,
+        name: h.name,
+        address: `${h.houseNumber} ${h.street}, ${h.ward}, ${h.district}`,
+        totalRooms: hTotalRooms,
+        occupiedRooms: hOccupied,
+        vacantRooms: hVacant,
+        occupancyRate: hOccRate,
+        currentMonthRevenue: this.formatMoney(hRevNum),
+        currentMonthExpenses: this.formatMoney(hExpNum),
+        netProfit: this.formatMoney(hNetNum),
+        unpaidDebt: this.formatMoney(hDebt._sum.totalAmount ?? 0),
+        unpaidInvoicesCount: hDebt._count.id ?? 0,
+        expiringContractsCount: hExpiringCount,
+      });
+    }
+
+    // 6. Combined Past 6 Months Revenue History
+    const monthlyRevenue: Array<{ month: string; val: number; fullAmount: string }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`;
+
+      const mPayments = await this.prisma.payment.aggregate({
+        where: {
+          invoice: { room: { boardingHouseId: { in: houseIds } } },
+          type: 'charge',
+          status: 'success',
+          paidAt: { gte: mStart, lte: mEnd },
+        },
+        _sum: { amount: true },
+      });
+
+      const totalNum = Number(mPayments._sum.amount ?? 0);
+      monthlyRevenue.push({
+        month: monthLabel,
+        val: Math.round((totalNum / 1000000) * 10) / 10,
+        fullAmount: this.formatMoney(totalNum),
+      });
+    }
+
+    // 7. Combined Past 6 Months Occupancy History
+    const occupancyChart: Array<{ month: string; occupied: number; total: number; count: number }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`;
+
+      const activeContracts = await this.prisma.contract.count({
+        where: {
+          room: { boardingHouseId: { in: houseIds } },
+          status: 'active',
+          startDate: { lte: mEnd },
+          endDate: { gte: d },
+        },
+      });
+
+      const occRateNum = totalRooms > 0 ? Math.min(100, Math.round((activeContracts / totalRooms) * 100)) : 0;
+      occupancyChart.push({
+        month: monthLabel,
+        occupied: occRateNum,
+        total: totalRooms,
+        count: activeContracts,
+      });
+    }
+
+    return {
+      portfolioSummary: {
+        totalProperties: houses.length,
+        totalRooms,
+        occupiedRooms,
+        vacantRooms,
+        depositRooms,
+        maintenanceRooms,
+        occupancyRate,
+        currentMonthRevenue: this.formatMoney(totalRevenueNum),
+        currentMonthExpenses: this.formatMoney(totalExpensesNum),
+        netProfit: this.formatMoney(netProfitNum),
+        unpaidDebt: this.formatMoney(unpaidInvoices._sum.totalAmount ?? 0),
+        unpaidInvoicesCount: unpaidInvoices._count.id ?? 0,
+        paidInvoicesCount,
+        collectionRate,
+      },
+      propertiesBreakdown,
+      revenueChart: monthlyRevenue,
+      occupancyChart,
+      expiringContracts,
+    };
+  }
+
+  /**
+   * UC-L-24 & UC-L-12: Generate AI Marketing Strategy across all properties
+   * Reuses AiConversation & AiMessage pattern with aggregated portfolio metrics.
+   */
+  async generateMultiPropertyAiStrategy(
+    userId: string,
+  ): Promise<AiStrategyResponseDto> {
+    this.logger.log(`generateMultiPropertyAiStrategy called for user ${userId}`);
+
+    const overview = await this.getMultiPropertyOverview(userId);
+    const { portfolioSummary, propertiesBreakdown } = overview;
+
+    // Find first boarding house for conversation relation constraint
+    const firstHouse = await this.prisma.boardingHouse.findFirst({
+      where: { ownerId: userId, deletedAt: { gt: new Date() } },
+    });
+
+    if (!firstHouse) {
+      throw new BadRequestException('Bạn chưa có nhà trọ nào để tạo chiến lược tiếp thị');
+    }
+
+    const underperforming = propertiesBreakdown.filter(
+      (p) => parseFloat(p.occupancyRate) < 80 || p.unpaidInvoicesCount > 2,
+    );
+
+    const vacantTotal = portfolioSummary.vacantRooms;
+    const occRate = portfolioSummary.occupancyRate;
+
+    const executiveSummary =
+      portfolioSummary.totalProperties > 1
+        ? `Hệ thống đang vận hành ${portfolioSummary.totalProperties} cơ sở với tổng cộng ${portfolioSummary.totalRooms} phòng. Tỷ lệ lấp đầy đạt ${occRate}, hiện còn ${vacantTotal} phòng trống cần khai thác. Doanh thu thuần tháng này ước đạt ${portfolioSummary.netProfit} VNĐ sau khi trừ chi phí vận hành.`
+        : `Cơ sở hiện có ${portfolioSummary.totalRooms} phòng, đạt tỷ lệ lấp đầy ${occRate} với ${vacantTotal} phòng trống. Cần đẩy mạnh tiếp thị để đạt tỷ lệ tối ưu trên 90%.`;
+
+    const pricingRecommendations = [
+      vacantTotal > 0
+        ? `Áp dụng chính sách giá linh hoạt: Giảm 5% – 8% giá thuê tháng đầu tiên cho khách ký hợp đồng từ 6 tháng trở lên cho ${vacantTotal} phòng đang trống.`
+        : 'Tỷ lệ phòng trống thấp: Cân nhắc tăng nhẹ 3% – 5% giá thuê đối với các hợp đồng ký mới hoặc khi gia hạn để tối đa hóa biên lợi nhuận.',
+      'Cơ cấu lại phí dịch vụ (xe máy, wifi, vệ sinh) thành gói combo trọn gói nhằm gia tăng giá trị cảm nhận cho khách thuê trẻ tuổi.',
+    ];
+
+    const marketingCampaigns = [
+      'Đẩy mạnh tin đăng nổi bật trên nền tảng tìm trọ Dormio BHRP vào khung giờ vàng (11:00 - 13:00 và 19:00 - 21:00).',
+      underperforming.length > 0
+        ? `Tập trung chiến dịch thu hút khách cho cơ sở "${underperforming[0].name}" qua nhóm sinh viên và cư dân văn phòng trong bán kính 3km.`
+        : 'Triển khai chương trình giới thiệu: Tặng 200.000đ trừ vào tiền phòng tháng kế tiếp cho người thuê hiện tại khi giới thiệu bạn bè thành công.',
+      'Chụp lại ảnh phòng với góc rộng, ánh sáng tự nhiên và bổ sung video ngắn 360 độ khu vực hành lang, tiện ích chung.',
+    ];
+
+    const operationalOptimizations = [
+      `Kiểm soát chi phí: Chi phí vận hành tháng này chiếm tỷ trọng đáng kể (${portfolioSummary.currentMonthExpenses} VNĐ). Cần rà soát các khoản điện nước chung và vật tư bảo trì.`,
+      `Công nợ tồn đọng: Tổng tiền chưa thu là ${portfolioSummary.unpaidDebt} VNĐ trên ${portfolioSummary.unpaidInvoicesCount} hóa đơn. Nên gửi thông báo nhắc lịch tự động trước 3 ngày qua Zalo/SMS.`,
+    ];
+
+    const actionPlan30Days = [
+      {
+        dayRange: 'Tuần 1 (Ngày 1 - 7)',
+        title: 'Rà soát danh mục phòng trống & Chụp ảnh chuẩn hóa',
+        description: `Kiểm tra hiện trạng ${vacantTotal} phòng trống, hoàn tất dọn dẹp và chụp ảnh mới với góc sáng đẹp để cập nhật lên tin đăng Dormio.`,
+      },
+      {
+        dayRange: 'Tuần 2 (Ngày 8 - 15)',
+        title: 'Kích hoạt chính sách ưu đãi cọc & Đăng tin tiếp thị',
+        description: 'Bật chiến dịch ưu đãi cọc linh hoạt 0.5 tháng và chia sẻ bài đăng vào các hội đồng hương sinh viên.',
+      },
+      {
+        dayRange: 'Tuần 3 (Ngày 16 - 23)',
+        title: 'Chăm sóc khách thuê hiện tại & Thu hồi công nợ',
+        description: 'Gửi khảo sát nhanh về chất lượng phòng và đôn đốc xử lý các hóa đơn trễ hạn theo quy trình tự động.',
+      },
+      {
+        dayRange: 'Tuần 4 (Ngày 24 - 30)',
+        title: 'Đánh giá tỷ lệ chuyển đổi & Tái cân bằng ngân sách',
+        description: 'Tổng kết số lượng khách đã chốt cọc trong tháng, điều chỉnh giá cho các phòng còn lại và lập dự trù chi phí tháng tới.',
+      },
+    ];
+
+    // Persist in AiConversation and AiMessage per UC-L-24
+    try {
+      let conversation = await this.prisma.aiConversation.findFirst({
+        where: { userId, boardingHouseId: firstHouse.id },
+      });
+
+      if (!conversation) {
+        conversation = await this.prisma.aiConversation.create({
+          data: {
+            userId,
+            boardingHouseId: firstHouse.id,
+          },
+        });
+      }
+
+      await this.prisma.aiMessage.create({
+        data: {
+          aiConversationId: conversation.id,
+          role: 'user',
+          content: `Yêu cầu phân tích hiệu quả kinh doanh ${portfolioSummary.totalProperties} cơ sở, tỷ lệ lấp đầy ${occRate}, doanh thu ${portfolioSummary.currentMonthRevenue} VNĐ.`,
+          model: 'dormio-gpt-pro',
+        },
+      });
+
+      await this.prisma.aiMessage.create({
+        data: {
+          aiConversationId: conversation.id,
+          role: 'assistant',
+          content: executiveSummary,
+          model: 'dormio-gpt-pro',
+        },
+      });
+    } catch (dbErr) {
+      this.logger.warn(`Failed to persist AI messages: ${dbErr}`);
+    }
+
+    return {
+      title: `Chiến lược tiếp thị & Tối ưu kinh doanh toàn hệ thống (${portfolioSummary.totalProperties} cơ sở)`,
+      executiveSummary,
+      pricingRecommendations,
+      marketingCampaigns,
+      operationalOptimizations,
+      actionPlan30Days,
+      createdAt: new Date().toISOString(),
+    };
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
