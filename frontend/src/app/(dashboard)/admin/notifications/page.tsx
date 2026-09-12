@@ -60,6 +60,14 @@ export default function AdminNotificationsPage() {
   const [composeScheduleType, setComposeScheduleType] = useState<"now" | "later">("now");
   const [composeScheduleTime, setComposeScheduleTime] = useState("");
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{
+    channels?: string;
+    targetId?: string;
+    title?: string;
+    content?: string;
+    scheduleTime?: string;
+  }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Inspect Campaign Modal
   const [inspectCampaign, setInspectCampaign] = useState<NotificationCampaign | null>(null);
@@ -305,19 +313,106 @@ export default function AdminNotificationsPage() {
     setComposeScheduleType("now");
     setComposeScheduleTime("");
     setFormError("");
+    setFieldErrors({});
+    setIsSubmitting(false);
+  };
+
+  const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  // Validate form fields matching backend CreateMassNotificationDto & service requirements
+  const validateComposer = (): boolean => {
+    const errors: {
+      channels?: string;
+      targetId?: string;
+      title?: string;
+      content?: string;
+      scheduleTime?: string;
+    } = {};
+
+    // 1. Channel validation: @IsEnum(AdminNotifyChannel), @IsNotEmpty
+    if (!composeChannels || composeChannels.length === 0) {
+      errors.channels = isEn
+        ? "Please select at least one delivery channel (In-App, Email, SMS, or Zalo)."
+        : "Vui lòng chọn ít nhất một kênh phát thông báo (In-App, Email, SMS hoặc Zalo).";
+    }
+
+    // 2. Title validation: @IsString(), @IsNotEmpty(), @MinLength(3)
+    const trimmedTitle = composeTitle.trim();
+    if (!trimmedTitle) {
+      errors.title = isEn
+        ? "Notification title is required."
+        : "Tiêu đề thông báo không được để trống.";
+    } else if (trimmedTitle.length < 3) {
+      errors.title = isEn
+        ? "Notification title must be at least 3 characters long."
+        : "Tiêu đề thông báo phải có ít nhất 3 ký tự.";
+    }
+
+    // 3. Content validation: @IsString(), @IsNotEmpty(), @MinLength(5)
+    const trimmedContent = composeContent.trim();
+    if (!trimmedContent) {
+      errors.content = isEn
+        ? "Message content is required."
+        : "Nội dung thông báo không được để trống.";
+    } else if (trimmedContent.length < 5) {
+      errors.content = isEn
+        ? "Message content must be at least 5 characters long."
+        : "Nội dung thông báo phải có ít nhất 5 ký tự.";
+    }
+
+    // 4. Target validation: specific_user requires targetId & @IsUUID('4')
+    if (composeTarget === "specific_user") {
+      const trimmedId = specificUserId.trim();
+      if (!trimmedId) {
+        errors.targetId = isEn
+          ? "Target user ID is required when target type is specific_user."
+          : "Mã User UUID người nhận là bắt buộc khi chọn đối tượng là người dùng cụ thể.";
+      } else if (!UUID_V4_REGEX.test(trimmedId)) {
+        errors.targetId = isEn
+          ? "Target user ID must be a valid UUID format (e.g., 123e4567-e89b-12d3-a456-426614174000)."
+          : "Mã User ID phải đúng định dạng UUID chuẩn (ví dụ: 123e4567-e89b-12d3-a456-426614174000).";
+      }
+    }
+
+    // 5. Schedule time validation (if scheduling for later)
+    if (composeScheduleType === "later") {
+      if (!composeScheduleTime) {
+        errors.scheduleTime = isEn
+          ? "Please select a scheduled delivery date and time."
+          : "Vui lòng chọn thời gian lên lịch phát thông báo.";
+      } else {
+        const scheduleTimestamp = new Date(composeScheduleTime).getTime();
+        if (isNaN(scheduleTimestamp) || scheduleTimestamp <= Date.now()) {
+          errors.scheduleTime = isEn
+            ? "Scheduled time must be a valid date/time in the future."
+            : "Thời gian lên lịch phát thông báo phải ở tương lai.";
+        }
+      }
+    }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setFormError(
+        isEn
+          ? "Please resolve all validation errors below before dispatching the campaign."
+          : "Vui lòng kiểm tra và sửa các lỗi bên dưới trước khi phát lệnh gửi."
+      );
+      return false;
+    }
+
+    setFormError("");
+    return true;
   };
 
   // Send campaign
   const handleSendCampaign = async () => {
-    if (!composeTitle.trim() || !composeContent.trim()) {
-      setFormError(isEn ? "Please fill in notification title and message content." : "Vui lòng nhập tiêu đề và nội dung thông báo.");
+    if (!validateComposer()) {
       return;
     }
 
-    if (composeTarget === "specific_user" && !specificUserId.trim()) {
-      setFormError(isEn ? "Please enter recipient User UUID." : "Vui lòng nhập mã User UUID của người nhận.");
-      return;
-    }
+    setIsSubmitting(true);
+    setFormError("");
 
     const channelsToSend = composeChannels.length > 0 ? composeChannels : ["in_app"];
 
@@ -334,53 +429,19 @@ export default function AdminNotificationsPage() {
         )
       );
       await fetchLiveCampaigns(true);
-    } catch (err) {
-      console.warn("Failed to create mass notification on backend, saving locally:", err);
-      const newId = `CMP-${Math.floor(Math.random() * 900) + 410}`;
-      let recipients = 12480;
-      let label = isEn ? "All Users" : "Toàn bộ người dùng";
-      if (composeTarget === "all_landlords") {
-        recipients = 3140;
-        label = isEn ? "All Landlords" : "Tất cả Chủ trọ";
-      } else if (composeTarget === "all_tenants") {
-        recipients = 8920;
-        label = isEn ? "All Tenants" : "Tất cả Khách thuê";
-      } else if (composeTarget === "all_staff") {
-        recipients = 420;
-        label = isEn ? "All Staff" : "Tất cả Nhân viên";
-      } else if (composeTarget === "all_admins") {
-        recipients = 15;
-        label = isEn ? "All Admins" : "Quản trị viên";
-      } else if (composeTarget === "specific_user") {
-        recipients = 1;
-        label = `${isEn ? "User" : "Người dùng"}: ${specificUserId.trim()}`;
-      }
-
-      const nowStr = new Date().toISOString().replace("T", " ").substring(0, 16);
-
-      const newCampaign: NotificationCampaign = {
-        id: newId,
-        name: composeName.trim() || composeTitle.trim(),
-        title: composeTitle.trim(),
-        content: composeContent.trim(),
-        targetGroup: composeTarget,
-        targetLabel: label,
-        targetId: composeTarget === "specific_user" ? specificUserId.trim() : undefined,
-        channels: composeChannels,
-        status: composeScheduleType === "now" ? "pending" : "pending",
-        totalRecipients: recipients,
-        sentCount: composeScheduleType === "now" ? Math.floor(recipients * 0.85) : 0,
-        failedCount: 0,
-        createdAt: nowStr,
-        scheduledFor: composeScheduleType === "later" ? composeScheduleTime : undefined,
-        createdBy: "Admin Quản Trị",
-      };
-
-      setCampaigns((prev) => [newCampaign, ...prev]);
+      setIsComposeOpen(false);
+      resetComposer();
+    } catch (err: any) {
+      console.error("Failed to create mass notification on backend:", err);
+      const apiErrorMessage =
+        err?.message ||
+        (isEn
+          ? "Failed to dispatch campaign to backend. Please verify your inputs."
+          : "Gửi chiến dịch thất bại. Vui lòng kiểm tra lại các trường dữ liệu.");
+      setFormError(apiErrorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsComposeOpen(false);
-    resetComposer();
   };
 
   // Retry campaign
@@ -971,10 +1032,16 @@ export default function AdminNotificationsPage() {
 
               {/* Channels Selection */}
               <div className="space-y-1.5">
-                <label className="font-bold text-zinc-700 block">
-                  {isEn ? "Select Dispatch Channels (Pick 1 or multiple):" : "Chọn kênh phát thông báo (Chọn 1 hoặc nhiều kênh):"}
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-zinc-700 block">
+                    {isEn ? "Select Dispatch Channels (Pick 1 or multiple):" : "Chọn kênh phát thông báo (Chọn 1 hoặc nhiều kênh):"}
+                    <span className="text-red-500 ml-1 font-bold">*</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-zinc-400">
+                    {composeChannels.length} {isEn ? "selected" : "đã chọn"}
+                  </span>
+                </div>
+                <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${fieldErrors.channels ? "p-1.5 rounded-2xl ring-2 ring-red-400 bg-red-50/20" : ""}`}>
                   {[
                     { id: "in_app" as const, label: "In-App Notification", icon: Bell, color: "text-blue-600 bg-blue-50" },
                     { id: "email" as const, label: "Email Broadcast", icon: Mail, color: "text-purple-600 bg-purple-50" },
@@ -987,7 +1054,10 @@ export default function AdminNotificationsPage() {
                       <button
                         key={ch.id}
                         type="button"
-                        onClick={() => toggleComposeChannel(ch.id)}
+                        onClick={() => {
+                          toggleComposeChannel(ch.id);
+                          if (fieldErrors.channels) setFieldErrors((prev) => ({ ...prev, channels: undefined }));
+                        }}
                         className={`p-3 rounded-xl border text-left font-bold transition-all cursor-pointer flex flex-col gap-1.5 ${
                           isSelected
                             ? "border-orange-500 bg-orange-50/50 text-orange-700 shadow-2xs"
@@ -1007,12 +1077,19 @@ export default function AdminNotificationsPage() {
                     );
                   })}
                 </div>
+                {fieldErrors.channels && (
+                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.channels}</span>
+                  </p>
+                )}
               </div>
 
               {/* Target Audience Group (Prisma NofifyTarget) */}
               <div className="space-y-1.5">
                 <label className="font-bold text-zinc-700 block">
                   {isEn ? "Target Audience Group:" : "Nhóm đối tượng nhận thông báo:"}
+                  <span className="text-red-500 ml-1 font-bold">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
@@ -1026,7 +1103,12 @@ export default function AdminNotificationsPage() {
                     <button
                       key={t.id}
                       type="button"
-                      onClick={() => setComposeTarget(t.id)}
+                      onClick={() => {
+                        setComposeTarget(t.id);
+                        if (t.id !== "specific_user" && fieldErrors.targetId) {
+                          setFieldErrors((prev) => ({ ...prev, targetId: undefined }));
+                        }
+                      }}
                       className={`px-3 py-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
                         composeTarget === t.id
                           ? "border-orange-500 bg-orange-50 text-orange-700 shadow-2xs"
@@ -1039,81 +1121,168 @@ export default function AdminNotificationsPage() {
                 </div>
 
                 {composeTarget === "specific_user" && (
-                  <div className="space-y-1 pt-1">
-                    <label className="font-bold text-zinc-700 block">
-                      {isEn ? "Recipient User ID or Phone Number:" : "Mã User UUID hoặc SĐT người nhận:"}
-                    </label>
+                  <div className="space-y-1 pt-1.5 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-zinc-700 block">
+                        {isEn ? "Recipient User UUID:" : "Mã User UUID người nhận:"}
+                        <span className="text-red-500 ml-1 font-bold">*</span>
+                      </label>
+                      <span className="text-[10px] font-mono text-zinc-400">UUID v4 format</span>
+                    </div>
                     <input
                       type="text"
                       value={specificUserId}
-                      onChange={(e) => setSpecificUserId(e.target.value)}
-                      placeholder={isEn ? "e.g., 0912.345.678 or user-uuid" : "Ví dụ: 0912.345.678 hoặc mã UUID người dùng"}
-                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
+                      onChange={(e) => {
+                        setSpecificUserId(e.target.value);
+                        if (fieldErrors.targetId) setFieldErrors((prev) => ({ ...prev, targetId: undefined }));
+                      }}
+                      placeholder={isEn ? "e.g., 123e4567-e89b-12d3-a456-426614174000" : "Ví dụ: 123e4567-e89b-12d3-a456-426614174000"}
+                      className={`w-full px-3 py-2 bg-zinc-50 border rounded-xl font-mono text-xs text-zinc-900 focus:outline-none focus:bg-white transition-colors ${
+                        fieldErrors.targetId
+                          ? "border-red-500 focus:border-red-600 bg-red-50/10 ring-1 ring-red-400"
+                          : "border-zinc-200 focus:border-orange-500"
+                      }`}
                     />
+                    {fieldErrors.targetId ? (
+                      <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{fieldErrors.targetId}</span>
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-zinc-400">
+                        {isEn
+                          ? "Must be the exact 36-character UUID of an existing user in the database"
+                          : "Phải là chuỗi UUID 36 ký tự hợp lệ của người dùng tồn tại trong hệ thống"}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Title / Subject */}
+              {/* Title / Subject (min 3 chars per backend) */}
               <div className="space-y-1">
-                <label className="font-bold text-zinc-700 block">
-                  {isEn ? "Notification Title / Email Subject:" : "Tiêu đề thông báo / Chủ đề Email:"}
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-zinc-700 block">
+                    {isEn ? "Notification Title / Email Subject:" : "Tiêu đề thông báo / Chủ đề Email:"}
+                    <span className="text-red-500 ml-1 font-bold">*</span>
+                  </label>
+                  <span className={`text-[10px] font-mono ${
+                    composeTitle.trim().length > 0 && composeTitle.trim().length < 3
+                      ? "text-red-500 font-bold"
+                      : "text-zinc-400 font-medium"
+                  }`}>
+                    {composeTitle.trim().length}/3 {isEn ? "chars min" : "ký tự tối thiểu"}
+                  </span>
+                </div>
                 <input
                   type="text"
                   value={composeTitle}
-                  onChange={(e) => setComposeTitle(e.target.value)}
-                  placeholder={isEn ? "Enter notification headline..." : "Nhập tiêu đề nổi bật gửi đến người dùng..."}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
+                  onChange={(e) => {
+                    setComposeTitle(e.target.value);
+                    if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }));
+                  }}
+                  placeholder={isEn ? "Enter notification headline (min 3 chars)..." : "Nhập tiêu đề nổi bật gửi đến người dùng (tối thiểu 3 ký tự)..."}
+                  className={`w-full px-3 py-2 bg-zinc-50 border rounded-xl font-bold text-zinc-900 focus:outline-none focus:bg-white transition-colors ${
+                    fieldErrors.title
+                      ? "border-red-500 focus:border-red-600 bg-red-50/10 ring-1 ring-red-400"
+                      : "border-zinc-200 focus:border-orange-500"
+                  }`}
                 />
+                {fieldErrors.title && (
+                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.title}</span>
+                  </p>
+                )}
               </div>
 
-              {/* Content / Body */}
+              {/* Content / Body (min 5 chars per backend) */}
               <div className="space-y-1">
-                <label className="font-bold text-zinc-700 block">
-                  {isEn ? "Message Body Content:" : "Nội dung chi tiết thông báo:"}
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-zinc-700 block">
+                    {isEn ? "Message Body Content:" : "Nội dung chi tiết thông báo:"}
+                    <span className="text-red-500 ml-1 font-bold">*</span>
+                  </label>
+                  <span className={`text-[10px] font-mono ${
+                    composeContent.trim().length > 0 && composeContent.trim().length < 5
+                      ? "text-red-500 font-bold"
+                      : "text-zinc-400 font-medium"
+                  }`}>
+                    {composeContent.trim().length}/5 {isEn ? "chars min" : "ký tự tối thiểu"}
+                  </span>
+                </div>
                 <textarea
                   rows={5}
                   value={composeContent}
-                  onChange={(e) => setComposeContent(e.target.value)}
-                  placeholder={isEn ? "Type message body here..." : "Nhập toàn bộ nội dung thông báo cần truyền tải..."}
-                  className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
+                  onChange={(e) => {
+                    setComposeContent(e.target.value);
+                    if (fieldErrors.content) setFieldErrors((prev) => ({ ...prev, content: undefined }));
+                  }}
+                  placeholder={isEn ? "Type message body here (min 5 chars)..." : "Nhập toàn bộ nội dung thông báo cần truyền tải (tối thiểu 5 ký tự)..."}
+                  className={`w-full p-3 bg-zinc-50 border rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:bg-white leading-relaxed transition-colors ${
+                    fieldErrors.content
+                      ? "border-red-500 focus:border-red-600 bg-red-50/10 ring-1 ring-red-400"
+                      : "border-zinc-200 focus:border-orange-500"
+                  }`}
                 />
+                {fieldErrors.content && (
+                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.content}</span>
+                  </p>
+                )}
               </div>
 
               {/* Schedule options */}
-              <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
-                    <input
-                      type="radio"
-                      name="schedule"
-                      checked={composeScheduleType === "now"}
-                      onChange={() => setComposeScheduleType("now")}
-                      className="text-orange-600 focus:ring-orange-500 cursor-pointer"
-                    />
-                    <span>{isEn ? "Send Immediately" : "Gửi ngay bây giờ"}</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
-                    <input
-                      type="radio"
-                      name="schedule"
-                      checked={composeScheduleType === "later"}
-                      onChange={() => setComposeScheduleType("later")}
-                      className="text-orange-600 focus:ring-orange-500 cursor-pointer"
-                    />
-                    <span>{isEn ? "Schedule for later" : "Lên lịch phát sau"}</span>
-                  </label>
-                </div>
+              <div className="space-y-1.5">
+                <div className={`p-3 rounded-2xl bg-zinc-50 border transition-colors ${
+                  fieldErrors.scheduleTime ? "border-red-400 bg-red-50/20 ring-1 ring-red-400" : "border-zinc-100"
+                } flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
+                      <input
+                        type="radio"
+                        name="schedule"
+                        checked={composeScheduleType === "now"}
+                        onChange={() => {
+                          setComposeScheduleType("now");
+                          if (fieldErrors.scheduleTime) setFieldErrors((prev) => ({ ...prev, scheduleTime: undefined }));
+                        }}
+                        className="text-orange-600 focus:ring-orange-500 cursor-pointer"
+                      />
+                      <span>{isEn ? "Send Immediately" : "Gửi ngay bây giờ"}</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
+                      <input
+                        type="radio"
+                        name="schedule"
+                        checked={composeScheduleType === "later"}
+                        onChange={() => setComposeScheduleType("later")}
+                        className="text-orange-600 focus:ring-orange-500 cursor-pointer"
+                      />
+                      <span>{isEn ? "Schedule for later" : "Lên lịch phát sau"}</span>
+                    </label>
+                  </div>
 
-                {composeScheduleType === "later" && (
-                  <input
-                    type="datetime-local"
-                    value={composeScheduleTime}
-                    onChange={(e) => setComposeScheduleTime(e.target.value)}
-                    className="px-3 py-1.5 bg-white border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-orange-500"
-                  />
+                  {composeScheduleType === "later" && (
+                    <input
+                      type="datetime-local"
+                      value={composeScheduleTime}
+                      onChange={(e) => {
+                        setComposeScheduleTime(e.target.value);
+                        if (fieldErrors.scheduleTime) setFieldErrors((prev) => ({ ...prev, scheduleTime: undefined }));
+                      }}
+                      className={`px-3 py-1.5 bg-white border rounded-xl text-xs font-bold text-zinc-800 focus:outline-none ${
+                        fieldErrors.scheduleTime ? "border-red-500 focus:border-red-600" : "border-zinc-200 focus:border-orange-500"
+                      }`}
+                    />
+                  )}
+                </div>
+                {fieldErrors.scheduleTime && (
+                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.scheduleTime}</span>
+                  </p>
                 )}
               </div>
             </div>
@@ -1121,16 +1290,27 @@ export default function AdminNotificationsPage() {
             <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
               <button
                 onClick={handleRequestCloseComposer}
-                className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
+                disabled={isSubmitting}
+                className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 disabled:opacity-50 transition-colors cursor-pointer"
               >
                 {isEn ? "Cancel" : "Hủy bỏ"}
               </button>
               <button
                 onClick={handleSendCampaign}
-                className="px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+                disabled={isSubmitting}
+                className="px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>{isEn ? "Dispatch Campaign" : "Phát Lệnh Gửi"}</span>
+                {isSubmitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                    <span>{isEn ? "Dispatching..." : "Đang phát lệnh..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isEn ? "Dispatch Campaign" : "Phát Lệnh Gửi"}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

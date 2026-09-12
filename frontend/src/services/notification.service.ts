@@ -37,8 +37,11 @@ export function resolveNotificationTarget(
     type === 'broadcast' ||
     type === 'happy_new_year' ||
     type === 'system_greeting' ||
+    type === 'system_broadcast' ||
+    type === 'maintenance_broadcast' ||
     type.includes('greeting') ||
-    type.includes('tet')
+    type.includes('tet') ||
+    type.includes('broadcast')
   ) {
     return null;
   }
@@ -69,7 +72,7 @@ export function resolveNotificationTarget(
   }
 
   // Grievances / maintenance
-  if (type === 'grievance' || type.includes('support')) {
+  if (type === 'grievance' || type === 'grievance_resolved' || type.includes('support')) {
     if (userRole === 'admin') return '/admin/boarding-houses';
     if (userRole === 'landlord') return '/landlord/maintenance';
     return '/tenant/support';
@@ -121,8 +124,13 @@ export const notificationService = {
   async getMyNotifications(): Promise<InAppNotification[]> {
     try {
       const response = await api.get<any>('/v1/notifications', { silent: true });
-      const list = response?.data || response;
-      if (Array.isArray(list) && list.length > 0) {
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+        ? response.data
+        : null;
+
+      if (list !== null) {
         return list;
       }
       return DEFAULT_MOCK_NOTIFICATIONS;
@@ -135,6 +143,14 @@ export const notificationService = {
     try {
       if (id.startsWith('mock-')) return;
       await api.patch(`/v1/notifications/${id}/read`, {}, { silent: true });
+    } catch {
+      // Graceful fallback
+    }
+  },
+
+  async markAllAsRead(): Promise<void> {
+    try {
+      await api.patch('/v1/notifications/read-all', {}, { silent: true });
     } catch {
       // Graceful fallback
     }

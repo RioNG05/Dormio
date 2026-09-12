@@ -85,15 +85,9 @@ export default function NotificationBell({ align = "right", className = "" }: No
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((n) => {
-        if (!n.isRead) {
-          notificationService.markAsRead(n.id);
-        }
-        return { ...n, isRead: true };
-      })
-    );
+  const handleMarkAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    await notificationService.markAllAsRead();
   };
 
   const handleNotificationClick = (item: InAppNotification) => {

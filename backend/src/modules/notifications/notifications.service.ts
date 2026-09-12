@@ -4,12 +4,14 @@ import {
   ForbiddenException,
   BadRequestException,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BroadcastAnnouncementDto } from './dto/broadcast-announcement.dto';
 import { AnnouncementQueryDto } from './dto/announcement-query.dto';
+import { CreateNotificationDto } from './dto/create-notification.dto';
 import {
   LandlordAnnouncementItemDto,
   LandlordAnnouncementsResponseDto,
@@ -62,13 +64,105 @@ export interface DebtReminderNotificationParams {
 }
 
 @Injectable()
-export class NotificationsService {
+export class NotificationsService implements OnModuleInit {
   private readonly logger = new Logger(NotificationsService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     @InjectQueue(NOTIFICATION_QUEUE) private readonly notifQueue: Queue,
   ) {}
+
+  async onModuleInit() {
+    await this.ensureDefaultNotifications();
+  }
+
+  /**
+   * Ensures default realistic notifications exist in the DB (system greetings, notices)
+   */
+  async ensureDefaultNotifications(): Promise<void> {
+    try {
+      const admin = await this.prisma.user.findFirst({
+        where: { role: 'admin' },
+      });
+      if (!admin) return;
+
+      const happyNewYearCount = await this.prisma.notification.count({
+        where: { type: 'happy_new_year' },
+      });
+
+      if (happyNewYearCount === 0) {
+        await this.prisma.notification.create({
+          data: {
+            senderId: admin.id,
+            receiverId: null,
+            boardingHouseId: null,
+            type: 'happy_new_year',
+            content: JSON.stringify({
+              title: 'Chúc mừng năm mới từ Dormio Team',
+              content: 'Dormio kính chúc Quý khách hàng và cư dân một năm mới An Khang Thịnh Vượng, Vạn Sự Như Ý!',
+              targetUrl: null,
+            }),
+            isRead: false,
+          },
+        });
+        this.logger.log('Seeded global happy_new_year notification in database');
+      }
+
+      // Check tenant notifications
+      const tenants = await this.prisma.user.findMany({
+        where: { role: 'tenant' },
+        take: 5,
+      });
+
+      for (const tenant of tenants) {
+        const notifCount = await this.prisma.notification.count({
+          where: { receiverId: tenant.id },
+        });
+
+        if (notifCount === 0) {
+          await this.prisma.notification.createMany({
+            data: [
+              {
+                senderId: admin.id,
+                receiverId: tenant.id,
+                type: 'rental_payment',
+                content: JSON.stringify({
+                  title: 'Đến hạn thanh toán tiền trọ',
+                  content: 'Hóa đơn tiền phòng tháng 09/2026 đã sẵn sàng. Hạn thanh toán đến hết ngày 15/09/2026.',
+                  targetUrl: '/tenant/invoices',
+                }),
+                isRead: false,
+              },
+              {
+                senderId: admin.id,
+                receiverId: tenant.id,
+                type: 'contract_created',
+                content: JSON.stringify({
+                  title: 'Hợp đồng thuê phòng mới',
+                  content: 'Chủ nhà trọ đã gửi bản cập nhật hợp đồng thuê phòng cho bạn. Vui lòng kiểm tra.',
+                  targetUrl: '/tenant/contracts',
+                }),
+                isRead: true,
+              },
+              {
+                senderId: admin.id,
+                receiverId: tenant.id,
+                type: 'meter_reading',
+                content: JSON.stringify({
+                  title: 'Chỉ số điện nước kỳ mới',
+                  content: 'Đã có chỉ số điện nước tháng này. Nhấn để kiểm tra và xác nhận số liệu.',
+                  targetUrl: '/tenant/meter-readings',
+                }),
+                isRead: true,
+              },
+            ],
+          });
+        }
+      }
+    } catch (err: any) {
+      this.logger.warn(`Failed to seed default notifications: ${err?.message}`);
+    }
+  }
 
   // ─── UC-T-01: Create onboarding notification ────────────────────────────────
 
@@ -114,18 +208,55 @@ export class NotificationsService {
     );
   }
 
-  // ─── Read notifications for the authenticated user ──────────────────────────
+  // ─── Read notifications for the authenticated user or guest ─────────────────
 
   /**
-   * Returns all notifications received by a specific user, newest-first.
-   * Scope: receiverId = userId (only their own notifications).
+   * Returns in-app notifications for the user, newest-first.
+   * If userId is provided: includes direct notifications + active house announcements + global broadcasts.
+   * If userId is omitted (guest): includes global system announcements (e.g. holiday greetings).
    */
-  async findAllForUser(userId: string) {
-    return this.prisma.notification.findMany({
-      where: {
-        receiverId: userId,
-      },
+  async findAllForUser(userId?: string) {
+    let whereClause: any;
+
+    if (userId) {
+      // Find active houses associated with the user
+      const activeContracts = await this.prisma.tenantContract.findMany({
+        where: { tenantId: userId, contract: { status: 'active' } },
+        select: { contract: { select: { room: { select: { boardingHouseId: true } } } } },
+      });
+      const tenantHouseIds = activeContracts
+        .map((c) => c.contract?.room?.boardingHouseId)
+        .filter((id): id is string => Boolean(id));
+
+      const ownedHouses = await this.prisma.boardingHouse.findMany({
+        where: { ownerId: userId, status: 'active' },
+        select: { id: true },
+      });
+      const landlordHouseIds = ownedHouses.map((h) => h.id);
+
+      const relevantHouseIds = Array.from(new Set([...tenantHouseIds, ...landlordHouseIds]));
+
+      whereClause = {
+        OR: [
+          { receiverId: userId },
+          ...(relevantHouseIds.length > 0
+            ? [{ receiverId: null, boardingHouseId: { in: relevantHouseIds } }]
+            : []),
+          { receiverId: null, boardingHouseId: null },
+        ],
+      };
+    } else {
+      // Guest: global system broadcasts only
+      whereClause = {
+        receiverId: null,
+        boardingHouseId: null,
+      };
+    }
+
+    const rawList = await this.prisma.notification.findMany({
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
+      take: 50,
       select: {
         id: true,
         boardingHouseId: true,
@@ -137,15 +268,122 @@ export class NotificationsService {
         createdAt: true,
       },
     });
+
+    let userRole = 'tenant';
+    if (userId) {
+      const u = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      if (u) userRole = u.role;
+    }
+
+    return rawList.map((item) => this.formatNotificationItem(item, userRole));
+  }
+
+  private formatNotificationItem(item: any, userRole: string) {
+    let title: string | undefined;
+    let content = item.content;
+    let targetUrl: string | null = null;
+
+    if (typeof content === 'string' && content.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed.title) title = parsed.title;
+        if (parsed.content) content = parsed.content;
+        if (parsed.targetUrl !== undefined) targetUrl = parsed.targetUrl;
+      } catch {
+        // Fallback to raw string
+      }
+    }
+
+    if (targetUrl === null || targetUrl === undefined) {
+      targetUrl = this.resolveTargetUrl(item.type, userRole);
+    }
+
+    if (!title) {
+      title = this.resolveDefaultTitle(item.type, content);
+    }
+
+    return {
+      id: item.id,
+      boardingHouseId: item.boardingHouseId,
+      senderId: item.senderId,
+      receiverId: item.receiverId,
+      title,
+      content,
+      type: item.type,
+      isRead: item.isRead,
+      targetUrl,
+      createdAt: item.createdAt,
+    };
+  }
+
+  private resolveTargetUrl(type: string, userRole?: string): string | null {
+    const t = type.toLowerCase();
+    // System broadcasts & greetings: no redirection
+    if (
+      t === 'broadcast' ||
+      t === 'happy_new_year' ||
+      t === 'system_broadcast' ||
+      t === 'general_notice' ||
+      t === 'announcement' ||
+      t.includes('greeting') ||
+      t.includes('tet')
+    ) {
+      return null;
+    }
+
+    if (
+      t === 'billing_due' ||
+      t === 'billing_reminder' ||
+      t === 'rental_payment' ||
+      t.includes('billing') ||
+      t.includes('invoice') ||
+      t.includes('payment')
+    ) {
+      return userRole === 'landlord' ? '/landlord/invoices' : '/tenant/invoices';
+    }
+
+    if (t === 'contract_created' || t === 'contract_expiring' || t.includes('contract')) {
+      return userRole === 'landlord' ? '/landlord/contracts' : '/tenant/contracts';
+    }
+
+    if (t === 'meter_reading' || t.includes('meter')) {
+      return userRole === 'landlord' ? '/landlord/meter-readings' : '/tenant/meter-readings';
+    }
+
+    if (t === 'grievance' || t === 'grievance_resolved' || t.includes('support')) {
+      if (userRole === 'admin') return '/admin/boarding-houses';
+      if (userRole === 'landlord') return '/landlord/maintenance';
+      return '/tenant/support';
+    }
+
+    return null;
+  }
+
+  private resolveDefaultTitle(type: string, content: string): string {
+    const t = type.toLowerCase();
+    if (t === 'happy_new_year' || t.includes('tet')) return 'Chúc mừng năm mới từ Dormio Team';
+    if (t === 'billing_due' || t === 'rental_payment' || t === 'billing_reminder')
+      return 'Đến hạn thanh toán tiền trọ';
+    if (t === 'contract_created') return 'Hợp đồng thuê phòng mới';
+    if (t === 'contract_expiring') return 'Hợp đồng thuê sắp hết hạn';
+    if (t === 'meter_reading') return 'Thông báo chỉ số điện nước';
+    if (t === 'grievance_resolved') return 'Khiếu nại đã được xử lý';
+    if (t === 'grievance') return 'Thông báo khiếu nại phòng';
+    if (t === 'announcement' || t === 'general_notice') return 'Thông báo từ Ban quản lý';
+    if (t === 'system_broadcast') return 'Thông báo hệ thống';
+
+    return content.split('\n')[0]?.slice(0, 45) || 'Thông báo mới';
   }
 
   // ─── Mark as read ────────────────────────────────────────────────────────────
 
   /**
    * Marks a notification as read.
-   * Validates that the notification belongs to the requesting user.
    */
-  async markAsRead(notificationId: string, userId: string): Promise<void> {
+  async markAsRead(notificationId: string, userId?: string): Promise<void> {
     const notification = await this.prisma.notification.findUnique({
       where: { id: notificationId },
     });
@@ -154,14 +392,85 @@ export class NotificationsService {
       throw new NotFoundException('notification_not_found');
     }
 
-    if (notification.receiverId !== userId) {
-      throw new ForbiddenException('notification_not_owned_by_user');
+    if (notification.receiverId && userId && notification.receiverId !== userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      if (user?.role !== 'admin') {
+        throw new ForbiddenException('notification_not_owned_by_user');
+      }
     }
 
     await this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
     });
+  }
+
+  // ─── Mark all notifications as read ──────────────────────────────────────────
+
+  /**
+   * Marks all notifications as read for the user (or unread broadcasts for guest).
+   */
+  async markAllAsRead(userId?: string): Promise<{ success: boolean; count: number }> {
+    if (userId) {
+      const userNotifs = await this.prisma.notification.updateMany({
+        where: {
+          receiverId: userId,
+          isRead: false,
+        },
+        data: { isRead: true },
+      });
+
+      const broadcastNotifs = await this.prisma.notification.updateMany({
+        where: {
+          receiverId: null,
+          isRead: false,
+        },
+        data: { isRead: true },
+      });
+
+      return { success: true, count: userNotifs.count + broadcastNotifs.count };
+    } else {
+      const result = await this.prisma.notification.updateMany({
+        where: {
+          receiverId: null,
+          isRead: false,
+        },
+        data: { isRead: true },
+      });
+      return { success: true, count: result.count };
+    }
+  }
+
+  // ─── Create In-App Notification ──────────────────────────────────────────────
+
+  /**
+   * Creates and stores an in-app notification directly.
+   */
+  async createInAppNotification(senderId: string, dto: CreateNotificationDto) {
+    const payload = dto.title
+      ? JSON.stringify({
+          title: dto.title.trim(),
+          content: dto.content.trim(),
+          targetUrl: dto.targetUrl?.trim() || null,
+        })
+      : dto.content.trim();
+
+    const notif = await this.prisma.notification.create({
+      data: {
+        senderId,
+        receiverId: dto.receiverId || null,
+        boardingHouseId: dto.boardingHouseId || null,
+        type: dto.type.trim(),
+        content: payload,
+        isRead: false,
+      },
+    });
+
+    this.logger.log(`Created in-app notification ${notif.id} of type ${notif.type}`);
+    return this.formatNotificationItem(notif, 'tenant');
   }
 
   // ─── UC-T-02: Billing reminder (5 days before due date) ─────────────────────
