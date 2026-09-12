@@ -403,5 +403,104 @@ export async function getBoardingHouseDetail(id: string): Promise<AdminBoardingH
   return (response?.data?.data || response?.data || response) as AdminBoardingHouseDetail;
 }
 
+export interface AdminHousesFilterParams {
+  propertyQuery?: string;
+  landlordQuery?: string;
+  minRooms?: number | string;
+  maxRooms?: number | string;
+  minOccupancy?: number | string;
+  maxOccupancy?: number | string;
+  status?: string; // Comma-separated or single, e.g. "active,reported"
+  page?: number;
+  limit?: number;
+}
+
+export interface AdminHouseModerationItem {
+  id: string;
+  name: string;
+  landlordName: string;
+  landlordPhone: string;
+  landlordEmail: string;
+  address: string;
+  totalRooms: number;
+  occupiedRooms: number;
+  occupancyRate: number;
+  status: 'active' | 'locked' | 'reported';
+  reportsCount: number;
+  reportReasons: string[];
+  lockReason?: string;
+  lockedAt?: string;
+  createdAt: string;
+  coverImage: string;
+}
+
+export interface AdminHousesListResponse {
+  success: boolean;
+  data: AdminHouseModerationItem[];
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * Fetch boarding houses for admin moderation with multi-value filtering and pagination.
+ */
+export async function getAdminHouses(
+  params?: AdminHousesFilterParams,
+): Promise<AdminHousesListResponse> {
+  const queryParams: Record<string, string> = {};
+
+  if (params?.propertyQuery?.trim()) queryParams.propertyQuery = params.propertyQuery.trim();
+  if (params?.landlordQuery?.trim()) queryParams.landlordQuery = params.landlordQuery.trim();
+  if (params?.minRooms !== undefined && params.minRooms !== '' && params.minRooms !== null) {
+    queryParams.minRooms = String(params.minRooms);
+  }
+  if (params?.maxRooms !== undefined && params.maxRooms !== '' && params.maxRooms !== null) {
+    queryParams.maxRooms = String(params.maxRooms);
+  }
+  if (params?.minOccupancy !== undefined && params.minOccupancy !== '' && params.minOccupancy !== null) {
+    queryParams.minOccupancy = String(params.minOccupancy);
+  }
+  if (params?.maxOccupancy !== undefined && params.maxOccupancy !== '' && params.maxOccupancy !== null) {
+    queryParams.maxOccupancy = String(params.maxOccupancy);
+  }
+  if (params?.status && params.status !== 'all') {
+    queryParams.status = params.status;
+  }
+  if (params?.page) queryParams.page = String(params.page);
+  if (params?.limit) queryParams.limit = String(params.limit);
+
+  const response = await api.get<AdminHousesListResponse>('/v1/admin/houses', {
+    params: queryParams,
+    silent: true,
+  });
+
+  return response;
+}
+
+/**
+ * Lock a boarding house with reason.
+ */
+export async function lockAdminHouse(id: string, reason: string): Promise<any> {
+  return api.patch(`/v1/admin/houses/${id}/lock`, { reason });
+}
+
+/**
+ * Unlock a boarding house.
+ */
+export async function unlockAdminHouse(id: string): Promise<any> {
+  return api.patch(`/v1/admin/houses/${id}/unlock`);
+}
+
+
 
 

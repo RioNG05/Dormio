@@ -33,6 +33,7 @@ export type ValidNamespace =
   | "admin";
 
 const legacyNamespaceMap: Record<string, ValidNamespace> = {
+  languageSwitcher: "common",
   staffPortal: "employee",
   staff: "employee",
   tenantPortal: "tenant",

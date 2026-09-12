@@ -6,8 +6,11 @@ import { AdminNotificationsController } from './admin-notifications.controller';
 import { NotificationsService, NOTIFICATION_QUEUE } from './notifications.service';
 import { NotificationProcessor } from './notifications.processor';
 
+import { AuthModule } from '../auth/auth.module';
+
 @Module({
   imports: [
+    AuthModule,
     BullModule.registerQueue({
       name: NOTIFICATION_QUEUE,
     }),

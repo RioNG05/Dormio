@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: tNav("adminOverview"), href: "/admin", icon: LayoutDashboard },
     { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
     { name: tNav("adminPostModeration"), href: "/admin/blogs", icon: ShieldCheck },
-    { name: tNav("adminHouseModeration"), href: "/admin/boarding-houses", icon: Building2 },
+    { name: tNav("adminHouseModeration"), href: "/admin/houses", icon: Building2 },
     { name: tNav("adminGrievances"), href: "/admin/grievances", icon: AlertTriangle },
     { name: tNav("adminNotifications"), href: "/admin/notifications", icon: Megaphone },
   ];
