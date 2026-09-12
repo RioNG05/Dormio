@@ -309,17 +309,6 @@ export default function AdminPostModerationPage() {
     }
   };
 
-  // --- Edit Post Flow (Rule #10 compliant) ---
-  const handleOpenEdit = (item: PublicPostListing) => {
-    setEditTarget(item);
-    setEditTitle(item.title || "");
-    setEditContent(item.content || "");
-    setEditDeposit(Number(item.depositAmount) || 0);
-    setEditCoverImage(item.images?.[0]?.url || "");
-    setEditStatus((item.status as any) || "posted");
-    setEditError("");
-  };
-
   const isEditDirty = useMemo(() => {
     if (!editTarget) return false;
     return (
@@ -341,43 +330,6 @@ export default function AdminPostModerationPage() {
       });
     } else {
       setEditTarget(null);
-    }
-  };
-
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editTarget) return;
-
-    if (editTitle.trim().length < 5) {
-      setEditError(t("adminBlogsErrorTitleLength"));
-      return;
-    }
-    if (editContent.trim().length < 10) {
-      setEditError(t("adminBlogsErrorContentLength"));
-      return;
-    }
-
-    setIsSavingEdit(true);
-    setEditError("");
-    try {
-      await postService.updatePost(editTarget.id, {
-        title: editTitle.trim(),
-        content: editContent.trim(),
-        depositAmount: Number(editDeposit) || 0,
-        imageUrls: editCoverImage.trim() ? [editCoverImage.trim()] : [],
-        status: editStatus,
-      });
-
-      await fetchPosts(true);
-
-      setEditTarget(null);
-      setFeedbackMsg({ type: "success", text: t("adminBlogsDetailSaveChanges") });
-      setTimeout(() => setFeedbackMsg(null), 4000);
-    } catch (err: any) {
-      console.error("Failed to update post:", err);
-      setEditError(err?.response?.data?.message || t("adminBlogsFetchError"));
-    } finally {
-      setIsSavingEdit(false);
     }
   };
 
@@ -573,14 +525,10 @@ export default function AdminPostModerationPage() {
 
       {/* Post count summary */}
       {!loading && (
-        <div className="flex items-center justify-between px-2 text-xs font-semibold text-zinc-500">
-          <span>
-            {t("adminBlogsShowingCount", { count: posts.length, total: totalItems })}
-          </span>
-          <span className="text-[11px] text-zinc-400 font-mono">
-            {t("adminBlogsSortedByNewest")}
-          </span>
-        </div>
+        <span className="text-xs font-semibold text-zinc-500 pl-2">
+          {t("adminBlogsShowingCount", { total: totalItems })}
+        </span>
+
       )}
 
       {/* Main Table View with Direct Column Filters */}
@@ -621,7 +569,7 @@ export default function AdminPostModerationPage() {
                         setFilterArticle(e.target.value);
                         setCurrentPage(1);
                       }}
-                      placeholder={locale === "en" ? "Filter title, author..." : "Lọc tiêu đề, tác giả..."}
+                      placeholder={t("adminBlogsFilterArticlePlaceholder")}
                       className="w-full pl-8 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
                     />
                     {filterArticle && (
@@ -648,7 +596,7 @@ export default function AdminPostModerationPage() {
                     }}
                     className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
-                    <option value="all">{locale === "en" ? "All Properties" : "Tất cả nhà trọ"}</option>
+                    <option value="all">{t("adminBlogsFilterPropertyAll")}</option>
                     {availableProperties.map((propName) => (
                       <option key={propName} value={propName}>
                         {propName}
@@ -672,11 +620,11 @@ export default function AdminPostModerationPage() {
                     }}
                     className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
-                    <option value="all">{locale === "en" ? "All Deposits" : "Tất cả mức cọc"}</option>
-                    <option value="free">{locale === "en" ? "0 ₫ (Free Deposit)" : "0 ₫ (Miễn cọc)"}</option>
-                    <option value="under_2m">{locale === "en" ? "< 2M ₫" : "< 2 triệu ₫"}</option>
-                    <option value="2m_5m">{locale === "en" ? "2M - 5M ₫" : "2 - 5 triệu ₫"}</option>
-                    <option value="above_5m">{locale === "en" ? "> 5M ₫" : "> 5 triệu ₫"}</option>
+                    <option value="all">{t("adminBlogsFilterDepositAll")}</option>
+                    <option value="free">{t("adminBlogsFilterDepositFree")}</option>
+                    <option value="under_2m">{t("adminBlogsFilterDepositUnder2m")}</option>
+                    <option value="2m_5m">{t("adminBlogsFilterDeposit2m5m")}</option>
+                    <option value="above_5m">{t("adminBlogsFilterDepositAbove5m")}</option>
                   </select>
                 </th>
 
@@ -705,10 +653,10 @@ export default function AdminPostModerationPage() {
                     <button
                       onClick={handleResetFilters}
                       className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
-                      title={locale === "en" ? "Reset all column filters" : "Đặt lại tất cả bộ lọc"}
+                      title={t("adminBlogsFilterResetTooltip")}
                     >
                       <RotateCcw className="w-3 h-3" />
-                      <span>{locale === "en" ? "Reset" : "Đặt lại"}</span>
+                      <span>{t("adminBlogsFilterReset")}</span>
                     </button>
                   )}
                 </th>
@@ -725,12 +673,12 @@ export default function AdminPostModerationPage() {
                       </div>
                       <h3 className="text-base font-bold text-zinc-800">
                         {isAnyFilterActive
-                          ? (locale === "en" ? "No posts match current filters" : "Không tìm thấy bài viết phù hợp bộ lọc")
+                          ? t("adminBlogsFilterNoMatchTitle")
                           : t("adminBlogsNoPosts")}
                       </h3>
                       <p className="text-xs text-zinc-400 max-w-sm mx-auto">
                         {isAnyFilterActive
-                          ? (locale === "en" ? "Try adjusting or clearing your column filters." : "Thử điều chỉnh hoặc đặt lại các bộ lọc theo cột.")
+                          ? t("adminBlogsFilterNoMatchDesc")
                           : t("adminBlogsNoPostsDesc")}
                       </p>
                       {isAnyFilterActive ? (
@@ -739,7 +687,7 @@ export default function AdminPostModerationPage() {
                           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs transition-colors cursor-pointer"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span>{locale === "en" ? "Clear Filters" : "Xóa bộ lọc"}</span>
+                          <span>{t("adminBlogsFilterReset")}</span>
                         </button>
                       ) : (
                         <button
@@ -822,23 +770,22 @@ export default function AdminPostModerationPage() {
 
                       <td className="p-3.5 space-y-1">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block ${
-                            item.status === "posted"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : item.status === "draft"
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block ${item.status === "posted"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : item.status === "draft"
                               ? "bg-amber-100 text-amber-800"
                               : item.status === "locked"
-                              ? "bg-red-100 text-red-800 ring-1 ring-red-300"
-                              : "bg-zinc-100 text-zinc-700"
-                          }`}
+                                ? "bg-red-100 text-red-800 ring-1 ring-red-300"
+                                : "bg-zinc-100 text-zinc-700"
+                            }`}
                         >
                           {item.status === "posted"
                             ? t("adminModBadgePosted")
                             : item.status === "draft"
-                            ? t("adminModBadgeDraft")
-                            : item.status === "locked"
-                            ? t("adminModBadgeLocked")
-                            : t("adminModBadgeHidden")}
+                              ? t("adminModBadgeDraft")
+                              : item.status === "locked"
+                                ? t("adminModBadgeLocked")
+                                : t("adminModBadgeHidden")}
                         </span>
 
                         {isReported && (
@@ -1102,134 +1049,6 @@ export default function AdminPostModerationPage() {
                 <span>{t("adminModUnlockConfirmBtn")}</span>
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 4: EDIT POST MODAL (Rule #10 compliant) ─── */}
-      {editTarget && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-          onClick={handleRequestCloseEdit}
-        >
-          <div
-            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8 animate-scaleIn max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-                  <Edit3 className="w-4 h-4" />
-                </div>
-                <h2 className="text-base font-black text-zinc-900">
-                  {t("adminBlogsDetailEditModalTitle")}
-                </h2>
-              </div>
-              <button
-                onClick={handleRequestCloseEdit}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {editError && (
-              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{editError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveEdit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t("adminBlogsFieldTitle")} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t("adminBlogsFieldCoverImage")}
-                </label>
-                <input
-                  type="url"
-                  value={editCoverImage}
-                  onChange={(e) => setEditCoverImage(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t("adminBlogsFieldContent")} <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={5}
-                  required
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700 block">
-                    {t("adminBlogsFieldDeposit")}
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={50000}
-                    value={editDeposit}
-                    onChange={(e) => setEditDeposit(Number(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700 block">
-                    {t("adminBlogsFieldStatus")}
-                  </label>
-                  <select
-                    value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white cursor-pointer"
-                  >
-                    <option value="posted">{t("adminModFilterPosted")}</option>
-                    <option value="draft">{t("adminModFilterDraft")}</option>
-                    <option value="hidden">{t("adminModFilterHidden")}</option>
-                    <option value="locked">{t("adminModFilterLocked")}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100">
-                <button
-                  type="button"
-                  onClick={handleRequestCloseEdit}
-                  disabled={isSavingEdit}
-                  className="px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
-                >
-                  {t("adminBlogsCancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingEdit}
-                  className="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {isSavingEdit && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{t("adminBlogsDetailSaveChanges")}</span>
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
