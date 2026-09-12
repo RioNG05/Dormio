@@ -30,6 +30,12 @@ const en = {
     statusCanceled: "Canceled",
     statusPaid: "Paid",
     statusPending: "Pending",
+    switchToEn: "Switch to English",
+    switchToOtherLang: "Switch to Vietnamese",
+    switchToVi: "Switch to Vietnamese",
+    toggleLanguage: "Switch language",
+    langVi: "VI",
+    langEn: "EN",
     viewDetail: "View Details",
     viewMap: "View Map"
   },

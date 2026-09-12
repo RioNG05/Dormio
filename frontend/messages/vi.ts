@@ -30,6 +30,12 @@ const vi = {
     statusCanceled: "Đã hủy",
     statusPaid: "Đã thanh toán",
     statusPending: "Chờ thanh toán",
+    switchToEn: "Chuyển sang Tiếng Anh",
+    switchToOtherLang: "Chuyển sang Tiếng Anh",
+    switchToVi: "Chuyển sang Tiếng Việt",
+    toggleLanguage: "Chuyển đổi ngôn ngữ",
+    langVi: "VI",
+    langEn: "EN",
     viewDetail: "Xem chi tiết",
     viewMap: "Xem Bản Đồ"
   },
