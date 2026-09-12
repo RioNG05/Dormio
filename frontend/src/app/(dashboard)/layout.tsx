@@ -15,7 +15,7 @@ import {
   Settings, HelpCircle,
   LogOut, Menu, X, ChevronDown, ChevronRight,
   AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2,
-  Megaphone, Newspaper, ShieldCheck, CheckSquare, Check, Plus
+  Megaphone, Newspaper, ShieldCheck, CheckSquare, Check, Plus, Layers
 } from "lucide-react";
 
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -91,9 +91,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       group: tNav("workforce"),
       key: "nhan-su",
       items: [
-        { name: tNav("staff"), href: "/landlord/workforce", icon: UserCircle },
-        { name: tNav("schedule"), href: "/landlord/workforce/schedule", icon: Calendar },
-        { name: tNav("attendance"), href: "/landlord/workforce/attendance", icon: Clock },
+        { name: tNav("staff"), href: "/landlord/staff", icon: UserCircle },
+        { name: tNav("shifts"), href: "/landlord/shifts", icon: Layers },
+        { name: tNav("schedule"), href: "/landlord/schedule", icon: Calendar },
+        { name: tNav("attendance"), href: "/landlord/attendance", icon: Clock },
       ]
     },
     {
