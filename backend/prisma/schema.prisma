@@ -836,6 +836,7 @@ model JobPosition {
 
   employeeAssignments EmployeeAssignment[]
 
+  @@index([boardingHouseId])
   @@map("job_positions")
 }
 
@@ -849,9 +850,11 @@ model EmployeeAssignment {
   boardingHouse   BoardingHouse    @relation(fields: [boardingHouseId], references: [id])
   status          AssignmentStatus @default(active)
   joinedAt        DateTime         @map("joined_at")
-  leftAt          DateTime         @map("left_at")
+  leftAt          DateTime?        @map("left_at")
   createdAt       DateTime         @default(now()) @map("created_at")
 
+  @@index([boardingHouseId, status])
+  @@index([employeeId])
   @@map("employee_assignments")
 }
 

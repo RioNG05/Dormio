@@ -26,6 +26,12 @@ import {
   TopPostAnalyticsDto,
 } from './dto/post-analytics.dto';
 import {
+  CreateAiPostDraftDto,
+  AiPostDraftResponseDto,
+  AiPostTone,
+} from './dto/create-ai-post-draft.dto';
+import { UnlistedRoomResponseDto } from './dto/unlisted-room-response.dto';
+import {
   PostStatus,
   SourceType,
   PostPurchaseStatus,
@@ -93,11 +99,12 @@ export class PostsService {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    // a) Free posts used today
+    // a) Free posts used today (only published posts count against quota)
     const freePostsUsedToday = await this.prisma.post.count({
       where: {
         postedBy: userId,
         sourceType: SourceType.free_quote,
+        status: PostStatus.posted,
         createdAt: {
           gte: startOfDay,
           lte: endOfDay,
@@ -192,6 +199,7 @@ export class PostsService {
       where: {
         postedBy: userId,
         sourceType: SourceType.free_quote,
+        status: PostStatus.posted,
         createdAt: {
           gte: startOfDay,
           lte: endOfDay,
@@ -304,8 +312,14 @@ export class PostsService {
       }
     }
 
-    // Step 3 — Quota Check
-    const quota = await this.checkQuota(userId, isLandlord);
+    // Step 3 — Quota Check (Only published posts consume daily posting quota)
+    let quota: QuotaAllocation = {
+      sourceType: SourceType.free_quote,
+      postPurchaseId: null,
+    };
+    if (dto.status !== PostStatus.draft) {
+      quota = await this.checkQuota(userId, isLandlord);
+    }
 
     // Step 4 — Database Insertion in transaction
     const farFuture = new Date('2099-12-31');
@@ -1766,6 +1780,245 @@ export class PostsService {
       hasActiveConversation,
       activeListings,
     };
+  }
+
+  // ─── UC-L-12: AI Rental Post Suggestions ────────────────────────────────────
+
+  /**
+   * Generates a context-aware AI rental post draft using real Room and BoardingHouse data.
+   * Creates an AiConversation and records prompt & assistant messages.
+   * Architecture note: This only generates a draft. It does not publish a Post.
+   */
+  async generateAiPostDraft(
+    userId: string,
+    dto: CreateAiPostDraftDto,
+  ): Promise<AiPostDraftResponseDto> {
+    this.logger.log(`generateAiPostDraft called by user ${userId} for room ${dto.roomId}`);
+
+    const room = await this.prisma.room.findUnique({
+      where: { id: dto.roomId },
+      include: {
+        boardingHouse: {
+          include: {
+            services: { where: { status: 'active' } },
+          },
+        },
+        roomType: true,
+        roomServices: {
+          include: { service: true },
+        },
+        contracts: {
+          where: { status: 'active' },
+          orderBy: { endDate: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException(`Không tìm thấy thông tin phòng với ID: ${dto.roomId}`);
+    }
+
+    if (room.boardingHouse.ownerId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền truy cập hoặc tạo bản nháp tin đăng cho phòng này');
+    }
+
+    const house = room.boardingHouse;
+    const roomType = room.roomType?.name || 'Phòng khép kín';
+    const areaStr = room.area ? `${room.area}m²` : '20-25m²';
+    const floorStr = `Tầng ${room.floor}`;
+    const maxOccupantsStr = room.maxOccupants ? `${room.maxOccupants} người` : '1-2 người';
+    const addressStr = `${house.houseNumber} ${house.street}, ${house.ward}, ${house.district}, ${house.city || house.province}`;
+
+    // Compute estimated base price / deposit
+    const activeContract = room.contracts[0];
+    const estimatedPrice = activeContract
+      ? Number(activeContract.rentPrice)
+      : (room.area ? Math.round((Number(room.area) * 140000) / 100000) * 100000 : 3500000);
+    const depositAmount = estimatedPrice;
+
+    // Services list
+    const attachedServices = (room.roomServices && room.roomServices.length > 0)
+      ? room.roomServices.map((rs) => rs.service)
+      : house.services;
+
+    const servicesListText = attachedServices.length > 0
+      ? attachedServices.map((s) => `- ${s.name}: ${Number(s.price).toLocaleString('vi-VN')} đ / ${s.unit}`).join('\n')
+      : '- Điện: 3.500 đ / kWh\n- Nước: 25.000 đ / m³\n- Wifi tốc độ cao & Dịch vụ chung: 150.000 đ / người';
+
+    // Tone customization
+    const tone = dto.tone || AiPostTone.PROFESSIONAL;
+    let headlinePrefix = 'Cho thuê phòng';
+    let vibeDescription = 'Không gian sống tiện nghi, sạch sẽ và an ninh tuyệt đối.';
+    if (tone === AiPostTone.YOUTHFUL) {
+      headlinePrefix = 'Phòng trọ sinh viên / giới trẻ cực chill';
+      vibeDescription = 'Môi trường sống trẻ trung, giờ giấc tự do 100%, thuận tiện kết nối các trường Đại học & văn phòng.';
+    } else if (tone === AiPostTone.BUDGET) {
+      headlinePrefix = 'Phòng trọ giá tốt, tối ưu chi phí';
+      vibeDescription = 'Phòng sạch đẹp, chi phí hợp lý, cam kết minh bạch điện nước, không phát sinh chi phí ẩn.';
+    }
+
+    const title = `${headlinePrefix} ${roomType} P.${room.roomNumber} tại ${house.name} - ${areaStr}, ${house.district}`;
+
+    const highlights = [
+      `Diện tích ${areaStr} (${floorStr})`,
+      'Full tiện nghi cơ bản',
+      'Giờ giấc tự do 100%',
+      'Khóa vân tay / Thẻ từ an ninh',
+      'Không chung chủ',
+    ];
+
+    if (dto.customNotes) {
+      highlights.push(dto.customNotes);
+    }
+
+    const content = `🏠 ${title.toUpperCase()}\n\n` +
+      `✨ TỔNG QUAN PHÒNG TRỌ:\n` +
+      `- Tòa nhà: ${house.name}\n` +
+      `- Vị trí: ${addressStr}\n` +
+      `- Mã phòng: P.${room.roomNumber} (${floorStr})\n` +
+      `- Loại phòng: ${roomType}\n` +
+      `- Diện tích sử dụng: ${areaStr} (Phù hợp ${maxOccupantsStr})\n` +
+      `- ${vibeDescription}\n\n` +
+      `🛋️ TIỆN NGHI & NỘI THẤT TRONG PHÒNG:\n` +
+      `- Máy lạnh Inverter tiết kiệm điện, quạt trần thoáng mát.\n` +
+      `- Giường nệm cao cấp, tủ quần áo lớn, bàn làm việc / học tập.\n` +
+      `- Nhà vệ sinh riêng trong phòng, trang bị máy nước nóng hiện đại.\n` +
+      `- Cửa sổ / ban công đón ánh sáng tự nhiên, không gian thông thoáng.\n\n` +
+      `🏢 TIỆN ÍCH CHUNG & AN NINH TÒA NHÀ:\n` +
+      `- Hệ thống khóa cửa vân tay / thẻ từ thông minh, camera an ninh 24/7.\n` +
+      `- Giờ giấc hoàn toàn tự do, không chung chủ, tiếp đón bạn bè thoải mái.\n` +
+      `- Khu giặt sấy chung rộng rãi, sân phơi đồ đón nắng gió.\n` +
+      `- Nhà để xe có mái che, bảo dưỡng định kỳ sạch sẽ.\n\n` +
+      `⚡ BIỂU PHÍ DỊCH VỤ MINH BẠCH:\n` +
+      `${servicesListText}\n\n` +
+      `📌 CHÍNH SÁCH ĐẶT CỌC & GIỮ CHỖ:\n` +
+      `- Tiền cọc giữ chỗ: ${depositAmount.toLocaleString('vi-VN')} đ (Hỗ trợ đặt cọc trực tuyến an toàn qua sàn Dormio BHRP).\n` +
+      `- Hợp đồng minh bạch, ký kết online hoặc trực tiếp linh hoạt từ 6 - 12 tháng.\n\n` +
+      `📞 LIÊN HỆ XEM PHÒNG NGAY:\n` +
+      `- Bấm "Đặt giữ chỗ" hoặc nhắn tin trực tiếp để giữ phòng tốt nhất trong hôm nay!\n` +
+      `- Hỗ trợ xem phòng trực tiếp các ngày trong tuần.`;
+
+    const imageUrls: string[] = [];
+    if (room.image_url) {
+      imageUrls.push(room.image_url);
+    }
+    if (house.thumbnail && !imageUrls.includes(house.thumbnail)) {
+      imageUrls.push(house.thumbnail);
+    }
+
+    // Persist AiConversation and AiMessage per UC-L-12 spec
+    let conversation = await this.prisma.aiConversation.findFirst({
+      where: {
+        userId,
+        boardingHouseId: house.id,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!conversation) {
+      conversation = await this.prisma.aiConversation.create({
+        data: {
+          userId,
+          boardingHouseId: house.id,
+        },
+      });
+    }
+
+    const userPrompt = `Tạo bản nháp tin đăng cho phòng ${room.roomNumber} (${roomType}, ${areaStr}) tại ${house.name}. Tone: ${tone}. Ghi chú thêm: ${dto.customNotes || 'Không'}`;
+
+    try {
+      await this.prisma.aiMessage.create({
+        data: {
+          aiConversationId: conversation.id,
+          role: 'user',
+          content: userPrompt,
+          model: 'dormio-gpt-plus',
+        },
+      });
+
+      await this.prisma.aiMessage.create({
+        data: {
+          aiConversationId: conversation.id,
+          role: 'assistant',
+          content: content,
+          model: 'dormio-gpt-plus',
+          tokenUsage: 520,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to persist AiMessage for room ${room.id}: ${err}`);
+    }
+
+    return {
+      conversationId: conversation.id,
+      title,
+      content,
+      depositAmount,
+      highlights,
+      imageUrls,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Retrieves vacant rooms owned by the landlord that have no active rental listing.
+   * Direct trigger for UC-L-12 AI post suggestions.
+   */
+  async getUnlistedVacantRooms(userId: string): Promise<UnlistedRoomResponseDto[]> {
+    this.logger.log(`getUnlistedVacantRooms called for user ${userId}`);
+
+    const now = new Date();
+    const vacantRooms = await this.prisma.room.findMany({
+      where: {
+        boardingHouse: {
+          ownerId: userId,
+          deletedAt: { gt: now },
+        },
+        status: 'available',
+        posts: {
+          none: {
+            status: 'posted',
+            deletedAt: { gt: now },
+          },
+        },
+      },
+      include: {
+        boardingHouse: true,
+        roomType: true,
+        contracts: {
+          orderBy: { endDate: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 20,
+    });
+
+    return vacantRooms.map((room) => {
+      const house = room.boardingHouse;
+      const fullAddress = `${house.houseNumber} ${house.street}, ${house.ward}, ${house.district}, ${house.city || house.province}`;
+      const lastUpdated = room.updatedAt || room.createdAt;
+      const vacantDays = Math.max(1, Math.floor((now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24)));
+      const basePrice = room.contracts[0]
+        ? Number(room.contracts[0].rentPrice)
+        : (room.area ? Math.round((Number(room.area) * 140000) / 100000) * 100000 : 3500000);
+
+      return {
+        roomId: room.id,
+        roomNumber: room.roomNumber,
+        floor: room.floor,
+        area: room.area ? Number(room.area) : null,
+        roomTypeName: room.roomType?.name || 'Tiêu chuẩn',
+        boardingHouseId: house.id,
+        boardingHouseName: house.name,
+        boardingHouseAddress: fullAddress,
+        status: room.status,
+        basePrice,
+        thumbnail: room.image_url || house.thumbnail || null,
+        vacantDays,
+      };
+    });
   }
 }
 

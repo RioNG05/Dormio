@@ -24,7 +24,7 @@ import {
   LandlordMeterPeriodHistory,
   LandlordMeterEditAction,
 } from "@/services/meter-reading.service";
-import { getRoomById, defaultRoomServices, Room } from "../data";
+import { defaultRoomServices, Room } from "../data";
 
 interface MeterHistoryRecord {
   id?: string;
@@ -402,40 +402,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           console.error("Failed to load room dashboard from API:", err);
           setMeterHistory([]);
           setMaintenanceHistory([]);
-          // Fallback to local mock data
-          const found = getRoomById(resolvedParams.id);
-          setRoom(found);
-          if (found) {
-            setEditRoomNumber(found.roomNumber);
-            setEditPrice(found.price || "3.000.000 ₫");
-            setEditArea(found.area || "25");
-            setEditFloor(found.floor || "1");
-            setInitialEditValues({
-              roomNumber: found.roomNumber,
-              price: found.price || "3.000.000 ₫",
-              area: found.area || "25",
-              floor: found.floor || "1",
-            });
-          }
+          setRoom(null);
         }
       } else {
-        // Fallback to local mock data
-        const found = getRoomById(resolvedParams.id);
-        setRoom(found);
-        if (found) {
-          setEditRoomNumber(found.roomNumber);
-          setEditPrice(found.price || "3.000.000 ₫");
-          setEditArea(found.area || "25");
-          setEditFloor(found.floor || "1");
-          setEditAmenities(found.amenities || ['WiFi', 'Điều hòa', 'Nóng lạnh', 'Tủ quần áo', 'Giường', 'Kệ bếp', 'Ban công', 'WC riêng']);
-          setEditNotes(found.notes || "");
-          setInitialEditValues({
-            roomNumber: found.roomNumber,
-            price: found.price || "3.000.000 ₫",
-            area: found.area || "25",
-            floor: found.floor || "1",
-          });
-        }
+        setRoom(null);
       }
       setIsLoading(false);
     }

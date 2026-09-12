@@ -15,7 +15,7 @@ import {
   Settings, HelpCircle,
   LogOut, Menu, X, ChevronDown, ChevronRight,
   AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2,
-  Megaphone, Newspaper, ShieldCheck, CheckSquare
+  Megaphone, Newspaper, ShieldCheck, CheckSquare, Check, Plus, Layers
 } from "lucide-react";
 
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -25,6 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const tNav = useTranslations("nav");
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [buildingDropdownOpen, setBuildingDropdownOpen] = useState(false);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     'van-hanh': true,
@@ -90,9 +91,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       group: tNav("workforce"),
       key: "nhan-su",
       items: [
-        { name: tNav("staff"), href: "/landlord/workforce", icon: UserCircle },
-        { name: tNav("schedule"), href: "/landlord/workforce/schedule", icon: Calendar },
-        { name: tNav("attendance"), href: "/landlord/workforce/attendance", icon: Clock },
+        { name: tNav("staff"), href: "/landlord/staff", icon: UserCircle },
+        { name: tNav("shifts"), href: "/landlord/shifts", icon: Layers },
+        { name: tNav("schedule"), href: "/landlord/schedule", icon: Calendar },
+        { name: tNav("attendance"), href: "/landlord/attendance", icon: Clock },
       ]
     },
     {
@@ -355,22 +357,99 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   const BuildingSelector = () => (
-    <div className="px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
-      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block mb-1">
-        {tNav("managingBuilding")}
-      </span>
-      <div className="relative">
-        <select
-          value={activeBuildingId}
-          onChange={(e) => selectBuilding(e.target.value)}
-          className="w-full bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-xs appearance-none pr-7"
-        >
-          {buildings.map(b => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
-        <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+    <div className="relative px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
+          {tNav("managingBuilding")}
+        </span>
+        <span className="text-[10px] font-extrabold text-[#2AC1BC] bg-[#2AC1BC]/10 px-1.5 py-0.5 rounded-md">
+          {buildings.length} {locale === "en" ? "Properties" : "Cơ sở"}
+        </span>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setBuildingDropdownOpen((prev) => !prev)}
+        className="w-full bg-white border border-zinc-200 hover:border-[#2AC1BC] rounded-xl px-2.5 py-2 text-left text-xs font-black text-zinc-900 focus:outline-none cursor-pointer shadow-2xs flex items-center justify-between transition-all"
+        title="Chuyển đổi nhà trọ đang quản lý (UC-L-23)"
+      >
+        <div className="min-w-0 flex-1 pr-1.5">
+          <div className="flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+            <span className="truncate">{activeBuilding?.name || "Chọn cơ sở..."}</span>
+          </div>
+          {activeBuilding?.address && (
+            <p className="text-[10px] font-medium text-zinc-400 truncate mt-0.5 pl-5">
+              {activeBuilding.address}
+            </p>
+          )}
+        </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200 ${
+            buildingDropdownOpen ? "rotate-180 text-[#2AC1BC]" : ""
+          }`}
+        />
+      </button>
+
+      {buildingDropdownOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setBuildingDropdownOpen(false)}
+          />
+          <div className="absolute left-2 right-2 top-full mt-1 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-2 py-1 text-[10px] font-black text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+              <span>{locale === "en" ? "Switch Property (UC-L-23)" : "Chuyển cơ sở (UC-L-23)"}</span>
+              <span className="text-zinc-400 font-normal">X-Boarding-House-Id</span>
+            </div>
+            <div className="max-h-56 overflow-y-auto space-y-1">
+              {buildings.map((b) => {
+                const isActive = b.id === activeBuildingId;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      selectBuilding(b.id);
+                      setBuildingDropdownOpen(false);
+                    }}
+                    className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs"
+                        : "hover:bg-zinc-50 text-zinc-700 font-bold"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="flex items-center gap-1.5">
+                        <Building
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            isActive ? "text-[#2AC1BC]" : "text-zinc-400"
+                          }`}
+                        />
+                        <span className="truncate">{b.name}</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-400 truncate mt-0.5 pl-5">
+                        {b.address || `${b.totalRooms} phòng`}
+                      </p>
+                    </div>
+                    {isActive && <Check className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="pt-1.5 border-t border-zinc-100">
+              <Link
+                href="/landlord/setup"
+                onClick={() => setBuildingDropdownOpen(false)}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-black text-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-xl transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{locale === "en" ? "+ Add New Property" : "+ Tạo nhà trọ mới"}</span>
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 

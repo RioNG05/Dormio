@@ -9,12 +9,15 @@ import {
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { ApiAuth } from '../../common/swagger';
 import { JwtPayload } from '../auth/types/jwt-payload.type';
 import { BoardingHousesService } from './boarding-houses.service';
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
 import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto';
 import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto';
+import { MultiPropertyOverviewResponseDto } from './dto/multi-property-overview-response.dto';
+import { AiStrategyResponseDto } from './dto/ai-strategy-response.dto';
 import {
   BoardingHouseListResponseDto,
   BoardingHouseResponseDto,
@@ -29,7 +32,7 @@ export class BoardingHousesController {
 
   constructor(
     private readonly boardingHousesService: BoardingHousesService,
-  ) {}
+  ) { }
 
   @Post('setup')
   @ApiAuth()
@@ -53,6 +56,7 @@ export class BoardingHousesController {
     return this.boardingHousesService.setupBoardingHouse(user.id, dto);
   }
 
+  @Get('multi-property/overview')
   @Public()
   @Get(':id/details')
   @ApiOperation({
@@ -74,6 +78,44 @@ export class BoardingHousesController {
   @ApiAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
+    summary: 'Báo cáo tổng quan đa cơ sở toàn danh mục (UC-L-24)',
+    description:
+      'Tổng hợp số liệu doanh thu, tỷ lệ lấp đầy, chi phí, lợi nhuận ròng, công nợ và hợp đồng sắp hết hạn trên toàn bộ các nhà trọ thuộc sở hữu của chủ nhà (Pro tier).',
+  })
+  @ApiOkResponse({
+    description: 'Báo cáo tổng hợp đa cơ sở được truy xuất thành công',
+    type: MultiPropertyOverviewResponseDto,
+  })
+  async getMultiPropertyOverview(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<MultiPropertyOverviewResponseDto> {
+    this.logger.log(`GET /boarding-houses/multi-property/overview called by user ${user.id}`);
+    return this.boardingHousesService.getMultiPropertyOverview(user.id);
+  }
+
+  @Post('multi-property/ai-strategy')
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Chiến lược tiếp thị & tối ưu hoá chuỗi nhà trọ bằng AI (UC-L-24 / UC-L-12)',
+    description:
+      'Tự động phân tích các cơ sở có tỷ lệ trống cao hoặc hợp đồng sắp đáo hạn để đề xuất chiến lược tiếp thị, bảng giá và kế hoạch hành động chi tiết.',
+  })
+  @ApiOkResponse({
+    description: 'Chiến lược tiếp thị AI được tạo thành công',
+    type: AiStrategyResponseDto,
+  })
+  async generateMultiPropertyAiStrategy(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<AiStrategyResponseDto> {
+    this.logger.log(`POST /boarding-houses/multi-property/ai-strategy called by user ${user.id}`);
+    return this.boardingHousesService.generateMultiPropertyAiStrategy(user.id);
+  }
+
+  @Get(':id/overview')
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+  @ApiOperation({
     summary: 'Lấy dữ liệu tổng quan & phân tích kinh doanh nhà trọ (UC-L-01 & UC-L-08)',
     description:
       'Trả về số liệu tổng quan bao gồm thống kê phòng, doanh thu thực tế, công nợ, trạng thái thu tiền (collectionStatus), hợp đồng sắp hết hạn và dòng tiền 6 tháng.',
@@ -92,7 +134,7 @@ export class BoardingHousesController {
 
   @Get(':id/analytics')
   @ApiAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
   @ApiOperation({
     summary: 'Báo cáo & Phân tích chuyên sâu nhà trọ (UC-L-08)',
     description:

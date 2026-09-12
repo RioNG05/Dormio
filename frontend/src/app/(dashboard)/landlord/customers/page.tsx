@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin, AlertCircle, CheckCircle2, Info, UserCheck, FileSpreadsheet, UserCircle2, PhoneCall, MessageCircle, Eye, Edit3, Link2, Mail, LogOut, Sparkles, ShieldCheck } from "lucide-react";
-import { generateMockCustomers, mockSystemTenantUsers, SystemTenantUser } from "./data";
+import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin, AlertCircle, CheckCircle2, Info, UserCheck, FileSpreadsheet, UserCircle2, PhoneCall, MessageCircle, Eye, Edit3, Link2, Mail, LogOut, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
+import { Customer, SystemTenantUser } from "./data";
+import { getLandlordContracts, searchTenantByPhone } from "@/services/contract.service";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
@@ -72,7 +73,7 @@ export default function CustomersPage() {
 
   // 2-Way Add Tenant State
   const [addMode, setAddMode] = useState<"manual" | "existing_user">("manual");
-  const [selectedSystemUser, setSelectedSystemUser] = useState<SystemTenantUser | null>(null);
+  const [selectedSystemUser, setSelectedSystemUser] = useState<any | null>(null);
   const [systemSearchTerm, setSystemSearchTerm] = useState("");
 
   // Form Controlled States
@@ -86,7 +87,7 @@ export default function CustomersPage() {
   const [jobInput, setJobInput] = useState("");
   const [workplaceInput, setWorkplaceInput] = useState("");
   const [roomInput, setRoomInput] = useState("101");
-  const [buildingInput, setBuildingInput] = useState("dormio");
+  const [buildingInput, setBuildingInput] = useState("");
   const [noteInput, setNoteInput] = useState("");
   const [hasAccountState, setHasAccountState] = useState(false);
 
@@ -96,7 +97,6 @@ export default function CustomersPage() {
     customer: null
   });
   const [linkSearchQuery, setLinkSearchQuery] = useState("");
-
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
@@ -124,7 +124,72 @@ export default function CustomersPage() {
     }
   };
 
-  const [customers, setCustomers] = useState(generateMockCustomers());
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Load real customers from active property contracts (UC-L-04, UC-L-23)
+  useEffect(() => {
+    async function loadCustomers() {
+      if (!activeBuilding?.id) {
+        setCustomers([]);
+        return;
+      }
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!UUID_RE.test(activeBuilding.id)) {
+        setCustomers([]);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
+        const list = res?.data || [];
+        const mapped: Customer[] = list.flatMap((c: any) => {
+          const tContracts = c.tenantContracts || [];
+          if (tContracts.length === 0) {
+            return [{
+              id: `cust_${c.id}`,
+              name: "Khách thuê",
+              phone: "—",
+              room: c.room?.roomNumber || "—",
+              building: activeBuilding.id,
+              cccd: "—",
+              joinDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
+              status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
+              hasAccount: false,
+            }];
+          }
+          return tContracts.map((tc: any) => {
+            const t = tc.tenant;
+            const ident = t?.userIdentification;
+            return {
+              id: t?.id || `cust_${c.id}`,
+              name: ident?.fullName || t?.username || "Khách thuê",
+              phone: t?.phoneNumber || "—",
+              room: c.room?.roomNumber || "—",
+              building: activeBuilding.id,
+              cccd: ident?.identityNumber || "—",
+              joinDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
+              status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
+              email: t?.email || undefined,
+              dob: ident?.dateOfBirth ? new Date(ident.dateOfBirth).toLocaleDateString("vi-VN") : undefined,
+              gender: ident?.gender || "nam",
+              address: ident?.permanentAddress || undefined,
+              hasAccount: !!t?.id,
+            };
+          });
+        });
+        setCustomers(mapped);
+      } catch (err) {
+        console.warn("Failed to load customers from contracts:", err);
+        setCustomers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadCustomers();
+  }, [activeBuilding?.id]);
 
   const handleOpenAddModal = () => {
     setSelectedCustomer(null);
@@ -141,7 +206,7 @@ export default function CustomersPage() {
     setJobInput("");
     setWorkplaceInput("");
     setRoomInput("101");
-    setBuildingInput(activeBuilding?.id || "dormio");
+    setBuildingInput(activeBuilding?.id || "");
     setNoteInput("");
     setHasAccountState(false);
     setIsDirty(false);
@@ -162,7 +227,7 @@ export default function CustomersPage() {
     setJobInput(cust.job || "");
     setWorkplaceInput(cust.workplace || "");
     setRoomInput(cust.room || "");
-    setBuildingInput(cust.building || "dormio");
+    setBuildingInput(cust.building || activeBuilding?.id || "");
     setNoteInput(cust.note || "");
     setHasAccountState(!!cust.hasAccount);
     setIsDirty(false);
@@ -274,16 +339,47 @@ export default function CustomersPage() {
     showAlert(t("landlordCustomersAlertLinkSuccess").replace("{name}", user.name).replace("{email}", user.email), "success", t("landlordCustomersAlertLinkTitle"));
   };
 
-  const filteredSystemUsers = mockSystemTenantUsers
-    .filter(u => !customers.some(c => c.cccd === u.cccd || c.phone === u.phone))
-    .filter(u => {
-      const q = systemSearchTerm.toLowerCase().trim();
-      if (!q) return true;
-      return u.name.toLowerCase().includes(q) ||
-        u.phone.includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.cccd.includes(q);
-    });
+  const [searchedUser, setSearchedUser] = useState<any | null>(null);
+  const [isSearchingUser, setIsSearchingUser] = useState(false);
+
+  useEffect(() => {
+    const term = (systemSearchTerm || linkSearchQuery).trim();
+    if (!term || term.length < 9) {
+      setSearchedUser(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearchingUser(true);
+        const res = await searchTenantByPhone(term);
+        if (res?.data?.exists && res.data.user) {
+          const u = res.data.user;
+          const ident = u.identification;
+          setSearchedUser({
+            userId: u.id,
+            name: ident?.fullName || u.fullName || "Khách thuê",
+            phone: u.phoneNumber,
+            email: u.email || "",
+            cccd: ident?.identityNumber || "",
+            dob: ident?.dateOfBirth ? new Date(ident.dateOfBirth).toLocaleDateString("vi-VN") : "",
+            gender: ident?.gender || "nam",
+            address: ident?.permanentAddress || "",
+            job: "",
+            workplace: "",
+          });
+        } else {
+          setSearchedUser(null);
+        }
+      } catch {
+        setSearchedUser(null);
+      } finally {
+        setIsSearchingUser(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [systemSearchTerm, linkSearchQuery]);
+
+  const filteredSystemUsers = searchedUser ? [searchedUser] : [];
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -450,8 +546,8 @@ export default function CustomersPage() {
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${statusFilter === tab.id
-                    ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs"
-                    : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                  ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs"
+                  : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                   }`}
               >
                 <span className="whitespace-nowrap">{tab.label}</span>
@@ -520,8 +616,26 @@ export default function CustomersPage() {
         viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sortedCustomers.length === 0 ? (
-              <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500">
-                {t("landlordCustomersNotFoundCustomers")}
+              <div className="col-span-full py-14 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500">
+                {isLoading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
+                    <span className="text-xs font-bold">Đang tải danh sách khách thuê...</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Users className="w-8 h-8 text-zinc-300" />
+                    <p className="text-sm font-bold text-zinc-700">Chưa có khách thuê nào tại cơ sở này</p>
+                    <p className="text-xs text-zinc-400">Khách thuê sẽ tự động được ghi nhận khi bạn lập hợp đồng thuê phòng.</p>
+                    <Link
+                      href="/landlord/contracts/create"
+                      className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Lập hợp đồng mới</span>
+                    </Link>
+                  </div>
+                )}
               </div>
             ) : (
               paginatedCustomers.map((customer) => (
@@ -553,8 +667,8 @@ export default function CustomersPage() {
 
                   <div className="p-2.5 bg-zinc-50 rounded-xl space-y-1.5 text-xs text-zinc-600">
                     <div className="flex justify-between items-center">
-                      <span className="text-zinc-400 font-medium whitespace-nowrap">{t("landlordCustomersBuildingAndRoomLabel")}</span>
-                      <span className="font-bold text-zinc-900 whitespace-nowrap">{customer.building === 'dormio' ? 'Dormio' : 'VinaHouse'} — {t("landlordCustomersRoomWord")} {customer.status === 'Đã rời' ? "—" : customer.room}</span>
+                      <span className="text-zinc-400 font-medium whitespace-nowrap">Tòa & Phòng:</span>
+                      <span className="font-bold text-zinc-900 whitespace-nowrap">{activeBuilding?.name || "Cơ sở"} — Phòng {customer.status === 'Đã rời' ? "—" : customer.room}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-zinc-400 font-medium whitespace-nowrap">{t("landlordCustomersStayDate")}</span>
@@ -615,8 +729,19 @@ export default function CustomersPage() {
                 <tbody className="divide-y divide-zinc-100">
                   {sortedCustomers.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
-                        {t("landlordCustomersNotFoundCustomers")}
+                      <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
+                        {isLoading ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+                            <span className="text-xs font-bold">Đang tải danh sách khách thuê...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1.5 py-4">
+                            <Users className="w-7 h-7 text-zinc-300" />
+                            <p className="text-xs font-bold text-zinc-700">Chưa có khách thuê nào tại cơ sở này</p>
+                            <p className="text-[11px] text-zinc-400">Khách thuê sẽ được tự động liệt kê khi có hợp đồng thuê.</p>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ) : (
@@ -636,7 +761,7 @@ export default function CustomersPage() {
                         </td>
                         <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.phone}</td>
                         <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.cccd}</td>
-                        <td className="px-6 py-3.5 font-medium text-zinc-700 capitalize whitespace-nowrap">{customer.building === 'dormio' ? 'Dormio' : 'VinaHouse'}</td>
+                        <td className="px-6 py-3.5 font-medium text-zinc-700 capitalize whitespace-nowrap">{activeBuilding?.name || "Cơ sở"}</td>
                         <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.status === 'Đã rời' ? "—" : customer.room}</td>
                         <td className="px-6 py-3.5 whitespace-nowrap">
                           <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
@@ -729,11 +854,10 @@ export default function CustomersPage() {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                    currentPage === page
+                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${currentPage === page
                       ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
                       : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                  }`}
+                    }`}
                 >
                   {page}
                 </button>
@@ -1103,9 +1227,8 @@ export default function CustomersPage() {
                 </div>
 
                 <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                  {mockSystemTenantUsers
-                    .filter(u => !linkSearchQuery || u.name.toLowerCase().includes(linkSearchQuery.toLowerCase()) || u.phone.includes(linkSearchQuery) || u.email.toLowerCase().includes(linkSearchQuery))
-                    .map((u) => (
+                  {filteredSystemUsers.length > 0 ? (
+                    filteredSystemUsers.map((u) => (
                       <div key={u.userId} className="p-3 bg-white border border-zinc-200/80 hover:border-orange-300 hover:bg-orange-50/30 rounded-2xl flex items-center justify-between gap-3 text-xs transition-all shadow-2xs">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-[#FF6B35] text-white flex items-center justify-center font-black text-xs uppercase shrink-0 shadow-2xs">
@@ -1118,14 +1241,18 @@ export default function CustomersPage() {
                                 <Phone className="w-3 h-3 text-[#FF6B35] shrink-0" />
                                 <span className="font-bold">{u.phone}</span>
                               </div>
-                              <div className="flex items-center gap-1.5">
-                                <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
-                                <span>CCCD: {u.cccd}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 truncate">
-                                <User className="w-3 h-3 text-zinc-400 shrink-0" />
-                                <span className="truncate">{u.email}</span>
-                              </div>
+                              {u.cccd && (
+                                <div className="flex items-center gap-1.5">
+                                  <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
+                                  <span>CCCD: {u.cccd}</span>
+                                </div>
+                              )}
+                              {u.email && (
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <User className="w-3 h-3 text-zinc-400 shrink-0" />
+                                  <span className="truncate">{u.email}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1137,7 +1264,17 @@ export default function CustomersPage() {
                           {t("landlordCustomersLinkAction")}
                         </button>
                       </div>
-                    ))}
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-zinc-400 text-xs space-y-1">
+                      <p className="font-bold text-zinc-600">
+                        {isSearchingUser ? "Đang tìm kiếm tài khoản..." : "Nhập số điện thoại (từ 9 số) để tìm tài khoản"}
+                      </p>
+                      <p className="text-[11px] text-zinc-400">
+                        Hệ thống sẽ tra cứu tài khoản khách thuê thực tế đã đăng ký trong hệ thống Dormio.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

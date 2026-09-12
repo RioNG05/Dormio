@@ -4,15 +4,8 @@ import React, { useState, useEffect } from "react";
 import {
   Plus,
   Search,
-  Filter,
   Image as ImageIcon,
-  MapPin,
-  MoreHorizontal,
-  X,
-  Check,
-  UploadCloud,
   ChevronDown,
-  Building2,
   LayoutGrid,
   List,
   Eye,
@@ -22,16 +15,16 @@ import {
   ChevronRight,
   Sparkles,
   AlertCircle,
-  ExternalLink,
   ShieldCheck,
-  Clock,
   Loader2,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import {
   postService,
   PostListing,
   PostQuotaStatus,
+  UnlistedVacantRoom,
 } from "@/services/post.service";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
@@ -56,6 +49,7 @@ export default function ListingsPage() {
   // Data states
   const [listings, setListings] = useState<PostListing[]>([]);
   const [quota, setQuota] = useState<PostQuotaStatus | null>(null);
+  const [unlistedRooms, setUnlistedRooms] = useState<UnlistedVacantRoom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -68,7 +62,7 @@ export default function ListingsPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [quotaRes, listingsRes] = await Promise.allSettled([
+      const [quotaRes, listingsRes, unlistedRes] = await Promise.allSettled([
         postService.getQuota(),
         postService.getMyListings({
           page,
@@ -76,6 +70,7 @@ export default function ListingsPage() {
           status: statusFilter || undefined,
           search: searchQuery || undefined,
         }),
+        postService.getUnlistedRooms(),
       ]);
 
       if (quotaRes.status === "fulfilled") {
@@ -95,82 +90,25 @@ export default function ListingsPage() {
       }
 
       if (listingsRes.status === "fulfilled") {
-        setListings(listingsRes.value.data);
-        setTotalItems(listingsRes.value.meta.total);
-        setTotalPages(listingsRes.value.meta.totalPages);
+        setListings(listingsRes.value.data || []);
+        setTotalItems(listingsRes.value.meta?.total || 0);
+        setTotalPages(listingsRes.value.meta?.totalPages || 1);
       } else {
-        // Fallback demo data if backend is offline
-        setListings([
-          {
-            id: "post-demo-1",
-            postedBy: "user-1",
-            roomId: "room-101",
-            title:
-              currentLocale === "en"
-                ? "Studio apartment for rent in District 1 - Fully furnished, private balcony"
-                : "Cho thuê phòng Studio cao cấp Quận 1 - Full nội thất, ban công riêng",
-            content:
-              currentLocale === "en"
-                ? "Dormio Premier Building 123 Nguyen Hue, 24/7 security, free hours, private kitchen..."
-                : "Toà nhà Dormio Premier 123 Nguyễn Huệ, an ninh 24/7, giờ giấc tự do, bếp riêng...",
-            depositAmount: 3500000,
-            status: "posted",
-            sourceType: "free_quote",
-            createdAt: new Date().toISOString(),
-            viewsCount: 142,
-            images: [
-              {
-                id: "img-1",
-                url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-              },
-            ],
-            room: {
-              id: "room-101",
-              roomNumber: "101",
-              floor: 1,
-              area: 28,
-              roomTypeName: "Studio",
-              boardingHouseName: "Dormio Premier Quận 1",
-            },
-          },
-          {
-            id: "post-demo-2",
-            postedBy: "user-1",
-            roomId: "room-202",
-            title:
-              currentLocale === "en"
-                ? "Student room near VNU Cau Giay with amenities, great price"
-                : "Phòng trọ sinh viên tiện nghi gần ĐH Quốc Gia Cầu Giấy, giá cực tốt",
-            content:
-              currentLocale === "en"
-                ? "100% newly built, full AC, water heater, smart lock, high speed wifi."
-                : "Phòng mới xây 100%, đầy đủ máy lạnh, nước nóng, khoá vân tay, wifi tốc độ cao.",
-            depositAmount: 2000000,
-            status: "posted",
-            sourceType: "purchased",
-            createdAt: new Date().toISOString(),
-            viewsCount: 89,
-            images: [
-              {
-                id: "img-2",
-                url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-              },
-            ],
-            room: {
-              id: "room-202",
-              roomNumber: "202",
-              floor: 2,
-              area: 22,
-              roomTypeName: currentLocale === "en" ? "Standard" : "Tiêu chuẩn",
-              boardingHouseName: "Dormio Campus Cầu Giấy",
-            },
-          },
-        ]);
-        setTotalItems(2);
+        setListings([]);
+        setTotalItems(0);
         setTotalPages(1);
+      }
+
+      if (unlistedRes.status === "fulfilled") {
+        setUnlistedRooms(unlistedRes.value || []);
+      } else {
+        setUnlistedRooms([]);
       }
     } catch (err: any) {
       console.error("Error loading listings data:", err);
+      setListings([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
@@ -216,15 +154,14 @@ export default function ListingsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
-      
+
       {/* Toast Alert */}
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-2 duration-300 ${
-            toast.type === "success"
+          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-2 duration-300 ${toast.type === "success"
               ? "bg-emerald-600 text-white shadow-emerald-600/20"
               : "bg-rose-600 text-white shadow-rose-600/20"
-          }`}
+            }`}
         >
           {toast.type === "success" ? (
             <ShieldCheck className="w-5 h-5" />
@@ -311,6 +248,54 @@ export default function ListingsPage() {
         </div>
       </div>
 
+      {/* UC-L-12: AI Rental Post Suggestions for Unlisted Vacant Rooms */}
+      {unlistedRooms.length > 0 && (
+        <div className="bg-linear-to-r from-teal-950 via-zinc-900 to-zinc-900 border border-teal-800/40 rounded-3xl p-5 sm:p-6 text-white shadow-lg space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-300" /> Gợi ý AI (UC-L-12)
+                </span>
+                <span className="text-xs text-zinc-300">Phát hiện {unlistedRooms.length} phòng trống chưa có tin đăng</span>
+              </div>
+              <h3 className="text-base font-bold text-white">Đăng tin tìm khách ngay để tối ưu tỷ lệ lấp đầy</h3>
+            </div>
+            <Link
+              href="/landlord/listings/create"
+              className="text-xs font-bold text-[#2AC1BC] hover:underline"
+            >
+              Xem tất cả phòng &rarr;
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {unlistedRooms.slice(0, 3).map((room) => (
+              <div
+                key={room.roomId}
+                className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#2AC1BC]/50 transition-all flex items-center justify-between gap-3"
+              >
+                <div className="space-y-1 text-xs">
+                  <div className="font-bold text-white flex items-center gap-1.5">
+                    <span>P.{room.roomNumber} (Tầng {room.floor})</span>
+                    <span className="text-[10px] text-[#2AC1BC] font-semibold">• {room.roomTypeName}</span>
+                  </div>
+                  <div className="text-[11px] text-zinc-400 line-clamp-1">{room.boardingHouseName}</div>
+                  <div className="text-[10px] text-amber-300">Đang trống {room.vacantDays} ngày</div>
+                </div>
+                <Link
+                  href={`/landlord/listings/create?roomId=${room.roomId}&aiDraft=true`}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#23a5a0] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  <span>Soạn tin AI</span>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Filter and View Mode Toolbar */}
       <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-xs">
@@ -352,11 +337,10 @@ export default function ListingsPage() {
                 setPageSize(6);
                 setPage(1);
               }}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === "grid"
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${viewMode === "grid"
                   ? "bg-white text-[#FF6B35] shadow-sm"
                   : "text-zinc-500 hover:text-zinc-900"
-              }`}
+                }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" /> {t("landlordListingsViewGrid")}
             </button>
@@ -367,11 +351,10 @@ export default function ListingsPage() {
                 setPageSize(10);
                 setPage(1);
               }}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === "table"
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${viewMode === "table"
                   ? "bg-white text-[#FF6B35] shadow-sm"
                   : "text-zinc-500 hover:text-zinc-900"
-              }`}
+                }`}
             >
               <List className="w-3.5 h-3.5" /> {t("landlordListingsViewList")}
             </button>
@@ -431,19 +414,18 @@ export default function ListingsPage() {
                   />
                   <div className="absolute top-3 left-3 flex items-center gap-2">
                     <span
-                      className={`px-3 py-1 text-[10px] font-black uppercase rounded-full shadow-sm backdrop-blur-md ${
-                        item.status === "posted"
+                      className={`px-3 py-1 text-[10px] font-black uppercase rounded-full shadow-sm backdrop-blur-md ${item.status === "posted"
                           ? "bg-emerald-500/90 text-white"
                           : item.status === "draft"
-                          ? "bg-amber-500/90 text-white"
-                          : "bg-zinc-800/90 text-zinc-200"
-                      }`}
+                            ? "bg-amber-500/90 text-white"
+                            : "bg-zinc-800/90 text-zinc-200"
+                        }`}
                     >
                       {item.status === "posted"
                         ? t("landlordListingsStatusPosted")
                         : item.status === "draft"
-                        ? t("landlordListingsStatusDraft")
-                        : t("landlordListingsStatusHidden")}
+                          ? t("landlordListingsStatusDraft")
+                          : t("landlordListingsStatusHidden")}
                     </span>
                     <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-black/60 text-white backdrop-blur-md">
                       {item.sourceType === "free_quote" ? t("landlordListingsSourceFree") : t("landlordListingsSourcePaid")}
@@ -462,9 +444,9 @@ export default function ListingsPage() {
                       <span className="font-bold text-zinc-700">
                         {item.room
                           ? t("landlordListingsRoomLabel", {
-                              room: item.room.roomNumber,
-                              house: item.room.boardingHouseName || t("landlordListingsRoomFallback"),
-                            })
+                            room: item.room.roomNumber,
+                            house: item.room.boardingHouseName || t("landlordListingsRoomFallback"),
+                          })
                           : t("landlordListingsUnlinkedRoom")}
                       </span>
                       <span>{new Date(item.createdAt).toLocaleDateString(currentLocale === "vi" ? "vi-VN" : "en-US")}</span>
@@ -492,11 +474,10 @@ export default function ListingsPage() {
                       <button
                         type="button"
                         onClick={() => handleToggleStatus(item)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-                          item.status === "posted"
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${item.status === "posted"
                             ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                             : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        }`}
+                          }`}
                         title={item.status === "posted" ? t("landlordListingsTitleHide") : t("landlordListingsTitleShow")}
                       >
                         {item.status === "posted" ? (
@@ -553,19 +534,18 @@ export default function ListingsPage() {
                     <td className="px-6 py-4 text-zinc-600 font-bold">{item.viewsCount}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${
-                          item.status === "posted"
+                        className={`px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${item.status === "posted"
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : item.status === "draft"
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
-                            : "bg-zinc-100 text-zinc-600 border border-zinc-200"
-                        }`}
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-zinc-100 text-zinc-600 border border-zinc-200"
+                          }`}
                       >
                         {item.status === "posted"
                           ? t("landlordListingsStatusPosted")
                           : item.status === "draft"
-                          ? t("landlordListingsStatusDraft")
-                          : t("landlordListingsStatusHidden")}
+                            ? t("landlordListingsStatusDraft")
+                            : t("landlordListingsStatusHidden")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -639,11 +619,10 @@ export default function ListingsPage() {
                 key={num}
                 type="button"
                 onClick={() => setPage(num)}
-                className={`w-8 h-8 font-bold rounded-xl transition-colors cursor-pointer ${
-                  page === num
+                className={`w-8 h-8 font-bold rounded-xl transition-colors cursor-pointer ${page === num
                     ? "bg-[#FF6B35] text-white shadow-sm shadow-[#FF6B35]/20"
                     : "border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                }`}
+                  }`}
               >
                 {num}
               </button>

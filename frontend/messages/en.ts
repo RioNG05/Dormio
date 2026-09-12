@@ -111,6 +111,7 @@ const en = {
     searchQuick: "Quick search...",
     services: "Services",
     settings: "Settings",
+    shifts: "Shift Templates",
     staff: "Employees",
     staffBadge: "OPERATIONS STAFF",
     staffMockBuilding: "HOLA Dormitory • Zone A",

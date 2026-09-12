@@ -31,29 +31,43 @@ export class PropertyOwnershipGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<{
       user: JwtPayload;
       headers: Record<string, string>;
+      params?: Record<string, string>;
+      query?: Record<string, string>;
+      boardingHouseId?: string;
+      boardingHouse?: { id: string; name: string };
     }>();
 
-    const boardingHouseId = req.headers['x-boarding-house-id'];
-    const userId = req.user?.id;
+    // Check header first (standard BHMS context), then fallback to route params or query
+    const headerId = req.headers['x-boarding-house-id'];
+    const paramId = req.params?.boardingHouseId || req.params?.id;
+    const queryId = req.query?.boardingHouseId;
 
-    if (!boardingHouseId) {
+    let rawId = (headerId || paramId || queryId)?.trim();
+
+    if (!rawId) {
       throw new BadRequestException('X-Boarding-House-Id header is required');
     }
 
+    // In case multiple headers were joined into a comma-separated string by Node.js, take the first value
+    if (rawId.includes(',')) {
+      rawId = rawId.split(',')[0].trim();
+    }
+
     // Reject non-UUID values early to avoid PostgreSQL cast errors (500)
-    if (!UUID_REGEX.test(boardingHouseId)) {
+    if (!UUID_REGEX.test(rawId)) {
       throw new BadRequestException(
         'X-Boarding-House-Id must be a valid UUID',
       );
     }
 
+    const userId = req.user?.id;
     if (!userId) {
       return false;
     }
 
     const house = await this.prisma.boardingHouse.findFirst({
-      where: { id: boardingHouseId, ownerId: userId },
-      select: { id: true },
+      where: { id: rawId, ownerId: userId },
+      select: { id: true, name: true },
     });
 
     if (!house) {
@@ -62,6 +76,12 @@ export class PropertyOwnershipGuard implements CanActivate {
       );
     }
 
+    // Attach validated property context to request object for downstream use
+    req.boardingHouseId = house.id;
+    req.boardingHouse = house;
+    req.headers['x-boarding-house-id'] = house.id;
+
     return true;
   }
 }
+
