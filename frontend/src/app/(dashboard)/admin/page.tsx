@@ -8,19 +8,73 @@ import {
   Megaphone, Newspaper, TrendingUp, ArrowRight, ArrowUpRight,
   CheckCircle2, ShieldAlert, ChevronRight
 } from "lucide-react";
+import { adminAnalyticsService, AdminOverviewResponse } from "@/services/admin-analytics.service";
 
 export default function AdminDashboardPage() {
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
-  // Mock quick stats - carefully balanced to prevent text wrapping/dropping
+  const [liveOverview, setLiveOverview] = React.useState<AdminOverviewResponse | null>(null);
+
+  React.useEffect(() => {
+    adminAnalyticsService
+      .getAdminOverview()
+      .then((data) => setLiveOverview(data))
+      .catch((err) => console.warn("Failed to fetch live admin overview, using fallback:", err));
+  }, []);
+
+  const totalUsersVal = liveOverview
+    ? new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.totalUsers)
+    : "12,480";
+
+  const userSubtext = liveOverview
+    ? `${liveOverview.userRoles?.tenant || 0} ${isEn ? "Tenants" : "Khách"} • ${liveOverview.userRoles?.landlord || 0} ${isEn ? "Landlords" : "Chủ trọ"} • ${liveOverview.userRoles?.employee || 0} ${isEn ? "Staff" : "NV"}`
+    : isEn ? "8,920 Tenants • 3,140 Landlords • 420 Staff" : "8.920 Khách • 3.140 Chủ trọ • 420 NV";
+
+  const userGrowth = liveOverview
+    ? `${liveOverview.userGrowthRate >= 0 ? "+" : ""}${liveOverview.userGrowthRate}%`
+    : "+14.2%";
+
+  const totalHousesVal = liveOverview
+    ? new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.totalHouses)
+    : "1,850";
+
+  const propSubtext = liveOverview
+    ? `${new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.totalRooms)} ${isEn ? "rooms" : "phòng"} • ${liveOverview.occupancyRate}% ${isEn ? "Occupancy" : "lấp đầy"}`
+    : isEn ? "24,600 rooms • 88.5% Occupancy" : "24.600 phòng • 88.5% lấp đầy";
+
+  const propGrowth = liveOverview
+    ? `${liveOverview.propertyGrowthRate >= 0 ? "+" : ""}${liveOverview.propertyGrowthRate}%`
+    : "+8.6%";
+
+  const revenueVal = liveOverview
+    ? new Intl.NumberFormat(isEn ? "en-US" : "vi-VN").format(liveOverview.platformRevenue)
+    : "148.500.000";
+
+  const revenueGrowth = liveOverview
+    ? `${liveOverview.revenueGrowthRate >= 0 ? "+" : ""}${liveOverview.revenueGrowthRate}%`
+    : "+22.4%";
+
+  const pendingGrv = liveOverview
+    ? String(liveOverview.pendingGrievancesCount)
+    : "7";
+
+  const urgentGrvText = liveOverview
+    ? `${liveOverview.urgentGrievancesCount} ${isEn ? "URGENT cases awaiting action" : "vụ việc KHẨN CẤP cần xử lý ngay"}`
+    : isEn ? "3 URGENT cases awaiting action" : "3 vụ việc KHẨN CẤP cần xử lý ngay";
+
+  const reportedItemsVal = liveOverview
+    ? String(liveOverview.reportedItemsCount)
+    : "12";
+
+  // Dynamic quick stats from live API with fallbacks
   const stats = [
     {
       id: "users",
       label: isEn ? "Total Users" : "Tổng người dùng",
-      value: "12,480",
-      subtext: isEn ? "8,920 Tenants • 3,140 Landlords • 420 Staff" : "8.920 Khách • 3.140 Chủ trọ • 420 NV",
-      growth: "+14.2%",
+      value: totalUsersVal,
+      subtext: userSubtext,
+      growth: userGrowth,
       isPositive: true,
       icon: Users,
       color: "text-blue-600 bg-blue-50 border-blue-100",
@@ -28,9 +82,9 @@ export default function AdminDashboardPage() {
     {
       id: "properties",
       label: isEn ? "Houses & Rooms" : "Nhà trọ & Phòng",
-      value: "1,850",
-      subtext: isEn ? "24,600 rooms • 88.5% Occupancy" : "24.600 phòng • 88.5% lấp đầy",
-      growth: "+8.6%",
+      value: totalHousesVal,
+      subtext: propSubtext,
+      growth: propGrowth,
       isPositive: true,
       icon: Building2,
       color: "text-emerald-600 bg-emerald-50 border-emerald-100",
@@ -38,10 +92,10 @@ export default function AdminDashboardPage() {
     {
       id: "revenue",
       label: isEn ? "Platform Revenue" : "Doanh thu nền tảng",
-      value: "148.500.000",
+      value: revenueVal,
       unit: "₫",
-      subtext: isEn ? "Deposit fees & Service packages" : "Phí cọc giữ chỗ & Gói dịch vụ",
-      growth: "+22.4%",
+      subtext: isEn ? "Subscription packages & Post credits" : "Gói dịch vụ chủ trọ & Lượt đăng tin",
+      growth: revenueGrowth,
       isPositive: true,
       icon: Wallet,
       color: "text-orange-600 bg-orange-50 border-orange-100",
@@ -49,26 +103,26 @@ export default function AdminDashboardPage() {
     {
       id: "grievances",
       label: isEn ? "Pending Grievances" : "Khiếu nại chờ xử lý",
-      value: "7",
-      subtext: isEn ? "3 URGENT cases awaiting action" : "3 vụ việc KHẨN CẤP cần xử lý ngay",
+      value: pendingGrv,
+      subtext: urgentGrvText,
       growth: isEn ? "Action needed" : "Cần can thiệp",
       isPositive: false,
       icon: AlertTriangle,
       color: "text-orange-600 bg-orange-50 border-orange-100",
-      badge: isEn ? "3 URGENT" : "3 KHẨN CẤP",
+      badge: liveOverview ? `${liveOverview.urgentGrievancesCount} ${isEn ? "URGENT" : "KHẨN CẤP"}` : isEn ? "3 URGENT" : "3 KHẨN CẤP",
       link: "/admin/grievances",
     },
     {
       id: "moderation",
       label: isEn ? "Reported Items" : "Vi phạm & Nghi vấn",
-      value: "12",
-      subtext: isEn ? "5 Fake prices • 4 Photo fraud • 3 Scam" : "5 Giá ảo • 4 Ảnh giả mạo • 3 Nghi vấn cọc",
+      value: reportedItemsVal,
+      subtext: isEn ? "Flagged rental listings" : "Tin đăng bị báo cáo / ẩn",
       growth: isEn ? "Needs review" : "Chờ kiểm tra",
       isPositive: false,
       icon: ShieldAlert,
       color: "text-amber-600 bg-amber-50 border-amber-100",
-      badge: isEn ? "12 Items" : "12 Mục",
-      link: "/admin/moderation",
+      badge: `${reportedItemsVal} ${isEn ? "Items" : "Mục"}`,
+      link: "/admin/blogs",
     },
   ];
 
@@ -350,7 +404,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
               <Link
-                href="/admin/moderation"
+                href="/admin/blogs"
                 className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <span>{isEn ? "Inspect (12)" : "Kiểm duyệt (12)"}</span>
@@ -382,7 +436,7 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <Link
-                    href="/admin/moderation"
+                    href="/admin/blogs"
                     className="shrink-0 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-md text-center cursor-pointer whitespace-nowrap"
                   >
                     {isEn ? "Inspect & Lock" : "Kiểm tra & Khóa"}
@@ -407,21 +461,21 @@ export default function AdminDashboardPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
-            href="/admin/moderation"
+            href="/admin/boarding-houses"
             className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <ShieldCheck className="w-5 h-5" />
+                  <Building2 className="w-5 h-5" />
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? "Content & House Moderation" : "Kiểm Duyệt & Giám Sát"}
+                {isEn ? "Boarding House Moderation" : "Kiểm Duyệt Nhà Trọ"}
               </h3>
               <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn ? "Inspect & lock fraudulent listings and properties" : "Kiểm tra từng tin đăng, khóa các cơ sở gian lận"}
+                {isEn ? "Inspect room capacities, occupancy & lock fraudulent houses" : "Thẩm định cơ sở, tỷ lệ lấp đầy, khóa nhà trọ vi phạm"}
               </p>
             </div>
           </Link>
@@ -478,10 +532,10 @@ export default function AdminDashboardPage() {
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? "Public Blog Management" : "Quản Lý Bài Viết Blog"}
+                {isEn ? "Blog & Post Moderation" : "Kiểm Duyệt Bài Viết"}
               </h3>
               <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn ? "Draft & publish tips and legal advice articles" : "Xuất bản bài viết cẩm nang thuê trọ, mẹo kinh doanh"}
+                {isEn ? "Inspect, edit, lock, publish & delete public rental posts" : "Kiểm tra, khóa tin, xuất bản và xóa bài đăng vi phạm"}
               </p>
             </div>
           </Link>

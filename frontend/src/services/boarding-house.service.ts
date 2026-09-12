@@ -325,4 +325,83 @@ export async function generateMultiPropertyAiStrategy(): Promise<AiStrategyRespo
   return response.data || (response as unknown as AiStrategyResponse);
 }
 
+export interface UserProfileDetails {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+  avatarUrl: string;
+  role: string;
+  status?: string;
+  createdAt: string;
+  idCardVerified?: boolean;
+  idCardNumber?: string;
+  totalProperties?: number;
+  roomNumber?: string;
+}
+
+export interface AdminBoardingHouseDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  address: string;
+  rawAddress?: {
+    houseNumber: string;
+    street: string;
+    ward: string;
+    district: string;
+    city: string;
+    province: string;
+    country: string;
+  };
+  builtAt: string;
+  totalFloor: number;
+  status: 'active' | 'inactive' | 'locked' | 'reported' | 'banned';
+  lockReason?: string;
+  lockedAt?: string;
+  thumbnail: string;
+  stats: {
+    totalRooms: number;
+    occupiedRooms: number;
+    vacantRooms: number;
+    occupancyRate: number;
+  };
+  owner: UserProfileDetails;
+  services: {
+    id: string;
+    name: string;
+    price: number;
+    unit: string;
+    autoApplied: boolean;
+    isMetered: boolean;
+  }[];
+  roomTypes: {
+    id: string;
+    name: string;
+    description: string | null;
+    area: number;
+    basePrice: number;
+    roomsCount: number;
+  }[];
+  grievances: {
+    id: string;
+    title: string;
+    description: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    status: 'pending' | 'in_progress' | 'resolved' | 'dismissed';
+    createdAt: string;
+    resolvedAt?: string | null;
+    resolutionNote?: string | null;
+    images?: string[];
+    sender: UserProfileDetails;
+  }[];
+}
+
+export async function getBoardingHouseDetail(id: string): Promise<AdminBoardingHouseDetail> {
+  const response = await api.get<any>(`/v1/boarding-houses/${id}/details`);
+  return (response?.data?.data || response?.data || response) as AdminBoardingHouseDetail;
+}
+
+
 

@@ -7,10 +7,27 @@ import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, B
 import { Customer, SystemTenantUser } from "./data";
 import { getLandlordContracts, searchTenantByPhone } from "@/services/contract.service";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function CustomersPage() {
   const { activeBuilding } = useAuth();
   const router = useRouter();
+  const t = useTranslations("landlord");
+  const { currentLocale } = useLanguage();
+
+  const getCustomerStatusLabel = (status: string) => {
+    switch (status) {
+      case "Đang ở":
+        return t("landlordCustomersStaying");
+      case "Sắp hết hợp đồng":
+        return t("landlordCustomersExpiringSoon");
+      case "Đã rời":
+        return t("landlordCustomersLeft");
+      default:
+        return status;
+    }
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -44,13 +61,14 @@ export default function CustomersPage() {
     type: "warning" | "error" | "success" | "info";
   }>({
     isOpen: false,
-    title: "Thông báo",
+    title: t("landlordCustomersAlertDefaultTitle"),
     message: "",
     type: "info",
   });
 
-  const showAlert = (message: string, type: "warning" | "error" | "success" | "info" = "warning", title: string = "Thông báo") => {
-    setAlertModal({ isOpen: true, title, message, type });
+  const showAlert = (message: string, type: "warning" | "error" | "success" | "info" = "warning", title?: string) => {
+    const finalTitle = title || t("landlordCustomersAlertDefaultTitle");
+    setAlertModal({ isOpen: true, title: finalTitle, message, type });
   };
 
   // 2-Way Add Tenant State
@@ -90,10 +108,10 @@ export default function CustomersPage() {
     if (isDirty) {
       setConfirmModal({
         isOpen: true,
-        title: "Xác nhận đóng form",
-        message: "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?",
-        confirmText: "Hủy thay đổi & Đóng",
-        cancelText: "Tiếp tục chỉnh sửa",
+        title: t("landlordCustomersConfirmCloseTitle"),
+        message: t("landlordCustomersConfirmCloseDesc"),
+        confirmText: t("landlordCustomersConfirmCloseDiscard"),
+        cancelText: t("landlordCustomersConfirmCloseKeep"),
         type: "warning",
         onConfirm: () => {
           setIsModalOpen(false);
@@ -233,11 +251,11 @@ export default function CustomersPage() {
 
   const handleSaveCustomer = () => {
     if (!nameInput.trim()) {
-      showAlert("Vui lòng nhập Họ và tên khách thuê!", "warning", "Thiếu thông tin");
+      showAlert(t("landlordCustomersAlertMissingName"), "warning", t("landlordCustomersAlertMissingInfo"));
       return;
     }
     if (!phoneInput.trim()) {
-      showAlert("Vui lòng nhập Số điện thoại liên hệ!", "warning", "Thiếu thông tin");
+      showAlert(t("landlordCustomersAlertMissingPhone"), "warning", t("landlordCustomersAlertMissingInfo"));
       return;
     }
 
@@ -260,11 +278,11 @@ export default function CustomersPage() {
         accountEmail: hasAccountState ? emailInput : undefined,
         updatedAt: new Date().toLocaleDateString("vi-VN")
       } : c));
-      showAlert("Đã cập nhật thông tin khách thuê thành công!", "success", "Cập nhật thành công");
+      showAlert(t("landlordCustomersAlertUpdateSuccess"), "success", t("landlordCustomersAlertUpdateTitle"));
     } else {
       const targetCCCD = cccdInput.trim();
       if (targetCCCD && customers.some(c => c.cccd === targetCCCD)) {
-        showAlert(`Khách thuê với số CCCD [${targetCCCD}] đã tồn tại trong danh sách của bạn! Vui lòng kiểm tra lại.`, "error", "Trùng lặp CCCD");
+        showAlert(t("landlordCustomersAlertDuplicateCccd").replace("{cccd}", targetCCCD), "error", t("landlordCustomersAlertDuplicateTitle"));
         return;
       }
 
@@ -280,9 +298,9 @@ export default function CustomersPage() {
         status: "Đang ở",
         dob: dobInput || "2000-01-01",
         gender: genderInput,
-        address: addressInput || "TP. Thủ Đức, TP.HCM",
+        address: addressInput || (currentLocale === "vi" ? "TP. Thủ Đức, TP.HCM" : "Thu Duc City, HCMC"),
         email: emailInput,
-        job: jobInput || "Tự do",
+        job: jobInput || (currentLocale === "vi" ? "Tự do" : "Freelancer"),
         workplace: workplaceInput || "TP.HCM",
         note: noteInput,
         hasAccount: hasAccountState,
@@ -291,7 +309,7 @@ export default function CustomersPage() {
         updatedAt: new Date().toLocaleDateString("vi-VN")
       };
       setCustomers(prev => [newCust, ...prev]);
-      showAlert("Đã thêm khách thuê mới vào danh sách thành công!", "success", "Thêm thành công");
+      showAlert(t("landlordCustomersAlertAddSuccess"), "success", t("landlordCustomersAlertAddTitle"));
     }
 
     setIsModalOpen(false);
@@ -318,7 +336,7 @@ export default function CustomersPage() {
     } : c));
 
     setLinkAccountModal({ isOpen: false, customer: null });
-    showAlert(`Đã liên kết thành công tài khoản Tenant ${user.name} (${user.email}) với hồ sơ khách thuê!`, "success", "Liên kết thành công");
+    showAlert(t("landlordCustomersAlertLinkSuccess").replace("{name}", user.name).replace("{email}", user.email), "success", t("landlordCustomersAlertLinkTitle"));
   };
 
   const [searchedUser, setSearchedUser] = useState<any | null>(null);
@@ -408,21 +426,21 @@ export default function CustomersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            Quản lý khách thuê
+            {t("landlordCustomersPageHeading")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
-            Danh sách khách thuê theo tòa nhà, phòng và trạng thái liên kết
+            {t("landlordCustomersPageSubheading")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => showAlert("Tính năng Import danh sách khách thuê bằng Excel đang được phát triển.", "info", "Tính năng thử nghiệm")}
+            onClick={() => showAlert(t("landlordCustomersAlertImportExcel"), "info", t("landlordCustomersAlertExperimentalTitle"))}
             className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
           >
             <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
           </button>
           <button
-            onClick={() => showAlert("Đã xuất danh sách khách thuê ra file Excel thành công!", "success", "Xuất file thành công")}
+            onClick={() => showAlert(t("landlordCustomersAlertExportExcel"), "success", t("landlordCustomersAlertExportTitle"))}
             className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
@@ -431,7 +449,7 @@ export default function CustomersPage() {
             onClick={handleOpenAddModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <UserPlus className="w-4 h-4" /> Thêm khách thuê
+            <UserPlus className="w-4 h-4" /> {t("landlordCustomersBtnAdd")}
           </button>
         </div>
       </div>
@@ -450,7 +468,7 @@ export default function CustomersPage() {
                 {activeBuilding.name}
               </h2>
               <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                Đang vận hành
+                {t("landlordContractsBannerOperating")}
               </span>
             </div>
 
@@ -466,12 +484,12 @@ export default function CustomersPage() {
                 rel="noreferrer"
                 className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>Xem Bản Đồ</span> &rarr;
+                <span>{t("landlordInvoicesViewMap")}</span> &rarr;
               </a>
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Quản lý tổng thể danh sách khách hàng lưu trú, thông tin liên lạc và tình trạng hợp đồng.
+              {t("landlordCustomersBannerSub")}
             </p>
           </div>
 
@@ -480,7 +498,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng khách</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordCustomersStatTotalShort")}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{totalCustomers}</span>
               </div>
             </div>
@@ -488,7 +506,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Đang ở</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordCustomersStatStayingShort")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{stayingCount}</span>
               </div>
             </div>
@@ -496,7 +514,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Sắp hết HĐ</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordCustomersStatExpiringShort")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{expiringCount}</span>
               </div>
             </div>
@@ -504,7 +522,7 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Đã rời</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordCustomersStatLeftShort")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{leftCount}</span>
               </div>
             </div>
@@ -519,17 +537,17 @@ export default function CustomersPage() {
           <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
             {/* Filter Pills */}
             {[
-              { id: "", label: "Tất cả", count: totalCustomers, color: "text-zinc-700 bg-zinc-100 border-zinc-200" },
-              { id: "Đang ở", label: "Đang ở", count: stayingCount, color: "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30" },
-              { id: "Sắp hết hợp đồng", label: "Sắp hết HĐ", count: expiringCount, color: "text-orange-700 bg-orange-50 border-orange-200" },
-              { id: "Đã rời", label: "Đã rời", count: leftCount, color: "text-blue-700 bg-blue-50 border-blue-200" },
+              { id: "", label: t("landlordCustomersAll"), count: totalCustomers, color: "text-zinc-700 bg-zinc-100 border-zinc-200" },
+              { id: "Đang ở", label: t("landlordCustomersStatStayingShort"), count: stayingCount, color: "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30" },
+              { id: "Sắp hết hợp đồng", label: t("landlordCustomersStatExpiringShort"), count: expiringCount, color: "text-orange-700 bg-orange-50 border-orange-200" },
+              { id: "Đã rời", label: t("landlordCustomersStatLeftShort"), count: leftCount, color: "text-blue-700 bg-blue-50 border-blue-200" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${statusFilter === tab.id
-                    ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs"
-                    : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                  ? "bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs"
+                  : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                   }`}
               >
                 <span className="whitespace-nowrap">{tab.label}</span>
@@ -548,7 +566,7 @@ export default function CustomersPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Tìm tên, SĐT, CCCD..."
+                placeholder={t("landlordCustomersSearchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -563,9 +581,9 @@ export default function CustomersPage() {
                 onChange={(e) => setSortFilter(e.target.value)}
                 className="pl-8 pr-7 py-1.5 text-xs font-semibold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-100 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap"
               >
-                <option value="">Sắp xếp</option>
-                <option value="name_asc">Theo tên (A-Z)</option>
-                <option value="room_asc">Theo số phòng</option>
+                <option value="">{t("landlordCustomersSort")}</option>
+                <option value="name_asc">{t("landlordCustomersSortName")}</option>
+                <option value="room_asc">{t("landlordCustomersSortRoom")}</option>
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             </div>
@@ -577,7 +595,7 @@ export default function CustomersPage() {
               onClick={() => { setViewMode("grid"); setItemsPerPage(6); setCurrentPage(1); }}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
                 }`}
-              title="Xem dạng thẻ (Grid)"
+              title={t("landlordCustomersViewGrid")}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -585,7 +603,7 @@ export default function CustomersPage() {
               onClick={() => { setViewMode("list"); setItemsPerPage(10); setCurrentPage(1); }}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list" ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold" : "text-zinc-500 hover:text-zinc-900"
                 }`}
-              title="Xem dạng bảng (List)"
+              title={t("landlordCustomersViewList")}
             >
               <List className="w-4 h-4" />
             </button>
@@ -643,7 +661,7 @@ export default function CustomersPage() {
                         ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
                         : 'bg-blue-50 text-blue-700 border border-blue-200'
                       }`}>
-                      {customer.status}
+                      {getCustomerStatusLabel(customer.status)}
                     </span>
                   </div>
 
@@ -653,13 +671,13 @@ export default function CustomersPage() {
                       <span className="font-bold text-zinc-900 whitespace-nowrap">{activeBuilding?.name || "Cơ sở"} — Phòng {customer.status === 'Đã rời' ? "—" : customer.room}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-zinc-400 font-medium whitespace-nowrap">Ngày ở:</span>
+                      <span className="text-zinc-400 font-medium whitespace-nowrap">{t("landlordCustomersStayDate")}</span>
                       <span className="font-semibold text-zinc-800 whitespace-nowrap">{customer.joinDate}</span>
                     </div>
                     {customer.status === 'Sắp hết hợp đồng' && (
                       <div className="flex justify-between items-center pt-1 border-t border-orange-200/60 text-orange-800 font-bold">
-                        <span className="whitespace-nowrap">⏳ Hạn hợp đồng:</span>
-                        <span className="text-orange-600 animate-pulse whitespace-nowrap">Còn 5 ngày</span>
+                        <span className="whitespace-nowrap">⏳ {t("landlordCustomersContractExpiry")}</span>
+                        <span className="text-orange-600 animate-pulse whitespace-nowrap">{t("landlordCustomersDaysRemainingShort")}</span>
                       </div>
                     )}
                   </div>
@@ -671,7 +689,7 @@ export default function CustomersPage() {
                       onClick={(e) => e.stopPropagation()}
                       className="py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-[11px] font-extrabold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                     >
-                      <PhoneCall className="w-3 h-3" /> Gọi
+                      <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
                     </a>
                     <a
                       href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
@@ -699,13 +717,13 @@ export default function CustomersPage() {
               <table className="w-full text-sm text-left relative">
                 <thead className="text-[11px] font-bold text-zinc-500 uppercase bg-zinc-50/80 border-b border-zinc-100 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-4 whitespace-nowrap">Tên khách thuê</th>
-                    <th className="px-6 py-4 whitespace-nowrap">SĐT</th>
+                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCustomerName")}</th>
+                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersPhone")}</th>
                     <th className="px-6 py-4 whitespace-nowrap">CCCD/CMND</th>
-                    <th className="px-6 py-4 whitespace-nowrap">Tòa nhà</th>
-                    <th className="px-6 py-4 whitespace-nowrap">Phòng hiện tại</th>
-                    <th className="px-6 py-4 whitespace-nowrap">Trạng thái</th>
-                    <th className="px-6 py-4 text-right whitespace-nowrap">Thao tác nhanh</th>
+                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersBuilding")}</th>
+                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCurrentRoom")}</th>
+                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersStatus")}</th>
+                    <th className="px-6 py-4 text-right whitespace-nowrap">{t("landlordCustomersActions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -752,17 +770,17 @@ export default function CustomersPage() {
                               ? 'bg-orange-50 text-orange-700 border-orange-200 animate-pulse'
                               : 'bg-blue-50 text-blue-700 border-blue-200'
                             }`}>
-                            {customer.status}
+                            {getCustomerStatusLabel(customer.status)}
                           </span>
                         </td>
                         <td className="px-6 py-3.5 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <a
                               href={`tel:${customer.phone}`}
-                              title="Gọi điện"
+                              title={t("landlordCustomersCallNow")}
                               className="px-2.5 py-1 bg-red-600 text-white border border-zinc-200 rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
                             >
-                              <PhoneCall className="w-3 h-3" /> Gọi
+                              <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
                             </a>
                             <a
                               href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
@@ -795,7 +813,7 @@ export default function CustomersPage() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
           <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-            <span>Hiển thị</span>
+            <span>{t("landlordInvoicesPaginationShow")}</span>
             <input
               type="number"
               min={1}
@@ -814,7 +832,7 @@ export default function CustomersPage() {
           <span className="hidden sm:inline text-zinc-300">|</span>
 
           <div>
-            <span className="font-extrabold text-zinc-800">{sortedCustomers.length === 0 ? 0 : startIndex + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(startIndex + itemsPerPage, sortedCustomers.length)}</span> trên tổng số <span className="font-extrabold text-zinc-800">{sortedCustomers.length}</span> khách thuê
+            <span className="font-extrabold text-zinc-800">{sortedCustomers.length === 0 ? 0 : startIndex + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(startIndex + itemsPerPage, sortedCustomers.length)}</span> {t("landlordCustomersOf")} <span className="font-extrabold text-zinc-800">{sortedCustomers.length}</span> {t("landlordCustomersTotalCustomers").toLowerCase()}
           </div>
         </div>
         {(() => {
@@ -830,17 +848,16 @@ export default function CustomersPage() {
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
                 className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                &larr; Trước
+                &larr; {t("landlordContractsPaginationPrev")}
               </button>
               {visiblePages.map(page => (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                    currentPage === page
+                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${currentPage === page
                       ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
                       : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                  }`}
+                    }`}
                 >
                   {page}
                 </button>
@@ -850,7 +867,7 @@ export default function CustomersPage() {
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
                 className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                Sau &rarr;
+                {t("landlordContractsPaginationNext")} &rarr;
               </button>
             </div>
           );
@@ -872,8 +889,8 @@ export default function CustomersPage() {
                   <User className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-zinc-900">{selectedCustomer ? "Chỉnh sửa khách thuê" : "Thêm khách thuê mới"}</h2>
-                  <p className="text-xs text-zinc-500 font-medium">Quản lý hồ sơ và liên kết tài khoản Tenant trên hệ thống</p>
+                  <h2 className="text-xl font-bold text-zinc-900">{selectedCustomer ? t("landlordCustomersEditCustomerTitle") : t("landlordCustomersAddCustomerTitle")}</h2>
+                  <p className="text-xs text-zinc-500 font-medium">{t("landlordCustomersCustomerModalSubtitle")}</p>
                 </div>
               </div>
               <button
@@ -903,7 +920,7 @@ export default function CustomersPage() {
                         }`}
                     >
                       <UserPlus className="w-4 h-4 text-[#2AC1BC]" />
-                      <span>Khách chưa có account</span>
+                      <span>{t("landlordCustomersNoAccountTab")}</span>
                     </button>
 
                     <button
@@ -915,7 +932,7 @@ export default function CustomersPage() {
                         }`}
                     >
                       <Users className="w-4 h-4" />
-                      <span>Khách đã có account</span>
+                      <span>{t("landlordCustomersHasAccountTab")}</span>
                     </button>
                   </div>
 
@@ -924,8 +941,8 @@ export default function CustomersPage() {
                     <div className="p-3 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-medium text-blue-800 flex items-start gap-2.5">
                       <AlertTriangle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-extrabold block text-blue-900 mb-0.5">Thêm mới thủ công</span>
-                        Khách thuê chưa đăng ký tài khoản trên hệ thống Dormio.
+                        <span className="font-extrabold block text-blue-900 mb-0.5">{t("landlordCustomersManualAdd")}</span>
+                        {t("landlordCustomersManualAddDesc")}
                       </div>
                     </div>
                   )}
@@ -935,7 +952,7 @@ export default function CustomersPage() {
                     <div className="p-4 bg-orange-50/60 border border-orange-200/80 rounded-2xl space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-orange-950 uppercase tracking-wider flex items-center gap-1.5">
-                          <Users className="w-4 h-4 text-[#FF6B35]" /> Tìm & Chọn tài khoản trong hệ thống
+                          <Users className="w-4 h-4 text-[#FF6B35]" /> {t("landlordCustomersSystemSearchLabel")}
                         </label>
                         <span className="text-[10px] font-black text-[#FF6B35] bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
                           Auto-Fill 100%
@@ -948,14 +965,14 @@ export default function CustomersPage() {
                           type="text"
                           value={systemSearchTerm}
                           onChange={(e) => setSystemSearchTerm(e.target.value)}
-                          placeholder="Nhập tên, số điện thoại (VD: 0912...), email hoặc số CCCD..."
+                          placeholder={t("landlordCustomersSystemSearchPlaceholder")}
                           className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] bg-white font-bold text-zinc-900 shadow-2xs"
                         />
                       </div>
 
                       <div className="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar pr-1">
                         {filteredSystemUsers.length === 0 ? (
-                          <p className="text-xs text-zinc-400 italic p-4 text-center bg-white/60 rounded-xl border border-dashed border-zinc-200">Không tìm thấy tài khoản Tenant nào trùng khớp với từ khóa tìm kiếm.</p>
+                          <p className="text-xs text-zinc-400 italic p-4 text-center bg-white/60 rounded-xl border border-dashed border-zinc-200">{t("landlordCustomersSystemSearchEmpty")}</p>
                         ) : (
                           filteredSystemUsers.map((user) => {
                             const isSelected = selectedSystemUser?.userId === user.userId;
@@ -977,7 +994,7 @@ export default function CustomersPage() {
                                       <span>{user.name}</span>
                                       {isSelected && (
                                         <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black">
-                                          Đã chọn
+                                          {t("landlordCustomersSelected")}
                                         </span>
                                       )}
                                     </div>
@@ -1005,7 +1022,7 @@ export default function CustomersPage() {
                                     : "bg-orange-50 text-[#FF6B35] border border-orange-200 hover:bg-[#FF6B35] hover:text-white"
                                     }`}
                                 >
-                                  {isSelected ? "Đã chọn" : "Chọn thêm"}
+                                  {isSelected ? t("landlordCustomersSelected") : t("landlordCustomersSelectMore")}
                                 </button>
                               </div>
                             );
@@ -1015,7 +1032,7 @@ export default function CustomersPage() {
 
                       {selectedSystemUser && (
                         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 font-bold flex items-center gap-2">
-                          <span>Đã tự động tải và cập nhật hồ sơ từ tài khoản <strong>{selectedSystemUser.name}</strong> ({selectedSystemUser.email})!</span>
+                          <span>{t("landlordCustomersAutoPopulatedNotice")} <strong>{selectedSystemUser.name}</strong> ({selectedSystemUser.email})!</span>
                         </div>
                       )}
                     </div>
@@ -1025,21 +1042,21 @@ export default function CustomersPage() {
 
               {/* PERSONAL INFO FIELDS */}
               <div className="space-y-4">
-                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider border-b border-zinc-200 pb-1">THÔNG TIN HỒ SƠ KHÁCH THUÊ</h3>
+                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider border-b border-zinc-200 pb-1">{t("landlordCustomersTenantProfileSection")}</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Họ và tên khách thuê <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersFullNameLabel")} <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
-                      placeholder="VD: Nguyễn Văn A"
+                      placeholder={t("landlordCustomersFullNamePlaceholder")}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Số CCCD / CMND <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersCccdLabel")} <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={cccdInput}
@@ -1052,7 +1069,7 @@ export default function CustomersPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Số điện thoại liên hệ <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersPhoneLabel")} <span className="text-red-500">*</span></label>
                     <input
                       type="tel"
                       value={phoneInput}
@@ -1062,7 +1079,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Địa chỉ Email</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersEmailLabel")}</label>
                     <input
                       type="email"
                       value={emailInput}
@@ -1075,7 +1092,7 @@ export default function CustomersPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Ngày sinh</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersDobLabel")}</label>
                     <input
                       type="date"
                       value={dobInput}
@@ -1084,48 +1101,48 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Giới tính</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersGenderLabel")}</label>
                     <select
                       value={genderInput}
                       onChange={(e) => setGenderInput(e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     >
-                      <option value="nam">Nam</option>
-                      <option value="nu">Nữ</option>
-                      <option value="khac">Khác</option>
+                      <option value="nam">{t("landlordCustomersGenderMale")}</option>
+                      <option value="nu">{t("landlordCustomersGenderFemale")}</option>
+                      <option value="khac">{t("landlordCustomersGenderOther")}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700">Địa chỉ thường trú</label>
+                  <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersPermanentAddressLabel")}</label>
                   <textarea
                     rows={2}
                     value={addressInput}
                     onChange={(e) => setAddressInput(e.target.value)}
-                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                    placeholder={t("landlordCustomersPermanentAddressPlaceholder")}
                     className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
                   ></textarea>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Nghề nghiệp</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersJobLabel")}</label>
                     <input
                       type="text"
                       value={jobInput}
                       onChange={(e) => setJobInput(e.target.value)}
-                      placeholder="VD: Kỹ sư phần mềm, Sinh viên..."
+                      placeholder={t("landlordCustomersJobPlaceholder")}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Nơi làm việc / Học tập</label>
+                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersWorkplaceLabel")}</label>
                     <input
                       type="text"
                       value={workplaceInput}
                       onChange={(e) => setWorkplaceInput(e.target.value)}
-                      placeholder="VD: Công ty FPT, Đại học SPKT..."
+                      placeholder={t("landlordCustomersWorkplacePlaceholder")}
                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                     />
                   </div>
@@ -1134,12 +1151,12 @@ export default function CustomersPage() {
 
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700">Ghi chú thêm</label>
+                  <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersNotesMoreLabel")}</label>
                   <textarea
                     rows={2}
                     value={noteInput}
                     onChange={(e) => setNoteInput(e.target.value)}
-                    placeholder="Ghi chú thêm về thông tin cá nhân khách thuê..."
+                    placeholder={t("landlordCustomersPermanentAddressPlaceholder")}
                     className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
                   ></textarea>
                 </div>
@@ -1149,7 +1166,7 @@ export default function CustomersPage() {
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50">
               <div className="text-xs font-bold text-zinc-500">
-                Trạng thái TK: {hasAccountState ? <span className="text-emerald-600 font-extrabold">✓ Đã liên kết Account</span> : <span className="text-amber-600 font-extrabold">Chưa liên kết TK</span>}
+                {t("landlordCustomersAccountStatusLabel")} {hasAccountState ? <span className="text-emerald-600 font-extrabold">✓ {t("landlordCustomersAccountLinked")}</span> : <span className="text-amber-600 font-extrabold">{t("landlordCustomersAccountUnlinked")}</span>}
               </div>
 
               <div className="flex gap-2">
@@ -1158,14 +1175,14 @@ export default function CustomersPage() {
                   onClick={handleCloseModal}
                   className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordCustomersCancelBtn")}
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveCustomer}
                   className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
                 >
-                  {selectedCustomer ? "Lưu thay đổi" : "Lưu khách thuê"}
+                  {selectedCustomer ? t("landlordCustomersSaveChangesBtn") : t("landlordCustomersSaveCustomerBtn")}
                 </button>
               </div>
             </div>
@@ -1188,8 +1205,8 @@ export default function CustomersPage() {
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-black text-zinc-900">Liên Kết Tài Khoản Tenant</h2>
-                    <p className="text-xs text-zinc-500 font-medium">Hồ sơ: {linkAccountModal.customer?.name} ({linkAccountModal.customer?.phone})</p>
+                    <h2 className="text-base font-black text-zinc-900">{t("landlordCustomersLinkAccountTitle")}</h2>
+                    <p className="text-xs text-zinc-500 font-medium">{t("landlordCustomersProfilePrefix")} {linkAccountModal.customer?.name} ({linkAccountModal.customer?.phone})</p>
                   </div>
                 </div>
                 <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full transition-colors cursor-pointer">
@@ -1204,7 +1221,7 @@ export default function CustomersPage() {
                     type="text"
                     value={linkSearchQuery}
                     onChange={(e) => setLinkSearchQuery(e.target.value)}
-                    placeholder="Tìm tài khoản theo tên, SĐT, Email..."
+                    placeholder={t("landlordCustomersSearchAccountPlaceholder")}
                     className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] font-bold text-zinc-900 bg-white"
                   />
                 </div>
@@ -1244,7 +1261,7 @@ export default function CustomersPage() {
                           onClick={() => handleLinkAccountSubmit(u)}
                           className="px-3.5 py-1.5 bg-[#FF6B35] hover:bg-[#e05a2b] text-white font-black text-xs rounded-xl transition-all shadow-2xs shrink-0 cursor-pointer"
                         >
-                          Liên kết
+                          {t("landlordCustomersLinkAction")}
                         </button>
                       </div>
                     ))
@@ -1263,7 +1280,7 @@ export default function CustomersPage() {
 
               <div className="p-4 border-t border-zinc-100 flex justify-end bg-zinc-50">
                 <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100">
-                  Đóng
+                  {t("landlordCustomersCloseModal")}
                 </button>
               </div>
             </div>
@@ -1296,8 +1313,8 @@ function ConfirmModal({
   isOpen,
   title,
   message,
-  confirmText = "Hủy thay đổi & Đóng",
-  cancelText = "Tiếp tục chỉnh sửa",
+  confirmText,
+  cancelText,
   type = "warning",
   onConfirm,
   onCancel
@@ -1311,7 +1328,11 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("landlord");
   if (!isOpen) return null;
+
+  const actualConfirm = confirmText || t("landlordCustomersConfirmCloseDiscard");
+  const actualCancel = cancelText || t("landlordCustomersConfirmCloseKeep");
 
   return (
     <div
@@ -1337,14 +1358,14 @@ function ConfirmModal({
             onClick={onCancel}
             className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
           >
-            {cancelText}
+            {actualCancel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
           >
-            {confirmText}
+            {actualConfirm}
           </button>
         </div>
       </div>
@@ -1365,6 +1386,7 @@ function AlertModal({
   type?: "warning" | "error" | "success" | "info";
   onClose: () => void;
 }) {
+  const t = useTranslations("landlord");
   if (!isOpen) return null;
 
   const config = {
@@ -1409,7 +1431,7 @@ function AlertModal({
           onClick={onClose}
           className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
         >
-          Đã hiểu
+          {t("landlordCustomersUnderstood")}
         </button>
       </div>
     </div>

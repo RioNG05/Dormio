@@ -1321,6 +1321,219 @@ async function main() {
     },
   });
 
+  // ─── 23. SUBSCRIPTION PLANS & PLATFORM REVENUE (UC-A-06) ──────────────────
+  console.log('💳 Creating platform monetization & historical revenue data...');
+
+  // Seed user subscriptions across multiple months of 2026
+  const monthsData = [
+    { month: 0, day: 5, plusCount: 3, proCount: 2, yearlyPlus: 1, yearlyPro: 1, postPurchases: 4 },
+    { month: 1, day: 10, plusCount: 4, proCount: 3, yearlyPlus: 1, yearlyPro: 2, postPurchases: 6 },
+    { month: 2, day: 12, plusCount: 5, proCount: 4, yearlyPlus: 2, yearlyPro: 1, postPurchases: 8 },
+    { month: 3, day: 8, plusCount: 6, proCount: 5, yearlyPlus: 2, yearlyPro: 2, postPurchases: 9 },
+    { month: 4, day: 15, plusCount: 7, proCount: 6, yearlyPlus: 3, yearlyPro: 2, postPurchases: 12 },
+    { month: 5, day: 18, plusCount: 8, proCount: 7, yearlyPlus: 3, yearlyPro: 3, postPurchases: 14 },
+    { month: 6, day: 20, plusCount: 9, proCount: 8, yearlyPlus: 4, yearlyPro: 3, postPurchases: 16 },
+    { month: 7, day: 22, plusCount: 10, proCount: 9, yearlyPlus: 4, yearlyPro: 4, postPurchases: 18 },
+  ];
+
+  let receiptCounter = 1000;
+
+  for (const mData of monthsData) {
+    // Plus Monthly
+    for (let i = 0; i < mData.plusCount; i++) {
+      receiptCounter++;
+      const paidDate = new Date(Date.UTC(2026, mData.month, mData.day + (i % 5)));
+      const sub = await prisma.userSubscription.create({
+        data: {
+          userId: landlord2.id,
+          planName: SubscriptionPackage.plus,
+          startDate: paidDate,
+          endDate: new Date(Date.UTC(2026, mData.month + 1, mData.day + (i % 5))),
+          billingCycle: BillingCycle.monthly,
+          price: 199000,
+          status: SubscriptionStatus.active,
+          createdAt: paidDate,
+        },
+      });
+
+      await prisma.payment.create({
+        data: {
+          payerId: landlord2.id,
+          subscriptionId: sub.id,
+          type: PaymentType.charge,
+          amount: 199000,
+          method: PaymentMethod.banking,
+          status: PaymentStatus.success,
+          receiptNumber: `REC-PL-M-${receiptCounter}`,
+          transactionRef: `VNPAY_${paidDate.getTime()}_${i}`,
+          paidAt: paidDate,
+          createdAt: paidDate,
+        },
+      });
+    }
+
+    // Pro Monthly
+    for (let i = 0; i < mData.proCount; i++) {
+      receiptCounter++;
+      const paidDate = new Date(Date.UTC(2026, mData.month, mData.day + 1 + (i % 5)));
+      const sub = await prisma.userSubscription.create({
+        data: {
+          userId: landlord2.id,
+          planName: SubscriptionPackage.pro,
+          startDate: paidDate,
+          endDate: new Date(Date.UTC(2026, mData.month + 1, mData.day + 1 + (i % 5))),
+          billingCycle: BillingCycle.monthly,
+          price: 399000,
+          status: SubscriptionStatus.active,
+          createdAt: paidDate,
+        },
+      });
+
+      await prisma.payment.create({
+        data: {
+          payerId: landlord2.id,
+          subscriptionId: sub.id,
+          type: PaymentType.charge,
+          amount: 399000,
+          method: PaymentMethod.banking,
+          status: PaymentStatus.success,
+          receiptNumber: `REC-PR-M-${receiptCounter}`,
+          transactionRef: `VNPAY_${paidDate.getTime()}_${i}`,
+          paidAt: paidDate,
+          createdAt: paidDate,
+        },
+      });
+    }
+
+    // Plus Yearly
+    for (let i = 0; i < mData.yearlyPlus; i++) {
+      receiptCounter++;
+      const paidDate = new Date(Date.UTC(2026, mData.month, mData.day + 2));
+      const sub = await prisma.userSubscription.create({
+        data: {
+          userId: adminUser.id,
+          planName: SubscriptionPackage.plus,
+          startDate: paidDate,
+          endDate: new Date(Date.UTC(2027, mData.month, mData.day + 2)),
+          billingCycle: BillingCycle.yearly,
+          price: 1990000,
+          status: SubscriptionStatus.active,
+          createdAt: paidDate,
+        },
+      });
+
+      await prisma.payment.create({
+        data: {
+          payerId: adminUser.id,
+          subscriptionId: sub.id,
+          type: PaymentType.charge,
+          amount: 1990000,
+          method: PaymentMethod.banking,
+          status: PaymentStatus.success,
+          receiptNumber: `REC-PL-Y-${receiptCounter}`,
+          transactionRef: `VNPAY_${paidDate.getTime()}_Y${i}`,
+          paidAt: paidDate,
+          createdAt: paidDate,
+        },
+      });
+    }
+
+    // Pro Yearly
+    for (let i = 0; i < mData.yearlyPro; i++) {
+      receiptCounter++;
+      const paidDate = new Date(Date.UTC(2026, mData.month, mData.day + 3));
+      const sub = await prisma.userSubscription.create({
+        data: {
+          userId: adminUser.id,
+          planName: SubscriptionPackage.pro,
+          startDate: paidDate,
+          endDate: new Date(Date.UTC(2027, mData.month, mData.day + 3)),
+          billingCycle: BillingCycle.yearly,
+          price: 3990000,
+          status: SubscriptionStatus.active,
+          createdAt: paidDate,
+        },
+      });
+
+      await prisma.payment.create({
+        data: {
+          payerId: adminUser.id,
+          subscriptionId: sub.id,
+          type: PaymentType.charge,
+          amount: 3990000,
+          method: PaymentMethod.banking,
+          status: PaymentStatus.success,
+          receiptNumber: `REC-PR-Y-${receiptCounter}`,
+          transactionRef: `VNPAY_${paidDate.getTime()}_PY${i}`,
+          paidAt: paidDate,
+          createdAt: paidDate,
+        },
+      });
+    }
+
+    // Post purchases (Credit Packages)
+    for (let i = 0; i < mData.postPurchases; i++) {
+      receiptCounter++;
+      const paidDate = new Date(Date.UTC(2026, mData.month, mData.day + (i % 10)));
+      const qty = i % 2 === 0 ? 10 : 25;
+      const unitPrice = 30000;
+      const totalAmount = qty * unitPrice;
+
+      const pp = await prisma.postPurchase.create({
+        data: {
+          buyerId: landlord2.id,
+          quantityPurchase: qty,
+          unitPrice,
+          totalAmount,
+          status: PostPurchaseStatus.paid,
+          createdAt: paidDate,
+          activatedAt: paidDate,
+        },
+      });
+
+      await prisma.payment.create({
+        data: {
+          payerId: landlord2.id,
+          postPurchaseId: pp.id,
+          type: PaymentType.charge,
+          amount: totalAmount,
+          method: PaymentMethod.banking,
+          status: PaymentStatus.success,
+          receiptNumber: `REC-PP-${receiptCounter}`,
+          transactionRef: `VNPAY_PP_${paidDate.getTime()}_${i}`,
+          paidAt: paidDate,
+          createdAt: paidDate,
+        },
+      });
+    }
+  }
+
+  // Add a sample refund linked via refundPaymentId
+  const refundCharge = await prisma.payment.findFirst({
+    where: { type: PaymentType.charge, subscriptionId: { not: null } },
+  });
+
+  if (refundCharge) {
+    const refundPayment = await prisma.payment.create({
+      data: {
+        payerId: refundCharge.payerId,
+        type: PaymentType.refund,
+        amount: refundCharge.amount,
+        method: PaymentMethod.banking,
+        status: PaymentStatus.success,
+        receiptNumber: `REF-${receiptCounter + 1}`,
+        transactionRef: `REFUND_${Date.now()}`,
+        paidAt: new Date(Date.UTC(2026, 6, 15)),
+        createdAt: new Date(Date.UTC(2026, 6, 15)),
+      },
+    });
+
+    await prisma.payment.update({
+      where: { id: refundCharge.id },
+      data: { refundPaymentId: refundPayment.id },
+    });
+  }
+
   console.log('✅ Database seeding completed successfully!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('🔑 ADMIN CREDENTIALS:');

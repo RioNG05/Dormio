@@ -1,13 +1,18 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   Megaphone, Bell, Mail, MessageSquare, Send, CheckCircle2,
   Clock, AlertCircle, Search, Filter, LayoutGrid, Table as TableIcon,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X,
-  Plus, Users, Smartphone, Eye, Calendar, Sparkles, AlertTriangle
+  Plus, Users, Smartphone, Eye, Calendar, Sparkles, AlertTriangle,
+  RefreshCw, RotateCcw
 } from "lucide-react";
+import {
+  adminNotificationService,
+  MassNotificationStatusCounts,
+} from "@/services/admin-notification.service";
 
 interface NotificationCampaign {
   id: string;
@@ -138,6 +143,57 @@ export default function AdminNotificationsPage() {
     },
   ]);
 
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [liveCounts, setLiveCounts] = useState<MassNotificationStatusCounts | null>(null);
+
+  const fetchLiveCampaigns = useCallback(async (isManualRefresh = false) => {
+    if (isManualRefresh) setRefreshing(true);
+    else setLoading(true);
+
+    try {
+      const rawRes: any = await adminNotificationService.getMassNotificationJobs({
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        channel: channelFilter !== "all" ? channelFilter : undefined,
+        search: searchQuery.trim() || undefined,
+        page: 1,
+        limit: 100,
+      });
+
+      const res = rawRes?.data ?? rawRes;
+
+      if (res && Array.isArray(res.items)) {
+        const mapped: NotificationCampaign[] = res.items.map((item: any) => ({
+          id: item.id,
+          name: item.title,
+          title: item.title,
+          content: item.content,
+          targetGroup: item.targetType as any,
+          targetLabel: item.targetLabel,
+          targetId: item.targetId,
+          channels: [item.channel as any],
+          status: item.status,
+          totalRecipients: item.totalRecipients,
+          sentCount: item.sentCount,
+          failedCount: item.failedCount,
+          createdAt: item.createdAt ? item.createdAt.replace("T", " ").substring(0, 16) : "",
+          createdBy: item.creatorName || "Admin Quản Trị",
+        }));
+        setCampaigns(mapped);
+        if (res.counts) setLiveCounts(res.counts);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch live mass notifications, keeping fallback:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [statusFilter, channelFilter, searchQuery]);
+
+  useEffect(() => {
+    fetchLiveCampaigns();
+  }, [fetchLiveCampaigns]);
+
   // Filtered dataset
   const currentDataset = useMemo(() => {
     return campaigns.filter((item) => {
@@ -252,60 +308,92 @@ export default function AdminNotificationsPage() {
   };
 
   // Send campaign
-  const handleSendCampaign = () => {
+  const handleSendCampaign = async () => {
     if (!composeTitle.trim() || !composeContent.trim()) {
       setFormError(isEn ? "Please fill in notification title and message content." : "Vui lòng nhập tiêu đề và nội dung thông báo.");
       return;
     }
 
     if (composeTarget === "specific_user" && !specificUserId.trim()) {
-      setFormError(isEn ? "Please enter recipient User UUID or Phone Number." : "Vui lòng nhập mã User UUID hoặc số điện thoại của người nhận.");
+      setFormError(isEn ? "Please enter recipient User UUID." : "Vui lòng nhập mã User UUID của người nhận.");
       return;
     }
 
-    const newId = `CMP-${Math.floor(Math.random() * 900) + 410}`;
-    let recipients = 12480;
-    let label = isEn ? "All Users" : "Toàn bộ người dùng";
-    if (composeTarget === "all_landlords") {
-      recipients = 3140;
-      label = isEn ? "All Landlords" : "Tất cả Chủ trọ";
-    } else if (composeTarget === "all_tenants") {
-      recipients = 8920;
-      label = isEn ? "All Tenants" : "Tất cả Khách thuê";
-    } else if (composeTarget === "all_staff") {
-      recipients = 420;
-      label = isEn ? "All Staff" : "Tất cả Nhân viên";
-    } else if (composeTarget === "all_admins") {
-      recipients = 15;
-      label = isEn ? "All Admins" : "Quản trị viên";
-    } else if (composeTarget === "specific_user") {
-      recipients = 1;
-      label = `${isEn ? "User" : "Người dùng"}: ${specificUserId.trim()}`;
+    const channelsToSend = composeChannels.length > 0 ? composeChannels : ["in_app"];
+
+    try {
+      await Promise.all(
+        channelsToSend.map((ch) =>
+          adminNotificationService.createMassNotificationJob({
+            channel: ch as any,
+            targetType: composeTarget === "all_tenants" ? "all_users" : (composeTarget as any),
+            targetId: composeTarget === "specific_user" ? specificUserId.trim() : undefined,
+            title: composeTitle.trim(),
+            content: composeContent.trim(),
+          })
+        )
+      );
+      await fetchLiveCampaigns(true);
+    } catch (err) {
+      console.warn("Failed to create mass notification on backend, saving locally:", err);
+      const newId = `CMP-${Math.floor(Math.random() * 900) + 410}`;
+      let recipients = 12480;
+      let label = isEn ? "All Users" : "Toàn bộ người dùng";
+      if (composeTarget === "all_landlords") {
+        recipients = 3140;
+        label = isEn ? "All Landlords" : "Tất cả Chủ trọ";
+      } else if (composeTarget === "all_tenants") {
+        recipients = 8920;
+        label = isEn ? "All Tenants" : "Tất cả Khách thuê";
+      } else if (composeTarget === "all_staff") {
+        recipients = 420;
+        label = isEn ? "All Staff" : "Tất cả Nhân viên";
+      } else if (composeTarget === "all_admins") {
+        recipients = 15;
+        label = isEn ? "All Admins" : "Quản trị viên";
+      } else if (composeTarget === "specific_user") {
+        recipients = 1;
+        label = `${isEn ? "User" : "Người dùng"}: ${specificUserId.trim()}`;
+      }
+
+      const nowStr = new Date().toISOString().replace("T", " ").substring(0, 16);
+
+      const newCampaign: NotificationCampaign = {
+        id: newId,
+        name: composeName.trim() || composeTitle.trim(),
+        title: composeTitle.trim(),
+        content: composeContent.trim(),
+        targetGroup: composeTarget,
+        targetLabel: label,
+        targetId: composeTarget === "specific_user" ? specificUserId.trim() : undefined,
+        channels: composeChannels,
+        status: composeScheduleType === "now" ? "pending" : "pending",
+        totalRecipients: recipients,
+        sentCount: composeScheduleType === "now" ? Math.floor(recipients * 0.85) : 0,
+        failedCount: 0,
+        createdAt: nowStr,
+        scheduledFor: composeScheduleType === "later" ? composeScheduleTime : undefined,
+        createdBy: "Admin Quản Trị",
+      };
+
+      setCampaigns((prev) => [newCampaign, ...prev]);
     }
 
-    const nowStr = new Date().toISOString().replace("T", " ").substring(0, 16);
-
-    const newCampaign: NotificationCampaign = {
-      id: newId,
-      name: composeName.trim() || composeTitle.trim(),
-      title: composeTitle.trim(),
-      content: composeContent.trim(),
-      targetGroup: composeTarget,
-      targetLabel: label,
-      targetId: composeTarget === "specific_user" ? specificUserId.trim() : undefined,
-      channels: composeChannels,
-      status: composeScheduleType === "now" ? "pending" : "pending",
-      totalRecipients: recipients,
-      sentCount: composeScheduleType === "now" ? Math.floor(recipients * 0.85) : 0,
-      failedCount: 0,
-      createdAt: nowStr,
-      scheduledFor: composeScheduleType === "later" ? composeScheduleTime : undefined,
-      createdBy: "Admin Quản Trị",
-    };
-
-    setCampaigns((prev) => [newCampaign, ...prev]);
     setIsComposeOpen(false);
     resetComposer();
+  };
+
+  // Retry campaign
+  const handleRetryCampaign = async (jobId: string) => {
+    try {
+      await adminNotificationService.retryMassNotificationJob(jobId);
+      await fetchLiveCampaigns(true);
+      if (inspectCampaign?.id === jobId) {
+        setInspectCampaign((prev) => (prev ? { ...prev, status: "pending", failedCount: 0 } : null));
+      }
+    } catch (err) {
+      console.warn("Failed to retry campaign:", err);
+    }
   };
 
   // Helper Channel Icon
@@ -399,13 +487,43 @@ export default function AdminNotificationsPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsComposeOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-all shadow-sm cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{isEn ? "Compose Campaign" : "Tạo Chiến Dịch Mới"}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Live KPI summary */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider block text-emerald-600">
+                {isEn ? "Sent" : "Đã gửi"}
+              </span>
+              <span className="text-sm font-black leading-tight block">
+                {liveCounts ? liveCounts.sent : campaigns.filter((c) => c.status === "sent").length}
+              </span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider block text-blue-600">
+                {isEn ? "Pending" : "Chờ xử lý"}
+              </span>
+              <span className="text-sm font-black leading-tight block">
+                {liveCounts ? liveCounts.pending : campaigns.filter((c) => c.status === "pending").length}
+              </span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider block text-rose-600">
+                {isEn ? "Failed" : "Thất bại"}
+              </span>
+              <span className="text-sm font-black leading-tight block">
+                {liveCounts ? liveCounts.failed : campaigns.filter((c) => c.status === "failed").length}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsComposeOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-all shadow-sm cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isEn ? "Compose Campaign" : "Tạo Chiến Dịch Mới"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
@@ -478,8 +596,17 @@ export default function AdminNotificationsPage() {
           </select>
         </div>
 
-        {/* View Mode (Rule #9) */}
-        <div className="flex items-center gap-3 self-end lg:self-auto">
+        {/* View Mode (Rule #9) & Refresh */}
+        <div className="flex items-center gap-2.5 self-end lg:self-auto">
+          <button
+            onClick={() => fetchLiveCampaigns(true)}
+            disabled={refreshing || loading}
+            className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold disabled:opacity-50"
+            title={isEn ? "Refresh queue" : "Làm mới danh sách"}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-orange-600" : ""}`} />
+            <span className="hidden sm:inline">{isEn ? "Refresh" : "Làm mới"}</span>
+          </button>
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
             <button
               onClick={() => handleViewModeChange("grid")}
@@ -1068,7 +1195,16 @@ export default function AdminNotificationsPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end">
+            <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2">
+              {(inspectCampaign.status === "failed" || inspectCampaign.status === "pending") && (
+                <button
+                  onClick={() => handleRetryCampaign(inspectCampaign.id)}
+                  className="px-4 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{isEn ? "Retry Job" : "Thử lại gửi"}</span>
+                </button>
+              )}
               <button
                 onClick={() => setInspectCampaign(null)}
                 className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"

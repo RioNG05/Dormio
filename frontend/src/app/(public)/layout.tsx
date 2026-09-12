@@ -11,6 +11,7 @@ import {
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import NotificationBell from "@/components/NotificationBell";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function PublicLayout({
@@ -320,15 +321,19 @@ export default function PublicLayout({
               </div>
             )}
 
-            {/* 🌐 VERY END RIGHT SIDE - Language Switcher */}
-            <div className="pl-1 border-l border-zinc-200/80">
+            {/* 🔔 Notification Popup & 🌐 Language Switcher */}
+            <div className="flex items-center gap-1 pl-1 border-l border-zinc-200/80">
+              <NotificationBell align="right" />
               <LanguageSwitcher />
             </div>
 
           </div>
 
           {/* Mobile Controls */}
-          <div className="flex items-center gap-2 lg:hidden">`n            <LanguageSwitcher />`n            <button
+          <div className="flex items-center gap-1.5 lg:hidden">
+            <NotificationBell align="right" />
+            <LanguageSwitcher />
+            <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 bg-zinc-100 text-zinc-900 rounded-2xl cursor-pointer hover:bg-zinc-200 transition-all border border-zinc-200/80"
               aria-label="Toggle Navigation Menu"

@@ -23,7 +23,7 @@ export interface PostListing {
   title: string;
   content: string;
   depositAmount: number;
-  status: "draft" | "posted" | "hidden";
+  status: "draft" | "posted" | "hidden" | "locked";
   sourceType: "free_quote" | "purchased";
   postPurchaseId?: string | null;
   resultedContractId?: string | null;
@@ -82,13 +82,19 @@ export interface PublicPostListing {
   poster?: PublicPoster | null;
   viewsCount: number;
   savedCount: number;
+  reportsCount?: number;
+  reportReasons?: string[];
+  lockReason?: string;
+  lockedAt?: string;
 }
 
 export interface BrowsePostsParams {
   search?: string;
+  status?: string;
   province?: string;
   district?: string;
   ward?: string;
+  property?: string;
   minPrice?: number;
   maxPrice?: number;
   minArea?: number;
@@ -126,6 +132,14 @@ export interface CreatePostPayload {
   depositAmount: number;
   imageUrls?: string[];
   status?: "draft" | "posted";
+}
+
+export interface UpdatePostPayload {
+  title?: string;
+  content?: string;
+  depositAmount?: number;
+  imageUrls?: string[];
+  status?: "draft" | "posted" | "hidden" | "locked";
 }
 
 export interface PaginatedPostsResponse {
@@ -184,9 +198,11 @@ export const postService = {
   ): Promise<PaginatedPublicPostsResponse> {
     const queryParams: Record<string, string> = {};
     if (params?.search) queryParams.search = params.search;
+    if (params?.status) queryParams.status = params.status;
     if (params?.province) queryParams.province = params.province;
     if (params?.district) queryParams.district = params.district;
     if (params?.ward) queryParams.ward = params.ward;
+    if (params?.property && params.property !== "all") queryParams.property = params.property;
     if (params?.minPrice !== undefined) queryParams.minPrice = String(params.minPrice);
     if (params?.maxPrice !== undefined) queryParams.maxPrice = String(params.maxPrice);
     if (params?.minArea !== undefined) queryParams.minArea = String(params.minArea);
@@ -201,6 +217,19 @@ export const postService = {
       return (res as { success: boolean; data: PaginatedPublicPostsResponse }).data;
     }
     return res as PaginatedPublicPostsResponse;
+  },
+
+  /**
+   * Get distinct property / boarding house names for listing filters
+   */
+  async getProperties(): Promise<string[]> {
+    const res = await api.get<{ success: boolean; data: string[] } | string[]>(
+      "/v1/posts/properties"
+    );
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: string[] }).data;
+    }
+    return (res as string[]) || [];
   },
 
   /**
@@ -315,11 +344,11 @@ export const postService = {
   },
 
   /**
-   * Update post status (e.g. pause/hidden or draft to posted)
+   * Update post status (e.g. pause/hidden, publish draft, or lock)
    */
   async updatePostStatus(
     id: string,
-    status: "draft" | "posted" | "hidden"
+    status: "draft" | "posted" | "hidden" | "locked"
   ): Promise<PostListing> {
     const res = await api.patch<{ success: boolean; data: PostListing } | PostListing>(
       `/v1/posts/${id}/status`,
@@ -329,6 +358,38 @@ export const postService = {
       return (res as { success: boolean; data: PostListing }).data;
     }
     return res as PostListing;
+  },
+
+  /**
+   * Update post listing content (title, content, deposit, images, status)
+   */
+  async updatePost(
+    id: string,
+    payload: UpdatePostPayload
+  ): Promise<PostListing> {
+    const res = await api.patch<{ success: boolean; data: PostListing } | PostListing>(
+      `/v1/posts/${id}`,
+      payload
+    );
+    if (res && typeof res === "object" && "success" in res) {
+      return (res as { success: boolean; data: PostListing }).data;
+    }
+    return res as PostListing;
+  },
+
+  /**
+   * Delete or archive a rental listing (requires auth, author or admin).
+   * Supports an optional or mandatory deletion reason to notify the author.
+   */
+  async deletePost(
+    id: string,
+    reason?: string
+  ): Promise<{ success: boolean; message: string }> {
+    const res = await api.delete<{ success: boolean; message: string }>(`/v1/posts/${id}`, {
+      body: reason ? JSON.stringify({ reason }) : undefined,
+      params: reason ? { reason } : undefined,
+    });
+    return res;
   },
 
   /**

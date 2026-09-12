@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Home, Users, FileText, Bell,
   Wallet, CreditCard,
@@ -39,18 +40,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isStaff = pathname?.startsWith('/staff');
 
   const staffMenus = [
-    { name: locale === "en" ? "Overview" : "Tổng quan", href: "/staff", icon: LayoutDashboard },
-    { name: locale === "en" ? "Shifts & Attendance" : "Ca làm & Chấm công", href: "/staff/schedule", icon: Calendar },
-    { name: locale === "en" ? "Tasks" : "Nhiệm vụ", href: "/staff/tasks", icon: CheckSquare },
+    { name: tNav("staffOverview"), href: "/staff", icon: LayoutDashboard },
+    { name: tNav("staffShiftsAttendance"), href: "/staff/schedule", icon: Calendar },
+    { name: tNav("staffTasks"), href: "/staff/tasks", icon: CheckSquare },
   ];
 
   const adminMenus = [
     { name: tNav("adminOverview"), href: "/admin", icon: LayoutDashboard },
-    { name: tNav("adminModeration"), href: "/admin/moderation", icon: ShieldCheck },
+    { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
+    { name: tNav("adminPostModeration"), href: "/admin/blogs", icon: ShieldCheck },
+    { name: tNav("adminHouseModeration"), href: "/admin/boarding-houses", icon: Building2 },
     { name: tNav("adminGrievances"), href: "/admin/grievances", icon: AlertTriangle },
     { name: tNav("adminNotifications"), href: "/admin/notifications", icon: Megaphone },
-    { name: tNav("adminBlogs"), href: "/admin/blogs", icon: Newspaper },
-    { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
   ];
 
   const landlordMenus = [
@@ -148,7 +149,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1">
           <div className="px-3 pb-2 text-[10px] font-black text-[#2AC1BC] uppercase tracking-widest flex items-center gap-1.5">
             <UserCircle className="w-3.5 h-3.5" />
-            <span>{locale === "en" ? "OPERATIONS STAFF" : "NHÂN VIÊN VẬN HÀNH"}</span>
+            <span>{tNav("staffBadge")}</span>
           </div>
           {staffMenus.map((item, idx) => {
             const isActive = item.href === '/staff'
@@ -274,45 +275,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       let pageTitle = "Dormio";
       if (isStaff) {
         if (pathname === "/staff") {
-          pageTitle = locale === "en" ? "Today's Shift Overview — Dormio Staff" : "Tổng Quan Ca Làm — Dormio Staff";
+          pageTitle = tNav("staffTitleOverview");
         } else if (pathname?.startsWith("/staff/schedule") || pathname?.startsWith("/staff/attendance")) {
-          pageTitle = locale === "en" ? "Shifts & Attendance — Dormio Staff" : "Ca Làm & Chấm Công — Dormio Staff";
+          pageTitle = tNav("staffTitleSchedule");
         } else if (pathname?.startsWith("/staff/tasks")) {
-          pageTitle = locale === "en" ? "Tasks & Responsibilities — Dormio Staff" : "Nhiệm Vụ & Trách Nhiệm — Dormio Staff";
+          pageTitle = tNav("staffTitleTasks");
         } else {
-          pageTitle = locale === "en" ? "Staff Operations Portal — Dormio Staff" : "Cổng Nhân Viên — Dormio Staff";
+          pageTitle = tNav("staffTitlePortal");
         }
       } else if (isAdmin) {
         if (pathname === "/admin") {
-          pageTitle = "Tổng Quan Quản Trị Hệ Thống — Dormio Admin";
+          pageTitle = tNav("adminTitleOverview");
         } else if (pathname?.startsWith("/admin/moderation")) {
-          pageTitle = "Kiểm Duyệt Tin Đăng & Nhà Trọ — Dormio Admin";
+          pageTitle = tNav("adminTitleModeration");
         } else if (pathname?.startsWith("/admin/grievances")) {
-          pageTitle = "Xử Lý Khiếu Nại Khách Thuê — Dormio Admin";
+          pageTitle = tNav("adminTitleGrievances");
         } else if (pathname?.startsWith("/admin/notifications")) {
-          pageTitle = "Gửi Thông Báo Hàng Loạt — Dormio Admin";
+          pageTitle = tNav("adminTitleNotifications");
         } else if (pathname?.startsWith("/admin/blogs")) {
-          pageTitle = "Quản Lý Bài Viết Blog — Dormio Admin";
+          pageTitle = tNav("adminTitleBlogs");
         } else if (pathname?.startsWith("/admin/analytics")) {
-          pageTitle = "Báo Cáo Thống Kê Nền Tảng — Dormio Admin";
+          pageTitle = tNav("adminTitleAnalytics");
         } else {
-          pageTitle = "Cổng Quản Trị Viên — Dormio Admin";
+          pageTitle = tNav("adminTitlePortal");
         }
       } else if (activeBuilding?.name) {
         if (pathname === "/landlord") {
-          pageTitle = `Tổng Quan — ${activeBuilding.name}`;
+          pageTitle = `${tNav("landlordTitleOverview")} — ${activeBuilding.name}`;
         } else if (pathname?.startsWith("/landlord/rooms")) {
-          pageTitle = `Sơ Đồ Phòng — ${activeBuilding.name}`;
+          pageTitle = `${tNav("landlordTitleRooms")} — ${activeBuilding.name}`;
         } else if (pathname?.startsWith("/landlord/contracts")) {
-          pageTitle = `Hợp Đồng Thuê — ${activeBuilding.name}`;
+          pageTitle = `${tNav("landlordTitleContracts")} — ${activeBuilding.name}`;
         } else if (pathname?.startsWith("/landlord/invoices")) {
-          pageTitle = `Hóa Đơn & Thu Tiền — ${activeBuilding.name}`;
+          pageTitle = `${tNav("landlordTitleInvoices")} — ${activeBuilding.name}`;
         } else if (pathname?.startsWith("/landlord/customers") || pathname?.startsWith("/landlord/tenants")) {
-          pageTitle = `Khách Thuê — ${activeBuilding.name}`;
+          pageTitle = `${tNav("landlordTitleCustomers")} — ${activeBuilding.name}`;
         } else if (pathname?.startsWith("/landlord/services")) {
-          pageTitle = `Bảng Dịch Vụ — ${activeBuilding.name}`;
+          pageTitle = `${tNav("landlordTitleServices")} — ${activeBuilding.name}`;
         } else if (pathname?.startsWith("/landlord/reports")) {
-          pageTitle = `Báo Cáo Doanh Thu — ${activeBuilding.name}`;
+          pageTitle = `${tNav("landlordTitleReports")} — ${activeBuilding.name}`;
         } else {
           pageTitle = `${activeBuilding.name} | Dormio BHMS`;
         }
@@ -320,7 +321,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       document.title = pageTitle;
     }
-  }, [activeBuilding?.name, pathname, isAdmin, isStaff]);
+  }, [activeBuilding?.name, pathname, isAdmin, isStaff, tNav]);
 
   const StaffHeaderBadge = () => (
     <div className="px-3.5 py-3 border-b border-[#2AC1BC]/20 bg-linear-to-r from-[#2AC1BC]/10 to-teal-50/40">
@@ -331,10 +332,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
-              {locale === "en" ? "OPERATIONS STAFF" : "NHÂN VIÊN VẬN HÀNH"}
+              {tNav("staffBadge")}
             </span>
           </div>
-          <p className="text-xs font-bold text-zinc-900 truncate">KTX HOLA • Khu A</p>
+          <p className="text-xs font-bold text-zinc-900 truncate">{tNav("staffMockBuilding")}</p>
         </div>
       </div>
     </div>
@@ -349,7 +350,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </span>
       </div>
       <p className="text-[11px] font-medium text-zinc-500 mt-1.5 leading-tight">
-        Trung tâm giám sát & điều hành nền tảng
+        {tNav("adminHeaderSubtitle")}
       </p>
     </div>
   );
@@ -471,19 +472,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Link
         href={isTenant ? "/tenant/profile" : "/profile"}
         className="group flex items-center gap-3 px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
-        title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
+        title={tNav("viewProfileTooltip")}
       >
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${
-          isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
-        }`}>
+        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
+          }`}>
           {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
         </div>
         <div className="overflow-hidden flex-1 min-w-0">
           <div className="text-sm font-semibold text-zinc-900 truncate group-hover:text-primary transition-colors">
-            {user?.name || (isAdmin ? "Admin Quản Trị" : isStaff ? "Nguyễn Văn Tuấn" : "Nguyễn Văn Rio")}
+            {user?.name || (isAdmin ? tNav("adminRole") : isStaff ? tNav("staffRole") : tNav("landlordRole"))}
           </div>
           <div className="text-xs text-zinc-400 truncate">
-            {isAdmin ? tNav("adminRole") : isTenant ? tNav("tenantRole") : isStaff ? (locale === "en" ? "Operations Staff" : "Nhân viên vận hành") : tNav("landlordRole")}
+            {isAdmin ? tNav("adminRole") : isTenant ? tNav("tenantRole") : isStaff ? tNav("staffRole") : tNav("landlordRole")}
           </div>
         </div>
       </Link>
@@ -502,8 +502,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-zinc-200 bg-white z-20">
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex items-center h-14 px-4 border-b border-zinc-100">
+          <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-100">
             <Logo />
+            <NotificationBell align="left" />
           </div>
 
           {/* Admin Badge or Staff Badge or Global Landlord Building Selector */}
@@ -521,12 +522,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl flex flex-col border-r border-zinc-200">
             <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-100">
               <Logo />
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <NotificationBell align="left" />
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Admin Badge or Staff Badge or Global Landlord Building Selector on Mobile Drawer */}
@@ -545,11 +549,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+              className="p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
             <Logo />
+            <NotificationBell align="left" />
           </div>
 
           {/* Admin badge or Staff Badge or Building Selector Dropdown on Mobile Topbar */}
@@ -561,7 +566,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : isStaff ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
               <UserCircle className="w-3.5 h-3.5" />
-              <span>NHÂN VIÊN</span>
+              <span>{tNav("staffBadge")}</span>
             </div>
           ) : !isTenant && (
             <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
@@ -580,10 +585,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <Link
             href={isTenant ? "/tenant/profile" : "/profile"}
-            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
-              isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
-            }`}
-            title={locale === "en" ? "View Personal Profile" : "Xem trang hồ sơ cá nhân"}
+            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
+              }`}
+            title={tNav("viewProfileTooltip")}
           >
             {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
           </Link>

@@ -13,6 +13,7 @@ import {
   PostPurchaseStatus,
   SubscriptionPackage,
   SubscriptionStatus,
+  UserRole,
 } from '@prisma';
 
 describe('PostsService', () => {
@@ -916,6 +917,145 @@ describe('PostsService', () => {
           }),
         );
       });
+    });
+  });
+
+  describe('updatePost', () => {
+    const postId = 'post-100';
+    const authorId = 'author-user-1';
+    const otherUserId = 'other-user-2';
+    const adminId = 'admin-user-1';
+
+    const mockPost = {
+      id: postId,
+      title: 'Original Title',
+      content: 'Original Content',
+      depositAmount: 1500000,
+      postedBy: authorId,
+      status: 'posted',
+      deletedAt: new Date('2099-12-31'),
+    };
+
+    it('should throw NotFoundException if post does not exist', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updatePost(authorId, postId, { title: 'New' }, UserRole.landlord),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if caller is neither author nor admin', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+
+      await expect(
+        service.updatePost(otherUserId, postId, { title: 'New' }, UserRole.landlord),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow author to update their own post', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+        return cb({
+          post: { update: jest.fn().mockResolvedValue(mockPost) },
+          postImage: { deleteMany: jest.fn(), createMany: jest.fn() },
+        });
+      });
+      jest.spyOn(service, 'getPostById').mockResolvedValue({
+        id: postId,
+        title: 'Updated by Author',
+      } as any);
+
+      const res = await service.updatePost(
+        authorId,
+        postId,
+        { title: 'Updated by Author' },
+        UserRole.landlord,
+      );
+
+      expect(res.title).toBe('Updated by Author');
+    });
+
+    it('should allow admin to update any post', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+        return cb({
+          post: { update: jest.fn().mockResolvedValue(mockPost) },
+          postImage: { deleteMany: jest.fn(), createMany: jest.fn() },
+        });
+      });
+      jest.spyOn(service, 'getPostById').mockResolvedValue({
+        id: postId,
+        title: 'Updated by Admin',
+      } as any);
+
+      const res = await service.updatePost(
+        adminId,
+        postId,
+        { title: 'Updated by Admin' },
+        UserRole.admin,
+      );
+
+      expect(res.title).toBe('Updated by Admin');
+    });
+  });
+
+  describe('deletePost (with reason & notification)', () => {
+    const postId = 'post-200';
+    const authorId = 'author-user-2';
+    const adminId = 'admin-user-9';
+    const mockPost = {
+      id: postId,
+      title: 'Listing Title',
+      postedBy: authorId,
+      room: { boardingHouseId: 'house-1' },
+      deletedAt: new Date('2099-12-31'),
+    };
+
+    it('should throw NotFoundException if post not found', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.deletePost(authorId, postId, UserRole.landlord),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should allow author to delete own post without notifying author', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+      mockPrisma.post.update.mockResolvedValue({ ...mockPost, status: 'hidden' });
+
+      const res = await service.deletePost(authorId, postId, UserRole.landlord);
+
+      expect(res.success).toBe(true);
+      expect(mockPrisma.post.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: postId },
+          data: expect.objectContaining({ status: 'hidden' }),
+        }),
+      );
+      // Author deleting their own post doesn't notify author
+      expect(mockPrisma.notification.create).not.toHaveBeenCalled();
+    });
+
+    it('should allow admin to delete post with reason and automatically notify author', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+      mockPrisma.post.update.mockResolvedValue({ ...mockPost, status: 'hidden' });
+      mockPrisma.notification.create.mockResolvedValue({ id: 'notif-1' });
+
+      const reason = 'Nội dung vi phạm chính sách cộng đồng';
+      const res = await service.deletePost(adminId, postId, UserRole.admin, reason);
+
+      expect(res.success).toBe(true);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            senderId: adminId,
+            receiverId: authorId,
+            boardingHouseId: 'house-1',
+            type: 'post_deleted',
+            content: expect.stringContaining(reason),
+          }),
+        }),
+      );
     });
   });
 });

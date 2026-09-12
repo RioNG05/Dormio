@@ -20,11 +20,14 @@ import {
   ApiResponse,
   ApiTags,
   ApiParam,
+  ApiQuery,
   ApiCreatedResponse,
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { DeletePostDto } from './dto/delete-post.dto';
 import {
   CreatePlatformDepositDto,
   InitiatePlatformDepositDto,
@@ -225,6 +228,22 @@ export class PostsController {
   ): Promise<PublicPostResponseDto[]> {
     this.logger.log(`GET /posts/saved/all called by user ${user.id}`);
     return this.postsService.getSavedPosts(user.id);
+  }
+
+  @Public()
+  @Get('properties')
+  @ApiOperation({
+    summary: 'Get distinct property / boarding house names for listing filters',
+    description: 'Returns an array of unique active boarding house names for dropdown filter menus.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of unique property names',
+    type: [String],
+  })
+  async getProperties(): Promise<string[]> {
+    this.logger.log('GET /posts/properties called');
+    return this.postsService.getProperties();
   }
 
   // ─── UC-PU-01: Public Browse & Filter Listings ────────────────────────────
@@ -480,9 +499,65 @@ export class PostsController {
     @Body('status') status: PostStatus,
   ): Promise<PostResponseDto> {
     this.logger.log(
-      `PATCH /posts/${id}/status to ${status} called by user ${user.id}`,
+      `PATCH /posts/${id}/status to ${status} called by user ${user.id} (${user.role})`,
     );
-    return this.postsService.updatePostStatus(user.id, id, status);
+    return this.postsService.updatePostStatus(user.id, id, status, user.role);
+  }
+
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Update rental listing details (title, content, deposit, images, status)',
+    description: 'Updates listing content. Requires author ownership or Admin role.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Post updated successfully',
+    type: PostResponseDto,
+  })
+  @ApiResponse({ status: 403, description: 'User is not authorized to edit this post' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async updatePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePostDto,
+  ): Promise<PostResponseDto> {
+    this.logger.log(`PATCH /posts/${id} called by user ${user.id} (${user.role})`);
+    return this.postsService.updatePost(user.id, id, dto, user.role);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete or archive a rental listing with an optional/mandatory reason',
+    description: 'Soft deletes the post. If deleted by admin, automatically notifies author with the deletion reason.',
+  })
+  @ApiParam({ name: 'id', description: 'Post listing UUID' })
+  @ApiQuery({ name: 'reason', required: false, description: 'Reason for deletion' })
+  @ApiResponse({
+    status: 200,
+    description: 'Post deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Bài viết/tin đăng đã được xóa thành công' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'User is not authorized to delete this post' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async deletePost(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto?: DeletePostDto,
+    @Query('reason') queryReason?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const reason = dto?.reason || queryReason;
+    this.logger.log(
+      `DELETE /posts/${id} called by user ${user.id} (${user.role}) with reason: "${reason || 'none'}"`,
+    );
+    return this.postsService.deletePost(user.id, id, user.role, reason);
   }
 
   // ─── UC-PU-03: Save/Bookmark Listing Endpoints ───────────────────────────

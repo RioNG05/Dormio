@@ -6,7 +6,6 @@ import {
   Search,
   RefreshCw,
   FileSpreadsheet,
-  FileText,
   DollarSign,
   Building2,
   Calendar,
@@ -23,7 +22,6 @@ import {
   ChevronRight,
   User,
   Phone,
-  ArrowUpRight,
   ShieldAlert,
   Loader2,
   Receipt,
@@ -31,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import {
   landlordInvoiceService,
   RoomDebtItem,
@@ -40,6 +39,9 @@ import {
 
 export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
 
   const [isMounted, setIsMounted] = useState(false);
   // Rule #9: Grid view as default (Grid=6, Table=10)
@@ -170,12 +172,17 @@ export default function LandlordDebtsPage() {
   const endIndex = Math.min(currentPage * pageSize, totalRecords);
 
   // Format currency
-  const formatVND = (amt: number) => amt.toLocaleString("vi-VN") + " ₫";
+  const formatCurrency = (amt: number) => {
+    return isEn ? `${amt.toLocaleString("en-US")} ₫` : `${amt.toLocaleString("vi-VN")} ₫`;
+  };
 
   // Reminder message template
   const buildReminderText = (room: RoomDebtItem, customNote: string) => {
-    const tenantName = room.tenant?.name || "Khách thuê";
-    const amountStr = formatVND(room.totalDebtAmount);
+    const tenantName = room.tenant?.name || (isEn ? "Tenant" : "Khách thuê");
+    const amountStr = formatCurrency(room.totalDebtAmount);
+    if (isEn) {
+      return `[Dormio - ${room.buildingName}]\nDear ${tenantName} (Room ${room.roomNumber}),\nThis is to notify you that your room currently has an outstanding balance for rent/services of: ${amountStr} (${room.invoicesCount} invoice(s)).\n${customNote ? `Landlord's note: "${customNote}"\n` : ""}Please arrange payment at your earliest convenience to protect your rental rights. Thank you!`;
+    }
     return `[Dormio - ${room.buildingName}]\nKính gửi anh/chị ${tenantName} (Phòng ${room.roomNumber}),\nHệ thống xin thông báo hiện tại phòng đang có dư nợ tiền trọ/dịch vụ chưa thanh toán: ${amountStr} (${room.invoicesCount} kỳ hóa đơn).\n${customNote ? `Ghi chú từ chủ trọ: "${customNote}"\n` : ""}Kính mong anh/chị thu xếp thanh toán sớm để đảm bảo quyền lợi thuê phòng. Trân trọng cảm ơn!`;
   };
 
@@ -198,7 +205,7 @@ export default function LandlordDebtsPage() {
         reminderNote || undefined,
       );
       if (res && res.success) {
-        setReminderSuccessMessage(res.message || "Đã gửi thông báo nhắc nợ thành công!");
+        setReminderSuccessMessage(res.message || t("landlordDebtsToastReminderSuccess"));
         setTimeout(() => {
           setReminderSuccessMessage(null);
           setReminderModalRoom(null);
@@ -207,7 +214,7 @@ export default function LandlordDebtsPage() {
         }, 1800);
       }
     } catch (err: unknown) {
-      const errorMsg = (err as Error)?.message || "Không thể gửi thông báo nhắc nợ";
+      const errorMsg = (err as Error)?.message || t("landlordDebtsToastReminderFailed");
       alert(errorMsg);
     } finally {
       setIsSendingReminder(false);
@@ -236,7 +243,7 @@ export default function LandlordDebtsPage() {
       setInvoicesModalRoom(null);
       await fetchDebts();
     } catch (err: unknown) {
-      alert((err as Error)?.message || "Ghi nhận thanh toán thất bại");
+      alert((err as Error)?.message || t("landlordDebtsToastPaymentFailed"));
     } finally {
       setIsSubmittingPayment(false);
     }
@@ -279,36 +286,56 @@ export default function LandlordDebtsPage() {
   // Export CSV
   const handleExportCSV = () => {
     if (debtRooms.length === 0) {
-      alert("Không có dữ liệu công nợ để xuất.");
+      alert(t("landlordDebtsExportNoData"));
       return;
     }
 
-    const headers = [
-      "Phòng",
-      "Tầng",
-      "Khách thuê",
-      "Số điện thoại",
-      "Số tiền nợ (VND)",
-      "Nợ quá hạn (VND)",
-      "Số ngày nợ cao nhất",
-      "Tình trạng",
-      "Số lượng hóa đơn",
-    ];
+    const headers = isEn
+      ? [
+          "Room",
+          "Floor",
+          "Tenant",
+          "Phone",
+          "Total Debt (VND)",
+          "Overdue Debt (VND)",
+          "Max Aging Days",
+          "Status",
+          "Invoice Count",
+        ]
+      : [
+          "Phòng",
+          "Tầng",
+          "Khách thuê",
+          "Số điện thoại",
+          "Số tiền nợ (VND)",
+          "Nợ quá hạn (VND)",
+          "Số ngày nợ cao nhất",
+          "Tình trạng",
+          "Số lượng hóa đơn",
+        ];
 
     const rows = debtRooms.map((r) => [
       r.roomNumber,
-      r.floor !== null ? `Tầng ${r.floor}` : "-",
-      r.tenant?.name || "Chưa có tên",
+      r.floor !== null ? (isEn ? `Floor ${r.floor}` : `Tầng ${r.floor}`) : "-",
+      r.tenant?.name || (isEn ? "No name" : "Chưa có tên"),
       r.tenant?.phone || "-",
       r.totalDebtAmount,
       r.overdueAmount,
       r.maxAgingDays,
       r.agingCategory === "bad_debt"
-        ? "Nợ xấu"
+        ? isEn
+          ? "Bad debt"
+          : "Nợ xấu"
         : r.agingCategory === "2_months"
-        ? "Quá hạn 2 tháng"
+        ? isEn
+          ? "2 months overdue"
+          : "Quá hạn 2 tháng"
         : r.agingCategory === "1_month"
-        ? "Quá hạn 1 tháng"
+        ? isEn
+          ? "1 month overdue"
+          : "Quá hạn 1 tháng"
+        : isEn
+        ? "Due"
         : "Đến hạn",
       r.invoicesCount,
     ]);
@@ -365,10 +392,10 @@ export default function LandlordDebtsPage() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tight text-zinc-900">
-                Sổ Công Nợ Tiền Phòng
+                {t("landlordDebtsTitle")}
               </h1>
               <p className="text-xs text-zinc-500 font-medium">
-                Theo dõi các khoản nợ tiền phòng quá hạn, tự động phân nhóm theo phòng và gửi nhắc nhở Zalo / SMS (UC-L-16).
+                {t("landlordDebtsSubtitle")}
               </p>
             </div>
           </div>
@@ -379,10 +406,10 @@ export default function LandlordDebtsPage() {
             onClick={handleTriggerFlip}
             disabled={isRefreshing}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-            title="Đồng bộ lại hạn nợ và cập nhật trạng thái quá hạn"
+            title={t("landlordDebtsSyncTooltip")}
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-teal-600" : ""}`} />
-            <span>{isRefreshing ? "Đang đồng bộ..." : "Cập nhật nợ"}</span>
+            <span>{isRefreshing ? t("landlordDebtsSyncing") : t("landlordDebtsSyncBtn")}</span>
           </button>
 
           <button
@@ -390,7 +417,7 @@ export default function LandlordDebtsPage() {
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>Xuất Excel</span>
+            <span>{t("landlordDebtsExportExcel")}</span>
           </button>
         </div>
       </div>
@@ -401,7 +428,7 @@ export default function LandlordDebtsPage() {
         <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              Tổng tiền nợ
+              {t("landlordDebtsTotalDebt")}
             </span>
             <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
               <DollarSign className="w-4 h-4" />
@@ -409,10 +436,10 @@ export default function LandlordDebtsPage() {
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-rose-600 tracking-tight block">
-              {formatVND(summary.totalDebtAmount)}
+              {formatCurrency(summary.totalDebtAmount)}
             </span>
             <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
-              {summary.totalInvoicesCount} hóa đơn chưa thu
+              {t("landlordDebtsInvoicesUncollected", { count: summary.totalInvoicesCount })}
             </span>
           </div>
           <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-rose-500/10 transition-all" />
@@ -422,7 +449,7 @@ export default function LandlordDebtsPage() {
         <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              Nợ quá hạn
+              {t("landlordDebtsOverdueDebt")}
             </span>
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
               <Clock className="w-4 h-4" />
@@ -430,10 +457,10 @@ export default function LandlordDebtsPage() {
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-amber-600 tracking-tight block">
-              {formatVND(summary.overdueDebtAmount)}
+              {formatCurrency(summary.overdueDebtAmount)}
             </span>
             <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
-              Đã vượt ngày hẹn thanh toán
+              {t("landlordDebtsOverdueNotice")}
             </span>
           </div>
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-amber-500/10 transition-all" />
@@ -443,7 +470,7 @@ export default function LandlordDebtsPage() {
         <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              Nợ xấu (≥3 tháng)
+              {t("landlordDebtsBadDebt3Months")}
             </span>
             <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
               <ShieldAlert className="w-4 h-4" />
@@ -451,10 +478,10 @@ export default function LandlordDebtsPage() {
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-purple-600 tracking-tight block">
-              {formatVND(summary.badDebtAmount)}
+              {formatCurrency(summary.badDebtAmount)}
             </span>
             <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
-              {summary.agingDistribution.over60Days} phòng nợ trên 60 ngày
+              {t("landlordDebtsBadDebtRooms", { count: summary.agingDistribution.over60Days })}
             </span>
           </div>
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-purple-500/10 transition-all" />
@@ -464,7 +491,7 @@ export default function LandlordDebtsPage() {
         <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              Khách nợ
+              {t("landlordDebtsDebtorRooms")}
             </span>
             <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xs">
               <Building2 className="w-4 h-4" />
@@ -472,10 +499,10 @@ export default function LandlordDebtsPage() {
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-zinc-900 tracking-tight block">
-              {summary.debtorRoomsCount} <span className="text-sm font-bold text-zinc-500">phòng</span>
+              {summary.debtorRoomsCount} <span className="text-sm font-bold text-zinc-500">{t("landlordDebtsRoomUnit")}</span>
             </span>
             <span className="text-[11px] text-teal-600 font-bold mt-1 block">
-              Tại tòa {activeBuilding?.name || "hiện tại"}
+              {t("landlordDebtsAtBuilding", { building: activeBuilding?.name || (isEn ? "current" : "hiện tại") })}
             </span>
           </div>
           <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-teal-500/10 transition-all" />
@@ -494,7 +521,7 @@ export default function LandlordDebtsPage() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Tìm theo số phòng, tên khách thuê, số điện thoại..."
+            placeholder={t("landlordDebtsSearchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 text-xs font-semibold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
           />
           {searchTerm && (
@@ -518,11 +545,11 @@ export default function LandlordDebtsPage() {
             }}
             className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
           >
-            <option value="all">Tất cả thời gian nợ</option>
-            <option value="overdue">Nợ quá hạn</option>
-            <option value="1_month">Nợ 1 tháng (≤ 30 ngày)</option>
-            <option value="2_months">Nợ 2 tháng (31 - 60 ngày)</option>
-            <option value="bad_debt">Nợ từ 3 tháng trở lên (Nợ xấu)</option>
+            <option value="all">{t("landlordDebtsAllDurations")}</option>
+            <option value="overdue">{t("landlordDebtsFilterOverdue")}</option>
+            <option value="1_month">{t("landlordDebtsFilter1Month")}</option>
+            <option value="2_months">{t("landlordDebtsFilter2Months")}</option>
+            <option value="bad_debt">{t("landlordDebtsFilterBadDebt")}</option>
           </select>
 
           {/* Sort By */}
@@ -534,9 +561,9 @@ export default function LandlordDebtsPage() {
             }}
             className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
           >
-            <option value="debt_desc">Tiền nợ: Cao → Thấp</option>
-            <option value="aging_desc">Thời gian nợ: Lâu nhất</option>
-            <option value="room_asc">Số phòng: Tăng dần</option>
+            <option value="debt_desc">{t("landlordDebtsSortDebtDesc")}</option>
+            <option value="aging_desc">{t("landlordDebtsSortAgingDesc")}</option>
+            <option value="room_asc">{t("landlordDebtsSortRoomAsc")}</option>
           </select>
 
           {/* View Mode Toggle per Rule #9 */}
@@ -548,7 +575,7 @@ export default function LandlordDebtsPage() {
                   ? "bg-white text-teal-600 shadow-sm font-bold"
                   : "text-zinc-400 hover:text-zinc-600"
               }`}
-              title="Chế độ lưới (Mặc định)"
+              title={t("landlordDebtsViewGrid")}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -559,7 +586,7 @@ export default function LandlordDebtsPage() {
                   ? "bg-white text-teal-600 shadow-sm font-bold"
                   : "text-zinc-400 hover:text-zinc-600"
               }`}
-              title="Chế độ danh sách / bảng"
+              title={t("landlordDebtsViewTable")}
             >
               <List className="w-4 h-4" />
             </button>
@@ -571,19 +598,19 @@ export default function LandlordDebtsPage() {
       {isLoading ? (
         <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
           <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-3" />
-          <p className="text-sm font-bold text-zinc-700">Đang tải dữ liệu công nợ...</p>
-          <p className="text-xs text-zinc-400 mt-1">Hệ thống đang đối chiếu các hóa đơn chưa thu.</p>
+          <p className="text-sm font-bold text-zinc-700">{t("landlordDebtsLoadingTitle")}</p>
+          <p className="text-xs text-zinc-400 mt-1">{t("landlordDebtsLoadingDesc")}</p>
         </div>
       ) : debtRooms.length === 0 ? (
         <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
           <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-sm">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h3 className="text-base font-black text-zinc-900">Không có dữ liệu công nợ phù hợp</h3>
+          <h3 className="text-base font-black text-zinc-900">{t("landlordDebtsEmptyFilteredTitle")}</h3>
           <p className="text-xs text-zinc-500 max-w-md mt-1.5">
             {searchTerm || durationFilter !== "all"
-              ? "Không tìm thấy phòng nào có khoản nợ thỏa mãn bộ lọc tìm kiếm hiện tại."
-              : "Thật tuyệt vời! Tất cả các phòng tại tòa nhà này đều đã thanh toán đủ tiền phòng và dịch vụ."}
+              ? t("landlordDebtsEmptyFilteredDesc")
+              : t("landlordDebtsEmptyAllPaidDesc")}
           </p>
           {(searchTerm || durationFilter !== "all") && (
             <button
@@ -593,7 +620,7 @@ export default function LandlordDebtsPage() {
               }}
               className="mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-xs font-bold text-zinc-700 transition-all"
             >
-              Xóa bộ lọc
+              {t("landlordDebtsClearFilter")}
             </button>
           )}
         </div>
@@ -615,12 +642,12 @@ export default function LandlordDebtsPage() {
               : "bg-sky-100 text-sky-700 border-sky-200";
 
             const badgeLabel = isBadDebt
-              ? "Nợ xấu (>60 ngày)"
+              ? t("landlordDebtsBadgeBadDebt")
               : is2Months
-              ? "Nợ 2 tháng"
+              ? t("landlordDebtsBadge2Months")
               : room.maxAgingDays > 0
-              ? `Quá hạn ${room.maxAgingDays} ngày`
-              : "Đến hạn thanh toán";
+              ? t("landlordDebtsBadgeOverdueDays", { days: room.maxAgingDays })
+              : t("landlordDebtsBadgeDue");
 
             return (
               <div
@@ -642,11 +669,11 @@ export default function LandlordDebtsPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-base font-black text-zinc-900 group-hover:text-teal-600 transition-colors">
-                            Phòng {room.roomNumber}
+                            {t("landlordDebtsRoomPrefix", { room: room.roomNumber })}
                           </span>
                           {room.floor !== null && (
                             <span className="text-[10px] font-bold text-zinc-500 px-2 py-0.5 bg-zinc-100 rounded-md">
-                              Tầng {room.floor}
+                              {t("landlordDebtsFloorPrefix", { floor: room.floor })}
                             </span>
                           )}
                         </div>
@@ -671,7 +698,7 @@ export default function LandlordDebtsPage() {
                       </div>
                       <div>
                         <span className="text-xs font-bold text-zinc-800 block">
-                          {room.tenant?.name || "Chưa có khách thuê"}
+                          {room.tenant?.name || t("landlordDebtsNoTenant")}
                         </span>
                         {room.tenant?.phone ? (
                           <a
@@ -682,17 +709,17 @@ export default function LandlordDebtsPage() {
                             {room.tenant.phone}
                           </a>
                         ) : (
-                          <span className="text-[11px] text-zinc-400">Không có số điện thoại</span>
+                          <span className="text-[11px] text-zinc-400">{t("landlordDebtsNoPhone")}</span>
                         )}
                       </div>
                     </div>
 
                     <div className="text-right">
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                        Số kỳ nợ
+                        {t("landlordDebtsInvoicesCount")}
                       </span>
                       <span className="text-xs font-black text-zinc-700">
-                        {room.invoicesCount} hóa đơn
+                        {t("landlordDebtsInvoicesUnit", { count: room.invoicesCount })}
                       </span>
                     </div>
                   </div>
@@ -701,17 +728,17 @@ export default function LandlordDebtsPage() {
                 {/* Card Financial Breakdown */}
                 <div className="p-5 bg-zinc-50/60 space-y-3">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Tổng tiền nợ:</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordDebtsTotalDebtLabel")}</span>
                     <span className="text-lg font-black text-rose-600 tracking-tight">
-                      {formatVND(room.totalDebtAmount)}
+                      {formatCurrency(room.totalDebtAmount)}
                     </span>
                   </div>
 
                   {room.overdueAmount > 0 && (
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-medium">Trong đó quá hạn:</span>
+                      <span className="text-zinc-500 font-medium">{t("landlordDebtsOverduePartLabel")}</span>
                       <span className="font-extrabold text-amber-600">
-                        {formatVND(room.overdueAmount)}
+                        {formatCurrency(room.overdueAmount)}
                       </span>
                     </div>
                   )}
@@ -720,10 +747,10 @@ export default function LandlordDebtsPage() {
                   <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-200/60">
                     <span className="flex items-center gap-1 font-medium">
                       <Calendar className="w-3 h-3 text-zinc-400" />
-                      Nợ từ ngày:
+                      {t("landlordDebtsOldestDebtDate")}
                     </span>
                     <span className="font-bold text-zinc-700">
-                      {new Date(room.oldestDueDate).toLocaleDateString("vi-VN")}
+                      {new Date(room.oldestDueDate).toLocaleDateString(isEn ? "en-US" : "vi-VN")}
                     </span>
                   </div>
                 </div>
@@ -735,7 +762,7 @@ export default function LandlordDebtsPage() {
                     className="flex-1 py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
                   >
                     <Eye className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Xem hóa đơn</span>
+                    <span>{t("landlordDebtsBtnViewInvoices")}</span>
                   </button>
 
                   <button
@@ -748,7 +775,7 @@ export default function LandlordDebtsPage() {
                     className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm shadow-teal-500/20"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Nhắc nợ</span>
+                    <span>{t("landlordDebtsBtnSendReminder")}</span>
                   </button>
                 </div>
               </div>
@@ -770,14 +797,14 @@ export default function LandlordDebtsPage() {
                       className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500/20 border-zinc-300 cursor-pointer"
                     />
                   </th>
-                  <th className="p-4">Phòng & Khách thuê</th>
-                  <th className="p-4">Số điện thoại</th>
-                  <th className="p-4 text-right">Tổng tiền nợ</th>
-                  <th className="p-4 text-right">Nợ quá hạn</th>
-                  <th className="p-4 text-center">Số kỳ</th>
-                  <th className="p-4">Nợ từ ngày</th>
-                  <th className="p-4 text-center">Tình trạng</th>
-                  <th className="p-4 text-center">Thao tác</th>
+                  <th className="p-4">{t("landlordDebtsThRoomTenant")}</th>
+                  <th className="p-4">{t("landlordDebtsThPhone")}</th>
+                  <th className="p-4 text-right">{t("landlordDebtsThTotalDebt")}</th>
+                  <th className="p-4 text-right">{t("landlordDebtsThOverdueDebt")}</th>
+                  <th className="p-4 text-center">{t("landlordDebtsThCycles")}</th>
+                  <th className="p-4">{t("landlordDebtsThSince")}</th>
+                  <th className="p-4 text-center">{t("landlordDebtsThStatus")}</th>
+                  <th className="p-4 text-center">{t("landlordDebtsThActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -795,12 +822,12 @@ export default function LandlordDebtsPage() {
                     : "bg-sky-100 text-sky-700 border-sky-200";
 
                   const badgeLabel = isBadDebt
-                    ? "Nợ xấu"
+                    ? t("landlordDebtsBadDebtStatus")
                     : is2Months
-                    ? "Nợ 2 tháng"
+                    ? t("landlordDebtsOverdue2Months")
                     : room.maxAgingDays > 0
-                    ? `${room.maxAgingDays} ngày`
-                    : "Đến hạn";
+                    ? t("landlordDebtsBadgeOverdueDays", { days: room.maxAgingDays })
+                    : t("landlordDebtsBadgeDue");
 
                   return (
                     <tr
@@ -825,15 +852,15 @@ export default function LandlordDebtsPage() {
                           </div>
                           <div>
                             <span className="font-bold text-zinc-900 block">
-                              Phòng {room.roomNumber}
+                              {t("landlordDebtsRoomPrefix", { room: room.roomNumber })}
                               {room.floor !== null && (
                                 <span className="text-[10px] text-zinc-400 font-normal ml-1.5">
-                                  (Tầng {room.floor})
+                                  ({t("landlordDebtsFloorPrefix", { floor: room.floor })})
                                 </span>
                               )}
                             </span>
                             <span className="text-[11px] text-zinc-500 font-medium">
-                              {room.tenant?.name || "Chưa có người thuê"}
+                              {room.tenant?.name || t("landlordDebtsNoTenant")}
                             </span>
                           </div>
                         </div>
@@ -854,22 +881,22 @@ export default function LandlordDebtsPage() {
 
                       <td className="p-4 text-right">
                         <span className="font-black text-rose-600 text-sm">
-                          {formatVND(room.totalDebtAmount)}
+                          {formatCurrency(room.totalDebtAmount)}
                         </span>
                       </td>
 
                       <td className="p-4 text-right">
                         <span className="font-extrabold text-amber-600">
-                          {formatVND(room.overdueAmount)}
+                          {formatCurrency(room.overdueAmount)}
                         </span>
                       </td>
 
                       <td className="p-4 text-center font-bold text-zinc-700">
-                        {room.invoicesCount} kỳ
+                        {t("landlordDebtsMonthsCount", { count: room.invoicesCount })}
                       </td>
 
                       <td className="p-4 text-zinc-600 font-medium">
-                        {new Date(room.oldestDueDate).toLocaleDateString("vi-VN")}
+                        {new Date(room.oldestDueDate).toLocaleDateString(isEn ? "en-US" : "vi-VN")}
                       </td>
 
                       <td className="p-4 text-center">
@@ -885,7 +912,7 @@ export default function LandlordDebtsPage() {
                           <button
                             onClick={() => setInvoicesModalRoom(room)}
                             className="p-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all"
-                            title="Xem chi tiết hóa đơn"
+                            title={t("landlordDebtsBtnViewInvoices")}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -897,7 +924,7 @@ export default function LandlordDebtsPage() {
                               setReminderCopied(false);
                             }}
                             className="p-1.5 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-all font-bold"
-                            title="Gửi nhắc nợ Zalo / App"
+                            title={t("landlordDebtsBtnSendReminder")}
                           >
                             <Send className="w-4 h-4" />
                           </button>
@@ -916,7 +943,7 @@ export default function LandlordDebtsPage() {
       {debtRooms.length > 0 && (
         <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
-            <span>Hiển thị</span>
+            <span>{t("landlordDebtsPaginationShowing")}</span>
             <input
               type="number"
               min={1}
@@ -931,10 +958,10 @@ export default function LandlordDebtsPage() {
               }}
               className="w-14 px-2 py-1 text-center font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
-            <span>/ trang</span>
+            <span>{t("landlordDebtsPaginationPerPage")}</span>
             <span className="text-zinc-300">|</span>
             <span>
-              {startIndex} - {endIndex} trên <span className="font-bold text-zinc-800">{totalRecords}</span> phòng nợ
+              {startIndex} - {endIndex} {t("landlordDebtsPaginationOf")} <span className="font-bold text-zinc-800">{totalRecords}</span> {t("landlordDebtsPaginationRooms")}
             </span>
           </div>
 
@@ -943,6 +970,7 @@ export default function LandlordDebtsPage() {
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               className="p-2 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              title={t("landlordDebtsPaginationPrev")}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -968,6 +996,7 @@ export default function LandlordDebtsPage() {
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               className="p-2 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              title={t("landlordDebtsPaginationNext")}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -985,18 +1014,12 @@ export default function LandlordDebtsPage() {
                 <div className="flex items-center gap-2">
                   <Receipt className="w-5 h-5 text-teal-600" />
                   <h3 className="text-lg font-black text-zinc-900">
-                    Danh Sách Hóa Đơn Nợ — Phòng {invoicesModalRoom.roomNumber}
+                    {t("landlordDebtsModalInvoicesTitle", { room: invoicesModalRoom.roomNumber })}
                   </h3>
                 </div>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  Khách thuê:{" "}
-                  <span className="font-bold text-zinc-800">
-                    {invoicesModalRoom.tenant?.name || "Chưa có tên"}
-                  </span>{" "}
-                  • SĐT:{" "}
-                  <span className="font-bold text-zinc-800">
-                    {invoicesModalRoom.tenant?.phone || "Chưa có"}
-                  </span>
+                  {t("landlordDebtsModalTenant", { name: invoicesModalRoom.tenant?.name || (isEn ? "None" : "Chưa có tên") })}{" "}
+                  • {t("landlordDebtsModalPhone", { phone: invoicesModalRoom.tenant?.phone || (isEn ? "None" : "Chưa có") })}
                 </p>
               </div>
 
@@ -1013,14 +1036,14 @@ export default function LandlordDebtsPage() {
               <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
                 <div>
                   <span className="text-xs font-extrabold text-rose-700 uppercase tracking-wider block">
-                    Tổng dư nợ cần thanh toán
+                    {t("landlordDebtsModalTotalOutstanding")}
                   </span>
                   <span className="text-2xl font-black text-rose-600">
-                    {formatVND(invoicesModalRoom.totalDebtAmount)}
+                    {formatCurrency(invoicesModalRoom.totalDebtAmount)}
                   </span>
                 </div>
                 <span className="px-3 py-1 bg-white text-rose-600 font-black text-xs rounded-full border border-rose-200 shadow-sm">
-                  {invoicesModalRoom.invoicesCount} kỳ hóa đơn
+                  {t("landlordDebtsModalInvoicesSummary", { count: invoicesModalRoom.invoicesCount })}
                 </span>
               </div>
 
@@ -1033,7 +1056,7 @@ export default function LandlordDebtsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-black text-sm text-zinc-900">
-                          Kỳ {inv.period}
+                          {t("landlordDebtsModalPeriod", { period: inv.period })}
                         </span>
                         <span
                           className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
@@ -1042,22 +1065,22 @@ export default function LandlordDebtsPage() {
                               : "bg-amber-100 text-amber-700 border-amber-200"
                           }`}
                         >
-                          {inv.status === "overdue" ? "Quá hạn" : "Chưa thu"}
+                          {inv.status === "overdue" ? t("landlordDebtsModalStatusOverdue") : t("landlordDebtsModalStatusUncollected")}
                         </span>
                         {inv.agingDays > 0 && (
                           <span className="text-[10px] font-bold text-zinc-400">
-                            (Quá hạn {inv.agingDays} ngày)
+                            {t("landlordDebtsModalOverdueDays", { days: inv.agingDays })}
                           </span>
                         )}
                       </div>
                       <span className="text-xs text-zinc-500 mt-1 block">
-                        Hạn thanh toán: {new Date(inv.dueDate).toLocaleDateString("vi-VN")}
+                        {t("landlordDebtsModalDueDate", { date: new Date(inv.dueDate).toLocaleDateString(isEn ? "en-US" : "vi-VN") })}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                       <span className="text-base font-black text-rose-600">
-                        {formatVND(inv.totalAmount)}
+                        {formatCurrency(inv.totalAmount)}
                       </span>
 
                       <button
@@ -1075,7 +1098,7 @@ export default function LandlordDebtsPage() {
                         className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all border border-emerald-200 flex items-center gap-1 active:scale-95"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
-                        <span>Thu tiền ngay</span>
+                        <span>{t("landlordDebtsModalCollectNow")}</span>
                       </button>
                     </div>
                   </div>
@@ -1089,7 +1112,7 @@ export default function LandlordDebtsPage() {
                 onClick={() => setInvoicesModalRoom(null)}
                 className="px-5 py-2.5 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all"
               >
-                Đóng
+                {t("landlordDebtsModalClose")}
               </button>
             </div>
           </div>
@@ -1106,10 +1129,10 @@ export default function LandlordDebtsPage() {
                 <Send className="w-5 h-5" />
                 <div>
                   <h3 className="text-base font-black">
-                    Nhắc Nợ Tiền Phòng — P.{reminderModalRoom.roomNumber}
+                    {t("landlordDebtsModalReminderTitle", { room: reminderModalRoom.roomNumber })}
                   </h3>
                   <p className="text-xs text-teal-100">
-                    Gửi thông báo ứng dụng hoặc sao chép tin nhắn gửi qua Zalo / SMS
+                    {t("landlordDebtsModalReminderSubtitle")}
                   </p>
                 </div>
               </div>
@@ -1134,27 +1157,27 @@ export default function LandlordDebtsPage() {
               {/* Tenant info banner */}
               <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Khách nhận</span>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordDebtsModalRecipient")}</span>
                   <span className="font-extrabold text-zinc-800 block">
-                    {reminderModalRoom.tenant?.name || "Chưa có tên"}
+                    {reminderModalRoom.tenant?.name || (isEn ? "No name" : "Chưa có tên")}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Số điện thoại</span>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordDebtsModalRecipientPhone")}</span>
                   <span className="font-extrabold text-zinc-800 block">
-                    {reminderModalRoom.tenant?.phone || "Chưa có"}
+                    {reminderModalRoom.tenant?.phone || (isEn ? "None" : "Chưa có")}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Số tiền nợ</span>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordDebtsTotalDebt")}</span>
                   <span className="font-black text-rose-600 block text-sm">
-                    {formatVND(reminderModalRoom.totalDebtAmount)}
+                    {formatCurrency(reminderModalRoom.totalDebtAmount)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Số kỳ nợ</span>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordDebtsInvoicesCount")}</span>
                   <span className="font-extrabold text-zinc-800 block">
-                    {reminderModalRoom.invoicesCount} kỳ hóa đơn
+                    {t("landlordDebtsModalInvoicesSummary", { count: reminderModalRoom.invoicesCount })}
                   </span>
                 </div>
               </div>
@@ -1162,7 +1185,7 @@ export default function LandlordDebtsPage() {
               {/* Custom Memo Input */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700">
-                  Ghi chú thêm từ chủ trọ (tùy chọn)
+                  {t("landlordDebtsModalMemoLabel")}
                 </label>
                 <input
                   type="text"
@@ -1171,7 +1194,7 @@ export default function LandlordDebtsPage() {
                     setReminderNote(e.target.value);
                     setIsReminderDirty(true);
                   }}
-                  placeholder="Ví dụ: Vui lòng thanh toán trước 18h ngày 20 để tránh phạt chậm..."
+                  placeholder={t("landlordDebtsModalMemoPlaceholder")}
                   className="w-full px-3.5 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 />
               </div>
@@ -1180,7 +1203,7 @@ export default function LandlordDebtsPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
-                    Nội dung tin nhắn mẫu
+                    {t("landlordDebtsModalTemplateTitle")}
                   </label>
                   <button
                     onClick={() => handleCopyReminder(reminderModalRoom)}
@@ -1189,12 +1212,12 @@ export default function LandlordDebtsPage() {
                     {reminderCopied ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-600">Đã sao chép!</span>
+                        <span className="text-emerald-600">{t("landlordDebtsModalCopied")}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>Sao chép Zalo / SMS</span>
+                        <span>{t("landlordDebtsModalCopyBtn")}</span>
                       </>
                     )}
                   </button>
@@ -1211,7 +1234,7 @@ export default function LandlordDebtsPage() {
                 onClick={handleRequestCloseReminder}
                 className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all"
               >
-                Hủy bỏ
+                {t("landlordDebtsModalCancelBtn")}
               </button>
 
               <button
@@ -1224,7 +1247,7 @@ export default function LandlordDebtsPage() {
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
-                <span>Gửi qua App Dormio</span>
+                <span>{t("landlordDebtsModalSendAppBtn")}</span>
               </button>
             </div>
           </div>
@@ -1239,7 +1262,7 @@ export default function LandlordDebtsPage() {
               <div className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-emerald-600" />
                 <h3 className="text-base font-black text-zinc-900">
-                  Ghi Nhận Thu Tiền Phòng {paymentModalInvoice.roomNumber}
+                  {t("landlordDebtsModalPaymentTitle", { room: paymentModalInvoice.roomNumber })}
                 </h3>
               </div>
               <button
@@ -1253,15 +1276,15 @@ export default function LandlordDebtsPage() {
             <div className="p-6 space-y-4">
               <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
                 <span className="text-[11px] font-extrabold text-emerald-700 uppercase block">
-                  Số tiền thu (Kỳ {paymentModalInvoice.period})
+                  {t("landlordDebtsModalPaymentAmount", { period: paymentModalInvoice.period })}
                 </span>
                 <span className="text-2xl font-black text-emerald-700 block mt-1">
-                  {formatVND(paymentModalInvoice.totalAmount)}
+                  {formatCurrency(paymentModalInvoice.totalAmount)}
                 </span>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">Hình thức thanh toán</label>
+                <label className="text-xs font-bold text-zinc-700">{t("landlordDebtsModalPaymentMethod")}</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -1275,7 +1298,7 @@ export default function LandlordDebtsPage() {
                         : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                     }`}
                   >
-                    Tiền mặt
+                    {t("landlordDebtsModalMethodCash")}
                   </button>
                   <button
                     type="button"
@@ -1289,13 +1312,13 @@ export default function LandlordDebtsPage() {
                         : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                     }`}
                   >
-                    Chuyển khoản ngoài
+                    {t("landlordDebtsModalMethodBanking")}
                   </button>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">Ghi chú thanh toán (tùy chọn)</label>
+                <label className="text-xs font-bold text-zinc-700">{t("landlordDebtsModalPaymentNoteLabel")}</label>
                 <textarea
                   rows={2}
                   value={paymentNote}
@@ -1303,7 +1326,7 @@ export default function LandlordDebtsPage() {
                     setPaymentNote(e.target.value);
                     setIsPaymentDirty(true);
                   }}
-                  placeholder="Ví dụ: Khách trả tiền mặt tại phòng..."
+                  placeholder={t("landlordDebtsModalPaymentNotePlaceholder")}
                   className="w-full px-3 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
                 />
               </div>
@@ -1314,7 +1337,7 @@ export default function LandlordDebtsPage() {
                 onClick={handleRequestClosePayment}
                 className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all"
               >
-                Hủy bỏ
+                {t("landlordDebtsModalCancelBtn")}
               </button>
 
               <button
@@ -1327,7 +1350,7 @@ export default function LandlordDebtsPage() {
                 ) : (
                   <Check className="w-4 h-4" />
                 )}
-                <span>Xác nhận thu tiền</span>
+                <span>{t("landlordDebtsModalConfirmPaymentBtn")}</span>
               </button>
             </div>
           </div>
@@ -1342,9 +1365,9 @@ export default function LandlordDebtsPage() {
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-base font-black text-zinc-900">Xác nhận đóng form</h4>
+              <h4 className="text-base font-black text-zinc-900">{t("landlordDebtsModalConfirmDiscardTitle")}</h4>
               <p className="text-xs text-zinc-500 mt-1">
-                Bạn có thay đổi chưa được lưu. Nếu đóng ngay bây giờ, các thông tin vừa nhập sẽ bị hủy bỏ.
+                {t("landlordDebtsModalConfirmDiscardDesc")}
               </p>
             </div>
             <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -1352,13 +1375,13 @@ export default function LandlordDebtsPage() {
                 onClick={() => setConfirmCloseTarget(null)}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordDebtsModalKeepEditing")}
               </button>
               <button
                 onClick={handleConfirmDiscard}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-sm shadow-rose-600/20"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordDebtsModalDiscardAndClose")}
               </button>
             </div>
           </div>

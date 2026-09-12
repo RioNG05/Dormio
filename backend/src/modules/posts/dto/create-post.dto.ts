@@ -66,6 +66,6 @@ export class CreatePostDto {
     default: PostStatus.posted,
   })
   @IsOptional()
-  @IsEnum(PostStatus, { message: 'Invalid post status (allowed: draft, posted, hidden)' })
+  @IsEnum(PostStatus, { message: 'Invalid post status (allowed: draft, posted, hidden, locked)' })
   status?: PostStatus;
 }
