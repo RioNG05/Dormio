@@ -57,24 +57,6 @@ export class BoardingHousesController {
   }
 
   @Get('multi-property/overview')
-  @Public()
-  @Get(':id/details')
-  @ApiOperation({
-    summary: 'Get full boarding house details for admin inspection',
-    description:
-      'Returns complete boarding house information including services, room types, owner profile, and tenant grievances.',
-  })
-  @ApiOkResponse({
-    description: 'Boarding house full details retrieved successfully',
-  })
-  async getBoardingHouseDetails(
-    @Param('id') id: string,
-  ) {
-    this.logger.log(`GET /boarding-houses/${id}/details called`);
-    return this.boardingHousesService.getBoardingHouseDetails(id);
-  }
-
-  @Get(':id/overview')
   @ApiAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
@@ -110,6 +92,23 @@ export class BoardingHousesController {
   ): Promise<AiStrategyResponseDto> {
     this.logger.log(`POST /boarding-houses/multi-property/ai-strategy called by user ${user.id}`);
     return this.boardingHousesService.generateMultiPropertyAiStrategy(user.id);
+  }
+
+  @Get(':id/details')
+  @Public()
+  @ApiOperation({
+    summary: 'Get full boarding house details for admin inspection',
+    description:
+      'Returns complete boarding house information including services, room types, owner profile, and tenant grievances.',
+  })
+  @ApiOkResponse({
+    description: 'Boarding house full details retrieved successfully',
+  })
+  async getBoardingHouseDetails(
+    @Param('id') id: string,
+  ) {
+    this.logger.log(`GET /boarding-houses/${id}/details called`);
+    return this.boardingHousesService.getBoardingHouseDetails(id);
   }
 
   @Get(':id/overview')
