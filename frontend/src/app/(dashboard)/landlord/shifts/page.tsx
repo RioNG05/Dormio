@@ -18,10 +18,14 @@ import {
   Layers,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { scheduleService, ShiftItem } from "@/services/schedule.service";
 
 export default function ShiftsPage() {
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
   const buildingId = activeBuilding?.id || "";
 
   const [shifts, setShifts] = useState<ShiftItem[]>([]);
@@ -53,7 +57,7 @@ export default function ShiftsPage() {
       setShifts(res || []);
     } catch (err) {
       console.error("Failed to fetch shifts:", err);
-      showToast("error", "Không thể tải danh sách ca mẫu.");
+      showToast("error", t("landlordShiftsLoading"));
     } finally {
       setIsLoading(false);
     }
@@ -105,11 +109,11 @@ export default function ShiftsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
-      setFormError("Tên ca làm việc không được để trống.");
+      setFormError(t("landlordShiftsNameRequired"));
       return;
     }
     if (formStart >= formEnd) {
-      setFormError("Giờ bắt đầu phải trước giờ kết thúc.");
+      setFormError(t("landlordShiftsStartBeforeEnd"));
       return;
     }
 
@@ -122,21 +126,23 @@ export default function ShiftsPage() {
           startTime: formStart,
           endTime: formEnd,
         });
-        showToast("success", `Đã cập nhật ca mẫu "${formName.trim()}" thành công!`);
+        showToast("success", t("landlordShiftsToastEditSuccess"));
       } else {
         await scheduleService.createShift(buildingId, {
           name: formName.trim(),
           startTime: formStart,
           endTime: formEnd,
         });
-        showToast("success", `Đã tạo ca mẫu "${formName.trim()}" thành công!`);
+        showToast("success", t("landlordShiftsToastAddSuccess"));
       }
       setIsModalOpen(false);
       resetForm();
       fetchShifts();
     } catch (err: any) {
       setFormError(
-        err?.response?.data?.message || err?.message || "Có lỗi xảy ra. Vui lòng thử lại."
+        err?.response?.data?.message ||
+        err?.message ||
+        (isEn ? "An error occurred. Please try again." : "Có lỗi xảy ra. Vui lòng thử lại.")
       );
     } finally {
       setIsSubmitting(false);
@@ -144,24 +150,24 @@ export default function ShiftsPage() {
   };
 
   const handleDelete = async (shift: ShiftItem) => {
-    if (!confirm(`Xác nhận xóa ca mẫu "${shift.name}"? Thao tác này không thể hoàn tác.`)) return;
+    if (!confirm(t("landlordShiftsDeleteConfirm", { name: shift.name }))) return;
     try {
       await scheduleService.deleteShift(buildingId, shift.id);
-      showToast("success", `Đã xóa ca mẫu "${shift.name}" thành công.`);
+      showToast("success", t("landlordShiftsToastDeleteSuccess"));
       fetchShifts();
     } catch (err: any) {
       showToast(
         "error",
-        err?.response?.data?.message || "Không thể xóa ca đang có lịch làm việc liên kết."
+        err?.response?.data?.message || t("landlordShiftsDeleteError")
       );
     }
   };
 
   const getShiftCategory = (startTime: string) => {
     const hour = parseInt(startTime.split(":")[0], 10);
-    if (hour >= 5 && hour < 12) return { label: "Ca sáng", icon: Sunrise, color: "text-amber-600 bg-amber-50 border-amber-200" };
-    if (hour >= 12 && hour < 18) return { label: "Ca chiều", icon: Sun, color: "text-blue-600 bg-blue-50 border-blue-200" };
-    return { label: "Ca tối / đêm", icon: Moon, color: "text-purple-600 bg-purple-50 border-purple-200" };
+    if (hour >= 5 && hour < 12) return { label: t("landlordShiftsMorningShift"), icon: Sunrise, color: "text-amber-600 bg-amber-50 border-amber-200" };
+    if (hour >= 12 && hour < 18) return { label: t("landlordShiftsAfternoonShift"), icon: Sun, color: "text-blue-600 bg-blue-50 border-blue-200" };
+    return { label: t("landlordShiftsNightShift"), icon: Moon, color: "text-purple-600 bg-purple-50 border-purple-200" };
   };
 
   const getDurationHours = (start: string, end: string) => {
@@ -201,14 +207,14 @@ export default function ShiftsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
             <Clock className="w-4 h-4" />
-            <span>UC-L-21 · Quản lý nhân sự</span>
+            <span>{isEn ? "UC-L-21 · Staff Management" : "UC-L-21 · Quản lý nhân sự"}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
-            Ca làm việc mẫu
+            {t("landlordShiftsTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            Quản lý các ca mẫu (sáng, chiều, tối) dùng để phân ca nhân viên tại{" "}
-            <strong className="text-zinc-800">{activeBuilding?.name || "tòa nhà"}</strong>
+            {t("landlordShiftsSubtitle")}:{" "}
+            <strong className="text-zinc-800">{activeBuilding?.name || (isEn ? "property" : "tòa nhà")}</strong>
           </p>
         </div>
 
@@ -216,7 +222,7 @@ export default function ShiftsPage() {
           onClick={openCreateModal}
           className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
         >
-          <Plus className="w-4 h-4" /> Thêm ca mẫu mới
+          <Plus className="w-4 h-4" /> {t("landlordShiftsAddNewBtn")}
         </button>
       </div>
 
@@ -226,23 +232,23 @@ export default function ShiftsPage() {
         </div>
         <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="flex flex-col p-3.5 bg-white/5 rounded-2xl border border-white/10">
-            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Tổng ca mẫu</span>
+            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t("landlordShiftsTotalShiftsCount")}</span>
             <span className="font-black text-white text-xl sm:text-2xl mt-1">{shifts.length}</span>
           </div>
           <div className="flex flex-col p-3.5 bg-amber-500/10 rounded-2xl border border-amber-500/30">
-            <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">Ca sáng</span>
+            <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">{t("landlordShiftsMorningShift")}</span>
             <span className="font-black text-amber-400 text-xl sm:text-2xl mt-1">
               {shifts.filter((s) => { const h = parseInt(s.startTime.split(":")[0]); return h >= 5 && h < 12; }).length}
             </span>
           </div>
           <div className="flex flex-col p-3.5 bg-blue-500/10 rounded-2xl border border-blue-500/30">
-            <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Ca chiều</span>
+            <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordShiftsAfternoonShift")}</span>
             <span className="font-black text-blue-400 text-xl sm:text-2xl mt-1">
               {shifts.filter((s) => { const h = parseInt(s.startTime.split(":")[0]); return h >= 12 && h < 18; }).length}
             </span>
           </div>
           <div className="flex flex-col p-3.5 bg-purple-500/10 rounded-2xl border border-purple-500/30">
-            <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Ca tối / đêm</span>
+            <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">{t("landlordShiftsNightShift")}</span>
             <span className="font-black text-purple-400 text-xl sm:text-2xl mt-1">
               {shifts.filter((s) => { const h = parseInt(s.startTime.split(":")[0]); return h < 5 || h >= 18; }).length}
             </span>
@@ -254,7 +260,7 @@ export default function ShiftsPage() {
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
         <input
           type="text"
-          placeholder="Tìm kiếm ca mẫu..."
+          placeholder={t("landlordShiftsFieldNamePh")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -264,7 +270,7 @@ export default function ShiftsPage() {
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-white rounded-3xl border border-zinc-200">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">Đang tải danh sách ca mẫu...</p>
+          <p className="text-xs text-zinc-500 font-medium">{t("landlordShiftsLoading")}</p>
         </div>
       ) : filteredShifts.length === 0 ? (
         <div className="bg-white border border-zinc-200 rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center space-y-4 shadow-sm">
@@ -273,12 +279,10 @@ export default function ShiftsPage() {
           </div>
           <div className="max-w-sm space-y-1">
             <h3 className="text-base font-extrabold text-zinc-900">
-              {searchQuery ? "Không tìm thấy ca mẫu phù hợp" : "Chưa có ca mẫu nào"}
+              {searchQuery ? t("landlordShiftsSearchNotFound") : t("landlordShiftsEmptyTitle")}
             </h3>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              {searchQuery
-                ? "Thử thay đổi từ khóa tìm kiếm."
-                : "Tạo ca sáng, ca chiều hoặc ca tối để bắt đầu phân ca cho nhân viên."}
+              {searchQuery ? t("landlordShiftsSearchNotFoundDesc") : t("landlordShiftsEmptyDesc")}
             </p>
           </div>
           {!searchQuery && (
@@ -286,7 +290,7 @@ export default function ShiftsPage() {
               onClick={openCreateModal}
               className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl transition-all shadow-sm cursor-pointer"
             >
-              + Thêm ca mẫu ngay
+              {t("landlordShiftsAddNow")}
             </button>
           )}
         </div>
@@ -322,16 +326,16 @@ export default function ShiftsPage() {
                   <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100 space-y-2.5">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-0.5">Bắt đầu</p>
+                        <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-0.5">{t("landlordShiftsStart")}</p>
                         <p className="text-lg font-black text-zinc-900">{shift.startTime}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-0.5">Kết thúc</p>
+                        <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-0.5">{t("landlordShiftsEnd")}</p>
                         <p className="text-lg font-black text-zinc-900">{shift.endTime}</p>
                       </div>
                     </div>
                     <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-medium">Thời lượng</span>
+                      <span className="text-zinc-500 font-medium">{t("landlordShiftsDuration")}</span>
                       <span className="font-extrabold text-zinc-800">{duration}</span>
                     </div>
                   </div>
@@ -342,13 +346,13 @@ export default function ShiftsPage() {
                     onClick={() => openEditModal(shift)}
                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer flex-1 justify-center"
                   >
-                    <Edit3 className="w-3.5 h-3.5" /> Chỉnh sửa
+                    <Edit3 className="w-3.5 h-3.5" /> {t("landlordShiftsBtnEdit")}
                   </button>
                   <button
                     onClick={() => handleDelete(shift)}
                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex-1 justify-center border border-rose-200"
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> Xóa
+                    <Trash2 className="w-3.5 h-3.5" /> {t("landlordShiftsBtnDelete")}
                   </button>
                 </div>
               </div>
@@ -369,10 +373,10 @@ export default function ShiftsPage() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-lg font-black text-zinc-900">
-                  {editingShift ? "Chỉnh sửa ca mẫu" : "Thêm ca làm việc mới"}
+                  {editingShift ? t("landlordShiftsModalEditTitle") : t("landlordShiftsModalAddTitle")}
                 </h2>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  {editingShift ? "Cập nhật tên và khung giờ của ca mẫu" : "Định nghĩa tên và khung giờ làm việc"}
+                  {editingShift ? t("landlordShiftsEditSubtitle") : t("landlordShiftsCreateSubtitle")}
                 </p>
               </div>
               <button
@@ -386,13 +390,13 @@ export default function ShiftsPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  Tên ca làm việc <span className="text-rose-500">*</span>
+                  {t("landlordShiftsFieldName")}
                 </label>
                 <input
                   type="text"
                   value={formName}
                   onChange={(e) => { setFormName(e.target.value); setIsDirty(true); }}
-                  placeholder="VD: Ca sáng, Ca chiều, Ca đêm bảo vệ..."
+                  placeholder={t("landlordShiftsFieldNamePh")}
                   className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
                   autoFocus
                 />
@@ -401,7 +405,7 @@ export default function ShiftsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    Giờ bắt đầu <span className="text-rose-500">*</span>
+                    {t("landlordShiftsFieldStartTime")}
                   </label>
                   <input
                     type="time"
@@ -412,7 +416,7 @@ export default function ShiftsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    Giờ kết thúc <span className="text-rose-500">*</span>
+                    {t("landlordShiftsFieldEndTime")}
                   </label>
                   <input
                     type="time"
@@ -426,7 +430,7 @@ export default function ShiftsPage() {
               {formStart && formEnd && (
                 <div className="flex items-center gap-2 px-4 py-2.5 bg-[#2AC1BC]/5 border border-[#2AC1BC]/20 rounded-xl text-xs font-semibold text-[#2AC1BC]">
                   <Clock className="w-3.5 h-3.5 shrink-0" />
-                  <span>Thời lượng: <strong>{getDurationHours(formStart, formEnd)}</strong></span>
+                  <span>{t("landlordShiftsDuration")}: <strong>{getDurationHours(formStart, formEnd)}</strong></span>
                 </div>
               )}
 
@@ -443,7 +447,7 @@ export default function ShiftsPage() {
                   onClick={handleAttemptClose}
                   className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordShiftsModalBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -455,7 +459,7 @@ export default function ShiftsPage() {
                   ) : (
                     <Check className="w-4 h-4" />
                   )}
-                  {editingShift ? "Lưu thay đổi" : "Tạo ca mẫu"}
+                  {editingShift ? t("landlordShiftsSaveShiftBtn") : t("landlordShiftsCreateShiftBtn")}
                 </button>
               </div>
             </form>
@@ -466,22 +470,20 @@ export default function ShiftsPage() {
       {isConfirmCloseOpen && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-in zoom-in-95 duration-150">
-            <h3 className="text-base font-black text-zinc-900 mb-1">Xác nhận đóng form</h3>
-            <p className="text-xs text-zinc-500 mb-5">
-              Bạn có thay đổi chưa được lưu. Bạn có muốn hủy bỏ và đóng form không?
-            </p>
+            <h3 className="text-base font-black text-zinc-900 mb-1">{t("landlordShiftsConfirmCloseTitle")}</h3>
+            <p className="text-xs text-zinc-500 mb-5">{t("landlordShiftsConfirmCloseDesc")}</p>
             <div className="flex gap-2.5">
               <button
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordShiftsConfirmCloseKeep")}
               </button>
               <button
                 onClick={handleConfirmClose}
                 className="flex-1 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors cursor-pointer"
               >
-                Hủy thay đổi &amp; Đóng
+                {t("landlordShiftsConfirmCloseDiscard")}
               </button>
             </div>
           </div>

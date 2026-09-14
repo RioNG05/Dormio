@@ -10,6 +10,7 @@ import {
   ChevronLeft, BarChart3, TrendingDown
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { Asset, initialMockAssets, MaintenanceLog, calculateDepreciation } from "../data";
 
 // Mock Room Tenants dictionary for automatic tenant reflection when room changes
@@ -26,6 +27,26 @@ export default function AssetDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
+
+  const getStatusLabel = (status: string) => {
+    if (status === "Đang sử dụng") return t("landlordAssetsStatusInUse");
+    if (status === "Sẵn sàng") return t("landlordAssetsStatusReady");
+    if (status === "Bảo trì") return t("landlordAssetsStatusMaintenance");
+    if (status === "Hỏng hóc") return t("landlordAssetsStatusBroken");
+    return status;
+  };
+
+  const getCategoryLabel = (category: string) => {
+    if (category === "Điện lạnh") return t("landlordAssetsCatRefrigeration");
+    if (category === "Nội thất") return t("landlordAssetsCatFurniture");
+    if (category === "Gia dụng") return t("landlordAssetsCatAppliances");
+    if (category === "Điện nước") return t("landlordAssetsCatUtilities");
+    if (category === "An ninh") return t("landlordAssetsCatSecurity");
+    return category;
+  };
 
   const [asset, setAsset] = useState<Asset | null>(null);
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
@@ -60,7 +81,7 @@ export default function AssetDetailPage() {
   // Alert & Confirm Modals
   const [alertModal, setAlertModal] = useState<{ isOpen: boolean; title: string; message: string; type: "warning" | "error" | "success" | "info" }>({
     isOpen: false,
-    title: "Thông báo",
+    title: isEn ? "Notification" : "Thông báo",
     message: "",
     type: "info"
   });
@@ -72,8 +93,8 @@ export default function AssetDetailPage() {
     onConfirm: () => { }
   });
 
-  const showAlert = (message: string, type: "warning" | "error" | "success" | "info" = "warning", title: string = "Thông báo") => {
-    setAlertModal({ isOpen: true, title, message, type });
+  const showAlert = (message: string, type: "warning" | "error" | "success" | "info" = "warning", title?: string) => {
+    setAlertModal({ isOpen: true, title: title || (isEn ? "Notification" : "Thông báo"), message, type });
   };
 
   useEffect(() => {
@@ -112,7 +133,7 @@ export default function AssetDetailPage() {
     return (
       <div className="p-8 sm:p-12 text-center text-zinc-500">
         <Package className="w-10 sm:w-12 h-10 sm:h-12 mx-auto mb-3 text-zinc-300 animate-pulse" />
-        <p className="font-bold text-xs sm:text-sm">Đang tải thông tin tài sản...</p>
+        <p className="font-bold text-xs sm:text-sm">{t("landlordAssetsDetailLoading")}</p>
       </div>
     );
   }
@@ -150,11 +171,11 @@ export default function AssetDetailPage() {
 
   const handleSaveEditAsset = () => {
     if (!editName.trim()) {
-      showAlert("Vui lòng nhập Tên tài sản!", "warning", "Thiếu thông tin");
+      showAlert(t("landlordAssetsNameRequired"), "warning", t("landlordAssetsInfoMissing"));
       return;
     }
     if (!editSku.trim()) {
-      showAlert("Vui lòng nhập Mã SKU cho tài sản!", "warning", "Thiếu thông tin");
+      showAlert(t("landlordAssetsSkuRequired"), "warning", t("landlordAssetsInfoMissing"));
       return;
     }
 
@@ -183,12 +204,12 @@ export default function AssetDetailPage() {
     } : null);
 
     setIsEditModalOpen(false);
-    showAlert("Đã cập nhật thông tin SKU, vị trí & khấu hao tài sản thành công!", "success", "Cập nhật thành công");
+    showAlert(t("landlordAssetsToastEditSuccess"), "success", t("landlordAssetsToastEditSuccess"));
   };
 
   const handleAddMaintenanceLog = () => {
     if (!logDescription.trim()) {
-      showAlert("Vui lòng nhập chi tiết công việc bảo trì!", "warning", "Thiếu thông tin");
+      showAlert(t("landlordAssetsDetailLogDesc"), "warning", t("landlordAssetsInfoMissing"));
       return;
     }
 
@@ -206,22 +227,28 @@ export default function AssetDetailPage() {
     setIsLogModalOpen(false);
     setLogDescription("");
     setLogPerformer("");
-    showAlert("Đã ghi nhận nhật ký bảo trì mới!", "success", "Ghi nhận thành công");
+    showAlert(t("landlordAssetsDetailLogSaveBtn"), "success", t("landlordAssetsDetailLogSaveBtn"));
   };
 
   const handleStatusChange = (newStatus: string) => {
     setAsset(prev => prev ? { ...prev, status: newStatus } : null);
-    showAlert(`Đã cập nhật trạng thái tài sản thành: ${newStatus}`, "success", "Cập nhật trạng thái");
+    showAlert(
+      isEn
+        ? `Updated asset status to: ${getStatusLabel(newStatus)}`
+        : `Đã cập nhật trạng thái tài sản thành: ${getStatusLabel(newStatus)}`,
+      "success",
+      isEn ? "Status updated" : "Cập nhật trạng thái"
+    );
   };
 
   const handleDeleteAsset = () => {
     setConfirmModal({
       isOpen: true,
-      title: "Xác nhận xóa tài sản",
+      title: t("landlordAssetsDetailDeleteConfirmTitle"),
       message: `Bạn có chắc chắn muốn xóa tài sản [${asset.name}] khỏi hệ thống? Hành động này không thể hoàn tác.`,
       onConfirm: () => {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
-        showAlert("Đã xóa tài sản thành công!", "success", "Đã xóa");
+        showAlert(t("landlordAssetsToastDeleteSuccess"), "success", t("landlordAssetsToastDeleteSuccess"));
         setTimeout(() => router.push("/landlord/assets"), 1000);
       }
     });
@@ -232,7 +259,7 @@ export default function AssetDetailPage() {
       {/* Breadcrumb Navigation */}
       <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-zinc-500 flex-wrap">
         <Link href="/landlord/assets" className="hover:text-[#2AC1BC] flex items-center gap-1 transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" /> Danh sách tài sản
+          <ArrowLeft className="w-3.5 h-3.5" /> {t("landlordAssetsDetailBack")}
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-zinc-300 shrink-0" />
         <span className="text-zinc-900 font-extrabold truncate">{asset.name} (SKU: {asset.sku || asset.id})</span>
@@ -247,7 +274,7 @@ export default function AssetDetailPage() {
           <div className="space-y-2 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
-                {asset.category}
+                {getCategoryLabel(asset.category)}
               </span>
               <span className="text-[10px] sm:text-xs font-black text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/30">
                 SKU: {asset.sku || asset.id}
@@ -257,7 +284,7 @@ export default function AssetDetailPage() {
                     asset.status === 'Bảo trì' ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse' :
                       'bg-rose-50 text-rose-600 border-rose-200'
                 }`}>
-                {asset.status}
+                {getStatusLabel(asset.status)}
               </span>
             </div>
 
@@ -268,13 +295,13 @@ export default function AssetDetailPage() {
               <div className="flex items-center gap-1.5 bg-zinc-50 px-3 py-1.5 rounded-xl border border-zinc-200/80">
                 <Home className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                 <span>
-                  Vị trí lắp đặt:{" "}
+                  {t("landlordAssetsDetailLocation")}{" "}
                   {hasRoomLink ? (
                     <Link
                       href={`/landlord/rooms?id=${asset.room}`}
                       className="font-extrabold text-[#2AC1BC] hover:underline hover:text-[#25ad87] transition-colors"
                     >
-                      Phòng {asset.room}
+                      {isEn ? `Room ${asset.room}` : `Phòng ${asset.room}`}
                     </Link>
                   ) : (
                     <strong className="text-zinc-900 font-extrabold">{asset.room}</strong>
@@ -286,7 +313,7 @@ export default function AssetDetailPage() {
                 <div className="flex items-center gap-1.5 bg-emerald-50/80 px-3 py-1.5 rounded-xl border border-emerald-200/80">
                   <User className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
-                    Khách thuê phòng:{" "}
+                    {t("landlordAssetsDetailTenant")}{" "}
                     <Link
                       href="/landlord/customers"
                       className="font-extrabold text-emerald-700 hover:underline hover:text-emerald-800 transition-colors"
@@ -307,19 +334,19 @@ export default function AssetDetailPage() {
             onClick={() => handleStatusChange(asset.status === "Bảo trì" ? "Đang sử dụng" : "Bảo trì")}
             className="px-3 sm:px-3.5 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <Wrench className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-600" /> {asset.status === "Bảo trì" ? "Hoàn tất bảo trì" : "Báo bảo trì"}
+            <Wrench className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-600" /> {asset.status === "Bảo trì" ? t("landlordAssetsDetailBtnFinishMaintenance") : t("landlordAssetsDetailBtnSendMaintenance")}
           </button>
           <button
             onClick={handleOpenEditModal}
             className="px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#2AC1BC]" /> Chỉnh sửa
+            <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#2AC1BC]" /> {t("landlordAssetsBtnEdit")}
           </button>
           <button
             onClick={handleDeleteAsset}
             className="px-3 sm:px-3.5 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Xóa
+            <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> {t("landlordAssetsBtnDelete")}
           </button>
         </div>
       </div>
@@ -332,24 +359,24 @@ export default function AssetDetailPage() {
           <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-zinc-100">
               <Info className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC]" />
-              <h2 className="text-sm sm:text-base font-black text-zinc-900">Thông tin chi tiết tài sản</h2>
+              <h2 className="text-sm sm:text-base font-black text-zinc-900">{t("landlordAssetsDetailGeneral")}</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
               <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">Mã Model / Kiểu dáng</span>
+                <span className="text-zinc-400 font-medium block">{t("landlordAssetsDetailModel")}</span>
                 <span className="font-bold text-zinc-800">{asset.modelCode || "— Chưa cập nhật"}</span>
               </div>
               <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">Số Serial máy</span>
+                <span className="text-zinc-400 font-medium block">{t("landlordAssetsDetailSerial")}</span>
                 <span className="font-bold text-zinc-800">{asset.serialNumber || "— Chưa cập nhật"}</span>
               </div>
               <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">Ngày mua / Nhập bàn giao</span>
+                <span className="text-zinc-400 font-medium block">{t("landlordAssetsFieldPurchaseDate")}</span>
                 <span className="font-bold text-zinc-800">{asset.purchaseDate || asset.dateAdded}</span>
               </div>
               <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">Hạn bảo hành nhà sản xuất</span>
+                <span className="text-zinc-400 font-medium block">{t("landlordAssetsDetailWarranty")}</span>
                 <span className="font-bold text-emerald-700">{asset.warrantyPeriod || "12 tháng"}</span>
               </div>
             </div>
@@ -361,30 +388,30 @@ export default function AssetDetailPage() {
               <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-emerald-600" />
-                  <h2 className="text-sm sm:text-base font-black text-zinc-900">Định giá & Khấu hao tài sản</h2>
+                  <h2 className="text-sm sm:text-base font-black text-zinc-900">{t("landlordAssetsDetailDepreciation")}</h2>
                 </div>
                 <span className="text-[10px] font-black text-zinc-500 bg-zinc-100 px-2 py-1 rounded-lg">
-                  Thời gian sử dụng: {asset.depreciationYears || 5} năm ({dep.totalMonths} tháng)
+                  {t("landlordAssetsDetailYearsUsed", { years: asset.depreciationYears || 5, months: dep.totalMonths })}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
                 <div className="p-3.5 sm:p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl space-y-1">
-                  <span className="text-emerald-700 font-medium block">Giá trị ban đầu (Giá gốc)</span>
+                  <span className="text-emerald-700 font-medium block">{t("landlordAssetsDetailInitialValue")}</span>
                   <span className="font-black text-emerald-900 text-base sm:text-lg">{asset.value}</span>
                   <span className="text-[10px] text-emerald-700 font-medium block">Ngày mua: {asset.purchaseDate || asset.dateAdded}</span>
                 </div>
 
                 <div className="p-3.5 sm:p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl space-y-1">
-                  <span className="text-amber-700 font-medium block">Khấu hao lũy kế ({dep.depreciatedPercent}%)</span>
+                  <span className="text-amber-700 font-medium block">{t("landlordAssetsDetailAccumulatedDepreciation", { percent: dep.depreciatedPercent })}</span>
                   <span className="font-black text-amber-900 text-base sm:text-lg">
                     - {dep.accumulatedDepreciation.toLocaleString("vi-VN")} ₫
                   </span>
-                  <span className="text-[10px] text-amber-700 font-medium block">Đã dùng: {dep.monthsUsed} / {dep.totalMonths} tháng</span>
+                  <span className="text-[10px] text-amber-700 font-medium block">{t("landlordAssetsDetailUsedMonths", { used: dep.monthsUsed, total: dep.totalMonths })}</span>
                 </div>
 
                 <div className="p-3.5 sm:p-4 bg-blue-50/80 border border-blue-200/80 rounded-2xl space-y-1">
-                  <span className="text-blue-700 font-medium block">Giá trị ước tính hiện tại ({dep.remainingPercent}%)</span>
+                  <span className="text-blue-700 font-medium block">{t("landlordAssetsDetailCurrentEstimated", { percent: dep.remainingPercent })}</span>
                   <span className="font-black text-blue-900 text-base sm:text-lg">
                     {dep.currentValue.toLocaleString("vi-VN")} ₫
                   </span>
@@ -396,8 +423,8 @@ export default function AssetDetailPage() {
             {/* VISUAL DEPRECIATION PROGRESS BAR */}
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between text-xs font-extrabold text-zinc-700">
-                <span>Tỷ lệ giá trị còn lại ({dep.remainingPercent}%)</span>
-                <span className="text-amber-600">Đã khấu hao {dep.depreciatedPercent}%</span>
+                <span>{t("landlordAssetsDetailRemainingRatio", { percent: dep.remainingPercent })}</span>
+                <span className="text-amber-600">{t("landlordAssetsDetailDepreciatedRatio", { percent: dep.depreciatedPercent })}</span>
               </div>
               <div className="w-full h-3 bg-amber-100 rounded-full overflow-hidden flex p-0.5 border border-zinc-200">
                 <div
@@ -417,13 +444,13 @@ export default function AssetDetailPage() {
               <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-zinc-100 shrink-0">
                 <div className="flex items-center gap-2">
                   <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-amber-500 shrink-0" />
-                  <h2 className="text-sm sm:text-base font-black text-zinc-900">Nhật ký bảo trì & Sửa chữa</h2>
+                  <h2 className="text-sm sm:text-base font-black text-zinc-900">{t("landlordAssetsDetailMaintenanceHistory")}</h2>
                 </div>
                 <button
                   onClick={() => setIsLogModalOpen(true)}
                   className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Thêm nhật ký
+                  <Plus className="w-3.5 h-3.5" /> {t("landlordAssetsDetailAddMaintenanceBtn")}
                 </button>
               </div>
 
@@ -433,9 +460,9 @@ export default function AssetDetailPage() {
                     <Clock className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="font-extrabold text-zinc-800 text-sm">Chưa có lịch sử bảo trì</p>
+                    <p className="font-extrabold text-zinc-800 text-sm">{t("landlordAssetsDetailNoMaintenance")}</p>
                     <p className="text-xs text-zinc-400 font-medium max-w-xs mx-auto mt-1">
-                      Ấn nút "+ Thêm nhật ký" để lưu thông tin vệ sinh, bơm gas hoặc sửa chữa định kỳ.
+                      {t("landlordAssetsDetailNoMaintenanceDesc")}
                     </p>
                   </div>
                 </div>
@@ -462,7 +489,7 @@ export default function AssetDetailPage() {
                       </p>
 
                       <div className="text-[11px] text-zinc-400 font-medium pt-1.5 border-t border-zinc-200/50 flex items-center justify-between">
-                        <span>Người thực hiện: <strong className="text-zinc-700">{log.performer}</strong></span>
+                        <span>{t("landlordAssetsDetailPerformer")} <strong className="text-zinc-700">{log.performer}</strong></span>
                       </div>
                     </div>
                   ))}
@@ -487,9 +514,9 @@ export default function AssetDetailPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-base sm:text-lg text-zinc-900">
-                    Chỉnh sửa thông tin tài sản [Mã SKU: {editSku}]
+                    {t("landlordAssetsModalEditTitle")} [{t("landlordAssetsFieldSku")}: {editSku}]
                   </h3>
-                  <p className="text-xs text-zinc-500 font-medium">Cập nhật mã SKU tự quản lý, vị trí phòng & thông số khấu hao</p>
+                  <p className="text-xs text-zinc-500 font-medium">{t("landlordAssetsModalSub")}</p>
                 </div>
               </div>
               <button onClick={() => setIsEditModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors">
@@ -501,7 +528,7 @@ export default function AssetDetailPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                 {/* SKU Code Input */}
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Mã SKU (Chủ trọ tự quản lý) *</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldSku")} *</label>
                   <input
                     type="text"
                     value={editSku}
@@ -511,7 +538,7 @@ export default function AssetDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Tên tài sản / Thiết bị *</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldName")} *</label>
                   <input
                     type="text"
                     value={editName}
@@ -521,39 +548,39 @@ export default function AssetDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Danh mục tài sản</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldCategory")}</label>
                   <select
                     value={editCategory}
                     onChange={(e) => setEditCategory(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="Điện lạnh">Điện lạnh</option>
-                    <option value="Nội thất">Nội thất</option>
-                    <option value="Gia dụng">Gia dụng</option>
-                    <option value="Điện nước">Điện nước</option>
-                    <option value="An ninh">An ninh</option>
+                    <option value="Điện lạnh">{t("landlordAssetsCatRefrigeration")}</option>
+                    <option value="Nội thất">{t("landlordAssetsCatFurniture")}</option>
+                    <option value="Gia dụng">{t("landlordAssetsCatAppliances")}</option>
+                    <option value="Điện nước">{t("landlordAssetsCatUtilities")}</option>
+                    <option value="An ninh">{t("landlordAssetsCatSecurity")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Vị trí / Phòng lắp đặt</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldRoom")}</label>
                   <select
                     value={editRoom}
                     onChange={(e) => setEditRoom(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="101">Phòng 101 (Khách: Nguyễn Văn A)</option>
-                    <option value="102">Phòng 102 (Khách: Trần Thị B)</option>
-                    <option value="103">Phòng 103 (Khách: Lê Văn C)</option>
-                    <option value="105">Phòng 105 (Khách: Phạm Hoàng D)</option>
-                    <option value="201">Phòng 201 (Khách: Vũ Thị E)</option>
-                    <option value="Kho">Kho chứa đồ (Không có khách)</option>
-                    <option value="Khu sinh hoạt chung">Khu sinh hoạt chung (Không có khách)</option>
+                    <option value="101">{isEn ? "Room 101 (Tenant: Nguyen Van A)" : "Phòng 101 (Khách: Nguyễn Văn A)"}</option>
+                    <option value="102">{isEn ? "Room 102 (Tenant: Tran Thi B)" : "Phòng 102 (Khách: Trần Thị B)"}</option>
+                    <option value="103">{isEn ? "Room 103 (Tenant: Le Van C)" : "Phòng 103 (Khách: Lê Văn C)"}</option>
+                    <option value="105">{isEn ? "Room 105 (Tenant: Pham Hoang D)" : "Phòng 105 (Khách: Phạm Hoàng D)"}</option>
+                    <option value="201">{isEn ? "Room 201 (Tenant: Vu Thi E)" : "Phòng 201 (Khách: Vũ Thị E)"}</option>
+                    <option value="Kho">{isEn ? "Storage (No tenant)" : "Kho chứa đồ (Không có khách)"}</option>
+                    <option value="Khu sinh hoạt chung">{isEn ? "Common area (No tenant)" : "Khu sinh hoạt chung (Không có khách)"}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Giá gốc ban đầu (VNĐ)</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldPurchaseValue")}</label>
                   <input
                     type="text"
                     value={editPurchaseValue}
@@ -563,7 +590,7 @@ export default function AssetDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Ngày mua / Nhập bàn giao</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldPurchaseDate")}</label>
                   <input
                     type="text"
                     placeholder="VD: 10/01/2024"
@@ -574,35 +601,35 @@ export default function AssetDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Thời gian khấu hao (Số năm)</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldDepreciationYears")}</label>
                   <select
                     value={editDepreciationYears}
                     onChange={(e) => setEditDepreciationYears(Number(e.target.value))}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value={3}>3 năm (36 tháng)</option>
-                    <option value={5}>5 năm (60 tháng)</option>
-                    <option value={8}>8 năm (96 tháng)</option>
-                    <option value={10}>10 năm (120 tháng)</option>
+                    <option value={3}>3 {isEn ? "years (36 months)" : "năm (36 tháng)"}</option>
+                    <option value={5}>5 {isEn ? "years (60 months)" : "năm (60 tháng)"}</option>
+                    <option value={8}>8 {isEn ? "years (96 months)" : "năm (96 tháng)"}</option>
+                    <option value={10}>10 {isEn ? "years (120 months)" : "năm (120 tháng)"}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Trạng thái thiết bị</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldStatus")}</label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="Đang sử dụng">Đang sử dụng</option>
-                    <option value="Sẵn sàng">Sẵn sàng (Kho)</option>
-                    <option value="Bảo trì">Đang bảo trì</option>
-                    <option value="Hỏng hóc">Hỏng hóc</option>
+                    <option value="Đang sử dụng">{t("landlordAssetsStatusInUse")}</option>
+                    <option value="Sẵn sàng">{t("landlordAssetsStatusReady")}</option>
+                    <option value="Bảo trì">{t("landlordAssetsStatusMaintenance")}</option>
+                    <option value="Hỏng hóc">{t("landlordAssetsStatusBroken")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Mã Model</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldModelCode")}</label>
                   <input
                     type="text"
                     value={editModelCode}
@@ -612,7 +639,7 @@ export default function AssetDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">Hạn bảo hành</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldWarranty")}</label>
                   <input
                     type="text"
                     value={editWarrantyPeriod}
@@ -625,10 +652,10 @@ export default function AssetDetailPage() {
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
               <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer">
-                Hủy bỏ
+                {t("landlordAssetsBtnCancel")}
               </button>
               <button onClick={handleSaveEditAsset} className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
-                Lưu thay đổi
+                {t("landlordAssetsBtnSave")}
               </button>
             </div>
           </div>
@@ -643,7 +670,7 @@ export default function AssetDetailPage() {
         >
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-base text-zinc-900">Ghi nhận nhật ký bảo trì</h3>
+              <h3 className="font-black text-base text-zinc-900">{t("landlordAssetsDetailLogModalTitle")}</h3>
               <button onClick={() => setIsLogModalOpen(false)} className="text-zinc-400 hover:text-zinc-600 p-1">
                 <Plus className="w-5 h-5 rotate-45" />
               </button>
@@ -651,24 +678,24 @@ export default function AssetDetailPage() {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">Loại công việc</label>
+                <label className="block font-extrabold text-zinc-700 mb-1">{t("landlordAssetsDetailLogType")}</label>
                 <select
                   value={logType}
                   onChange={(e) => setLogType(e.target.value)}
                   className="w-full px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
                 >
-                  <option value="Bảo dưỡng định kỳ">Bảo dưỡng định kỳ</option>
-                  <option value="Sửa chữa linh kiện">Sửa chữa linh kiện</option>
-                  <option value="Vệ sinh & Nạp gas">Vệ sinh & Nạp gas</option>
-                  <option value="Thay thế mới">Thay thế mới</option>
+                  <option value="Bảo dưỡng định kỳ">{t("landlordAssetsDetailLogTypeRoutine")}</option>
+                  <option value="Sửa chữa linh kiện">{t("landlordAssetsDetailLogTypeRepair")}</option>
+                  <option value="Vệ sinh & Nạp gas">{t("landlordAssetsDetailLogTypeCleanGas")}</option>
+                  <option value="Thay thế mới">{t("landlordAssetsDetailLogTypeReplace")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">Mô tả công việc <span className="text-rose-500">*</span></label>
+                <label className="block font-extrabold text-zinc-700 mb-1">{t("landlordAssetsDetailLogDesc")} <span className="text-rose-500">*</span></label>
                 <textarea
                   rows={2}
-                  placeholder="VD: Kiểm tra và nạp thêm 0.5kg gas R32..."
+                  placeholder={t("landlordAssetsDetailLogDescPh")}
                   value={logDescription}
                   onChange={(e) => setLogDescription(e.target.value)}
                   className="w-full px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none resize-none"
@@ -676,7 +703,7 @@ export default function AssetDetailPage() {
               </div>
 
               <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">Chi phí thực hiện (VNĐ)</label>
+                <label className="block font-extrabold text-zinc-700 mb-1">{t("landlordAssetsDetailLogCost")}</label>
                 <input
                   type="text"
                   placeholder="VD: 250.000 ₫"
@@ -687,10 +714,10 @@ export default function AssetDetailPage() {
               </div>
 
               <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">Người / Đơn vị thực hiện</label>
+                <label className="block font-extrabold text-zinc-700 mb-1">{t("landlordAssetsDetailLogPerformer")}</label>
                 <input
                   type="text"
-                  placeholder="VD: Thợ điện lạnh Tuấn"
+                  placeholder={t("landlordAssetsDetailLogPerformerPh")}
                   value={logPerformer}
                   onChange={(e) => setLogPerformer(e.target.value)}
                   className="w-full px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
@@ -700,10 +727,10 @@ export default function AssetDetailPage() {
 
             <div className="pt-2 flex justify-end gap-2">
               <button onClick={() => setIsLogModalOpen(false)} className="px-4 py-2 font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl cursor-pointer">
-                Hủy
+                {t("landlordAssetsBtnCancel")}
               </button>
               <button onClick={handleAddMaintenanceLog} className="px-4 py-2 font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
-                Lưu nhật ký
+                {t("landlordAssetsDetailLogSaveBtn")}
               </button>
             </div>
           </div>
@@ -745,10 +772,10 @@ function ConfirmModal({ isOpen, title, message, onConfirm, onCancel }: { isOpen:
         </div>
         <div className="grid grid-cols-2 gap-2.5 pt-2">
           <button onClick={onCancel} className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100">
-            Hủy bỏ
+            Cancel
           </button>
           <button onClick={onConfirm} className="px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20">
-            Xác nhận
+            OK
           </button>
         </div>
       </div>
@@ -757,6 +784,7 @@ function ConfirmModal({ isOpen, title, message, onConfirm, onCancel }: { isOpen:
 }
 
 function AlertModal({ isOpen, title, message, type = "info", onClose }: { isOpen: boolean; title: string; message: string; type?: "warning" | "error" | "success" | "info"; onClose: () => void; }) {
+  const t = useTranslations("landlord");
   if (!isOpen) return null;
   const config = {
     warning: { bgColor: "bg-amber-500/10 text-amber-600 border-amber-200", icon: <AlertTriangle className="w-7 h-7 text-amber-500" />, btnColor: "bg-amber-500 text-white" },
@@ -776,7 +804,7 @@ function AlertModal({ isOpen, title, message, type = "info", onClose }: { isOpen
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
         </div>
         <button onClick={onClose} className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md ${config.btnColor}`}>
-          Đã hiểu
+          {t("landlordAssetsBtnUnderstood")}
         </button>
       </div>
     </div>

@@ -15,7 +15,7 @@ import {
   Tooltip, Legend, BarChart, Bar
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
-import { useLanguage } from "@/context/LanguageContext";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import { formatCurrency, formatVND } from "@/utils";
 import {
   getBoardingHouseOverview,
@@ -30,6 +30,8 @@ import {
 export default function ReportsPage() {
   const { activeBuilding, buildings, selectBuilding } = useAuth();
   const { locale } = useLanguage();
+  const t = useTranslations("landlord");
+  const isEn = locale === "en";
 
   const [mounted, setMounted] = useState(false);
 
@@ -87,11 +89,11 @@ export default function ReportsPage() {
       setPortfolioOverview(data);
     } catch {
       setPortfolioOverview(null);
-      showToast("Không thể tải số liệu báo cáo toàn chuỗi", "error");
+      showToast(t("landlordReportsToastFetchError"), "error");
     } finally {
       setIsPortfolioLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     setMounted(true);
@@ -108,9 +110,9 @@ export default function ReportsPage() {
       const res = await generateMultiPropertyAiStrategy();
       setAiStrategy(res);
       setShowAiModal(true);
-      showToast("Đã khởi tạo chiến lược tiếp thị đa cơ sở thành công!", "success");
+      showToast(t("landlordReportsToastAiSuccess"), "success");
     } catch (err: any) {
-      showToast(err?.message || "Lỗi khi khởi tạo chiến lược AI", "error");
+      showToast(err?.message || t("landlordReportsToastAiError"), "error");
     } finally {
       setIsAiGenerating(false);
     }
@@ -151,7 +153,20 @@ export default function ReportsPage() {
   // Export CSV Data
   const handleExportCsv = () => {
     if (reportMode === "portfolio" && portfolioOverview) {
-      const headers = ["ID", "Tên cơ sở", "Địa chỉ", "Tổng phòng", "Đang ở", "Phòng trống", "Tỷ lệ lấp đầy", "Doanh thu", "Chi phí", "Lợi nhuận ròng", "Công nợ", "HĐ sắp hết hạn"];
+      const headers = [
+        t("landlordReportsCsvId"),
+        t("landlordReportsCsvName"),
+        t("landlordReportsCsvAddress"),
+        t("landlordReportsCsvTotalRooms"),
+        t("landlordReportsCsvOccupied"),
+        t("landlordReportsCsvVacant"),
+        t("landlordReportsCsvOccupancyRate"),
+        t("landlordReportsCsvRevenue"),
+        t("landlordReportsCsvExpenses"),
+        t("landlordReportsCsvNetProfit"),
+        t("landlordReportsCsvDebt"),
+        t("landlordReportsCsvExpiring"),
+      ];
       const rows = portfolioOverview.propertiesBreakdown.map((p) => [
         `"${p.id}"`,
         `"${p.name}"`,
@@ -176,9 +191,9 @@ export default function ReportsPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast("Đã xuất tệp dữ liệu báo cáo danh mục thành công!");
+      showToast(t("landlordReportsExportSuccess"));
     } else if (singleOverview) {
-      showToast("Đang xuất báo cáo chi tiết cơ sở...");
+      showToast(t("landlordReportsExportSingleStarting"));
     }
   };
 
@@ -244,16 +259,16 @@ export default function ReportsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight flex items-center gap-2.5">
-            <span>{locale === "en" ? "Reports & Portfolio Analytics" : "Báo Cáo & Phân Tích Danh Mục"}</span>
+            <span>{t("landlordReportsTitle")}</span>
             <span className="px-2.5 py-0.5 text-[11px] font-black bg-[#2AC1BC]/15 text-[#138e89] rounded-full border border-[#2AC1BC]/30 flex items-center gap-1">
               <Layers className="w-3 h-3" />
-              {reportMode === "portfolio" ? "Toàn bộ chuỗi (UC-L-24)" : activeBuilding?.name || "Cơ sở"}
+              {reportMode === "portfolio" ? t("landlordReportsBadgePortfolio") : activeBuilding?.name || t("landlordReportsBadgeSingleFallback")}
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
             {reportMode === "portfolio"
-              ? "Tổng hợp doanh thu, tỷ lệ lấp đầy, chi phí, lợi nhuận ròng và chiến lược tiếp thị trên toàn bộ các cơ sở."
-              : (activeBuilding?.address || "Dữ liệu vận hành, doanh thu và tỷ lệ lấp đầy phòng theo thời gian thực.")}
+              ? t("landlordReportsSubtitlePortfolio")
+              : (activeBuilding?.address || t("landlordReportsSubtitleSingle"))}
           </p>
         </div>
 
@@ -271,7 +286,7 @@ export default function ReportsPage() {
               }`}
             >
               <Layers className="w-3.5 h-3.5 text-[#2AC1BC]" />
-              <span>Toàn chuỗi (Pro)</span>
+              <span>{t("landlordReportsTabPortfolio")}</span>
             </button>
             <button
               type="button"
@@ -283,7 +298,7 @@ export default function ReportsPage() {
               }`}
             >
               <Building2 className="w-3.5 h-3.5 text-blue-500" />
-              <span>Từng cơ sở</span>
+              <span>{t("landlordReportsTabSingle")}</span>
             </button>
           </div>
 
@@ -319,7 +334,7 @@ export default function ReportsPage() {
               ) : (
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               )}
-              <span>{isAiGenerating ? "Đang phân tích..." : "Chiến lược AI"}</span>
+              <span>{isAiGenerating ? t("landlordReportsAiAnalyzing") : t("landlordReportsAiButton")}</span>
             </button>
           )}
 
@@ -330,7 +345,7 @@ export default function ReportsPage() {
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#138e89] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
           >
             <FileSpreadsheet className="w-4 h-4 text-[#2AC1BC]" />
-            <span>Xuất Excel / CSV</span>
+            <span>{t("landlordReportsExportCsv")}</span>
           </button>
         </div>
       </div>
@@ -343,7 +358,7 @@ export default function ReportsPage() {
           {isPortfolioLoading ? (
             <div className="py-20 text-center text-zinc-400 space-y-3">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
-              <p className="text-xs font-semibold">Đang tổng hợp dữ liệu toàn bộ danh mục nhà trọ...</p>
+              <p className="text-xs font-semibold">{t("landlordReportsPortfolioLoading")}</p>
             </div>
           ) : (
             <>
@@ -354,15 +369,15 @@ export default function ReportsPage() {
                   <div className="space-y-1.5 max-w-2xl">
                     <div className="flex items-center gap-2">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" /> Dormio AI Advisor (UC-L-24)
+                        <Sparkles className="w-3 h-3" /> {t("landlordReportsAiBannerBadge")}
                       </span>
-                      <span className="text-xs text-zinc-300">Tự động phân tích chuỗi nhà trọ</span>
+                      <span className="text-xs text-zinc-300">{t("landlordReportsAiBannerTag")}</span>
                     </div>
                     <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
-                      Chiến lược Tiếp thị & Tối ưu Doanh thu đa cơ sở
+                      {t("landlordReportsAiBannerTitle")}
                     </h3>
                     <p className="text-xs text-zinc-300 leading-relaxed">
-                      AI phân tích tỷ lệ trống, chi phí vận hành và hợp đồng sắp đáo hạn trên tất cả {portfolioSummary.totalProperties} cơ sở để đề xuất biểu phí, chiến dịch quảng bá và kế hoạch hành động 30 ngày.
+                      {t("landlordReportsAiBannerDesc", { count: portfolioSummary.totalProperties })}
                     </p>
                   </div>
                   <button
@@ -374,12 +389,12 @@ export default function ReportsPage() {
                     {isAiGenerating ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin text-[#2AC1BC]" />
-                        <span>Đang tính toán...</span>
+                        <span>{t("landlordReportsAiBannerCalculating")}</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <span>{aiStrategy ? "Xem lại chiến lược AI" : "Tạo chiến lược bằng AI"}</span>
+                        <span>{aiStrategy ? t("landlordReportsAiBannerReview") : t("landlordReportsAiBannerGenerate")}</span>
                       </>
                     )}
                   </button>
@@ -388,10 +403,10 @@ export default function ReportsPage() {
 
               {/* 4 Real Portfolio KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* KPI 1: Lợi nhuận ròng toàn chuỗi */}
+                {/* KPI 1: Chain-wide Net Profit */}
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Lợi nhuận ròng (Net Profit)</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsKpiNetProfit")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                       <DollarSign className="w-5 h-5" />
                     </div>
@@ -401,16 +416,16 @@ export default function ReportsPage() {
                       {formatCurrency(portfolioSummary.netProfit)}
                     </span>
                     <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>Thu: {formatCurrency(portfolioSummary.currentMonthRevenue)}</span>
-                      <span>Chi: {formatCurrency(portfolioSummary.currentMonthExpenses)}</span>
+                      <span>{t("landlordReportsKpiRevenueSub", { amount: formatCurrency(portfolioSummary.currentMonthRevenue) })}</span>
+                      <span>{t("landlordReportsKpiExpensesSub", { amount: formatCurrency(portfolioSummary.currentMonthExpenses) })}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* KPI 2: Tỷ lệ lấp đầy toàn chuỗi */}
+                {/* KPI 2: Chain-wide Occupancy Rate */}
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Tỷ lệ lấp đầy toàn chuỗi</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsKpiOccupancyRate")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center">
                       <Home className="w-5 h-5" />
                     </div>
@@ -420,15 +435,15 @@ export default function ReportsPage() {
                       {portfolioSummary.occupancyRate}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>{portfolioSummary.occupiedRooms} / {portfolioSummary.totalRooms} phòng có khách ({portfolioSummary.totalProperties} cơ sở)</span>
+                      <span>{t("landlordReportsKpiOccupancyRoomsSub", { occupied: portfolioSummary.occupiedRooms, total: portfolioSummary.totalRooms, properties: portfolioSummary.totalProperties })}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* KPI 3: Công nợ tồn đọng */}
+                {/* KPI 3: Outstanding Debt */}
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Công nợ toàn chuỗi</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsKpiTotalDebt")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
                       <Flame className="w-5 h-5" />
                     </div>
@@ -438,15 +453,15 @@ export default function ReportsPage() {
                       {formatCurrency(portfolioSummary.unpaidDebt)}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>{portfolioSummary.unpaidInvoicesCount} hóa đơn chưa tất toán</span>
+                      <span>{t("landlordReportsKpiUnpaidInvoicesSub", { count: portfolioSummary.unpaidInvoicesCount })}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* KPI 4: Tiến độ thu hồi tiền */}
+                {/* KPI 4: Collection Progress */}
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Tiến độ thu tiền & HĐ</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsKpiCollectionRate")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
@@ -456,7 +471,7 @@ export default function ReportsPage() {
                       {portfolioSummary.collectionRate}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>Đã thu {portfolioSummary.paidInvoicesCount} hóa đơn tháng này</span>
+                      <span>{t("landlordReportsKpiPaidInvoicesSub", { count: portfolioSummary.paidInvoicesCount })}</span>
                     </div>
                   </div>
                 </div>
@@ -469,11 +484,11 @@ export default function ReportsPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
-                        <span>Doanh thu chuỗi 6 tháng gần nhất</span>
+                        <span>{t("landlordReportsRevenueChartTitle")}</span>
                         <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
                       </h3>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        Tổng hợp số tiền thực thu của toàn bộ các cơ sở theo tháng
+                        {t("landlordReportsRevenueChartDesc")}
                       </p>
                     </div>
                     <span className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
@@ -484,7 +499,7 @@ export default function ReportsPage() {
                   {(!portfolioOverview?.revenueChart || portfolioOverview.revenueChart.length === 0) ? (
                     <div className="py-16 text-center space-y-2">
                       <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-zinc-600">Chưa có dữ liệu giao dịch</p>
+                      <p className="text-xs font-bold text-zinc-600">{t("landlordReportsChartEmptyTransactions")}</p>
                     </div>
                   ) : (
                     <div className="h-64 w-full">
@@ -501,10 +516,10 @@ export default function ReportsPage() {
                           <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
                           <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
                           <Tooltip
-                            formatter={(val: any) => [`${val}M ₫`, "Doanh thu"]}
+                            formatter={(val: any) => [`${val}M ₫`, t("landlordReportsChartRevenueTooltip")]}
                             contentStyle={{ backgroundColor: "#0f172a", borderRadius: "12px", border: "none", color: "#fff", fontSize: "12px" }}
                           />
-                          <Line type="monotone" dataKey="revenue" name="Doanh thu (triệu VNĐ)" stroke="#2AC1BC" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="revenue" name={t("landlordReportsChartRevenueLegend")} stroke="#2AC1BC" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -516,11 +531,11 @@ export default function ReportsPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
-                        <span>Tỷ lệ lấp đầy chuỗi 6 tháng qua</span>
+                        <span>{t("landlordReportsOccupancyChartTitle")}</span>
                         <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                       </h3>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        Biến động tỷ lệ phòng có người thuê trên tổng công suất phòng
+                        {t("landlordReportsOccupancyChartDesc")}
                       </p>
                     </div>
                     <span className="p-2 rounded-xl bg-blue-50 text-blue-600">
@@ -531,7 +546,7 @@ export default function ReportsPage() {
                   {(!portfolioOverview?.occupancyChart || portfolioOverview.occupancyChart.length === 0) ? (
                     <div className="py-16 text-center space-y-2">
                       <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-zinc-600">Chưa có dữ liệu phòng</p>
+                      <p className="text-xs font-bold text-zinc-600">{t("landlordReportsChartEmptyRooms")}</p>
                     </div>
                   ) : (
                     <div className="h-64 w-full">
@@ -549,10 +564,10 @@ export default function ReportsPage() {
                           <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
                           <YAxis domain={[0, 100]} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
                           <Tooltip
-                            formatter={(val: any) => [`${val}%`, "Lấp đầy"]}
+                            formatter={(val: any) => [`${val}%`, t("landlordReportsChartOccupancyTooltip")]}
                             contentStyle={{ backgroundColor: "#0f172a", borderRadius: "12px", border: "none", color: "#fff", fontSize: "12px" }}
                           />
-                          <Line type="monotone" dataKey="rate" name="Tỷ lệ lấp đầy (%)" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="rate" name={t("landlordReportsChartOccupancyLegend")} stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -565,13 +580,13 @@ export default function ReportsPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                      <span>Bảng So Sánh Hiệu Quả Giữa Các Cơ Sở</span>
+                      <span>{t("landlordReportsCompareTitle")}</span>
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-zinc-100 text-zinc-600">
-                        {totalItems} cơ sở
+                        {t("landlordReportsCompareCount", { count: totalItems })}
                       </span>
                     </h3>
                     <p className="text-xs text-zinc-500 mt-0.5">
-                      Đối chiếu chi tiết công suất phòng, doanh thu, chi phí và tỷ suất lợi nhuận của từng cơ sở
+                      {t("landlordReportsCompareDesc")}
                     </p>
                   </div>
 
@@ -585,7 +600,7 @@ export default function ReportsPage() {
                           ? "bg-white text-zinc-900 shadow-xs"
                           : "text-zinc-400 hover:text-zinc-700"
                       }`}
-                      title="Chế độ lưới"
+                      title={t("landlordReportsTooltipGrid")}
                     >
                       <LayoutGrid className="w-4 h-4" />
                     </button>
@@ -597,7 +612,7 @@ export default function ReportsPage() {
                           ? "bg-white text-zinc-900 shadow-xs"
                           : "text-zinc-400 hover:text-zinc-700"
                       }`}
-                      title="Chế độ bảng danh sách"
+                      title={t("landlordReportsTooltipTable")}
                     >
                       <List className="w-4 h-4" />
                     </button>
@@ -607,7 +622,7 @@ export default function ReportsPage() {
                 {displayedProperties.length === 0 ? (
                   <div className="py-16 text-center space-y-2">
                     <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                    <p className="text-xs font-bold text-zinc-600">Chưa có cơ sở nào được tạo</p>
+                    <p className="text-xs font-bold text-zinc-600">{t("landlordReportsCompareEmpty")}</p>
                   </div>
                 ) : viewMode === "grid" ? (
                   /* Grid View (Default) */
@@ -640,15 +655,15 @@ export default function ReportsPage() {
                           {/* Room Breakdown Pills */}
                           <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-bold">
                             <div className="p-1.5 bg-zinc-50 rounded-lg">
-                              <span className="text-zinc-400 block text-[10px]">Tổng phòng</span>
+                              <span className="text-zinc-400 block text-[10px]">{t("landlordReportsCardTotalRooms")}</span>
                               <span className="text-zinc-900">{p.totalRooms}</span>
                             </div>
                             <div className="p-1.5 bg-emerald-50/60 rounded-lg text-emerald-800">
-                              <span className="text-emerald-600 block text-[10px]">Đang ở</span>
+                              <span className="text-emerald-600 block text-[10px]">{t("landlordReportsCardOccupied")}</span>
                               <span>{p.occupiedRooms}</span>
                             </div>
                             <div className="p-1.5 bg-blue-50/60 rounded-lg text-blue-800">
-                              <span className="text-blue-600 block text-[10px]">Còn trống</span>
+                              <span className="text-blue-600 block text-[10px]">{t("landlordReportsCardVacant")}</span>
                               <span>{p.vacantRooms}</span>
                             </div>
                           </div>
@@ -656,19 +671,19 @@ export default function ReportsPage() {
                           {/* Financial Breakdown */}
                           <div className="space-y-1.5 text-xs pt-1 border-t border-zinc-100 font-medium">
                             <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">Doanh thu tháng:</span>
+                              <span className="text-zinc-500">{t("landlordReportsCardMonthlyRevenue")}</span>
                               <span className="font-bold text-zinc-900">{formatCurrency(p.currentMonthRevenue)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">Chi phí vận hành:</span>
+                              <span className="text-zinc-500">{t("landlordReportsCardMonthlyExpenses")}</span>
                               <span className="font-bold text-zinc-700">{formatCurrency(p.currentMonthExpenses)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-zinc-500 font-bold">Lợi nhuận ròng:</span>
+                              <span className="text-zinc-500 font-bold">{t("landlordReportsCardNetProfit")}</span>
                               <span className="font-extrabold text-emerald-600">{formatCurrency(p.netProfit)}</span>
                             </div>
                             <div className="flex items-center justify-between text-rose-600 text-[11px]">
-                              <span>Công nợ chưa thu:</span>
+                              <span>{t("landlordReportsCardUnpaidDebt")}</span>
                               <span className="font-bold">{formatCurrency(p.unpaidDebt)}</span>
                             </div>
                           </div>
@@ -676,8 +691,8 @@ export default function ReportsPage() {
                           {/* Expiring contracts tag */}
                           {p.expiringContractsCount > 0 && (
                             <div className="p-2 bg-amber-50 rounded-xl text-amber-800 text-[11px] font-bold flex items-center justify-between">
-                              <span>HĐ sắp hết hạn (30 ngày):</span>
-                              <span className="px-1.5 py-0.5 bg-amber-200/60 rounded-md">{p.expiringContractsCount} HĐ</span>
+                              <span>{t("landlordReportsCardExpiringSoon")}</span>
+                              <span className="px-1.5 py-0.5 bg-amber-200/60 rounded-md">{t("landlordReportsCardExpiringCount", { count: p.expiringContractsCount })}</span>
                             </div>
                           )}
                         </div>
@@ -690,14 +705,14 @@ export default function ReportsPage() {
                     <table className="w-full text-left text-xs border-collapse">
                       <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-bold">
                         <tr>
-                          <th className="p-3">Tên cơ sở</th>
-                          <th className="p-3 text-center">Phòng (Ở / Trống / Tổng)</th>
-                          <th className="p-3 text-center">Tỷ lệ lấp đầy</th>
-                          <th className="p-3 text-right">Doanh thu</th>
-                          <th className="p-3 text-right">Chi phí</th>
-                          <th className="p-3 text-right">Lợi nhuận ròng</th>
-                          <th className="p-3 text-right">Công nợ</th>
-                          <th className="p-3 text-center">HĐ sắp hết hạn</th>
+                          <th className="p-3">{t("landlordReportsThProperty")}</th>
+                          <th className="p-3 text-center">{t("landlordReportsThRooms")}</th>
+                          <th className="p-3 text-center">{t("landlordReportsThOccupancy")}</th>
+                          <th className="p-3 text-right">{t("landlordReportsThRevenue")}</th>
+                          <th className="p-3 text-right">{t("landlordReportsThExpenses")}</th>
+                          <th className="p-3 text-right">{t("landlordReportsThNetProfit")}</th>
+                          <th className="p-3 text-right">{t("landlordReportsThDebt")}</th>
+                          <th className="p-3 text-center">{t("landlordReportsThExpiring")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100 font-medium">
@@ -753,7 +768,7 @@ export default function ReportsPage() {
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-100 text-xs font-bold text-zinc-600">
                     {/* Items per page & range */}
                     <div className="flex items-center gap-2">
-                      <span>Hiển thị</span>
+                      <span>{t("landlordReportsPaginationShowing")}</span>
                       <input
                         type="number"
                         min={1}
@@ -765,11 +780,14 @@ export default function ReportsPage() {
                         }}
                         className="w-14 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-center text-xs font-bold focus:outline-none focus:border-[#2AC1BC]"
                       />
-                      <span>/ trang</span>
+                      <span>{t("landlordReportsPaginationPerPage")}</span>
                       <span className="text-zinc-400 mx-1">|</span>
                       <span>
-                        {Math.min(totalItems, (page - 1) * pageSize + 1)} -{" "}
-                        {Math.min(totalItems, page * pageSize)} trên {totalItems} cơ sở
+                        {t("landlordReportsPaginationRange", {
+                          start: Math.min(totalItems, (page - 1) * pageSize + 1),
+                          end: Math.min(totalItems, page * pageSize),
+                          total: totalItems,
+                        })}
                       </span>
                     </div>
 
@@ -780,7 +798,7 @@ export default function ReportsPage() {
                         disabled={page === 1}
                         onClick={() => setPage(1)}
                         className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title="Trang đầu"
+                        title={t("landlordReportsPaginationFirst")}
                       >
                         <ChevronsLeft className="w-3.5 h-3.5" />
                       </button>
@@ -789,7 +807,7 @@ export default function ReportsPage() {
                         disabled={page === 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title="Trang trước"
+                        title={t("landlordReportsPaginationPrev")}
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
                       </button>
@@ -817,7 +835,7 @@ export default function ReportsPage() {
                         disabled={page === totalPages}
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title="Trang kế"
+                        title={t("landlordReportsPaginationNext")}
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
@@ -826,7 +844,7 @@ export default function ReportsPage() {
                         disabled={page === totalPages}
                         onClick={() => setPage(totalPages)}
                         className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title="Trang cuối"
+                        title={t("landlordReportsPaginationLast")}
                       >
                         <ChevronsRight className="w-3.5 h-3.5" />
                       </button>
@@ -840,13 +858,13 @@ export default function ReportsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                      <span>Hợp Đồng Sắp Hết Hạn Trong 30 Ngày (Toàn Hệ Thống)</span>
+                      <span>{t("landlordReportsExpiringTitle")}</span>
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800">
-                        {portfolioOverview?.expiringContracts.length || 0} hợp đồng
+                        {t("landlordReportsExpiringBadge", { count: portfolioOverview?.expiringContracts?.length || 0 })}
                       </span>
                     </h3>
                     <p className="text-xs text-zinc-500 mt-0.5">
-                      Danh sách khách thuê sắp đến ngày đáo hạn để chủ nhà chủ động tái ký hoặc mở đặt cọc mới
+                      {t("landlordReportsExpiringDesc")}
                     </p>
                   </div>
                   <Calendar className="w-5 h-5 text-amber-500" />
@@ -854,7 +872,7 @@ export default function ReportsPage() {
 
                 {(!portfolioOverview?.expiringContracts || portfolioOverview.expiringContracts.length === 0) ? (
                   <div className="py-8 text-center text-zinc-400 text-xs font-semibold">
-                    Không có hợp đồng nào hết hạn trong 30 ngày tới.
+                    {t("landlordReportsExpiringEmpty")}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -865,12 +883,12 @@ export default function ReportsPage() {
                       >
                         <div className="space-y-1">
                           <div className="font-bold text-zinc-900">{c.propertyName} — {c.room}</div>
-                          <div className="text-zinc-600 font-medium">Khách: {c.tenant} {c.phone && `(${c.phone})`}</div>
-                          <div className="text-[11px] text-zinc-500">Ngày kết thúc: {c.endDate}</div>
+                          <div className="text-zinc-600 font-medium">{t("landlordReportsExpiringTenant")} {c.tenant} {c.phone && `(${c.phone})`}</div>
+                          <div className="text-[11px] text-zinc-500">{t("landlordReportsExpiringEndDate")} {c.endDate}</div>
                         </div>
                         <div className="shrink-0 text-right">
                           <span className="px-2 py-1 bg-amber-200/80 text-amber-900 rounded-lg font-black text-[11px] block">
-                            Còn {c.daysLeft} ngày
+                            {t("landlordReportsExpiringDaysLeft", { days: c.daysLeft })}
                           </span>
                         </div>
                       </div>
@@ -891,7 +909,7 @@ export default function ReportsPage() {
           {isSingleLoading ? (
             <div className="py-20 text-center text-zinc-400 space-y-3">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
-              <p className="text-xs font-semibold">Đang tải số liệu báo cáo của cơ sở...</p>
+              <p className="text-xs font-semibold">{t("landlordReportsSingleLoading")}</p>
             </div>
           ) : (
             <>
@@ -899,7 +917,7 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Tỷ lệ lấp đầy phòng</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsSingleKpiOccupancy")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
                       <Home className="w-5 h-5" />
                     </div>
@@ -909,14 +927,14 @@ export default function ReportsPage() {
                       {singleRooms.occupancyRate}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>{singleRooms.occupiedRooms} / {singleRooms.totalRooms} phòng có người ở</span>
+                      <span>{t("landlordReportsSingleKpiOccupancySub", { occupied: singleRooms.occupiedRooms, total: singleRooms.totalRooms })}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Doanh thu tháng này</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsSingleKpiRevenue")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center">
                       <DollarSign className="w-5 h-5" />
                     </div>
@@ -926,14 +944,14 @@ export default function ReportsPage() {
                       {formatVND(Number(singleFinancial.currentMonthRevenue) || 0)}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>Đã thu {singleFinancial.paidInvoicesCount} hóa đơn</span>
+                      <span>{t("landlordReportsSingleKpiRevenueSub", { count: singleFinancial.paidInvoicesCount })}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Công nợ chưa thu</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsSingleKpiDebt")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
                       <Flame className="w-5 h-5" />
                     </div>
@@ -943,14 +961,14 @@ export default function ReportsPage() {
                       {formatVND(Number(singleFinancial.unpaidDebt) || 0)}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>{singleFinancial.unpaidInvoicesCount} hóa đơn chưa tất toán</span>
+                      <span>{t("landlordReportsSingleKpiDebtSub", { count: singleFinancial.unpaidInvoicesCount })}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">Tiến độ thu tiền</span>
+                    <span className="text-xs font-bold text-zinc-500">{t("landlordReportsSingleKpiCollection")}</span>
                     <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
@@ -960,7 +978,7 @@ export default function ReportsPage() {
                       {singleCollection.collectionRate}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
-                      <span>{singleOverview?.depositNotifications?.length || 0} khoản cọc đang quản lý</span>
+                      <span>{t("landlordReportsSingleKpiCollectionSub", { count: singleOverview?.depositNotifications?.length || 0 })}</span>
                     </div>
                   </div>
                 </div>
@@ -972,11 +990,11 @@ export default function ReportsPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
-                        <span>Xu hướng doanh thu thực tế</span>
+                        <span>{t("landlordReportsSingleChartTitle")}</span>
                         <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
                       </h3>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        Doanh thu theo tháng của cơ sở {activeBuilding?.name}
+                        {t("landlordReportsSingleChartDesc", { name: activeBuilding?.name || "" })}
                       </p>
                     </div>
                     <span className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
@@ -987,7 +1005,7 @@ export default function ReportsPage() {
                   {(!singleOverview?.revenueChart || singleOverview.revenueChart.length === 0) ? (
                     <div className="py-16 text-center space-y-2">
                       <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-zinc-600">Chưa có dữ liệu giao dịch</p>
+                      <p className="text-xs font-bold text-zinc-600">{t("landlordReportsChartEmptyTransactions")}</p>
                     </div>
                   ) : (
                     <div className="h-64 sm:h-72 w-full">
@@ -1003,10 +1021,10 @@ export default function ReportsPage() {
                           <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
                           <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
                           <Tooltip
-                            formatter={(val: any) => [`${val}M ₫`, "Doanh thu"]}
+                            formatter={(val: any) => [`${val}M ₫`, t("landlordReportsChartRevenueTooltip")]}
                             contentStyle={{ backgroundColor: "#0f172a", borderRadius: "12px", border: "none", color: "#fff", fontSize: "12px" }}
                           />
-                          <Line type="monotone" dataKey="revenue" name="Doanh thu" stroke="#2AC1BC" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="revenue" name={t("landlordReportsChartRevenueTooltip")} stroke="#2AC1BC" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -1016,35 +1034,35 @@ export default function ReportsPage() {
                 <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col justify-between">
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-zinc-900 mb-1">
-                      Trạng Thái Phòng Trọ
+                      {t("landlordReportsSingleRoomStatusTitle")}
                     </h3>
                     <p className="text-xs text-zinc-500 mb-4">
-                      Phân bổ phòng ốc hiện tại của cơ sở
+                      {t("landlordReportsSingleRoomStatusDesc")}
                     </p>
 
                     <div className="space-y-3">
                       <div className="p-3 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-between text-xs font-bold text-[#138e89]">
-                        <span>Đang ở / Đã thuê</span>
-                        <span className="text-sm font-black">{singleRooms.occupiedRooms} phòng</span>
+                        <span>{t("landlordReportsSingleRoomOccupied")}</span>
+                        <span className="text-sm font-black">{t("landlordReportsSingleRoomCount", { count: singleRooms.occupiedRooms })}</span>
                       </div>
                       <div className="p-3 bg-blue-50 rounded-2xl flex items-center justify-between text-xs font-bold text-blue-700">
-                        <span>Phòng trống sẵn sàng</span>
-                        <span className="text-sm font-black">{singleRooms.vacantRooms} phòng</span>
+                        <span>{t("landlordReportsSingleRoomVacant")}</span>
+                        <span className="text-sm font-black">{t("landlordReportsSingleRoomCount", { count: singleRooms.vacantRooms })}</span>
                       </div>
                       <div className="p-3 bg-purple-50 rounded-2xl flex items-center justify-between text-xs font-bold text-purple-700">
-                        <span>Đang giữ chỗ / Cọc</span>
-                        <span className="text-sm font-black">{singleRooms.depositRooms} phòng</span>
+                        <span>{t("landlordReportsSingleRoomDeposit")}</span>
+                        <span className="text-sm font-black">{t("landlordReportsSingleRoomCount", { count: singleRooms.depositRooms })}</span>
                       </div>
                       <div className="p-3 bg-amber-50 rounded-2xl flex items-center justify-between text-xs font-bold text-amber-700">
-                        <span>Đang sửa chữa / Bảo trì</span>
-                        <span className="text-sm font-black">{singleRooms.maintenanceRooms} phòng</span>
+                        <span>{t("landlordReportsSingleRoomMaintenance")}</span>
+                        <span className="text-sm font-black">{t("landlordReportsSingleRoomCount", { count: singleRooms.maintenanceRooms })}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
-                    <span>Tổng cộng: <strong className="text-zinc-900 font-bold">{singleRooms.totalRooms} phòng</strong></span>
-                    <span className="text-[#2AC1BC] font-extrabold">{singleRooms.occupancyRate} lấp đầy</span>
+                    <span>{t("landlordReportsSingleTotalLabel")} <strong className="text-zinc-900 font-bold">{t("landlordReportsSingleTotalRooms", { count: singleRooms.totalRooms })}</strong></span>
+                    <span className="text-[#2AC1BC] font-extrabold">{t("landlordReportsSingleOccupancySuffix", { rate: singleRooms.occupancyRate })}</span>
                   </div>
                 </div>
               </div>
@@ -1067,7 +1085,11 @@ export default function ReportsPage() {
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-zinc-900">{aiStrategy.title}</h3>
-                  <p className="text-xs text-zinc-500">Khởi tạo lúc: {new Date(aiStrategy.createdAt).toLocaleString("vi-VN")}</p>
+                  <p className="text-xs text-zinc-500">
+                    {t("landlordReportsAiCreatedAt", {
+                      date: new Date(aiStrategy.createdAt).toLocaleString(isEn ? "en-US" : "vi-VN"),
+                    })}
+                  </p>
                 </div>
               </div>
               <button
@@ -1085,7 +1107,7 @@ export default function ReportsPage() {
               <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200 text-teal-950 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-[#138e89]">
                   <Compass className="w-3.5 h-3.5" />
-                  <span>Tổng quan phân tích & Đánh giá</span>
+                  <span>{t("landlordReportsAiSummaryHeader")}</span>
                 </div>
                 <p className="text-xs sm:text-sm leading-relaxed">{aiStrategy.executiveSummary}</p>
               </div>
@@ -1096,7 +1118,7 @@ export default function ReportsPage() {
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
                     <DollarSign className="w-4 h-4 text-emerald-600" />
-                    <span>Chính sách giá & Combo</span>
+                    <span>{t("landlordReportsAiPillarPricing")}</span>
                   </div>
                   <ul className="text-xs text-zinc-600 space-y-1.5 list-disc pl-4">
                     {aiStrategy.pricingRecommendations.map((rec, i) => (
@@ -1109,7 +1131,7 @@ export default function ReportsPage() {
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
                     <Rocket className="w-4 h-4 text-blue-600" />
-                    <span>Chiến dịch truyền thông</span>
+                    <span>{t("landlordReportsAiPillarMarketing")}</span>
                   </div>
                   <ul className="text-xs text-zinc-600 space-y-1.5 list-disc pl-4">
                     {aiStrategy.marketingCampaigns.map((camp, i) => (
@@ -1122,7 +1144,7 @@ export default function ReportsPage() {
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
                     <Zap className="w-4 h-4 text-amber-600" />
-                    <span>Tối ưu chi phí & Thu nợ</span>
+                    <span>{t("landlordReportsAiPillarOperations")}</span>
                   </div>
                   <ul className="text-xs text-zinc-600 space-y-1.5 list-disc pl-4">
                     {aiStrategy.operationalOptimizations.map((op, i) => (
@@ -1136,7 +1158,7 @@ export default function ReportsPage() {
               <div className="space-y-3 pt-2">
                 <h4 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>Kế hoạch hành động 30 ngày (Action Plan)</span>
+                  <span>{t("landlordReportsAiActionPlanTitle")}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {aiStrategy.actionPlan30Days.map((step, i) => (
@@ -1148,7 +1170,9 @@ export default function ReportsPage() {
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/15 text-[#138e89]">
                           {step.dayRange}
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-bold">Bước {i + 1}</span>
+                        <span className="text-[10px] text-zinc-400 font-bold">
+                          {t("landlordReportsAiStepPrefix", { step: i + 1 })}
+                        </span>
                       </div>
                       <div className="text-xs font-bold text-zinc-900">{step.title}</div>
                       <p className="text-[11px] text-zinc-500 leading-normal">{step.description}</p>
@@ -1165,17 +1189,17 @@ export default function ReportsPage() {
                 onClick={() => setShowAiModal(false)}
                 className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
               >
-                Đóng
+                {t("landlordReportsAiCloseBtn")}
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setShowAiModal(false);
-                  showToast("Đã áp dụng các lưu ý vào kế hoạch kinh doanh!");
+                  showToast(t("landlordReportsToastAiPlanSaved"));
                 }}
                 className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
               >
-                Lưu vào kế hoạch
+                {t("landlordReportsAiSavePlanBtn")}
               </button>
             </div>
           </div>

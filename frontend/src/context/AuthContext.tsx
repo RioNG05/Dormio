@@ -49,14 +49,6 @@ interface AuthContextType {
   refreshBuildings: () => Promise<void>;
 }
 
-const defaultUser: UserProfile = {
-  name: "Nguyễn Văn A",
-  email: "nguyenvana@gmail.com",
-  phone: "0987654321",
-  role: "tenant",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-};
-
 const EMPTY_BUILDING: BuildingItem = {
   id: "",
   name: "",
@@ -98,18 +90,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // No active building until API loads real data
   const [activeBuildingId, setActiveBuildingId] = useState<string>("");
 
-  // NOTE: houseName/houseAddress from localStorage are legacy fields.
-  // Buildings are now fully managed by the API — no local override needed.
   /**
    * Fetch real boarding houses from the backend and sync the buildings state.
-   * Falls back silently — mock data remains if the landlord has no properties yet.
    */
   const loadBuildingsFromApi = useCallback(async () => {
     setIsBuildingsLoading(true);
     try {
       let token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
       if (!token && typeof window !== "undefined") {
-        // Auto-login to obtain token in dev
+        // Auto-login to obtain token in dev with real seeded landlord account
         try {
           const loginRes = await api.post<any>(
             "/v1/auth/login",
@@ -124,6 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             token = data.token;
             localStorage.setItem("auth_token", data.token);
             if (data.user?.id) localStorage.setItem("dormio_user_id", String(data.user.id));
+            if (data.user?.username) localStorage.setItem("dormio_user_name", data.user.username);
+            if (data.user?.email) localStorage.setItem("dormio_user_email", data.user.email);
+            if (data.user?.phoneNumber) localStorage.setItem("dormio_user_phone", data.user.phoneNumber);
           }
         } catch {
           // Ignore dev login error
@@ -191,11 +183,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Read initial state from localStorage if available
+  // Read initial session or auto-login default test landlord
   useEffect(() => {
     const savedState = localStorage.getItem("dormio_logged_in");
     const savedToken = localStorage.getItem("auth_token");
-    const savedRole = localStorage.getItem("dormio_user_role") as "tenant" | "landlord" | "admin" | null;
+    const savedRole = localStorage.getItem("dormio_user_role") as "tenant" | "landlord" | "admin" | "poster" | "employee" | null;
     const savedHouseName = localStorage.getItem("dormio_house_name");
     const savedHouseAddress = localStorage.getItem("dormio_house_address");
     const savedBuildingId = localStorage.getItem("dormio_active_building_id");
@@ -205,15 +197,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedId = localStorage.getItem("dormio_user_id");
 
     if (savedState === "true" && (savedToken || savedRole)) {
-      const resolvedRole = (savedRole as UserProfile["role"]) || "tenant";
+      const resolvedRole = savedRole || "landlord";
       setIsLoggedIn(true);
       setUser({
-        ...defaultUser,
         id: savedId || undefined,
-        name: savedName || defaultUser.name,
-        email: savedEmail || defaultUser.email,
-        phone: savedPhone || defaultUser.phone,
+        name: savedName || "Nguyễn Quang Huy",
+        email: savedEmail || "ngquanghuy.work@gmail.com",
+        phone: savedPhone || "0344265925",
         role: resolvedRole,
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
         houseName: savedHouseName || undefined,
         houseAddress: savedHouseAddress || undefined,
       });
@@ -228,15 +220,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loadBuildingsFromApi().then(() => {
         setIsLoggedIn(true);
         setUser({
-          ...defaultUser,
           id: typeof window !== "undefined" ? localStorage.getItem("dormio_user_id") || undefined : undefined,
-          name: "Nguyễn Quang Huy",
-          email: "ngquanghuy.work@gmail.com",
+          name: typeof window !== "undefined" ? localStorage.getItem("dormio_user_name") || "Nguyễn Quang Huy" : "Nguyễn Quang Huy",
+          email: typeof window !== "undefined" ? localStorage.getItem("dormio_user_email") || "ngquanghuy.work@gmail.com" : "ngquanghuy.work@gmail.com",
+          phone: typeof window !== "undefined" ? localStorage.getItem("dormio_user_phone") || "0344265925" : "0344265925",
           role: "landlord",
+          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
         });
         if (typeof window !== "undefined") {
           localStorage.setItem("dormio_logged_in", "true");
           localStorage.setItem("dormio_user_role", "landlord");
+          localStorage.setItem("dormio_user_name", "Nguyễn Quang Huy");
+          localStorage.setItem("dormio_user_email", "ngquanghuy.work@gmail.com");
+          localStorage.setItem("dormio_user_phone", "0344265925");
         }
       });
     }
@@ -248,24 +244,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = (userData?: Partial<UserProfile>) => {
+    const role = userData?.role || "tenant";
     const updatedUser: UserProfile = {
-      ...defaultUser,
-      ...userData,
-      role: userData?.role || "tenant",
+      id: userData?.id,
+      name: userData?.name || "User",
+      email: userData?.email || "",
+      phone: userData?.phone || "",
+      role,
+      avatar: userData?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+      houseName: userData?.houseName,
+      houseAddress: userData?.houseAddress,
     };
     setIsLoggedIn(true);
     setUser(updatedUser);
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", updatedUser.role);
+    if (updatedUser.id) localStorage.setItem("dormio_user_id", updatedUser.id);
+    if (updatedUser.name) localStorage.setItem("dormio_user_name", updatedUser.name);
+    if (updatedUser.email) localStorage.setItem("dormio_user_email", updatedUser.email);
+    if (updatedUser.phone) localStorage.setItem("dormio_user_phone", updatedUser.phone);
   };
 
   // Called by login/register pages after receiving a real JWT token from the backend
   const loginWithToken = (token: string, userData: Partial<UserProfile>) => {
     const resolvedRole = (userData.role as UserProfile["role"]) || "poster";
     const updatedUser: UserProfile = {
-      ...defaultUser,
-      ...userData,
+      id: userData.id,
+      name: userData.name || "User",
+      email: userData.email || "",
+      phone: userData.phone || "",
       role: resolvedRole,
+      avatar: userData.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+      houseName: userData.houseName,
+      houseAddress: userData.houseAddress,
+      mustChangePassword: userData.mustChangePassword,
     };
     setIsLoggedIn(true);
     setUser(updatedUser);
@@ -285,8 +297,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const upgradeToLandlord = (houseDetails: { houseName: string; houseAddress: string }) => {
     const updatedUser: UserProfile = {
-      ...(user || defaultUser),
+      id: user?.id,
+      name: user?.name || "Landlord",
+      email: user?.email || "",
+      phone: user?.phone || "",
       role: "landlord",
+      avatar: user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
       houseName: houseDetails.houseName,
       houseAddress: houseDetails.houseAddress,
     };

@@ -255,17 +255,21 @@ export default function ListingsPage() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-300" /> Gợi ý AI (UC-L-12)
+                  <Sparkles className="w-3 h-3 text-amber-300" /> {t("landlordListingsVacantBannerTag")}
                 </span>
-                <span className="text-xs text-zinc-300">Phát hiện {unlistedRooms.length} phòng trống chưa có tin đăng</span>
+                <span className="text-xs text-zinc-300">
+                  {t("landlordListingsVacantBannerCount", { count: unlistedRooms.length })}
+                </span>
               </div>
-              <h3 className="text-base font-bold text-white">Đăng tin tìm khách ngay để tối ưu tỷ lệ lấp đầy</h3>
+              <h3 className="text-base font-bold text-white">
+                {t("landlordListingsVacantBannerTitle")}
+              </h3>
             </div>
             <Link
               href="/landlord/listings/create"
               className="text-xs font-bold text-[#2AC1BC] hover:underline"
             >
-              Xem tất cả phòng &rarr;
+              {t("landlordListingsVacantBannerViewAll")}
             </Link>
           </div>
 
@@ -277,18 +281,25 @@ export default function ListingsPage() {
               >
                 <div className="space-y-1 text-xs">
                   <div className="font-bold text-white flex items-center gap-1.5">
-                    <span>P.{room.roomNumber} (Tầng {room.floor})</span>
+                    <span>
+                      {t("landlordListingsVacantRoomFloor", {
+                        room: room.roomNumber,
+                        floor: room.floor,
+                      })}
+                    </span>
                     <span className="text-[10px] text-[#2AC1BC] font-semibold">• {room.roomTypeName}</span>
                   </div>
                   <div className="text-[11px] text-zinc-400 line-clamp-1">{room.boardingHouseName}</div>
-                  <div className="text-[10px] text-amber-300">Đang trống {room.vacantDays} ngày</div>
+                  <div className="text-[10px] text-amber-300">
+                    {t("landlordListingsVacantDays", { days: room.vacantDays })}
+                  </div>
                 </div>
                 <Link
                   href={`/landlord/listings/create?roomId=${room.roomId}&aiDraft=true`}
                   className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#23a5a0] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
-                  <span>Soạn tin AI</span>
+                  <span>{t("landlordListingsVacantAiDraftBtn")}</span>
                 </Link>
               </div>
             ))}
