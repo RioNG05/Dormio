@@ -152,7 +152,7 @@ export default function ReportsPage() {
   const handleExportCsv = () => {
     if (reportMode === "portfolio" && portfolioOverview) {
       const headers = ["ID", "Tên cơ sở", "Địa chỉ", "Tổng phòng", "Đang ở", "Phòng trống", "Tỷ lệ lấp đầy", "Doanh thu", "Chi phí", "Lợi nhuận ròng", "Công nợ", "HĐ sắp hết hạn"];
-      const rows = portfolioOverview.propertiesBreakdown.map((p) => [
+      const rows = (portfolioOverview.propertiesBreakdown ?? []).map((p) => [
         `"${p.id}"`,
         `"${p.name}"`,
         `"${p.address}"`,
@@ -490,7 +490,7 @@ export default function ReportsPage() {
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart
-                          data={portfolioOverview.revenueChart.map((p) => ({
+                          data={(portfolioOverview.revenueChart ?? []).map((p) => ({
                             name: `T${p.month}`,
                             revenue: p.val,
                             fullAmount: p.fullAmount,
@@ -537,7 +537,7 @@ export default function ReportsPage() {
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart
-                          data={portfolioOverview.occupancyChart.map((o) => ({
+                          data={(portfolioOverview.occupancyChart ?? []).map((o) => ({
                             name: `T${o.month}`,
                             rate: o.occupied,
                             total: o.total,
@@ -842,7 +842,7 @@ export default function ReportsPage() {
                     <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
                       <span>Hợp Đồng Sắp Hết Hạn Trong 30 Ngày (Toàn Hệ Thống)</span>
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800">
-                        {portfolioOverview?.expiringContracts.length || 0} hợp đồng
+                        {portfolioOverview?.expiringContracts?.length || 0} hợp đồng
                       </span>
                     </h3>
                     <p className="text-xs text-zinc-500 mt-0.5">
@@ -858,7 +858,7 @@ export default function ReportsPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {portfolioOverview.expiringContracts.map((c) => (
+                    {(portfolioOverview.expiringContracts ?? []).map((c) => (
                       <div
                         key={c.id}
                         className="p-4 rounded-2xl border border-amber-200/80 bg-amber-50/40 flex items-start justify-between gap-3 text-xs"
