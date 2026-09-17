@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "@/context/LanguageContext";
 import { api } from "@/services/api";
+import { getHighestRoleRedirect } from "@/utils";
 
 interface LoginApiResponse {
   token: string;
@@ -56,10 +57,9 @@ export default function LoginPage() {
         throw new Error(t("authLoginErrCannotVerify"));
       }
 
-      // Map role from backend to frontend (poster → tenant for display)
-      const displayRole = (user.role === "landlord" || user.role === "admin")
-        ? user.role as "landlord" | "admin"
-        : "tenant";
+      // Determine highest achieved role and target redirect path:
+      // guest (/) -> leasing agent (/) -> tenant (/tenant) -> staff (/staff) -> landlord (/landlord) -> admin (/admin)
+      const { role: displayRole, redirectPath } = getHighestRoleRedirect(user);
 
       loginWithToken(token, {
         id: user.id,
@@ -73,12 +73,8 @@ export default function LoginPage() {
       // Spec: if mustChangePassword → redirect to change-password page
       if (mustChangePassword) {
         router.push("/change-password");
-      } else if (displayRole === "landlord") {
-        router.push("/landlord");
-      } else if (displayRole === "admin") {
-        router.push("/admin");
       } else {
-        router.push("/tenant");
+        router.push(redirectPath);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t("authLoginErrGeneric");
@@ -301,6 +297,24 @@ export default function LoginPage() {
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               0344265925 • 88888888
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("phone");
+              setAccountIdentifier("0901122334");
+              setPassword("Secret@123");
+              setError(null);
+            }}
+            className="p-2 text-left bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 border border-zinc-200 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] flex items-center justify-between">
+              <span>{t("authLoginDemoStaff")}</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              0901122334 • Secret@123
             </div>
           </button>
         </div>

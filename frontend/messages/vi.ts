@@ -202,6 +202,7 @@ const vi = {
     authLoginDemoLandlordTri: "🏢 Chủ trọ (Võ Minh Trí)",
     authLoginDemoTenantDung: "🏠 Khách thuê (Trần Thị Thuỳ Dung - Có HĐ & HĐơn)",
     authLoginDemoTenantNam: "🏠 Khách thuê (Lê Hoàng Nam - Phòng 301)",
+    authLoginDemoStaff: "👷 Nhân viên (Phạm Văn Bảo - Kỹ thuật)",
     authLoginDemoTitle: "Tài khoản mẫu thử nghiệm",
     authLoginEmailLabel: "ĐỊA CHỈ EMAIL *",
     authLoginErrCannotVerify: "Không thể xác thực thông tin tài khoản.",

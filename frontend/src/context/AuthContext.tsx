@@ -28,7 +28,7 @@ export interface BuildingItem {
   occupancyRate: string;
 }
 
-export type DemoPreset = "guest" | "tenant" | "landlord_empty" | "landlord_active" | "admin";
+export type DemoPreset = "guest" | "tenant" | "landlord_empty" | "landlord_active" | "admin" | "staff";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -404,6 +404,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: preset === "admin" ? "admin" : "landlord",
           });
         });
+    } else if (preset === "staff") {
+      api.post<any>("/v1/auth/login", {
+        identifier: "0901122334",
+        password: "Secret@123",
+      })
+        .then((res) => {
+          const data = res?.data || res;
+          if (data?.token && data?.user) {
+            loginWithToken(data.token, {
+              id: data.user.id,
+              name: data.user.username || "Phạm Văn Bảo (Nhân viên)",
+              email: data.user.email || "bao.pham@dormio.vn",
+              role: "employee",
+            });
+          }
+        })
+        .catch(() => {
+          login({
+            name: "Phạm Văn Bảo (Nhân viên)",
+            email: "bao.pham@dormio.vn",
+            role: "employee",
+          });
+        });
+      localStorage.removeItem("dormio_house_name");
+      localStorage.removeItem("dormio_house_address");
     }
   };
 

@@ -202,6 +202,7 @@ const en = {
     authLoginDemoLandlordTri: "🏢 Landlord (Vo Minh Tri)",
     authLoginDemoTenantDung: "🏠 Tenant (Tran Thi Thuy Dung - Contract & Invoice)",
     authLoginDemoTenantNam: "🏠 Tenant (Le Hoang Nam - Room 301)",
+    authLoginDemoStaff: "👷 Staff / Employee (Pham Van Bao - Tech)",
     authLoginDemoTitle: "Demo test accounts",
     authLoginEmailLabel: "EMAIL ADDRESS *",
     authLoginErrCannotVerify: "Unable to verify account credentials.",

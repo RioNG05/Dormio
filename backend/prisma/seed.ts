@@ -96,7 +96,7 @@ async function main() {
 
   // ─── 1. USERS ───────────────────────────────────────────────────────────────
   console.log('👤 Creating users...');
-  const password88 = await bcrypt.hash('123456789', 10);
+  const password88 = await bcrypt.hash('88888888', 10);
   const passwordCommon = await bcrypt.hash('Secret@123', 10);
 
   // 1.1 Admin User (Requirement: ngquanghuy.work@gmail.com, 0344265925, 88888888, admin)
@@ -252,6 +252,25 @@ async function main() {
       expiryDate: new Date('2038-11-12'),
       personalIdentification: tenant2.id,
       note: 'Kỹ sư phần mềm',
+      cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    },
+  });
+
+  await prisma.userIdentification.create({
+    data: {
+      userId: employeeUser1.id,
+      identityNumber: '079200009999',
+      fullName: 'PHẠM VĂN BẢO',
+      dateOfBirth: new Date('1996-05-15'),
+      gender: Gender.male,
+      nationnality: 'Việt Nam',
+      placeOfOrigin: { province: 'Nam Định', district: 'Hải Hậu' },
+      placeOfResidence: { province: 'TP.HCM', district: 'Quận 1', address: '123 Nguyễn Huệ' },
+      issueDate: new Date('2021-08-20'),
+      expiryDate: new Date('2036-05-15'),
+      personalIdentification: employeeUser1.id,
+      note: 'Nhân viên quản lý kỹ thuật toà nhà',
       cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
       cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
     },
@@ -1542,6 +1561,13 @@ async function main() {
   console.log('   Password:  88888888');
   console.log('   Role:      admin');
   console.log('   Properties: 2 Boarding Houses (40 rooms total: 20 common, 20 duplex)');
+  console.log('────────────────────────────────────────────────────────────────');
+  console.log('👷 STAFF CREDENTIALS:');
+  console.log('   Email:     bao.pham@dormio.vn');
+  console.log('   Phone:     0901122334');
+  console.log('   Password:  Secret@123');
+  console.log('   Role:      employee');
+  console.log('   Assignment: Quản lý toà nhà (Dormio Premier Quận 1)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 

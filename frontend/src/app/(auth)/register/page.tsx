@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "@/context/LanguageContext";
 import { api } from "@/services/api";
+import { getHighestRoleRedirect } from "@/utils";
 
 interface RegisterApiResponse {
   token: string;
@@ -85,17 +86,20 @@ export default function RegisterPage() {
         throw new Error(t("authRegisterErrCannotCreate"));
       }
 
+      // Determine highest achieved role and target redirect path:
+      // guest (/) -> leasing agent (/) -> tenant (/tenant) -> staff (/staff) -> landlord (/landlord) -> admin (/admin)
+      const { role: displayRole, redirectPath } = getHighestRoleRedirect(user);
+
       loginWithToken(token, {
         id: user.id,
         name: user.username || fullName,
         email: user.email || email,
         phone: user.phoneNumber || phone,
-        role: "tenant", // newly registered users are always poster → display as tenant
+        role: displayRole,
         mustChangePassword: false,
       });
 
-      // After registration, go to tenant dashboard
-      router.push("/tenant");
+      router.push(redirectPath);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t("authLoginErrGeneric");
       if (message.includes("phone_number_already_exists")) {
