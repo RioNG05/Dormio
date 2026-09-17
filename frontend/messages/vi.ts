@@ -131,7 +131,17 @@ const vi = {
     tenantRole: "Khách thuê",
     trialBtn: "Dùng thử 7 ngày",
     viewProfileTooltip: "Xem trang hồ sơ cá nhân",
-    workforce: "Nhân sự"
+    workforce: "Nhân sự",
+
+    // --- User account switcher popup menu (UserFooter in dashboard layout) ---
+    userMenuTitle: "Tài khoản của tôi",
+    userMenuProfile: "Thông tin cá nhân",
+    userMenuSwitchDashboard: "Chuyển bảng điều khiển",
+    userMenuLandlordDashboard: "Bảng điều khiển Chủ trọ",
+    userMenuTenantDashboard: "Bảng điều khiển Khách thuê",
+    userMenuStaffDashboard: "Bảng điều khiển Nhân viên",
+    userMenuAdminDashboard: "Bảng điều khiển Quản trị viên",
+    userMenuNoAccess: "Không có quyền truy cập"
   },
 
   // ==========================================================================

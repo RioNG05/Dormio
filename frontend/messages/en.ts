@@ -131,7 +131,17 @@ const en = {
     tenantRole: "Tenant",
     trialBtn: "7-Day Free Trial",
     viewProfileTooltip: "View Personal Profile",
-    workforce: "Staff"
+    workforce: "Staff",
+
+    // --- User account switcher popup menu (UserFooter in dashboard layout) ---
+    userMenuTitle: "My Account",
+    userMenuProfile: "Personal Information",
+    userMenuSwitchDashboard: "Switch Dashboard",
+    userMenuLandlordDashboard: "Landlord Dashboard",
+    userMenuTenantDashboard: "Tenant Dashboard",
+    userMenuStaffDashboard: "Staff Dashboard",
+    userMenuAdminDashboard: "Admin Dashboard",
+    userMenuNoAccess: "No access"
   },
 
   // ==========================================================================
