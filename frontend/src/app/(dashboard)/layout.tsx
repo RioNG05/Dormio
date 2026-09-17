@@ -7,6 +7,7 @@ import AIChatBot from "@/components/AIChatBot";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
+import AuthGuard from "@/components/AuthGuard";
 import {
   LayoutDashboard, Home, Users, FileText, Bell,
   Wallet, CreditCard,
@@ -594,7 +595,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+          <AuthGuard>{children}</AuthGuard>
+        </main>
       </div>
 
       {!isTenant && !isAdmin && !isStaff && <AIChatBot />}
