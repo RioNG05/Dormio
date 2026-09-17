@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
   Clock, CheckCircle2, AlertCircle, Building2, User,
@@ -29,73 +29,12 @@ import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { staffAttendanceService, StaffMonthlySummary } from "@/services/staff-attendance.service";
 
-const INITIAL_EMPTY_SCHEDULE: WorkScheduleItem = {
-  id: "",
-  workDate: getTodayISODate(),
-  boardingHouseId: "",
-  boardingHouseName: "",
-  shift: {
-    id: "",
-    name: "Ca trực",
-    startTime: "07:00",
-    endTime: "15:00",
-    durationHours: 8,
-  },
-  position: {
-    id: "",
-    name: "Nhân viên",
-    description: "",
-  },
-  status: "scheduled",
-  isRecurring: false,
-  coWorkers: [],
-  duties: [],
-};
-
-const INITIAL_EMPTY_ATTENDANCE: AttendanceRecord = {
-  id: "",
-  workScheduleId: "",
-  workDate: getTodayISODate(),
-  boardingHouseName: "",
-  shiftName: "Ca trực",
-  shiftTime: "07:00 - 15:00",
-  checkIn: null,
-  checkOut: null,
-  status: "not_yet",
-  totalHours: 0,
-  editedByLandlord: false,
-};
-
-function getDutyTitle(duty: DutyTaskItem, isEn = false): string {
-  if (!isEn) return duty.title;
-  if (duty.id.includes("sec-1") || duty.title.includes("Kiểm soát an ninh")) {
-    return "Control main gate security and organize student parking area tidily";
-  }
-  if (duty.id.includes("sec-2") || duty.title.includes("Kiểm tra mở cổng sáng")) {
-    return "Check early gate opening (06:00) and inspect automatic latch lock operations";
-  }
-  if (duty.id.includes("sec-3") || duty.title.includes("Giám sát camera")) {
-    return "Monitor hallway security cameras on floors 1, 2, 3 and record shift logbook";
-  }
-  if (duty.id.includes("sec-4") || duty.title.includes("Tuần tra chống ồn")) {
-    return "Patrol noise prevention, maintain building order and lock gates at 23:00";
-  }
+function getDutyTitle(duty: DutyTaskItem, _isEn = false): string {
   return duty.title;
 }
 
-function getDutyNote(note?: string, isEn = false): string {
-  if (!note) return "";
-  if (!isEn) return note;
-  if (note.includes("45 xe") || note.includes("thoát hiểm")) {
-    return "Inspected 45 vehicles, emergency exit cleared";
-  }
-  if (note.includes("Cổng mở đúng giờ") || note.includes("khóa chốt")) {
-    return "Gate opened on time, latch mechanism working properly";
-  }
-  if (note.includes("Đang theo dõi")) {
-    return "Monitoring actively during shift";
-  }
-  return note;
+function getDutyNote(note?: string, _isEn = false): string {
+  return note || "";
 }
 
 export default function StaffOverviewPage() {
@@ -110,16 +49,17 @@ export default function StaffOverviewPage() {
 
   const { user } = useAuth();
 
-  // Today's schedule & duties state
-  const [todaySchedule, setTodaySchedule] = useState<WorkScheduleItem>(INITIAL_EMPTY_SCHEDULE);
+  // Today's schedule & duties state (initialized to null to represent no mock data)
+  const [todaySchedule, setTodaySchedule] = useState<WorkScheduleItem | null>(null);
   const [dutyList, setDutyList] = useState<DutyTaskItem[]>([]);
   const [staffName, setStaffName] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const todayAdditionalTasks: any[] = [];
 
   // Active attendance state
-  const [attendance, setAttendance] = useState<AttendanceRecord>(INITIAL_EMPTY_ATTENDANCE);
+  const [attendance, setAttendance] = useState<AttendanceRecord | null>(null);
 
   // Monthly summary state (UC-S-02)
   const [monthlySummary, setMonthlySummary] = useState<StaffMonthlySummary | null>(null);
@@ -132,74 +72,69 @@ export default function StaffOverviewPage() {
     setTimeout(() => setToast(null), 3800);
   };
 
-  // Safe client-side mount & local storage sync
+  // Fetch live overview from backend (UC-S-01 & UC-S-02)
+  const fetchOverview = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await staffAttendanceService.getTodayOverview();
+      if (data) {
+        if (data.staffName) {
+          setStaffName(data.staffName);
+        }
+        if (data.schedule && data.schedule.id) {
+          setTodaySchedule(data.schedule);
+          if (data.schedule.duties && Array.isArray(data.schedule.duties)) {
+            setDutyList(data.schedule.duties);
+          } else {
+            setDutyList([]);
+          }
+        } else {
+          setTodaySchedule(null);
+          setDutyList([]);
+        }
+
+        if (data.attendance && data.attendance.id) {
+          setAttendance(data.attendance);
+          saveAttendanceRecord(data.attendance);
+        } else {
+          setAttendance(null);
+        }
+      } else {
+        setTodaySchedule(null);
+        setAttendance(null);
+        setDutyList([]);
+      }
+    } catch (err: any) {
+      console.warn("Could not fetch today's staff overview from backend:", err);
+      setTodaySchedule(null);
+      setAttendance(null);
+      setDutyList([]);
+      setFetchError(err?.message || (locale === "en" ? "Failed to load schedule from server" : "Không thể tải dữ liệu ca làm việc từ máy chủ"));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [locale]);
+
+  // Fetch monthly attendance summary from backend (UC-S-02)
+  const fetchMonthlySummary = useCallback(async () => {
+    try {
+      const summary = await staffAttendanceService.getMonthlySummary();
+      if (summary) {
+        setMonthlySummary(summary);
+      }
+    } catch (err) {
+      console.warn("Could not fetch monthly attendance summary from backend:", err);
+    }
+  }, []);
+
+  // Safe client-side mount & lifecycle sync
   useEffect(() => {
     setIsMounted(true);
     setCurrentTime(new Date());
 
-    try {
-      const savedDuties = localStorage.getItem("dormio_staff_today_duties");
-      if (savedDuties) {
-        const parsed = JSON.parse(savedDuties);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setDutyList(parsed);
-        }
-      }
-      const today = getTodayISODate();
-      const todayRaw = localStorage.getItem("dormio_staff_today_attendance");
-      if (todayRaw) {
-        const parsed = JSON.parse(todayRaw);
-        if (parsed && (parsed.workDate === today || parsed.id)) {
-          setAttendance(parsed);
-        }
-      }
-    } catch {
-      // Fallback
-    }
-
-    // Fetch live overview from backend
-    staffAttendanceService
-      .getTodayOverview()
-      .then((data) => {
-        if (data) {
-          if (data.staffName) {
-            setStaffName(data.staffName);
-          }
-          if (data.schedule) {
-            setTodaySchedule(data.schedule);
-            if (data.schedule.duties && data.schedule.duties.length > 0) {
-              setDutyList(data.schedule.duties);
-              try {
-                localStorage.setItem("dormio_staff_today_duties", JSON.stringify(data.schedule.duties));
-              } catch {
-                // ignore
-              }
-            }
-          }
-          if (data.attendance) {
-            setAttendance(data.attendance);
-            saveAttendanceRecord(data.attendance);
-          }
-        }
-      })
-      .catch((err) => {
-        console.warn("Could not fetch today's staff overview from backend:", err);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-
-    // Fetch monthly attendance summary from backend (UC-S-02)
-    staffAttendanceService
-      .getMonthlySummary()
-      .then((summary) => {
-        if (summary) {
-          setMonthlySummary(summary);
-        }
-      })
-      .catch((err) => {
-        console.warn("Could not fetch monthly attendance summary from backend:", err);
-      });
+    fetchOverview();
+    fetchMonthlySummary();
 
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -217,7 +152,7 @@ export default function StaffOverviewPage() {
       clearInterval(interval);
       window.removeEventListener("dormio_attendance_updated", handleAttendanceEvent);
     };
-  }, []);
+  }, [fetchOverview, fetchMonthlySummary]);
 
   // Format current effective time string (HH:mm:ss)
   const effectiveTimeString = currentTime
@@ -229,18 +164,28 @@ export default function StaffOverviewPage() {
     : "00:00";
 
   // Evaluate check-in & check-out window constraints (UC-S-02)
-  const checkInEval = evaluateCheckInWindow(
-    todaySchedule.shift,
-    effectiveHHMM,
-    Boolean(attendance.checkIn)
-  );
+  const checkInEval = useMemo(() => {
+    if (!todaySchedule) {
+      return { allowed: false, isLate: false, isTooEarly: false, reason: "" };
+    }
+    return evaluateCheckInWindow(
+      todaySchedule.shift,
+      effectiveHHMM,
+      Boolean(attendance?.checkIn)
+    );
+  }, [todaySchedule, effectiveHHMM, attendance?.checkIn]);
 
-  const checkOutEval = evaluateCheckOutWindow(
-    todaySchedule.shift,
-    effectiveHHMM,
-    Boolean(attendance.checkIn),
-    Boolean(attendance.checkOut)
-  );
+  const checkOutEval = useMemo(() => {
+    if (!todaySchedule) {
+      return { allowed: false, isEarly: false, reason: "" };
+    }
+    return evaluateCheckOutWindow(
+      todaySchedule.shift,
+      effectiveHHMM,
+      Boolean(attendance?.checkIn),
+      Boolean(attendance?.checkOut)
+    );
+  }, [todaySchedule, effectiveHHMM, attendance?.checkIn, attendance?.checkOut]);
 
   // Modals state
   const [activeModal, setActiveModal] = useState<"checkin" | "checkout" | "duty_proof" | null>(null);
@@ -277,13 +222,13 @@ export default function StaffOverviewPage() {
     return name;
   };
 
-  const todayStr = todaySchedule.workDate || getTodayISODate();
+  const todayStr = todaySchedule?.workDate || getTodayISODate();
   const todayFormattedDate = locale === "en"
     ? (currentTime || new Date()).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
     : (currentTime || new Date()).toLocaleDateString("vi-VN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
   const monthlySummaryTitle = useMemo(() => {
-    const rawMonth = monthlySummary?.month || (todaySchedule.workDate ? todaySchedule.workDate.substring(0, 7) : "");
+    const rawMonth = monthlySummary?.month || (todaySchedule?.workDate ? todaySchedule.workDate.substring(0, 7) : "");
     if (rawMonth && /^\d{4}-\d{2}$/.test(rawMonth)) {
       const [year, month] = rawMonth.split("-");
       if (locale === "en") {
@@ -298,11 +243,12 @@ export default function StaffOverviewPage() {
       return `TỔNG KẾT CÔNG THÁNG ${month}/${year}`;
     }
     return locale === "en" ? "MONTHLY WORK SUMMARY" : "TỔNG KẾT CÔNG THÁNG";
-  }, [monthlySummary?.month, todaySchedule.workDate, locale]);
+  }, [monthlySummary?.month, todaySchedule?.workDate, locale]);
 
   // Handle opening Check-in modal
   const handleOpenCheckIn = () => {
-    if (attendance.checkIn) {
+    if (!todaySchedule) return;
+    if (attendance?.checkIn) {
       showToast(locale === "en" ? "Check-in record is locked and cannot be edited!" : "Hồ sơ Check-in đã chốt, không thể chỉnh sửa lại!", "info");
       return;
     }
@@ -323,7 +269,8 @@ export default function StaffOverviewPage() {
 
   // Handle opening Check-out modal
   const handleOpenCheckOut = () => {
-    if (attendance.checkOut) {
+    if (!todaySchedule) return;
+    if (attendance?.checkOut) {
       showToast(locale === "en" ? "Check-out record is locked and cannot be edited!" : "Hồ sơ Check-out đã chốt, không thể chỉnh sửa lại!", "info");
       return;
     }
@@ -358,6 +305,8 @@ export default function StaffOverviewPage() {
     capturedDate?: string;
     explanation?: string;
   }) => {
+    if (!todaySchedule) return;
+
     const [h, m] = payload.capturedTime.split(":").map(Number);
     const capturedMinutes = (h || 0) * 60 + (m || 0);
     const [startH, startM] = todaySchedule.shift.startTime.split(":").map(Number);
@@ -365,9 +314,23 @@ export default function StaffOverviewPage() {
     const isLate = capturedMinutes > startMinutes || checkInEval.isLate;
     const newStatus: "on_time" | "late" = isLate ? "late" : "on_time";
 
+    const baseAttendance: AttendanceRecord = attendance || {
+      id: "att-today",
+      workScheduleId: todaySchedule.id,
+      workDate: payload.capturedDate || todaySchedule.workDate,
+      boardingHouseName: todaySchedule.boardingHouseName,
+      shiftName: todaySchedule.shift.name,
+      shiftTime: `${todaySchedule.shift.startTime} - ${todaySchedule.shift.endTime}`,
+      checkIn: null,
+      checkOut: null,
+      status: "not_yet",
+      totalHours: 0,
+      editedByLandlord: false,
+    };
+
     const updated: AttendanceRecord = {
-      ...attendance,
-      workDate: payload.capturedDate || attendance.workDate,
+      ...baseAttendance,
+      workDate: payload.capturedDate || baseAttendance.workDate,
       checkIn: payload.capturedTime,
       status: newStatus,
       checkInPhoto: payload.photo,
@@ -430,14 +393,30 @@ export default function StaffOverviewPage() {
     capturedDate?: string;
     explanation?: string;
   }) => {
+    if (!todaySchedule) return;
+
     const [h, m] = payload.capturedTime.split(":").map(Number);
     const capturedMinutes = (h || 0) * 60 + (m || 0);
     const [endH, endM] = todaySchedule.shift.endTime.split(":").map(Number);
     const endMinutes = endH * 60 + endM;
     const isEarly = capturedMinutes < endMinutes || checkOutEval.isEarly;
 
+    const baseAttendance: AttendanceRecord = attendance || {
+      id: "att-today",
+      workScheduleId: todaySchedule.id,
+      workDate: todaySchedule.workDate,
+      boardingHouseName: todaySchedule.boardingHouseName,
+      shiftName: todaySchedule.shift.name,
+      shiftTime: `${todaySchedule.shift.startTime} - ${todaySchedule.shift.endTime}`,
+      checkIn: null,
+      checkOut: null,
+      status: "not_yet",
+      totalHours: 0,
+      editedByLandlord: false,
+    };
+
     const updated: AttendanceRecord = {
-      ...attendance,
+      ...baseAttendance,
       checkOut: payload.capturedTime,
       totalHours: isEarly ? 7.5 : 8,
       isEarlyCheckOut: isEarly,
@@ -495,6 +474,8 @@ export default function StaffOverviewPage() {
 
   // Toggle duty task status
   const handleToggleDuty = (duty: DutyTaskItem) => {
+    if (!todaySchedule) return;
+
     // If task requires photo and doesn't have proof yet, require photo first
     if (duty.requiresPhoto && !duty.photoProof && !duty.completed) {
       setSelectedDutyForProof(duty);
@@ -547,6 +528,7 @@ export default function StaffOverviewPage() {
     proofTime?: string;
     markCompleted?: boolean;
   }) => {
+    if (!todaySchedule) return;
     const targetDuty = dutyList.find(d => d.id === payload.dutyId);
     if (!targetDuty) return;
 
@@ -619,6 +601,65 @@ export default function StaffOverviewPage() {
   const currentStaffName = staffName || user?.name || (locale === "en" ? "Staff Member" : "Nhân viên");
   const completedCount = dutyList.filter(d => d.completed).length;
 
+  if (isLoading || !isMounted) {
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto pb-16 animate-pulse">
+        {/* Banner Skeleton */}
+        <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2.5 flex-1">
+            <div className="h-5 w-24 bg-zinc-200 rounded-full" />
+            <div className="h-8 w-64 bg-zinc-200 rounded-xl" />
+            <div className="h-4 w-48 bg-zinc-100 rounded-md" />
+          </div>
+          <div className="h-14 w-48 bg-zinc-200 rounded-2xl shrink-0" />
+        </div>
+
+        {/* 2-Column Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-6 sm:p-7 space-y-6">
+              <div className="flex justify-between items-center pb-5 border-b border-zinc-100">
+                <div className="space-y-2">
+                  <div className="h-4 w-28 bg-zinc-200 rounded-md" />
+                  <div className="h-7 w-52 bg-zinc-200 rounded-lg" />
+                </div>
+                <div className="h-8 w-32 bg-zinc-200 rounded-xl" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="h-20 bg-zinc-100 rounded-2xl" />
+                <div className="h-20 bg-zinc-100 rounded-2xl" />
+                <div className="h-20 bg-zinc-100 rounded-2xl" />
+              </div>
+              <div className="h-48 bg-zinc-100 rounded-2xl" />
+              <div className="space-y-3 pt-2">
+                <div className="h-5 w-36 bg-zinc-200 rounded-md" />
+                <div className="h-16 bg-zinc-50 rounded-2xl border border-zinc-100" />
+                <div className="h-16 bg-zinc-50 rounded-2xl border border-zinc-100" />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
+              <div className="h-5 w-32 bg-zinc-200 rounded-md" />
+              <div className="h-16 bg-zinc-100 rounded-2xl" />
+              <div className="h-16 bg-zinc-100 rounded-2xl" />
+            </div>
+            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
+              <div className="h-5 w-40 bg-zinc-200 rounded-md" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-20 bg-zinc-100 rounded-2xl" />
+                <div className="h-20 bg-zinc-100 rounded-2xl" />
+                <div className="h-20 bg-zinc-100 rounded-2xl" />
+                <div className="h-20 bg-zinc-100 rounded-2xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
       
@@ -669,126 +710,201 @@ export default function StaffOverviewPage() {
       {/* MAIN SECTION: 2-COLUMN LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* COLUMN LEFT (2 SPAN): TODAY'S SHIFT CARD & SMART TIMEKEEPING BUTTONS */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* TODAY'S SHIFT HERO CARD */}
-          <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-6 sm:p-7 space-y-6">
-            
-            {/* Header of Shift Card */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-zinc-100">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] animate-ping" />
-                  <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
-                    {t("todayShiftTitle")}
-                  </span>
-                </div>
+        {/* COLUMN LEFT (2 SPAN): TODAY'S SHIFT CARD & SMART TIMEKEEPING BUTTONS OR EMPTY STATE */}
+        {!todaySchedule ? (
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-8 sm:p-12 text-center space-y-6">
+              <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto shadow-inner">
+                <Calendar className="w-8 h-8" />
+              </div>
+              
+              <div className="space-y-2 max-w-md mx-auto">
                 <h2 className="text-xl sm:text-2xl font-black text-zinc-900">
-                  {getShiftName(todaySchedule.shift)} ({todaySchedule.shift.startTime} - {todaySchedule.shift.endTime})
+                  {locale === "en" ? "No Shift Scheduled for Today" : "Không có lịch trực hôm nay"}
                 </h2>
+                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">
+                  {fetchError
+                    ? fetchError
+                    : (locale === "en"
+                        ? "You do not have any work shifts assigned for today. You can check upcoming shifts in the Schedule tab or review past attendance history."
+                        : "Hôm nay bạn không có ca trực nào được phân công. Bạn có thể kiểm tra lịch phân ca sắp tới tại tab Lịch trực & Nhiệm vụ hoặc tra cứu lịch sử chấm công.")}
+                </p>
               </div>
 
-              {/* Status Badge */}
-              <div>
-                {attendance.checkOut ? (
-                  <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-100 text-emerald-700 inline-flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                    {locale === "en" ? "SHIFT COMPLETED" : "ĐÃ HOÀN THÀNH CA"}
-                  </span>
-                ) : attendance.checkIn ? (
-                  <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-[#2AC1BC]/15 text-[#2AC1BC] inline-flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 animate-spin" />
-                    {locale === "en" ? "ON DUTY" : "ĐANG TRONG CA TRỰC"}
-                  </span>
-                ) : (
-                  <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-amber-100 text-amber-800 inline-flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4" />
-                    {locale === "en" ? "NOT CHECKED IN" : "CHƯA CHECK-IN"}
-                  </span>
-                )}
-              </div>
-            </div>
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    fetchOverview();
+                    fetchMonthlySummary();
+                  }}
+                  className="py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <span>{locale === "en" ? "Refresh Data" : "Tải lại dữ liệu"}</span>
+                </button>
 
-            {/* Shift Metadata Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
-                <span className="text-[11px] font-bold text-zinc-400 block uppercase">
-                  {locale === "en" ? "Shift Location" : "Địa điểm trực"}
-                </span>
-                <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
-                  <Building2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                  <span className="truncate">{todaySchedule.boardingHouseName}</span>
-                </div>
-              </div>
+                <Link
+                  href="/staff/schedule"
+                  className="py-2.5 px-4 rounded-xl bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm shadow-[#2AC1BC]/20"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{locale === "en" ? "View Shift Schedule" : "Xem lịch trực & nhiệm vụ"}</span>
+                </Link>
 
-              <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
-                <span className="text-[11px] font-bold text-zinc-400 block uppercase">
-                  {locale === "en" ? "Assigned Role" : "Vị trí đảm nhiệm"}
-                </span>
-                <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
-                  <Shield className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                  <span className="truncate">{getPositionName(todaySchedule.position)}</span>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
-                <span className="text-[11px] font-bold text-zinc-400 block uppercase">
-                  {locale === "en" ? "Shift Duration" : "Thời lượng ca"}
-                </span>
-                <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
-                  <Clock className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                  <span>
-                    {locale === "en" ? `${todaySchedule.shift.durationHours} Hours (8h work)` : `${todaySchedule.shift.durationHours} Tiếng (8h công)`}
-                  </span>
-                </div>
+                <Link
+                  href="/staff/shift-history"
+                  className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
+                >
+                  <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <span>{locale === "en" ? "Shift History" : "Lịch sử chấm công"}</span>
+                </Link>
               </div>
             </div>
-
-            {/* TIMEKEEPING ACTION CONTAINER (UC-S-02) */}
-            <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-br from-zinc-50 to-zinc-100/80 border border-zinc-200 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <Camera className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t("attendanceTitle")}</span>
-                </h3>
-                <span className="text-[11px] font-semibold text-zinc-500">
-                  {t("attendanceSubtitle")}
-                </span>
-              </div>
-
-              {/* Status details line */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {/* Check In info */}
-                <div className="p-3.5 rounded-xl bg-white border border-zinc-200 flex flex-col justify-between gap-2.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-400 block">{t("checkInTime")}</span>
-                      <span className="font-black text-zinc-900 text-sm">
-                        {attendance.checkIn ? `${attendance.checkIn}` : "--:--:--"}
-                      </span>
-                    </div>
-                    <div>
-                      {attendance.checkIn ? (
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                          attendance.status === "late" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                        }`}>
-                          {attendance.status === "late" ? t("statusLate") : t("statusOnTime")}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-zinc-400 font-bold">{t("windowCheckIn")}</span>
-                      )}
-                    </div>
+          </div>
+        ) : (
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* TODAY'S SHIFT HERO CARD */}
+            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-6 sm:p-7 space-y-6">
+              
+              {/* Header of Shift Card */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-zinc-100">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] animate-ping" />
+                    <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
+                      {t("todayShiftTitle")}
+                    </span>
                   </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-zinc-900">
+                    {getShiftName(todaySchedule.shift)} ({todaySchedule.shift.startTime} - {todaySchedule.shift.endTime})
+                  </h2>
+                </div>
 
-                  {/* Photo & Watermark pill if checked in */}
-                  {attendance.checkIn && attendance.checkInPhoto && (
-                    <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={attendance.checkInPhoto}
-                          alt="Check-in proof"
-                          className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
+                {/* Status Badge */}
+                <div>
+                  {attendance?.checkOut ? (
+                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-100 text-emerald-700 inline-flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      {locale === "en" ? "SHIFT COMPLETED" : "ĐÃ HOÀN THÀNH CA"}
+                    </span>
+                  ) : attendance?.checkIn ? (
+                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-[#2AC1BC]/15 text-[#2AC1BC] inline-flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 animate-spin" />
+                      {locale === "en" ? "ON DUTY" : "ĐANG TRONG CA TRỰC"}
+                    </span>
+                  ) : (
+                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-amber-100 text-amber-800 inline-flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4" />
+                      {locale === "en" ? "NOT CHECKED IN" : "CHƯA CHECK-IN"}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Shift Metadata Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                  <span className="text-[11px] font-bold text-zinc-400 block uppercase">
+                    {locale === "en" ? "Shift Location" : "Địa điểm trực"}
+                  </span>
+                  <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
+                    <Building2 className="w-4 h-4 text-[#2AC1BC]" />
+                    <span className="truncate">{todaySchedule.boardingHouseName}</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                  <span className="text-[11px] font-bold text-zinc-400 block uppercase">
+                    {locale === "en" ? "Assigned Role" : "Vị trí đảm nhiệm"}
+                  </span>
+                  <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
+                    <Shield className="w-4 h-4 text-[#2AC1BC]" />
+                    <span className="truncate">{getPositionName(todaySchedule.position)}</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                  <span className="text-[11px] font-bold text-zinc-400 block uppercase">
+                    {locale === "en" ? "Shift Duration" : "Thời lượng ca"}
+                  </span>
+                  <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
+                    <Clock className="w-4 h-4 text-[#2AC1BC]" />
+                    <span>
+                      {locale === "en" ? `${todaySchedule.shift.durationHours} Hours (8h work)` : `${todaySchedule.shift.durationHours} Tiếng (8h công)`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* TIMEKEEPING ACTION CONTAINER (UC-S-02) */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-br from-zinc-50 to-zinc-100/80 border border-zinc-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Camera className="w-4 h-4 text-[#2AC1BC]" />
+                    <span>{t("attendanceTitle")}</span>
+                  </h3>
+                  <span className="text-[11px] font-semibold text-zinc-500">
+                    {t("attendanceSubtitle")}
+                  </span>
+                </div>
+
+                {/* Status details line */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {/* Check In info */}
+                  <div className="p-3.5 rounded-xl bg-white border border-zinc-200 flex flex-col justify-between gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-zinc-400 block">{t("checkInTime")}</span>
+                        <span className="font-black text-zinc-900 text-sm">
+                          {attendance?.checkIn ? `${attendance.checkIn}` : "--:--:--"}
+                        </span>
+                      </div>
+                      <div>
+                        {attendance?.checkIn ? (
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
+                            attendance.status === "late" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                          }`}>
+                            {attendance.status === "late" ? t("statusLate") : t("statusOnTime")}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-zinc-400 font-bold">{t("windowCheckIn")}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Photo & Watermark pill if checked in */}
+                    {attendance?.checkIn && attendance?.checkInPhoto && (
+                      <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={attendance.checkInPhoto}
+                            alt="Check-in proof"
+                            className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
+                            onClick={() => setPreviewImageModal({
+                              isOpen: true,
+                              title: locale === "en" ? "Check-in Verification Photo" : "Ảnh Xác Thực Check-in",
+                              imageUrl: attendance.checkInPhoto!,
+                              watermark: attendance.checkInWatermark ? {
+                                ...attendance.checkInWatermark,
+                                place: getLocalizedPlace(attendance.checkInWatermark.place, locale === "en"),
+                                staffName: getLocalizedStaffName(attendance.checkInWatermark.staffName, locale === "en")
+                              } : undefined,
+                              note: getLocalizedExplanation(attendance.checkInExplanation, locale === "en")
+                            })}
+                          />
+                          <div className="text-[10px] text-zinc-500 font-medium">
+                            <span className="text-zinc-800 font-bold block truncate max-w-[150px]" title={getLocalizedPlace(attendance.checkInWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}>
+                              📍 {getLocalizedPlace(attendance.checkInWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}
+                            </span>
+                            <span className="text-zinc-500 block truncate max-w-[150px]">
+                              🕒 {attendance.checkInWatermark?.time || (locale === "en" ? "Time & Place stamped" : "Đã in dấu thời gian")}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
                           onClick={() => setPreviewImageModal({
                             isOpen: true,
                             title: locale === "en" ? "Check-in Verification Photo" : "Ảnh Xác Thực Check-in",
@@ -800,77 +916,77 @@ export default function StaffOverviewPage() {
                             } : undefined,
                             note: getLocalizedExplanation(attendance.checkInExplanation, locale === "en")
                           })}
-                        />
-                        <div className="text-[10px] text-zinc-500 font-medium">
-                          <span className="text-zinc-800 font-bold block truncate max-w-[150px]" title={getLocalizedPlace(attendance.checkInWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}>
-                            📍 {getLocalizedPlace(attendance.checkInWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}
-                          </span>
-                          <span className="text-zinc-500 block truncate max-w-[150px]">
-                            🕒 {attendance.checkInWatermark?.time || (locale === "en" ? "Time & Place stamped" : "Đã in dấu thời gian")}
-                          </span>
-                        </div>
+                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer"
+                        >
+                          <Eye className="w-3 h-3" /> {t("viewPhoto")}
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewImageModal({
-                          isOpen: true,
-                          title: locale === "en" ? "Check-in Verification Photo" : "Ảnh Xác Thực Check-in",
-                          imageUrl: attendance.checkInPhoto!,
-                          watermark: attendance.checkInWatermark ? {
-                            ...attendance.checkInWatermark,
-                            place: getLocalizedPlace(attendance.checkInWatermark.place, locale === "en"),
-                            staffName: getLocalizedStaffName(attendance.checkInWatermark.staffName, locale === "en")
-                          } : undefined,
-                          note: getLocalizedExplanation(attendance.checkInExplanation, locale === "en")
-                        })}
-                        className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer"
-                      >
-                        <Eye className="w-3 h-3" /> {t("viewPhoto")}
-                      </button>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Explanation snippet if present */}
-                  {attendance.checkInExplanation && (
-                    <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900">
-                      <span className="font-bold block">
-                        {attendance.status === "late" ? t("explanationLate") : t("explanationCheckIn")}
-                      </span>
-                      <p className="italic text-zinc-700 truncate">&quot;{getLocalizedExplanation(attendance.checkInExplanation, locale === "en")}&quot;</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Check Out info */}
-                <div className="p-3.5 rounded-xl bg-white border border-zinc-200 flex flex-col justify-between gap-2.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-400 block">{t("checkOutTime")}</span>
-                      <span className="font-black text-zinc-900 text-sm">
-                        {attendance.checkOut ? `${attendance.checkOut}` : "--:--:--"}
-                      </span>
-                    </div>
-                    <div>
-                      {attendance.checkOut ? (
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                          attendance.isEarlyCheckOut ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                        }`}>
-                          {attendance.isEarlyCheckOut ? t("statusEarly") : t("statusCompleted")}
+                    {/* Explanation snippet if present */}
+                    {attendance?.checkInExplanation && (
+                      <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900">
+                        <span className="font-bold block">
+                          {attendance.status === "late" ? t("explanationLate") : t("explanationCheckIn")}
                         </span>
-                      ) : (
-                        <span className="text-[10px] text-zinc-400 font-bold">{t("windowCheckOut")}</span>
-                      )}
-                    </div>
+                        <p className="italic text-zinc-700 truncate">&quot;{getLocalizedExplanation(attendance.checkInExplanation, locale === "en")}&quot;</p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Photo & Watermark pill if checked out */}
-                  {attendance.checkOut && attendance.checkOutPhoto && (
-                    <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={attendance.checkOutPhoto}
-                          alt="Check-out proof"
-                          className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
+                  {/* Check Out info */}
+                  <div className="p-3.5 rounded-xl bg-white border border-zinc-200 flex flex-col justify-between gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-zinc-400 block">{t("checkOutTime")}</span>
+                        <span className="font-black text-zinc-900 text-sm">
+                          {attendance?.checkOut ? `${attendance.checkOut}` : "--:--:--"}
+                        </span>
+                      </div>
+                      <div>
+                        {attendance?.checkOut ? (
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
+                            attendance.isEarlyCheckOut ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                          }`}>
+                            {attendance.isEarlyCheckOut ? t("statusEarly") : t("statusCompleted")}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-zinc-400 font-bold">{t("windowCheckOut")}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Photo & Watermark pill if checked out */}
+                    {attendance?.checkOut && attendance?.checkOutPhoto && (
+                      <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={attendance.checkOutPhoto}
+                            alt="Check-out proof"
+                            className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
+                            onClick={() => setPreviewImageModal({
+                              isOpen: true,
+                              title: locale === "en" ? "Check-out Verification Photo" : "Ảnh Xác Thực Check-out",
+                              imageUrl: attendance.checkOutPhoto!,
+                              watermark: attendance.checkOutWatermark ? {
+                                ...attendance.checkOutWatermark,
+                                place: getLocalizedPlace(attendance.checkOutWatermark.place, locale === "en"),
+                                staffName: getLocalizedStaffName(attendance.checkOutWatermark.staffName, locale === "en")
+                              } : undefined,
+                              note: getLocalizedExplanation(attendance.checkOutExplanation, locale === "en")
+                            })}
+                          />
+                          <div className="text-[10px] text-zinc-500 font-medium">
+                            <span className="text-zinc-800 font-bold block truncate max-w-[150px]" title={getLocalizedPlace(attendance.checkOutWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}>
+                              📍 {getLocalizedPlace(attendance.checkOutWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}
+                            </span>
+                            <span className="text-zinc-500 block truncate max-w-[150px]">
+                              🕒 {attendance.checkOutWatermark?.time || (locale === "en" ? "Time & Place stamped" : "Đã in dấu thời gian")}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
                           onClick={() => setPreviewImageModal({
                             isOpen: true,
                             title: locale === "en" ? "Check-out Verification Photo" : "Ảnh Xác Thực Check-out",
@@ -882,280 +998,270 @@ export default function StaffOverviewPage() {
                             } : undefined,
                             note: getLocalizedExplanation(attendance.checkOutExplanation, locale === "en")
                           })}
-                        />
-                        <div className="text-[10px] text-zinc-500 font-medium">
-                          <span className="text-zinc-800 font-bold block truncate max-w-[150px]" title={getLocalizedPlace(attendance.checkOutWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}>
-                            📍 {getLocalizedPlace(attendance.checkOutWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}
-                          </span>
-                          <span className="text-zinc-500 block truncate max-w-[150px]">
-                            🕒 {attendance.checkOutWatermark?.time || (locale === "en" ? "Time & Place stamped" : "Đã in dấu thời gian")}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewImageModal({
-                          isOpen: true,
-                          title: locale === "en" ? "Check-out Verification Photo" : "Ảnh Xác Thực Check-out",
-                          imageUrl: attendance.checkOutPhoto!,
-                          watermark: attendance.checkOutWatermark ? {
-                            ...attendance.checkOutWatermark,
-                            place: getLocalizedPlace(attendance.checkOutWatermark.place, locale === "en"),
-                            staffName: getLocalizedStaffName(attendance.checkOutWatermark.staffName, locale === "en")
-                          } : undefined,
-                          note: getLocalizedExplanation(attendance.checkOutExplanation, locale === "en")
-                        })}
-                        className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer"
-                      >
-                        <Eye className="w-3 h-3" /> {t("viewPhoto")}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Explanation snippet if early check-out */}
-                  {attendance.checkOutExplanation && (
-                    <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900">
-                      <span className="font-bold block">{t("explanationEarly")}</span>
-                      <p className="italic text-zinc-700 truncate">&quot;{getLocalizedExplanation(attendance.checkOutExplanation, locale === "en")}&quot;</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                
-                {/* Check In Button */}
-                {attendance.checkIn ? (
-                  <button
-                    type="button"
-                    onClick={() => setPreviewImageModal({
-                      isOpen: true,
-                      title: locale === "en" ? "Check-in Verification Photo (Locked - View only)" : "Ảnh Xác Thực Check-in (Đã chốt - Không thể chỉnh sửa)",
-                      imageUrl: attendance.checkInPhoto || "",
-                      watermark: attendance.checkInWatermark ? {
-                        ...attendance.checkInWatermark,
-                        place: getLocalizedPlace(attendance.checkInWatermark.place, locale === "en"),
-                        staffName: getLocalizedStaffName(attendance.checkInWatermark.staffName, locale === "en")
-                      } : undefined,
-                      note: getLocalizedExplanation(attendance.checkInExplanation, locale === "en")
-                    })}
-                    className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>{t("btnCheckInLocked")}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={!checkInEval.allowed}
-                    onClick={handleOpenCheckIn}
-                    className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                      checkInEval.allowed
-                        ? "bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25"
-                        : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                    }`}
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>
-                      {checkInEval.isLate ? t("btnCheckInLate") : t("btnCheckInOnTime")}
-                    </span>
-                  </button>
-                )}
-
-                {/* Check Out Button */}
-                {attendance.checkOut ? (
-                  <button
-                    type="button"
-                    onClick={() => setPreviewImageModal({
-                      isOpen: true,
-                      title: locale === "en" ? "Check-out Verification Photo (Locked - View only)" : "Ảnh Xác Thực Check-out (Đã chốt - Không thể chỉnh sửa)",
-                      imageUrl: attendance.checkOutPhoto || "",
-                      watermark: attendance.checkOutWatermark ? {
-                        ...attendance.checkOutWatermark,
-                        place: getLocalizedPlace(attendance.checkOutWatermark.place, locale === "en"),
-                        staffName: getLocalizedStaffName(attendance.checkOutWatermark.staffName, locale === "en")
-                      } : undefined,
-                      note: getLocalizedExplanation(attendance.checkOutExplanation, locale === "en")
-                    })}
-                    className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>{t("btnCheckOutLocked")}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={!checkOutEval.allowed}
-                    onClick={handleOpenCheckOut}
-                    className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                      checkOutEval.allowed
-                        ? "bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25"
-                        : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                    }`}
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>
-                      {checkOutEval.isEarly ? t("btnCheckOutEarly") : t("btnCheckOutNormal")}
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {/* Explanatory Notice */}
-              <div className="p-3 rounded-xl bg-white border border-zinc-200/90 text-[11px] text-zinc-500 space-y-1">
-                <div className="font-bold text-zinc-700 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{t("rulesTitle")}</span>
-                </div>
-                <p className="leading-relaxed">{t("rule1")}</p>
-                <p className="leading-relaxed">{t("rule2")}</p>
-              </div>
-            </div>
-
-            {/* CHECKLIST (NHIỆM VỤ CA LÀM • DUTY LIST UC-S-01) */}
-            <div className="space-y-4 pt-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-zinc-800 text-xs font-black uppercase tracking-wider">
-                  <CheckSquare className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t("checklistTitle")}</span>
-                </div>
-                <div className="flex items-center gap-2.5 self-start sm:self-auto">
-                  <span className="text-[11px] font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2.5 py-1 rounded-lg">
-                    {t("checklistProgress", { completed: completedCount, total: dutyList.length })}
-                  </span>
-                  <Link
-                    href="/staff/schedule"
-                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-1"
-                  >
-                    <span>{locale === "en" ? "View in Schedule" : "Xem trong Lịch trực & Nhiệm vụ"}</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Additional Tasks / Landlord Reminders Due Today Banner */}
-              {todayAdditionalTasks.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                    <span className="text-xs font-bold text-amber-950">
-                      {t("todayAdditionalNotice", { count: todayAdditionalTasks.length })}
-                    </span>
-                  </div>
-                  <Link
-                    href="/staff/schedule"
-                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0 shadow-2xs cursor-pointer"
-                  >
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>{t("btnViewTodayAdditional", { count: todayAdditionalTasks.length })}</span>
-                  </Link>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {dutyList.map((duty) => (
-                  <div
-                    key={duty.id}
-                    className={`p-4 rounded-2xl border transition-all ${
-                      duty.completed
-                        ? "bg-emerald-50/40 border-emerald-200/80 text-zinc-800"
-                        : "bg-white border-zinc-200 text-zinc-800 hover:border-[#2AC1BC]/40"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                      
-                      {/* Left: Checkbox + Title + Proof Tag */}
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <input
-                          type="checkbox"
-                          checked={duty.completed}
-                          onChange={() => handleToggleDuty(duty)}
-                          className="mt-1 w-4 h-4 rounded text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer shrink-0"
-                        />
-                        <div className="space-y-1.5 flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={`text-xs font-bold leading-snug ${duty.completed ? "line-through text-zinc-400" : "text-zinc-900"}`}>
-                              {getDutyTitle(duty, locale === "en")}
-                            </span>
-                            
-                            {/* Requirement Tag */}
-                            {duty.requiresPhoto ? (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200/80 inline-flex items-center gap-1 shrink-0">
-                                <Camera className="w-3 h-3 text-amber-600" />
-                                {t("requiresPhoto")}
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-100 text-zinc-500 inline-flex items-center gap-1 shrink-0">
-                                {t("photoOptional")}
-                              </span>
-                            )}
-                          </div>
-
-                          {duty.note && (
-                            <p className="text-[11px] text-zinc-500 font-medium italic">
-                              {t("notePrefix", { note: getDutyNote(duty.note, locale === "en") })}
-                            </p>
-                          )}
-
-                          {duty.completedAt && (
-                            <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                              <Check className="w-3 h-3" /> {t("completedAtPrefix", { time: duty.completedAt })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right: Photo proof thumbnail + Update details action button */}
-                      <div className="flex items-center gap-2 self-start sm:self-center shrink-0 pl-7 sm:pl-0">
-                        {duty.photoProof && (
-                          <div
-                            onClick={() => setPreviewImageModal({
-                              isOpen: true,
-                              title: `${t("dutyProofTitle")}: ${getDutyTitle(duty, locale === "en")}`,
-                              imageUrl: duty.photoProof!,
-                              watermark: {
-                                time: duty.photoProofTime || (locale === "en" ? "07:15 - Sep 09, 2026" : "07:15 - 09/09/2026"),
-                                place: getLocalizedPlace(todaySchedule.boardingHouseName || (locale === "en" ? "Assigned Building" : "Toà nhà trực"), locale === "en"),
-                                staffName: getLocalizedStaffName(currentStaffName, locale === "en")
-                              },
-                              note: getDutyNote(duty.note, locale === "en")
-                            })}
-                            className="relative group cursor-pointer"
-                            title={t("clickToEnlargeProof")}
-                          >
-                            <img
-                              src={duty.photoProof}
-                              alt="Proof thumbnail"
-                              className="w-10 h-10 rounded-xl object-cover border border-zinc-200 shadow-2xs group-hover:opacity-80 transition-opacity"
-                            />
-                            <div className="absolute inset-0 bg-black/30 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Eye className="w-3.5 h-3.5 text-white" />
-                            </div>
-                          </div>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedDutyForProof(duty);
-                            setActiveModal("duty_proof");
-                          }}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs shrink-0"
+                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer"
                         >
-                          <FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                          <span>{t("btnUpdateDetails")}</span>
+                          <Eye className="w-3 h-3" /> {t("viewPhoto")}
                         </button>
                       </div>
+                    )}
 
-                    </div>
+                    {/* Explanation snippet if early check-out */}
+                    {attendance?.checkOutExplanation && (
+                      <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900">
+                        <span className="font-bold block">{t("explanationEarly")}</span>
+                        <p className="italic text-zinc-700 truncate">&quot;{getLocalizedExplanation(attendance.checkOutExplanation, locale === "en")}&quot;</p>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
+                {/* Action Buttons Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  
+                  {/* Check In Button */}
+                  {attendance?.checkIn ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImageModal({
+                        isOpen: true,
+                        title: locale === "en" ? "Check-in Verification Photo (Locked - View only)" : "Ảnh Xác Thực Check-in (Đã chốt - Không thể chỉnh sửa)",
+                        imageUrl: attendance.checkInPhoto || "",
+                        watermark: attendance.checkInWatermark ? {
+                          ...attendance.checkInWatermark,
+                          place: getLocalizedPlace(attendance.checkInWatermark.place, locale === "en"),
+                          staffName: getLocalizedStaffName(attendance.checkInWatermark.staffName, locale === "en")
+                        } : undefined,
+                        note: getLocalizedExplanation(attendance.checkInExplanation, locale === "en")
+                      })}
+                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>{t("btnCheckInLocked")}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!checkInEval.allowed}
+                      onClick={handleOpenCheckIn}
+                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        checkInEval.allowed
+                          ? "bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25"
+                          : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>
+                        {checkInEval.isLate ? t("btnCheckInLate") : t("btnCheckInOnTime")}
+                      </span>
+                    </button>
+                  )}
+
+                  {/* Check Out Button */}
+                  {attendance?.checkOut ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImageModal({
+                        isOpen: true,
+                        title: locale === "en" ? "Check-out Verification Photo (Locked - View only)" : "Ảnh Xác Thực Check-out (Đã chốt - Không thể chỉnh sửa)",
+                        imageUrl: attendance.checkOutPhoto || "",
+                        watermark: attendance.checkOutWatermark ? {
+                          ...attendance.checkOutWatermark,
+                          place: getLocalizedPlace(attendance.checkOutWatermark.place, locale === "en"),
+                          staffName: getLocalizedStaffName(attendance.checkOutWatermark.staffName, locale === "en")
+                        } : undefined,
+                        note: getLocalizedExplanation(attendance.checkOutExplanation, locale === "en")
+                      })}
+                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>{t("btnCheckOutLocked")}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!checkOutEval.allowed}
+                      onClick={handleOpenCheckOut}
+                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        checkOutEval.allowed
+                          ? "bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25"
+                          : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>
+                        {checkOutEval.isEarly ? t("btnCheckOutEarly") : t("btnCheckOutNormal")}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Explanatory Notice */}
+                <div className="p-3 rounded-xl bg-white border border-zinc-200/90 text-[11px] text-zinc-500 space-y-1">
+                  <div className="font-bold text-zinc-700 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <span>{t("rulesTitle")}</span>
+                  </div>
+                  <p className="leading-relaxed">{t("rule1")}</p>
+                  <p className="leading-relaxed">{t("rule2")}</p>
+                </div>
+              </div>
+
+              {/* CHECKLIST (NHIỆM VỤ CA LÀM • DUTY LIST UC-S-01) */}
+              <div className="space-y-4 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-zinc-800 text-xs font-black uppercase tracking-wider">
+                    <CheckSquare className="w-4 h-4 text-[#2AC1BC]" />
+                    <span>{t("checklistTitle")}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 self-start sm:self-auto">
+                    <span className="text-[11px] font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2.5 py-1 rounded-lg">
+                      {t("checklistProgress", { completed: completedCount, total: dutyList.length })}
+                    </span>
+                    <Link
+                      href="/staff/schedule"
+                      className="text-[11px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-1"
+                    >
+                      <span>{locale === "en" ? "View in Schedule" : "Xem trong Lịch trực & Nhiệm vụ"}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Additional Tasks / Landlord Reminders Due Today Banner */}
+                {todayAdditionalTasks.length > 0 && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                      <span className="text-xs font-bold text-amber-950">
+                        {t("todayAdditionalNotice", { count: todayAdditionalTasks.length })}
+                      </span>
+                    </div>
+                    <Link
+                      href="/staff/schedule"
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0 shadow-2xs cursor-pointer"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{t("btnViewTodayAdditional", { count: todayAdditionalTasks.length })}</span>
+                    </Link>
+                  </div>
+                )}
+
+                {dutyList.length > 0 ? (
+                  <div className="space-y-3">
+                    {dutyList.map((duty) => (
+                      <div
+                        key={duty.id}
+                        className={`p-4 rounded-2xl border transition-all ${
+                          duty.completed
+                            ? "bg-emerald-50/40 border-emerald-200/80 text-zinc-800"
+                            : "bg-white border-zinc-200 text-zinc-800 hover:border-[#2AC1BC]/40"
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          
+                          {/* Left: Checkbox + Title + Proof Tag */}
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={duty.completed}
+                              onChange={() => handleToggleDuty(duty)}
+                              className="mt-1 w-4 h-4 rounded text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer shrink-0"
+                            />
+                            <div className="space-y-1.5 flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className={`text-xs font-bold leading-snug ${duty.completed ? "line-through text-zinc-400" : "text-zinc-900"}`}>
+                                  {getDutyTitle(duty, locale === "en")}
+                                </span>
+                                
+                                {/* Requirement Tag */}
+                                {duty.requiresPhoto ? (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200/80 inline-flex items-center gap-1 shrink-0">
+                                    <Camera className="w-3 h-3 text-amber-600" />
+                                    {t("requiresPhoto")}
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-100 text-zinc-500 inline-flex items-center gap-1 shrink-0">
+                                    {t("photoOptional")}
+                                  </span>
+                                )}
+                              </div>
+
+                              {duty.note && (
+                                <p className="text-[11px] text-zinc-500 font-medium italic">
+                                  {t("notePrefix", { note: getDutyNote(duty.note, locale === "en") })}
+                                </p>
+                              )}
+
+                              {duty.completedAt && (
+                                <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                                  <Check className="w-3 h-3" /> {t("completedAtPrefix", { time: duty.completedAt })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right: Photo proof thumbnail + Update details action button */}
+                          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 pl-7 sm:pl-0">
+                            {duty.photoProof && (
+                              <div
+                                onClick={() => setPreviewImageModal({
+                                  isOpen: true,
+                                  title: `${t("dutyProofTitle")}: ${getDutyTitle(duty, locale === "en")}`,
+                                  imageUrl: duty.photoProof!,
+                                  watermark: {
+                                    time: duty.photoProofTime || (duty.completedAt ? `${duty.completedAt} - ${todayStr}` : effectiveTimeString),
+                                    place: getLocalizedPlace(todaySchedule.boardingHouseName || (locale === "en" ? "Assigned Building" : "Toà nhà trực"), locale === "en"),
+                                    staffName: getLocalizedStaffName(currentStaffName, locale === "en")
+                                  },
+                                  note: getDutyNote(duty.note, locale === "en")
+                                })}
+                                className="relative group cursor-pointer"
+                                title={t("clickToEnlargeProof")}
+                              >
+                                <img
+                                  src={duty.photoProof}
+                                  alt="Proof thumbnail"
+                                  className="w-10 h-10 rounded-xl object-cover border border-zinc-200 shadow-2xs group-hover:opacity-80 transition-opacity"
+                                />
+                                <div className="absolute inset-0 bg-black/30 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Eye className="w-3.5 h-3.5 text-white" />
+                                </div>
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedDutyForProof(duty);
+                                setActiveModal("duty_proof");
+                              }}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs shrink-0"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                              <span>{t("btnUpdateDetails")}</span>
+                            </button>
+                          </div>
+
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 text-center space-y-1">
+                    <CheckSquare className="w-5 h-5 text-zinc-400 mx-auto" />
+                    <p className="text-xs font-bold text-zinc-600">
+                      {locale === "en" ? "No duty tasks assigned for this shift" : "Không có nhiệm vụ ca làm nào được giao"}
+                    </p>
+                    <p className="text-[11px] text-zinc-400">
+                      {locale === "en" ? "All core duties have been settled or none were assigned." : "Ca trực này hiện không có danh mục nhiệm vụ bắt buộc."}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+            </div>
           </div>
-        </div>
+        )}
 
         {/* COLUMN RIGHT (1 SPAN): CO-WORKERS ON SHIFT & QUICK METRICS */}
         <div className="space-y-6">
@@ -1167,12 +1273,14 @@ export default function StaffOverviewPage() {
                 <Users className="w-4 h-4 text-[#2AC1BC]" />
                 <span>{t("coworkersTitle")}</span>
               </div>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/10 text-[#2AC1BC]">
-                {t("coworkersCount", { count: todaySchedule.coWorkers.length })}
-              </span>
+              {todaySchedule && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                  {t("coworkersCount", { count: todaySchedule.coWorkers.length })}
+                </span>
+              )}
             </div>
 
-            {todaySchedule.coWorkers.length > 0 ? (
+            {todaySchedule && todaySchedule.coWorkers.length > 0 ? (
               <div className="space-y-3">
                 {todaySchedule.coWorkers.map((cw) => (
                   <div key={cw.id} className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center justify-between gap-3">
@@ -1200,14 +1308,20 @@ export default function StaffOverviewPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-zinc-400 text-xs font-medium">
-                {t("onlyStaffAssigned")}
+              <div className="text-center py-6 text-zinc-400 text-xs font-medium space-y-1">
+                <Users className="w-6 h-6 text-zinc-300 mx-auto" />
+                <p>{todaySchedule ? t("onlyStaffAssigned") : (locale === "en" ? "No scheduled shifts today" : "Chưa có dữ liệu ca trực hôm nay")}</p>
+                <p className="text-[11px] text-zinc-400">
+                  {todaySchedule ? t("coworkerNote") : (locale === "en" ? "Co-workers will appear here when a shift is active." : "Danh sách đồng nghiệp cùng ca sẽ xuất hiện khi có ca trực.")}
+                </p>
               </div>
             )}
 
-            <div className="pt-2 text-[11px] text-zinc-400 leading-tight">
-              {t("coworkerNote")}
-            </div>
+            {todaySchedule && todaySchedule.coWorkers.length > 0 && (
+              <div className="pt-2 text-[11px] text-zinc-400 leading-tight">
+                {t("coworkerNote")}
+              </div>
+            )}
           </div>
 
           {/* MONTHLY SUMMARY METRICS WIDGET */}
@@ -1294,12 +1408,14 @@ export default function StaffOverviewPage() {
       {/* ========================================================================= */}
       {/* MODAL 1: CHECK-IN / CHECK-OUT WITH CAMERA WATERMARK & EXPLANATION SECTION */}
       {/* ========================================================================= */}
-      {activeModal && (activeModal === "checkin" || activeModal === "checkout") && (
+      {activeModal && (activeModal === "checkin" || activeModal === "checkout") && todaySchedule && (
         <CheckInOutCameraModal
           mode={activeModal}
           isLate={activeModal === "checkin" ? checkInEval.isLate : false}
           isEarly={activeModal === "checkout" ? checkOutEval.isEarly : false}
           shiftName={todaySchedule.shift.name}
+          shiftStartTime={todaySchedule.shift.startTime}
+          shiftEndTime={todaySchedule.shift.endTime}
           effectiveTime={effectiveTimeString}
           boardingHouseName={todaySchedule.boardingHouseName}
           staffName={currentStaffName}
@@ -1318,7 +1434,7 @@ export default function StaffOverviewPage() {
       {/* ========================================================================= */}
       {/* MODAL 2: DUTY TASK PHOTO PROOF UPLOAD (LANDLORD REQUIRED AUDIT)            */}
       {/* ========================================================================= */}
-      {activeModal === "duty_proof" && selectedDutyForProof && (
+      {activeModal === "duty_proof" && selectedDutyForProof && todaySchedule && (
         <DutyProofModal
           duty={selectedDutyForProof}
           boardingHouseName={todaySchedule.boardingHouseName}
@@ -1397,7 +1513,7 @@ export default function StaffOverviewPage() {
                       <User className="w-3 h-3 text-zinc-400" /> {getLocalizedStaffName(previewImageModal.watermark.staffName, locale === "en")}
                     </span>
                     <span className="font-mono text-zinc-400">
-                      {previewImageModal.watermark.coordinates || "21.0132° N, 105.5258° E"}
+                      {previewImageModal.watermark.coordinates || (locale === "en" ? "GPS coordinates recorded" : "Đã ghi nhận tọa độ GPS")}
                     </span>
                   </div>
                 </div>
@@ -1583,6 +1699,8 @@ interface CheckInOutCameraModalProps {
   isLate: boolean;
   isEarly: boolean;
   shiftName: string;
+  shiftStartTime?: string;
+  shiftEndTime?: string;
   effectiveTime: string;
   boardingHouseName: string;
   staffName?: string;
@@ -1602,6 +1720,8 @@ function CheckInOutCameraModal({
   isLate,
   isEarly,
   shiftName,
+  shiftStartTime,
+  shiftEndTime,
   effectiveTime,
   boardingHouseName,
   staffName,
@@ -2211,10 +2331,10 @@ function CheckInOutCameraModal({
                   <p className="text-[11px] text-amber-700 leading-relaxed font-medium">
                     {mode === "checkin"
                       ? (isLate
-                          ? t("lateCheckInDesc", { time: "07:00" })
+                          ? t("lateCheckInDesc", { time: shiftStartTime || "07:00" })
                           : t("onTimeCheckInDesc"))
                       : (isEarly
-                          ? t("earlyCheckOutDesc", { time: "15:00" })
+                          ? t("earlyCheckOutDesc", { time: shiftEndTime || "15:00" })
                           : t("normalCheckOutDesc"))}
                   </p>
                 </div>
