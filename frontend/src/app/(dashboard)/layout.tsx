@@ -151,7 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1">
           <div className="px-3 pb-2 text-[10px] font-black text-[#2AC1BC] uppercase tracking-widest flex items-center gap-1.5">
             <UserCircle className="w-3.5 h-3.5" />
-            <span>{tNav("staffBadge")}</span>
+            <span>{tNav("staffTag")}</span>
           </div>
           {staffMenus.map((item, idx) => {
             const isActive = item.href === '/staff'
@@ -325,37 +325,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [activeBuilding?.name, pathname, isAdmin, isStaff, tNav]);
 
-  const StaffHeaderBadge = () => (
-    <div className="px-3.5 py-3 border-b border-[#2AC1BC]/20 bg-linear-to-r from-[#2AC1BC]/10 to-teal-50/40">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center font-black text-xs shrink-0">
-          <UserCircle className="w-5 h-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
-              {tNav("staffBadge")}
-            </span>
-          </div>
-          <p className="text-xs font-bold text-zinc-900 truncate">{tNav("staffMockBuilding")}</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const AdminHeaderBadge = () => (
-    <div className="px-3.5 py-3 border-b border-orange-100 bg-linear-to-r from-orange-50/80 to-amber-50/40">
-      <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black bg-orange-600 text-white tracking-wider shadow-2xs uppercase">
-          <Shield className="w-3 h-3" />
-          {tNav("adminTag")}
-        </span>
-      </div>
-      <p className="text-[11px] font-medium text-zinc-500 mt-1.5 leading-tight">
-        {tNav("adminHeaderSubtitle")}
-      </p>
-    </div>
-  );
 
   const BuildingSelector = () => (
     <div className="relative px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
@@ -509,8 +478,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NotificationBell align="left" />
           </div>
 
-          {/* Admin Badge or Staff Badge or Global Landlord Building Selector */}
-          {isAdmin ? <AdminHeaderBadge /> : isStaff ? <StaffHeaderBadge /> : !isTenant && <BuildingSelector />}
+          {/* Global Landlord Building Selector */}
+          {!isAdmin && !isStaff && !isTenant && <BuildingSelector />}
 
           <NavContent />
           <UserFooter />
@@ -535,8 +504,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </div>
 
-            {/* Admin Badge or Staff Badge or Global Landlord Building Selector on Mobile Drawer */}
-            {isAdmin ? <AdminHeaderBadge /> : isStaff ? <StaffHeaderBadge /> : !isTenant && <BuildingSelector />}
+            {/* Global Landlord Building Selector on Mobile Drawer */}
+            {!isAdmin && !isStaff && !isTenant && <BuildingSelector />}
 
             <NavContent />
             <UserFooter />
@@ -568,7 +537,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : isStaff ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
               <UserCircle className="w-3.5 h-3.5" />
-              <span>{tNav("staffBadge")}</span>
+              <span>{tNav("staffTag")}</span>
             </div>
           ) : !isTenant && (
             <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
