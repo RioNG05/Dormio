@@ -1,48 +1,63 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from "react";
+import React, { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import {
   Calendar, Clock, Building2, Shield, Users,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Info, X, CheckCircle2, AlertTriangle, XCircle,
   Phone, ArrowLeft, Search,
-  Camera, Eye, ShieldCheck, ArrowRight, FileText
+  Camera, Eye, ShieldCheck, ArrowRight, FileText,
+  Loader2
 } from "lucide-react";
 import {
-  MOCK_ATTENDANCES,
   AttendanceRecord,
   AttendanceWatermark,
   getLocalizedPlace,
   getLocalizedStaffName,
-  getLocalizedExplanation,
-  getStoredAttendances
+  getLocalizedExplanation
 } from "../data";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import {
+  staffAttendanceService,
+  StaffAttendanceHistorySummary,
+} from "@/services/staff-attendance.service";
 
 function StaffShiftHistoryContent() {
   const t = useTranslations("staffPortal");
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
+  // Filter & Search state
   const [attSearchQuery, setAttSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [attStatusFilter, setAttStatusFilter] = useState<"all" | "on_time" | "late" | "absent">("all");
 
-  // Real-time persistent attendances
-  const [attendances, setAttendances] = useState<AttendanceRecord[]>(MOCK_ATTENDANCES);
-
+  // Debounce search query
   useEffect(() => {
-    setAttendances(getStoredAttendances());
-    const handleSync = () => {
-      setAttendances(getStoredAttendances());
-    };
-    window.addEventListener("dormio_attendance_updated", handleSync);
-    window.addEventListener("storage", handleSync);
-    return () => {
-      window.removeEventListener("dormio_attendance_updated", handleSync);
-      window.removeEventListener("storage", handleSync);
-    };
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(attSearchQuery);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [attSearchQuery]);
+
+  // Data & loading state
+  const [attendances, setAttendances] = useState<AttendanceRecord[]>([]);
+  const [summary, setSummary] = useState<StaffAttendanceHistorySummary>({
+    total: 0,
+    onTime: 0,
+    late: 0,
+    absent: 0,
+    hours: "0.0",
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Pagination states (Table view: default 10)
+  const [pageSizeInput, setPageSizeInput] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [windowStart, setWindowStart] = useState<number>(1);
 
   // Preview watermark photo modal
   const [previewImageModal, setPreviewImageModal] = useState<{
@@ -53,11 +68,6 @@ function StaffShiftHistoryContent() {
     note?: string;
   } | null>(null);
 
-  // Pagination states (Table view: default 10)
-  const [pageSizeInput, setPageSizeInput] = useState<number>(10);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [windowStart, setWindowStart] = useState<number>(1);
-
   const getShiftName = (name: string) => {
     if (!isEn) return name;
     if (name.includes("Sáng")) return "Morning Shift (07:00 - 15:00)";
@@ -66,25 +76,52 @@ function StaffShiftHistoryContent() {
     return name;
   };
 
-  const filteredAttendances = useMemo(() => {
-    return attendances.filter((item) => {
-      const matchSearch =
-        item.workDate.includes(attSearchQuery) ||
-        item.shiftName.toLowerCase().includes(attSearchQuery.toLowerCase()) ||
-        item.boardingHouseName.toLowerCase().includes(attSearchQuery.toLowerCase());
-      const matchStatus = attStatusFilter === "all" || item.status === attStatusFilter;
-      return matchSearch && matchStatus;
-    });
-  }, [attendances, attSearchQuery, attStatusFilter]);
+  // Fetch paginated history from backend API
+  const fetchHistory = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const validPageSize = Math.max(1, pageSizeInput || 10);
+      const res = await staffAttendanceService.getHistory({
+        page: currentPage,
+        limit: validPageSize,
+        status: attStatusFilter,
+        search: debouncedSearch.trim() || undefined,
+      });
 
+      setAttendances(res.data);
+      setSummary(res.summary);
+      setTotalItems(res.total);
+      setTotalPages(res.totalPages);
+    } catch (err) {
+      console.error("Failed to fetch staff attendance history:", err);
+      setAttendances([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, pageSizeInput, attStatusFilter, debouncedSearch]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  // Sync with check-in / check-out updates
+  useEffect(() => {
+    const handleSync = () => {
+      fetchHistory();
+    };
+    window.addEventListener("dormio_attendance_updated", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("dormio_attendance_updated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, [fetchHistory]);
+
+  // Pagination window helpers (Rule #9: 5-page window jumping)
   const validPageSize = Math.max(1, pageSizeInput || 10);
-  const totalItems = filteredAttendances.length;
-  const totalPages = Math.ceil(totalItems / validPageSize) || 1;
   const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
-
   const startIndex = (safeCurrentPage - 1) * validPageSize;
   const endIndex = Math.min(startIndex + validPageSize, totalItems);
-  const paginatedAttendances = filteredAttendances.slice(startIndex, endIndex);
 
   const windowEnd = Math.min(windowStart + 4, totalPages);
   const pageNumbers: number[] = [];
@@ -106,18 +143,8 @@ function StaffShiftHistoryContent() {
     setCurrentPage(prevStart);
   };
 
-  const attendanceSummary = useMemo(() => {
-    const total = attendances.length;
-    const onTime = attendances.filter(a => a.status === "on_time").length;
-    const late = attendances.filter(a => a.status === "late").length;
-    const absent = attendances.filter(a => a.status === "absent").length;
-    const hours = attendances.reduce((sum, a) => sum + (a.totalHours || 0), 0);
-    return { total, onTime, late, absent, hours: hours.toFixed(1) };
-  }, [attendances]);
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
-      
       {/* HEADER BAR */}
       <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="space-y-1">
@@ -158,45 +185,86 @@ function StaffShiftHistoryContent() {
 
       {/* Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("metricTotalShifts")}</span>
-          <div className="text-2xl font-black text-zinc-900">{attendanceSummary.total}</div>
-          <span className="text-[10px] font-semibold text-zinc-500 block">{t("metricMonthSub")}</span>
-        </div>
+        {isLoading ? (
+          <>
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-2 animate-pulse"
+              >
+                <div className="h-2.5 w-16 bg-zinc-200 rounded" />
+                <div className="h-7 w-12 bg-zinc-200 rounded" />
+                <div className="h-2.5 w-20 bg-zinc-100 rounded" />
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                {t("metricTotalShifts")}
+              </span>
+              <div className="text-2xl font-black text-zinc-900">{summary.total}</div>
+              <span className="text-[10px] font-semibold text-zinc-500 block">
+                {t("metricMonthSub")}
+              </span>
+            </div>
 
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("metricOnTime")}</span>
-          <div className="text-2xl font-black text-[#2AC1BC]">{attendanceSummary.onTime}</div>
-          <span className="text-[10px] font-bold text-emerald-600 block">{t("metricOnTimeSub")}</span>
-        </div>
+            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                {t("metricOnTime")}
+              </span>
+              <div className="text-2xl font-black text-[#2AC1BC]">{summary.onTime}</div>
+              <span className="text-[10px] font-bold text-emerald-600 block">
+                {t("metricOnTimeSub")}
+              </span>
+            </div>
 
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("metricLate")}</span>
-          <div className="text-2xl font-black text-amber-600">{attendanceSummary.late}</div>
-          <span className="text-[10px] font-medium text-amber-600 block">{t("metricLateSub")}</span>
-        </div>
+            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                {t("metricLate")}
+              </span>
+              <div className="text-2xl font-black text-amber-600">{summary.late}</div>
+              <span className="text-[10px] font-medium text-amber-600 block">
+                {t("metricLateSub")}
+              </span>
+            </div>
 
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("metricAbsent")}</span>
-          <div className="text-2xl font-black text-zinc-400">{attendanceSummary.absent}</div>
-          <span className="text-[10px] font-medium text-zinc-400 block">{t("metricAbsentSub")}</span>
-        </div>
+            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                {t("metricAbsent")}
+              </span>
+              <div className="text-2xl font-black text-zinc-400">{summary.absent}</div>
+              <span className="text-[10px] font-medium text-zinc-400 block">
+                {t("metricAbsentSub")}
+              </span>
+            </div>
 
-        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("metricHours")}</span>
-          <div className="text-2xl font-black text-purple-600">{attendanceSummary.hours}h</div>
-          <span className="text-[10px] font-bold text-zinc-500 block">{t("metricHoursSub")}</span>
-        </div>
+            <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                {t("metricHours")}
+              </span>
+              <div className="text-2xl font-black text-purple-600">{summary.hours}h</div>
+              <span className="text-[10px] font-bold text-zinc-500 block">
+                {t("metricHoursSub")}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Filter & View Mode Controls */}
+      {/* Filter & Search Controls */}
       <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={attSearchQuery}
-            onChange={(e) => setAttSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setAttSearchQuery(e.target.value);
+              setCurrentPage(1);
+              setWindowStart(1);
+            }}
             placeholder={t("attSearchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2AC1BC]"
           />
@@ -219,10 +287,10 @@ function StaffShiftHistoryContent() {
                     : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                 }`}
               >
-                {st === "all" && `${t("filterAll")} (${attendanceSummary.total})`}
-                {st === "on_time" && `${t("filterOnTime")} (${attendanceSummary.onTime})`}
-                {st === "late" && `${t("filterLate")} (${attendanceSummary.late})`}
-                {st === "absent" && `${t("filterAbsent")} (${attendanceSummary.absent})`}
+                {st === "all" && `${t("filterAll")} (${summary.total})`}
+                {st === "on_time" && `${t("filterOnTime")} (${summary.onTime})`}
+                {st === "late" && `${t("filterLate")} (${summary.late})`}
+                {st === "absent" && `${t("filterAbsent")} (${summary.absent})`}
               </button>
             ))}
           </div>
@@ -233,44 +301,70 @@ function StaffShiftHistoryContent() {
       <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-              <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">{t("tableColDate")}</th>
-                  <th className="py-3 px-3">{t("tableColShift")}</th>
-                  <th className="py-3 px-3">{t("tableColPlace")}</th>
-                  <th className="py-3 px-3">{t("tableColCheckIn")}</th>
-                  <th className="py-3 px-3">{t("tableColCheckOut")}</th>
-                  <th className="py-3 px-3">{t("tableColStatus")}</th>
-                  <th className="py-3 px-3">{t("tableColHours")}</th>
-                  <th className="py-3 px-3">{t("tableColNote")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
-                {paginatedAttendances.map((item) => (
+            <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
+              <tr>
+                <th className="py-3 px-4">{t("tableColDate")}</th>
+                <th className="py-3 px-3">{t("tableColShift")}</th>
+                <th className="py-3 px-3">{t("tableColPlace")}</th>
+                <th className="py-3 px-3">{t("tableColCheckIn")}</th>
+                <th className="py-3 px-3">{t("tableColCheckOut")}</th>
+                <th className="py-3 px-3">{t("tableColStatus")}</th>
+                <th className="py-3 px-3">{t("tableColHours")}</th>
+                <th className="py-3 px-3">{t("tableColNote")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
+              {isLoading ? (
+                <>
+                  {[...Array(5)].map((_, idx) => (
+                    <tr key={idx} className="animate-pulse">
+                      <td className="py-4 px-4"><div className="h-4 w-20 bg-zinc-200 rounded" /></td>
+                      <td className="py-4 px-3"><div className="h-4 w-28 bg-zinc-200 rounded" /></td>
+                      <td className="py-4 px-3"><div className="h-4 w-32 bg-zinc-100 rounded" /></td>
+                      <td className="py-4 px-3"><div className="h-4 w-16 bg-zinc-200 rounded" /></td>
+                      <td className="py-4 px-3"><div className="h-4 w-16 bg-zinc-200 rounded" /></td>
+                      <td className="py-4 px-3"><div className="h-5 w-18 bg-zinc-100 rounded-lg" /></td>
+                      <td className="py-4 px-3"><div className="h-4 w-10 bg-zinc-200 rounded" /></td>
+                      <td className="py-4 px-3"><div className="h-4 w-36 bg-zinc-100 rounded" /></td>
+                    </tr>
+                  ))}
+                </>
+              ) : attendances.length > 0 ? (
+                attendances.map((item) => (
                   <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-4 px-4 font-bold text-zinc-900 whitespace-nowrap">{item.workDate}</td>
+                    <td className="py-4 px-4 font-bold text-zinc-900 whitespace-nowrap">
+                      {item.workDate}
+                    </td>
                     <td className="py-4 px-3 whitespace-nowrap font-bold">
                       <div>{getShiftName(item.shiftName)}</div>
-                      <div className="text-[10px] text-zinc-400 font-normal">{item.shiftTime}</div>
+                      <div className="text-[10px] text-zinc-400 font-normal">
+                        {item.shiftTime}
+                      </div>
                     </td>
-                    <td className="py-4 px-3 whitespace-nowrap text-zinc-600">{getLocalizedPlace(item.boardingHouseName, isEn)}</td>
+                    <td className="py-4 px-3 whitespace-nowrap text-zinc-600">
+                      {getLocalizedPlace(item.boardingHouseName, isEn)}
+                    </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono font-bold">
                         <span>{item.checkIn || "--:--"}</span>
                         {item.checkInPhoto && (
                           <button
                             type="button"
-                            onClick={() => setPreviewImageModal({
-                              isOpen: true,
-                              title: `${t("tableColCheckIn")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                              imageUrl: item.checkInPhoto!,
-                              watermark: item.checkInWatermark ? {
-                                ...item.checkInWatermark,
-                                place: getLocalizedPlace(item.checkInWatermark.place, isEn),
-                                staffName: getLocalizedStaffName(item.checkInWatermark.staffName, isEn)
-                              } : undefined,
-                              note: getLocalizedExplanation(item.checkInExplanation, isEn)
-                            })}
+                            onClick={() =>
+                              setPreviewImageModal({
+                                isOpen: true,
+                                title: `${t("tableColCheckIn")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                imageUrl: item.checkInPhoto!,
+                                watermark: item.checkInWatermark
+                                  ? {
+                                      ...item.checkInWatermark,
+                                      place: getLocalizedPlace(item.checkInWatermark.place, isEn),
+                                      staffName: getLocalizedStaffName(item.checkInWatermark.staffName, isEn),
+                                    }
+                                  : undefined,
+                                note: getLocalizedExplanation(item.checkInExplanation, isEn),
+                              })
+                            }
                             className="p-1 rounded-md text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
                             title={t("viewWatermarkCheckIn")}
                           >
@@ -285,17 +379,21 @@ function StaffShiftHistoryContent() {
                         {item.checkOutPhoto && (
                           <button
                             type="button"
-                            onClick={() => setPreviewImageModal({
-                              isOpen: true,
-                              title: `${t("tableColCheckOut")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                              imageUrl: item.checkOutPhoto!,
-                              watermark: item.checkOutWatermark ? {
-                                ...item.checkOutWatermark,
-                                place: getLocalizedPlace(item.checkOutWatermark.place, isEn),
-                                staffName: getLocalizedStaffName(item.checkOutWatermark.staffName, isEn)
-                              } : undefined,
-                              note: getLocalizedExplanation(item.checkOutExplanation, isEn)
-                            })}
+                            onClick={() =>
+                              setPreviewImageModal({
+                                isOpen: true,
+                                title: `${t("tableColCheckOut")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                imageUrl: item.checkOutPhoto!,
+                                watermark: item.checkOutWatermark
+                                  ? {
+                                      ...item.checkOutWatermark,
+                                      place: getLocalizedPlace(item.checkOutWatermark.place, isEn),
+                                      staffName: getLocalizedStaffName(item.checkOutWatermark.staffName, isEn),
+                                    }
+                                  : undefined,
+                                note: getLocalizedExplanation(item.checkOutExplanation, isEn),
+                              })
+                            }
                             className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
                             title={t("viewWatermarkCheckOut")}
                           >
@@ -329,12 +427,20 @@ function StaffShiftHistoryContent() {
                     <td className="py-4 px-3 font-black text-[#2AC1BC]">{item.totalHours}h</td>
                     <td className="py-4 px-3 text-[11px] text-zinc-500 max-w-xs">
                       {item.checkInExplanation ? (
-                        <div className="text-amber-800 font-medium truncate" title={getLocalizedExplanation(item.checkInExplanation, isEn)}>
-                          <span className="font-bold">{t("tableLateShort")}</span> &quot;{getLocalizedExplanation(item.checkInExplanation, isEn)}&quot;
+                        <div
+                          className="text-amber-800 font-medium truncate"
+                          title={getLocalizedExplanation(item.checkInExplanation, isEn)}
+                        >
+                          <span className="font-bold">{t("tableLateShort")}</span> &quot;
+                          {getLocalizedExplanation(item.checkInExplanation, isEn)}&quot;
                         </div>
                       ) : item.checkOutExplanation ? (
-                        <div className="text-amber-800 font-medium truncate" title={getLocalizedExplanation(item.checkOutExplanation, isEn)}>
-                          <span className="font-bold">{t("tableEarlyShort")}</span> &quot;{getLocalizedExplanation(item.checkOutExplanation, isEn)}&quot;
+                        <div
+                          className="text-amber-800 font-medium truncate"
+                          title={getLocalizedExplanation(item.checkOutExplanation, isEn)}
+                        >
+                          <span className="font-bold">{t("tableEarlyShort")}</span> &quot;
+                          {getLocalizedExplanation(item.checkOutExplanation, isEn)}&quot;
                         </div>
                       ) : item.editedByLandlord ? (
                         <span className="text-blue-600 font-semibold flex items-center gap-1">
@@ -345,14 +451,15 @@ function StaffShiftHistoryContent() {
                       )}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : null}
+            </tbody>
+          </table>
         </div>
+      </div>
 
       {/* Empty State */}
-      {paginatedAttendances.length === 0 && (
+      {!isLoading && attendances.length === 0 && (
         <div className="p-8 rounded-3xl bg-white border border-dashed border-zinc-200 text-center space-y-2">
           <div className="w-10 h-10 mx-auto rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400">
             <Clock className="w-5 h-5" />
@@ -361,7 +468,9 @@ function StaffShiftHistoryContent() {
             {isEn ? "No attendance records found matching filters" : "Không tìm thấy dữ liệu chấm công phù hợp"}
           </p>
           <p className="text-[11px] text-zinc-400">
-            {isEn ? "Try adjusting your search terms or filter status." : "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái."}
+            {isEn
+              ? "Try adjusting your search terms or filter status."
+              : "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái."}
           </p>
         </div>
       )}
@@ -407,7 +516,7 @@ function StaffShiftHistoryContent() {
 
           <button
             type="button"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={safeCurrentPage === 1}
             className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t("paginationPrev")}
@@ -432,7 +541,7 @@ function StaffShiftHistoryContent() {
 
           <button
             type="button"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
             disabled={safeCurrentPage >= totalPages}
             className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t("paginationNext")}
@@ -527,16 +636,20 @@ function StaffShiftHistoryContent() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
 export default function StaffShiftHistoryPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-zinc-400 font-bold">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs text-zinc-400 font-bold">
+          Loading...
+        </div>
+      }
+    >
       <StaffShiftHistoryContent />
     </Suspense>
   );
 }
-

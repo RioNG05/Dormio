@@ -142,5 +142,50 @@ describe('StaffAttendanceController', () => {
     expect(service.getStaffMonthlySummary).toHaveBeenCalledWith('user-123', '2026-09');
     expect(res).toEqual(mockMonthly);
   });
+
+  it('should delegate getHistory to service', async () => {
+    const mockHistory = {
+      data: [
+        {
+          id: 'att-1',
+          workScheduleId: 'ws-1',
+          workDate: '2026-09-17',
+          boardingHouseName: 'KTX HOLA (Khu A)',
+          shiftName: 'Ca Sáng',
+          shiftTime: '07:00 - 15:00',
+          checkIn: '06:58',
+          checkOut: '15:02',
+          status: 'on_time',
+          totalHours: 8.0,
+          editedByLandlord: false,
+          note: null,
+          checkInPhoto: null,
+          checkInWatermark: null,
+          checkInExplanation: null,
+          checkOutPhoto: null,
+          checkOutWatermark: null,
+          checkOutExplanation: null,
+          isEarlyCheckOut: false,
+        },
+      ],
+      summary: {
+        total: 1,
+        onTime: 1,
+        late: 0,
+        absent: 0,
+        hours: '8.0',
+      },
+      page: 1,
+      limit: 10,
+      total: 1,
+      totalPages: 1,
+    };
+    service.getStaffAttendanceHistory = jest.fn().mockResolvedValue(mockHistory);
+
+    const query = { page: 1, limit: 10, status: 'all' as any, search: 'Ca Sáng' };
+    const res = await controller.getHistory(mockUser, query);
+    expect(service.getStaffAttendanceHistory).toHaveBeenCalledWith('user-123', query);
+    expect(res).toEqual(mockHistory);
+  });
 });
 

@@ -21,6 +21,11 @@ import {
   StaffTodayOverviewResponseDto,
 } from './dto/staff-today-response.dto';
 import { StaffMonthlySummaryResponseDto } from './dto/staff-monthly-summary-response.dto';
+import { QueryStaffAttendanceHistoryDto } from './dto/query-staff-attendance-history.dto';
+import {
+  StaffAttendanceHistoryItemDto,
+  StaffAttendanceHistoryResponseDto,
+} from './dto/staff-attendance-history-response.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -1242,6 +1247,184 @@ export class AttendanceService {
       onTimeCount,
       lateCount,
       earlyCount,
+    };
+  }
+
+  /**
+   * UC-S-01 & UC-S-02: Get paginated timesheet history, metrics, and photo watermark data for staff
+   */
+  async getStaffAttendanceHistory(
+    userId: string,
+    query: QueryStaffAttendanceHistoryDto,
+  ): Promise<StaffAttendanceHistoryResponseDto> {
+    this.logger.log(
+      `getStaffAttendanceHistory for userId=${userId}, query=${JSON.stringify(query)}`,
+    );
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+    });
+
+    if (!employee) {
+      throw new NotFoundException(
+        'Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.',
+      );
+    }
+
+    const where: any = {
+      employeeId: employee.id,
+      status: { not: ScheduleStatus.canceled },
+    };
+
+    if (query.startDate && query.endDate) {
+      where.workDate = {
+        gte: this.parseDateOnly(query.startDate),
+        lte: new Date(
+          this.parseDateOnly(query.endDate).getTime() + 86400000 - 1,
+        ),
+      };
+    } else if (query.startDate) {
+      where.workDate = {
+        gte: this.parseDateOnly(query.startDate),
+      };
+    } else if (query.endDate) {
+      where.workDate = {
+        lte: new Date(
+          this.parseDateOnly(query.endDate).getTime() + 86400000 - 1,
+        ),
+      };
+    }
+
+    const allSchedules = await this.prisma.workSchedule.findMany({
+      where,
+      include: {
+        shift: true,
+        boardingHouse: true,
+        attendances: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: [{ workDate: 'desc' }, { shift: { startTime: 'asc' } }],
+    });
+
+    const now = new Date();
+    const todayDateStr = this.formatDateOnly(now);
+
+    let onTimeCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+    let totalWorkHours = 0;
+
+    const allItems: StaffAttendanceHistoryItemDto[] = allSchedules.map(
+      (item) => {
+        const att = item.attendances?.[0];
+        const workDateStr = this.formatDateOnly(item.workDate);
+
+        // Status resolution
+        let itemStatus: string;
+        if (att?.status) {
+          itemStatus = att.status;
+        } else if (workDateStr < todayDateStr) {
+          itemStatus = 'absent';
+        } else {
+          itemStatus = 'not_yet';
+        }
+
+        // Hours & early checkout calculation
+        let hours = 0;
+        let isEarlyCheckOut = false;
+        if (att?.checkIn && att?.checkOut) {
+          const diffMs = att.checkOut.getTime() - att.checkIn.getTime();
+          hours = Math.max(
+            0,
+            Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10,
+          );
+
+          const shiftEndTimeStr = this.formatTime(item.shift.endTime);
+          const [endH, endM] = shiftEndTimeStr.split(':').map(Number);
+          const checkOutH = att.checkOut.getUTCHours();
+          const checkOutM = att.checkOut.getUTCMinutes();
+          if (checkOutH * 60 + checkOutM < endH * 60 + endM) {
+            isEarlyCheckOut = true;
+          }
+        } else if (att?.checkOutExplanation) {
+          isEarlyCheckOut = true;
+        }
+
+        // Accumulate metrics
+        if (itemStatus === 'on_time') onTimeCount++;
+        else if (itemStatus === 'late') lateCount++;
+        else if (itemStatus === 'absent') absentCount++;
+        totalWorkHours += hours;
+
+        const shiftStartStr = this.formatTime(item.shift.startTime);
+        const shiftEndStr = this.formatTime(item.shift.endTime);
+
+        return {
+          id: att?.id || item.id,
+          workScheduleId: item.id,
+          workDate: workDateStr,
+          boardingHouseName: item.boardingHouse.name,
+          shiftName: item.shift.name,
+          shiftTime: `${shiftStartStr} - ${shiftEndStr}`,
+          checkIn: att?.checkIn ? this.formatTime(att.checkIn) : null,
+          checkOut: att?.checkOut ? this.formatTime(att.checkOut) : null,
+          status: itemStatus,
+          totalHours: hours,
+          editedByLandlord: !!att?.editedBy,
+          note: att?.note || null,
+          checkInPhoto: att?.checkInPhoto || null,
+          checkInWatermark: (att?.checkInWatermark as any) || null,
+          checkInExplanation: att?.checkInExplanation || null,
+          checkOutPhoto: att?.checkOutPhoto || null,
+          checkOutWatermark: (att?.checkOutWatermark as any) || null,
+          checkOutExplanation: att?.checkOutExplanation || null,
+          isEarlyCheckOut,
+        };
+      },
+    );
+
+    const summary = {
+      total: allSchedules.length,
+      onTime: onTimeCount,
+      late: lateCount,
+      absent: absentCount,
+      hours: (Math.round(totalWorkHours * 10) / 10).toFixed(1),
+    };
+
+    // Filter by status if specified
+    let filteredItems = allItems;
+    if (query.status && query.status !== 'all') {
+      filteredItems = filteredItems.filter((i) => i.status === query.status);
+    }
+
+    // Filter by search keyword (date, shift, property)
+    if (query.search) {
+      const q = query.search.trim().toLowerCase();
+      filteredItems = filteredItems.filter(
+        (i) =>
+          i.workDate.toLowerCase().includes(q) ||
+          i.shiftName.toLowerCase().includes(q) ||
+          i.boardingHouseName.toLowerCase().includes(q),
+      );
+    }
+
+    // Pagination (Rule #9)
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const limit = query.limit && query.limit > 0 ? query.limit : 10;
+    const total = filteredItems.length;
+    const totalPages = Math.ceil(total / limit) || 1;
+    const startIndex = (page - 1) * limit;
+    const data = filteredItems.slice(startIndex, startIndex + limit);
+
+    return {
+      data,
+      summary,
+      page,
+      limit,
+      total,
+      totalPages,
     };
   }
 }

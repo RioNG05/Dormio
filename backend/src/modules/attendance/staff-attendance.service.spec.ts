@@ -419,5 +419,148 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
       ).rejects.toThrow('Không tìm thấy hồ sơ nhân viên');
     });
   });
+
+  describe('getStaffAttendanceHistory (UC-S-01 & UC-S-02)', () => {
+    it('should throw NotFoundException if employee profile does not exist', async () => {
+      prisma.employee.findUnique.mockResolvedValue(null);
+      await expect(
+        service.getStaffAttendanceHistory('unknown-user', {}),
+      ).rejects.toThrow('Không tìm thấy hồ sơ nhân viên');
+    });
+
+    it('should return paginated history with punctuality metrics and watermark data', async () => {
+      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.workSchedule.findMany.mockResolvedValue([
+        {
+          id: 'ws-1',
+          workDate: new Date('2026-09-17T00:00:00Z'),
+          shift: {
+            id: 's-1',
+            name: 'Ca Sáng',
+            startTime: new Date('1970-01-01T07:00:00Z'),
+            endTime: new Date('1970-01-01T15:00:00Z'),
+          },
+          boardingHouse: {
+            id: 'bh-1',
+            name: 'KTX HOLA (Khu A)',
+          },
+          attendances: [
+            {
+              id: 'att-1',
+              status: AttendanceStatus.on_time,
+              checkIn: new Date('2026-09-17T06:58:00Z'),
+              checkOut: new Date('2026-09-17T15:02:00Z'),
+              checkInPhoto: 'https://img.test/checkin.jpg',
+              checkInWatermark: { place: 'KTX HOLA', time: '06:58' },
+              checkInExplanation: null,
+              checkOutPhoto: null,
+              checkOutWatermark: null,
+              checkOutExplanation: null,
+              note: null,
+              editedBy: null,
+            },
+          ],
+        },
+        {
+          id: 'ws-2',
+          workDate: new Date('2026-09-16T00:00:00Z'),
+          shift: {
+            id: 's-2',
+            name: 'Ca Chiều',
+            startTime: new Date('1970-01-01T15:00:00Z'),
+            endTime: new Date('1970-01-01T23:00:00Z'),
+          },
+          boardingHouse: {
+            id: 'bh-1',
+            name: 'KTX HOLA (Khu A)',
+          },
+          attendances: [
+            {
+              id: 'att-2',
+              status: AttendanceStatus.late,
+              checkIn: new Date('2026-09-16T15:15:00Z'),
+              checkOut: new Date('2026-09-16T23:00:00Z'),
+              checkInPhoto: null,
+              checkInWatermark: null,
+              checkInExplanation: 'Kẹt xe',
+              checkOutPhoto: null,
+              checkOutWatermark: null,
+              checkOutExplanation: null,
+              note: null,
+              editedBy: null,
+            },
+          ],
+        },
+      ]);
+
+      const result = await service.getStaffAttendanceHistory(mockUserId, {
+        page: 1,
+        limit: 10,
+        status: 'all',
+      });
+
+      expect(result.total).toBe(2);
+      expect(result.data).toHaveLength(2);
+      expect(result.summary.total).toBe(2);
+      expect(result.summary.onTime).toBe(1);
+      expect(result.summary.late).toBe(1);
+      expect(result.data[0].checkInPhoto).toBe('https://img.test/checkin.jpg');
+      expect(result.data[0].boardingHouseName).toBe('KTX HOLA (Khu A)');
+      expect(result.data[1].status).toBe('late');
+      expect(result.data[1].checkInExplanation).toBe('Kẹt xe');
+    });
+
+    it('should filter items by search keyword and status', async () => {
+      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.workSchedule.findMany.mockResolvedValue([
+        {
+          id: 'ws-1',
+          workDate: new Date('2026-09-17T00:00:00Z'),
+          shift: {
+            id: 's-1',
+            name: 'Ca Sáng',
+            startTime: new Date('1970-01-01T07:00:00Z'),
+            endTime: new Date('1970-01-01T15:00:00Z'),
+          },
+          boardingHouse: {
+            id: 'bh-1',
+            name: 'KTX HOLA (Khu A)',
+          },
+          attendances: [
+            {
+              id: 'att-1',
+              status: AttendanceStatus.on_time,
+              checkIn: new Date('2026-09-17T06:58:00Z'),
+              checkOut: new Date('2026-09-17T15:02:00Z'),
+            },
+          ],
+        },
+        {
+          id: 'ws-2',
+          workDate: new Date('2026-09-16T00:00:00Z'),
+          shift: {
+            id: 's-2',
+            name: 'Ca Chiều',
+            startTime: new Date('1970-01-01T15:00:00Z'),
+            endTime: new Date('1970-01-01T23:00:00Z'),
+          },
+          boardingHouse: {
+            id: 'bh-2',
+            name: 'Dormio Cầu Giấy',
+          },
+          attendances: [],
+        },
+      ]);
+
+      const result = await service.getStaffAttendanceHistory(mockUserId, {
+        search: 'Cầu Giấy',
+        status: 'all',
+      });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].boardingHouseName).toBe('Dormio Cầu Giấy');
+      expect(result.summary.total).toBe(2); // Summary reflects all range records
+    });
+  });
 });
 

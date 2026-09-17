@@ -27,6 +27,8 @@ import { StaffDutyProofDto } from './dto/staff-duty-proof.dto';
 import { StaffTodayOverviewResponseDto } from './dto/staff-today-response.dto';
 import { StaffMonthlySummaryResponseDto } from './dto/staff-monthly-summary-response.dto';
 import { QueryStaffMonthlyDto } from './dto/query-staff-monthly.dto';
+import { QueryStaffAttendanceHistoryDto } from './dto/query-staff-attendance-history.dto';
+import { StaffAttendanceHistoryResponseDto } from './dto/staff-attendance-history-response.dto';
 
 @ApiTags('Staff Attendance (UC-S-01 & UC-S-02)')
 @ApiBearerAuth()
@@ -72,6 +74,27 @@ export class StaffAttendanceController {
       `Staff user ${user.id} requested monthly attendance summary for ${query.month || 'current month'}`,
     );
     return this.attendanceService.getStaffMonthlySummary(user.id, query.month);
+  }
+
+  @Get('history')
+  @ApiOperation({
+    summary:
+      'UC-S-01 & UC-S-02: Get paginated timesheet history, attendance metrics, and photo watermark data for staff',
+    description:
+      'Retrieves clock-in/out records with filtering (search, status, date range), overall punctuality metrics, photo proofs and GPS audit watermarks.',
+  })
+  @ApiOkResponse({
+    type: StaffAttendanceHistoryResponseDto,
+    description: 'Paginated timesheet records and summary metrics',
+  })
+  async getHistory(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: QueryStaffAttendanceHistoryDto,
+  ): Promise<StaffAttendanceHistoryResponseDto> {
+    this.logger.log(
+      `Staff user ${user.id} requested attendance history page=${query.page || 1} limit=${query.limit || 10} search=${query.search || ''} status=${query.status || 'all'}`,
+    );
+    return this.attendanceService.getStaffAttendanceHistory(user.id, query);
   }
 
   @Post('check-in')

@@ -48,6 +48,32 @@ export interface StaffMonthlySummary {
   earlyCount: number;
 }
 
+export interface StaffAttendanceHistoryParams {
+  search?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface StaffAttendanceHistorySummary {
+  total: number;
+  onTime: number;
+  late: number;
+  absent: number;
+  hours: string;
+}
+
+export interface StaffAttendanceHistoryResponse {
+  data: AttendanceRecord[];
+  summary: StaffAttendanceHistorySummary;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export const staffAttendanceService = {
   /**
    * UC-S-01: Fetch today's schedule, duties, coworkers and attendance status
@@ -64,6 +90,31 @@ export const staffAttendanceService = {
     const query = month ? `?month=${month}` : '';
     const res = await api.get<any>(`/v1/staff/attendance/monthly-summary${query}`);
     return res?.data ?? res;
+  },
+
+  /**
+   * UC-S-01 & UC-S-02: Fetch paginated timesheet history, attendance metrics and watermark photo proofs
+   */
+  async getHistory(params?: StaffAttendanceHistoryParams): Promise<StaffAttendanceHistoryResponse> {
+    const queryParts: string[] = [];
+    if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
+    if (params?.status && params.status !== 'all') queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.startDate) queryParts.push(`startDate=${encodeURIComponent(params.startDate)}`);
+    if (params?.endDate) queryParts.push(`endDate=${encodeURIComponent(params.endDate)}`);
+    if (params?.page) queryParts.push(`page=${params.page}`);
+    if (params?.limit) queryParts.push(`limit=${params.limit}`);
+
+    const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+    const res = await api.get<any>(`/v1/staff/attendance/history${queryString}`);
+    const data = res?.data ?? res;
+    return {
+      data: Array.isArray(data?.data) ? data.data : [],
+      summary: data?.summary || { total: 0, onTime: 0, late: 0, absent: 0, hours: '0.0' },
+      page: data?.page || 1,
+      limit: data?.limit || 10,
+      total: data?.total || 0,
+      totalPages: data?.totalPages || 1,
+    };
   },
 
   /**
