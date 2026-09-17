@@ -101,7 +101,7 @@ export function getCurrentWeekDays(refDate: Date = new Date()): { label: string;
   monday.setDate(refDate.getDate() + mondayOffset);
 
   const labelsVi = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
-  const todayStr = formatToYYYYMMDD(refDate);
+  const actualTodayStr = formatToYYYYMMDD(new Date());
 
   const days = [];
   for (let i = 0; i < 7; i++) {
@@ -112,7 +112,7 @@ export function getCurrentWeekDays(refDate: Date = new Date()): { label: string;
       label: labelsVi[i],
       date: dateStr,
       dayNum: String(cur.getDate()).padStart(2, "0"),
-      isToday: dateStr === todayStr
+      isToday: dateStr === actualTodayStr
     });
   }
   return days;

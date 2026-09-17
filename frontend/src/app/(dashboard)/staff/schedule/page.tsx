@@ -95,6 +95,17 @@ function StaffScheduleContent() {
   const startDate = weekDays[0]?.date;
   const endDate = weekDays[weekDays.length - 1]?.date;
 
+  // Real-time dynamic today indicator label
+  const todayLabel = useMemo(() => {
+    const now = new Date();
+    const dayOfWeekIndex = now.getDay();
+    const viDays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+    const enDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = isEn ? enDays[dayOfWeekIndex] : viDays[dayOfWeekIndex];
+    const formattedDate = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return isEn ? `Today (${dayName}, ${formattedDate})` : `Hôm nay (${dayName}, ${formattedDate})`;
+  }, [isEn]);
+
   // 1. Fetch active assigned boarding houses
   useEffect(() => {
     let mounted = true;
@@ -442,10 +453,10 @@ function StaffScheduleContent() {
               type="button"
               onClick={handleCurrentWeek}
               className="text-xs font-bold text-zinc-600 hover:text-[#2AC1BC] flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Về tuần hiện tại"
+              title={isEn ? "Return to current week" : "Về tuần hiện tại"}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC]" />
-              <span>{t("todayIndicator")}</span>
+              <span>{todayLabel}</span>
             </button>
           </div>
         </div>
