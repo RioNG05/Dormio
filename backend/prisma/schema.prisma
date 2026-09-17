@@ -923,10 +923,18 @@ model Attendance {
   checkIn        DateTime?        @map("check_in")
   checkOut       DateTime?        @map("check_out")
   status         AttendanceStatus @default(not_yet)
-  editedBy       String?          @map("edited_by") @db.Uuid
-  editedByUser   User?            @relation(fields: [editedBy], references: [id])
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime?        @updatedAt @map("updated_at")
+  editedBy            String?          @map("edited_by") @db.Uuid
+  editedByUser        User?            @relation(fields: [editedBy], references: [id])
+  note                String?
+  checkInPhoto        String?          @map("check_in_photo")
+  checkInWatermark    Json?            @map("check_in_watermark")
+  checkInExplanation  String?          @map("check_in_explanation")
+  checkOutPhoto       String?          @map("check_out_photo")
+  checkOutWatermark   Json?            @map("check_out_watermark")
+  checkOutExplanation String?          @map("check_out_explanation")
+  dutyTasks           Json?            @map("duty_tasks")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime?        @updatedAt @map("updated_at")
 
   @@map("attendances")
 }

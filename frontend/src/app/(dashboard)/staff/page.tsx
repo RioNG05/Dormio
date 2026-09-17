@@ -34,6 +34,7 @@ import {
   saveAttendanceRecord
 } from "./data";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { staffAttendanceService } from "@/services/staff-attendance.service";
 
 function getDutyTitle(duty: DutyTaskItem, isEn = false): string {
   if (!isEn) return duty.title;
@@ -138,6 +139,32 @@ export default function StaffOverviewPage() {
     } catch {
       // Fallback
     }
+
+    // Fetch live overview from backend
+    staffAttendanceService
+      .getTodayOverview()
+      .then((data) => {
+        if (data) {
+          if (data.schedule) {
+            setTodaySchedule(data.schedule);
+            if (data.schedule.duties && data.schedule.duties.length > 0) {
+              setDutyList(data.schedule.duties);
+              try {
+                localStorage.setItem("dormio_staff_today_duties", JSON.stringify(data.schedule.duties));
+              } catch {
+                // ignore
+              }
+            }
+          }
+          if (data.attendance) {
+            setAttendance(data.attendance);
+            saveAttendanceRecord(data.attendance);
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn("Using offline / cached staff overview:", err);
+      });
 
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -318,6 +345,28 @@ export default function StaffOverviewPage() {
             : `Đã Check-in thành công lúc ${payload.capturedTime} tại ${payload.watermark.place} (Đúng giờ!)`),
       isLate ? "warning" : "success"
     );
+
+    // Sync to backend API
+    staffAttendanceService
+      .checkIn({
+        workScheduleId: todaySchedule.id,
+        photo: payload.photo,
+        watermark: payload.watermark,
+        explanation: payload.explanation,
+        capturedTime: payload.capturedTime,
+      })
+      .then((res) => {
+        if (res?.attendance) {
+          setAttendance(res.attendance);
+          saveAttendanceRecord(res.attendance);
+        }
+        if (res?.schedule?.duties) {
+          setDutyList(res.schedule.duties);
+        }
+      })
+      .catch((err) => {
+        console.warn("Backend check-in sync failed (local state active):", err);
+      });
   };
 
   // Submit Check-out
@@ -366,6 +415,28 @@ export default function StaffOverviewPage() {
             : `Đã Check-out thành công lúc ${payload.capturedTime} tại ${payload.watermark.place}!`),
       isEarly ? "warning" : "success"
     );
+
+    // Sync to backend API
+    staffAttendanceService
+      .checkOut({
+        workScheduleId: todaySchedule.id,
+        photo: payload.photo,
+        watermark: payload.watermark,
+        explanation: payload.explanation,
+        capturedTime: payload.capturedTime,
+      })
+      .then((res) => {
+        if (res?.attendance) {
+          setAttendance(res.attendance);
+          saveAttendanceRecord(res.attendance);
+        }
+        if (res?.schedule?.duties) {
+          setDutyList(res.schedule.duties);
+        }
+      })
+      .catch((err) => {
+        console.warn("Backend check-out sync failed (local state active):", err);
+      });
   };
 
   // Toggle duty task status
@@ -401,6 +472,17 @@ export default function StaffOverviewPage() {
     } catch {
       // Fallback
     }
+
+    // Backend sync
+    staffAttendanceService
+      .saveDutyProof({
+        workScheduleId: todaySchedule.id,
+        dutyId: duty.id,
+        markCompleted: !duty.completed,
+      })
+      .catch((err) => {
+        console.warn("Backend task toggle sync warning:", err);
+      });
   };
 
   // Save Duty Proof / Update Progress / Mark Completed
@@ -459,6 +541,24 @@ export default function StaffOverviewPage() {
     } else {
       showToast(locale === "en" ? "Progress updated successfully!" : "Đã cập nhật tiến độ nhiệm vụ!", "info");
     }
+
+    // Sync to backend API
+    staffAttendanceService
+      .saveDutyProof({
+        workScheduleId: todaySchedule.id,
+        dutyId: payload.dutyId,
+        photo: payload.photo,
+        note: payload.note,
+        markCompleted: payload.markCompleted,
+      })
+      .then((res) => {
+        if (res?.schedule?.duties) {
+          setDutyList(res.schedule.duties);
+        }
+      })
+      .catch((err) => {
+        console.warn("Backend duty proof sync warning:", err);
+      });
   };
 
   // Reset demo state

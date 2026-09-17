@@ -13,6 +13,13 @@ import {
 } from './dto/attendance-response.dto';
 import { OverrideAttendanceDto } from './dto/override-attendance.dto';
 import { QueryAttendanceDto } from './dto/query-attendance.dto';
+import { StaffCheckInDto } from './dto/staff-check-in.dto';
+import { StaffCheckOutDto } from './dto/staff-check-out.dto';
+import { StaffDutyProofDto } from './dto/staff-duty-proof.dto';
+import {
+  StaffDutyDto,
+  StaffTodayOverviewResponseDto,
+} from './dto/staff-today-response.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -414,4 +421,720 @@ export class AttendanceService {
       updatedAt: result.updatedAt ? result.updatedAt.toISOString() : null,
     };
   }
+
+  /**
+   * Helper to return default duties based on job position name
+   */
+  private getDefaultDutiesForPosition(positionName?: string): StaffDutyDto[] {
+    const name = (positionName || '').toLowerCase();
+    if (name.includes('vệ sinh') || name.includes('tạp vụ') || name.includes('clean')) {
+      return [
+        {
+          id: 'duty-clean-1',
+          title: 'Quét dọn, lau sàn hành lang tất cả các tầng từ 1 đến 4 và cầu thang bộ',
+          requiresPhoto: true,
+          completed: false,
+        },
+        {
+          id: 'duty-clean-2',
+          title: 'Thu gom rác thải tập kết tại từng tầng và vận chuyển ra điểm gom rác đô thị',
+          requiresPhoto: true,
+          completed: false,
+        },
+        {
+          id: 'duty-clean-3',
+          title: 'Vệ sinh khu vực giặt phơi chung và kiểm tra máy giặt hoạt động bình thường',
+          requiresPhoto: false,
+          completed: false,
+          note: 'Khu vực sân phơi thông thoáng, máy giặt hoạt động tốt',
+        },
+        {
+          id: 'duty-clean-4',
+          title: 'Bổ sung nước rửa tay, xà phòng tại khu vực vệ sinh chung tầng trệt',
+          requiresPhoto: true,
+          completed: false,
+        },
+      ];
+    }
+
+    if (name.includes('kỹ thuật') || name.includes('bảo trì') || name.includes('maint')) {
+      return [
+        {
+          id: 'duty-maint-1',
+          title: 'Kiểm tra chỉ số công tơ điện, đồng hồ nước các phòng định kỳ',
+          requiresPhoto: true,
+          completed: false,
+          note: 'Ghi nhận chỉ số định kỳ theo ca',
+        },
+        {
+          id: 'duty-maint-2',
+          title: 'Kiểm tra áp lực nước máy bơm tầng thượng và bình nóng lạnh năng lượng mặt trời',
+          requiresPhoto: true,
+          completed: false,
+        },
+        {
+          id: 'duty-maint-3',
+          title: 'Rà soát kiểm tra đèn chiếu sáng hành lang và chốt niêm phong bình chữa cháy PCCC',
+          requiresPhoto: true,
+          completed: false,
+        },
+        {
+          id: 'duty-maint-4',
+          title: 'Tiếp nhận và xử lý nhanh các sự cố điện nước phát sinh từ cư dân trong ca trực',
+          requiresPhoto: false,
+          completed: false,
+        },
+      ];
+    }
+
+    // Default: Security & Building Operations
+    return [
+      {
+        id: 'duty-sec-1',
+        title: 'Kiểm soát an ninh cổng chính và sắp xếp khu vực để xe sinh viên ngăn nắp',
+        requiresPhoto: true,
+        completed: false,
+      },
+      {
+        id: 'duty-sec-2',
+        title: 'Kiểm tra mở cổng sáng (06:00) và kiểm tra hoạt động của chốt khóa cổng tự động',
+        requiresPhoto: true,
+        completed: false,
+      },
+      {
+        id: 'duty-sec-3',
+        title: 'Giám sát camera an ninh hành lang các tầng 1, 2, 3 và ghi nhận nhật ký trực',
+        requiresPhoto: false,
+        completed: false,
+        note: 'Đang theo dõi trong ca trực',
+      },
+      {
+        id: 'duty-sec-4',
+        title: 'Tuần tra chống ồn, bảo đảm an ninh trật tự và khóa an toàn cổng ban đêm (23:00)',
+        requiresPhoto: true,
+        completed: false,
+      },
+    ];
+  }
+
+  /**
+   * Helper to format response DTO for staff overview
+   */
+  private buildStaffTodayOverview(
+    employee: any,
+    schedule: any,
+    attendance: any,
+    coWorkers: any[],
+  ): StaffTodayOverviewResponseDto {
+    const activeAssignment = employee.employeeAssignments[0];
+    const positionName = activeAssignment?.position?.name || 'Nhân viên';
+    const positionDesc = activeAssignment?.position?.description || null;
+    const positionId = activeAssignment?.position?.id || 'default-pos';
+
+    const defaultDuties = this.getDefaultDutiesForPosition(positionName);
+    const duties: StaffDutyDto[] =
+      attendance?.dutyTasks && Array.isArray(attendance.dutyTasks)
+        ? (attendance.dutyTasks as unknown as StaffDutyDto[])
+        : defaultDuties;
+
+    const staffName =
+      employee.user.userIdentification?.fullName ||
+      employee.user.username ||
+      employee.user.phoneNumber;
+
+    const shiftStartTimeStr = this.formatTime(schedule.shift.startTime);
+    const shiftEndTimeStr = this.formatTime(schedule.shift.endTime);
+    const durationHours = Math.max(
+      1,
+      Math.round(
+        (schedule.shift.endTime.getTime() - schedule.shift.startTime.getTime()) /
+          (1000 * 60 * 60),
+      ),
+    );
+
+    let totalHours = 0;
+    let isEarlyCheckOut = false;
+    if (attendance?.checkIn && attendance?.checkOut) {
+      const diffMs = attendance.checkOut.getTime() - attendance.checkIn.getTime();
+      totalHours = Math.max(0, Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10);
+    }
+
+    if (attendance?.checkOut) {
+      const [endH, endM] = shiftEndTimeStr.split(':').map(Number);
+      const checkOutH = attendance.checkOut.getUTCHours();
+      const checkOutM = attendance.checkOut.getUTCMinutes();
+      if (checkOutH * 60 + checkOutM < endH * 60 + endM) {
+        isEarlyCheckOut = true;
+      }
+    }
+
+    const boardingHouseAddress = [
+      schedule.boardingHouse.houseNumber,
+      schedule.boardingHouse.street,
+      schedule.boardingHouse.ward,
+      schedule.boardingHouse.district,
+      schedule.boardingHouse.city,
+    ]
+      .filter(Boolean)
+      .join(', ') || schedule.boardingHouse.name;
+
+    return {
+      employeeId: employee.id,
+      staffName,
+      staffPhone: employee.user.phoneNumber,
+      staffAvatar: employee.user.avatarUrl || null,
+      schedule: {
+        id: schedule.id,
+        workDate: this.formatDateOnly(schedule.workDate),
+        boardingHouseId: schedule.boardingHouseId,
+        boardingHouseName: schedule.boardingHouse.name,
+        boardingHouseAddress,
+        shift: {
+          id: schedule.shift.id,
+          name: schedule.shift.name,
+          startTime: shiftStartTimeStr,
+          endTime: shiftEndTimeStr,
+          durationHours,
+        },
+        position: {
+          id: positionId,
+          name: positionName,
+          description: positionDesc,
+        },
+        status: schedule.status,
+        isRecurring: !!schedule.recurrenceId,
+        coWorkers,
+        duties,
+      },
+      attendance: {
+        id: attendance?.id || '',
+        workScheduleId: schedule.id,
+        workDate: this.formatDateOnly(schedule.workDate),
+        boardingHouseName: schedule.boardingHouse.name,
+        shiftName: schedule.shift.name,
+        shiftTime: `${shiftStartTimeStr} - ${shiftEndTimeStr}`,
+        checkIn: attendance?.checkIn ? this.formatTime(attendance.checkIn) : null,
+        checkOut: attendance?.checkOut ? this.formatTime(attendance.checkOut) : null,
+        status: attendance?.status || AttendanceStatus.not_yet,
+        totalHours,
+        editedByLandlord: !!attendance?.editedBy,
+        note: attendance?.note || undefined,
+        checkInPhoto: attendance?.checkInPhoto || undefined,
+        checkInWatermark: attendance?.checkInWatermark || undefined,
+        checkInExplanation: attendance?.checkInExplanation || undefined,
+        checkOutPhoto: attendance?.checkOutPhoto || undefined,
+        checkOutWatermark: attendance?.checkOutWatermark || undefined,
+        checkOutExplanation: attendance?.checkOutExplanation || undefined,
+        isEarlyCheckOut,
+      },
+    };
+  }
+
+  /**
+   * UC-S-01 & UC-S-02: Get today's staff schedule, attendance, duties and co-workers
+   */
+  async getTodayStaffAttendance(userId: string): Promise<StaffTodayOverviewResponseDto> {
+    this.logger.log(`getTodayStaffAttendance for user ${userId}`);
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          include: { userIdentification: true },
+        },
+        employeeAssignments: {
+          where: { status: 'active' },
+          include: {
+            position: true,
+            boardingHouse: true,
+          },
+        },
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.');
+    }
+
+    const activeAssignment =
+      employee.employeeAssignments[0] ||
+      (await this.prisma.employeeAssignment.findFirst({
+        where: { employeeId: employee.id },
+        include: { position: true, boardingHouse: true },
+      }));
+
+    if (!activeAssignment) {
+      throw new BadRequestException('Nhân viên chưa được phân công nhiệm vụ tại nhà trọ nào.');
+    }
+
+    const now = new Date();
+    const todayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    const todayEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+
+    let schedule = await this.prisma.workSchedule.findFirst({
+      where: {
+        employeeId: employee.id,
+        workDate: {
+          gte: todayDate,
+          lte: todayEnd,
+        },
+      },
+      include: {
+        shift: true,
+        boardingHouse: true,
+        attendances: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!schedule) {
+      let shift = await this.prisma.shift.findFirst({
+        where: { boardingHouseId: activeAssignment.boardingHouseId },
+      });
+
+      if (!shift) {
+        shift = await this.prisma.shift.create({
+          data: {
+            boardingHouseId: activeAssignment.boardingHouseId,
+            name: 'Ca Sáng (07:00 - 15:00)',
+            startTime: new Date('1970-01-01T07:00:00Z'),
+            endTime: new Date('1970-01-01T15:00:00Z'),
+          },
+        });
+      }
+
+      schedule = await this.prisma.workSchedule.create({
+        data: {
+          employeeId: employee.id,
+          boardingHouseId: activeAssignment.boardingHouseId,
+          shiftId: shift.id,
+          workDate: todayDate,
+          status: ScheduleStatus.scheduled,
+        },
+        include: {
+          shift: true,
+          boardingHouse: true,
+          attendances: true,
+        },
+      });
+    }
+
+    let attendance = schedule.attendances?.[0];
+    if (!attendance) {
+      const initialDuties = this.getDefaultDutiesForPosition(activeAssignment.position?.name);
+      attendance = await this.prisma.attendance.create({
+        data: {
+          workScheduleId: schedule.id,
+          employeeId: employee.id,
+          status: AttendanceStatus.not_yet,
+          dutyTasks: initialDuties as any,
+        },
+      });
+    }
+
+    const coWorkerAssignments = await this.prisma.employeeAssignment.findMany({
+      where: {
+        boardingHouseId: schedule.boardingHouseId,
+        status: 'active',
+        employeeId: { not: employee.id },
+      },
+      include: {
+        employee: {
+          include: {
+            user: {
+              include: { userIdentification: true },
+            },
+          },
+        },
+        position: true,
+      },
+      take: 10,
+    });
+
+    const coWorkers = coWorkerAssignments.map((a) => ({
+      id: a.employee.id,
+      name:
+        a.employee.user.userIdentification?.fullName ||
+        a.employee.user.username ||
+        a.employee.user.phoneNumber,
+      phone: a.employee.user.phoneNumber,
+      positionName: a.position?.name || 'Nhân viên',
+      avatar: a.employee.user.avatarUrl || null,
+    }));
+
+    return this.buildStaffTodayOverview(employee, schedule, attendance, coWorkers);
+  }
+
+  /**
+   * UC-S-02: Staff Check-in with photo proof, GPS watermark and optional late explanation
+   */
+  async staffCheckIn(
+    userId: string,
+    dto: StaffCheckInDto,
+    ipAddress: string,
+  ): Promise<StaffTodayOverviewResponseDto> {
+    this.logger.log(`staffCheckIn for user ${userId}, schedule ${dto.workScheduleId}`);
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+    });
+    if (!employee) {
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+    }
+
+    const schedule = await this.prisma.workSchedule.findUnique({
+      where: { id: dto.workScheduleId },
+      include: {
+        shift: true,
+        boardingHouse: true,
+      },
+    });
+
+    if (!schedule || schedule.employeeId !== employee.id) {
+      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.');
+    }
+
+    const existingAttendance = await this.prisma.attendance.findFirst({
+      where: {
+        workScheduleId: dto.workScheduleId,
+        employeeId: employee.id,
+      },
+    });
+
+    if (existingAttendance?.checkIn) {
+      throw new BadRequestException('Bạn đã thực hiện check-in cho ca trực này rồi.');
+    }
+
+    const now = new Date();
+    let h: number;
+    let m: number;
+    if (dto.capturedTime) {
+      const [parsedH, parsedM] = dto.capturedTime.split(':').map(Number);
+      h = parsedH || 0;
+      m = parsedM || 0;
+    } else {
+      // Vietnam UTC+7
+      h = (now.getUTCHours() + 7) % 24;
+      m = now.getUTCMinutes();
+    }
+
+    const checkInDate = new Date(
+      Date.UTC(
+        schedule.workDate.getUTCFullYear(),
+        schedule.workDate.getUTCMonth(),
+        schedule.workDate.getUTCDate(),
+        h,
+        m,
+        now.getUTCSeconds(),
+        0,
+      ),
+    );
+
+    const [startH, startM] = this.formatTime(schedule.shift.startTime).split(':').map(Number);
+    const shiftStartMinutes = startH * 60 + startM;
+    const checkInMinutes = h * 60 + m;
+    const isLate = checkInMinutes > shiftStartMinutes;
+    const newStatus = isLate ? AttendanceStatus.late : AttendanceStatus.on_time;
+
+    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const boardingHouseAddress = [
+      schedule.boardingHouse.houseNumber,
+      schedule.boardingHouse.street,
+      schedule.boardingHouse.ward,
+      schedule.boardingHouse.district,
+      schedule.boardingHouse.city,
+    ]
+      .filter(Boolean)
+      .join(', ') || schedule.boardingHouse.name;
+    const placeStr = dto.watermark?.place || boardingHouseAddress;
+    const note = isLate
+      ? `Check-in muộn lúc ${timeStr} tại ${placeStr}. Giải trình: "${dto.explanation || 'Chưa có'}"`
+      : `Check-in đúng giờ lúc ${timeStr} tại ${placeStr}.`;
+
+    await this.prisma.$transaction(async (tx) => {
+      let recordId: string;
+      if (existingAttendance) {
+        const updated = await tx.attendance.update({
+          where: { id: existingAttendance.id },
+          data: {
+            checkIn: checkInDate,
+            status: newStatus,
+            checkInPhoto: dto.photo || null,
+            checkInWatermark: (dto.watermark as any) || null,
+            checkInExplanation: dto.explanation || null,
+            note,
+          },
+        });
+        recordId = updated.id;
+      } else {
+        const created = await tx.attendance.create({
+          data: {
+            workScheduleId: dto.workScheduleId,
+            employeeId: employee.id,
+            checkIn: checkInDate,
+            status: newStatus,
+            checkInPhoto: dto.photo || null,
+            checkInWatermark: (dto.watermark as any) || null,
+            checkInExplanation: dto.explanation || null,
+            note,
+          },
+        });
+        recordId = created.id;
+      }
+
+      // Rule 4: AuditLog in same transaction
+      await tx.auditLog.create({
+        data: {
+          userId,
+          boardingHouseId: schedule.boardingHouseId,
+          action: AuditLogAction.update,
+          entityType: 'ATTENDANCE',
+          entityId: recordId,
+          oldValue: existingAttendance
+            ? { status: existingAttendance.status, checkIn: existingAttendance.checkIn }
+            : { status: AttendanceStatus.not_yet },
+          newValue: {
+            status: newStatus,
+            checkIn: checkInDate,
+            capturedTime: timeStr,
+            checkInExplanation: dto.explanation || null,
+          },
+          ipAddress,
+        },
+      });
+    });
+
+    return this.getTodayStaffAttendance(userId);
+  }
+
+  /**
+   * UC-S-02: Staff Check-out with photo proof, GPS watermark and optional early explanation
+   */
+  async staffCheckOut(
+    userId: string,
+    dto: StaffCheckOutDto,
+    ipAddress: string,
+  ): Promise<StaffTodayOverviewResponseDto> {
+    this.logger.log(`staffCheckOut for user ${userId}, schedule ${dto.workScheduleId}`);
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+    });
+    if (!employee) {
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+    }
+
+    const schedule = await this.prisma.workSchedule.findUnique({
+      where: { id: dto.workScheduleId },
+      include: {
+        shift: true,
+        boardingHouse: true,
+      },
+    });
+
+    if (!schedule || schedule.employeeId !== employee.id) {
+      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.');
+    }
+
+    const attendance = await this.prisma.attendance.findFirst({
+      where: {
+        workScheduleId: dto.workScheduleId,
+        employeeId: employee.id,
+      },
+    });
+
+    if (!attendance || !attendance.checkIn) {
+      throw new BadRequestException('Bạn cần hoàn tất check-in trước khi check-out.');
+    }
+
+    if (attendance.checkOut) {
+      throw new BadRequestException('Bạn đã hoàn thành check-out cho ca trực này rồi.');
+    }
+
+    const now = new Date();
+    let h: number;
+    let m: number;
+    if (dto.capturedTime) {
+      const [parsedH, parsedM] = dto.capturedTime.split(':').map(Number);
+      h = parsedH || 0;
+      m = parsedM || 0;
+    } else {
+      // Vietnam UTC+7
+      h = (now.getUTCHours() + 7) % 24;
+      m = now.getUTCMinutes();
+    }
+
+    const checkOutDate = new Date(
+      Date.UTC(
+        schedule.workDate.getUTCFullYear(),
+        schedule.workDate.getUTCMonth(),
+        schedule.workDate.getUTCDate(),
+        h,
+        m,
+        now.getUTCSeconds(),
+        0,
+      ),
+    );
+
+    const [endH, endM] = this.formatTime(schedule.shift.endTime).split(':').map(Number);
+    const shiftEndMinutes = endH * 60 + endM;
+    const checkOutMinutes = h * 60 + m;
+    const isEarly = checkOutMinutes < shiftEndMinutes;
+
+    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const boardingHouseAddress = [
+      schedule.boardingHouse.houseNumber,
+      schedule.boardingHouse.street,
+      schedule.boardingHouse.ward,
+      schedule.boardingHouse.district,
+      schedule.boardingHouse.city,
+    ]
+      .filter(Boolean)
+      .join(', ') || schedule.boardingHouse.name;
+    const placeStr = dto.watermark?.place || boardingHouseAddress;
+    const appendNote = isEarly
+      ? `Check-out sớm lúc ${timeStr} tại ${placeStr}. Giải trình: "${dto.explanation || 'Chưa có'}"`
+      : `Check-out hoàn thành lúc ${timeStr} tại ${placeStr}.`;
+    const combinedNote = attendance.note ? `${attendance.note} | ${appendNote}` : appendNote;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.attendance.update({
+        where: { id: attendance.id },
+        data: {
+          checkOut: checkOutDate,
+          checkOutPhoto: dto.photo || null,
+          checkOutWatermark: (dto.watermark as any) || null,
+          checkOutExplanation: dto.explanation || null,
+          note: combinedNote,
+        },
+      });
+
+      // Rule 4: AuditLog in same transaction
+      await tx.auditLog.create({
+        data: {
+          userId,
+          boardingHouseId: schedule.boardingHouseId,
+          action: AuditLogAction.update,
+          entityType: 'ATTENDANCE',
+          entityId: attendance.id,
+          oldValue: { checkOut: attendance.checkOut, status: attendance.status },
+          newValue: {
+            checkOut: checkOutDate,
+            capturedTime: timeStr,
+            checkOutExplanation: dto.explanation || null,
+            isEarly,
+          },
+          ipAddress,
+        },
+      });
+    });
+
+    return this.getTodayStaffAttendance(userId);
+  }
+
+  /**
+   * UC-S-01: Update Duty Task Proof and Progress
+   */
+  async saveStaffDutyProof(
+    userId: string,
+    dto: StaffDutyProofDto,
+  ): Promise<StaffTodayOverviewResponseDto> {
+    this.logger.log(`saveStaffDutyProof for user ${userId}, task ${dto.dutyId}`);
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+      include: {
+        employeeAssignments: {
+          where: { status: 'active' },
+          include: { position: true },
+        },
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+    }
+
+    const schedule = await this.prisma.workSchedule.findUnique({
+      where: { id: dto.workScheduleId },
+    });
+
+    if (!schedule || schedule.employeeId !== employee.id) {
+      throw new NotFoundException('Lịch làm việc không hợp lệ.');
+    }
+
+    let attendance = await this.prisma.attendance.findFirst({
+      where: {
+        workScheduleId: dto.workScheduleId,
+        employeeId: employee.id,
+      },
+    });
+
+    const activeAssignment = employee.employeeAssignments[0];
+    const defaultDuties = this.getDefaultDutiesForPosition(activeAssignment?.position?.name);
+
+    if (!attendance) {
+      attendance = await this.prisma.attendance.create({
+        data: {
+          workScheduleId: dto.workScheduleId,
+          employeeId: employee.id,
+          status: AttendanceStatus.not_yet,
+          dutyTasks: defaultDuties as any,
+        },
+      });
+    }
+
+    const duties: StaffDutyDto[] =
+      attendance.dutyTasks && Array.isArray(attendance.dutyTasks)
+        ? (attendance.dutyTasks as unknown as StaffDutyDto[])
+        : defaultDuties;
+
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+    const fullProofTimeStr = `${timeStr}:${String(now.getSeconds()).padStart(2, '0')} - ${dateStr}`;
+
+    const updatedDuties = duties.map((duty) => {
+      if (duty.id === dto.dutyId) {
+        const isCompleted = dto.markCompleted !== undefined ? dto.markCompleted : duty.completed;
+        return {
+          ...duty,
+          photoProof: dto.photo || duty.photoProof,
+          photoProofTime: dto.photo ? fullProofTimeStr : duty.photoProofTime,
+          note: dto.note !== undefined ? dto.note : duty.note,
+          completed: isCompleted,
+          completedAt: isCompleted ? (duty.completedAt || timeStr) : undefined,
+        };
+      }
+      return duty;
+    });
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.attendance.update({
+        where: { id: attendance.id },
+        data: {
+          dutyTasks: updatedDuties as any,
+        },
+      });
+
+      // Rule 4: AuditLog in same transaction
+      await tx.auditLog.create({
+        data: {
+          userId,
+          boardingHouseId: schedule.boardingHouseId,
+          action: AuditLogAction.update,
+          entityType: 'ATTENDANCE',
+          entityId: attendance.id,
+          oldValue: { dutyTasks: attendance.dutyTasks as any },
+          newValue: { dutyTasks: updatedDuties as any, dutyId: dto.dutyId },
+          ipAddress: '127.0.0.1',
+        },
+      });
+    });
+
+    return this.getTodayStaffAttendance(userId);
+  }
 }
+
