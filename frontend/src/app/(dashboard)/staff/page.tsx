@@ -110,11 +110,11 @@ export default function StaffOverviewPage() {
       setTodaySchedule(null);
       setAttendance(null);
       setDutyList([]);
-      setFetchError(err?.message || (locale === "en" ? "Failed to load schedule from server" : "Không thể tải dữ liệu ca làm việc từ máy chủ"));
+      setFetchError(err?.message || "ERR_FETCH_FAILED");
     } finally {
       setIsLoading(false);
     }
-  }, [locale]);
+  }, []);
 
   // Fetch monthly attendance summary from backend (UC-S-02)
   const fetchMonthlySummary = useCallback(async () => {
@@ -723,7 +723,11 @@ export default function StaffOverviewPage() {
                 </h2>
                 <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">
                   {fetchError
-                    ? fetchError
+                    ? (fetchError === "ERR_FETCH_FAILED"
+                      ? (locale === "en"
+                        ? "Failed to load schedule from server"
+                        : "Không thể tải dữ liệu ca làm việc từ máy chủ")
+                      : fetchError)
                     : (locale === "en"
                       ? "You do not have any work shifts assigned for today. You can check upcoming shifts in the Schedule tab or review past attendance history."
                       : "Hôm nay bạn không có ca trực nào được phân công. Bạn có thể kiểm tra lịch phân ca sắp tới tại tab Lịch trực & Nhiệm vụ hoặc tra cứu lịch sử chấm công.")}
