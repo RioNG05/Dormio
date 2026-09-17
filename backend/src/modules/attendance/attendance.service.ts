@@ -20,6 +20,7 @@ import {
   StaffDutyDto,
   StaffTodayOverviewResponseDto,
 } from './dto/staff-today-response.dto';
+import { StaffMonthlySummaryResponseDto } from './dto/staff-monthly-summary-response.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -1135,6 +1136,113 @@ export class AttendanceService {
     });
 
     return this.getTodayStaffAttendance(userId);
+  }
+
+  /**
+   * UC-S-01: Get monthly attendance summary metrics for logged-in staff
+   */
+  async getStaffMonthlySummary(
+    userId: string,
+    month?: string,
+  ): Promise<StaffMonthlySummaryResponseDto> {
+    this.logger.log(
+      `getStaffMonthlySummary for user ${userId}, requested month: ${month || 'current'}`,
+    );
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+    });
+
+    if (!employee) {
+      throw new NotFoundException(
+        'Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.',
+      );
+    }
+
+    let targetYear: number;
+    let targetMonth: number; // 0-indexed for Date
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
+      const [y, m] = month.split('-').map(Number);
+      targetYear = y;
+      targetMonth = m - 1;
+    } else {
+      const now = new Date();
+      targetYear = now.getUTCFullYear();
+      targetMonth = now.getUTCMonth();
+    }
+
+    const startOfMonth = new Date(
+      Date.UTC(targetYear, targetMonth, 1, 0, 0, 0, 0),
+    );
+    const endOfMonth = new Date(
+      Date.UTC(targetYear, targetMonth + 1, 0, 23, 59, 59, 999),
+    );
+    const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}`;
+
+    const schedules = await this.prisma.workSchedule.findMany({
+      where: {
+        employeeId: employee.id,
+        workDate: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+      include: {
+        shift: true,
+        attendances: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    let totalHours = 0;
+    let onTimeCount = 0;
+    let lateCount = 0;
+    let earlyCount = 0;
+
+    for (const item of schedules) {
+      const att = item.attendances?.[0];
+      if (!att) continue;
+
+      if (att.status === AttendanceStatus.on_time) {
+        onTimeCount++;
+      } else if (att.status === AttendanceStatus.late) {
+        lateCount++;
+      }
+
+      if (att.checkIn && att.checkOut) {
+        const diffMs = att.checkOut.getTime() - att.checkIn.getTime();
+        const hours = Math.max(0, diffMs / (1000 * 60 * 60));
+        totalHours += hours;
+
+        const shiftEndTimeStr = this.formatTime(item.shift.endTime);
+        const [endH, endM] = shiftEndTimeStr.split(':').map(Number);
+        const checkOutH = att.checkOut.getUTCHours();
+        const checkOutM = att.checkOut.getUTCMinutes();
+        if (checkOutH * 60 + checkOutM < endH * 60 + endM) {
+          earlyCount++;
+        }
+      } else if (att.checkOutExplanation) {
+        earlyCount++;
+      }
+    }
+
+    const totalAttended = onTimeCount + lateCount;
+    const onTimeRate =
+      totalAttended > 0
+        ? Math.round((onTimeCount / totalAttended) * 1000) / 10
+        : 100;
+
+    return {
+      month: monthKey,
+      totalShifts: schedules.length,
+      totalHours: Math.round(totalHours * 10) / 10,
+      onTimeRate,
+      onTimeCount,
+      lateCount,
+      earlyCount,
+    };
   }
 }
 

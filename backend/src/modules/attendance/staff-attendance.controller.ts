@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -24,6 +25,8 @@ import { StaffCheckInDto } from './dto/staff-check-in.dto';
 import { StaffCheckOutDto } from './dto/staff-check-out.dto';
 import { StaffDutyProofDto } from './dto/staff-duty-proof.dto';
 import { StaffTodayOverviewResponseDto } from './dto/staff-today-response.dto';
+import { StaffMonthlySummaryResponseDto } from './dto/staff-monthly-summary-response.dto';
+import { QueryStaffMonthlyDto } from './dto/query-staff-monthly.dto';
 
 @ApiTags('Staff Attendance (UC-S-01 & UC-S-02)')
 @ApiBearerAuth()
@@ -49,6 +52,26 @@ export class StaffAttendanceController {
   ): Promise<StaffTodayOverviewResponseDto> {
     this.logger.log(`Staff user ${user.id} requested today attendance overview`);
     return this.attendanceService.getTodayStaffAttendance(user.id);
+  }
+
+  @Get('monthly-summary')
+  @ApiOperation({
+    summary: "UC-S-01: Get logged-in staff's monthly attendance summary metrics",
+    description:
+      'Returns aggregate work stats (total shifts, total hours, on-time rate, late count, early checkout count) for the specified or current month.',
+  })
+  @ApiOkResponse({
+    type: StaffMonthlySummaryResponseDto,
+    description: 'Monthly attendance summary metrics',
+  })
+  async getMonthlySummary(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: QueryStaffMonthlyDto,
+  ): Promise<StaffMonthlySummaryResponseDto> {
+    this.logger.log(
+      `Staff user ${user.id} requested monthly attendance summary for ${query.month || 'current month'}`,
+    );
+    return this.attendanceService.getStaffMonthlySummary(user.id, query.month);
   }
 
   @Post('check-in')

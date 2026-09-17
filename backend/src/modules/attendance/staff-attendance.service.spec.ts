@@ -88,6 +88,7 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
       workSchedule: {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
+        findMany: jest.fn(),
         create: jest.fn(),
       },
       shift: {
@@ -359,6 +360,63 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
       expect(prisma.attendance.update).toHaveBeenCalled();
       expect(prisma.auditLog.create).toHaveBeenCalled();
       expect(result.schedule.duties[0].completed).toBe(true);
+    });
+  });
+
+  describe('getStaffMonthlySummary', () => {
+    it('should compute monthly attendance summary for staff', async () => {
+      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.workSchedule.findMany.mockResolvedValue([
+        {
+          id: 'ws-1',
+          workDate: new Date('2026-09-01'),
+          shift: {
+            id: 's-1',
+            startTime: new Date('1970-01-01T07:00:00Z'),
+            endTime: new Date('1970-01-01T15:00:00Z'),
+          },
+          attendances: [
+            {
+              id: 'att-1',
+              status: AttendanceStatus.on_time,
+              checkIn: new Date('2026-09-01T06:55:00Z'),
+              checkOut: new Date('2026-09-01T15:00:00Z'),
+            },
+          ],
+        },
+        {
+          id: 'ws-2',
+          workDate: new Date('2026-09-02'),
+          shift: {
+            id: 's-1',
+            startTime: new Date('1970-01-01T07:00:00Z'),
+            endTime: new Date('1970-01-01T15:00:00Z'),
+          },
+          attendances: [
+            {
+              id: 'att-2',
+              status: AttendanceStatus.late,
+              checkIn: new Date('2026-09-02T07:15:00Z'),
+              checkOut: new Date('2026-09-02T15:00:00Z'),
+            },
+          ],
+        },
+      ]);
+
+      const summary = await service.getStaffMonthlySummary(mockUserId, '2026-09');
+      expect(summary.month).toBe('2026-09');
+      expect(summary.totalShifts).toBe(2);
+      expect(summary.onTimeCount).toBe(1);
+      expect(summary.lateCount).toBe(1);
+      expect(summary.onTimeRate).toBe(50);
+      expect(summary.totalHours).toBeGreaterThan(0);
+    });
+
+    it('should throw NotFoundException if employee profile does not exist', async () => {
+      prisma.employee.findUnique.mockResolvedValue(null);
+      await expect(
+        service.getStaffMonthlySummary('unknown-user', '2026-09'),
+      ).rejects.toThrow('Không tìm thấy hồ sơ nhân viên');
     });
   });
 });

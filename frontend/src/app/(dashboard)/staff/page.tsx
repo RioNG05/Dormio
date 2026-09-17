@@ -5,18 +5,12 @@ import Link from "next/link";
 import {
   Clock, CheckCircle2, AlertCircle, Building2, User,
   Calendar, Shield, Phone, ChevronRight, CheckSquare,
-  Sparkles, History, MapPin, Play, LogOut, ArrowRight,
+  Sparkles,  MapPin, LogOut, ArrowRight,
   RefreshCw, Check, Users, Camera, Image as ImageIcon,
   Upload, Eye, X, AlertTriangle, ShieldCheck, FileText,
-  Info, ExternalLink, Lock
+  Info, Lock
 } from "lucide-react";
 import {
-  MOCK_WORK_SCHEDULES,
-  MOCK_ATTENDANCES,
-  MOCK_STAFF_TASKS,
-  SYSTEM_SHIFTS,
-  JOB_POSITIONS,
-  DEFAULT_SECURITY_DUTIES,
   evaluateCheckInWindow,
   evaluateCheckOutWindow,
   Shift,
@@ -29,12 +23,48 @@ import {
   getLocalizedStaffName,
   getLocalizedExplanation,
   getTodayISODate,
-  getDailyDutiesForPosition,
-  getStoredAttendances,
   saveAttendanceRecord
 } from "./data";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { staffAttendanceService } from "@/services/staff-attendance.service";
+import { useAuth } from "@/context/AuthContext";
+import { staffAttendanceService, StaffMonthlySummary } from "@/services/staff-attendance.service";
+
+const INITIAL_EMPTY_SCHEDULE: WorkScheduleItem = {
+  id: "",
+  workDate: getTodayISODate(),
+  boardingHouseId: "",
+  boardingHouseName: "",
+  shift: {
+    id: "",
+    name: "Ca trực",
+    startTime: "07:00",
+    endTime: "15:00",
+    durationHours: 8,
+  },
+  position: {
+    id: "",
+    name: "Nhân viên",
+    description: "",
+  },
+  status: "scheduled",
+  isRecurring: false,
+  coWorkers: [],
+  duties: [],
+};
+
+const INITIAL_EMPTY_ATTENDANCE: AttendanceRecord = {
+  id: "",
+  workScheduleId: "",
+  workDate: getTodayISODate(),
+  boardingHouseName: "",
+  shiftName: "Ca trực",
+  shiftTime: "07:00 - 15:00",
+  checkIn: null,
+  checkOut: null,
+  status: "not_yet",
+  totalHours: 0,
+  editedByLandlord: false,
+};
 
 function getDutyTitle(duty: DutyTaskItem, isEn = false): string {
   if (!isEn) return duty.title;
@@ -75,37 +105,24 @@ export default function StaffOverviewPage() {
   // Live Clock
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
-  // Time simulation: default to null (Real Time mode)
-  // Can be toggled for strict UC-S-02 window test cases: "06:45", "06:55", "07:15", "14:30", "15:05"
-  const [simulatedTime, setSimulatedTime] = useState<string | null>(null);
-
   // Mount state to prevent hydration mismatches
   const [isMounted, setIsMounted] = useState(false);
 
-  // Today's schedule & duties state (Anchored to today's real date and position's fixed duties)
-  const [todaySchedule, setTodaySchedule] = useState<WorkScheduleItem>(() => ({
-    ...MOCK_WORK_SCHEDULES[0],
-    workDate: getTodayISODate(),
-    duties: getDailyDutiesForPosition(MOCK_WORK_SCHEDULES[0].position.id)
-  }));
-  const [dutyList, setDutyList] = useState<DutyTaskItem[]>(() =>
-    getDailyDutiesForPosition(MOCK_WORK_SCHEDULES[0].position.id)
-  );
+  const { user } = useAuth();
 
-  const todayStr = getTodayISODate();
-  const todayAdditionalTasks = useMemo(() => {
-    return MOCK_STAFF_TASKS.filter(
-      (task) => task.isCustomTask && task.deadline.startsWith(todayStr)
-    );
-  }, [todayStr]);
+  // Today's schedule & duties state
+  const [todaySchedule, setTodaySchedule] = useState<WorkScheduleItem>(INITIAL_EMPTY_SCHEDULE);
+  const [dutyList, setDutyList] = useState<DutyTaskItem[]>([]);
+  const [staffName, setStaffName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const todayAdditionalTasks: any[] = [];
 
   // Active attendance state
-  const [attendance, setAttendance] = useState<AttendanceRecord>(() => {
-    const list = getStoredAttendances();
-    const today = getTodayISODate();
-    const found = list.find(a => a.workDate === today || a.id === "att-today");
-    return found ? { ...found, workDate: today } : { ...MOCK_ATTENDANCES[0], workDate: today };
-  });
+  const [attendance, setAttendance] = useState<AttendanceRecord>(INITIAL_EMPTY_ATTENDANCE);
+
+  // Monthly summary state (UC-S-02)
+  const [monthlySummary, setMonthlySummary] = useState<StaffMonthlySummary | null>(null);
 
   // Toast notification
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "warning" } | null>(null);
@@ -123,18 +140,18 @@ export default function StaffOverviewPage() {
     try {
       const savedDuties = localStorage.getItem("dormio_staff_today_duties");
       if (savedDuties) {
-        setDutyList(JSON.parse(savedDuties));
+        const parsed = JSON.parse(savedDuties);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setDutyList(parsed);
+        }
       }
-    } catch {
-      // Fallback
-    }
-
-    try {
-      const stored = getStoredAttendances();
       const today = getTodayISODate();
-      const found = stored.find(a => a.workDate === today || a.id === "att-today");
-      if (found) {
-        setAttendance({ ...found, workDate: today });
+      const todayRaw = localStorage.getItem("dormio_staff_today_attendance");
+      if (todayRaw) {
+        const parsed = JSON.parse(todayRaw);
+        if (parsed && (parsed.workDate === today || parsed.id)) {
+          setAttendance(parsed);
+        }
       }
     } catch {
       // Fallback
@@ -145,6 +162,9 @@ export default function StaffOverviewPage() {
       .getTodayOverview()
       .then((data) => {
         if (data) {
+          if (data.staffName) {
+            setStaffName(data.staffName);
+          }
           if (data.schedule) {
             setTodaySchedule(data.schedule);
             if (data.schedule.duties && data.schedule.duties.length > 0) {
@@ -163,7 +183,22 @@ export default function StaffOverviewPage() {
         }
       })
       .catch((err) => {
-        console.warn("Using offline / cached staff overview:", err);
+        console.warn("Could not fetch today's staff overview from backend:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+
+    // Fetch monthly attendance summary from backend (UC-S-02)
+    staffAttendanceService
+      .getMonthlySummary()
+      .then((summary) => {
+        if (summary) {
+          setMonthlySummary(summary);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not fetch monthly attendance summary from backend:", err);
       });
 
     const interval = setInterval(() => {
@@ -185,15 +220,13 @@ export default function StaffOverviewPage() {
   }, []);
 
   // Format current effective time string (HH:mm:ss)
-  const effectiveTimeString = simulatedTime
-    ? `${simulatedTime}:00`
-    : currentTime
+  const effectiveTimeString = currentTime
     ? currentTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
-    : "06:55:00";
+    : "00:00:00";
 
-  const effectiveHHMM = simulatedTime || (currentTime
+  const effectiveHHMM = currentTime
     ? currentTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })
-    : "06:55");
+    : "00:00";
 
   // Evaluate check-in & check-out window constraints (UC-S-02)
   const checkInEval = evaluateCheckInWindow(
@@ -244,9 +277,28 @@ export default function StaffOverviewPage() {
     return name;
   };
 
+  const todayStr = todaySchedule.workDate || getTodayISODate();
   const todayFormattedDate = locale === "en"
     ? (currentTime || new Date()).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
     : (currentTime || new Date()).toLocaleDateString("vi-VN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  const monthlySummaryTitle = useMemo(() => {
+    const rawMonth = monthlySummary?.month || (todaySchedule.workDate ? todaySchedule.workDate.substring(0, 7) : "");
+    if (rawMonth && /^\d{4}-\d{2}$/.test(rawMonth)) {
+      const [year, month] = rawMonth.split("-");
+      if (locale === "en") {
+        const monthNames = [
+          "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+          "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+        ];
+        const mIndex = parseInt(month, 10) - 1;
+        const mName = monthNames[mIndex] || month;
+        return `${mName} ${year} WORK SUMMARY`;
+      }
+      return `TỔNG KẾT CÔNG THÁNG ${month}/${year}`;
+    }
+    return locale === "en" ? "MONTHLY WORK SUMMARY" : "TỔNG KẾT CÔNG THÁNG";
+  }, [monthlySummary?.month, todaySchedule.workDate, locale]);
 
   // Handle opening Check-in modal
   const handleOpenCheckIn = () => {
@@ -363,6 +415,7 @@ export default function StaffOverviewPage() {
         if (res?.schedule?.duties) {
           setDutyList(res.schedule.duties);
         }
+        staffAttendanceService.getMonthlySummary().then((sum) => sum && setMonthlySummary(sum)).catch(() => {});
       })
       .catch((err) => {
         console.warn("Backend check-in sync failed (local state active):", err);
@@ -433,6 +486,7 @@ export default function StaffOverviewPage() {
         if (res?.schedule?.duties) {
           setDutyList(res.schedule.duties);
         }
+        staffAttendanceService.getMonthlySummary().then((sum) => sum && setMonthlySummary(sum)).catch(() => {});
       })
       .catch((err) => {
         console.warn("Backend check-out sync failed (local state active):", err);
@@ -561,28 +615,8 @@ export default function StaffOverviewPage() {
       });
   };
 
-  // Reset demo state
-  const handleResetAttendance = () => {
-    const fresh: AttendanceRecord = {
-      ...MOCK_ATTENDANCES[0],
-      checkIn: null,
-      checkOut: null,
-      status: "not_yet",
-      checkInPhoto: undefined,
-      checkInWatermark: undefined,
-      checkInExplanation: undefined,
-      checkOutPhoto: undefined,
-      checkOutWatermark: undefined,
-      checkOutExplanation: undefined,
-      isEarlyCheckOut: false
-    };
-    setAttendance(fresh);
-    setDutyList(DEFAULT_SECURITY_DUTIES);
-    localStorage.removeItem("dormio_staff_today_attendance");
-    localStorage.removeItem("dormio_staff_today_duties");
-    showToast(locale === "en" ? "Reset shift state for testing." : "Đã thiết lập lại trạng thái ca làm việc để kiểm thử.", "info");
-  };
 
+  const currentStaffName = staffName || user?.name || (locale === "en" ? "Staff Member" : "Nhân viên");
   const completedCount = dutyList.filter(d => d.completed).length;
 
   return (
@@ -609,14 +643,14 @@ export default function StaffOverviewPage() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t("greeting", { name: locale === "en" ? "Nguyen Van Tuan" : "Nguyễn Văn Tuấn" })}
+            {t("greeting", { name: currentStaffName })}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 font-medium">
             {t("greetingSubtitle", { date: todayFormattedDate })}
           </p>
         </div>
 
-        {/* Live / Simulated Digital Clock Widget */}
+        {/* Live Digital Clock Widget */}
         <div className="flex flex-col items-start md:items-end z-10 shrink-0">
           <div className="bg-zinc-900 text-white px-5 py-3 rounded-2xl shadow-md border border-zinc-800 flex items-center gap-3">
             <Clock className="w-5 h-5 text-[#2AC1BC] animate-pulse" />
@@ -625,94 +659,10 @@ export default function StaffOverviewPage() {
                 {effectiveTimeString}
               </div>
               <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">
-                {simulatedTime ? t("simulatedTimeLabel") : t("realSystemTime")}
+                {t("realSystemTime")}
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* DEMO TIME SIMULATOR CONTROLLER (For testing UC-S-02 strict server windows & explanations) */}
-      <div className="bg-[#2AC1BC]/5 border border-[#2AC1BC]/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-bold text-zinc-700">
-          <Play className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-          <span>{t("simTitle")}</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setSimulatedTime("06:45")}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-              simulatedTime === "06:45"
-                ? "bg-[#2AC1BC] text-white shadow-2xs"
-                : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-            }`}
-          >
-            {t("simNotOpen")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSimulatedTime("06:55")}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-              simulatedTime === "06:55"
-                ? "bg-[#2AC1BC] text-white shadow-2xs"
-                : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-            }`}
-          >
-            {t("simOnTime")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSimulatedTime("07:15")}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-              simulatedTime === "07:15"
-                ? "bg-amber-600 text-white shadow-2xs"
-                : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-            }`}
-          >
-            {t("simLate")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSimulatedTime("14:30")}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-              simulatedTime === "14:30"
-                ? "bg-amber-600 text-white shadow-2xs"
-                : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-            }`}
-          >
-            {t("simEarly")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSimulatedTime("15:05")}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-              simulatedTime === "15:05"
-                ? "bg-[#2AC1BC] text-white shadow-2xs"
-                : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-            }`}
-          >
-            {t("simNormalEnd")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSimulatedTime(null)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-              simulatedTime === null
-                ? "bg-[#2AC1BC] text-white shadow-2xs"
-                : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-            }`}
-          >
-            {t("simRealTime")}
-          </button>
-          <button
-            type="button"
-            onClick={handleResetAttendance}
-            title={t("simReset")}
-            className="p-1 rounded-lg bg-zinc-200/80 hover:bg-zinc-300 text-zinc-700 transition-colors cursor-pointer ml-1"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
 
@@ -1166,8 +1116,8 @@ export default function StaffOverviewPage() {
                               imageUrl: duty.photoProof!,
                               watermark: {
                                 time: duty.photoProofTime || (locale === "en" ? "07:15 - Sep 09, 2026" : "07:15 - 09/09/2026"),
-                                place: getLocalizedPlace(todaySchedule.boardingHouseName, locale === "en"),
-                                staffName: getLocalizedStaffName("Nguyễn Văn Tuấn (NV01)", locale === "en")
+                                place: getLocalizedPlace(todaySchedule.boardingHouseName || (locale === "en" ? "Assigned Building" : "Toà nhà trực"), locale === "en"),
+                                staffName: getLocalizedStaffName(currentStaffName, locale === "en")
                               },
                               note: getDutyNote(duty.note, locale === "en")
                             })}
@@ -1228,7 +1178,7 @@ export default function StaffOverviewPage() {
                   <div key={cw.id} className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <img
-                        src={cw.avatar}
+                        src={cw.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(cw.name)}&background=2AC1BC&color=fff`}
                         alt={cw.name}
                         className="w-10 h-10 rounded-full object-cover border border-zinc-200 shrink-0"
                       />
@@ -1237,13 +1187,15 @@ export default function StaffOverviewPage() {
                         <p className="text-[11px] font-semibold text-zinc-500 truncate">{getPositionName(cw.positionName)}</p>
                       </div>
                     </div>
-                    <a
-                      href={`tel:${cw.phone}`}
-                      title={t("callCoworker", { name: cw.name })}
-                      className="p-2 rounded-xl bg-white border border-zinc-200 text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors shrink-0 shadow-2xs"
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                    </a>
+                    {cw.phone ? (
+                      <a
+                        href={`tel:${cw.phone}`}
+                        title={t("callCoworker", { name: cw.name })}
+                        className="p-2 rounded-xl bg-white border border-zinc-200 text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors shrink-0 shadow-2xs"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                      </a>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -1261,34 +1213,72 @@ export default function StaffOverviewPage() {
           {/* MONTHLY SUMMARY METRICS WIDGET */}
           <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-black text-zinc-800 uppercase tracking-wider">
-              {t("monthlySummaryTitle")}
+              {monthlySummaryTitle}
             </h3>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("totalShiftsLabel")}</span>
-                <div className="text-xl font-black text-zinc-900">{t("shiftsUnit", { count: 8 })}</div>
-                <span className="text-[10px] text-emerald-600 font-bold">{t("workHoursUnit", { count: 64 })}</span>
-              </div>
+            {monthlySummary && monthlySummary.totalShifts > 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                    {t("metricTotalShifts") || (locale === "en" ? "TOTAL SHIFTS" : "TỔNG CA TRỰC")}
+                  </span>
+                  <div className="text-xl font-black text-zinc-900">
+                    {t("shiftsUnit", { count: monthlySummary.totalShifts })}
+                  </div>
+                  <span className="text-[10px] text-emerald-600 font-bold">
+                    {locale === "en" ? `${monthlySummary.totalHours} hrs` : `${monthlySummary.totalHours} giờ công`}
+                  </span>
+                </div>
 
-              <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("onTimeLabel")}</span>
-                <div className="text-xl font-black text-[#2AC1BC]">87.5%</div>
-                <span className="text-[10px] text-zinc-500 font-bold">{t("onTimeStandard", { count: "7/8" })}</span>
-              </div>
+                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                    {t("onTimeLabel") || (locale === "en" ? "ON TIME" : "ĐÚNG GIỜ")}
+                  </span>
+                  <div className="text-xl font-black text-[#2AC1BC]">
+                    {monthlySummary.onTimeRate}%
+                  </div>
+                  <span className="text-[10px] text-zinc-500 font-bold">
+                    {t("onTimeStandard", {
+                      count: `${monthlySummary.onTimeCount}/${monthlySummary.totalShifts}`
+                    })}
+                  </span>
+                </div>
 
-              <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("lateLabel")}</span>
-                <div className="text-xl font-black text-amber-600">{t("shiftsUnit", { count: 1 })}</div>
-                <span className="text-[10px] text-zinc-400 font-medium">{t("lateHasExplanation")}</span>
-              </div>
+                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                    {t("lateLabel") || (locale === "en" ? "LATE" : "ĐI MUỘN")}
+                  </span>
+                  <div className="text-xl font-black text-amber-600">
+                    {t("shiftsUnit", { count: monthlySummary.lateCount })}
+                  </div>
+                  <span className="text-[10px] text-zinc-400 font-medium">{t("lateHasExplanation")}</span>
+                </div>
 
-              <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("earlyLabel")}</span>
-                <div className="text-xl font-black text-amber-600">{t("shiftsUnit", { count: 1 })}</div>
-                <span className="text-[10px] text-zinc-400 font-medium">{t("earlyApproved")}</span>
+                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                    {t("earlyLabel") || (locale === "en" ? "EARLY LEAVE" : "VỀ SỚM")}
+                  </span>
+                  <div className="text-xl font-black text-amber-600">
+                    {t("shiftsUnit", { count: monthlySummary.earlyCount })}
+                  </div>
+                  <span className="text-[10px] text-zinc-400 font-medium">{t("earlyApproved")}</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-5 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 text-center space-y-2">
+                <div className="w-8 h-8 mx-auto rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-400">
+                  <Calendar className="w-4 h-4 text-[#2AC1BC]" />
+                </div>
+                <div className="text-xs font-bold text-zinc-700">
+                  {locale === "en" ? "No attendance data for this month" : "Chưa có dữ liệu chấm công tháng này"}
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  {locale === "en"
+                    ? "Your shift hours, attendance rate, and punctuality records will be summarized here."
+                    : "Tổng giờ công, số ca trực và tỷ lệ chuyên cần sẽ được tự động tổng hợp tại đây khi hoàn thành các ca làm việc."}
+                </p>
+              </div>
+            )}
 
             <Link
               href="/staff/schedule?tab=attendance"
@@ -1296,37 +1286,6 @@ export default function StaffOverviewPage() {
             >
               <span>{t("viewAttendanceHistory")}</span>
               <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            </Link>
-          </div>
-
-          {/* TWO PRIMARY NAVIGATION HUB CARDS (COMPACT & SLEEK) */}
-          <div className="grid grid-cols-1 gap-3">
-            {/* Card 1: Shifts & Attendance Hub */}
-            <Link
-              href="/staff/schedule"
-              className="p-4 rounded-2xl bg-[#2AC1BC] hover:bg-[#25ad87] text-white flex items-center justify-between shadow-2xs hover:shadow-md transition-all group cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Calendar className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-sm font-black text-white">{t("navHubTitle")}</span>
-              </div>
-              <ChevronRight className="w-5 h-5 text-white/80 group-hover:text-white group-hover:translate-x-1 transition-transform shrink-0" />
-            </Link>
-
-            {/* Card 2: Dedicated Tasks Center */}
-            <Link
-              href="/staff/tasks"
-              className="p-4 rounded-2xl bg-white border border-zinc-200/90 hover:border-[#2AC1BC]/60 text-zinc-900 flex items-center justify-between shadow-2xs hover:shadow-md transition-all group cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#2AC1BC]/10 flex items-center justify-center shrink-0">
-                  <CheckSquare className="w-5 h-5 text-[#2AC1BC]" />
-                </div>
-                <span className="text-sm font-black text-zinc-800 group-hover:text-[#2AC1BC] transition-colors">{t("navTasksTitle")}</span>
-              </div>
-              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-[#2AC1BC] group-hover:translate-x-1 transition-transform shrink-0" />
             </Link>
           </div>
         </div>
@@ -1343,6 +1302,7 @@ export default function StaffOverviewPage() {
           shiftName={todaySchedule.shift.name}
           effectiveTime={effectiveTimeString}
           boardingHouseName={todaySchedule.boardingHouseName}
+          staffName={currentStaffName}
           onClose={handleCloseModal}
           onSubmit={(data) => {
             if (activeModal === "checkin") {
@@ -1363,6 +1323,7 @@ export default function StaffOverviewPage() {
           duty={selectedDutyForProof}
           boardingHouseName={todaySchedule.boardingHouseName}
           effectiveTime={effectiveTimeString}
+          staffName={currentStaffName}
           onClose={handleCloseModal}
           onSubmit={(payload) => handleSaveDutyProof(payload)}
           onChangeDraft={() => setHasFormDraftChanges(true)}
@@ -1624,6 +1585,7 @@ interface CheckInOutCameraModalProps {
   shiftName: string;
   effectiveTime: string;
   boardingHouseName: string;
+  staffName?: string;
   onClose: () => void;
   onSubmit: (data: {
     photo: string;
@@ -1640,7 +1602,9 @@ function CheckInOutCameraModal({
   isLate,
   isEarly,
   shiftName,
+  effectiveTime,
   boardingHouseName,
+  staffName,
   onClose,
   onSubmit,
   onChangeDraft
@@ -1654,6 +1618,7 @@ function CheckInOutCameraModal({
   // Real Camera Hardware Refs & States
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fallbackFileInputRef = useRef<HTMLInputElement>(null);
 
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [cameraStatus, setCameraStatus] = useState<"starting" | "ready" | "error" | "unsupported">("starting");
@@ -1889,7 +1854,7 @@ function CheckInOutCameraModal({
       const activeWatermark: AttendanceWatermark = {
         time: snapFullDateTime,
         place: activePlace,
-        staffName: getLocalizedStaffName("Nguyễn Văn Tuấn (NV01)", isEn),
+        staffName: getLocalizedStaffName(staffName || (isEn ? "Staff Member" : "Nhân viên"), isEn),
         coordinates: activeCoords
       };
 
@@ -1942,9 +1907,11 @@ function CheckInOutCameraModal({
     }
   };
 
-  const handleSimulatedSnapFallback = () => {
-    setIsFlashing(true);
+  const handleFallbackImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     onChangeDraft();
+    setIsFlashing(true);
 
     const now = new Date();
     const d = String(now.getDate()).padStart(2, "0");
@@ -1960,53 +1927,63 @@ function CheckInOutCameraModal({
     const snapFullDateTime = `${snapDateStr} ${snapTimeStr}`;
 
     const activePlace = getLocalizedPlace(
-      geoState.status === "ready" ? geoState.place : (isEn ? "GPS Coordinates: 20.9824° N, 105.7756° E" : "Tọa độ GPS: 20.9824° N, 105.7756° E"),
+      geoState.status === "ready" ? geoState.place : (isEn ? "GPS address undetermined" : "Không xác định được địa chỉ GPS"),
       isEn
     );
-    const activeCoords = geoState.status === "ready" ? geoState.coordinates : "20.9824° N, 105.7756° E";
+    const activeCoords = geoState.status === "ready" ? geoState.coordinates : (isEn ? "GPS unverified" : "GPS chưa xác thực");
 
     const activeWatermark: AttendanceWatermark = {
       time: snapFullDateTime,
       place: activePlace,
-      staffName: getLocalizedStaffName("Nguyễn Văn Tuấn (NV01)", isEn),
+      staffName: getLocalizedStaffName(staffName || (isEn ? "Staff Member" : "Nhân viên"), isEn),
       coordinates: activeCoords
     };
 
-    const canvas = document.createElement("canvas");
-    canvas.width = 640;
-    canvas.height = 480;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(0, 0, 640, 480);
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(40, 40, 560, 400);
-      ctx.fillStyle = "#64748b";
-      ctx.font = "bold 18px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(t("simulatedPhotoNotice"), 320, 220);
-      ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-      ctx.fillRect(0, 395, 640, 85);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const width = img.width || 640;
+        const height = img.height || 480;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
 
-      const padX = 36;
-      ctx.fillStyle = "#2AC1BC";
-      ctx.font = "bold 13px monospace";
-      ctx.fillText(`🕒 ${activeWatermark.time} | ${isEn ? "LIVE VERIFIED" : "XÁC THỰC THỜI GIAN THỰC"}`, padX, 420);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 12px sans-serif";
-      ctx.fillText(`📍 ${activeWatermark.place}`, padX, 442);
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "11px sans-serif";
-      ctx.fillText(`👤 ${activeWatermark.staffName}  •  GPS: ${activeWatermark.coordinates}`, padX, 464);
+          const barHeight = Math.max(90, Math.floor(height * 0.22));
+          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+          ctx.fillRect(0, height - barHeight, width, barHeight);
 
-      setCapturedPhoto(canvas.toDataURL("image/jpeg", 0.92));
-      setCapturedWatermark(activeWatermark);
-      setCapturedTime(snapTimeStr);
-      setCapturedDate(snapIsoDate);
-      stopCamera();
-    }
-    setTimeout(() => setIsFlashing(false), 250);
+          const padX = Math.max(36, Math.floor(width * 0.04));
+          const fontSize = Math.max(13, Math.min(22, Math.floor(width * 0.024)));
+
+          ctx.fillStyle = "#2AC1BC";
+          ctx.font = `bold ${fontSize}px monospace`;
+          ctx.fillText(`🕒 ${activeWatermark.time} | ${isEn ? "LIVE VERIFIED" : "XÁC THỰC THỜI GIAN THỰC"}`, padX, height - barHeight + fontSize + 8);
+
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = `bold ${fontSize - 1}px sans-serif`;
+          ctx.fillText(`📍 ${activeWatermark.place}`, padX, height - barHeight + (fontSize * 2) + 16);
+
+          ctx.fillStyle = "#CBD5E1";
+          ctx.font = `${fontSize - 2}px sans-serif`;
+          ctx.fillText(`👤 ${activeWatermark.staffName}  •  GPS: ${activeWatermark.coordinates}${geoState.accuracy ? ` (±${geoState.accuracy}m)` : ""}`, padX, height - barHeight + (fontSize * 3) + 24);
+
+          setCapturedPhoto(canvas.toDataURL("image/jpeg", 0.92));
+          setCapturedWatermark(activeWatermark);
+          setCapturedTime(snapTimeStr);
+          setCapturedDate(snapIsoDate);
+          stopCamera();
+        }
+        setIsFlashing(false);
+      };
+      if (typeof event.target?.result === "string") {
+        img.src = event.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRetakePhoto = () => {
@@ -2130,9 +2107,19 @@ function CheckInOutCameraModal({
                     <div className="text-center p-6 text-zinc-400 text-xs space-y-3 max-w-sm">
                       <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
                       <p className="font-bold text-zinc-200">{cameraError}</p>
-                      <div className="flex flex-col gap-2 pt-1">
+                      <input
+                        ref={fallbackFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFallbackImageUpload}
+                      />
+                      <div className="flex flex-col sm:flex-row gap-2 pt-1 justify-center">
                         <button type="button" onClick={() => startCamera(facingMode)} className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer">{t("retryCamera")}</button>
-                        <button type="button" onClick={handleSimulatedSnapFallback} className="px-3 py-1.5 rounded-xl bg-[#2AC1BC]/20 hover:bg-[#2AC1BC]/30 text-[#2AC1BC] border border-[#2AC1BC]/40 text-xs font-bold transition-colors cursor-pointer">{t("simulateCapture")}</button>
+                        <button type="button" onClick={() => fallbackFileInputRef.current?.click()} className="px-3 py-1.5 rounded-xl bg-[#2AC1BC]/20 hover:bg-[#2AC1BC]/30 text-[#2AC1BC] border border-[#2AC1BC]/40 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{t("btnUploadDuty")}</span>
+                        </button>
                       </div>
                     </div>
                   )}
@@ -2343,6 +2330,7 @@ interface DutyProofModalProps {
   duty: DutyTaskItem;
   boardingHouseName: string;
   effectiveTime: string;
+  staffName?: string;
   onClose: () => void;
   onSubmit: (payload: { dutyId: string; photo?: string; note?: string; proofTime?: string; markCompleted?: boolean }) => void;
   onChangeDraft: () => void;
@@ -2352,6 +2340,7 @@ function DutyProofModal({
   duty,
   boardingHouseName,
   effectiveTime,
+  staffName,
   onClose,
   onSubmit,
   onChangeDraft
@@ -2359,13 +2348,7 @@ function DutyProofModal({
   const t = useTranslations("staffPortal");
   const { locale } = useLanguage();
 
-  const SAMPLE_DUTY_PHOTOS = [
-    "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80"
-  ];
-
-  const [photo, setPhoto] = useState<string>(duty.photoProof || (duty.requiresPhoto ? SAMPLE_DUTY_PHOTOS[0] : ""));
+  const [photo, setPhoto] = useState<string>(duty.photoProof || "");
   const [note, setNote] = useState(duty.note || "");
   const [warningNotice, setWarningNotice] = useState<string | null>(null);
   const [proofTimeStr] = useState<string>(() => {
@@ -2374,6 +2357,7 @@ function DutyProofModal({
     return `${now.toLocaleDateString(loc)} ${now.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`;
   });
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2453,7 +2437,7 @@ function DutyProofModal({
                   📍 {getLocalizedPlace(boardingHouseName, locale === "en")}
                 </div>
                 <div className="text-zinc-400 text-[9px]">
-                  👤 {getLocalizedStaffName("Nguyễn Văn Tuấn (NV01)", locale === "en")}
+                  👤 {getLocalizedStaffName(staffName || (locale === "en" ? "Staff Member" : "Nhân viên"), locale === "en")}
                 </div>
               </div>
             </div>
@@ -2479,6 +2463,14 @@ function DutyProofModal({
           {/* Actions */}
           <div className="flex items-center gap-2">
             <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            <input
               ref={fileRef}
               type="file"
               accept="image/*"
@@ -2487,12 +2479,7 @@ function DutyProofModal({
             />
             <button
               type="button"
-              onClick={() => {
-                const nextIdx = Math.floor(Math.random() * SAMPLE_DUTY_PHOTOS.length);
-                setPhoto(SAMPLE_DUTY_PHOTOS[nextIdx]);
-                setWarningNotice(null);
-                onChangeDraft();
-              }}
+              onClick={() => cameraRef.current?.click()}
               className="flex-1 py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <Camera className="w-3.5 h-3.5 text-[#2AC1BC]" />

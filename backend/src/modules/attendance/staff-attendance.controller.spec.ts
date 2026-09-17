@@ -125,5 +125,22 @@ describe('StaffAttendanceController', () => {
     expect(service.saveStaffDutyProof).toHaveBeenCalledWith('user-123', dto);
     expect(res).toEqual(mockOverviewResponse);
   });
+
+  it('should delegate getMonthlySummary to service', async () => {
+    const mockMonthly = {
+      month: '2026-09',
+      totalShifts: 8,
+      totalHours: 64,
+      onTimeRate: 87.5,
+      onTimeCount: 7,
+      lateCount: 1,
+      earlyCount: 0,
+    };
+    service.getStaffMonthlySummary = jest.fn().mockResolvedValue(mockMonthly);
+
+    const res = await controller.getMonthlySummary(mockUser, { month: '2026-09' });
+    expect(service.getStaffMonthlySummary).toHaveBeenCalledWith('user-123', '2026-09');
+    expect(res).toEqual(mockMonthly);
+  });
 });
 

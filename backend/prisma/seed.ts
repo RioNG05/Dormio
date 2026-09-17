@@ -1218,7 +1218,7 @@ async function main() {
       {
         employeeId: emp2.id,
         positionId: posCleaning.id,
-        boardingHouseId: house2.id,
+        boardingHouseId: house1.id,
         status: AssignmentStatus.active,
         joinedAt: new Date('2026-02-01'),
         leftAt: farFuture,
@@ -1270,6 +1270,7 @@ async function main() {
     },
   });
 
+  // August sample schedule
   const sched1 = await prisma.workSchedule.create({
     data: {
       employeeId: emp1.id,
@@ -1312,6 +1313,43 @@ async function main() {
       },
     ],
   });
+
+  // September 2026 work schedules & attendances for emp1 (8 shifts: 7 on-time, 1 late, 1 early checkout)
+  const septDays = [
+    { day: '01', status: AttendanceStatus.on_time, inTime: '05:55', outTime: '14:02', early: false },
+    { day: '03', status: AttendanceStatus.on_time, inTime: '05:58', outTime: '14:00', early: false },
+    { day: '05', status: AttendanceStatus.on_time, inTime: '05:52', outTime: '14:05', early: false },
+    { day: '08', status: AttendanceStatus.on_time, inTime: '05:57', outTime: '13:45', early: true },
+    { day: '10', status: AttendanceStatus.on_time, inTime: '05:59', outTime: '14:01', early: false },
+    { day: '12', status: AttendanceStatus.late, inTime: '06:18', outTime: '14:18', early: false },
+    { day: '15', status: AttendanceStatus.on_time, inTime: '05:54', outTime: '14:03', early: false },
+    { day: '17', status: AttendanceStatus.on_time, inTime: '05:56', outTime: '14:00', early: false },
+  ];
+
+  for (const s of septDays) {
+    const ws = await prisma.workSchedule.create({
+      data: {
+        employeeId: emp1.id,
+        boardingHouseId: house1.id,
+        shiftId: shiftMorning.id,
+        workDate: new Date(`2026-09-${s.day}T00:00:00Z`),
+        recurrenceId: recPattern1.id,
+        status: ScheduleStatus.scheduled,
+      },
+    });
+
+    await prisma.attendance.create({
+      data: {
+        workScheduleId: ws.id,
+        employeeId: emp1.id,
+        checkIn: new Date(`2026-09-${s.day}T${s.inTime}:00Z`),
+        checkOut: new Date(`2026-09-${s.day}T${s.outTime}:00Z`),
+        status: s.status,
+        checkInExplanation: s.status === AttendanceStatus.late ? 'Kẹt xe đường Nguyễn Hữu Thọ' : undefined,
+        checkOutExplanation: s.early ? 'Bàn giao ca sớm 15 phút' : undefined,
+      },
+    });
+  }
 
   // ─── 22. OTP CODES ──────────────────────────────────────────────────────────
   console.log('🔢 Creating OTP codes...');
