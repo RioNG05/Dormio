@@ -561,6 +561,54 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
       expect(result.data[0].boardingHouseName).toBe('Dormio Cầu Giấy');
       expect(result.summary.total).toBe(2); // Summary reflects all range records
     });
+
+    it('should filter items by specific date and shiftName', async () => {
+      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.workSchedule.findMany.mockResolvedValue([
+        {
+          id: 'ws-1',
+          workDate: new Date('2026-09-17T00:00:00Z'),
+          shift: {
+            id: 's-1',
+            name: 'Ca Sáng',
+            startTime: new Date('1970-01-01T07:00:00Z'),
+            endTime: new Date('1970-01-01T15:00:00Z'),
+          },
+          boardingHouse: {
+            id: 'bh-1',
+            name: 'KTX HOLA (Khu A)',
+          },
+          attendances: [],
+        },
+        {
+          id: 'ws-2',
+          workDate: new Date('2026-09-16T00:00:00Z'),
+          shift: {
+            id: 's-2',
+            name: 'Ca Chiều',
+            startTime: new Date('1970-01-01T15:00:00Z'),
+            endTime: new Date('1970-01-01T23:00:00Z'),
+          },
+          boardingHouse: {
+            id: 'bh-2',
+            name: 'Dormio Cầu Giấy',
+          },
+          attendances: [],
+        },
+      ]);
+
+      const resultByDate = await service.getStaffAttendanceHistory(mockUserId, {
+        date: '2026-09-17',
+      });
+      expect(resultByDate.data).toHaveLength(1);
+      expect(resultByDate.data[0].workDate).toBe('2026-09-17');
+
+      const resultByShift = await service.getStaffAttendanceHistory(mockUserId, {
+        shiftName: 'Ca Chiều',
+      });
+      expect(resultByShift.data).toHaveLength(1);
+      expect(resultByShift.data[0].shiftName).toBe('Ca Chiều');
+    });
   });
 });
 

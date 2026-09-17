@@ -1410,6 +1410,22 @@ export class AttendanceService {
       );
     }
 
+    // Filter by specific work date if specified
+    if (query.date && query.date.trim()) {
+      const targetDate = query.date.trim();
+      filteredItems = filteredItems.filter((i) =>
+        i.workDate.includes(targetDate),
+      );
+    }
+
+    // Filter by shift name if specified
+    if (query.shiftName && query.shiftName !== 'all' && query.shiftName.trim()) {
+      const targetShift = query.shiftName.trim().toLowerCase();
+      filteredItems = filteredItems.filter((i) =>
+        i.shiftName.toLowerCase().includes(targetShift),
+      );
+    }
+
     // Pagination (Rule #9)
     const page = query.page && query.page > 0 ? query.page : 1;
     const limit = query.limit && query.limit > 0 ? query.limit : 10;

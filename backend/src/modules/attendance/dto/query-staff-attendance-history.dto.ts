@@ -23,6 +23,22 @@ export class QueryStaffAttendanceHistoryDto {
   status?: 'all' | 'on_time' | 'late' | 'absent';
 
   @ApiPropertyOptional({
+    description: 'Filter specific work date string (YYYY-MM-DD or partial)',
+    example: '2026-09-17',
+  })
+  @IsOptional()
+  @IsString()
+  date?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter shift name or shift type (e.g. Ca Sáng, Ca Chiều, Ca Đêm, or all)',
+    example: 'Ca Sáng',
+  })
+  @IsOptional()
+  @IsString()
+  shiftName?: string;
+
+  @ApiPropertyOptional({
     description: 'Filter start date (YYYY-MM-DD)',
     example: '2026-09-01',
   })

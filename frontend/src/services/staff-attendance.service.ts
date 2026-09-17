@@ -53,6 +53,8 @@ export interface StaffAttendanceHistoryParams {
   status?: string;
   startDate?: string;
   endDate?: string;
+  date?: string;
+  shiftName?: string;
   page?: number;
   limit?: number;
 }

@@ -8,7 +8,7 @@ import {
   Info, X, CheckCircle2, AlertTriangle, XCircle,
   Phone, ArrowLeft, Search,
   Camera, Eye, ShieldCheck, ArrowRight, FileText,
-  Loader2
+  Loader2, Filter, RotateCcw
 } from "lucide-react";
 import {
   AttendanceRecord,
@@ -28,18 +28,45 @@ function StaffShiftHistoryContent() {
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
-  // Filter & Search state
-  const [attSearchQuery, setAttSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [attStatusFilter, setAttStatusFilter] = useState<"all" | "on_time" | "late" | "absent">("all");
+  // Table Inline Filter Draft States (edited by user inside table header controls)
+  const [filterDateDraft, setFilterDateDraft] = useState<string>("");
+  const [filterShiftDraft, setFilterShiftDraft] = useState<string>("all");
+  const [filterStatusDraft, setFilterStatusDraft] = useState<"all" | "on_time" | "late" | "absent">("all");
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(attSearchQuery);
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [attSearchQuery]);
+  // Applied Filter States (applied to backend query only when clicking "Lọc")
+  const [appliedDate, setAppliedDate] = useState<string>("");
+  const [appliedShift, setAppliedShift] = useState<string>("all");
+  const [appliedStatus, setAppliedStatus] = useState<"all" | "on_time" | "late" | "absent">("all");
+
+  const isFilterActive = useMemo(() => {
+    return (
+      filterDateDraft.trim() !== "" ||
+      filterShiftDraft !== "all" ||
+      filterStatusDraft !== "all" ||
+      appliedDate !== "" ||
+      appliedShift !== "all" ||
+      appliedStatus !== "all"
+    );
+  }, [filterDateDraft, filterShiftDraft, filterStatusDraft, appliedDate, appliedShift, appliedStatus]);
+
+  const handleApplyFilter = () => {
+    setAppliedDate(filterDateDraft.trim());
+    setAppliedShift(filterShiftDraft);
+    setAppliedStatus(filterStatusDraft);
+    setCurrentPage(1);
+    setWindowStart(1);
+  };
+
+  const handleResetFilter = () => {
+    setFilterDateDraft("");
+    setFilterShiftDraft("all");
+    setFilterStatusDraft("all");
+    setAppliedDate("");
+    setAppliedShift("all");
+    setAppliedStatus("all");
+    setCurrentPage(1);
+    setWindowStart(1);
+  };
 
   // Data & loading state
   const [attendances, setAttendances] = useState<AttendanceRecord[]>([]);
@@ -84,8 +111,9 @@ function StaffShiftHistoryContent() {
       const res = await staffAttendanceService.getHistory({
         page: currentPage,
         limit: validPageSize,
-        status: attStatusFilter,
-        search: debouncedSearch.trim() || undefined,
+        status: appliedStatus !== "all" ? appliedStatus : undefined,
+        date: appliedDate || undefined,
+        shiftName: appliedShift !== "all" ? appliedShift : undefined,
       });
 
       setAttendances(res.data);
@@ -98,7 +126,7 @@ function StaffShiftHistoryContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSizeInput, attStatusFilter, debouncedSearch]);
+  }, [currentPage, pageSizeInput, appliedStatus, appliedDate, appliedShift]);
 
   useEffect(() => {
     fetchHistory();
@@ -253,64 +281,124 @@ function StaffShiftHistoryContent() {
         )}
       </div>
 
-      {/* Filter & Search Controls */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={attSearchQuery}
-            onChange={(e) => {
-              setAttSearchQuery(e.target.value);
-              setCurrentPage(1);
-              setWindowStart(1);
-            }}
-            placeholder={t("attSearchPlaceholder")}
-            className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2AC1BC]"
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 text-xs">
-            {(["all", "on_time", "late", "absent"] as const).map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => {
-                  setAttStatusFilter(st);
-                  setCurrentPage(1);
-                  setWindowStart(1);
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  attStatusFilter === st
-                    ? "bg-[#2AC1BC] text-white shadow-2xs"
-                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                }`}
-              >
-                {st === "all" && `${t("filterAll")} (${summary.total})`}
-                {st === "on_time" && `${t("filterOnTime")} (${summary.onTime})`}
-                {st === "late" && `${t("filterLate")} (${summary.late})`}
-                {st === "absent" && `${t("filterAbsent")} (${summary.absent})`}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* TABLE VIEW */}
       <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
+              {/* Row 1: Column Titles */}
               <tr>
-                <th className="py-3 px-4">{t("tableColDate")}</th>
-                <th className="py-3 px-3">{t("tableColShift")}</th>
-                <th className="py-3 px-3">{t("tableColPlace")}</th>
-                <th className="py-3 px-3">{t("tableColCheckIn")}</th>
-                <th className="py-3 px-3">{t("tableColCheckOut")}</th>
-                <th className="py-3 px-3">{t("tableColStatus")}</th>
-                <th className="py-3 px-3">{t("tableColHours")}</th>
-                <th className="py-3 px-3">{t("tableColNote")}</th>
+                <th className="py-3 px-3 min-w-[130px]">{t("tableColDate")}</th>
+                <th className="py-3 px-3 min-w-[160px]">{t("tableColShift")}</th>
+                <th className="py-3 px-3 min-w-[90px]">{t("tableColCheckIn")}</th>
+                <th className="py-3 px-3 min-w-[90px]">{t("tableColCheckOut")}</th>
+                <th className="py-3 px-3 min-w-[130px]">{t("tableColStatus")}</th>
+                <th className="py-3 px-3 min-w-[80px]">{t("tableColHours")}</th>
+                <th className="py-3 px-3 min-w-[160px]">{t("tableColNote")}</th>
+                <th className="py-3 px-3 min-w-[90px] text-center">{isEn ? "Action" : "Thao tác"}</th>
+              </tr>
+              {/* Row 2: Table Inline Filters */}
+              <tr className="bg-white border-t border-zinc-100 font-normal lowercase tracking-normal">
+                {/* Ngày trực: input filter */}
+                <th className="py-2.5 px-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={filterDateDraft}
+                      onChange={(e) => setFilterDateDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleApplyFilter();
+                      }}
+                      placeholder={isEn ? "All dates" : "Tất cả ngày trực"}
+                      className="w-full pl-2.5 pr-7 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs"
+                    />
+                    {filterDateDraft ? (
+                      <button
+                        type="button"
+                        onClick={() => setFilterDateDraft("")}
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
+                        title={isEn ? "Clear" : "Xoá"}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    ) : (
+                      <Calendar className="w-3.5 h-3.5 text-zinc-300 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    )}
+                  </div>
+                </th>
+
+                {/* Ca làm việc: dropdown shift filter */}
+                <th className="py-2.5 px-3">
+                  <select
+                    value={filterShiftDraft}
+                    onChange={(e) => setFilterShiftDraft(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer truncate"
+                  >
+                    <option value="all">{isEn ? "All shifts" : "Tất cả ca làm việc"}</option>
+                    <option value="Ca Sáng">{isEn ? "Morning Shift" : "Ca Sáng"}</option>
+                    <option value="Ca Chiều">{isEn ? "Afternoon Shift" : "Ca Chiều"}</option>
+                    <option value="Ca Đêm">{isEn ? "Night Shift" : "Ca Đêm"}</option>
+                  </select>
+                </th>
+
+                {/* Checkin: no filter */}
+                <th className="py-2.5 px-3 text-center">
+                  <span className="text-zinc-300 font-mono text-xs">-</span>
+                </th>
+
+                {/* Checkout: no filter */}
+                <th className="py-2.5 px-3 text-center">
+                  <span className="text-zinc-300 font-mono text-xs">-</span>
+                </th>
+
+                {/* Trạng thái: dropdown status filter */}
+                <th className="py-2.5 px-3">
+                  <select
+                    value={filterStatusDraft}
+                    onChange={(e) => setFilterStatusDraft(e.target.value as any)}
+                    className="w-full px-2.5 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer truncate"
+                  >
+                    <option value="all">{isEn ? "All statuses" : "Tất cả trạng thái"}</option>
+                    <option value="on_time">{t("tableStatusOnTime")}</option>
+                    <option value="late">{t("tableStatusLate")}</option>
+                    <option value="absent">{t("tableStatusAbsent")}</option>
+                  </select>
+                </th>
+
+                {/* Giờ công: no filter */}
+                <th className="py-2.5 px-3 text-center">
+                  <span className="text-zinc-300 font-mono text-xs">-</span>
+                </th>
+
+                {/* Ghi chú & giải trình: no filter */}
+                <th className="py-2.5 px-3 text-center">
+                  <span className="text-zinc-300 font-mono text-xs">-</span>
+                </th>
+
+                {/* Nút "Lọc" ở ngoài cùng */}
+                <th className="py-2.5 px-3 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handleApplyFilter}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#2AC1BC] hover:bg-[#22a8a4] text-white text-xs font-bold flex items-center justify-center gap-1 transition-all shadow-2xs cursor-pointer active:scale-95"
+                      title={isEn ? "Apply filters" : "Áp dụng bộ lọc"}
+                    >
+                      <Filter className="w-3.5 h-3.5" />
+                      <span>{isEn ? "Filter" : "Lọc"}</span>
+                    </button>
+                    {isFilterActive && (
+                      <button
+                        type="button"
+                        onClick={handleResetFilter}
+                        className="p-1.5 rounded-xl border border-zinc-200 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+                        title={isEn ? "Reset filters" : "Đặt lại bộ lọc"}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
@@ -318,21 +406,21 @@ function StaffShiftHistoryContent() {
                 <>
                   {[...Array(5)].map((_, idx) => (
                     <tr key={idx} className="animate-pulse">
-                      <td className="py-4 px-4"><div className="h-4 w-20 bg-zinc-200 rounded" /></td>
+                      <td className="py-4 px-3"><div className="h-4 w-20 bg-zinc-200 rounded" /></td>
                       <td className="py-4 px-3"><div className="h-4 w-28 bg-zinc-200 rounded" /></td>
-                      <td className="py-4 px-3"><div className="h-4 w-32 bg-zinc-100 rounded" /></td>
                       <td className="py-4 px-3"><div className="h-4 w-16 bg-zinc-200 rounded" /></td>
                       <td className="py-4 px-3"><div className="h-4 w-16 bg-zinc-200 rounded" /></td>
                       <td className="py-4 px-3"><div className="h-5 w-18 bg-zinc-100 rounded-lg" /></td>
                       <td className="py-4 px-3"><div className="h-4 w-10 bg-zinc-200 rounded" /></td>
                       <td className="py-4 px-3"><div className="h-4 w-36 bg-zinc-100 rounded" /></td>
+                      <td className="py-4 px-3 text-center"><div className="h-6 w-10 bg-zinc-100 rounded-lg mx-auto" /></td>
                     </tr>
                   ))}
                 </>
               ) : attendances.length > 0 ? (
                 attendances.map((item) => (
                   <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-4 px-4 font-bold text-zinc-900 whitespace-nowrap">
+                    <td className="py-4 px-3 font-bold text-zinc-900 whitespace-nowrap">
                       {item.workDate}
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap font-bold">
@@ -340,9 +428,6 @@ function StaffShiftHistoryContent() {
                       <div className="text-[10px] text-zinc-400 font-normal">
                         {item.shiftTime}
                       </div>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap text-zinc-600">
-                      {getLocalizedPlace(item.boardingHouseName, isEn)}
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono font-bold">
@@ -450,6 +535,34 @@ function StaffShiftHistoryContent() {
                         getLocalizedExplanation(item.note, isEn) || "--"
                       )}
                     </td>
+                    <td className="py-4 px-3 text-center whitespace-nowrap">
+                      {item.checkInPhoto || item.checkOutPhoto ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewImageModal({
+                              isOpen: true,
+                              title: `${item.workDate} (${getShiftName(item.shiftName)})`,
+                              imageUrl: (item.checkInPhoto || item.checkOutPhoto)!,
+                              watermark: item.checkInWatermark
+                                ? {
+                                    ...item.checkInWatermark,
+                                    place: getLocalizedPlace(item.checkInWatermark.place, isEn),
+                                    staffName: getLocalizedStaffName(item.checkInWatermark.staffName, isEn),
+                                  }
+                                : undefined,
+                              note: getLocalizedExplanation(item.checkInExplanation || item.checkOutExplanation || item.note, isEn),
+                            })
+                          }
+                          className="p-1.5 rounded-xl bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-600 hover:text-[#2AC1BC] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          title={isEn ? "View photo proof" : "Xem ảnh đối chiếu"}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <span className="text-zinc-300 font-mono text-xs">-</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : null}
@@ -469,9 +582,21 @@ function StaffShiftHistoryContent() {
           </p>
           <p className="text-[11px] text-zinc-400">
             {isEn
-              ? "Try adjusting your search terms or filter status."
-              : "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái."}
+              ? "Try adjusting your date, shift, or status filters."
+              : "Hãy thử thay đổi ngày trực, ca làm việc hoặc bộ lọc trạng thái."}
           </p>
+          {isFilterActive && (
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleResetFilter}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
+                <span>{isEn ? "Reset filters" : "Đặt lại bộ lọc"}</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
