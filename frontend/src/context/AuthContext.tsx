@@ -32,6 +32,11 @@ export type DemoPreset = "guest" | "tenant" | "landlord_empty" | "landlord_activ
 
 interface AuthContextType {
   isLoggedIn: boolean;
+  /**
+   * True while the auth state is being read from localStorage on first mount.
+   * Guards should wait for this to become false before redirecting.
+   */
+  isHydrating: boolean;
   user: UserProfile | null;
   login: (userData?: Partial<UserProfile>) => void;
   loginWithToken: (token: string, userData: Partial<UserProfile>) => void;
@@ -63,6 +68,7 @@ const EMPTY_BUILDING: BuildingItem = {
 
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
+  isHydrating: true,
   user: null,
   login: () => {},
   loginWithToken: () => {},
@@ -82,6 +88,10 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [user, setUser] = useState<UserProfile | null>(null);
+
+  // True until localStorage has been read on the first client mount.
+  // AuthGuard waits for this to be false before performing any redirect.
+  const [isHydrating, setIsHydrating] = useState<boolean>(true);
 
   // Buildings loaded from API — starts empty until API responds
   const [buildings, setBuildings] = useState<BuildingItem[]>([]);
@@ -214,6 +224,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setActiveBuildingId(savedBuildingId);
       }
 
+      // Hydration complete — user state is resolved from localStorage
+      setIsHydrating(false);
       loadBuildingsFromApi();
     } else {
       // In local dev, auto-authenticate default test landlord so real API requests are active
@@ -234,6 +246,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("dormio_user_email", "ngquanghuy.work@gmail.com");
           localStorage.setItem("dormio_user_phone", "0344265925");
         }
+        // Hydration complete — dev auto-login resolved
+        setIsHydrating(false);
       });
     }
   }, [loadBuildingsFromApi]);
@@ -439,6 +453,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         isLoggedIn,
+        isHydrating,
         user,
         login,
         loginWithToken,

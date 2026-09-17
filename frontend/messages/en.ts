@@ -249,7 +249,16 @@ const en = {
     authRegisterTermsSuffix: "of Dormio.",
     authRegisterTitle: "Create Dormio Account",
     authRememberMe: "Remember me",
-    authUpdatePassBtn: "Update New Password"
+    authUpdatePassBtn: "Update New Password",
+
+    // --- Unauthorized page (app/(auth)/unauthorized/) ---
+    unauthorizedTagCode: "403 FORBIDDEN",
+    unauthorizedTitle: "Access Denied",
+    unauthorizedSubtitle: "You don't have permission to view this page",
+    unauthorizedDesc: "Your account does not have access to this area. If you believe this is a mistake, please contact your administrator.",
+    unauthorizedBtnHome: "Back to Home",
+    unauthorizedBtnLogin: "Sign In",
+    unauthorizedBtnSwitchAcc: "Switch Account"
   },
 
   // ==========================================================================

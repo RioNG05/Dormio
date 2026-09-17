@@ -249,7 +249,16 @@ const vi = {
     authRegisterTermsSuffix: "của Dormio.",
     authRegisterTitle: "Tạo tài khoản Dormio",
     authRememberMe: "Ghi nhớ đăng nhập",
-    authUpdatePassBtn: "Cập Nhật Mật Khẩu Mới"
+    authUpdatePassBtn: "Cập Nhật Mật Khẩu Mới",
+
+    // --- Unauthorized page (app/(auth)/unauthorized/) ---
+    unauthorizedTagCode: "403 FORBIDDEN",
+    unauthorizedTitle: "Truy cập bị từ chối",
+    unauthorizedSubtitle: "Bạn không có quyền xem trang này",
+    unauthorizedDesc: "Tài khoản của bạn không có quyền truy cập vào khu vực này. Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ quản trị viên.",
+    unauthorizedBtnHome: "Về trang chủ",
+    unauthorizedBtnLogin: "Đăng nhập",
+    unauthorizedBtnSwitchAcc: "Đổi tài khoản khác"
   },
 
   // ==========================================================================
