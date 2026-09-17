@@ -7,12 +7,12 @@ export default function StaffAttendancePage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/staff/schedule?tab=attendance");
+    router.replace("/staff/shift-history");
   }, [router]);
 
   return (
     <div className="p-12 text-center text-xs text-zinc-400 font-bold animate-pulse">
-      Đang chuyển đến Ca làm & Chấm công...
+      Đang chuyển đến Lịch sử chấm công...
     </div>
   );
 }

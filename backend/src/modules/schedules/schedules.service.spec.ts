@@ -36,6 +36,9 @@ describe('SchedulesService (UC-L-21)', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
+      employee: {
+        findUnique: jest.fn(),
+      },
       employeeAssignment: {
         findMany: jest.fn(),
         findFirst: jest.fn(),
@@ -327,6 +330,131 @@ describe('SchedulesService (UC-L-21)', () => {
           }),
         }),
       );
+    });
+  });
+
+  describe('getStaffBoardingHouses (UC-S-01)', () => {
+    it('should throw NotFoundException if employee not found', async () => {
+      prisma.employee.findUnique.mockResolvedValueOnce(null);
+      await expect(service.getStaffBoardingHouses(mockUserId)).rejects.toThrow(
+        'Không tìm thấy thông tin nhân viên.',
+      );
+    });
+
+    it('should return active assigned boarding houses for staff', async () => {
+      prisma.employee.findUnique.mockResolvedValueOnce({
+        id: mockEmployeeId,
+        userId: mockUserId,
+      });
+      prisma.employeeAssignment.findMany.mockResolvedValueOnce([
+        {
+          employeeId: mockEmployeeId,
+          boardingHouseId: mockBoardingHouseId,
+          status: 'active',
+          boardingHouse: {
+            id: mockBoardingHouseId,
+            name: 'KTX HOLA (Khu A)',
+            address: 'Thạch Thất, Hà Nội',
+          },
+        },
+      ]);
+
+      const result = await service.getStaffBoardingHouses(mockUserId);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(mockBoardingHouseId);
+      expect(result[0].name).toBe('KTX HOLA (Khu A)');
+    });
+  });
+
+  describe('getStaffSchedules (UC-S-01)', () => {
+    it('should throw NotFoundException if employee profile is missing', async () => {
+      prisma.employee.findUnique.mockResolvedValueOnce(null);
+      await expect(
+        service.getStaffSchedules(mockUserId, {}),
+      ).rejects.toThrow('Không tìm thấy thông tin nhân viên.');
+    });
+
+    it('should return mapped schedules with shift, coworker, and duties info', async () => {
+      prisma.employee.findUnique.mockResolvedValueOnce({
+        id: mockEmployeeId,
+        userId: mockUserId,
+      });
+
+      prisma.employeeAssignment.findMany.mockResolvedValueOnce([
+        {
+          employeeId: mockEmployeeId,
+          boardingHouseId: mockBoardingHouseId,
+          status: 'active',
+          position: {
+            id: 'pos-1',
+            name: 'Bảo vệ',
+            description: 'Kiểm tra an ninh\nTuần tra bãi đỗ xe',
+          },
+          boardingHouse: {
+            id: mockBoardingHouseId,
+            name: 'KTX HOLA (Khu A)',
+          },
+        },
+      ]);
+
+      prisma.workSchedule.findMany
+        // 1st call: user schedules
+        .mockResolvedValueOnce([
+          {
+            id: mockScheduleId,
+            employeeId: mockEmployeeId,
+            boardingHouseId: mockBoardingHouseId,
+            shiftId: mockShiftId,
+            workDate: new Date('2026-09-17T00:00:00Z'),
+            recurrenceId: mockPatternId,
+            status: 'scheduled',
+            shift: {
+              id: mockShiftId,
+              name: 'Ca Sáng (07:00 - 15:00)',
+              startTime: new Date('1970-01-01T07:00:00Z'),
+              endTime: new Date('1970-01-01T15:00:00Z'),
+            },
+            boardingHouse: {
+              id: mockBoardingHouseId,
+              name: 'KTX HOLA (Khu A)',
+            },
+            attendances: [],
+          },
+        ])
+        // 2nd call: coworkers on shift
+        .mockResolvedValueOnce([
+          {
+            employeeId: 'emp-coworker',
+            employee: {
+              id: 'emp-coworker',
+              user: {
+                username: 'coworker1',
+                phoneNumber: '0988776655',
+                avatarUrl: null,
+                userIdentification: { fullName: 'Trần Văn Bình' },
+              },
+              employeeAssignments: [
+                {
+                  position: { name: 'Bảo vệ ca sáng' },
+                },
+              ],
+            },
+          },
+        ]);
+
+      const result = await service.getStaffSchedules(mockUserId, {
+        startDate: '2026-09-14',
+        endDate: '2026-09-20',
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(mockScheduleId);
+      expect(result[0].boardingHouseName).toBe('KTX HOLA (Khu A)');
+      expect(result[0].shift.name).toBe('Ca Sáng (07:00 - 15:00)');
+      expect(result[0].coWorkers).toHaveLength(1);
+      expect(result[0].coWorkers[0].name).toBe('Trần Văn Bình');
+      expect(result[0].duties).toHaveLength(2);
+      expect(result[0].duties[0].title).toBe('Kiểm tra an ninh');
     });
   });
 });

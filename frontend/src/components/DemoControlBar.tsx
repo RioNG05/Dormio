@@ -38,6 +38,7 @@ export default function DemoControlBar() {
   const getActivePreset = (): DemoPreset => {
     if (!isLoggedIn || !user) return "guest";
     if (user.role === "admin") return "admin";
+    if (user.role === "employee") return "staff";
     if (user.role === "tenant") return "tenant";
     if (user.role === "landlord") {
       return user.houseName ? "landlord_active" : "landlord_empty";
@@ -51,6 +52,7 @@ export default function DemoControlBar() {
     switch (preset) {
       case "guest": return "🌐 Khách Vãng Lai";
       case "tenant": return "👤 Khách Thuê (Tenant)";
+      case "staff": return "👷 Nhân Viên (Staff)";
       case "landlord_empty": return "🏠 Chủ Trọ Mới (Trống Trơn)";
       case "landlord_active": return "📊 Chủ Trọ Đang Vận Hành";
       case "admin": return "👑 Admin Nền Tảng";
@@ -115,7 +117,7 @@ export default function DemoControlBar() {
 
               {/* Tenant */}
               <button
-                onClick={() => handleSelectPreset("tenant", "/")}
+                onClick={() => handleSelectPreset("tenant", "/tenant")}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "tenant"
                   ? "border-[#FF6B35] bg-[#FF6B35] text-white shadow-md"
                   : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
@@ -123,6 +125,18 @@ export default function DemoControlBar() {
               >
                 <span>👤 2. Khách Thuê </span>
                 {activePreset === "tenant" && <Check className="w-4 h-4 text-white stroke-[3]" />}
+              </button>
+
+              {/* Staff */}
+              <button
+                onClick={() => handleSelectPreset("staff", "/staff")}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "staff"
+                  ? "border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md"
+                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
+                  }`}
+              >
+                <span>👷 3. Nhân Viên Vận Hành (Staff)</span>
+                {activePreset === "staff" && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
               {/* Landlord Empty */}
@@ -133,7 +147,7 @@ export default function DemoControlBar() {
                   : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
                   }`}
               >
-                <span>🏠 3. Chủ Trọ Mới (Dashboard Trống Trơn)</span>
+                <span>🏠 4. Chủ Trọ Mới (Dashboard Trống Trơn)</span>
                 {activePreset === "landlord_empty" && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
@@ -141,11 +155,11 @@ export default function DemoControlBar() {
               <button
                 onClick={() => handleSelectPreset("landlord_active", "/landlord")}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "landlord_active"
-                  ? "border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md"
+                  ? "border-emerald-600 bg-emerald-600 text-white shadow-md"
                   : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
                   }`}
               >
-                <span>📊 4. Chủ Trọ Đang Vận Hành (Đầy Đủ Data)</span>
+                <span>📊 5. Chủ Trọ Đang Vận Hành</span>
                 {activePreset === "landlord_active" && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
@@ -157,7 +171,7 @@ export default function DemoControlBar() {
                   : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
                   }`}
               >
-                <span>👑 5. Admin Nền Tảng (System)</span>
+                <span>👑 6. Admin Nền Tảng (System)</span>
                 {activePreset === "admin" && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 

@@ -96,7 +96,7 @@ async function main() {
 
   // ─── 1. USERS ───────────────────────────────────────────────────────────────
   console.log('👤 Creating users...');
-  const password88 = await bcrypt.hash('123456789', 10);
+  const password88 = await bcrypt.hash('88888888', 10);
   const passwordCommon = await bcrypt.hash('Secret@123', 10);
 
   // 1.1 Admin User (Requirement: ngquanghuy.work@gmail.com, 0344265925, 88888888, admin)
@@ -252,6 +252,25 @@ async function main() {
       expiryDate: new Date('2038-11-12'),
       personalIdentification: tenant2.id,
       note: 'Kỹ sư phần mềm',
+      cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    },
+  });
+
+  await prisma.userIdentification.create({
+    data: {
+      userId: employeeUser1.id,
+      identityNumber: '079200009999',
+      fullName: 'PHẠM VĂN BẢO',
+      dateOfBirth: new Date('1996-05-15'),
+      gender: Gender.male,
+      nationnality: 'Việt Nam',
+      placeOfOrigin: { province: 'Nam Định', district: 'Hải Hậu' },
+      placeOfResidence: { province: 'TP.HCM', district: 'Quận 1', address: '123 Nguyễn Huệ' },
+      issueDate: new Date('2021-08-20'),
+      expiryDate: new Date('2036-05-15'),
+      personalIdentification: employeeUser1.id,
+      note: 'Nhân viên quản lý kỹ thuật toà nhà',
       cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
       cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
     },
@@ -1199,7 +1218,7 @@ async function main() {
       {
         employeeId: emp2.id,
         positionId: posCleaning.id,
-        boardingHouseId: house2.id,
+        boardingHouseId: house1.id,
         status: AssignmentStatus.active,
         joinedAt: new Date('2026-02-01'),
         leftAt: farFuture,
@@ -1251,6 +1270,7 @@ async function main() {
     },
   });
 
+  // August sample schedule
   const sched1 = await prisma.workSchedule.create({
     data: {
       employeeId: emp1.id,
@@ -1293,6 +1313,43 @@ async function main() {
       },
     ],
   });
+
+  // September 2026 work schedules & attendances for emp1 (8 shifts: 7 on-time, 1 late, 1 early checkout)
+  const septDays = [
+    { day: '01', status: AttendanceStatus.on_time, inTime: '05:55', outTime: '14:02', early: false },
+    { day: '03', status: AttendanceStatus.on_time, inTime: '05:58', outTime: '14:00', early: false },
+    { day: '05', status: AttendanceStatus.on_time, inTime: '05:52', outTime: '14:05', early: false },
+    { day: '08', status: AttendanceStatus.on_time, inTime: '05:57', outTime: '13:45', early: true },
+    { day: '10', status: AttendanceStatus.on_time, inTime: '05:59', outTime: '14:01', early: false },
+    { day: '12', status: AttendanceStatus.late, inTime: '06:18', outTime: '14:18', early: false },
+    { day: '15', status: AttendanceStatus.on_time, inTime: '05:54', outTime: '14:03', early: false },
+    { day: '17', status: AttendanceStatus.on_time, inTime: '05:56', outTime: '14:00', early: false },
+  ];
+
+  for (const s of septDays) {
+    const ws = await prisma.workSchedule.create({
+      data: {
+        employeeId: emp1.id,
+        boardingHouseId: house1.id,
+        shiftId: shiftMorning.id,
+        workDate: new Date(`2026-09-${s.day}T00:00:00Z`),
+        recurrenceId: recPattern1.id,
+        status: ScheduleStatus.scheduled,
+      },
+    });
+
+    await prisma.attendance.create({
+      data: {
+        workScheduleId: ws.id,
+        employeeId: emp1.id,
+        checkIn: new Date(`2026-09-${s.day}T${s.inTime}:00Z`),
+        checkOut: new Date(`2026-09-${s.day}T${s.outTime}:00Z`),
+        status: s.status,
+        checkInExplanation: s.status === AttendanceStatus.late ? 'Kẹt xe đường Nguyễn Hữu Thọ' : undefined,
+        checkOutExplanation: s.early ? 'Bàn giao ca sớm 15 phút' : undefined,
+      },
+    });
+  }
 
   // ─── 22. OTP CODES ──────────────────────────────────────────────────────────
   console.log('🔢 Creating OTP codes...');
@@ -1542,6 +1599,13 @@ async function main() {
   console.log('   Password:  88888888');
   console.log('   Role:      admin');
   console.log('   Properties: 2 Boarding Houses (40 rooms total: 20 common, 20 duplex)');
+  console.log('────────────────────────────────────────────────────────────────');
+  console.log('👷 STAFF CREDENTIALS:');
+  console.log('   Email:     bao.pham@dormio.vn');
+  console.log('   Phone:     0901122334');
+  console.log('   Password:  Secret@123');
+  console.log('   Role:      employee');
+  console.log('   Assignment: Quản lý toà nhà (Dormio Premier Quận 1)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 

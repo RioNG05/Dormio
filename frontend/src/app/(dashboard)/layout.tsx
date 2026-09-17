@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
@@ -14,9 +14,9 @@ import {
   Receipt, BarChart2,
   UserCircle, Calendar, Clock,
   Settings, HelpCircle,
-  LogOut, Menu, X, ChevronDown, ChevronRight,
+  LogOut, Menu, X, ChevronDown, ChevronUp, ChevronRight,
   AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2,
-  Megaphone, Newspaper, ShieldCheck, CheckSquare, Check, Plus, Layers
+  Megaphone, Newspaper, ShieldCheck, Check, Plus, Layers, ExternalLink
 } from "lucide-react";
 
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -27,6 +27,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [buildingDropdownOpen, setBuildingDropdownOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     'van-hanh': true,
@@ -43,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const staffMenus = [
     { name: tNav("staffOverview"), href: "/staff", icon: LayoutDashboard },
     { name: tNav("staffShiftsAttendance"), href: "/staff/schedule", icon: Calendar },
-    { name: tNav("staffTasks"), href: "/staff/tasks", icon: CheckSquare },
+    { name: tNav("staffShiftHistory"), href: "/staff/shift-history", icon: Clock },
   ];
 
   const adminMenus = [
@@ -151,7 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1">
           <div className="px-3 pb-2 text-[10px] font-black text-[#2AC1BC] uppercase tracking-widest flex items-center gap-1.5">
             <UserCircle className="w-3.5 h-3.5" />
-            <span>{tNav("staffBadge")}</span>
+            <span>{tNav("staffTag")}</span>
           </div>
           {staffMenus.map((item, idx) => {
             const isActive = item.href === '/staff'
@@ -269,7 +271,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   };
 
-  const { user, buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
+  const { user, isLoggedIn, logout, buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
 
   // DYNAMICALLY UPDATE BROWSER DOCUMENT TITLE BASED ON ACTIVE BUILDING & ROUTE
   React.useEffect(() => {
@@ -278,10 +280,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (isStaff) {
         if (pathname === "/staff") {
           pageTitle = tNav("staffTitleOverview");
-        } else if (pathname?.startsWith("/staff/schedule") || pathname?.startsWith("/staff/attendance")) {
+        } else if (pathname?.startsWith("/staff/schedule")) {
           pageTitle = tNav("staffTitleSchedule");
-        } else if (pathname?.startsWith("/staff/tasks")) {
-          pageTitle = tNav("staffTitleTasks");
+        } else if (pathname?.startsWith("/staff/shift-history") || pathname?.startsWith("/staff/attendance")) {
+          pageTitle = tNav("staffTitleShiftHistory");
         } else {
           pageTitle = tNav("staffTitlePortal");
         }
@@ -325,37 +327,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [activeBuilding?.name, pathname, isAdmin, isStaff, tNav]);
 
-  const StaffHeaderBadge = () => (
-    <div className="px-3.5 py-3 border-b border-[#2AC1BC]/20 bg-linear-to-r from-[#2AC1BC]/10 to-teal-50/40">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center font-black text-xs shrink-0">
-          <UserCircle className="w-5 h-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
-              {tNav("staffBadge")}
-            </span>
-          </div>
-          <p className="text-xs font-bold text-zinc-900 truncate">{tNav("staffMockBuilding")}</p>
-        </div>
-      </div>
-    </div>
-  );
 
-  const AdminHeaderBadge = () => (
-    <div className="px-3.5 py-3 border-b border-orange-100 bg-linear-to-r from-orange-50/80 to-amber-50/40">
-      <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black bg-orange-600 text-white tracking-wider shadow-2xs uppercase">
-          <Shield className="w-3 h-3" />
-          {tNav("adminTag")}
-        </span>
-      </div>
-      <p className="text-[11px] font-medium text-zinc-500 mt-1.5 leading-tight">
-        {tNav("adminHeaderSubtitle")}
-      </p>
-    </div>
-  );
+  // Close user account menu when clicking outside it
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [userMenuOpen]);
 
   const BuildingSelector = () => (
     <div className="relative px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
@@ -463,41 +447,188 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </Link>
   );
 
-  const UserFooter = ({ compact = false }: { compact?: boolean }) => (
-    <div className={`border-t border-zinc-100 ${compact ? "p-3" : "p-3"}`}>
-      <div className="flex items-center justify-between px-2 mb-2">
-        <span className="text-xs font-semibold text-zinc-500">{tNav("langLabel")}</span>
-        <LanguageSwitcher />
-      </div>
+  /**
+   * UserFooter — bottom of sidebar.
+   * Clicking the avatar/name row opens an upward popup menu that offers:
+   *  - Personal profile link
+   *  - Dashboard switcher buttons (shown/enabled only for roles the user actually has)
+   *  - Logout
+   */
+  const UserFooter = () => {
+    const userRole = user?.role ?? null;
 
-      {/* Clickable Profile Card */}
-      <Link
-        href={isTenant ? "/tenant/profile" : "/profile"}
-        className="group flex items-center gap-3 px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
-        title={tNav("viewProfileTooltip")}
-      >
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${isAdmin ? "bg-orange-100 text-orange-600" : isStaff ? "bg-[#2AC1BC]/15 text-[#2AC1BC]" : "bg-primary/10 text-primary"
-          }`}>
-          {user?.name ? user.name.trim().charAt(0).toUpperCase() : (isAdmin ? "A" : isStaff ? "T" : "R")}
+    // Dashboard options — each entry is shown only when the user has the matching role
+    const dashboardOptions = [
+      {
+        label: tNav("userMenuLandlordDashboard"),
+        href: "/landlord",
+        icon: Building2,
+        allowed: userRole === "landlord",
+        color: "text-[#2AC1BC]",
+        bg: "hover:bg-[#2AC1BC]/5",
+      },
+      {
+        label: tNav("userMenuTenantDashboard"),
+        href: "/tenant",
+        icon: Home,
+        allowed: userRole === "tenant",
+        color: "text-blue-500",
+        bg: "hover:bg-blue-50",
+      },
+      {
+        label: tNav("userMenuStaffDashboard"),
+        href: "/staff",
+        icon: UserCircle,
+        allowed: userRole === "employee",
+        color: "text-teal-500",
+        bg: "hover:bg-teal-50",
+      },
+      {
+        label: tNav("userMenuAdminDashboard"),
+        href: "/admin",
+        icon: Shield,
+        allowed: userRole === "admin",
+        color: "text-orange-500",
+        bg: "hover:bg-orange-50",
+      },
+    ];
+
+    // Only show options the user actually has access to
+    const availableOptions = dashboardOptions.filter((o) => o.allowed);
+
+    const handleLogout = () => {
+      setUserMenuOpen(false);
+      logout();
+    };
+
+    const avatarColor = isAdmin
+      ? "bg-orange-100 text-orange-600"
+      : isStaff
+        ? "bg-[#2AC1BC]/15 text-[#2AC1BC]"
+        : "bg-primary/10 text-primary";
+
+    const avatarInitial = user?.name
+      ? user.name.trim().charAt(0).toUpperCase()
+      : isAdmin ? "A" : isStaff ? "S" : "R";
+
+    return (
+      <div className="border-t border-zinc-100 p-3">
+        {/* Language toggle row */}
+        <div className="flex items-center justify-between px-2 mb-2">
+          <span className="text-xs font-semibold text-zinc-500">{tNav("langLabel")}</span>
+          <LanguageSwitcher />
         </div>
-        <div className="overflow-hidden flex-1 min-w-0">
-          <div className="text-sm font-semibold text-zinc-900 truncate group-hover:text-primary transition-colors">
-            {user?.name || (isAdmin ? tNav("adminRole") : isStaff ? tNav("staffRole") : tNav("landlordRole"))}
-          </div>
-          <div className="text-xs text-zinc-400 truncate">
-            {isAdmin ? tNav("adminRole") : isTenant ? tNav("tenantRole") : isStaff ? tNav("staffRole") : tNav("landlordRole")}
-          </div>
+
+        {/* Account popup trigger + menu container */}
+        <div ref={userMenuRef} className="relative">
+
+          {/* Upward popup menu */}
+          {userMenuOpen && (
+            <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-zinc-200 rounded-2xl shadow-lg shadow-zinc-200/60 overflow-hidden z-50">
+              {/* Header */}
+              <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50/60">
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">
+                  {tNav("userMenuTitle")}
+                </p>
+                <p className="text-sm font-bold text-zinc-900 truncate">
+                  {user?.name || tNav(isAdmin ? "adminRole" : isStaff ? "staffRole" : isTenant ? "tenantRole" : "landlordRole")}
+                </p>
+                <p className="text-xs text-zinc-400 truncate">
+                  {isAdmin ? tNav("adminRole") : isStaff ? tNav("staffRole") : isTenant ? tNav("tenantRole") : tNav("landlordRole")}
+                </p>
+              </div>
+
+              {/* Profile link */}
+              <div className="px-2 py-1.5">
+                <Link
+                  href={isTenant ? "/tenant/profile" : "/profile"}
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                >
+                  <UserCircle className="w-4 h-4 text-zinc-400 shrink-0" />
+                  {tNav("userMenuProfile")}
+                </Link>
+              </div>
+
+              {/* Dashboard switcher — only shown if user has access to at least 1 */}
+              {availableOptions.length > 0 && (
+                <>
+                  <div className="mx-3 my-1 h-px bg-zinc-100" />
+                  <div className="px-2 py-1.5">
+                    <p className="px-3 pb-1 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                      {tNav("userMenuSwitchDashboard")}
+                    </p>
+                    {availableOptions.map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <Link
+                          key={opt.href}
+                          href={opt.href}
+                          onClick={() => setUserMenuOpen(false)}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${opt.color} ${opt.bg}`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          {opt.label}
+                          <ExternalLink className="w-3 h-3 ml-auto opacity-50 shrink-0" />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* Logout */}
+              <div className="mx-3 my-1 h-px bg-zinc-100" />
+              <div className="px-2 py-1.5">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors w-full text-left cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 shrink-0" />
+                  {tNav("logout")}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Clickable Profile Card (trigger) */}
+          <button
+            type="button"
+            onClick={() => setUserMenuOpen((prev) => !prev)}
+            className="group flex items-center gap-3 w-full px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer text-left"
+            title={tNav("viewProfileTooltip")}
+          >
+            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${avatarColor}`}>
+              {avatarInitial}
+            </div>
+            <div className="overflow-hidden flex-1 min-w-0">
+              <div className="text-sm font-semibold text-zinc-900 truncate group-hover:text-primary transition-colors">
+                {user?.name || (isAdmin ? tNav("adminRole") : isStaff ? tNav("staffRole") : tNav("landlordRole"))}
+              </div>
+              <div className="text-xs text-zinc-400 truncate">
+                {isAdmin ? tNav("adminRole") : isTenant ? tNav("tenantRole") : isStaff ? tNav("staffRole") : tNav("landlordRole")}
+              </div>
+            </div>
+            {userMenuOpen
+              ? <ChevronUp className="w-4 h-4 text-zinc-400 shrink-0" />
+              : <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0" />
+            }
+          </button>
+
+          {/* Logout shortcut (always visible below profile card) */}
+          <Link
+            href="/login"
+            onClick={logout}
+            className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg hover:bg-orange-100 transition-colors"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {tNav("logout")}
+          </Link>
         </div>
-      </Link>
-      <Link
-        href="/login"
-        className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg hover:bg-orange-100 transition-colors"
-      >
-        <LogOut className="h-4 w-4 shrink-0" />
-        {tNav("logout")}
-      </Link>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div className="flex min-h-screen bg-zinc-50">
@@ -509,8 +640,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NotificationBell align="left" />
           </div>
 
-          {/* Admin Badge or Staff Badge or Global Landlord Building Selector */}
-          {isAdmin ? <AdminHeaderBadge /> : isStaff ? <StaffHeaderBadge /> : !isTenant && <BuildingSelector />}
+          {/* Global Landlord Building Selector */}
+          {!isAdmin && !isStaff && !isTenant && <BuildingSelector />}
 
           <NavContent />
           <UserFooter />
@@ -535,8 +666,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </div>
 
-            {/* Admin Badge or Staff Badge or Global Landlord Building Selector on Mobile Drawer */}
-            {isAdmin ? <AdminHeaderBadge /> : isStaff ? <StaffHeaderBadge /> : !isTenant && <BuildingSelector />}
+            {/* Global Landlord Building Selector on Mobile Drawer */}
+            {!isAdmin && !isStaff && !isTenant && <BuildingSelector />}
 
             <NavContent />
             <UserFooter />
@@ -568,7 +699,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : isStaff ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
               <UserCircle className="w-3.5 h-3.5" />
-              <span>{tNav("staffBadge")}</span>
+              <span>{tNav("staffTag")}</span>
             </div>
           ) : !isTenant && (
             <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">

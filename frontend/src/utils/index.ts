@@ -159,3 +159,109 @@ export function localizeDbEnum(
   }
   return code;
 }
+
+/**
+ * Role hierarchy from lowest to highest:
+ * 0: guest -> /
+ * 1: leasing agent (leasing_agent, poster) -> /
+ * 2: tenant -> /tenant
+ * 3: staff (employee, staff) -> /staff
+ * 4: landlord (landlord, owner) -> /landlord
+ * 5: admin (admin, administrator) -> /admin
+ */
+export type CanonicalDisplayRole = "admin" | "landlord" | "employee" | "tenant" | "poster";
+
+export interface RoleRedirectInfo {
+  role: CanonicalDisplayRole;
+  redirectPath: string;
+  rank: number;
+}
+
+export function getHighestRoleRedirect(user: any): RoleRedirectInfo {
+  if (!user) {
+    return { role: "poster", redirectPath: "/", rank: 0 };
+  }
+
+  const roleConfigs: Record<
+    string,
+    { rank: number; path: string; displayRole: CanonicalDisplayRole }
+  > = {
+    // Rank 5: Admin (highest)
+    admin: { rank: 5, path: "/admin", displayRole: "admin" },
+    administrator: { rank: 5, path: "/admin", displayRole: "admin" },
+
+    // Rank 4: Landlord
+    landlord: { rank: 4, path: "/landlord", displayRole: "landlord" },
+    owner: { rank: 4, path: "/landlord", displayRole: "landlord" },
+
+    // Rank 3: Staff / Employee
+    staff: { rank: 3, path: "/staff", displayRole: "employee" },
+    employee: { rank: 3, path: "/staff", displayRole: "employee" },
+
+    // Rank 2: Tenant
+    tenant: { rank: 2, path: "/tenant", displayRole: "tenant" },
+
+    // Rank 1: Leasing Agent / Poster
+    leasing_agent: { rank: 1, path: "/", displayRole: "poster" },
+    "leasing-agent": { rank: 1, path: "/", displayRole: "poster" },
+    leasingagent: { rank: 1, path: "/", displayRole: "poster" },
+    poster: { rank: 1, path: "/", displayRole: "poster" },
+
+    // Rank 0: Guest
+    guest: { rank: 0, path: "/", displayRole: "poster" },
+  };
+
+  const candidateRoles: string[] = [];
+
+  // Extract from user.roles array if present
+  if (Array.isArray(user.roles)) {
+    for (const r of user.roles) {
+      if (typeof r === "string") {
+        candidateRoles.push(r.trim().toLowerCase());
+      }
+    }
+  }
+
+  // Extract from user.role if present (can be string or comma-separated)
+  if (typeof user.role === "string") {
+    const split = user.role.split(",");
+    for (const s of split) {
+      if (s.trim()) {
+        candidateRoles.push(s.trim().toLowerCase());
+      }
+    }
+  }
+
+  // Check relationship-based hints if present
+  if (user.isLandlord || (Array.isArray(user.boardingHouses) && user.boardingHouses.length > 0)) {
+    candidateRoles.push("landlord");
+  }
+  if (user.isEmployee || user.isStaff || user.employee) {
+    candidateRoles.push("employee");
+  }
+  if (user.isTenant || (Array.isArray(user.tenantContracts) && user.tenantContracts.length > 0)) {
+    candidateRoles.push("tenant");
+  }
+
+  // Find candidate role with the highest rank
+  let best = { rank: 0, path: "/", displayRole: "poster" as CanonicalDisplayRole };
+
+  for (const rawRole of candidateRoles) {
+    const config = roleConfigs[rawRole];
+    if (config && config.rank > best.rank) {
+      best = config;
+    }
+  }
+
+  // If candidate was leasing_agent or poster specifically, ensure rank is 1
+  if (best.rank === 0 && candidateRoles.some((r) => r === "leasing_agent" || r === "poster")) {
+    best = roleConfigs["leasing_agent"];
+  }
+
+  return {
+    role: best.displayRole,
+    redirectPath: best.path,
+    rank: best.rank,
+  };
+}
+
