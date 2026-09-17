@@ -42,6 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const staffMenus = [
     { name: tNav("staffOverview"), href: "/staff", icon: LayoutDashboard },
     { name: tNav("staffShiftsAttendance"), href: "/staff/schedule", icon: Calendar },
+    { name: tNav("staffShiftHistory"), href: "/staff/shift-history", icon: Clock },
     { name: tNav("staffTasks"), href: "/staff/tasks", icon: CheckSquare },
   ];
 
@@ -277,8 +278,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (isStaff) {
         if (pathname === "/staff") {
           pageTitle = tNav("staffTitleOverview");
-        } else if (pathname?.startsWith("/staff/schedule") || pathname?.startsWith("/staff/attendance")) {
+        } else if (pathname?.startsWith("/staff/schedule")) {
           pageTitle = tNav("staffTitleSchedule");
+        } else if (pathname?.startsWith("/staff/shift-history") || pathname?.startsWith("/staff/attendance")) {
+          pageTitle = tNav("staffTitleShiftHistory");
         } else if (pathname?.startsWith("/staff/tasks")) {
           pageTitle = tNav("staffTitleTasks");
         } else {

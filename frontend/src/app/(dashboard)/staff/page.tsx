@@ -1281,7 +1281,7 @@ export default function StaffOverviewPage() {
             )}
 
             <Link
-              href="/staff/schedule?tab=attendance"
+              href="/staff/shift-history"
               className="w-full py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
             >
               <span>{t("viewAttendanceHistory")}</span>
