@@ -64,19 +64,17 @@ function StaffScheduleContent() {
 
   // Helper translations for shift names
   const getShiftName = (name: string) => {
-    if (!isEn) return name;
-    if (name.includes("Sáng")) return "Morning Shift (07:00 - 15:00)";
-    if (name.includes("Chiều")) return "Afternoon Shift (15:00 - 23:00)";
-    if (name.includes("Đêm")) return "Night Shift (23:00 - 07:00)";
+    if (name.includes("Sáng")) return `${t("shiftMorning")} (07:00 - 15:00)`;
+    if (name.includes("Chiều")) return `${t("shiftAfternoon")} (15:00 - 23:00)`;
+    if (name.includes("Đêm")) return `${t("shiftNight")} (23:00 - 07:00)`;
     return name;
   };
 
   const getPositionName = (name: string) => {
-    if (!isEn) return name;
     const lower = name.toLowerCase();
-    if (lower.includes("bảo vệ") || lower.includes("an ninh")) return "Head of Security";
-    if (lower.includes("vệ sinh")) return "Cleaning Specialist";
-    if (lower.includes("kỹ thuật") || lower.includes("bảo trì")) return "Technical Specialist";
+    if (lower.includes("bảo vệ") || lower.includes("an ninh") || lower.includes("security")) return t("positionSecurity");
+    if (lower.includes("vệ sinh") || lower.includes("cleaning")) return t("positionCleaning");
+    if (lower.includes("kỹ thuật") || lower.includes("bảo trì") || lower.includes("technical")) return t("positionTechnical");
     return name;
   };
 
@@ -99,12 +97,11 @@ function StaffScheduleContent() {
   const todayLabel = useMemo(() => {
     const now = new Date();
     const dayOfWeekIndex = now.getDay();
-    const viDays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-    const enDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const dayName = isEn ? enDays[dayOfWeekIndex] : viDays[dayOfWeekIndex];
+    const dayNames = [t("daySun"), t("dayMon"), t("dayTue"), t("dayWed"), t("dayThu"), t("dayFri"), t("daySat")];
+    const dayName = dayNames[dayOfWeekIndex] || "";
     const formattedDate = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}`;
-    return isEn ? `Today (${dayName}, ${formattedDate})` : `Hôm nay (${dayName}, ${formattedDate})`;
-  }, [isEn]);
+    return t("todayWithDayDate", { day: dayName, date: formattedDate });
+  }, [t]);
 
   // 1. Fetch active assigned boarding houses
   useEffect(() => {
@@ -241,22 +238,12 @@ function StaffScheduleContent() {
   const handleToggleDuty = async (duty: DutyTaskItem) => {
     if (duty.requiresPhoto && !duty.photoProof && !duty.completed) {
       handleOpenDutyProofModal(duty);
-      showToast(
-        isEn
-          ? "This task requires photo proof. Please capture or upload a photo before completing!"
-          : "Nhiệm vụ này yêu cầu ảnh đối chiếu. Vui lòng chụp hoặc tải ảnh trước khi hoàn thành!",
-        "warning"
-      );
+      showToast(t("toastDutyProofRequired"), "warning");
       return;
     }
 
     if (!todayOverview?.schedule?.id) {
-      showToast(
-        isEn
-          ? "No active shift today to record task completion."
-          : "Hôm nay bạn không có ca trực hoạt động để ghi nhận nhiệm vụ.",
-        "warning"
-      );
+      showToast(t("toastNoActiveShiftDuty"), "warning");
       return;
     }
 
@@ -271,15 +258,9 @@ function StaffScheduleContent() {
         setTodayDuties(res.schedule.duties);
       }
       window.dispatchEvent(new CustomEvent("dormio_attendance_updated"));
-      showToast(
-        isEn ? "Updated task status successfully" : "Đã cập nhật trạng thái nhiệm vụ",
-        "success"
-      );
+      showToast(t("toastDutyStatusUpdated"), "success");
     } catch (err: any) {
-      showToast(
-        err?.message || (isEn ? "Failed to update task" : "Cập nhật nhiệm vụ thất bại"),
-        "warning"
-      );
+      showToast(err?.message || t("toastDutyUpdateFailed"), "warning");
     }
   };
 
@@ -292,22 +273,12 @@ function StaffScheduleContent() {
       !dutyDraftPhoto &&
       !activeDutyForProof.photoProof
     ) {
-      showToast(
-        isEn
-          ? "This task requires photo proof before completing!"
-          : "Nhiệm vụ này yêu cầu ảnh đối chiếu. Vui lòng chụp hoặc tải ảnh trước khi hoàn thành!",
-        "warning"
-      );
+      showToast(t("toastDutyProofRequired"), "warning");
       return;
     }
 
     if (!todayOverview?.schedule?.id) {
-      showToast(
-        isEn
-          ? "No active shift today to attach proof."
-          : "Hôm nay bạn không có ca trực hoạt động để lưu bằng chứng.",
-        "warning"
-      );
+      showToast(t("toastNoActiveShiftProof"), "warning");
       return;
     }
 
@@ -327,21 +298,12 @@ function StaffScheduleContent() {
       setActiveDutyForProof(null);
 
       if (markComplete) {
-        showToast(
-          isEn ? "Task completed successfully!" : "Đã hoàn thành nhiệm vụ thành công!",
-          "success"
-        );
+        showToast(t("toastDutyCompleted"), "success");
       } else {
-        showToast(
-          isEn ? "Progress updated successfully!" : "Đã cập nhật tiến độ nhiệm vụ!",
-          "info"
-        );
+        showToast(t("toastDutyProgressUpdated"), "info");
       }
     } catch (err: any) {
-      showToast(
-        err?.message || (isEn ? "Failed to save duty proof" : "Lưu ảnh đối chiếu thất bại"),
-        "warning"
-      );
+      showToast(err?.message || t("toastDutyProofSaveFailed"), "warning");
     }
   };
 
@@ -415,7 +377,7 @@ function StaffScheduleContent() {
             className="px-4 py-2.5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-zinc-200/80 cursor-pointer"
           >
             <Clock className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{isEn ? "Attendance History" : "Lịch sử chấm công"}</span>
+            <span>{t("btnViewAttendanceHistory")}</span>
             <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
           </Link>
         </div>
@@ -453,7 +415,7 @@ function StaffScheduleContent() {
               type="button"
               onClick={handleCurrentWeek}
               className="text-xs font-bold text-zinc-600 hover:text-[#2AC1BC] flex items-center gap-1.5 transition-colors cursor-pointer"
-              title={isEn ? "Return to current week" : "Về tuần hiện tại"}
+              title={t("titleReturnCurrentWeek")}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC]" />
               <span>{todayLabel}</span>
@@ -469,7 +431,7 @@ function StaffScheduleContent() {
                 type="button"
                 onClick={handlePrevWeek}
                 className="p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
-                title={isEn ? "Previous week" : "Tuần trước"}
+                title={t("titlePrevWeek")}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -477,7 +439,7 @@ function StaffScheduleContent() {
                 type="button"
                 onClick={handleNextWeek}
                 className="p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
-                title={isEn ? "Next week" : "Tuần sau"}
+                title={t("titleNextWeek")}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -488,10 +450,10 @@ function StaffScheduleContent() {
               type="button"
               onClick={handleCurrentWeek}
               className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-              title={isEn ? "View today's schedule / current week" : "Xem lịch làm việc của tuần hiện tại"}
+              title={t("titleTodaySchedule")}
             >
               <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
-              <span>{isEn ? "Today's Schedule" : "Xem lịch hôm nay"}</span>
+              <span>{t("btnTodaySchedule")}</span>
             </button>
 
             <span className="text-xs sm:text-sm font-black text-zinc-900 ml-1">
@@ -629,17 +591,15 @@ function StaffScheduleContent() {
                 <CheckSquare className="w-4 h-4" />
               </span>
               <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
-                {isEn ? "TODAY'S DUTIES" : "NHIỆM VỤ HÔM NAY"}
+                {t("todayDutiesTag")}
               </span>
               <span className="text-xs text-zinc-400 font-medium">• {todayStr}</span>
             </div>
             <h2 className="text-lg sm:text-xl font-black text-zinc-900">
-              {isEn ? "Today's Shift Duties Checklist" : "Danh Mục Nhiệm Vụ Ca Trực Hôm Nay"}
+              {t("todayDutiesTitle")}
             </h2>
             <p className="text-xs text-zinc-500 leading-relaxed font-medium">
-              {isEn
-                ? "Execute daily routine responsibilities, capture required photo proofs, and track completion progress."
-                : "Thực hiện danh mục trách nhiệm trong ca, đính kèm ảnh đối chiếu hiện trường và cập nhật tiến độ công việc."}
+              {t("todayDutiesDesc")}
             </p>
           </div>
 
@@ -648,7 +608,7 @@ function StaffScheduleContent() {
             <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-3.5 min-w-[200px] space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-zinc-600">
-                  {isEn ? "Progress:" : "Tiến độ:"}
+                  {t("dutyProgressLabel")}
                 </span>
                 <span className="font-black text-[#2AC1BC] text-sm font-mono">
                   {completedDuties}/{totalDuties} ({progressPercent}%)
@@ -706,11 +666,11 @@ function StaffScheduleContent() {
                       {duty.requiresPhoto ? (
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
                           <Camera className="w-3 h-3 text-amber-600" />
-                          {isEn ? "Photo proof required" : "Yêu cầu ảnh đối chiếu"}
+                          {t("dutyPhotoRequired")}
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-zinc-100 text-zinc-500">
-                          {isEn ? "Optional photo" : "Không bắt buộc ảnh"}
+                          {t("dutyPhotoOptional")}
                         </span>
                       )}
                     </div>
@@ -723,7 +683,7 @@ function StaffScheduleContent() {
 
                     {duty.completedAt && (
                       <span className="text-[11px] text-emerald-600 font-bold block">
-                        ✓ {isEn ? "Completed at" : "Hoàn thành lúc"} {duty.completedAt}
+                        ✓ {t("dutyCompletedAt", { time: duty.completedAt })}
                       </span>
                     )}
                   </div>
@@ -742,7 +702,7 @@ function StaffScheduleContent() {
                         })
                       }
                       className="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-[#2AC1BC] cursor-pointer group transition-colors"
-                      title={isEn ? "View enlarged audit photo" : "Xem ảnh đối chiếu phóng to"}
+                      title={t("titleEnlargePhoto")}
                     >
                       <img
                         src={duty.photoProof}
@@ -751,7 +711,7 @@ function StaffScheduleContent() {
                       />
                       <div className="text-left pr-1 hidden sm:block">
                         <span className="text-[10px] font-bold text-zinc-700 group-hover:text-[#2AC1BC] block flex items-center gap-1">
-                          <Eye className="w-2.5 h-2.5" /> {isEn ? "Audit Proof" : "Ảnh đối chiếu"}
+                          <Eye className="w-2.5 h-2.5" /> {t("dutyAuditProof")}
                         </span>
                         <span className="text-[9px] text-zinc-400 font-mono">
                           {duty.photoProofTime || todayStr}
@@ -766,7 +726,7 @@ function StaffScheduleContent() {
                     className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200 shadow-2xs"
                   >
                     <FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                    <span>{isEn ? "Update details" : "Cập nhật chi tiết"}</span>
+                    <span>{t("btnUpdateDetails")}</span>
                   </button>
                 </div>
               </div>
@@ -779,12 +739,10 @@ function StaffScheduleContent() {
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h4 className="text-sm font-black text-zinc-800">
-              {isEn ? "No tasks assigned for today" : "Hôm nay bạn không có nhiệm vụ nào cần thực hiện"}
+              {t("noTasksAssigned")}
             </h4>
             <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-              {isEn
-                ? "All routine shift duties and additional landlord reminders will be displayed here once scheduled."
-                : "Mọi nhiệm vụ ca làm hoặc nhắc nhở từ chủ trọ sẽ hiển thị tại đây khi bạn có ca trực được phân công."}
+              {t("noTasksAssignedDesc")}
             </p>
           </div>
         )}
@@ -902,7 +860,7 @@ function StaffScheduleContent() {
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-[#2AC1BC]" />
-                    <span>{isEn ? "Fixed Daily Routine Duties" : "Nhiệm vụ hàng ngày cố định"}</span>
+                    <span>{t("routineDutiesTitle")}</span>
                   </h4>
                   <span className="text-[10px] font-bold text-[#2AC1BC] px-2.5 py-0.5 rounded-full bg-[#2AC1BC]/10 border border-[#2AC1BC]/20">
                     {getPositionName(selectedSchedule.position.name)}
@@ -918,7 +876,7 @@ function StaffScheduleContent() {
                     ))
                   ) : (
                     <p className="text-zinc-400 italic">
-                      {isEn ? "No specific duty checklist registered." : "Chưa có danh mục nhiệm vụ cụ thể cho ca này."}
+                      {t("noRoutineDuties")}
                     </p>
                   )}
                 </div>
@@ -928,7 +886,7 @@ function StaffScheduleContent() {
               <div className="space-y-2.5 pt-2 border-t border-zinc-100">
                 <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
                   <BellRing className="w-4 h-4 text-amber-500" />
-                  <span>{isEn ? "Landlord Additional Tasks & Reminders" : "Nhắc nhở / Nhiệm vụ bổ sung"}</span>
+                  <span>{t("landlordTasksTitle")}</span>
                 </h4>
 
                 {selectedSchedule.additionalTasks && selectedSchedule.additionalTasks.length > 0 ? (
@@ -937,9 +895,7 @@ function StaffScheduleContent() {
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                         <span className="text-xs font-black text-amber-900">
-                          {isEn
-                            ? `Upcoming Additional Deadlines (${selectedSchedule.additionalTasks.length})`
-                            : `Có ${selectedSchedule.additionalTasks.length} nhiệm vụ bổ sung / nhắc nhở trong ngày!`}
+                          {t("upcomingDeadlines", { count: selectedSchedule.additionalTasks.length })}
                         </span>
                       </div>
                       <span className="px-2 py-0.5 rounded-md bg-amber-200/70 text-amber-900 font-bold text-[10px]">
@@ -970,9 +926,7 @@ function StaffScheduleContent() {
                   <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-zinc-500 text-xs flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>
-                      {isEn
-                        ? "No additional tasks on this day. Only routine daily duties apply."
-                        : "Ngày này không có nhiệm vụ bổ sung. Chỉ thực hiện nhiệm vụ hàng ngày cố định."}
+                      {t("noAdditionalTasks")}
                     </span>
                   </div>
                 )}
@@ -1010,7 +964,7 @@ function StaffScheduleContent() {
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#2AC1BC]" />
                 <h3 className="text-base font-black text-zinc-900 truncate">
-                  {isEn ? "Task Execution & Photo Proof" : "Báo Cáo & Ảnh Đối Chiếu Nhiệm Vụ"}
+                  {t("dutyModalHeader")}
                 </h3>
               </div>
               <button
@@ -1025,7 +979,7 @@ function StaffScheduleContent() {
             {/* Task Info */}
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                {isEn ? "Task Title:" : "Tên nhiệm vụ:"}
+                {t("taskTitleLabel")}
               </span>
               <h4 className="text-xs font-black text-zinc-900 leading-snug">
                 {activeDutyForProof.title}
@@ -1034,11 +988,11 @@ function StaffScheduleContent() {
                 {activeDutyForProof.requiresPhoto ? (
                   <span className="text-amber-700 font-bold flex items-center gap-1">
                     <Camera className="w-3 h-3 text-amber-600" />
-                    {isEn ? "Photo proof mandatory" : "Bắt buộc có ảnh đối chiếu"}
+                    {t("proofMandatory")}
                   </span>
                 ) : (
                   <span className="text-zinc-500">
-                    {isEn ? "Photo proof optional" : "Ảnh đối chiếu không bắt buộc"}
+                    {t("proofOptional")}
                   </span>
                 )}
               </div>
@@ -1056,7 +1010,7 @@ function StaffScheduleContent() {
             {/* Photo Upload / Preview */}
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-zinc-600 block">
-                {isEn ? "Audit Proof Image:" : "Hình ảnh hiện trường đối chiếu:"}
+                {t("auditPhotoLabel")}
               </label>
 
               {dutyDraftPhoto ? (
@@ -1068,7 +1022,7 @@ function StaffScheduleContent() {
                   />
                   <div className="space-y-1 text-xs flex-1">
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      ✓ {isEn ? "Photo Attached" : "Ảnh đã đính kèm"}
+                      ✓ {t("photoAttached")}
                     </span>
                     <p className="text-[11px] text-zinc-500 font-mono">{todayStr}</p>
                   </div>
@@ -1076,7 +1030,7 @@ function StaffScheduleContent() {
                     type="button"
                     onClick={() => setDutyDraftPhoto(null)}
                     className="p-2 rounded-xl bg-white hover:bg-red-50 text-zinc-400 hover:text-red-600 border border-zinc-200 transition-colors cursor-pointer"
-                    title="Xóa ảnh"
+                    title={t("deletePhoto")}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -1088,9 +1042,9 @@ function StaffScheduleContent() {
                   className="w-full py-4 px-4 rounded-2xl border-2 border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50/70 hover:bg-[#2AC1BC]/5 text-zinc-700 text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Camera className="w-6 h-6 text-[#2AC1BC]" />
-                  <span>{isEn ? "Click to capture / attach photo" : "Nhấn để chụp hoặc tải ảnh đối chiếu"}</span>
+                  <span>{t("clickToCapturePhoto")}</span>
                   <span className="text-[10px] text-zinc-400 font-normal">
-                    {isEn ? "Automatically timestamps verification data" : "Đính kèm vào báo cáo đối soát của Chủ trọ"}
+                    {t("autoTimestampDesc")}
                   </span>
                 </button>
               )}
@@ -1099,17 +1053,13 @@ function StaffScheduleContent() {
             {/* Note input */}
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-zinc-600 block">
-                {isEn ? "Result Note / Explanation:" : "Ghi chú kết quả thực hiện:"}
+                {t("dutyNoteLabel")}
               </label>
               <textarea
                 rows={3}
                 value={dutyDraftNote}
                 onChange={(e) => setDutyDraftNote(e.target.value)}
-                placeholder={
-                  isEn
-                    ? "e.g. Cleared 45 vehicles, safety latch working properly..."
-                    : "VD: Đã kiểm tra cổng chính, bãi xe xếp gọn gàng theo lối thoát nạn..."
-                }
+                placeholder={t("dutyNotePlaceholder")}
                 className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2AC1BC] leading-relaxed"
               />
             </div>
@@ -1121,7 +1071,7 @@ function StaffScheduleContent() {
                 onClick={() => setActiveDutyForProof(null)}
                 className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                {isEn ? "Cancel" : "Hủy bỏ"}
+                {t("btnCancel")}
               </button>
 
               <div className="flex items-center gap-2">
@@ -1131,7 +1081,7 @@ function StaffScheduleContent() {
                   className="px-4 py-2.5 bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
                 >
                   <FileText className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>{isEn ? "Save Progress" : "Cập nhật tiến độ"}</span>
+                  <span>{t("saveProgress")}</span>
                 </button>
 
                 <button
@@ -1140,7 +1090,7 @@ function StaffScheduleContent() {
                   className="px-4.5 py-2.5 bg-[#2AC1BC] hover:bg-[#22a8a4] text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isEn ? "Complete Task" : "Hoàn thành nhiệm vụ"}</span>
+                  <span>{t("btnCompleteDuty")}</span>
                 </button>
               </div>
             </div>
@@ -1187,7 +1137,7 @@ function StaffScheduleContent() {
             {previewPhotoModal.note && (
               <div className="p-4 bg-zinc-50 border-t border-zinc-200 text-xs text-zinc-700 space-y-1">
                 <span className="font-bold text-zinc-500 uppercase tracking-wider text-[10px] block">
-                  {isEn ? "Note:" : "Ghi chú:"}
+                  {t("lightboxNoteLabel")}
                 </span>
                 <p className="italic text-zinc-900 font-medium leading-relaxed">
                   &quot;{previewPhotoModal.note}&quot;

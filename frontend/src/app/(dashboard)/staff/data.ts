@@ -687,13 +687,15 @@ export function evaluateCheckInWindow(
   statusText: string;
   reason: string;
   isLate: boolean;
+  isTooEarly: boolean;
 } {
   if (hasCheckedIn) {
     return {
       allowed: false,
       statusText: "Đã Check-in",
       reason: "Bạn đã hoàn thành check-in ca trực này.",
-      isLate: false
+      isLate: false,
+      isTooEarly: false
     };
   }
 
@@ -710,7 +712,8 @@ export function evaluateCheckInWindow(
       allowed: false,
       statusText: `Mở sau ${diff} phút`,
       reason: `Cổng check-in chỉ mở trước ca làm 10 phút (từ ${formatMinutesToHHMM(windowOpenMinutes)}).`,
-      isLate: false
+      isLate: false,
+      isTooEarly: true
     };
   }
 
@@ -719,7 +722,8 @@ export function evaluateCheckInWindow(
       allowed: true,
       statusText: "Sẵn sàng Check-in",
       reason: "Đang trong khung giờ check-in hợp lệ (Đúng giờ).",
-      isLate: false
+      isLate: false,
+      isTooEarly: false
     };
   }
 
@@ -733,7 +737,8 @@ export function evaluateCheckInWindow(
       allowed: true,
       statusText: `Check-in (Muộn ${lateMinutes}p)`,
       reason: `Bạn đang check-in muộn ${lateMinutes} phút so với giờ bắt đầu ca.`,
-      isLate: true
+      isLate: true,
+      isTooEarly: false
     };
   }
 
@@ -741,7 +746,8 @@ export function evaluateCheckInWindow(
     allowed: false,
     statusText: "Đã hết ca",
     reason: "Ca trực đã kết thúc. Bạn không thể check-in bổ sung.",
-    isLate: true
+    isLate: true,
+    isTooEarly: false
   };
 }
 

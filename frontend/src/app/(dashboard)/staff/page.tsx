@@ -205,60 +205,53 @@ export default function StaffOverviewPage() {
   const [hasFormDraftChanges, setHasFormDraftChanges] = useState(false);
 
   const getShiftName = (s: Shift) => {
-    if (locale !== "en") return s.name;
-    if (s.id === "shift-morning") return "Morning Shift";
-    if (s.id === "shift-afternoon") return "Afternoon Shift";
-    if (s.id === "shift-night") return "Night Shift";
+    if (s.id === "shift-morning") return t("shiftMorning");
+    if (s.id === "shift-afternoon") return t("shiftAfternoon");
+    if (s.id === "shift-night") return t("shiftNight");
     return s.name;
   };
 
   const getPositionName = (posOrName: string | JobPosition) => {
     const name = typeof posOrName === "string" ? posOrName : posOrName.name;
-    if (locale !== "en") return name;
     const lower = name.toLowerCase();
-    if (lower.includes("bảo vệ") || lower.includes("an ninh")) return "Head of Security";
-    if (lower.includes("vệ sinh")) return "Cleaning Specialist";
-    if (lower.includes("kỹ thuật") || lower.includes("bảo trì")) return "Technical Specialist";
+    if (lower.includes("bảo vệ") || lower.includes("an ninh") || lower.includes("security")) return t("positionSecurity");
+    if (lower.includes("vệ sinh") || lower.includes("cleaning")) return t("positionCleaning");
+    if (lower.includes("kỹ thuật") || lower.includes("bảo trì") || lower.includes("technical")) return t("positionTechnical");
     return name;
   };
 
   const todayStr = todaySchedule?.workDate || getTodayISODate();
-  const todayFormattedDate = locale === "en"
-    ? (currentTime || new Date()).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
-    : (currentTime || new Date()).toLocaleDateString("vi-VN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const todayFormattedDate = (currentTime || new Date()).toLocaleDateString(locale === "en" ? "en-US" : "vi-VN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
   const monthlySummaryTitle = useMemo(() => {
     const rawMonth = monthlySummary?.month || (todaySchedule?.workDate ? todaySchedule.workDate.substring(0, 7) : "");
     if (rawMonth && /^\d{4}-\d{2}$/.test(rawMonth)) {
       const [year, month] = rawMonth.split("-");
-      if (locale === "en") {
-        const monthNames = [
-          "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
-          "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
-        ];
-        const mIndex = parseInt(month, 10) - 1;
-        const mName = monthNames[mIndex] || month;
-        return `${mName} ${year} WORK SUMMARY`;
-      }
-      return `TỔNG KẾT CÔNG THÁNG ${month}/${year}`;
+      const monthNames = [
+        "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+        "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+      ];
+      const mIndex = parseInt(month, 10) - 1;
+      const mName = monthNames[mIndex] || month;
+      return t("monthlySummaryPattern", { monthName: mName, month, year });
     }
-    return locale === "en" ? "MONTHLY WORK SUMMARY" : "TỔNG KẾT CÔNG THÁNG";
-  }, [monthlySummary?.month, todaySchedule?.workDate, locale]);
+    return t("monthlySummaryDefault");
+  }, [monthlySummary?.month, todaySchedule?.workDate, t]);
 
   // Handle opening Check-in modal
   const handleOpenCheckIn = () => {
     if (!todaySchedule) return;
     if (attendance?.checkIn) {
-      showToast(locale === "en" ? "Check-in record is locked and cannot be edited!" : "Hồ sơ Check-in đã chốt, không thể chỉnh sửa lại!", "info");
+      showToast(t("checkInLockedToast"), "info");
       return;
     }
     if (!checkInEval.allowed) {
       showToast(
-        locale === "en"
-          ? (checkInEval.isLate
-            ? "Shift has already ended. Cannot check in."
-            : "Check-in only opens 10 minutes prior to shift start.")
-          : checkInEval.reason,
+        checkInEval.isLate
+          ? t("checkInEndedToast")
+          : checkInEval.isTooEarly
+            ? t("checkInNotOpenToast")
+            : checkInEval.reason || t("checkInNotOpenToast"),
         "warning"
       );
       return;
@@ -271,11 +264,11 @@ export default function StaffOverviewPage() {
   const handleOpenCheckOut = () => {
     if (!todaySchedule) return;
     if (attendance?.checkOut) {
-      showToast(locale === "en" ? "Check-out record is locked and cannot be edited!" : "Hồ sơ Check-out đã chốt, không thể chỉnh sửa lại!", "info");
+      showToast(t("checkOutLockedToast"), "info");
       return;
     }
     if (!checkOutEval.allowed) {
-      showToast(locale === "en" ? "Please check in first before checking out." : checkOutEval.reason, "warning");
+      showToast(t("checkOutRequireCheckInToast"), "warning");
       return;
     }
     setHasFormDraftChanges(false);
@@ -337,12 +330,15 @@ export default function StaffOverviewPage() {
       checkInWatermark: payload.watermark,
       checkInExplanation: payload.explanation,
       note: isLate
-        ? (locale === "en"
-          ? `Checked in late at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}. Explanation: "${getLocalizedExplanation(payload.explanation, true) || "None"}"`
-          : `Check-in muộn lúc ${payload.capturedTime} tại ${payload.watermark.place}. Giải trình: "${payload.explanation || "Chưa có"}"`)
-        : (locale === "en"
-          ? `Checked in on-time at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}.`
-          : `Check-in đúng giờ lúc ${payload.capturedTime} tại ${payload.watermark.place}.`)
+        ? t("noteCheckInLate", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+            explanation: getLocalizedExplanation(payload.explanation, locale === "en") || t("noneExplanation"),
+          })
+        : t("noteCheckInOnTime", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+          }),
     };
 
     setAttendance(updated);
@@ -352,12 +348,14 @@ export default function StaffOverviewPage() {
     setHasFormDraftChanges(false);
     showToast(
       isLate
-        ? (locale === "en"
-          ? `Checked in successfully (Late at ${payload.capturedTime}) at ${getLocalizedPlace(payload.watermark.place, true)}`
-          : `Đã Check-in thành công (Muộn ${payload.capturedTime}) tại ${payload.watermark.place}`)
-        : (locale === "en"
-          ? `Checked in successfully at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)} (On-time!)`
-          : `Đã Check-in thành công lúc ${payload.capturedTime} tại ${payload.watermark.place} (Đúng giờ!)`),
+        ? t("toastCheckInLate", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+          })
+        : t("toastCheckInOnTime", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+          }),
       isLate ? "warning" : "success"
     );
 
@@ -424,12 +422,15 @@ export default function StaffOverviewPage() {
       checkOutWatermark: payload.watermark,
       checkOutExplanation: payload.explanation,
       note: isEarly
-        ? (locale === "en"
-          ? `Checked out early at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}. Explanation: "${getLocalizedExplanation(payload.explanation, true) || "None"}"`
-          : `Check-out sớm lúc ${payload.capturedTime} tại ${payload.watermark.place}. Giải trình: "${payload.explanation || "Chưa có"}"`)
-        : (locale === "en"
-          ? `Checked out completed at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}.`
-          : `Check-out hoàn thành lúc ${payload.capturedTime} tại ${payload.watermark.place}.`)
+        ? t("noteCheckOutEarly", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+            explanation: getLocalizedExplanation(payload.explanation, locale === "en") || t("noneExplanation"),
+          })
+        : t("noteCheckOutCompleted", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+          }),
     };
 
     setAttendance(updated);
@@ -439,12 +440,14 @@ export default function StaffOverviewPage() {
     setHasFormDraftChanges(false);
     showToast(
       isEarly
-        ? (locale === "en"
-          ? `Checked out early at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)} with explanation.`
-          : `Đã Check-out sớm lúc ${payload.capturedTime} tại ${payload.watermark.place} kèm giải trình.`)
-        : (locale === "en"
-          ? `Checked out successfully at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}!`
-          : `Đã Check-out thành công lúc ${payload.capturedTime} tại ${payload.watermark.place}!`),
+        ? t("toastCheckOutEarly", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+          })
+        : t("toastCheckOutSuccess", {
+            time: payload.capturedTime,
+            place: getLocalizedPlace(payload.watermark.place, locale === "en"),
+          }),
       isEarly ? "warning" : "success"
     );
 
@@ -480,12 +483,7 @@ export default function StaffOverviewPage() {
     if (duty.requiresPhoto && !duty.photoProof && !duty.completed) {
       setSelectedDutyForProof(duty);
       setActiveModal("duty_proof");
-      showToast(
-        locale === "en"
-          ? "This task requires photo proof. Please capture or upload a photo before completing!"
-          : "Nhiệm vụ này yêu cầu ảnh đối chiếu. Vui lòng chụp hoặc tải ảnh trước khi hoàn thành!",
-        "warning"
-      );
+      showToast(t("toastDutyProofRequired"), "warning");
       return;
     }
 
@@ -533,12 +531,7 @@ export default function StaffOverviewPage() {
     if (!targetDuty) return;
 
     if (payload.markCompleted && targetDuty.requiresPhoto && !payload.photo && !targetDuty.photoProof) {
-      showToast(
-        locale === "en"
-          ? "This task requires photo proof before completing!"
-          : "Nhiệm vụ này bắt buộc phải có ảnh đối chiếu mới được hoàn thành!",
-        "warning"
-      );
+      showToast(t("toastDutyProofRequired"), "warning");
       return;
     }
 
@@ -573,9 +566,9 @@ export default function StaffOverviewPage() {
     setHasFormDraftChanges(false);
 
     if (payload.markCompleted) {
-      showToast(locale === "en" ? "Task completed successfully!" : "Đã lưu ảnh và hoàn thành nhiệm vụ!", "success");
+      showToast(t("toastDutyCompleted"), "success");
     } else {
-      showToast(locale === "en" ? "Progress updated successfully!" : "Đã cập nhật tiến độ nhiệm vụ!", "info");
+      showToast(t("toastDutyProgressUpdated"), "info");
     }
 
     // Sync to backend API
@@ -598,7 +591,7 @@ export default function StaffOverviewPage() {
   };
 
 
-  const currentStaffName = staffName || user?.name || (locale === "en" ? "Staff Member" : "Nhân viên");
+  const currentStaffName = staffName || user?.name || t("defaultStaffName");
   const completedCount = dutyList.filter(d => d.completed).length;
 
   if (isLoading || !isMounted) {
@@ -719,18 +712,14 @@ export default function StaffOverviewPage() {
 
               <div className="space-y-2 max-w-md mx-auto">
                 <h2 className="text-xl sm:text-2xl font-black text-zinc-900">
-                  {locale === "en" ? "No Shift Scheduled for Today" : "Không có lịch trực hôm nay"}
+                  {t("noShiftTitle")}
                 </h2>
                 <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">
                   {fetchError
                     ? (fetchError === "ERR_FETCH_FAILED"
-                      ? (locale === "en"
-                        ? "Failed to load schedule from server"
-                        : "Không thể tải dữ liệu ca làm việc từ máy chủ")
+                      ? t("errFailedLoad")
                       : fetchError)
-                    : (locale === "en"
-                      ? "You do not have any work shifts assigned for today. You can check upcoming shifts in the Schedule tab or review past attendance history."
-                      : "Hôm nay bạn không có ca trực nào được phân công. Bạn có thể kiểm tra lịch phân ca sắp tới tại tab Lịch trực & Nhiệm vụ hoặc tra cứu lịch sử chấm công.")}
+                    : t("noShiftDesc")}
                 </p>
               </div>
 
@@ -744,7 +733,7 @@ export default function StaffOverviewPage() {
                   className="py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
                 >
                   <RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{locale === "en" ? "Refresh Data" : "Tải lại dữ liệu"}</span>
+                  <span>{t("btnRefreshData")}</span>
                 </button>
 
                 <Link
@@ -752,7 +741,7 @@ export default function StaffOverviewPage() {
                   className="py-2.5 px-4 rounded-xl bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm shadow-[#2AC1BC]/20"
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>{locale === "en" ? "View Shift Schedule" : "Xem lịch trực & nhiệm vụ"}</span>
+                  <span>{t("btnViewShiftSchedule")}</span>
                 </Link>
 
                 <Link
@@ -760,7 +749,7 @@ export default function StaffOverviewPage() {
                   className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
                 >
                   <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{locale === "en" ? "Shift History" : "Lịch sử chấm công"}</span>
+                  <span>{t("btnShiftHistory")}</span>
                 </Link>
               </div>
             </div>
@@ -790,17 +779,17 @@ export default function StaffOverviewPage() {
                   {attendance?.checkOut ? (
                     <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-100 text-emerald-700 inline-flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
-                      {locale === "en" ? "SHIFT COMPLETED" : "ĐÃ HOÀN THÀNH CA"}
+                      {t("badgeShiftCompleted")}
                     </span>
                   ) : attendance?.checkIn ? (
                     <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-[#2AC1BC]/15 text-[#2AC1BC] inline-flex items-center gap-1.5">
                       <Clock className="w-4 h-4 animate-spin" />
-                      {locale === "en" ? "ON DUTY" : "ĐANG TRONG CA TRỰC"}
+                      {t("badgeOnDuty")}
                     </span>
                   ) : (
                     <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-amber-100 text-amber-800 inline-flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4" />
-                      {locale === "en" ? "NOT CHECKED IN" : "CHƯA CHECK-IN"}
+                      {t("badgeNotCheckedIn")}
                     </span>
                   )}
                 </div>
@@ -810,7 +799,7 @@ export default function StaffOverviewPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
                   <span className="text-[11px] font-bold text-zinc-400 block uppercase">
-                    {locale === "en" ? "Shift Location" : "Địa điểm trực"}
+                    {t("shiftLocationLabel")}
                   </span>
                   <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
                     <Building2 className="w-4 h-4 text-[#2AC1BC]" />
@@ -820,7 +809,7 @@ export default function StaffOverviewPage() {
 
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
                   <span className="text-[11px] font-bold text-zinc-400 block uppercase">
-                    {locale === "en" ? "Assigned Role" : "Vị trí đảm nhiệm"}
+                    {t("assignedRoleLabel")}
                   </span>
                   <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
                     <Shield className="w-4 h-4 text-[#2AC1BC]" />
@@ -830,12 +819,12 @@ export default function StaffOverviewPage() {
 
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
                   <span className="text-[11px] font-bold text-zinc-400 block uppercase">
-                    {locale === "en" ? "Shift Duration" : "Thời lượng ca"}
+                    {t("shiftDurationLabel")}
                   </span>
                   <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
                     <Clock className="w-4 h-4 text-[#2AC1BC]" />
                     <span>
-                      {locale === "en" ? `${todaySchedule.shift.durationHours} Hours (8h work)` : `${todaySchedule.shift.durationHours} Tiếng (8h công)`}
+                      {t("shiftDurationHours", { hours: todaySchedule.shift.durationHours })}
                     </span>
                   </div>
                 </div>
@@ -886,7 +875,7 @@ export default function StaffOverviewPage() {
                             className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
                             onClick={() => setPreviewImageModal({
                               isOpen: true,
-                              title: locale === "en" ? "Check-in Verification Photo" : "Ảnh Xác Thực Check-in",
+                              title: t("checkInPhotoTitle"),
                               imageUrl: attendance.checkInPhoto!,
                               watermark: attendance.checkInWatermark ? {
                                 ...attendance.checkInWatermark,
@@ -901,7 +890,7 @@ export default function StaffOverviewPage() {
                               📍 {getLocalizedPlace(attendance.checkInWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}
                             </span>
                             <span className="text-zinc-500 block truncate max-w-[150px]">
-                              🕒 {attendance.checkInWatermark?.time || (locale === "en" ? "Time & Place stamped" : "Đã in dấu thời gian")}
+                              🕒 {attendance.checkInWatermark?.time || t("timePlaceStamped")}
                             </span>
                           </div>
                         </div>
@@ -909,7 +898,7 @@ export default function StaffOverviewPage() {
                           type="button"
                           onClick={() => setPreviewImageModal({
                             isOpen: true,
-                            title: locale === "en" ? "Check-in Verification Photo" : "Ảnh Xác Thực Check-in",
+                            title: t("checkInPhotoTitle"),
                             imageUrl: attendance.checkInPhoto!,
                             watermark: attendance.checkInWatermark ? {
                               ...attendance.checkInWatermark,
@@ -967,7 +956,7 @@ export default function StaffOverviewPage() {
                             className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
                             onClick={() => setPreviewImageModal({
                               isOpen: true,
-                              title: locale === "en" ? "Check-out Verification Photo" : "Ảnh Xác Thực Check-out",
+                              title: t("checkOutPhotoTitle"),
                               imageUrl: attendance.checkOutPhoto!,
                               watermark: attendance.checkOutWatermark ? {
                                 ...attendance.checkOutWatermark,
@@ -982,7 +971,7 @@ export default function StaffOverviewPage() {
                               📍 {getLocalizedPlace(attendance.checkOutWatermark?.place || todaySchedule.boardingHouseName, locale === "en")}
                             </span>
                             <span className="text-zinc-500 block truncate max-w-[150px]">
-                              🕒 {attendance.checkOutWatermark?.time || (locale === "en" ? "Time & Place stamped" : "Đã in dấu thời gian")}
+                              🕒 {attendance.checkOutWatermark?.time || t("timePlaceStamped")}
                             </span>
                           </div>
                         </div>
@@ -990,7 +979,7 @@ export default function StaffOverviewPage() {
                           type="button"
                           onClick={() => setPreviewImageModal({
                             isOpen: true,
-                            title: locale === "en" ? "Check-out Verification Photo" : "Ảnh Xác Thực Check-out",
+                            title: t("checkOutPhotoTitle"),
                             imageUrl: attendance.checkOutPhoto!,
                             watermark: attendance.checkOutWatermark ? {
                               ...attendance.checkOutWatermark,
@@ -1025,7 +1014,7 @@ export default function StaffOverviewPage() {
                       type="button"
                       onClick={() => setPreviewImageModal({
                         isOpen: true,
-                        title: locale === "en" ? "Check-in Verification Photo (Locked - View only)" : "Ảnh Xác Thực Check-in (Đã chốt - Không thể chỉnh sửa)",
+                        title: t("checkInPhotoLockedTitle"),
                         imageUrl: attendance.checkInPhoto || "",
                         watermark: attendance.checkInWatermark ? {
                           ...attendance.checkInWatermark,
@@ -1062,7 +1051,7 @@ export default function StaffOverviewPage() {
                       type="button"
                       onClick={() => setPreviewImageModal({
                         isOpen: true,
-                        title: locale === "en" ? "Check-out Verification Photo (Locked - View only)" : "Ảnh Xác Thực Check-out (Đã chốt - Không thể chỉnh sửa)",
+                        title: t("checkOutPhotoLockedTitle"),
                         imageUrl: attendance.checkOutPhoto || "",
                         watermark: attendance.checkOutWatermark ? {
                           ...attendance.checkOutWatermark,
@@ -1120,7 +1109,7 @@ export default function StaffOverviewPage() {
                       href="/staff/schedule"
                       className="text-[11px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-1"
                     >
-                      <span>{locale === "en" ? "View in Schedule" : "Xem trong Lịch trực & Nhiệm vụ"}</span>
+                      <span>{t("viewInSchedule")}</span>
                       <ArrowRight className="w-3 h-3" />
                     </Link>
                   </div>
@@ -1208,7 +1197,7 @@ export default function StaffOverviewPage() {
                                   imageUrl: duty.photoProof!,
                                   watermark: {
                                     time: duty.photoProofTime || (duty.completedAt ? `${duty.completedAt} - ${todayStr}` : effectiveTimeString),
-                                    place: getLocalizedPlace(todaySchedule.boardingHouseName || (locale === "en" ? "Assigned Building" : "Toà nhà trực"), locale === "en"),
+                                    place: getLocalizedPlace(todaySchedule.boardingHouseName || t("assignedBuilding"), locale === "en"),
                                     staffName: getLocalizedStaffName(currentStaffName, locale === "en")
                                   },
                                   note: getDutyNote(duty.note, locale === "en")
@@ -1248,10 +1237,10 @@ export default function StaffOverviewPage() {
                   <div className="p-6 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 text-center space-y-1">
                     <CheckSquare className="w-5 h-5 text-zinc-400 mx-auto" />
                     <p className="text-xs font-bold text-zinc-600">
-                      {locale === "en" ? "No duty tasks assigned for this shift" : "Không có nhiệm vụ ca làm nào được giao"}
+                      {t("noDutiesTitle")}
                     </p>
                     <p className="text-[11px] text-zinc-400">
-                      {locale === "en" ? "All core duties have been settled or none were assigned." : "Ca trực này hiện không có danh mục nhiệm vụ bắt buộc."}
+                      {t("noDutiesDesc")}
                     </p>
                   </div>
                 )}
@@ -1308,9 +1297,9 @@ export default function StaffOverviewPage() {
             ) : (
               <div className="text-center py-6 text-zinc-400 text-xs font-medium space-y-1">
                 <Users className="w-6 h-6 text-zinc-300 mx-auto" />
-                <p>{todaySchedule ? t("onlyStaffAssigned") : (locale === "en" ? "No scheduled shifts today" : "Chưa có dữ liệu ca trực hôm nay")}</p>
+                <p>{todaySchedule ? t("onlyStaffAssigned") : t("noScheduledShifts")}</p>
                 <p className="text-[11px] text-zinc-400">
-                  {todaySchedule ? t("coworkerNote") : (locale === "en" ? "Co-workers will appear here when a shift is active." : "Danh sách đồng nghiệp cùng ca sẽ xuất hiện khi có ca trực.")}
+                  {todaySchedule ? t("coworkerNote") : t("coWorkersEmptyDesc")}
                 </p>
               </div>
             )}
@@ -1332,19 +1321,19 @@ export default function StaffOverviewPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase">
-                    {t("metricTotalShifts") || (locale === "en" ? "TOTAL SHIFTS" : "TỔNG CA TRỰC")}
+                    {t("metricTotalShifts")}
                   </span>
                   <div className="text-xl font-black text-zinc-900">
                     {t("shiftsUnit", { count: monthlySummary.totalShifts })}
                   </div>
                   <span className="text-[10px] text-emerald-600 font-bold">
-                    {locale === "en" ? `${monthlySummary.totalHours} hrs` : `${monthlySummary.totalHours} giờ công`}
+                    {t("totalHoursUnit", { hours: monthlySummary.totalHours })}
                   </span>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase">
-                    {t("onTimeLabel") || (locale === "en" ? "ON TIME" : "ĐÚNG GIỜ")}
+                    {t("onTimeLabel")}
                   </span>
                   <div className="text-xl font-black text-[#2AC1BC]">
                     {monthlySummary.onTimeRate}%
@@ -1358,7 +1347,7 @@ export default function StaffOverviewPage() {
 
                 <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase">
-                    {t("lateLabel") || (locale === "en" ? "LATE" : "ĐI MUỘN")}
+                    {t("lateLabel")}
                   </span>
                   <div className="text-xl font-black text-amber-600">
                     {t("shiftsUnit", { count: monthlySummary.lateCount })}
@@ -1368,7 +1357,7 @@ export default function StaffOverviewPage() {
 
                 <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase">
-                    {t("earlyLabel") || (locale === "en" ? "EARLY LEAVE" : "VỀ SỚM")}
+                    {t("earlyLabel")}
                   </span>
                   <div className="text-xl font-black text-amber-600">
                     {t("shiftsUnit", { count: monthlySummary.earlyCount })}
@@ -1382,12 +1371,10 @@ export default function StaffOverviewPage() {
                   <Calendar className="w-4 h-4 text-[#2AC1BC]" />
                 </div>
                 <div className="text-xs font-bold text-zinc-700">
-                  {locale === "en" ? "No attendance data for this month" : "Chưa có dữ liệu chấm công tháng này"}
+                  {t("noMonthlyAttendanceTitle")}
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  {locale === "en"
-                    ? "Your shift hours, attendance rate, and punctuality records will be summarized here."
-                    : "Tổng giờ công, số ca trực và tỷ lệ chuyên cần sẽ được tự động tổng hợp tại đây khi hoàn thành các ca làm việc."}
+                  {t("noMonthlyAttendanceDesc")}
                 </p>
               </div>
             )}
@@ -1511,7 +1498,7 @@ export default function StaffOverviewPage() {
                       <User className="w-3 h-3 text-zinc-400" /> {getLocalizedStaffName(previewImageModal.watermark.staffName, locale === "en")}
                     </span>
                     <span className="font-mono text-zinc-400">
-                      {previewImageModal.watermark.coordinates || (locale === "en" ? "GPS coordinates recorded" : "Đã ghi nhận tọa độ GPS")}
+                      {previewImageModal.watermark.coordinates || t("gpsRecorded")}
                     </span>
                   </div>
                 </div>
@@ -1751,7 +1738,7 @@ function CheckInOutCameraModal({
     error?: string;
   }>({
     status: "locating",
-    place: isEn ? "Locating actual GPS coordinates & address..." : "Đang dò tìm tọa độ & địa chỉ GPS thực tế...",
+    place: t("gpsLocating"),
     coordinates: "",
   });
 
@@ -1766,59 +1753,34 @@ function CheckInOutCameraModal({
   const [selectedQuickReason, setSelectedQuickReason] = useState<string | null>(null);
 
   // Preset reason chips for Check-in (Late / Handover)
-  const checkInLatePresets = isEn ? [
-    "Traffic congestion during commute",
-    "Assisted tenant with emergency issue",
-    "Notified & approved by Landlord",
-    "Unexpected personal health issue",
-    "Heavy rain & street flooding"
-  ] : [
-    "Kẹt xe trên đường di chuyển",
-    "Hỗ trợ giải quyết sự cố cho khách thuê khẩn cấp",
-    "Đã thông báo & có sự đồng ý của Chủ trọ",
-    "Vấn đề sức khỏe cá nhân đột xuất",
-    "Thời tiết mưa lớn, ngập úng"
+  const checkInLatePresets = [
+    t("presetLateTraffic"),
+    t("presetLateIncident"),
+    t("presetLateFamily"),
+    t("presetLateWeather"),
+    t("presetLateOvertime")
   ];
 
-  const checkInOnTimePresets = isEn ? [
-    "Shift handover & keys received in full",
-    "Checked lobby security & cameras",
-    "Heavy traffic (Arrived close to shift time)",
-    "Assisted tenant with emergency issue",
-    "Notified & approved by Landlord",
-    "Personal health issue needs support"
-  ] : [
-    "Đã nhận bàn giao ca & chìa khóa đầy đủ",
-    "Đã kiểm tra hệ thống camera & an ninh sảnh",
-    "Kẹt xe trên đường di chuyển (Đến sát giờ)",
-    "Hỗ trợ giải quyết sự cố cho khách thuê khẩn cấp",
-    "Đã thông báo & có sự đồng ý của Chủ trọ",
-    "Lý do sức khỏe cá nhân cần hỗ trợ"
+  const checkInOnTimePresets = [
+    t("presetOnTimeHandover"),
+    t("presetOnTimeReady"),
+    t("presetOnTimeVehicles"),
+    t("presetOnTimeHygiene")
   ];
 
   // Preset reason chips for Check-out (Early / Normal)
-  const checkOutEarlyPresets = isEn ? [
-    "Handed over shift early to on-duty co-worker",
-    "Urgent family matter",
-    "Notified & approved by Landlord",
-    "Health issue requires early rest"
-  ] : [
-    "Đã bàn giao ca sớm cho đồng nghiệp cùng trực",
-    "Gia đình có việc hiếu hỉ khẩn cấp",
-    "Đã thông báo & có sự đồng ý của Chủ trọ",
-    "Lý do sức khỏe cần nghỉ ngơi sớm"
+  const checkOutEarlyPresets = [
+    t("presetEarlyHealth"),
+    t("presetEarlyFamily"),
+    t("presetEarlyHandover"),
+    t("presetEarlyApproval")
   ];
 
-  const checkOutNormalPresets = isEn ? [
-    "Handed over shift & keys to next shift staff",
-    "Checked gate lock, cameras & lobby facilities",
-    "Shift completed safely, no incidents",
-    "Notified & approved by Landlord"
-  ] : [
-    "Đã bàn giao ca trực & chìa khóa cho ca tiếp theo",
-    "Đã kiểm tra khóa cổng, camera & tài sản sảnh",
-    "Ca trực hoàn thành an toàn, không có sự cố",
-    "Đã thông báo & có sự đồng ý của Chủ trọ"
+  const checkOutNormalPresets = [
+    t("presetNormalGateLocked"),
+    t("presetNormalDone"),
+    t("presetNormalSafe"),
+    t("presetNormalClean")
   ];
 
   const currentPresets = mode === "checkin"
@@ -1838,7 +1800,7 @@ function CheckInOutCameraModal({
     setGeoState(prev => ({
       ...prev,
       status: "locating",
-      place: isEn ? "Locating actual GPS coordinates..." : "Đang định vị vị trí GPS thực tế...",
+      place: t("gpsLocatingShort"),
       coordinates: "",
       error: undefined
     }));
@@ -1846,9 +1808,9 @@ function CheckInOutCameraModal({
     if (typeof window === "undefined" || !navigator.geolocation) {
       setGeoState({
         status: "error",
-        place: isEn ? "Device does not support Geolocation" : "Thiết bị không hỗ trợ Geolocation",
-        coordinates: isEn ? "GPS not available" : "GPS Không khả dụng",
-        error: isEn ? "Browser does not support Geolocation" : "Trình duyệt không hỗ trợ Geolocation"
+        place: t("gpsNoSupportDevice"),
+        coordinates: t("gpsNotAvailable"),
+        error: t("gpsNoSupportBrowser")
       });
       return;
     }
@@ -1869,15 +1831,15 @@ function CheckInOutCameraModal({
         });
       },
       (err) => {
-        let errorMsg = isEn ? "Cannot obtain GPS coordinates" : "Không thể lấy tọa độ GPS";
-        if (err.code === 1) errorMsg = isEn ? "GPS permission denied" : "Quyền GPS bị từ chối";
-        else if (err.code === 2) errorMsg = isEn ? "Location unavailable" : "Vị trí không khả dụng";
-        else if (err.code === 3) errorMsg = isEn ? "GPS timeout" : "Hết thời gian tìm GPS";
+        let errorMsg = t("gpsCannotObtain");
+        if (err.code === 1) errorMsg = t("gpsPermissionDenied");
+        else if (err.code === 2) errorMsg = t("gpsLocationUnavailable");
+        else if (err.code === 3) errorMsg = t("gpsTimeout");
 
         setGeoState({
           status: "error",
-          place: isEn ? "GPS permission not granted" : "Chưa cấp quyền truy cập GPS",
-          coordinates: isEn ? "GPS not ready" : "GPS chưa khả dụng",
+          place: t("gpsPermissionNotGranted"),
+          coordinates: t("gpsNotReady"),
           error: errorMsg
         });
       },
@@ -1893,7 +1855,7 @@ function CheckInOutCameraModal({
 
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setCameraStatus("unsupported");
-      setCameraError(isEn ? "This browser or device does not support direct camera API." : "Trình duyệt hoặc thiết bị này không hỗ trợ API truy cập Camera trực tiếp.");
+      setCameraError(t("cameraNotSupported"));
       return;
     }
 
@@ -1919,11 +1881,11 @@ function CheckInOutCameraModal({
       console.warn("Camera init error:", err);
       setCameraStatus("error");
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        setCameraError(isEn ? "Camera access denied. Please allow camera access in your browser settings." : "Quyền truy cập Camera bị từ chối. Vui lòng cho phép quyền máy ảnh trong cài đặt trình duyệt.");
+        setCameraError(t("cameraDenied"));
       } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-        setCameraError(isEn ? "No camera device found on this machine/device." : "Không tìm thấy thiết bị Camera trên máy tính/thiết bị này.");
+        setCameraError(t("cameraNotFound"));
       } else {
-        setCameraError(isEn ? `Cannot connect to Camera (${err.message || "Hardware error"}).` : `Không thể kết nối Camera (${err.message || "Lỗi phần cứng"}).`);
+        setCameraError(t("cameraConnectError", { error: err.message || t("cameraHardwareError") }));
       }
     }
   };
@@ -1964,15 +1926,15 @@ function CheckInOutCameraModal({
       const snapFullDateTime = `${snapDateStr} ${snapTimeStr}`;
 
       const activePlace = getLocalizedPlace(
-        geoState.status === "ready" ? geoState.place : (isEn ? "GPS address undetermined" : "Không xác định được địa chỉ GPS"),
+        geoState.status === "ready" ? geoState.place : t("gpsAddressUndetermined"),
         isEn
       );
-      const activeCoords = geoState.status === "ready" ? geoState.coordinates : (isEn ? "GPS unverified" : "GPS chưa xác thực");
+      const activeCoords = geoState.status === "ready" ? geoState.coordinates : t("gpsUnverified");
 
       const activeWatermark: AttendanceWatermark = {
         time: snapFullDateTime,
         place: activePlace,
-        staffName: getLocalizedStaffName(staffName || (isEn ? "Staff Member" : "Nhân viên"), isEn),
+        staffName: getLocalizedStaffName(staffName || t("defaultStaffName"), isEn),
         coordinates: activeCoords
       };
 
@@ -2002,7 +1964,7 @@ function CheckInOutCameraModal({
 
         ctx.fillStyle = "#2AC1BC";
         ctx.font = `bold ${fontSize}px monospace`;
-        ctx.fillText(`🕒 ${activeWatermark.time} | ${isEn ? "LIVE VERIFIED" : "XÁC THỰC THỜI GIAN THỰC"}`, padX, height - barHeight + fontSize + 8);
+        ctx.fillText(`🕒 ${activeWatermark.time} | ${t("liveVerified")}`, padX, height - barHeight + fontSize + 8);
 
         ctx.fillStyle = "#FFFFFF";
         ctx.font = `bold ${fontSize - 1}px sans-serif`;
@@ -2045,15 +2007,15 @@ function CheckInOutCameraModal({
     const snapFullDateTime = `${snapDateStr} ${snapTimeStr}`;
 
     const activePlace = getLocalizedPlace(
-      geoState.status === "ready" ? geoState.place : (isEn ? "GPS address undetermined" : "Không xác định được địa chỉ GPS"),
+      geoState.status === "ready" ? geoState.place : t("gpsAddressUndetermined"),
       isEn
     );
-    const activeCoords = geoState.status === "ready" ? geoState.coordinates : (isEn ? "GPS unverified" : "GPS chưa xác thực");
+    const activeCoords = geoState.status === "ready" ? geoState.coordinates : t("gpsUnverified");
 
     const activeWatermark: AttendanceWatermark = {
       time: snapFullDateTime,
       place: activePlace,
-      staffName: getLocalizedStaffName(staffName || (isEn ? "Staff Member" : "Nhân viên"), isEn),
+      staffName: getLocalizedStaffName(staffName || t("defaultStaffName"), isEn),
       coordinates: activeCoords
     };
 
@@ -2079,7 +2041,7 @@ function CheckInOutCameraModal({
 
           ctx.fillStyle = "#2AC1BC";
           ctx.font = `bold ${fontSize}px monospace`;
-          ctx.fillText(`🕒 ${activeWatermark.time} | ${isEn ? "LIVE VERIFIED" : "XÁC THỰC THỜI GIAN THỰC"}`, padX, height - barHeight + fontSize + 8);
+          ctx.fillText(`🕒 ${activeWatermark.time} | ${t("liveVerified")}`, padX, height - barHeight + fontSize + 8);
 
           ctx.fillStyle = "#FFFFFF";
           ctx.font = `bold ${fontSize - 1}px sans-serif`;
@@ -2566,7 +2528,7 @@ function DutyProofModal({
               </div>
               <div>
                 <p className="text-xs font-bold text-zinc-700">
-                  {locale === "en" ? "Upload or capture verification photo" : "Chụp hoặc tải ảnh đối chiếu hiện trường"}
+                  {t("dutyProofUploadTitle")}
                 </p>
                 <p className="text-[11px] text-zinc-400">
                   {duty.requiresPhoto ? t("requiresPhoto") : t("photoOptional")}

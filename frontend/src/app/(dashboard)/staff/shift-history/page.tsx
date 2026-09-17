@@ -172,10 +172,9 @@ function StaffShiftHistoryContent() {
   } | null>(null);
 
   const getShiftName = (name: string) => {
-    if (!isEn) return name;
-    if (name.includes("Sáng")) return "Morning Shift (07:00 - 15:00)";
-    if (name.includes("Chiều")) return "Afternoon Shift (15:00 - 23:00)";
-    if (name.includes("Đêm")) return "Night Shift (23:00 - 07:00)";
+    if (name.includes("Sáng")) return `${t("shiftMorning")} (07:00 - 15:00)`;
+    if (name.includes("Chiều")) return `${t("shiftAfternoon")} (15:00 - 23:00)`;
+    if (name.includes("Đêm")) return `${t("shiftNight")} (23:00 - 07:00)`;
     return name;
   };
 
@@ -262,16 +261,14 @@ function StaffShiftHistoryContent() {
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
-              {isEn ? "ATTENDANCE TIMESHEET" : "NHẬT KÝ CHẤM CÔNG"}
+              {t("attHistoryTag")}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {isEn ? "Attendance History & Timesheet" : "Lịch Sử Chấm Công & Giờ Làm"}
+            {t("attHistoryTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 font-medium">
-            {isEn
-              ? "Audit verified clock-in/out records, punctuality rates, and photo proofs."
-              : "Theo dõi chi tiết lịch sử vào/ra ca, tỷ lệ chuyên cần và hình ảnh đối chiếu thực tế."}
+            {t("attHistorySubtitle")}
           </p>
         </div>
 
@@ -282,7 +279,7 @@ function StaffShiftHistoryContent() {
             className="px-4 py-2.5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-zinc-200/80 cursor-pointer"
           >
             <Calendar className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{isEn ? "View Work Schedule" : "Xem lịch phân ca tuần"}</span>
+            <span>{t("btnViewWorkSchedule")}</span>
             <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
           </Link>
         </div>
@@ -366,10 +363,10 @@ function StaffShiftHistoryContent() {
             type="button"
             onClick={handleOpenFilterModal}
             className="px-4 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-95"
-            title={isEn ? "Open filter dialog" : "Mở hộp thoại bộ lọc"}
+            title={t("titleFilterOpen")}
           >
             <Filter className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>{isEn ? "Use Filters" : "Sử dụng bộ lọc"}</span>
+            <span>{t("btnUseFilters")}</span>
             {hasAnyAppliedFilter && (
               <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
             )}
@@ -386,8 +383,8 @@ function StaffShiftHistoryContent() {
                     {appliedStartDate && appliedEndDate
                       ? `${appliedStartDate} → ${appliedEndDate}`
                       : appliedStartDate
-                        ? `Từ ${appliedStartDate}`
-                        : `Đến ${appliedEndDate}`}
+                        ? t("filterDateFrom", { date: appliedStartDate })
+                        : t("filterDateTo", { date: appliedEndDate })}
                   </span>
                   <button
                     type="button"
@@ -398,7 +395,7 @@ function StaffShiftHistoryContent() {
                       setWindowStart(1);
                     }}
                     className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
-                    title={isEn ? "Remove date filter" : "Bỏ lọc ngày"}
+                    title={t("titleRemoveDateFilter")}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -418,7 +415,7 @@ function StaffShiftHistoryContent() {
                       setWindowStart(1);
                     }}
                     className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
-                    title={isEn ? "Remove shift filter" : "Bỏ lọc ca trực"}
+                    title={t("titleRemoveShiftFilter")}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -442,7 +439,7 @@ function StaffShiftHistoryContent() {
                       setWindowStart(1);
                     }}
                     className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
-                    title={isEn ? "Remove status filter" : "Bỏ lọc trạng thái"}
+                    title={t("titleRemoveStatusFilter")}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -455,19 +452,19 @@ function StaffShiftHistoryContent() {
                 onClick={handleClearAllFilters}
                 className="text-xs text-red-600 hover:text-red-700 font-bold ml-1 hover:underline cursor-pointer"
               >
-                {isEn ? "Clear all" : "Xoá tất cả"}
+                {t("btnClearAll")}
               </button>
             </div>
           ) : (
             <span className="text-xs text-zinc-400 font-medium italic">
-              {isEn ? "No active filters" : "Chưa áp dụng bộ lọc nào"}
+              {t("noActiveFilters")}
             </span>
           )}
         </div>
 
         {/* Total records count */}
         <div className="text-xs text-zinc-500 font-medium self-start md:self-center">
-          {isEn ? "Total records:" : "Tổng số bản ghi:"} <strong className="text-zinc-900 font-bold">{totalItems}</strong>
+          {t("totalRecords")} <strong className="text-zinc-900 font-bold">{totalItems}</strong>
         </div>
       </div>
 
@@ -484,7 +481,7 @@ function StaffShiftHistoryContent() {
                 <th className="py-3.5 px-3">{t("tableColStatus")}</th>
                 <th className="py-3.5 px-3">{t("tableColHours")}</th>
                 <th className="py-3.5 px-3">{t("tableColNote")}</th>
-                <th className="py-3.5 px-3 text-center">{isEn ? "Action" : "Thao tác"}</th>
+                <th className="py-3.5 px-3 text-center">{t("tableColAction")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
@@ -641,7 +638,7 @@ function StaffShiftHistoryContent() {
                             })
                           }
                           className="p-1.5 rounded-xl bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-600 hover:text-[#2AC1BC] transition-colors inline-flex items-center gap-1 cursor-pointer"
-                          title={isEn ? "View photo proof" : "Xem ảnh đối chiếu"}
+                          title={t("viewPhotoProof")}
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -664,12 +661,10 @@ function StaffShiftHistoryContent() {
             <Clock className="w-5 h-5" />
           </div>
           <p className="text-xs font-bold text-zinc-700">
-            {isEn ? "No attendance records found matching filters" : "Không tìm thấy dữ liệu chấm công phù hợp"}
+            {t("emptyHistoryTitle")}
           </p>
           <p className="text-[11px] text-zinc-400">
-            {isEn
-              ? "Try adjusting your date, shift, or status filters."
-              : "Hãy thử thay đổi ngày trực, ca làm việc hoặc bộ lọc trạng thái."}
+            {t("emptyHistoryDesc")}
           </p>
           {hasAnyAppliedFilter && (
             <div className="pt-1">
@@ -679,7 +674,7 @@ function StaffShiftHistoryContent() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
-                <span>{isEn ? "Reset filters" : "Đặt lại bộ lọc"}</span>
+                <span>{t("btnResetFilters")}</span>
               </button>
             </div>
           )}
@@ -866,10 +861,10 @@ function StaffShiftHistoryContent() {
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-zinc-900">
-                    {isEn ? "Filter Shift History" : "Bộ lọc lịch sử ca trực"}
+                    {t("titleFilterModal")}
                   </h3>
                   <p className="text-[11px] text-zinc-500 font-medium">
-                    {isEn ? "Select criteria to narrow down records" : "Chọn các tiêu chí để lọc bảng chấm công"}
+                    {t("descFilterModal")}
                   </p>
                 </div>
               </div>
@@ -877,7 +872,7 @@ function StaffShiftHistoryContent() {
                 type="button"
                 onClick={handleRequestCloseFilterModal}
                 className="p-1.5 rounded-lg hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
-                title={isEn ? "Close" : "Đóng"}
+                title={t("btnClose")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -890,7 +885,7 @@ function StaffShiftHistoryContent() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                    <span>{isEn ? "Shift Date Range" : "Khoảng ngày trực"}</span>
+                    <span>{t("filterDateRange")}</span>
                   </label>
                   {(modalStartDate || modalEndDate) && (
                     <button
@@ -901,14 +896,14 @@ function StaffShiftHistoryContent() {
                       }}
                       className="text-[11px] text-zinc-400 hover:text-red-500 font-semibold cursor-pointer"
                     >
-                      {isEn ? "Clear dates" : "Xóa ngày"}
+                      {t("filterClearDates")}
                     </button>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <span className="text-[10px] font-bold text-zinc-400 block mb-1">
-                      {isEn ? "From date" : "Từ ngày"}
+                      {t("filterFromDate")}
                     </span>
                     <input
                       type="date"
@@ -919,7 +914,7 @@ function StaffShiftHistoryContent() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-zinc-400 block mb-1">
-                      {isEn ? "To date" : "Đến ngày"}
+                      {t("filterToDate")}
                     </span>
                     <input
                       type="date"
@@ -936,7 +931,7 @@ function StaffShiftHistoryContent() {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{isEn ? "Shift Type" : "Ca làm việc"}</span>
+                  <span>{t("filterShiftType")}</span>
                 </label>
                 <div className="relative">
                   <select
@@ -946,7 +941,7 @@ function StaffShiftHistoryContent() {
                     className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
                   >
                     <option value="all">
-                      {isEn ? "All Shifts (Default)" : "Tất cả ca làm việc (Mặc định)"}
+                      {t("filterAllShifts")}
                     </option>
                     {availableShifts.map((s) => (
                       <option key={s.id} value={s.name}>
@@ -966,7 +961,7 @@ function StaffShiftHistoryContent() {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{isEn ? "Attendance Status" : "Trạng thái chấm công"}</span>
+                  <span>{t("filterStatus")}</span>
                 </label>
                 <select
                   value={modalStatus}
@@ -978,11 +973,11 @@ function StaffShiftHistoryContent() {
                   className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                 >
                   <option value="all">
-                    {isEn ? "All Statuses (Default)" : "Tất cả trạng thái (Mặc định)"}
+                    {t("filterAllStatuses")}
                   </option>
-                  <option value="on_time">{t("tableStatusOnTime") || (isEn ? "On time" : "Đúng giờ")}</option>
-                  <option value="late">{t("tableStatusLate") || (isEn ? "Late" : "Đi muộn")}</option>
-                  <option value="absent">{t("tableStatusAbsent") || (isEn ? "Absent" : "Vắng mặt")}</option>
+                  <option value="on_time">{t("tableStatusOnTime")}</option>
+                  <option value="late">{t("tableStatusLate")}</option>
+                  <option value="absent">{t("tableStatusAbsent")}</option>
                 </select>
               </div>
             </div>
@@ -993,10 +988,10 @@ function StaffShiftHistoryContent() {
                 type="button"
                 onClick={handleResetModalDrafts}
                 className="px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-                title={isEn ? "Reset all fields in dialog" : "Đặt lại tất cả trường trong hộp thoại"}
+                title={t("titleResetDialog")}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>{isEn ? "Reset" : "Thiết lập lại"}</span>
+                <span>{t("btnReset")}</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -1005,14 +1000,14 @@ function StaffShiftHistoryContent() {
                   onClick={handleRequestCloseFilterModal}
                   className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
                 >
-                  {isEn ? "Cancel" : "Hủy bỏ"}
+                  {t("btnCancel")}
                 </button>
                 <button
                   type="button"
                   onClick={handleApplyModalFilter}
                   className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#22a8a4] rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
                 >
-                  {isEn ? "Apply Filters" : "Áp dụng"}
+                  {t("btnApplyFilters")}
                 </button>
               </div>
             </div>
@@ -1031,13 +1026,11 @@ function StaffShiftHistoryContent() {
               <div className="flex items-center gap-2.5 mb-2 text-amber-600">
                 <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                 <h3 className="text-base font-bold text-zinc-900">
-                  {isEn ? "Confirm Close Form" : "Xác nhận đóng form"}
+                  {t("confirmCloseTitle")}
                 </h3>
               </div>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                {isEn
-                  ? "You have unsaved filter changes. Are you sure you want to discard changes and close?"
-                  : "Bạn có những thay đổi trong bộ lọc chưa được áp dụng. Bạn có chắc muốn hủy thay đổi & đóng?"}
+                {t("filterConfirmCloseDesc")}
               </p>
             </div>
             <div className="flex items-center gap-3 px-6 pb-6">
@@ -1046,14 +1039,14 @@ function StaffShiftHistoryContent() {
                 onClick={() => setShowConfirmCloseModal(false)}
                 className="flex-1 px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
-                {isEn ? "Continue Editing" : "Tiếp tục chỉnh sửa"}
+                {t("btnContinueEditing")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDiscardAndClose}
                 className="flex-1 px-4 py-2 text-xs font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors cursor-pointer shadow-2xs"
               >
-                {isEn ? "Discard & Close" : "Hủy thay đổi & Đóng"}
+                {t("btnDiscardAndClose")}
               </button>
             </div>
           </div>
