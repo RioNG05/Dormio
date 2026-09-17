@@ -524,14 +524,6 @@ function StaffScheduleContent() {
               </div>
             </div>
 
-            <Link
-              href="/staff/tasks"
-              className="px-3.5 py-2.5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0"
-              title="Đến Trung tâm Nhiệm vụ"
-            >
-              <span>{isEn ? "Task Center" : "Trung tâm nhiệm vụ"}</span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            </Link>
           </div>
         </div>
 
@@ -792,17 +784,24 @@ function StaffScheduleContent() {
                         : "Chủ trọ có giao thêm các nhắc nhở, kiểm tra đột xuất hoặc xử lý sự cố có hạn chót trong ngày này."}
                     </p>
 
-                    <Link
-                      href={`/staff/tasks?tab=additional&date=${selectedSchedule.workDate}`}
-                      className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
-                    >
-                      <CheckSquare className="w-4 h-4" />
-                      <span>
-                        {isEn
-                          ? `View Additional Tasks (${additionalTasksOnSelectedDate.length}) →`
-                          : `Nhiệm vụ bổ sung (${additionalTasksOnSelectedDate.length}) →`}
-                      </span>
-                    </Link>
+                    <div className="space-y-2 pt-1 border-t border-amber-200/60">
+                      {additionalTasksOnSelectedDate.map((task) => (
+                        <div
+                          key={task.id}
+                          className="p-2.5 rounded-xl bg-white border border-amber-200 text-xs space-y-1 shadow-2xs"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-zinc-900">{task.title}</span>
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
+                              {task.deadline.split(" ")[1] || task.deadline}
+                            </span>
+                          </div>
+                          {task.description && (
+                            <p className="text-[11px] text-zinc-600 leading-snug">{task.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-zinc-500 text-xs flex items-center gap-2">

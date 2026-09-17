@@ -15,7 +15,7 @@ import {
   Settings, HelpCircle,
   LogOut, Menu, X, ChevronDown, ChevronRight,
   AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2,
-  Megaphone, Newspaper, ShieldCheck, CheckSquare, Check, Plus, Layers
+  Megaphone, Newspaper, ShieldCheck, Check, Plus, Layers
 } from "lucide-react";
 
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -43,7 +43,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: tNav("staffOverview"), href: "/staff", icon: LayoutDashboard },
     { name: tNav("staffShiftsAttendance"), href: "/staff/schedule", icon: Calendar },
     { name: tNav("staffShiftHistory"), href: "/staff/shift-history", icon: Clock },
-    { name: tNav("staffTasks"), href: "/staff/tasks", icon: CheckSquare },
   ];
 
   const adminMenus = [
@@ -282,8 +281,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           pageTitle = tNav("staffTitleSchedule");
         } else if (pathname?.startsWith("/staff/shift-history") || pathname?.startsWith("/staff/attendance")) {
           pageTitle = tNav("staffTitleShiftHistory");
-        } else if (pathname?.startsWith("/staff/tasks")) {
-          pageTitle = tNav("staffTitleTasks");
         } else {
           pageTitle = tNav("staffTitlePortal");
         }

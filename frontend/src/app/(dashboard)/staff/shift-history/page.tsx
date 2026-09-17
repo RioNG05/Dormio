@@ -6,7 +6,7 @@ import {
   Calendar, Clock, Building2, Shield, Users,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Info, X, CheckCircle2, AlertTriangle, XCircle,
-  Phone, ArrowLeft, LayoutGrid, List, Search,
+  Phone, ArrowLeft, Search,
   Camera, Eye, ShieldCheck, ArrowRight, FileText
 } from "lucide-react";
 import {
@@ -25,8 +25,6 @@ function StaffShiftHistoryContent() {
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
-  // Rule #9: Standardized View & Pagination (Grid view as default)
-  const [attViewMode, setAttViewMode] = useState<"grid" | "table">("grid");
   const [attSearchQuery, setAttSearchQuery] = useState("");
   const [attStatusFilter, setAttStatusFilter] = useState<"all" | "on_time" | "late" | "absent">("all");
 
@@ -55,18 +53,10 @@ function StaffShiftHistoryContent() {
     note?: string;
   } | null>(null);
 
-  // Pagination states (Rule #9: default Grid=6, Table=10)
-  const [pageSizeInput, setPageSizeInput] = useState<number>(attViewMode === "grid" ? 6 : 10);
+  // Pagination states (Table view: default 10)
+  const [pageSizeInput, setPageSizeInput] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [windowStart, setWindowStart] = useState<number>(1);
-
-  const handleAttViewModeChange = (mode: "grid" | "table") => {
-    setAttViewMode(mode);
-    const newSize = mode === "grid" ? 6 : 10;
-    setPageSizeInput(newSize);
-    setCurrentPage(1);
-    setWindowStart(1);
-  };
 
   const getShiftName = (name: string) => {
     if (!isEn) return name;
@@ -87,7 +77,7 @@ function StaffShiftHistoryContent() {
     });
   }, [attendances, attSearchQuery, attStatusFilter]);
 
-  const validPageSize = Math.max(1, pageSizeInput || (attViewMode === "grid" ? 6 : 10));
+  const validPageSize = Math.max(1, pageSizeInput || 10);
   const totalItems = filteredAttendances.length;
   const totalPages = Math.ceil(totalItems / validPageSize) || 1;
   const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
@@ -236,199 +226,13 @@ function StaffShiftHistoryContent() {
               </button>
             ))}
           </div>
-
-          {/* View Mode Toggle: Grid vs Table (Rule #9: Grid default) */}
-          <div className="flex p-1 bg-zinc-100 rounded-xl border border-zinc-200 ml-2">
-            <button
-              type="button"
-              onClick={() => handleAttViewModeChange("grid")}
-              className={`p-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                attViewMode === "grid"
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "text-zinc-600 hover:text-zinc-900"
-              }`}
-              title={t("viewGridTitle")}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleAttViewModeChange("table")}
-              className={`p-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                attViewMode === "table"
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "text-zinc-600 hover:text-zinc-900"
-              }`}
-              title={t("viewTableTitle")}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* DISPLAY MODE 1: GRID VIEW (Default per Rule #9) */}
-      {attViewMode === "grid" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedAttendances.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-5 space-y-4 hover:border-[#2AC1BC]/50 transition-all flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1 rounded-lg bg-zinc-100 text-[#2AC1BC]">
-                      <Calendar className="w-3.5 h-3.5" />
-                    </span>
-                    <span className="text-xs font-black text-zinc-900">{item.workDate}</span>
-                  </div>
-
-                  {item.status === "on_time" && (
-                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> {t("tableStatusOnTime")}
-                    </span>
-                  )}
-                  {item.status === "late" && (
-                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> {t("tableStatusLate")}
-                    </span>
-                  )}
-                  {item.status === "absent" && (
-                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-700 border border-red-200 flex items-center gap-1">
-                      <XCircle className="w-3 h-3" /> {t("tableStatusAbsent")}
-                    </span>
-                  )}
-                  {item.status === "not_yet" && (
-                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-zinc-100 text-zinc-600">
-                      {t("statusNotYet")}
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-black text-zinc-900">{getShiftName(item.shiftName)}</h4>
-                  <p className="text-xs text-zinc-500 font-semibold">{item.shiftTime}</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-2.5 text-xs">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("tableColCheckIn")}</span>
-                      <span className="font-bold text-zinc-800 font-mono text-sm">
-                        {item.checkIn || "--:--"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("tableColCheckOut")}</span>
-                      <span className="font-bold text-zinc-800 font-mono text-sm">
-                        {item.checkOut || "--:--"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {(item.checkInPhoto || item.checkOutPhoto) && (
-                    <div className="pt-2 border-t border-zinc-200/70 flex items-center gap-3">
-                      {item.checkInPhoto && (
-                        <div
-                          onClick={() => setPreviewImageModal({
-                            isOpen: true,
-                            title: `${t("tableColCheckIn")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                            imageUrl: item.checkInPhoto!,
-                            watermark: item.checkInWatermark ? {
-                              ...item.checkInWatermark,
-                              place: getLocalizedPlace(item.checkInWatermark.place, isEn),
-                              staffName: getLocalizedStaffName(item.checkInWatermark.staffName, isEn)
-                            } : undefined,
-                            note: getLocalizedExplanation(item.checkInExplanation, isEn)
-                          })}
-                          className="flex items-center gap-1.5 cursor-pointer group"
-                          title={t("viewWatermarkCheckIn")}
-                        >
-                          <img
-                            src={item.checkInPhoto}
-                            alt="Check-in"
-                            className="w-7 h-7 rounded-lg object-cover border border-zinc-200 group-hover:border-[#2AC1BC] transition-colors"
-                          />
-                          <span className="text-[10px] font-bold text-zinc-600 group-hover:text-[#2AC1BC] flex items-center gap-0.5">
-                            <Camera className="w-2.5 h-2.5 text-[#2AC1BC]" /> {t("checkInBadge")}
-                          </span>
-                        </div>
-                      )}
-
-                      {item.checkOutPhoto && (
-                        <div
-                          onClick={() => setPreviewImageModal({
-                            isOpen: true,
-                            title: `${t("tableColCheckOut")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                            imageUrl: item.checkOutPhoto!,
-                            watermark: item.checkOutWatermark ? {
-                              ...item.checkOutWatermark,
-                              place: getLocalizedPlace(item.checkOutWatermark.place, isEn),
-                              staffName: getLocalizedStaffName(item.checkOutWatermark.staffName, isEn)
-                            } : undefined,
-                            note: getLocalizedExplanation(item.checkOutExplanation, isEn)
-                          })}
-                          className="flex items-center gap-1.5 cursor-pointer group"
-                          title={t("viewWatermarkCheckOut")}
-                        >
-                          <img
-                            src={item.checkOutPhoto}
-                            alt="Check-out"
-                            className="w-7 h-7 rounded-lg object-cover border border-zinc-200 group-hover:border-[#2AC1BC] transition-colors"
-                          />
-                          <span className="text-[10px] font-bold text-zinc-600 group-hover:text-[#2AC1BC] flex items-center gap-0.5">
-                            <Camera className="w-2.5 h-2.5 text-emerald-600" /> {t("checkOutBadge")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {item.checkInExplanation && (
-                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/90 text-[11px] text-amber-900 space-y-0.5">
-                    <span className="font-bold flex items-center gap-1 text-amber-800">
-                      <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
-                      {t("lateExplanationPrefix")}
-                    </span>
-                    <p className="italic text-zinc-700 leading-tight">
-                      &quot;{getLocalizedExplanation(item.checkInExplanation, isEn)}&quot;
-                    </p>
-                  </div>
-                )}
-
-                {item.checkOutExplanation && (
-                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/90 text-[11px] text-amber-900 space-y-0.5">
-                    <span className="font-bold flex items-center gap-1 text-amber-800">
-                      <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
-                      {t("earlyExplanationPrefix")}
-                    </span>
-                    <p className="italic text-zinc-700 leading-tight">
-                      &quot;{getLocalizedExplanation(item.checkOutExplanation, isEn)}&quot;
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-                <span className="text-zinc-500 font-medium">
-                  {getLocalizedPlace(item.boardingHouseName, isEn)}
-                </span>
-                <span className="font-black text-[#2AC1BC]">
-                  {t("workHours", { hours: item.totalHours })}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* DISPLAY MODE 2: TABLE VIEW */}
-      {attViewMode === "table" && (
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+      {/* TABLE VIEW */}
+      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
               <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
                 <tr>
                   <th className="py-3 px-4">{t("tableColDate")}</th>
@@ -546,7 +350,6 @@ function StaffShiftHistoryContent() {
             </table>
           </div>
         </div>
-      )}
 
       {/* Empty State */}
       {paginatedAttendances.length === 0 && (

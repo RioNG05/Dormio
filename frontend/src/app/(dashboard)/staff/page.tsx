@@ -1025,10 +1025,10 @@ export default function StaffOverviewPage() {
                     {t("checklistProgress", { completed: completedCount, total: dutyList.length })}
                   </span>
                   <Link
-                    href="/staff/tasks"
+                    href="/staff/schedule"
                     className="text-[11px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-1"
                   >
-                    <span>{t("btnViewTasksCenter")}</span>
+                    <span>{locale === "en" ? "View in Schedule" : "Xem trong Lịch trực & Nhiệm vụ"}</span>
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -1044,10 +1044,10 @@ export default function StaffOverviewPage() {
                     </span>
                   </div>
                   <Link
-                    href={`/staff/tasks?tab=additional&date=${todayStr}`}
+                    href="/staff/schedule"
                     className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0 shadow-2xs cursor-pointer"
                   >
-                    <CheckSquare className="w-3.5 h-3.5" />
+                    <Calendar className="w-3.5 h-3.5" />
                     <span>{t("btnViewTodayAdditional", { count: todayAdditionalTasks.length })}</span>
                   </Link>
                 </div>
