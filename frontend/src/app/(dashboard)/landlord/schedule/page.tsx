@@ -32,6 +32,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { staffService, StaffItem } from "@/services/staff.service";
 import {
   scheduleService,
@@ -42,13 +43,13 @@ import {
 
 // Days of week helper (Mon to Sun)
 const DAYS_OF_WEEK = [
-  { key: "2", label: "Thứ 2", short: "T2", dayIndex: 1 },
-  { key: "3", label: "Thứ 3", short: "T3", dayIndex: 2 },
-  { key: "4", label: "Thứ 4", short: "T4", dayIndex: 3 },
-  { key: "5", label: "Thứ 5", short: "T5", dayIndex: 4 },
-  { key: "6", label: "Thứ 6", short: "T6", dayIndex: 5 },
-  { key: "7", label: "Thứ 7", short: "T7", dayIndex: 6 },
-  { key: "CN", label: "Chủ Nhật", short: "CN", dayIndex: 0 },
+  { key: "2", label: "Thứ 2", enLabel: "Monday", short: "T2", enShort: "Mon", dayIndex: 1 },
+  { key: "3", label: "Thứ 3", enLabel: "Tuesday", short: "T3", enShort: "Tue", dayIndex: 2 },
+  { key: "4", label: "Thứ 4", enLabel: "Wednesday", short: "T4", enShort: "Wed", dayIndex: 3 },
+  { key: "5", label: "Thứ 5", enLabel: "Thursday", short: "T5", enShort: "Thu", dayIndex: 4 },
+  { key: "6", label: "Thứ 6", enLabel: "Friday", short: "T6", enShort: "Fri", dayIndex: 5 },
+  { key: "7", label: "Thứ 7", enLabel: "Saturday", short: "T7", enShort: "Sat", dayIndex: 6 },
+  { key: "CN", label: "Chủ Nhật", enLabel: "Sunday", short: "CN", enShort: "Sun", dayIndex: 0 },
 ];
 
 function getMondayOfCurrentWeek(d = new Date()): Date {
@@ -75,6 +76,9 @@ function formatDisplayDate(dateStr: string): string {
 
 export default function WorkforceSchedulePage() {
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
   const buildingId = activeBuilding?.id || "";
 
   // ─── View & Navigation States ──────────────────────────────────────────
@@ -256,7 +260,7 @@ export default function WorkforceSchedulePage() {
       }
     } catch (err) {
       console.error("Failed to fetch schedules:", err);
-      showToast("error", "Không thể tải danh sách ca làm việc.");
+      showToast("error", isEn ? "Could not load shift list." : "Không thể tải danh sách ca làm việc.");
     } finally {
       setIsLoading(false);
     }
@@ -350,15 +354,15 @@ export default function WorkforceSchedulePage() {
   const handleSubmitRecurring = async (e: React.FormEvent) => {
     e.preventDefault();
     if (recurringEmployeeIds.length === 0) {
-      showToast("error", "Vui lòng chọn ít nhất một nhân viên");
+      showToast("error", isEn ? "Please select at least one employee." : "Vui lòng chọn ít nhất một nhân viên.");
       return;
     }
     if (!recurringShiftId) {
-      showToast("error", "Vui lòng chọn ca làm việc");
+      showToast("error", isEn ? "Please select a shift." : "Vui lòng chọn ca làm việc.");
       return;
     }
     if (recurringDays.length === 0) {
-      showToast("error", "Vui lòng chọn ít nhất một ngày trong tuần");
+      showToast("error", isEn ? "Please select at least one day of the week." : "Vui lòng chọn ít nhất một ngày trong tuần.");
       return;
     }
 
@@ -375,14 +379,14 @@ export default function WorkforceSchedulePage() {
 
       showToast(
         "success",
-        res?.message || "Đã tạo và phân ca làm việc lặp lại thành công!"
+        res?.message || t("landlordScheduleToastRecurringSuccess")
       );
       performCloseModal("recurring");
       fetchSchedules();
     } catch (err: any) {
       showToast(
         "error",
-        err?.response?.data?.message || "Lỗi khi tạo ca làm việc định kỳ"
+        err?.response?.data?.message || (isEn ? "Failed to create recurring shifts" : "Lỗi khi tạo ca làm việc định kỳ")
       );
     } finally {
       setIsSubmittingRecurring(false);
@@ -393,15 +397,15 @@ export default function WorkforceSchedulePage() {
   const handleSubmitAdhoc = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adhocEmployeeId) {
-      showToast("error", "Vui lòng chọn nhân viên");
+      showToast("error", isEn ? "Please select an employee." : "Vui lòng chọn nhân viên.");
       return;
     }
     if (!adhocShiftId) {
-      showToast("error", "Vui lòng chọn ca làm việc");
+      showToast("error", isEn ? "Please select a shift." : "Vui lòng chọn ca làm việc.");
       return;
     }
     if (!adhocWorkDate) {
-      showToast("error", "Vui lòng chọn ngày làm việc");
+      showToast("error", isEn ? "Please select a work date." : "Vui lòng chọn ngày làm việc.");
       return;
     }
 
@@ -414,13 +418,13 @@ export default function WorkforceSchedulePage() {
         note: adhocNote || undefined,
       });
 
-      showToast("success", "Đã xếp ca làm việc đột xuất thành công!");
+      showToast("success", t("landlordScheduleToastAssignSuccess"));
       performCloseModal("adhoc");
       fetchSchedules();
     } catch (err: any) {
       showToast(
         "error",
-        err?.response?.data?.message || "Lỗi khi xếp ca làm việc đột xuất"
+        err?.response?.data?.message || (isEn ? "Failed to assign ad-hoc shift" : "Lỗi khi xếp ca làm việc đột xuất")
       );
     } finally {
       setIsSubmittingAdhoc(false);
@@ -431,7 +435,7 @@ export default function WorkforceSchedulePage() {
   const handleCreateShift = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newShiftName.trim()) {
-      showToast("error", "Tên ca làm việc không được để trống");
+      showToast("error", t("landlordShiftsNameRequired"));
       return;
     }
 
@@ -449,7 +453,7 @@ export default function WorkforceSchedulePage() {
     } catch (err: any) {
       showToast(
         "error",
-        err?.response?.data?.message || "Lỗi khi tạo ca làm việc"
+        err?.response?.data?.message || (isEn ? "Failed to create shift template" : "Lỗi khi tạo ca làm việc")
       );
     } finally {
       setIsCreatingShift(false);
@@ -461,7 +465,7 @@ export default function WorkforceSchedulePage() {
     if (!confirm(`Bạn có chắc chắn muốn xóa ca mẫu "${shiftName}"?`)) return;
     try {
       await scheduleService.deleteShift(buildingId, shiftId);
-      showToast("success", "Đã xóa ca mẫu thành công");
+      showToast("success", t("landlordShiftsToastDeleteSuccess"));
       setShifts((prev) => prev.filter((s) => s.id !== shiftId));
     } catch (err: any) {
       showToast(
@@ -514,7 +518,7 @@ export default function WorkforceSchedulePage() {
             status: editStatus,
           }
         );
-        showToast("success", "Đã cập nhật ca làm việc thành công!");
+        showToast("success", isEn ? "Shift updated successfully!" : "Đã cập nhật ca làm việc thành công!");
       }
 
       performCloseModal("edit");
@@ -522,7 +526,7 @@ export default function WorkforceSchedulePage() {
     } catch (err: any) {
       showToast(
         "error",
-        err?.response?.data?.message || "Lỗi khi cập nhật ca làm việc"
+        err?.response?.data?.message || (isEn ? "Failed to update shift" : "Lỗi khi cập nhật ca làm việc")
       );
     } finally {
       setIsSubmittingEdit(false);
@@ -554,7 +558,7 @@ export default function WorkforceSchedulePage() {
 
     try {
       await scheduleService.deleteSchedule(buildingId, item.id, mode);
-      showToast("success", "Đã hủy ca làm việc thành công");
+      showToast("success", isEn ? "Shift canceled successfully!" : "Đã hủy ca làm việc thành công.");
       fetchSchedules();
     } catch (err: any) {
       showToast(
@@ -622,16 +626,16 @@ export default function WorkforceSchedulePage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
             <CalendarDays className="w-4 h-4" />
-            <span>UC-L-21 · Quản lý nhân sự</span>
+            <span>{isEn ? "UC-L-21 · Staff Management" : "UC-L-21 · Quản lý nhân sự"}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            Lịch làm việc & Phân ca
+            {t("landlordScheduleTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            Phân ca định kỳ hàng tuần, xếp ca đột xuất và theo dõi lịch trực tại{" "}
+            {t("landlordScheduleSubtitleFull")} ({" "}
             <strong className="text-zinc-800">
-              {activeBuilding?.name || "Tòa nhà hiện tại"}
-            </strong>
+              {activeBuilding?.name || (isEn ? "current property" : "Tòa nhà hiện tại")}
+            </strong>)
           </p>
         </div>
 
@@ -644,7 +648,7 @@ export default function WorkforceSchedulePage() {
             className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5 text-zinc-500" />
-            <span>Quản lý ca mẫu</span>
+            <span>{isEn ? "Shift Templates" : "Quản lý ca mẫu"}</span>
           </button>
 
           <button
@@ -655,7 +659,7 @@ export default function WorkforceSchedulePage() {
             className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-800 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Phân ca đơn lẻ</span>
+            <span>{t("landlordScheduleBtnAssign")}</span>
           </button>
 
           <button
@@ -666,7 +670,7 @@ export default function WorkforceSchedulePage() {
             className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
             <Repeat className="w-3.5 h-3.5" />
-            <span>Phân ca lặp lại</span>
+            <span>{t("landlordScheduleBtnRecurring")}</span>
           </button>
         </div>
       </div>
@@ -676,53 +680,53 @@ export default function WorkforceSchedulePage() {
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              Tổng ca trực
+              {t("landlordScheduleStatTotalShifts")}
             </span>
             <Layers className="w-4 h-4 text-[#2AC1BC]" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-zinc-900">
             {summary.totalSchedules}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Trong khoảng thời gian</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "Within timeframe" : "Trong khoảng thời gian"}</p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              Đã lên lịch
+              {t("landlordScheduleStatusAssigned")}
             </span>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-emerald-600">
             {summary.scheduledCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Sẵn sàng thực hiện</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "Ready for duty" : "Sẵn sàng thực hiện"}</p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              Ca lặp lại
+              {isEn ? "Recurring Shifts" : "Ca lặp lại"}
             </span>
             <Repeat className="w-4 h-4 text-blue-500" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-blue-600">
             {summary.recurringCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Tự động hàng tuần</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "Weekly recurring" : "Tự động hàng tuần"}</p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              Ca đột xuất
+              {isEn ? "Ad-hoc Shifts" : "Ca đột xuất"}
             </span>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-amber-600">
             {summary.adhocCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Phân theo nhu cầu</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "On demand" : "Phân theo nhu cầu"}</p>
         </div>
       </div>
 
@@ -734,7 +738,7 @@ export default function WorkforceSchedulePage() {
             <button
               onClick={handlePrevWeek}
               className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200"
-              title="Tuần trước"
+              title={t("landlordScheduleBtnPrevWeek")}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -743,13 +747,13 @@ export default function WorkforceSchedulePage() {
               onClick={handleCurrentWeek}
               className="px-3 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200"
             >
-              Hôm nay
+              {t("landlordScheduleBtnToday")}
             </button>
 
             <button
               onClick={handleNextWeek}
               className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200"
-              title="Tuần sau"
+              title={t("landlordScheduleBtnNextWeek")}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -772,7 +776,7 @@ export default function WorkforceSchedulePage() {
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Lịch tuần</span>
+                <span>{t("landlordScheduleViewCalendar")}</span>
               </button>
               <button
                 onClick={() => setViewMode("list")}
@@ -783,7 +787,7 @@ export default function WorkforceSchedulePage() {
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
-                <span>Danh sách</span>
+                <span>{t("landlordScheduleViewList")}</span>
               </button>
             </div>
           </div>
@@ -795,7 +799,7 @@ export default function WorkforceSchedulePage() {
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm theo tên, SĐT nhân viên..."
+              placeholder={t("landlordScheduleFilterSearchPh")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50"
@@ -807,7 +811,7 @@ export default function WorkforceSchedulePage() {
             onChange={(e) => setFilterEmployeeId(e.target.value)}
             className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
           >
-            <option value="">Tất cả nhân viên ({staffList.length})</option>
+            <option value="">{t("landlordScheduleFilterStaffPh")} ({staffList.length})</option>
             {staffList.map((s) => (
               <option key={s.employeeId} value={s.employeeId}>
                 {s.fullName} ({s.positionName})
@@ -820,7 +824,7 @@ export default function WorkforceSchedulePage() {
             onChange={(e) => setFilterShiftId(e.target.value)}
             className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
           >
-            <option value="">Tất cả ca làm việc ({shifts.length})</option>
+            <option value="">{t("landlordScheduleFilterShiftPh")} ({shifts.length})</option>
             {shifts.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name} ({s.startTime} - {s.endTime})
@@ -833,9 +837,9 @@ export default function WorkforceSchedulePage() {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
           >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="scheduled">Đã lên lịch</option>
-            <option value="canceled">Đã hủy</option>
+            <option value="all">{t("landlordScheduleFilterStatusPh")}</option>
+            <option value="scheduled">{t("landlordScheduleStatusAssigned")}</option>
+            <option value="canceled">{t("landlordScheduleStatusCanceled")}</option>
           </select>
         </div>
       </div>
@@ -845,7 +849,7 @@ export default function WorkforceSchedulePage() {
         <div className="bg-white border border-zinc-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
           <p className="text-xs font-bold text-zinc-500">
-            Đang tải lịch phân ca làm việc...
+            {isEn ? "Loading workforce schedule..." : "Đang tải lịch phân ca làm việc..."}
           </p>
         </div>
       ) : viewMode === "calendar" ? (
@@ -876,10 +880,10 @@ export default function WorkforceSchedulePage() {
                   }`}
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <span className="text-xs font-extrabold">{day.label}</span>
+                    <span className="text-xs font-extrabold">{isEn ? (day as any).enLabel : day.label}</span>
                     {day.isToday && (
                       <span className="px-1.5 py-0.2 text-[9px] font-black uppercase bg-[#2AC1BC] text-white rounded-full">
-                        Hôm nay
+                        {t("landlordScheduleBtnToday")}
                       </span>
                     )}
                   </div>
@@ -887,7 +891,7 @@ export default function WorkforceSchedulePage() {
                     {formatDisplayDate(day.dateString)}
                   </div>
                   <div className="text-[10px] font-bold text-zinc-400 mt-1">
-                    {daySchedules.length} ca trực
+                    {daySchedules.length} {isEn ? "shifts" : "ca trực"}
                   </div>
                 </div>
 
@@ -899,7 +903,7 @@ export default function WorkforceSchedulePage() {
                         <CalendarDays className="w-4 h-4" />
                       </div>
                       <span className="text-[11px] font-semibold text-zinc-400">
-                        Chưa có ca trực
+                        {t("landlordScheduleEmptyDay")}
                       </span>
                     </div>
                   ) : (
@@ -925,14 +929,14 @@ export default function WorkforceSchedulePage() {
                           {schedule.isRecurring ? (
                             <span
                               className="flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100"
-                              title="Ca lặp lại hàng tuần"
+                              title={isEn ? "Weekly recurring shift" : "Ca lặp lại hàng tuần"}
                             >
                               <Repeat className="w-2.5 h-2.5" />
-                              <span>Lặp</span>
+                              <span>{isEn ? "Repeat" : "Lặp"}</span>
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-md">
-                              Đơn lẻ
+                              {isEn ? "Ad-hoc" : "Đơn lẻ"}
                             </span>
                           )}
                         </div>
@@ -942,7 +946,7 @@ export default function WorkforceSchedulePage() {
                           {schedule.employeeName}
                         </div>
                         <div className="text-[10px] text-zinc-400 font-semibold truncate mb-2">
-                          {schedule.positionName || "Nhân viên"}
+                          {schedule.positionName || (isEn ? "Staff" : "Nhân viên")}
                         </div>
 
                         {/* Working hours */}
@@ -958,7 +962,7 @@ export default function WorkforceSchedulePage() {
                           <button
                             onClick={() => handleOpenEditModal(schedule)}
                             className="p-1 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                            title="Chỉnh sửa ca này"
+                            title={isEn ? "Edit shift" : "Chỉnh sửa ca này"}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -966,7 +970,7 @@ export default function WorkforceSchedulePage() {
                             <button
                               onClick={() => handleDeleteSchedule(schedule)}
                               className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title="Hủy ca này"
+                              title={isEn ? "Cancel shift" : "Hủy ca này"}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -991,10 +995,10 @@ export default function WorkforceSchedulePage() {
                 <CalendarIcon className="w-7 h-7" />
               </div>
               <h3 className="text-base font-extrabold text-zinc-900 mb-1">
-                Không tìm thấy ca làm việc
+                {isEn ? "No shift schedules found" : "Không tìm thấy ca làm việc"}
               </h3>
               <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                Chưa có ca làm việc nào trong khoảng thời gian hoặc theo bộ lọc
+                {isEn ? "No shifts found for the selected timeframe or filter." : "Chưa có ca làm việc nào trong khoảng thời gian hoặc theo bộ lọc"}
                 đã chọn. Bấm vào nút bên dưới để phân ca.
               </p>
               <button
@@ -1004,7 +1008,7 @@ export default function WorkforceSchedulePage() {
                 }}
                 className="mt-4 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer"
               >
-                + Bắt đầu phân ca lặp lại
+                {t("landlordScheduleBtnRecurring")}
               </button>
             </div>
           ) : (
@@ -1012,14 +1016,14 @@ export default function WorkforceSchedulePage() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-100 bg-zinc-50/70 text-zinc-400 font-extrabold uppercase text-[10px] tracking-wider">
-                    <th className="py-3.5 px-4">Ngày làm việc</th>
-                    <th className="py-3.5 px-4">Nhân viên</th>
-                    <th className="py-3.5 px-4">Vị trí</th>
-                    <th className="py-3.5 px-4">Ca trực</th>
-                    <th className="py-3.5 px-4">Khung giờ</th>
-                    <th className="py-3.5 px-4">Loại phân ca</th>
-                    <th className="py-3.5 px-4">Trạng thái</th>
-                    <th className="py-3.5 px-4 text-right">Thao tác</th>
+                    <th className="py-3.5 px-4">{t("landlordScheduleColDate")}</th>
+                    <th className="py-3.5 px-4">{t("landlordScheduleColStaff")}</th>
+                    <th className="py-3.5 px-4">{isEn ? "Position" : "Vị trí"}</th>
+                    <th className="py-3.5 px-4">{t("landlordScheduleColShift")}</th>
+                    <th className="py-3.5 px-4">{t("landlordScheduleColTime")}</th>
+                    <th className="py-3.5 px-4">{isEn ? "Type" : "Loại phân ca"}</th>
+                    <th className="py-3.5 px-4">{t("landlordScheduleColStatus")}</th>
+                    <th className="py-3.5 px-4 text-right">{t("landlordScheduleColActions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 font-medium text-zinc-700">
@@ -1040,7 +1044,7 @@ export default function WorkforceSchedulePage() {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-zinc-500 font-semibold">
-                        {item.positionName || "Nhân viên"}
+                        {item.positionName || (isEn ? "Staff" : "Nhân viên")}
                       </td>
                       <td className="py-3 px-4">
                         <span
@@ -1058,22 +1062,22 @@ export default function WorkforceSchedulePage() {
                         {item.isRecurring ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
                             <Repeat className="w-2.5 h-2.5" />
-                            <span>Lặp lại hàng tuần</span>
+                            <span>{isEn ? "Weekly Recurring" : "Lặp lại hàng tuần"}</span>
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md">
-                            Đơn lẻ (Đột xuất)
+                            {isEn ? "Ad-hoc Shift" : "Đơn lẻ (Đột xuất)"}
                           </span>
                         )}
                       </td>
                       <td className="py-3 px-4">
                         {item.status === "scheduled" ? (
                           <span className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded-md border border-emerald-100">
-                            Đã lên lịch
+                            {t("landlordScheduleStatusAssigned")}
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 text-[10px] font-bold text-zinc-400 bg-zinc-100 rounded-md">
-                            Đã hủy
+                            {t("landlordScheduleStatusCanceled")}
                           </span>
                         )}
                       </td>
@@ -1082,7 +1086,7 @@ export default function WorkforceSchedulePage() {
                           <button
                             onClick={() => handleOpenEditModal(item)}
                             className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                            title="Chỉnh sửa"
+                            title={t("landlordShiftsBtnEdit")}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -1090,7 +1094,7 @@ export default function WorkforceSchedulePage() {
                             <button
                               onClick={() => handleDeleteSchedule(item)}
                               className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title="Hủy ca"
+                              title={isEn ? "Cancel shift" : "Hủy ca"}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1105,7 +1109,7 @@ export default function WorkforceSchedulePage() {
               {/* Rule #9: Standardized Pagination Bar */}
               <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
-                  <span>Hiển thị</span>
+                  <span>{isEn ? "Showing" : "Hiển thị"}</span>
                   <input
                     type="number"
                     min={1}
@@ -1121,8 +1125,8 @@ export default function WorkforceSchedulePage() {
                   <span className="text-zinc-300">|</span>
                   <span>
                     {(listPage - 1) * listPageSize + 1}-
-                    {Math.min(listPage * listPageSize, totalListItems)} trên{" "}
-                    {totalListItems} mục
+                    {Math.min(listPage * listPageSize, totalListItems)} {isEn ? "of" : "trên"}{" "}
+                    {totalListItems} {isEn ? "items" : "mục"}
                   </span>
                 </div>
 
@@ -1132,7 +1136,7 @@ export default function WorkforceSchedulePage() {
                     disabled={windowStart <= 1}
                     onClick={() => handlePageJump(-5)}
                     className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                    title="Lùi 5 trang"
+                    title={isEn ? "Back 5 pages" : "Lùi 5 trang"}
                   >
                     «
                   </button>
@@ -1171,7 +1175,7 @@ export default function WorkforceSchedulePage() {
                     disabled={windowStart + 5 > totalListPages}
                     onClick={() => handlePageJump(5)}
                     className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                    title="Tiến 5 trang"
+                    title={isEn ? "Forward 5 pages" : "Tiến 5 trang"}
                   >
                     »
                   </button>
@@ -1206,11 +1210,11 @@ export default function WorkforceSchedulePage() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-zinc-900">
-                    Phân ca làm việc lặp lại
+                    {t("landlordScheduleModalRecurringTitle")}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    UC-L-21: Tạo chuỗi lịch tự động và kết xuất thành các ca
-                    trực độc lập theo tuần
+                    {isEn ? "UC-L-21: Auto-generate shift series materialized into daily assignments" : "UC-L-21: Tạo chuỗi lịch tự động và kết xuất thành các ca"}
+                    {isEn ? "independently by week" : "trực độc lập theo tuần"}
                   </p>
                 </div>
               </div>
@@ -1231,7 +1235,7 @@ export default function WorkforceSchedulePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>Chọn nhân viên được phân ca</span>
+                    <span>{t("landlordScheduleModalStaffLabel")}</span>
                     <span className="text-rose-500">*</span>
                   </label>
                   <button
@@ -1249,8 +1253,8 @@ export default function WorkforceSchedulePage() {
                     className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer"
                   >
                     {recurringEmployeeIds.length === staffList.length
-                      ? "Bỏ chọn tất cả"
-                      : "Chọn tất cả"}
+                      ? (isEn ? "Deselect All" : "Bỏ chọn tất cả")
+                      : (isEn ? "Select All" : "Chọn tất cả")}
                   </button>
                 </div>
 
@@ -1258,8 +1262,9 @@ export default function WorkforceSchedulePage() {
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>
-                      Chưa có nhân viên đang hoạt động tại tòa nhà này. Vui lòng
-                      thêm nhân viên trước.
+                      {isEn
+                    ? "No active staff members found at this property. Please add employees first."
+                    : "Chưa có nhân viên đang hoạt động tại tòa nhà này. Vui lòng thêm nhân viên trước."}
                     </span>
                   </div>
                 ) : (
@@ -1298,7 +1303,7 @@ export default function WorkforceSchedulePage() {
                           <div className="truncate">
                             <span className="font-bold">{s.fullName}</span>
                             <span className="text-[10px] text-zinc-400 ml-1">
-                              ({s.positionName || "Nhân viên"})
+                              ({s.positionName || (isEn ? "Staff" : "Nhân viên")})
                             </span>
                           </div>
                         </label>
@@ -1311,7 +1316,7 @@ export default function WorkforceSchedulePage() {
               {/* Select Shift */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                  <span>Ca làm việc</span>
+                  <span>{t("landlordScheduleModalShiftLabel")}</span>
                   <span className="text-rose-500">*</span>
                 </label>
                 <select
@@ -1322,7 +1327,7 @@ export default function WorkforceSchedulePage() {
                   }}
                   className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
                 >
-                  <option value="">-- Chọn ca làm việc --</option>
+                  <option value="">{t("landlordScheduleModalShiftPh")}</option>
                   {shifts.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.startTime} - {s.endTime})
@@ -1335,7 +1340,7 @@ export default function WorkforceSchedulePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>Các ngày trong tuần</span>
+                    <span>{t("landlordScheduleModalRepeatLabel")}</span>
                     <span className="text-rose-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
@@ -1408,7 +1413,7 @@ export default function WorkforceSchedulePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>Bắt đầu từ ngày</span>
+                    <span>{isEn ? "Start Date" : "Bắt đầu từ ngày"}</span>
                     <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1424,7 +1429,7 @@ export default function WorkforceSchedulePage() {
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>Đến ngày</span>
+                    <span>{t("landlordScheduleModalUntilLabel")}</span>
                     <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1442,7 +1447,7 @@ export default function WorkforceSchedulePage() {
               {/* Duty Note */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700">
-                  Ghi chú nhiệm vụ chung cho chuỗi ca
+                  {t("landlordScheduleModalNoteLabel")}
                 </label>
                 <textarea
                   rows={2}
@@ -1451,7 +1456,7 @@ export default function WorkforceSchedulePage() {
                     setRecurringNote(e.target.value);
                     setIsDirty(true);
                   }}
-                  placeholder="Ví dụ: Giám sát an ninh, ghi nhận khách ra vào và bàn giao sổ trực..."
+                  placeholder={t("landlordScheduleModalNotePh")}
                   className="w-full px-4 py-2.5 text-xs font-medium border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
                 />
               </div>
@@ -1460,10 +1465,11 @@ export default function WorkforceSchedulePage() {
               <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  Hệ thống sẽ tự động tạo mẫu lặp và <strong>kết xuất</strong>{" "}
-                  thành các ca trực cụ thể theo từng ngày. Sau khi tạo, bạn có
-                  thể điều chỉnh riêng lẻ từng ca mà không ảnh hưởng tới toàn
-                  chuỗi.
+                  {isEn ? (
+                    <>The system will automatically generate recurrence rules and <strong>materialize</strong> daily shift assignments. You can later adjust individual shifts independently without altering the full series.</>
+                  ) : (
+                    <>Hệ thống sẽ tự động tạo mẫu lặp và <strong>kết xuất</strong> thành các ca trực cụ thể theo từng ngày. Sau khi tạo, bạn có thể điều chỉnh riêng lẻ từng ca mà không ảnh hưởng tới toàn chuỗi.</>
+                  )}
                 </span>
               </div>
 
@@ -1474,7 +1480,7 @@ export default function WorkforceSchedulePage() {
                   onClick={() => handleAttemptCloseModal("recurring")}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordShiftsModalBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1484,10 +1490,10 @@ export default function WorkforceSchedulePage() {
                   {isSubmittingRecurring ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang kết xuất ca trực...</span>
+                      <span>{isEn ? "Materializing shifts..." : "Đang kết xuất ca trực..."}</span>
                     </>
                   ) : (
-                    <span>Xác nhận phân ca lặp lại</span>
+                    <span>{t("landlordScheduleModalSubmitRecurring")}</span>
                   )}
                 </button>
               </div>
@@ -1518,10 +1524,10 @@ export default function WorkforceSchedulePage() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-zinc-900">
-                    Phân ca làm việc đơn lẻ (Đột xuất)
+                    {t("landlordScheduleModalAssignTitle")}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    Xếp ca làm việc một lần không định kỳ cho nhân viên
+                    {isEn ? "Assign a one-time ad-hoc shift for an employee" : "Xếp ca làm việc một lần không định kỳ cho nhân viên"}
                   </p>
                 </div>
               </div>
@@ -1539,7 +1545,7 @@ export default function WorkforceSchedulePage() {
             >
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                  <span>Chọn nhân viên</span>
+                  <span>{t("landlordScheduleModalStaffLabel")}</span>
                   <span className="text-rose-500">*</span>
                 </label>
                 <select
@@ -1550,10 +1556,10 @@ export default function WorkforceSchedulePage() {
                   }}
                   className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
                 >
-                  <option value="">-- Chọn nhân viên --</option>
+                  <option value="">{t("landlordScheduleModalStaffPh")}</option>
                   {staffList.map((s) => (
                     <option key={s.employeeId} value={s.employeeId}>
-                      {s.fullName} ({s.positionName || "Nhân viên"})
+                      {s.fullName} ({s.positionName || (isEn ? "Staff" : "Nhân viên")})
                     </option>
                   ))}
                 </select>
@@ -1562,7 +1568,7 @@ export default function WorkforceSchedulePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>Ca làm việc</span>
+                    <span>{t("landlordScheduleModalShiftLabel")}</span>
                     <span className="text-rose-500">*</span>
                   </label>
                   <select
@@ -1573,7 +1579,7 @@ export default function WorkforceSchedulePage() {
                     }}
                     className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
                   >
-                    <option value="">-- Chọn ca --</option>
+                    <option value="">{t("landlordScheduleModalShiftPh")}</option>
                     {shifts.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.startTime} - {s.endTime})
@@ -1584,7 +1590,7 @@ export default function WorkforceSchedulePage() {
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>Ngày làm việc</span>
+                    <span>{t("landlordScheduleModalDateLabel")}</span>
                     <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1601,7 +1607,7 @@ export default function WorkforceSchedulePage() {
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700">
-                  Ghi chú công việc đột xuất
+                  {t("landlordScheduleModalNoteLabel")}
                 </label>
                 <textarea
                   rows={3}
@@ -1610,7 +1616,7 @@ export default function WorkforceSchedulePage() {
                     setAdhocNote(e.target.value);
                     setIsDirty(true);
                   }}
-                  placeholder="Ví dụ: Hỗ trợ kiểm tra đường ống nước phòng 204..."
+                  placeholder={t("landlordScheduleModalNotePh")}
                   className="w-full px-4 py-2.5 text-xs font-medium border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
                 />
               </div>
@@ -1621,7 +1627,7 @@ export default function WorkforceSchedulePage() {
                   onClick={() => handleAttemptCloseModal("adhoc")}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordShiftsModalBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1631,10 +1637,10 @@ export default function WorkforceSchedulePage() {
                   {isSubmittingAdhoc ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang lưu...</span>
+                      <span>{isEn ? "Saving..." : "Đang lưu..."}</span>
                     </>
                   ) : (
-                    <span>Xác nhận xếp ca</span>
+                    <span>{t("landlordScheduleModalSubmitAssign")}</span>
                   )}
                 </button>
               </div>
@@ -1665,10 +1671,10 @@ export default function WorkforceSchedulePage() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-zinc-900">
-                    Cấu hình ca làm việc mẫu
+                    {isEn ? "Shift Templates Configuration" : "Cấu hình ca làm việc mẫu"}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    Quản lý danh sách các khung giờ và ca làm việc tại tòa nhà
+                    {isEn ? "Manage duty hours and shift templates for the property" : "Quản lý danh sách các khung giờ và ca làm việc tại tòa nhà"}
                   </p>
                 </div>
               </div>
@@ -1688,13 +1694,13 @@ export default function WorkforceSchedulePage() {
               >
                 <div className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
                   <Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>Thêm ca làm việc mới</span>
+                  <span>{t("landlordShiftsAddNewBtn")}</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <input
                     type="text"
-                    placeholder="Tên ca (ví dụ: Ca gãy)"
+                    placeholder={isEn ? "Shift name (e.g. Split shift)" : "Tên ca (ví dụ: Ca gãy)"}
                     value={newShiftName}
                     onChange={(e) => {
                       setNewShiftName(e.target.value);
@@ -1728,7 +1734,7 @@ export default function WorkforceSchedulePage() {
                     disabled={isCreatingShift}
                     className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer disabled:opacity-50"
                   >
-                    {isCreatingShift ? "Đang tạo..." : "+ Thêm ca"}
+                    {isCreatingShift ? (isEn ? "Creating..." : "Đang tạo...") : (isEn ? "+ Add Shift" : "+ Thêm ca")}
                   </button>
                 </div>
               </form>
@@ -1736,7 +1742,7 @@ export default function WorkforceSchedulePage() {
               {/* Current Shifts List */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700">
-                  Danh sách ca làm việc hiện hành ({shifts.length})
+                  {isEn ? `Active shift templates (${shifts.length})` : `Danh sách ca làm việc hiện hành (${shifts.length})`}
                 </label>
                 <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden bg-white">
                   {shifts.map((s) => (
@@ -1763,7 +1769,7 @@ export default function WorkforceSchedulePage() {
                       <button
                         onClick={() => handleDeleteShift(s.id, s.name)}
                         className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                        title="Xóa ca mẫu"
+                        title={t("landlordShiftsBtnDelete")}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1779,7 +1785,7 @@ export default function WorkforceSchedulePage() {
                 onClick={() => handleAttemptCloseModal("shifts")}
                 className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
-                Đóng
+                {isEn ? "Close" : "Đóng"}
               </button>
             </div>
           </div>
@@ -1808,7 +1814,7 @@ export default function WorkforceSchedulePage() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-zinc-900">
-                    Chỉnh sửa ca làm việc
+                    {isEn ? "Edit Shift Assignment" : "Chỉnh sửa ca làm việc"}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
                     {selectedScheduleForEdit.employeeName} ·{" "}
@@ -1831,7 +1837,7 @@ export default function WorkforceSchedulePage() {
               {/* Shift Picker */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700">
-                  Chọn ca làm việc mới
+                  {isEn ? "Select new shift" : "Chọn ca làm việc mới"}
                 </label>
                 <select
                   value={editShiftId}
@@ -1852,7 +1858,7 @@ export default function WorkforceSchedulePage() {
               {/* Status Picker */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700">
-                  Trạng thái ca làm việc
+                  {isEn ? "Shift Status" : "Trạng thái ca làm việc"}
                 </label>
                 <select
                   value={editStatus}
@@ -1862,8 +1868,8 @@ export default function WorkforceSchedulePage() {
                   }}
                   className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
                 >
-                  <option value="scheduled">Đã lên lịch (scheduled)</option>
-                  <option value="canceled">Hủy ca này (canceled)</option>
+                  <option value="scheduled">{t("landlordScheduleStatusAssigned")} (scheduled)</option>
+                  <option value="canceled">{t("landlordScheduleStatusCanceled")}</option>
                 </select>
               </div>
 
@@ -1872,7 +1878,7 @@ export default function WorkforceSchedulePage() {
                 selectedScheduleForEdit.recurrenceId && (
                   <div className="space-y-2.5 p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl">
                     <label className="text-xs font-extrabold text-zinc-800 block">
-                      Phạm vi áp dụng chỉnh sửa
+                      {isEn ? "Scope of Changes" : "Phạm vi áp dụng chỉnh sửa"}
                     </label>
 
                     <label className="flex items-start gap-2.5 text-xs cursor-pointer">
@@ -1888,11 +1894,12 @@ export default function WorkforceSchedulePage() {
                       />
                       <div>
                         <span className="font-bold text-zinc-800">
-                          Chỉ áp dụng cho ca ngày này
+                          {isEn ? "Apply to this shift only" : "Chỉ áp dụng cho ca ngày này"}
                         </span>
                         <p className="text-[11px] text-zinc-400">
-                          Chỉ cập nhật ca trực hiện tại. Chuỗi lịch lặp lại trong
-                          tương lai vẫn giữ nguyên.
+                          {isEn
+                          ? "Only update this single shift. Future recurring schedules remain untouched."
+                          : "Chỉ cập nhật ca trực hiện tại. Chuỗi lịch lặp lại trong tương lai vẫn giữ nguyên."}
                         </p>
                       </div>
                     </label>
@@ -1910,12 +1917,12 @@ export default function WorkforceSchedulePage() {
                       />
                       <div>
                         <span className="font-bold text-amber-700">
-                          Áp dụng cho toàn bộ các ca trong tương lai
+                          {isEn ? "Apply to all future recurring shifts" : "Áp dụng cho toàn bộ các ca trong tương lai"}
                         </span>
                         <p className="text-[11px] text-amber-600/80 leading-relaxed">
-                          Thao tác này sẽ ghi đè lên toàn bộ ca làm việc định kỳ
-                          từ hôm nay trở đi, bao gồm các ca đã từng được chỉnh
-                          sửa riêng lẻ.
+                          {isEn
+                          ? "This will overwrite all recurring shifts from today onwards, including individually customized shifts."
+                          : "Thao tác này sẽ ghi đè lên toàn bộ ca làm việc định kỳ từ hôm nay trở đi, bao gồm các ca đã từng được chỉnh sửa riêng lẻ."}
                         </p>
                       </div>
                     </label>
@@ -1928,7 +1935,7 @@ export default function WorkforceSchedulePage() {
                   onClick={() => handleAttemptCloseModal("edit")}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordShiftsModalBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1938,10 +1945,10 @@ export default function WorkforceSchedulePage() {
                   {isSubmittingEdit ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang lưu...</span>
+                      <span>{isEn ? "Saving..." : "Đang lưu..."}</span>
                     </>
                   ) : (
-                    <span>Lưu thay đổi</span>
+                    <span>{t("landlordShiftsSaveShiftBtn")}</span>
                   )}
                 </button>
               </div>
@@ -1967,11 +1974,10 @@ export default function WorkforceSchedulePage() {
 
             <div className="space-y-1">
               <h4 className="text-base font-black text-zinc-900">
-                Xác nhận đóng form
+                {t("landlordShiftsConfirmCloseTitle")}
               </h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Bạn có thông tin chưa lưu. Nếu đóng bây giờ, toàn bộ các thay đổi
-                sẽ bị hủy bỏ.
+                {t("landlordShiftsConfirmCloseDesc")}
               </p>
             </div>
 
@@ -1981,7 +1987,7 @@ export default function WorkforceSchedulePage() {
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordShiftsConfirmCloseKeep")}
               </button>
               <button
                 type="button"
@@ -1991,7 +1997,7 @@ export default function WorkforceSchedulePage() {
                 }}
                 className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordShiftsConfirmCloseDiscard")}
               </button>
             </div>
           </div>

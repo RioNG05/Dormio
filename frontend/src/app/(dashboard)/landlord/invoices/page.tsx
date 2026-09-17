@@ -703,7 +703,7 @@ function InvoicesContent() {
                         className="py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
                         title={t("landlordInvoicesTooltipMarkPaid")}
                       >
-                        <Check className="w-3.5 h-3.5" /> Thu
+                        <Check className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnCollect")}
                       </button>
                     )}
                   </div>

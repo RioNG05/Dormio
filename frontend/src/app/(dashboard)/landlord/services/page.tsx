@@ -9,6 +9,7 @@ import {
   LayoutGrid, List, Home, X, Clock, MapPin, RefreshCw, Loader2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import {
   serviceService,
   ServiceItem,
@@ -18,6 +19,9 @@ import {
 
 export default function ServicesPage() {
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
 
   // Data States
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -72,7 +76,7 @@ export default function ServicesPage() {
     type: "warning" | "error" | "success" | "info";
   }>({
     isOpen: false,
-    title: "Thông báo",
+    title: t("landlordServicesAlertDefaultTitle"),
     message: "",
     type: "info",
   });
@@ -89,7 +93,7 @@ export default function ServicesPage() {
   const showAlert = (
     message: string,
     type: "warning" | "error" | "success" | "info" = "info",
-    title: string = "Thông báo",
+    title: string = t("landlordServicesAlertDefaultTitle"),
   ) => {
     setAlertModal({ isOpen: true, title, message, type });
   };
@@ -99,20 +103,20 @@ export default function ServicesPage() {
     const lowerName = name.toLowerCase();
     const lowerUnit = unit.toLowerCase();
 
-    if (lowerName.includes("điện") || lowerName.includes("dien")) {
+    if (lowerName.includes("điện") || lowerName.includes("dien") || lowerName.includes("elec")) {
       return {
         iconName: "Zap",
         color: "text-amber-500",
         bg: "bg-amber-50 border-amber-200/80",
-        typeLabel: "Theo chỉ số đồng hồ",
+        typeLabel: t("landlordServicesTypeMetered"),
       };
     }
-    if (lowerName.includes("nước") || lowerName.includes("nuoc")) {
+    if (lowerName.includes("nước") || lowerName.includes("nuoc") || lowerName.includes("water")) {
       return {
         iconName: "Droplets",
         color: "text-blue-500",
         bg: "bg-blue-50 border-blue-200/80",
-        typeLabel: "Theo chỉ số đồng hồ",
+        typeLabel: t("landlordServicesTypeMetered"),
       };
     }
     if (lowerName.includes("wifi") || lowerName.includes("mạng") || lowerName.includes("internet")) {
@@ -120,31 +124,31 @@ export default function ServicesPage() {
         iconName: "Wifi",
         color: "text-indigo-500",
         bg: "bg-indigo-50 border-indigo-200/80",
-        typeLabel: "Cố định theo phòng",
+        typeLabel: t("landlordServicesTypeFixedRoom"),
       };
     }
-    if (lowerName.includes("rác") || lowerName.includes("vệ sinh") || lowerName.includes("rac")) {
+    if (lowerName.includes("rác") || lowerName.includes("vệ sinh") || lowerName.includes("rac") || lowerName.includes("clean") || lowerName.includes("trash")) {
       return {
         iconName: "Trash2",
         color: "text-emerald-500",
         bg: "bg-emerald-50 border-emerald-200/80",
-        typeLabel: lowerUnit.includes("người") ? "Cố định theo người" : "Cố định theo phòng",
+        typeLabel: (lowerUnit.includes("người") || lowerUnit.includes("person")) ? t("landlordServicesTypeFixedPerson") : t("landlordServicesTypeFixedRoom"),
       };
     }
-    if (lowerName.includes("xe") || lowerName.includes("gửi xe") || lowerName.includes("bãi xe")) {
+    if (lowerName.includes("xe") || lowerName.includes("gửi xe") || lowerName.includes("bãi xe") || lowerName.includes("park") || lowerName.includes("vehicle")) {
       return {
         iconName: "CarFront",
         color: "text-purple-500",
         bg: "bg-purple-50 border-purple-200/80",
-        typeLabel: "Theo số lượng / Đăng ký",
+        typeLabel: t("landlordServicesTypeQuantity"),
       };
     }
-    if (lowerName.includes("an ninh") || lowerName.includes("thang máy") || lowerName.includes("bảo vệ")) {
+    if (lowerName.includes("an ninh") || lowerName.includes("thang máy") || lowerName.includes("bảo vệ") || lowerName.includes("security") || lowerName.includes("elevator")) {
       return {
         iconName: "ShieldCheck",
         color: "text-rose-500",
         bg: "bg-rose-50 border-rose-200/80",
-        typeLabel: "Cố định theo phòng",
+        typeLabel: t("landlordServicesTypeFixedRoom"),
       };
     }
     if (lowerName.includes("gas") || lowerName.includes("bếp")) {
@@ -152,16 +156,16 @@ export default function ServicesPage() {
         iconName: "Flame",
         color: "text-orange-500",
         bg: "bg-orange-50 border-orange-200/80",
-        typeLabel: isMetered ? "Theo chỉ số đồng hồ" : "Cố định theo phòng",
+        typeLabel: isMetered ? t("landlordServicesTypeMetered") : t("landlordServicesTypeFixedRoom"),
       };
     }
 
     // Generic fallback
-    let typeLabel = "Cố định";
-    if (isMetered) typeLabel = "Theo chỉ số đồng hồ";
-    else if (lowerUnit.includes("phòng") || lowerUnit.includes("phong")) typeLabel = "Cố định theo phòng";
-    else if (lowerUnit.includes("người") || lowerUnit.includes("nguoi")) typeLabel = "Cố định theo người";
-    else if (lowerUnit.includes("xe") || lowerUnit.includes("chiếc")) typeLabel = "Theo số lượng / Đăng ký";
+    let typeLabel = t("landlordServicesTypeFixed");
+    if (isMetered) typeLabel = t("landlordServicesTypeMetered");
+    else if (lowerUnit.includes("phòng") || lowerUnit.includes("phong") || lowerUnit.includes("room")) typeLabel = t("landlordServicesTypeFixedRoom");
+    else if (lowerUnit.includes("người") || lowerUnit.includes("nguoi") || lowerUnit.includes("person")) typeLabel = t("landlordServicesTypeFixedPerson");
+    else if (lowerUnit.includes("xe") || lowerUnit.includes("chiếc") || lowerUnit.includes("vehicle")) typeLabel = t("landlordServicesTypeQuantity");
 
     return {
       iconName: "Wrench",
@@ -266,10 +270,10 @@ export default function ServicesPage() {
     if (isDirty) {
       setConfirmModal({
         isOpen: true,
-        title: "Xác nhận đóng form",
-        message: "Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng và hủy các thông tin đã nhập?",
-        confirmText: "Hủy thay đổi & Đóng",
-        cancelText: "Tiếp tục chỉnh sửa",
+        title: t("landlordServicesConfirmCloseTitle"),
+        message: t("landlordServicesConfirmCloseDesc"),
+        confirmText: t("landlordServicesConfirmCloseDiscard"),
+        cancelText: t("landlordServicesConfirmCloseKeep"),
         onConfirm: () => {
           setIsModalOpen(false);
           setConfirmModal((prev) => ({ ...prev, isOpen: false }));
@@ -284,18 +288,18 @@ export default function ServicesPage() {
   // Save (Create or Update) Service
   const handleSaveService = async () => {
     if (!formName.trim()) {
-      showAlert("Vui lòng nhập Tên dịch vụ!", "warning", "Thiếu thông tin");
+      showAlert(t("landlordServicesAlertMissingName"), "warning");
       return;
     }
 
     const priceNum = typeof formPrice === "number" ? formPrice : parseInt(String(formPrice).replace(/\D/g, ""), 10) || 0;
     if (priceNum < 0) {
-      showAlert("Đơn giá không được nhỏ hơn 0!", "warning", "Dữ liệu không hợp lệ");
+      showAlert(t("landlordServicesAlertInvalidPrice"), "warning");
       return;
     }
 
     if (!formUnit.trim()) {
-      showAlert("Vui lòng nhập Đơn vị tính (VD: kWh, m³, phòng/tháng)!", "warning", "Thiếu thông tin");
+      showAlert(t("landlordServicesAlertMissingUnit"), "warning");
       return;
     }
 
@@ -311,7 +315,7 @@ export default function ServicesPage() {
           autoApplied: formAutoApplied,
           status: formStatus,
         });
-        showAlert("Đã cập nhật dịch vụ thành công!", "success", "Thành công");
+        showAlert(t("landlordServicesAlertUpdateSuccess"), "success");
       } else {
         await serviceService.createService(activeBuilding.id, {
           name: formName.trim(),
@@ -321,14 +325,14 @@ export default function ServicesPage() {
           autoApplied: formAutoApplied,
           status: formStatus,
         });
-        showAlert("Đã thêm dịch vụ mới thành công!", "success", "Thành công");
+        showAlert(t("landlordServicesAlertUpdateSuccess"), "success");
       }
 
       setIsModalOpen(false);
       setIsDirty(false);
       fetchServices();
     } catch (err: any) {
-      showAlert(err?.message || "Thao tác thất bại", "error", "Lỗi");
+      showAlert(err?.message || "Thao tác thất bại", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -342,10 +346,12 @@ export default function ServicesPage() {
 
     try {
       await serviceService.updateService(activeBuilding.id, srv.id, { status: nextStatus });
+      const statusText = nextStatus === "active"
+        ? t("landlordServicesAlertStatusActive")
+        : t("landlordServicesAlertStatusInactive");
       showAlert(
-        `Đã ${nextStatus === "active" ? "KÍCH HOẠT" : "TẠM DỪNG"} dịch vụ [${srv.name}]`,
+        t("landlordServicesAlertToggleStatus", { status: statusText, name: srv.name }),
         nextStatus === "active" ? "success" : "info",
-        "Cập nhật trạng thái",
       );
       // Optimistic update local state
       setServices((prev) =>
@@ -368,11 +374,11 @@ export default function ServicesPage() {
     setIsDeleting(true);
     try {
       await serviceService.deleteService(activeBuilding.id, deleteTarget.id);
-      showAlert(`Đã xóa dịch vụ [${deleteTarget.name}] thành công!`, "success", "Xóa thành công");
+      showAlert(t("landlordServicesAlertDeleteSuccess", { name: deleteTarget.name }), "success");
       setDeleteTarget(null);
       fetchServices();
     } catch (err: any) {
-      showAlert(err?.message || "Không thể xóa dịch vụ này", "error", "Lỗi xóa dịch vụ");
+      showAlert(err?.message || "Không thể xóa dịch vụ này", "error");
     } finally {
       setIsDeleting(false);
     }
@@ -387,21 +393,21 @@ export default function ServicesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            Quản lý Dịch vụ & Tiện ích
+            {t("landlordServicesTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
-            Cấu hình bảng giá điện, nước, internet và phí sinh hoạt cho tòa nhà
+            {t("landlordServicesSubtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => showAlert("Tính năng Import cấu hình dịch vụ từ Excel đang được phát triển.", "info", "Tính năng thử nghiệm")}
+            onClick={() => showAlert(t("landlordServicesAlertImportDeveloping"), "info")}
             className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
           >
             <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
           </button>
           <button
-            onClick={() => showAlert("Đã xuất bảng phí dịch vụ ra file Excel thành công!", "success", "Xuất file thành công")}
+            onClick={() => showAlert(t("landlordServicesAlertExportSuccess"), "success")}
             className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
@@ -409,15 +415,15 @@ export default function ServicesPage() {
           <button
             onClick={fetchServices}
             className="cursor-pointer px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
-            title="Làm mới dữ liệu"
+            title={t("landlordServicesRefresh")}
           >
-            <RefreshCw className={`w-4 h-4 text-zinc-500 ${isLoading ? "animate-spin" : ""}`} /> Làm mới
+            <RefreshCw className={`w-4 h-4 text-zinc-500 ${isLoading ? "animate-spin" : ""}`} /> {t("landlordServicesRefresh")}
           </button>
           <button
             onClick={handleOpenAddModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Thêm dịch vụ mới
+            <Plus className="w-4 h-4" /> {t("landlordServicesAddNew")}
           </button>
         </div>
       </div>
@@ -432,7 +438,7 @@ export default function ServicesPage() {
           <div className="space-y-2.5 max-w-xl w-full">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                {activeBuilding?.name || "Tòa nhà"}
+                {activeBuilding?.name || t("landlordServicesBuildingFallback")}
               </h2>
             </div>
 
@@ -440,7 +446,7 @@ export default function ServicesPage() {
               <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                 <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                  {activeBuilding?.address || "Chưa thiết lập địa chỉ"}
+                  {activeBuilding?.address || t("landlordServicesNoAddress")}
                 </span>
               </div>
               {activeBuilding?.address && (
@@ -450,13 +456,13 @@ export default function ServicesPage() {
                   rel="noreferrer"
                   className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
                 >
-                  <span>Xem Bản Đồ</span> &rarr;
+                  <span>{t("landlordServicesViewMap")}</span> &rarr;
                 </a>
               )}
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Cấu hình đơn giá điện, nước, dịch vụ vệ sinh và quản lý phí sinh hoạt tiện ích toàn nhà. Đơn giá sẽ tự động được sử dụng khi chốt số điện nước và tính hóa đơn hàng tháng.
+              {t("landlordServicesHeroSubtitle")}
             </p>
           </div>
 
@@ -464,7 +470,7 @@ export default function ServicesPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full md:w-[135px]">
               <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Tổng dịch vụ</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordServicesTotalServices")}</span>
                 <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{summary.totalServices}</span>
               </div>
             </div>
@@ -472,7 +478,7 @@ export default function ServicesPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full md:w-[135px]">
               <Zap className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">Theo đồng hồ</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordServicesFilterMetered")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{summary.meteredCount}</span>
               </div>
             </div>
@@ -480,7 +486,7 @@ export default function ServicesPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full md:w-[135px]">
               <Wifi className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">Cố định phòng</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordServicesFixedRoom")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{summary.roomFixedCount}</span>
               </div>
             </div>
@@ -488,7 +494,7 @@ export default function ServicesPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full md:w-[135px]">
               <CarFront className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">Theo người/xe</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordServicesFixedPerson")}</span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{summary.otherCount}</span>
               </div>
             </div>
@@ -502,9 +508,9 @@ export default function ServicesPage() {
           <Info className="w-4 h-4" />
         </div>
         <div className="space-y-0.5 text-xs">
-          <h3 className="font-extrabold text-zinc-900">Quy tắc tính bảng giá dịch vụ tòa nhà</h3>
+          <h3 className="font-extrabold text-zinc-900">{t("landlordServicesPricingRule")}</h3>
           <p className="text-zinc-600 leading-relaxed font-medium">
-            Đơn giá bên dưới áp dụng trực tiếp cho các phòng thuộc <strong className="text-zinc-800">{activeBuilding?.name || "tòa nhà"}</strong>. Các dịch vụ <span className="text-rose-600 font-bold">Bắt buộc</span> sẽ tự động tính vào hóa đơn hàng tháng, dịch vụ <span className="text-indigo-600 font-bold">Tùy chọn</span> có thể linh hoạt đăng ký theo từng phòng.
+            {t("landlordServicesPricingRuleGuidance", { building: activeBuilding?.name || (isEn ? "the property" : "tòa nhà") })}
           </p>
         </div>
       </div>
@@ -517,7 +523,7 @@ export default function ServicesPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm theo tên dịch vụ..."
+              placeholder={t("landlordServicesSearchPlaceholder")}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -529,7 +535,6 @@ export default function ServicesPage() {
 
           {/* Right Toolbar: View Mode Toggle */}
           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-            <span className="text-xs text-zinc-400 font-semibold sm:hidden">Chế độ xem:</span>
             <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200">
               <button
                 onClick={() => {
@@ -542,7 +547,7 @@ export default function ServicesPage() {
                     ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold"
                     : "text-zinc-500 hover:text-zinc-900"
                 }`}
-                title="Xem dạng thẻ (Grid)"
+                title={t("landlordServicesViewGrid")}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -557,7 +562,7 @@ export default function ServicesPage() {
                     ? "bg-white text-[#2AC1BC] shadow-2xs font-extrabold"
                     : "text-zinc-500 hover:text-zinc-900"
                 }`}
-                title="Xem dạng bảng (List)"
+                title={t("landlordServicesViewTable")}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -568,9 +573,9 @@ export default function ServicesPage() {
         {/* Category Pills */}
         <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-100">
           {[
-            { label: "Tất cả dịch vụ", val: "" },
-            { label: "Theo đồng hồ", val: "metered" },
-            { label: "Cố định", val: "room" },
+            { label: t("landlordServicesFilterAll"), val: "" },
+            { label: t("landlordServicesFilterMetered"), val: "metered" },
+            { label: t("landlordServicesFilterFixed"), val: "room" },
           ].map((tab) => (
             <button
               key={tab.val}
@@ -594,7 +599,7 @@ export default function ServicesPage() {
       {isLoading && (
         <div className="py-12 flex flex-col items-center justify-center space-y-2">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">Đang tải danh sách dịch vụ...</p>
+          <p className="text-xs text-zinc-500 font-medium">{t("landlordServicesLoading")}</p>
         </div>
       )}
 
@@ -606,7 +611,7 @@ export default function ServicesPage() {
             services.map((service) => {
               const visual = getServiceVisuals(service.name, service.isMetered, service.unit);
               const isActive = service.status === "active";
-              const formattedPrice = `${service.numericPrice.toLocaleString("vi-VN")} ₫`;
+              const formattedPrice = `${service.numericPrice.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫`;
 
               return (
                 <div
@@ -634,7 +639,7 @@ export default function ServicesPage() {
                                   : "bg-indigo-50 text-indigo-700 border-indigo-200"
                               }`}
                             >
-                              {service.autoApplied ? "Bắt buộc" : "Tùy chọn"}
+                              {service.autoApplied ? t("landlordServicesMandatory") : t("landlordServicesOptional")}
                             </span>
                           </div>
                           <h3 className="font-black text-zinc-900 text-base sm:text-lg mt-1">{service.name}</h3>
@@ -645,9 +650,9 @@ export default function ServicesPage() {
                     {/* STATUS TOGGLE WITH SWITCH */}
                     <div className="flex items-center justify-between p-3 bg-zinc-50 rounded-2xl border border-zinc-200/80">
                       <div className="space-y-0.5">
-                        <span className="text-xs font-extrabold text-zinc-700 block">Trạng thái áp dụng:</span>
+                        <span className="text-xs font-extrabold text-zinc-700 block">{t("landlordServicesAppliedStatus")}:</span>
                         <span className={`text-[11px] font-bold block ${isActive ? "text-emerald-600" : "text-zinc-400"}`}>
-                          {isActive ? "Đang Bật (Tính phí vào hóa đơn)" : "Đã Tắt (Tạm ngưng thu phí)"}
+                          {isActive ? t("landlordServicesStatusOn") : t("landlordServicesStatusOff")}
                         </span>
                       </div>
 
@@ -657,9 +662,9 @@ export default function ServicesPage() {
                         className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                           isActive ? "bg-[#2AC1BC]" : "bg-zinc-300"
                         }`}
-                        title={isActive ? "Click để Tắt dịch vụ" : "Click để Bật dịch vụ"}
+                        title={isActive ? t("landlordServicesClickToDisable") : t("landlordServicesClickToEnable")}
                       >
-                        <span className="sr-only">Chuyển trạng thái áp dụng</span>
+                        <span className="sr-only">Toggle status</span>
                         <span
                           className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
                             isActive ? "translate-x-5" : "translate-x-0"
@@ -671,17 +676,17 @@ export default function ServicesPage() {
                     {/* Service Specification Table */}
                     <div className="p-3.5 bg-zinc-50/80 rounded-2xl space-y-2 text-xs border border-zinc-100">
                       <div className="flex justify-between items-center text-zinc-600">
-                        <span className="text-zinc-400 font-medium">Hình thức thu:</span>
+                        <span className="text-zinc-400 font-medium">{t("landlordServicesBillingTypeLabel")}</span>
                         <span className="font-bold text-zinc-900 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
                           {visual.typeLabel}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-zinc-600">
-                        <span className="text-zinc-400 font-medium">Đơn vị tính:</span>
+                        <span className="text-zinc-400 font-medium">{t("landlordServicesUnitLabel")}</span>
                         <span className="font-bold text-zinc-800">{service.unit}</span>
                       </div>
                       <div className="flex justify-between items-center text-zinc-600 pt-1 border-t border-zinc-200/60">
-                        <span className="text-zinc-400 font-medium">Đơn giá mặc định:</span>
+                        <span className="text-zinc-400 font-medium">{t("landlordServicesDefaultPriceLabel")}</span>
                         <span className="font-black text-emerald-600 text-base sm:text-lg">{formattedPrice}</span>
                       </div>
                     </div>
@@ -692,9 +697,9 @@ export default function ServicesPage() {
                     <button
                       onClick={() => handleOpenRoomsModal(service)}
                       className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer text-[11px]"
-                      title="Xem danh sách phòng áp dụng"
+                      title={t("landlordServicesAppliedRooms")}
                     >
-                      <Home className="w-3.5 h-3.5 text-[#2AC1BC]" /> {service.appliedRoomsCount} phòng
+                      <Home className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordServicesRoomsCount", { count: service.appliedRoomsCount })}
                     </button>
 
                     <div className="flex items-center gap-1">
@@ -702,12 +707,12 @@ export default function ServicesPage() {
                         onClick={() => handleOpenEditModal(service)}
                         className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-[#2AC1BC]/30 text-[11px]"
                       >
-                        <Edit3 className="w-3.5 h-3.5" /> Sửa
+                        <Edit3 className="w-3.5 h-3.5" /> {t("landlordServicesEdit")}
                       </button>
                       <button
                         onClick={() => setDeleteTarget(service)}
                         className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-rose-200 text-[11px]"
-                        title="Xóa dịch vụ"
+                        title={t("landlordServicesDeleteTooltip")}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -719,8 +724,8 @@ export default function ServicesPage() {
           ) : (
             <div className="col-span-full py-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-zinc-200 border-dashed p-6 text-center space-y-2">
               <Wrench className="w-12 h-12 text-zinc-300 mb-1" />
-              <p className="font-black text-zinc-900 text-base">Không tìm thấy dịch vụ nào</p>
-              <p className="text-xs text-zinc-500">Hãy thử tìm kiếm với từ khóa khác hoặc bấm "+ Thêm dịch vụ mới".</p>
+              <p className="font-black text-zinc-900 text-base">{t("landlordServicesEmptyTitle")}</p>
+              <p className="text-xs text-zinc-500">{t("landlordServicesEmptyDesc")}</p>
             </div>
           )}
         </div>
@@ -731,28 +736,28 @@ export default function ServicesPage() {
             <table className="w-full text-xs text-left min-w-[900px]">
               <thead className="bg-zinc-50 text-zinc-500 uppercase font-extrabold border-b border-zinc-200 whitespace-nowrap">
                 <tr>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[200px]">Mã / Dịch vụ</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[170px]">Hình thức</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">Đơn vị</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">Đơn giá</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">Quy định</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[130px]">Phòng áp dụng</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[140px]">Trạng thái</th>
-                  <th className="px-4 sm:px-6 py-3.5 min-w-[120px] text-right">Thao tác</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[200px]">{t("landlordServicesCode")}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[170px]">{t("landlordServicesType")}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">{t("landlordServicesUnit")}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">{t("landlordServicesPrice")}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[100px]">{t("landlordServicesRule")}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[130px]">{t("landlordServicesAppliedRooms")}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[140px]">{t("landlordServicesStatus")}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[120px] text-right">{t("landlordServicesActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-medium">
                 {services.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
-                      Không tìm thấy dịch vụ nào
+                      {t("landlordServicesEmptyTitle")}
                     </td>
                   </tr>
                 ) : (
                   services.map((service) => {
                     const visual = getServiceVisuals(service.name, service.isMetered, service.unit);
                     const isActive = service.status === "active";
-                    const formattedPrice = `${service.numericPrice.toLocaleString("vi-VN")} ₫`;
+                    const formattedPrice = `${service.numericPrice.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫`;
 
                     return (
                       <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors">
@@ -784,7 +789,7 @@ export default function ServicesPage() {
                                 : "bg-indigo-50 text-indigo-700 border-indigo-200"
                             }`}
                           >
-                            {service.autoApplied ? "Bắt buộc" : "Tùy chọn"}
+                            {service.autoApplied ? t("landlordServicesMandatory") : t("landlordServicesOptional")}
                           </span>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -792,7 +797,7 @@ export default function ServicesPage() {
                             onClick={() => handleOpenRoomsModal(service)}
                             className="font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
                           >
-                            <Home className="w-3.5 h-3.5" /> {service.appliedRoomsCount} phòng
+                            <Home className="w-3.5 h-3.5" /> {t("landlordServicesRoomsCount", { count: service.appliedRoomsCount })}
                           </button>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -803,7 +808,7 @@ export default function ServicesPage() {
                               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                                 isActive ? "bg-[#2AC1BC]" : "bg-zinc-300"
                               }`}
-                              title={isActive ? "Click để Tắt" : "Click để Bật"}
+                              title={isActive ? t("landlordServicesClickToDisable") : t("landlordServicesClickToEnable")}
                             >
                               <span
                                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-2xs ring-0 transition duration-200 ease-in-out ${
@@ -812,7 +817,7 @@ export default function ServicesPage() {
                               />
                             </button>
                             <span className={`text-xs font-bold ${isActive ? "text-emerald-600 font-black" : "text-zinc-400"}`}>
-                              {isActive ? "Đang Bật" : "Đã Tắt"}
+                              {isActive ? t("landlordServicesAlertStatusActive") : t("landlordServicesAlertStatusInactive")}
                             </span>
                           </div>
                         </td>
@@ -822,12 +827,12 @@ export default function ServicesPage() {
                               onClick={() => handleOpenEditModal(service)}
                               className="px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
                             >
-                              <Edit3 className="w-3 h-3 text-[#2AC1BC]" /> Sửa
+                              <Edit3 className="w-3 h-3 text-[#2AC1BC]" /> {t("landlordServicesEdit")}
                             </button>
                             <button
                               onClick={() => setDeleteTarget(service)}
                               className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
-                              title="Xóa dịch vụ"
+                              title={t("landlordServicesDeleteTooltip")}
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -847,7 +852,7 @@ export default function ServicesPage() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
           <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-            <span>Hiển thị</span>
+            <span>{t("landlordServicesPaginationShowing")}</span>
             <input
               type="number"
               min={1}
@@ -860,7 +865,7 @@ export default function ServicesPage() {
               }}
               className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
             />
-            <span>/ trang</span>
+            <span>{t("landlordServicesPaginationPerPage")}</span>
           </div>
 
           <span className="hidden sm:inline text-zinc-300">|</span>
@@ -873,7 +878,7 @@ export default function ServicesPage() {
             <span className="font-extrabold text-zinc-800">
               {Math.min(currentPage * itemsPerPage, totalItems)}
             </span>{" "}
-            trên tổng số <span className="font-extrabold text-zinc-800">{totalItems}</span> dịch vụ
+            {t("landlordServicesPaginationTotal", { total: totalItems })}
           </div>
         </div>
 
@@ -890,7 +895,7 @@ export default function ServicesPage() {
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
                 className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                &larr; Trước
+                &larr; {t("landlordServicesPaginationPrev")}
               </button>
               {visiblePages.map((page) => (
                 <button
@@ -910,7 +915,7 @@ export default function ServicesPage() {
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
                 className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                Sau &rarr;
+                {t("landlordServicesPaginationNext")} &rarr;
               </button>
             </div>
           );
@@ -931,9 +936,9 @@ export default function ServicesPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-base sm:text-lg text-zinc-900">
-                    {selectedService ? `Chỉnh sửa dịch vụ [${selectedService.name}]` : "Thêm dịch vụ tiện ích mới"}
+                    {selectedService ? t("landlordServicesModalEditTitle", { name: selectedService.name }) : t("landlordServicesModalAddTitle")}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-medium">Thiết lập đơn giá mặc định và hình thức thu phí</p>
+                  <p className="text-xs text-zinc-500 font-medium">{t("landlordServicesModalSubtitle")}</p>
                 </div>
               </div>
               <button onClick={handleCloseModal} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer">
@@ -944,11 +949,11 @@ export default function ServicesPage() {
             <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
               <div>
                 <label className="block font-extrabold text-zinc-700 mb-1">
-                  Tên dịch vụ <span className="text-rose-500">*</span>
+                  {t("landlordServicesFormNameLabel")} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="VD: Điện sinh hoạt, Wifi, Giữ xe máy..."
+                  placeholder={t("landlordServicesFormNamePlaceholder")}
                   value={formName}
                   onChange={(e) => { setFormName(e.target.value); setIsDirty(true); }}
                   className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
@@ -957,26 +962,26 @@ export default function ServicesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">Hình thức đo lường</label>
+                  <label className="block font-extrabold text-zinc-700 mb-1">{t("landlordServicesFormMeasurementLabel")}</label>
                   <select
                     value={formIsMetered ? "metered" : "fixed"}
                     onChange={(e) => { setFormIsMetered(e.target.value === "metered"); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="metered">Theo chỉ số đồng hồ (Điện, Nước)</option>
-                    <option value="fixed">Cố định / Theo phòng / Theo người</option>
+                    <option value="metered">{t("landlordServicesFormOptionMetered")}</option>
+                    <option value="fixed">{t("landlordServicesFormOptionFixed")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">Quy định áp dụng</label>
+                  <label className="block font-extrabold text-zinc-700 mb-1">{t("landlordServicesFormRuleLabel")}</label>
                   <select
                     value={formAutoApplied ? "mandatory" : "optional"}
                     onChange={(e) => { setFormAutoApplied(e.target.value === "mandatory"); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="mandatory">Bắt buộc tất cả các phòng</option>
-                    <option value="optional">Tùy chọn đăng ký theo phòng</option>
+                    <option value="mandatory">{t("landlordServicesFormOptionMandatory")}</option>
+                    <option value="optional">{t("landlordServicesFormOptionOptional")}</option>
                   </select>
                 </div>
               </div>
@@ -984,11 +989,11 @@ export default function ServicesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="block font-extrabold text-zinc-700 mb-1">
-                    Đơn vị tính <span className="text-rose-500">*</span>
+                    {t("landlordServicesFormUnitLabel")} <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="VD: kWh, m³, phòng/tháng, xe/tháng..."
+                    placeholder={t("landlordServicesFormUnitPlaceholder")}
                     value={formUnit}
                     onChange={(e) => { setFormUnit(e.target.value); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
@@ -997,13 +1002,13 @@ export default function ServicesPage() {
 
                 <div>
                   <label className="block font-extrabold text-zinc-700 mb-1">
-                    Đơn giá mặc định (VNĐ) <span className="text-rose-500">*</span>
+                    {t("landlordServicesFormPriceLabel")} <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
                     min={0}
                     step={100}
-                    placeholder="VD: 3500, 100000..."
+                    placeholder={t("landlordServicesFormPricePlaceholder")}
                     value={formPrice}
                     onChange={(e) => { setFormPrice(e.target.value === "" ? "" : Number(e.target.value)); setIsDirty(true); }}
                     className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
@@ -1012,14 +1017,14 @@ export default function ServicesPage() {
               </div>
 
               <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">Trạng thái áp dụng</label>
+                <label className="block font-extrabold text-zinc-700 mb-1">{t("landlordServicesFormStatusLabel")}</label>
                 <select
                   value={formStatus}
                   onChange={(e) => { setFormStatus(e.target.value as "active" | "inactive"); setIsDirty(true); }}
                   className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
                 >
-                  <option value="active">Đang áp dụng (Hoạt động)</option>
-                  <option value="inactive">Tạm ngưng thu phí</option>
+                  <option value="active">{t("landlordServicesFormOptionActive")}</option>
+                  <option value="inactive">{t("landlordServicesFormOptionInactive")}</option>
                 </select>
               </div>
             </div>
@@ -1030,7 +1035,7 @@ export default function ServicesPage() {
                 onClick={handleCloseModal}
                 className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
               >
-                Hủy bỏ
+                {t("landlordServicesModalCancel")}
               </button>
               <button
                 type="button"
@@ -1039,7 +1044,7 @@ export default function ServicesPage() {
                 className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all disabled:opacity-50 flex items-center gap-1.5"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Lưu dịch vụ
+                {t("landlordServicesModalSave")}
               </button>
             </div>
           </div>
@@ -1061,7 +1066,7 @@ export default function ServicesPage() {
                 <div>
                   <h3 className="font-black text-base text-zinc-900">{roomsModalService.name}</h3>
                   <span className="text-xs text-zinc-400 font-medium">
-                    Đang áp dụng cho {serviceRooms.length} phòng
+                    {t("landlordServicesRoomsAppliedSubtitle", { count: serviceRooms.length })}
                   </span>
                 </div>
               </div>
@@ -1073,14 +1078,14 @@ export default function ServicesPage() {
             <div className="space-y-2 text-xs">
               <div className="p-3 bg-zinc-50 rounded-xl space-y-1 border border-zinc-100">
                 <span className="text-zinc-500 font-bold block">
-                  Đơn giá: <strong className="text-emerald-600 text-sm">{roomsModalService.numericPrice.toLocaleString("vi-VN")} ₫</strong> / {roomsModalService.unit}
+                  {t("landlordServicesPrice")}: <strong className="text-emerald-600 text-sm">{roomsModalService.numericPrice.toLocaleString(isEn ? "en-US" : "vi-VN")} ₫</strong> / {roomsModalService.unit}
                 </span>
                 <span className="text-zinc-400 block font-medium">
-                  Loại: {roomsModalService.isMetered ? "Theo chỉ số đồng hồ" : "Cố định"} ({roomsModalService.autoApplied ? "Bắt buộc" : "Tùy chọn"})
+                  {t("landlordServicesType")}: {roomsModalService.isMetered ? t("landlordServicesMetered") : t("landlordServicesTypeFixed")} ({roomsModalService.autoApplied ? t("landlordServicesMandatory") : t("landlordServicesOptional")})
                 </span>
               </div>
 
-              <span className="font-extrabold text-zinc-700 block pt-2">Danh sách phòng đang tính phí:</span>
+              <span className="font-extrabold text-zinc-700 block pt-2">{t("landlordServicesRoomsListTitle")}</span>
 
               {isLoadingRooms ? (
                 <div className="py-8 flex justify-center items-center">
@@ -1088,7 +1093,7 @@ export default function ServicesPage() {
                 </div>
               ) : serviceRooms.length === 0 ? (
                 <div className="py-6 text-center text-zinc-400 text-xs">
-                  Chưa có phòng nào được gán dịch vụ này.
+                  {t("landlordServicesRoomsEmpty")}
                 </div>
               ) : (
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
@@ -1109,7 +1114,7 @@ export default function ServicesPage() {
               onClick={() => setRoomsModalService(null)}
               className="w-full py-2.5 bg-[#2AC1BC] text-white font-bold rounded-xl text-xs hover:bg-[#25ad87] transition-colors cursor-pointer shadow-2xs"
             >
-              Đóng danh sách
+              {t("landlordServicesRoomsClose")}
             </button>
           </div>
         </div>
@@ -1127,9 +1132,9 @@ export default function ServicesPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-zinc-900 tracking-tight">Xác nhận xóa dịch vụ</h3>
+              <h3 className="text-xl font-black text-zinc-900 tracking-tight">{t("landlordServicesDeleteTitle")}</h3>
               <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-                Bạn có chắc chắn muốn xóa dịch vụ <strong className="text-zinc-800">[{deleteTarget.name}]</strong>? Dịch vụ sẽ bị hủy liên kết khỏi tất cả các phòng.
+                {t("landlordServicesDeleteMessage", { name: deleteTarget.name })}
               </p>
             </div>
 
@@ -1139,7 +1144,7 @@ export default function ServicesPage() {
                 onClick={() => setDeleteTarget(null)}
                 className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
               >
-                Hủy bỏ
+                {t("landlordServicesDeleteCancel")}
               </button>
               <button
                 type="button"
@@ -1148,7 +1153,7 @@ export default function ServicesPage() {
                 className="flex-1 py-2.5 px-4 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-500/30 disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
                 {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Xác nhận xóa
+                {t("landlordServicesDeleteConfirm")}
               </button>
             </div>
           </div>
@@ -1160,8 +1165,8 @@ export default function ServicesPage() {
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         message={confirmModal.message}
-        confirmText={confirmModal.confirmText}
-        cancelText={confirmModal.cancelText}
+        confirmText={confirmModal.confirmText || t("landlordServicesConfirmCloseDiscard")}
+        cancelText={confirmModal.cancelText || t("landlordServicesConfirmCloseKeep")}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
@@ -1172,6 +1177,7 @@ export default function ServicesPage() {
         title={alertModal.title}
         message={alertModal.message}
         type={alertModal.type}
+        btnText={t("landlordServicesAlertUnderstand")}
         onClose={() => setAlertModal((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
@@ -1182,8 +1188,8 @@ function ConfirmModal({
   isOpen,
   title,
   message,
-  confirmText = "Hủy thay đổi & Đóng",
-  cancelText = "Tiếp tục chỉnh sửa",
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
 }: {
@@ -1195,6 +1201,7 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("landlord");
   if (!isOpen) return null;
 
   return (
@@ -1218,14 +1225,14 @@ function ConfirmModal({
             onClick={onCancel}
             className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
           >
-            {cancelText}
+            {cancelText || t("landlordServicesConfirmCloseKeep")}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
           >
-            {confirmText}
+            {confirmText || t("landlordServicesConfirmCloseDiscard")}
           </button>
         </div>
       </div>
@@ -1238,14 +1245,17 @@ function AlertModal({
   title,
   message,
   type = "info",
+  btnText,
   onClose,
 }: {
   isOpen: boolean;
   title: string;
   message: string;
   type?: "warning" | "error" | "success" | "info";
+  btnText?: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("landlord");
   if (!isOpen) return null;
 
   const config = {
@@ -1290,7 +1300,7 @@ function AlertModal({
           onClick={onClose}
           className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
         >
-          Đã hiểu
+          {btnText || t("landlordServicesAlertUnderstand")}
         </button>
       </div>
     </div>

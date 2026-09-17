@@ -28,6 +28,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import {
   staffService,
   StaffItem,
@@ -38,6 +39,9 @@ import {
 export default function StaffPage() {
   const { activeBuilding } = useAuth();
   const buildingId = activeBuilding?.id || "";
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
 
   // Data states
   const [staffList, setStaffList] = useState<StaffItem[]>([]);
@@ -266,28 +270,28 @@ export default function StaffPage() {
   const handleSubmitOnboard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!buildingId) {
-      setErrorMessage("Vui lòng chọn tòa nhà trước khi thêm nhân viên.");
+      setErrorMessage(t("landlordStaffAlertMissingBuilding"));
       return;
     }
 
     const cleanPhone = lookupPhone.trim();
     if (!cleanPhone) {
-      setErrorMessage("Vui lòng nhập số điện thoại nhân viên.");
+      setErrorMessage(t("landlordStaffAlertMissingPhone"));
       return;
     }
 
     if (!foundUser && !fullNameInput.trim()) {
-      setErrorMessage("Vui lòng nhập họ và tên cho nhân viên mới.");
+      setErrorMessage(t("landlordStaffAlertMissingFullName"));
       return;
     }
 
     if (foundUser?.isAlreadyStaffAtThisHouse) {
-      setErrorMessage("Nhân viên này đã đang làm việc tại nhà trọ này.");
+      setErrorMessage(t("landlordStaffAlertAlreadyAssigned"));
       return;
     }
 
     if (isCreatingNewPosition && !newPositionName.trim()) {
-      setErrorMessage("Vui lòng nhập tên vị trí công việc mới.");
+      setErrorMessage(t("landlordStaffAlertMissingNewPosName"));
       return;
     }
 
@@ -334,7 +338,7 @@ export default function StaffPage() {
       const msg =
         err?.response?.data?.message ||
         err?.message ||
-        "Có lỗi xảy ra khi thêm nhân viên. Vui lòng thử lại.";
+        t("landlordStaffAlertOnboardError");
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
@@ -358,7 +362,7 @@ export default function StaffPage() {
     if (!selectedStaff || !buildingId) return;
 
     if (isAssignCreatingNew && !assignNewPosName.trim()) {
-      setAssignError("Vui lòng nhập tên vị trí mới.");
+      setAssignError(t("landlordStaffAlertMissingNewPosName"));
       return;
     }
 
@@ -380,7 +384,7 @@ export default function StaffPage() {
       await fetchStaffData();
     } catch (err: any) {
       setAssignError(
-        err?.response?.data?.message || err?.message || "Không thể phân công vai trò."
+        err?.response?.data?.message || err?.message || t("landlordStaffAlertAssignError")
       );
     } finally {
       setIsAssignSubmitting(false);
@@ -392,8 +396,8 @@ export default function StaffPage() {
     const nextStatus = staff.status === "active" ? "inactive" : "active";
     const confirmMsg =
       nextStatus === "inactive"
-        ? `Xác nhận chuyển nhân viên "${staff.fullName}" sang trạng thái ĐÃ NGHỈ? Các ca làm việc trong tương lai của nhân viên này sẽ bị hủy.`
-        : `Kích hoạt lại trạng thái ĐANG LÀM VIỆC cho nhân viên "${staff.fullName}"?`;
+        ? t("landlordStaffConfirmDeactivate", { name: staff.fullName })
+        : t("landlordStaffConfirmActivate", { name: staff.fullName });
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -403,7 +407,7 @@ export default function StaffPage() {
       });
       await fetchStaffData();
     } catch (err: any) {
-      alert(err?.response?.data?.message || "Không thể cập nhật trạng thái nhân viên");
+      alert(err?.response?.data?.message || t("landlordStaffAlertUpdateStatusError"));
     }
   };
 
@@ -411,7 +415,7 @@ export default function StaffPage() {
   const handleSavePosition = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!posFormName.trim()) {
-      setPosErrorMessage("Tên vị trí không được để trống.");
+      setPosErrorMessage(t("landlordStaffAlertPosNameRequired"));
       return;
     }
 
@@ -438,7 +442,7 @@ export default function StaffPage() {
       await fetchStaffData();
     } catch (err: any) {
       setPosErrorMessage(
-        err?.response?.data?.message || err?.message || "Lỗi lưu vị trí công việc"
+        err?.response?.data?.message || err?.message || t("landlordStaffAlertPosSaveError")
       );
     } finally {
       setIsPosSubmitting(false);
@@ -447,9 +451,7 @@ export default function StaffPage() {
 
   const handleDeletePosition = async (pos: JobPosition) => {
     if (
-      !window.confirm(
-        `Xác nhận xóa vị trí công việc "${pos.name}"? Thao tác này không thể hoàn tác.`
-      )
+      !window.confirm(t("landlordStaffConfirmDeletePos", { name: pos.name }))
     )
       return;
 
@@ -457,7 +459,7 @@ export default function StaffPage() {
       await staffService.deletePosition(buildingId, pos.id);
       await fetchStaffData();
     } catch (err: any) {
-      alert(err?.response?.data?.message || "Không thể xóa vị trí này.");
+      alert(err?.response?.data?.message || t("landlordStaffAlertDeletePosError"));
     }
   };
 
@@ -483,10 +485,10 @@ export default function StaffPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
-            Quản lý nhân sự
+            {t("landlordStaffTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            Phân công vai trò, quản lý vị trí công việc và hồ sơ nhân sự (UC-L-19, UC-L-20)
+            {t("landlordStaffSubtitle")}
           </p>
         </div>
 
@@ -503,7 +505,7 @@ export default function StaffPage() {
             className="flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl shadow-2xs transition-all cursor-pointer shrink-0"
           >
             <Briefcase className="w-4 h-4 text-[#2AC1BC]" />
-            <span>Quản lý vị trí ({positions.length})</span>
+            <span>{t("landlordStaffManagePositions", { count: positions.length })}</span>
           </button>
 
           <button
@@ -513,7 +515,7 @@ export default function StaffPage() {
             }}
             className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
           >
-            <Plus className="w-4 h-4" /> Thêm nhân viên mới
+            <Plus className="w-4 h-4" /> {t("landlordStaffAddNew")}
           </button>
         </div>
       </div>
@@ -528,20 +530,20 @@ export default function StaffPage() {
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-[#2AC1BC] border border-[#2AC1BC]/30">
               <Building2 className="w-3.5 h-3.5" />
-              <span>{activeBuilding?.name || "Chưa chọn tòa nhà"}</span>
+              <span>{activeBuilding?.name || t("landlordStaffNoBuilding")}</span>
             </div>
             <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              Đội ngũ nhân sự & vai trò
+              {t("landlordStaffHeroTitle")}
             </h2>
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Dễ dàng phân quyền vai trò (Bảo vệ, Vệ sinh, Quản lý), cập nhật trạng thái làm việc và quy định nhiệm vụ công việc.
+              {t("landlordStaffHeroSubtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
             <div className="flex flex-col p-3.5 bg-white/5 rounded-2xl border border-white/10 min-w-[125px]">
               <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                Tổng nhân sự
+                {t("landlordStaffStatTotal")}
               </span>
               <span className="font-black text-white text-xl sm:text-2xl mt-1">
                 {summary.totalStaff}
@@ -550,7 +552,7 @@ export default function StaffPage() {
 
             <div className="flex flex-col p-3.5 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 min-w-[125px]">
               <span className="text-[10px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                Đang làm việc
+                {t("landlordStaffStatActive")}
               </span>
               <span className="font-black text-[#2AC1BC] text-xl sm:text-2xl mt-1">
                 {summary.activeStaff}
@@ -559,7 +561,7 @@ export default function StaffPage() {
 
             <div className="flex flex-col p-3.5 bg-zinc-800/80 rounded-2xl border border-zinc-700 min-w-[125px]">
               <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                Đã nghỉ việc
+                {t("landlordStaffStatInactive")}
               </span>
               <span className="font-black text-zinc-300 text-xl sm:text-2xl mt-1">
                 {summary.inactiveStaff}
@@ -568,7 +570,7 @@ export default function StaffPage() {
 
             <div className="flex flex-col p-3.5 bg-blue-500/10 rounded-2xl border border-blue-500/30 min-w-[125px]">
               <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
-                Vị trí công việc
+                {t("landlordStaffStatPositions")}
               </span>
               <span className="font-black text-blue-400 text-xl sm:text-2xl mt-1">
                 {summary.positionsCount}
@@ -586,7 +588,7 @@ export default function StaffPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm theo tên, SĐT, vị trí..."
+              placeholder={t("landlordStaffSearchPlaceholder")}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -607,7 +609,7 @@ export default function StaffPage() {
                 }}
                 className="w-full rounded-xl border border-zinc-200 pl-3 pr-8 py-2 text-xs font-semibold text-zinc-800 bg-zinc-50 focus:bg-white focus:outline-none focus:border-[#2AC1BC] appearance-none cursor-pointer"
               >
-                <option value="all">Tất cả vị trí ({positions.length})</option>
+                <option value="all">{t("landlordStaffAllPositions", { count: positions.length })}</option>
                 {positions.map((pos) => (
                   <option key={pos.id} value={pos.id}>
                     {pos.name} {pos.staffCount ? `(${pos.staffCount})` : ""}
@@ -629,7 +631,7 @@ export default function StaffPage() {
                   ? "bg-white text-[#2AC1BC] shadow-xs font-bold"
                   : "text-zinc-500 hover:text-zinc-900"
                   }`}
-                title="Xem dạng lưới (Grid)"
+                title={t("landlordStaffViewGrid")}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -643,7 +645,7 @@ export default function StaffPage() {
                   ? "bg-white text-[#2AC1BC] shadow-xs font-bold"
                   : "text-zinc-500 hover:text-zinc-900"
                   }`}
-                title="Xem dạng bảng (Table)"
+                title={t("landlordStaffViewTable")}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -654,9 +656,9 @@ export default function StaffPage() {
         {/* Status Category Tabs */}
         <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-100">
           {[
-            { label: "Tất cả nhân sự", val: "all", count: summary.totalStaff },
-            { label: "Đang làm việc", val: "active", count: summary.activeStaff },
-            { label: "Đã nghỉ việc", val: "inactive", count: summary.inactiveStaff },
+            { label: t("landlordStaffTabAll"), val: "all", count: summary.totalStaff },
+            { label: t("landlordStaffTabActive"), val: "active", count: summary.activeStaff },
+            { label: t("landlordStaffTabInactive"), val: "inactive", count: summary.inactiveStaff },
           ].map((tab) => (
             <button
               key={tab.val}
@@ -687,7 +689,7 @@ export default function StaffPage() {
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-white rounded-3xl border border-zinc-200">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">Đang tải danh sách nhân sự...</p>
+          <p className="text-xs text-zinc-500 font-medium">{t("landlordStaffLoading")}</p>
         </div>
       ) : staffList.length === 0 ? (
         <div className="bg-white border border-zinc-200 rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
@@ -696,12 +698,12 @@ export default function StaffPage() {
           </div>
           <div className="max-w-sm space-y-1">
             <h3 className="text-base font-extrabold text-zinc-900">
-              Chưa có nhân viên nào
+              {t("landlordStaffEmptyTitle")}
             </h3>
             <p className="text-xs text-zinc-500 leading-relaxed">
               {searchQuery || statusFilter !== "all" || positionFilter !== "all"
-                ? "Không tìm thấy nhân viên phù hợp với bộ lọc hiện tại. Thử xóa bớt điều kiện tìm kiếm."
-                : "Bắt đầu thêm nhân viên bảo vệ, vệ sinh hoặc quản lý để đồng bộ ca làm việc và lịch trực."}
+                ? t("landlordStaffEmptyFiltered")
+                : t("landlordStaffEmptyDesc")}
             </p>
           </div>
           <button
@@ -711,7 +713,7 @@ export default function StaffPage() {
             }}
             className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl transition-all shadow-sm cursor-pointer"
           >
-            + Thêm nhân viên ngay
+            {t("landlordStaffAddNow")}
           </button>
         </div>
       ) : viewMode === "grid" ? (
@@ -750,7 +752,7 @@ export default function StaffPage() {
                         : "bg-zinc-100 text-zinc-500 border-zinc-200"
                         }`}
                     >
-                      {isActive ? "Đang làm" : "Đã nghỉ"}
+                      {isActive ? t("landlordStaffStatusActiveBadge") : t("landlordStaffStatusInactiveBadge")}
                     </span>
                   </div>
 
@@ -769,9 +771,9 @@ export default function StaffPage() {
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                       <span>
-                        Bắt đầu:{" "}
+                        {t("landlordStaffJoinedLabel")}{" "}
                         <strong className="text-zinc-700">
-                          {new Date(staff.joinedAt).toLocaleDateString("vi-VN")}
+                          {new Date(staff.joinedAt).toLocaleDateString(isEn ? "en-US" : "vi-VN")}
                         </strong>
                       </span>
                     </div>
@@ -786,7 +788,7 @@ export default function StaffPage() {
                     {staff.mustChangePassword && (
                       <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 font-semibold">
                         <AlertCircle className="w-3 h-3 shrink-0" />
-                        <span>Chờ đổi mật khẩu lần đầu</span>
+                        <span>{t("landlordStaffMustChangePassword")}</span>
                       </div>
                     )}
                   </div>
@@ -802,14 +804,14 @@ export default function StaffPage() {
                       }}
                       className="text-xs font-bold text-zinc-600 hover:text-zinc-900 px-2.5 py-1.5 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                     >
-                      Chi tiết
+                      {t("landlordStaffBtnDetail")}
                     </button>
                     <button
                       onClick={() => handleOpenAssignRoleModal(staff)}
                       className="text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
-                      title="Đổi vai trò & nhiệm vụ"
+                      title={t("landlordStaffBtnAssignRoleTooltip")}
                     >
-                      <Edit3 className="w-3 h-3" /> Đổi vai trò
+                      <Edit3 className="w-3 h-3" /> {t("landlordStaffBtnAssignRole")}
                     </button>
                   </div>
 
@@ -821,7 +823,7 @@ export default function StaffPage() {
                       }`}
                   >
                     <Power className="w-3 h-3" />
-                    <span>{isActive ? "Tạm nghỉ" : "Kích hoạt"}</span>
+                    <span>{isActive ? t("landlordStaffBtnDeactivate") : t("landlordStaffBtnActivate")}</span>
                   </button>
                 </div>
               </div>
@@ -835,12 +837,12 @@ export default function StaffPage() {
             <table className="w-full text-xs text-left">
               <thead className="bg-zinc-50/80 text-zinc-500 uppercase font-bold border-b border-zinc-200">
                 <tr>
-                  <th className="px-6 py-3.5">Nhân viên</th>
-                  <th className="px-6 py-3.5">Vị trí & Nhiệm vụ</th>
-                  <th className="px-6 py-3.5">Số điện thoại</th>
-                  <th className="px-6 py-3.5">Ngày tham gia</th>
-                  <th className="px-6 py-3.5">Trạng thái</th>
-                  <th className="px-6 py-3.5 text-right">Thao tác</th>
+                  <th className="px-6 py-3.5">{t("landlordStaffThStaff")}</th>
+                  <th className="px-6 py-3.5">{t("landlordStaffThRole")}</th>
+                  <th className="px-6 py-3.5">{t("landlordStaffThPhone")}</th>
+                  <th className="px-6 py-3.5">{t("landlordStaffThJoined")}</th>
+                  <th className="px-6 py-3.5">{t("landlordStaffThStatus")}</th>
+                  <th className="px-6 py-3.5 text-right">{t("landlordStaffThActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-medium">
@@ -858,7 +860,7 @@ export default function StaffPage() {
                               {staff.fullName}
                             </div>
                             <div className="text-[11px] text-zinc-400">
-                              {staff.email || "Chưa có email"}
+                              {staff.email || t("landlordStaffNoEmail")}
                             </div>
                           </div>
                         </div>
@@ -879,7 +881,7 @@ export default function StaffPage() {
                         {staff.phoneNumber}
                       </td>
                       <td className="px-6 py-4 text-zinc-600">
-                        {new Date(staff.joinedAt).toLocaleDateString("vi-VN")}
+                        {new Date(staff.joinedAt).toLocaleDateString(isEn ? "en-US" : "vi-VN")}
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -888,7 +890,7 @@ export default function StaffPage() {
                             : "bg-zinc-100 text-zinc-500 border-zinc-200"
                             }`}
                         >
-                          {isActive ? "Đang làm việc" : "Đã nghỉ"}
+                          {isActive ? t("landlordStaffTableStatusActive") : t("landlordStaffTableStatusInactive")}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -896,9 +898,9 @@ export default function StaffPage() {
                           <button
                             onClick={() => handleOpenAssignRoleModal(staff)}
                             className="px-2.5 py-1 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-lg transition-colors cursor-pointer"
-                            title="Đổi vai trò & nhiệm vụ"
+                            title={t("landlordStaffBtnAssignRoleTooltip")}
                           >
-                            Đổi vai trò
+                            {t("landlordStaffBtnAssignRole")}
                           </button>
                           <button
                             onClick={() => {
@@ -907,7 +909,7 @@ export default function StaffPage() {
                             }}
                             className="px-2.5 py-1 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors cursor-pointer"
                           >
-                            Chi tiết
+                            {t("landlordStaffBtnDetail")}
                           </button>
                           <button
                             onClick={() => handleToggleStatus(staff)}
@@ -915,7 +917,7 @@ export default function StaffPage() {
                               ? "text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100"
                               : "text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20"
                               }`}
-                            title={isActive ? "Chuyển sang Đã nghỉ" : "Kích hoạt lại"}
+                            title={isActive ? t("landlordStaffTooltipDeactivate") : t("landlordStaffTooltipActivate")}
                           >
                             <Power className="w-3.5 h-3.5" />
                           </button>
@@ -934,7 +936,7 @@ export default function StaffPage() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200 rounded-2xl shadow-xs">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
           <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200">
-            <span>Hiển thị</span>
+            <span>{t("landlordStaffPaginationShowing")}</span>
             <input
               type="number"
               min={1}
@@ -947,7 +949,7 @@ export default function StaffPage() {
               }}
               className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
             />
-            <span>/ trang</span>
+            <span>{t("landlordStaffPaginationPerPage")}</span>
           </div>
 
           <span className="hidden sm:inline text-zinc-300">|</span>
@@ -960,7 +962,7 @@ export default function StaffPage() {
             <span className="font-extrabold text-zinc-800">
               {Math.min(currentPage * pageSize, totalItems)}
             </span>{" "}
-            trên tổng số <span className="font-extrabold text-zinc-800">{totalItems}</span> nhân viên
+            {t("landlordStaffPaginationTotal", { total: totalItems })}
           </div>
         </div>
 
@@ -971,7 +973,7 @@ export default function StaffPage() {
             onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
             className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
-            &larr; Trước
+            &larr; {t("landlordStaffPaginationPrev")}
           </button>
           {visiblePages.map((page) => (
             <button
@@ -990,7 +992,7 @@ export default function StaffPage() {
             onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
             className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
-            Sau &rarr;
+            {t("landlordStaffPaginationNext")} &rarr;
           </button>
         </div>
       </div>
@@ -1017,10 +1019,10 @@ export default function StaffPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-zinc-900 text-base">
-                    Thêm nhân viên mới
+                    {t("landlordStaffOnboardTitle")}
                   </h3>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    Kiểm tra số điện thoại và phân công vai trò (UC-L-19)
+                    {t("landlordStaffOnboardSubtitle")}
                   </p>
                 </div>
               </div>
@@ -1045,7 +1047,7 @@ export default function StaffPage() {
                 {/* Phone lookup */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>Số điện thoại nhân viên</span>
+                    <span>{t("landlordStaffOnboardPhoneLabel")}</span>
                     <span className="text-rose-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
@@ -1054,7 +1056,7 @@ export default function StaffPage() {
                       <input
                         type="tel"
                         required
-                        placeholder="VD: 0901234567"
+                        placeholder={t("landlordStaffOnboardPhonePlaceholder")}
                         value={lookupPhone}
                         onChange={(e) => {
                           setLookupPhone(e.target.value);
@@ -1080,12 +1082,12 @@ export default function StaffPage() {
                       {isSearchingUser ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        "Kiểm tra"
+                        t("landlordStaffOnboardBtnCheck")
                       )}
                     </button>
                   </div>
                   <p className="text-[11px] text-zinc-400">
-                    Nhập SĐT để kiểm tra xem nhân viên đã có tài khoản trên Dormio hay chưa.
+                    {t("landlordStaffOnboardPhoneHelp")}
                   </p>
                 </div>
 
@@ -1094,7 +1096,7 @@ export default function StaffPage() {
                   <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-2.5">
                     <div className="flex items-center gap-2 text-emerald-800 text-xs font-extrabold">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Tài khoản đã tồn tại trên Dormio</span>
+                      <span>{t("landlordStaffOnboardAccountFound")}</span>
                     </div>
 
                     <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-emerald-100">
@@ -1117,7 +1119,7 @@ export default function StaffPage() {
                     {foundUser.isAlreadyStaffAtThisHouse && (
                       <div className="p-2 bg-amber-100/70 border border-amber-300 rounded-xl text-[11px] text-amber-800 font-bold flex items-center gap-1.5">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span>Nhân viên này hiện đã được phân công tại nhà trọ này.</span>
+                        <span>{t("landlordStaffOnboardAlreadyAssigned")}</span>
                       </div>
                     )}
                   </div>
@@ -1128,17 +1130,17 @@ export default function StaffPage() {
                   <div className="p-4 rounded-2xl bg-orange-50/80 border border-orange-200/80 space-y-3">
                     <div className="flex items-center gap-2 text-orange-800 text-xs font-extrabold">
                       <Info className="w-4 h-4 text-[#FF6B35] shrink-0" />
-                      <span>Chưa có tài khoản — Hệ thống sẽ tự động tạo tài khoản mới</span>
+                      <span>{t("landlordStaffOnboardNewAccountTitle")}</span>
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-zinc-700">
-                        Họ và tên nhân viên <span className="text-rose-500">*</span>
+                        {t("landlordStaffOnboardFullNameLabel")} <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="VD: Nguyễn Văn Bảo"
+                        placeholder={t("landlordStaffOnboardFullNamePlaceholder")}
                         value={fullNameInput}
                         onChange={(e) => {
                           setFullNameInput(e.target.value);
@@ -1149,9 +1151,9 @@ export default function StaffPage() {
                     </div>
 
                     <div className="p-2.5 bg-white/80 rounded-xl border border-orange-100 text-[11px] text-zinc-600 leading-relaxed space-y-1">
-                      <p className="font-bold text-orange-700">Chính sách bảo mật (UC-AUTH-03):</p>
+                      <p className="font-bold text-orange-700">{t("landlordStaffOnboardSecurityPolicyTitle")}</p>
                       <p>
-                        Mật khẩu ngẫu nhiên tạm thời sẽ được tạo tự động và hiển thị cho bạn sao chép sau khi lưu. Tài khoản sẽ bắt buộc đổi mật khẩu mới trong lần đầu đăng nhập.
+                        {t("landlordStaffOnboardSecurityPolicyDesc")}
                       </p>
                     </div>
                   </div>
@@ -1161,7 +1163,7 @@ export default function StaffPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                      <span>Vị trí công việc (Vai trò)</span>
+                      <span>{t("landlordStaffOnboardPositionLabel")}</span>
                       <span className="text-rose-500">*</span>
                     </label>
                     <button
@@ -1169,7 +1171,7 @@ export default function StaffPage() {
                       onClick={() => setIsCreatingNewPosition(!isCreatingNewPosition)}
                       className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer"
                     >
-                      {isCreatingNewPosition ? "Chọn vị trí có sẵn" : "+ Tạo vị trí mới"}
+                      {isCreatingNewPosition ? t("landlordStaffOnboardSelectExistingPos") : t("landlordStaffOnboardCreateNewPos")}
                     </button>
                   </div>
 
@@ -1195,12 +1197,12 @@ export default function StaffPage() {
                     <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
                       <div>
                         <label className="text-[11px] font-bold text-zinc-600">
-                          Tên vị trí mới <span className="text-rose-500">*</span>
+                          {t("landlordStaffOnboardNewPosNameLabel")} <span className="text-rose-500">*</span>
                         </label>
                         <input
                           type="text"
                           required={isCreatingNewPosition}
-                          placeholder="VD: Kỹ thuật điện nước, Lễ tân"
+                          placeholder={t("landlordStaffOnboardNewPosNamePlaceholder")}
                           value={newPositionName}
                           onChange={(e) => {
                             setNewPositionName(e.target.value);
@@ -1211,11 +1213,11 @@ export default function StaffPage() {
                       </div>
                       <div>
                         <label className="text-[11px] font-bold text-zinc-600">
-                          Mô tả nhiệm vụ tĩnh (duties list cho nhân viên)
+                          {t("landlordStaffOnboardNewPosDescLabel")}
                         </label>
                         <input
                           type="text"
-                          placeholder="VD: Kiểm tra đồng hồ, sửa chữa sự cố phòng trọ"
+                          placeholder={t("landlordStaffOnboardNewPosDescPlaceholder")}
                           value={newPositionDesc}
                           onChange={(e) => {
                             setNewPositionDesc(e.target.value);
@@ -1232,7 +1234,7 @@ export default function StaffPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-700">
-                      Ngày bắt đầu làm việc
+                      {t("landlordStaffOnboardStartDateLabel")}
                     </label>
                     <input
                       type="date"
@@ -1247,11 +1249,11 @@ export default function StaffPage() {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-700">
-                      Ghi chú thêm
+                      {t("landlordStaffOnboardNoteLabel")}
                     </label>
                     <input
                       type="text"
-                      placeholder="VD: Thử việc ca ngày"
+                      placeholder={t("landlordStaffOnboardNotePlaceholder")}
                       value={noteInput}
                       onChange={(e) => {
                         setNoteInput(e.target.value);
@@ -1270,7 +1272,7 @@ export default function StaffPage() {
                   onClick={() => handleAttemptCloseModal("onboard")}
                   className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordStaffOnboardBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1280,10 +1282,10 @@ export default function StaffPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang lưu...</span>
+                      <span>{t("landlordStaffOnboardBtnSaving")}</span>
                     </>
                   ) : (
-                    <span>Lưu & Phân công</span>
+                    <span>{t("landlordStaffOnboardBtnSave")}</span>
                   )}
                 </button>
               </div>
@@ -1314,10 +1316,10 @@ export default function StaffPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-zinc-900 text-base">
-                    Phân công lại vai trò
+                    {t("landlordStaffAssignTitle")}
                   </h3>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    Đổi vị trí và cập nhật danh sách nhiệm vụ công việc (UC-L-20)
+                    {t("landlordStaffAssignSubtitle")}
                   </p>
                 </div>
               </div>
@@ -1348,7 +1350,7 @@ export default function StaffPage() {
                     {selectedStaff.fullName}
                   </h4>
                   <p className="text-[11px] text-zinc-500">
-                    SĐT: {selectedStaff.phoneNumber} • Hiện tại:{" "}
+                    {t("landlordStaffAssignCurrentLabel", { phone: selectedStaff.phoneNumber })}{" "}
                     <strong className="text-[#2AC1BC]">{selectedStaff.positionName}</strong>
                   </p>
                 </div>
@@ -1358,14 +1360,14 @@ export default function StaffPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-zinc-700">
-                    Chọn vai trò mới <span className="text-rose-500">*</span>
+                    {t("landlordStaffAssignSelectRoleLabel")} <span className="text-rose-500">*</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setIsAssignCreatingNew(!isAssignCreatingNew)}
                     className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer"
                   >
-                    {isAssignCreatingNew ? "Chọn vị trí có sẵn" : "+ Tạo vị trí mới"}
+                    {isAssignCreatingNew ? t("landlordStaffOnboardSelectExistingPos") : t("landlordStaffOnboardCreateNewPos")}
                   </button>
                 </div>
 
@@ -1391,12 +1393,12 @@ export default function StaffPage() {
                   <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
                     <div>
                       <label className="text-[11px] font-bold text-zinc-600">
-                        Tên vị trí mới <span className="text-rose-500">*</span>
+                        {t("landlordStaffOnboardNewPosNameLabel")} <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="VD: Quản lý kỹ thuật"
+                        placeholder={t("landlordStaffOnboardNewPosNamePlaceholder")}
                         value={assignNewPosName}
                         onChange={(e) => {
                           setAssignNewPosName(e.target.value);
@@ -1407,11 +1409,11 @@ export default function StaffPage() {
                     </div>
                     <div>
                       <label className="text-[11px] font-bold text-zinc-600">
-                        Mô tả nhiệm vụ công việc
+                        {t("landlordStaffOnboardNewPosDescLabel")}
                       </label>
                       <input
                         type="text"
-                        placeholder="VD: Kiểm tra camera, hệ thống PCCC"
+                        placeholder={t("landlordStaffOnboardNewPosDescPlaceholder")}
                         value={assignNewPosDesc}
                         onChange={(e) => {
                           setAssignNewPosDesc(e.target.value);
@@ -1428,11 +1430,11 @@ export default function StaffPage() {
               {!isAssignCreatingNew && (
                 <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900 space-y-1">
                   <span className="font-bold block text-[11px] uppercase tracking-wider text-blue-700">
-                    Mô tả nhiệm vụ được giao:
+                    {t("landlordStaffAssignDutiesTitle")}
                   </span>
                   <p className="italic text-zinc-700">
                     {positions.find((p) => p.id === assignTargetPositionId)?.description ||
-                      "Chưa có mô tả nhiệm vụ chi tiết cho vị trí này."}
+                      t("landlordStaffAssignNoDuties")}
                   </p>
                 </div>
               )}
@@ -1444,7 +1446,7 @@ export default function StaffPage() {
                   onClick={() => handleAttemptCloseModal("assignRole")}
                   className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordStaffAssignBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1454,10 +1456,10 @@ export default function StaffPage() {
                   {isAssignSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang cập nhật...</span>
+                      <span>{t("landlordStaffAssignBtnUpdating")}</span>
                     </>
                   ) : (
-                    <span>Xác nhận đổi vai trò</span>
+                    <span>{t("landlordStaffAssignBtnConfirm")}</span>
                   )}
                 </button>
               </div>
@@ -1488,10 +1490,10 @@ export default function StaffPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-zinc-900 text-base">
-                    Quản lý vị trí & nhiệm vụ công việc
+                    {t("landlordStaffPositionsTitle")}
                   </h3>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    Cấu hình vai trò và mô tả nhiệm vụ tĩnh cho nhân viên tòa nhà
+                    {t("landlordStaffPositionsSubtitle")}
                   </p>
                 </div>
               </div>
@@ -1520,7 +1522,7 @@ export default function StaffPage() {
                 >
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-black text-zinc-900">
-                      {editingPosition ? "Chỉnh sửa vị trí công việc" : "Thêm vị trí mới"}
+                      {editingPosition ? t("landlordStaffPositionsEditTitle") : t("landlordStaffPositionsAddTitle")}
                     </h4>
                     <button
                       type="button"
@@ -1530,19 +1532,19 @@ export default function StaffPage() {
                       }}
                       className="text-[11px] text-zinc-400 hover:text-zinc-700 font-bold"
                     >
-                      Đóng form
+                      {t("landlordStaffPositionsBtnCloseForm")}
                     </button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[11px] font-bold text-zinc-700">
-                        Tên vị trí <span className="text-rose-500">*</span>
+                        {t("landlordStaffPositionsNameLabel")} <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="VD: Trưởng ban Quản lý"
+                        placeholder={t("landlordStaffPositionsNamePlaceholder")}
                         value={posFormName}
                         onChange={(e) => {
                           setPosFormName(e.target.value);
@@ -1553,11 +1555,11 @@ export default function StaffPage() {
                     </div>
                     <div>
                       <label className="text-[11px] font-bold text-zinc-700">
-                        Nhiệm vụ & trách nhiệm (duties list)
+                        {t("landlordStaffPositionsDescLabel")}
                       </label>
                       <input
                         type="text"
-                        placeholder="VD: Kiểm tra hành lang, thu gom rác chung"
+                        placeholder={t("landlordStaffPositionsDescPlaceholder")}
                         value={posFormDesc}
                         onChange={(e) => {
                           setPosFormDesc(e.target.value);
@@ -1577,14 +1579,14 @@ export default function StaffPage() {
                       }}
                       className="px-3 py-1.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
                     >
-                      Hủy
+                      {t("landlordStaffPositionsBtnCancel")}
                     </button>
                     <button
                       type="submit"
                       disabled={isPosSubmitting}
                       className="px-4 py-1.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-xs"
                     >
-                      {isPosSubmitting ? "Đang lưu..." : "Lưu vị trí"}
+                      {isPosSubmitting ? t("landlordStaffPositionsBtnSaving") : t("landlordStaffPositionsBtnSave")}
                     </button>
                   </div>
                 </form>
@@ -1594,7 +1596,7 @@ export default function StaffPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider">
-                    Danh sách các vị trí ({positions.length})
+                    {t("landlordStaffPositionsListTitle", { count: positions.length })}
                   </span>
                   {!isAddingPositionInline && !editingPosition && (
                     <button
@@ -1607,7 +1609,7 @@ export default function StaffPage() {
                       }}
                       className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Thêm vị trí mới
+                      <Plus className="w-3.5 h-3.5" /> {t("landlordStaffPositionsBtnAddNew")}
                     </button>
                   )}
                 </div>
@@ -1624,11 +1626,11 @@ export default function StaffPage() {
                             {pos.name}
                           </span>
                           <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded-full text-[10px] font-bold">
-                            {pos.staffCount || 0} nhân sự
+                            {t("landlordStaffPositionsStaffCount", { count: pos.staffCount || 0 })}
                           </span>
                         </div>
                         <p className="text-xs text-zinc-500 italic">
-                          {pos.description || "Chưa có mô tả nhiệm vụ"}
+                          {pos.description || t("landlordStaffPositionsNoDesc")}
                         </p>
                       </div>
 
@@ -1642,7 +1644,7 @@ export default function StaffPage() {
                             setPosFormDesc(pos.description || "");
                           }}
                           className="p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                          title="Sửa vị trí"
+                          title={t("landlordStaffPositionsEditTooltip")}
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
@@ -1653,8 +1655,8 @@ export default function StaffPage() {
                           className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer"
                           title={
                             (pos.staffCount || 0) > 0
-                              ? "Không thể xóa vì đang có nhân viên đảm nhận"
-                              : "Xóa vị trí"
+                              ? t("landlordStaffPositionsCannotDeleteTooltip")
+                              : t("landlordStaffPositionsDeleteTooltip")
                           }
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1672,7 +1674,7 @@ export default function StaffPage() {
                 onClick={() => handleAttemptCloseModal("positions")}
                 className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
               >
-                Đóng
+                {t("landlordStaffPositionsBtnClose")}
               </button>
             </div>
           </div>
@@ -1698,21 +1700,20 @@ export default function StaffPage() {
 
             <div className="space-y-1">
               <h3 className="text-lg font-black text-zinc-900">
-                Đã thêm nhân viên thành công!
+                {t("landlordStaffCredSuccessTitle")}
               </h3>
               <p className="text-xs text-zinc-500">
-                Tài khoản mới đã được tạo cho nhân viên{" "}
-                <strong className="text-zinc-800">{credentialModal.name}</strong>. Hãy chia sẻ thông tin đăng nhập bên dưới cho nhân viên:
+                {t("landlordStaffCredSuccessDesc", { name: credentialModal.name })}
               </p>
             </div>
 
             <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200 text-left space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-500 font-semibold">Tên đăng nhập (SĐT):</span>
+                <span className="text-zinc-500 font-semibold">{t("landlordStaffCredPhoneLabel")}</span>
                 <span className="font-extrabold text-zinc-900">{credentialModal.phone}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-500 font-semibold">Mật khẩu tạm thời:</span>
+                <span className="text-zinc-500 font-semibold">{t("landlordStaffCredPasswordLabel")}</span>
                 <span className="font-mono font-black text-sm text-[#FF6B35] bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-200">
                   {credentialModal.password}
                 </span>
@@ -1722,7 +1723,10 @@ export default function StaffPage() {
             <button
               onClick={() =>
                 copyToClipboard(
-                  `Thông tin tài khoản nhân viên Dormio:\n- SĐT: ${credentialModal.phone}\n- Mật khẩu: ${credentialModal.password}\nVui lòng đăng nhập và đổi mật khẩu mới trong lần đầu tiên.`
+                  t("landlordStaffCredShareMessage", {
+                    phone: credentialModal.phone,
+                    password: credentialModal.password,
+                  })
                 )
               }
               className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
@@ -1730,12 +1734,12 @@ export default function StaffPage() {
               {copiedPassword ? (
                 <>
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Đã sao chép vào bộ nhớ tạm!</span>
+                  <span>{t("landlordStaffCredCopied")}</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  <span>Sao chép thông tin đăng nhập</span>
+                  <span>{t("landlordStaffCredCopyBtn")}</span>
                 </>
               )}
             </button>
@@ -1744,7 +1748,7 @@ export default function StaffPage() {
               onClick={() => setCredentialModal((prev) => ({ ...prev, isOpen: false }))}
               className="text-xs font-bold text-zinc-500 hover:text-zinc-800 transition-colors"
             >
-              Đóng thông báo
+              {t("landlordStaffCredCloseBtn")}
             </button>
           </div>
         </div>
@@ -1786,44 +1790,44 @@ export default function StaffPage() {
 
             <div className="space-y-3 text-xs bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">Trạng thái:</span>
+                <span className="text-zinc-500 font-semibold">{t("landlordStaffDetailStatusLabel")}</span>
                 <span
                   className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${selectedStaff.status === "active"
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-zinc-200 text-zinc-600"
                     }`}
                 >
-                  {selectedStaff.status === "active" ? "Đang làm việc" : "Đã nghỉ"}
+                  {selectedStaff.status === "active" ? t("landlordStaffTableStatusActive") : t("landlordStaffTableStatusInactive")}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">Số điện thoại:</span>
+                <span className="text-zinc-500 font-semibold">{t("landlordStaffDetailPhoneLabel")}</span>
                 <span className="font-bold text-zinc-900">{selectedStaff.phoneNumber}</span>
               </div>
               {selectedStaff.email && (
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-semibold">Email:</span>
+                  <span className="text-zinc-500 font-semibold">{t("landlordStaffDetailEmailLabel")}</span>
                   <span className="font-medium text-zinc-700">{selectedStaff.email}</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">Ngày tham gia:</span>
+                <span className="text-zinc-500 font-semibold">{t("landlordStaffDetailJoinedLabel")}</span>
                 <span className="font-medium text-zinc-700">
-                  {new Date(selectedStaff.joinedAt).toLocaleDateString("vi-VN")}
+                  {new Date(selectedStaff.joinedAt).toLocaleDateString(isEn ? "en-US" : "vi-VN")}
                 </span>
               </div>
               {selectedStaff.leftAt && (
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-semibold">Ngày nghỉ việc:</span>
+                  <span className="text-zinc-500 font-semibold">{t("landlordStaffDetailLeftLabel")}</span>
                   <span className="font-medium text-rose-600">
-                    {new Date(selectedStaff.leftAt).toLocaleDateString("vi-VN")}
+                    {new Date(selectedStaff.leftAt).toLocaleDateString(isEn ? "en-US" : "vi-VN")}
                   </span>
                 </div>
               )}
               {selectedStaff.positionDescription && (
                 <div className="pt-2 border-t border-zinc-200/80">
                   <span className="text-zinc-500 font-semibold block mb-1">
-                    Mô tả nhiệm vụ công việc:
+                    {t("landlordStaffDetailDutiesLabel")}
                   </span>
                   <p className="text-zinc-700 italic">
                     {selectedStaff.positionDescription}
@@ -1840,7 +1844,7 @@ export default function StaffPage() {
                 }}
                 className="px-3.5 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-xl transition-colors cursor-pointer"
               >
-                Đổi vai trò
+                {t("landlordStaffBtnAssignRole")}
               </button>
               <button
                 onClick={() => {
@@ -1849,13 +1853,13 @@ export default function StaffPage() {
                 }}
                 className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
-                {selectedStaff.status === "active" ? "Chuyển sang Đã nghỉ" : "Kích hoạt lại"}
+                {selectedStaff.status === "active" ? t("landlordStaffBtnDeactivate") : t("landlordStaffBtnActivate")}
               </button>
               <button
                 onClick={() => setIsDetailModalOpen(false)}
                 className="px-4 py-2 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
               >
-                Đóng
+                {t("landlordStaffDetailBtnClose")}
               </button>
             </div>
           </div>
@@ -1879,10 +1883,10 @@ export default function StaffPage() {
 
             <div className="space-y-1">
               <h4 className="text-base font-black text-zinc-900">
-                Xác nhận đóng form
+                {t("landlordStaffConfirmCloseTitle")}
               </h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Bạn có thông tin chưa được lưu. Nếu đóng bây giờ, các thay đổi sẽ bị hủy bỏ.
+                {t("landlordStaffConfirmCloseMessage")}
               </p>
             </div>
 
@@ -1892,14 +1896,14 @@ export default function StaffPage() {
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordStaffConfirmCloseKeep")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmClose}
                 className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordStaffConfirmCloseDiscard")}
               </button>
             </div>
           </div>

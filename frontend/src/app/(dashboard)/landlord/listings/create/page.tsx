@@ -30,6 +30,7 @@ import {
   AiPostDraftResponse,
 } from "@/services/post.service";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { getRooms, type RoomItem } from "@/services/room.service";
 import { getMyBoardingHouses } from "@/services/boarding-house.service";
 import { formatCurrency } from "@/utils";
@@ -38,6 +39,9 @@ function CreateListingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { buildings: authBuildings, activeBuildingId } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
 
   const queryRoomId = searchParams.get("roomId");
   const queryAiDraft = searchParams.get("aiDraft");
@@ -179,9 +183,9 @@ function CreateListingForm() {
     if (rId) {
       const room = rooms.find((r) => r.id === rId);
       const house = landlordBuildings.find((b) => b.id === selectedBuildingId);
-      if (room && (!title.trim() || title.startsWith("Cho thuê phòng"))) {
+      if (room && (!title.trim() || title.startsWith("Cho thuê phòng") || title.startsWith("Rent room"))) {
         setTitle(
-          `Cho thuê phòng ${room.roomNumber} - ${house?.name || "Khu trọ"}`
+          isEn ? `Rent room ${room.roomNumber} - ${house?.name || "Boarding house"}` : `Cho thuê phòng ${room.roomNumber} - ${house?.name || "Khu trọ"}`
         );
       }
     }
@@ -218,7 +222,7 @@ function CreateListingForm() {
   // AI Post Draft Generation (UC-L-12)
   const handleOpenAiModal = () => {
     if (!roomId) {
-      setErrorMessage("Vui lòng chọn một phòng cụ thể trước khi dùng Trợ lý AI.");
+      setErrorMessage(t("landlordListingsCreateErrSelectRoomAi"));
       return;
     }
     setAiErrorMessage(null);
@@ -227,7 +231,7 @@ function CreateListingForm() {
 
   const handleGenerateAi = async () => {
     if (!roomId) {
-      setAiErrorMessage("Vui lòng chọn phòng để AI trích xuất thông số thực tế.");
+      setAiErrorMessage(t("landlordListingsCreateErrSelectRoomAiExtract"));
       return;
     }
 
@@ -241,7 +245,7 @@ function CreateListingForm() {
       });
       setAiDraftResult(draft);
     } catch (err: any) {
-      setAiErrorMessage(err?.message || "Lỗi khi khởi tạo gợi ý tin đăng từ AI.");
+      setAiErrorMessage(err?.message || t("landlordListingsCreateErrAiInit"));
     } finally {
       setIsGeneratingAi(false);
     }
@@ -261,7 +265,7 @@ function CreateListingForm() {
 
     setIsDirty(true);
     setIsAiModalOpen(false);
-    setSuccessToast("Đã áp dụng bản nháp gợi ý từ AI vào biểu mẫu tin đăng!");
+    setSuccessToast(t("landlordListingsCreateToastAiApplied"));
     setTimeout(() => setSuccessToast(null), 3000);
   };
 
@@ -269,19 +273,19 @@ function CreateListingForm() {
     if (isSubmitting) return;
 
     if (!title.trim()) {
-      setErrorMessage("Vui lòng nhập tiêu đề tin đăng (tối thiểu 5 ký tự).");
+      setErrorMessage(t("landlordListingsCreateErrTitleMin"));
       return;
     }
     if (title.trim().length < 5) {
-      setErrorMessage("Tiêu đề tin đăng phải có ít nhất 5 ký tự.");
+      setErrorMessage(t("landlordListingsCreateErrTitleMin"));
       return;
     }
     if (!content.trim() || content.trim().length < 10) {
-      setErrorMessage("Nội dung mô tả chi tiết phải có ít nhất 10 ký tự.");
+      setErrorMessage(t("landlordListingsCreateErrContentMin"));
       return;
     }
     if (Number(depositAmount) < 0 || isNaN(Number(depositAmount))) {
-      setErrorMessage("Số tiền cọc không hợp lệ.");
+      setErrorMessage(t("landlordListingsCreateErrDepositInvalid"));
       return;
     }
 
@@ -291,9 +295,7 @@ function CreateListingForm() {
       quota.freePostsRemainingToday <= 0 &&
       quota.purchasedCreditsAvailable <= 0
     ) {
-      setErrorMessage(
-        "Bạn đã dùng hết hạn mức đăng tin miễn phí hôm nay. Vui lòng chọn 'Lưu bản nháp' hoặc nâng cấp gói thành viên để xuất bản lên sàn."
-      );
+      setErrorMessage(t("landlordListingsCreateErrQuotaExceeded"));
       return;
     }
 
@@ -315,8 +317,8 @@ function CreateListingForm() {
 
       setSuccessToast(
         publishStatus === "posted"
-          ? "Đăng tin cho thuê thành công lên sàn BHRP!"
-          : "Đã lưu bản nháp tin đăng thành công!"
+          ? t("landlordListingsCreateToastSuccess")
+          : t("landlordListingsCreateToastDraftSuccess")
       );
 
       setIsDirty(false);
@@ -325,7 +327,7 @@ function CreateListingForm() {
       }, 1200);
     } catch (err: any) {
       setErrorMessage(
-        err.message || "Đã xảy ra lỗi khi tạo tin đăng. Vui lòng kiểm tra lại lượt đăng tin."
+        err.message || t("landlordListingsCreateToastError")
       );
     } finally {
       setIsSubmitting(false);
@@ -341,15 +343,13 @@ function CreateListingForm() {
             type="button"
             onClick={handleCancelClick}
             className="p-2.5 text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-            title="Quay lại danh sách"
+            title={t("landlordListingsCreateBackBtn")}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Đăng tin tìm khách thuê (UC-P-01)</h1>
-            <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-              Đăng tin lên nền tảng BHRP để tiếp cận hàng nghìn khách thuê tiềm năng
-            </p>
+            <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{t("landlordListingsCreatePageTitle")}</h1>
+            <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">{t("landlordListingsCreatePageSubtitle")}</p>
           </div>
         </div>
 
@@ -358,18 +358,14 @@ function CreateListingForm() {
           <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#FF6B35]/10 to-[#2ac1bc]/10 border border-[#FF6B35]/20 rounded-2xl">
             <Coins className="w-5 h-5 text-[#FF6B35]" />
             <div className="text-right">
-              <div className="text-[10px] font-bold uppercase text-zinc-500 tracking-wider">Hạn mức đăng tin</div>
+              <div className="text-[10px] font-bold uppercase text-zinc-500 tracking-wider">{t("landlordListingsCreateQuotaLabel")}</div>
               <div className="text-xs font-black text-zinc-900">
                 {quota.freePostsRemainingToday > 0 ? (
-                  <span className="text-[#2ac1bc]">
-                    Còn {quota.freePostsRemainingToday}/{quota.dailyPostQuota} tin miễn phí
-                  </span>
+                  <span className="text-[#2ac1bc]">{t("landlordListingsCreateFreePostsRemaining", { remaining: quota.freePostsRemainingToday, total: quota.dailyPostQuota })}</span>
                 ) : quota.purchasedCreditsAvailable > 0 ? (
-                  <span className="text-[#FF6B35]">
-                    {quota.purchasedCreditsAvailable} lượt trả phí
-                  </span>
+                  <span className="text-[#FF6B35]">{t("landlordListingsCreatePaidCreditsRemaining", { count: quota.purchasedCreditsAvailable })}</span>
                 ) : (
-                  <span className="text-rose-500">Hết lượt hôm nay</span>
+                  <span className="text-rose-500">{t("landlordListingsCreateOutOfQuota")}</span>
                 )}
               </div>
             </div>
@@ -401,22 +397,22 @@ function CreateListingForm() {
             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35] text-white text-xs font-black">
               1
             </span>
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Thông tin cơ bản</h3>
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">{t("landlordListingsCreateBasicInfo")}</h3>
           </div>
 
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-bold text-zinc-700">
-                Tiêu đề tin đăng <span className="text-rose-500">*</span>
+                {t("landlordListingsCreateTitleLabel")} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => handleFieldChange(setTitle, e.target.value)}
-                placeholder="VD: Cho thuê phòng Studio cao cấp, Full nội thất, Ban công thoáng Cầu Giấy..."
+                placeholder={t("landlordListingsCreateTitlePh")}
                 className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
               />
-              <span className="text-xs text-zinc-400">Tối thiểu 5 ký tự</span>
+              <span className="text-xs text-zinc-400">{t("landlordListingsCreateTitleHelp")}</span>
             </div>
 
             <div className="space-y-6">
@@ -426,14 +422,14 @@ function CreateListingForm() {
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 flex items-center gap-1.5">
                     <Building2 className="w-4 h-4 text-[#2AC1BC]" />
-                    Tòa nhà / Nhà trọ
+                    {t("landlordListingsCreateBuildingLabel")}
                   </label>
 
                   {landlordBuildings.length === 0 ? (
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                      Chưa có nhà trọ nào.{" "}
+                      {t("landlordListingsCreateNoBuildings")}{" "}
                       <Link href="/landlord/setup" className="underline font-bold">
-                        Tạo nhà trọ mới
+                        {t("landlordListingsCreateCreateBuilding")}
                       </Link>
                     </div>
                   ) : (
@@ -452,7 +448,7 @@ function CreateListingForm() {
                     </div>
                   )}
                   <span className="text-xs text-zinc-400">
-                    Chọn nhà trọ sở hữu để hiển thị các phòng khả dụng.
+                    {t("landlordListingsCreateBuildingHelp")}
                   </span>
                 </div>
 
@@ -460,11 +456,11 @@ function CreateListingForm() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-bold text-zinc-700">
-                      Phòng liên kết
+                      {t("landlordListingsCreateLinkedRoom")}
                     </label>
                     {isLoadingRooms && (
                       <span className="text-xs text-[#2AC1BC] flex items-center gap-1 font-semibold">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Đang tải phòng...
+                        <Loader2 className="w-3 h-3 animate-spin" /> {t("landlordListingsCreateLoadingRooms")}
                       </span>
                     )}
                   </div>
@@ -476,21 +472,21 @@ function CreateListingForm() {
                       disabled={isLoadingRooms || !selectedBuildingId}
                       className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white cursor-pointer disabled:opacity-50"
                     >
-                      <option value="">-- Đăng tin chung (không gắn phòng) --</option>
+                      <option value="">-- {t("landlordListingsCreateRoomGeneric")} --</option>
                       {rooms.map((room) => {
-                        const typeName = room.roomType?.name || "Tiêu chuẩn";
+                        const typeName = room.roomType?.name || t("landlordListingsCreateRoomStandard");
                         const areaStr = room.area ? ` • ${room.area}m²` : "";
                         const statusMap: Record<string, string> = {
-                          available: "Trống",
-                          deposited: "Đã cọc",
-                          occupied: "Đang thuê",
-                          maintainace: "Bảo trì",
+                          available: t("landlordListingsCreateRoomStatusAvailable"),
+                          deposited: t("landlordListingsCreateRoomStatusDeposited"),
+                          occupied: t("landlordListingsCreateRoomStatusOccupied"),
+                          maintainace: t("landlordListingsCreateRoomStatusMaintenance"),
                         };
                         const statusLabel = statusMap[room.status] || room.status;
 
                         return (
                           <option key={room.id} value={room.id}>
-                            Phòng {room.roomNumber} (Tầng {room.floor}) - {typeName}{areaStr} [{statusLabel}]
+                            {isEn ? `Room ${room.roomNumber} (Fl. ${room.floor}) - ${typeName}${areaStr} [${statusLabel}]` : `Phòng ${room.roomNumber} (Tầng ${room.floor}) - ${typeName}${areaStr} [${statusLabel}]`}
                           </option>
                         );
                       })}
@@ -499,9 +495,9 @@ function CreateListingForm() {
 
                   {rooms.length === 0 && !isLoadingRooms && selectedBuildingId && (
                     <span className="text-xs text-amber-600 block">
-                      Tòa nhà này hiện chưa có phòng nào.{" "}
+                      {t("landlordListingsCreateBuildingNoRooms")}{" "}
                       <Link href="/landlord/rooms" className="underline font-bold">
-                        Thêm phòng ngay
+                        {t("landlordListingsCreateAddRoomNow")}
                       </Link>
                     </span>
                   )}
@@ -509,21 +505,21 @@ function CreateListingForm() {
                   {selectedRoom && (
                     <div className="p-3 bg-white border border-zinc-200 rounded-xl text-xs space-y-1 mt-2 shadow-xs animate-in fade-in duration-200">
                       <div className="flex justify-between font-bold text-zinc-800">
-                        <span>Phòng {selectedRoom.roomNumber}</span>
+                        <span>{t("landlordListingsCreateRoomPrefix")} {selectedRoom.roomNumber}</span>
                         <span className="text-[#2AC1BC] font-extrabold">
-                          {selectedRoom.roomType?.name || "Tiêu chuẩn"}
+                          {selectedRoom.roomType?.name || t("landlordListingsCreateRoomStandard")}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-zinc-500 text-[11px]">
-                        <span>Tầng: {selectedRoom.floor}</span>
-                        {selectedRoom.area && <span>Diện tích: {selectedRoom.area} m²</span>}
-                        {selectedRoom.maxOccupants && <span>Sức chứa: {selectedRoom.maxOccupants} người</span>}
+                        <span>{t("landlordListingsCreateFloorPrefix")}: {selectedRoom.floor}</span>
+                        {selectedRoom.area && <span>{t("landlordListingsCreateAreaPrefix")}: {selectedRoom.area} m²</span>}
+                        {selectedRoom.maxOccupants && <span>{t("landlordListingsCreateCapacityPrefix")}: {selectedRoom.maxOccupants} {t("landlordListingsCreatePeopleUnit")}</span>}
                       </div>
                     </div>
                   )}
 
                   <span className="text-xs text-zinc-400 block">
-                    Liên kết phòng giúp kích hoạt Trợ lý AI (UC-L-12) tự động trích xuất tiện nghi và vị trí.
+                    {t("landlordListingsCreateLinkedRoomHelp")}
                   </span>
                 </div>
               </div>
@@ -531,7 +527,7 @@ function CreateListingForm() {
               {/* Deposit Amount */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-zinc-700">
-                  Số tiền cọc giữ chỗ (VND) <span className="text-rose-500">*</span>
+                  {t("landlordListingsCreateDepositLabel")} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -543,7 +539,7 @@ function CreateListingForm() {
                   className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
                 />
                 <span className="text-xs text-zinc-400">
-                  Số tiền cọc trực tuyến hiển thị cho khách thuê đặt giữ chỗ trên sàn BHRP (UC-PU-04).
+                  {t("landlordListingsCreateDepositHelp")}
                 </span>
               </div>
             </div>
@@ -557,7 +553,7 @@ function CreateListingForm() {
               <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35] text-white text-xs font-black">
                 2
               </span>
-              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Mô tả chi tiết</h3>
+              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">{t("landlordListingsCreateDescriptionSection")}</h3>
             </div>
 
             {/* UC-L-12 AI Suggestion Trigger Button */}
@@ -567,22 +563,22 @@ function CreateListingForm() {
               className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-linear-to-r from-teal-600 to-[#2AC1BC] hover:opacity-95 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Gợi ý tin đăng bằng AI (UC-L-12)</span>
+              <span>{t("landlordListingsCreateAiSuggestBtn")}</span>
             </button>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-zinc-700">
-              Nội dung bài đăng <span className="text-rose-500">*</span>
+              {t("landlordListingsCreateContentLabel")} <span className="text-rose-500">*</span>
             </label>
             <textarea
               rows={9}
               value={content}
               onChange={(e) => handleFieldChange(setContent, e.target.value)}
-              placeholder="Mô tả chi tiết về không gian phòng, nội thất, tiện ích chung, quy định giờ giấc, chi phí điện nước dịch vụ... Bạn có thể bấm nút 'Gợi ý tin đăng bằng AI' phía trên để tạo nội dung tự động."
+              placeholder={t("landlordListingsCreateContentPh")}
               className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors resize-none leading-relaxed"
             ></textarea>
-            <span className="text-xs text-zinc-400">Tối thiểu 10 ký tự</span>
+            <span className="text-xs text-zinc-400">{t("landlordListingsCreateContentHelp")}</span>
           </div>
         </div>
 
@@ -592,7 +588,7 @@ function CreateListingForm() {
             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35] text-white text-xs font-black">
               3
             </span>
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Hình ảnh phòng & không gian</h3>
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">{t("landlordListingsCreateGalleryLabel")}</h3>
           </div>
 
           {/* Add Image by URL */}
@@ -601,7 +597,7 @@ function CreateListingForm() {
               type="url"
               value={newImageUrl}
               onChange={(e) => setNewImageUrl(e.target.value)}
-              placeholder="Nhập URL hình ảnh (VD: https://...)"
+              placeholder={t("landlordListingsCreateAddImagePh")}
               className="flex-1 px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
             />
             <button
@@ -609,7 +605,7 @@ function CreateListingForm() {
               onClick={handleAddImage}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Thêm ảnh
+              <Plus className="w-4 h-4" /> {t("landlordListingsCreateAddImageBtn")}
             </button>
           </div>
 
@@ -631,7 +627,7 @@ function CreateListingForm() {
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
                       className="p-2 bg-rose-600 text-white rounded-full hover:bg-rose-700 transition-colors shadow-md cursor-pointer"
-                      title="Xóa ảnh này"
+                      title={t("landlordListingsCreateDeleteImage")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -642,8 +638,8 @@ function CreateListingForm() {
           ) : (
             <div className="p-8 border-2 border-dashed border-zinc-200 rounded-2xl text-center space-y-2">
               <ImageIcon className="w-8 h-8 text-zinc-300 mx-auto" />
-              <p className="text-xs font-semibold text-zinc-500">Chưa có ảnh nào được thêm</p>
-              <p className="text-[11px] text-zinc-400">Bạn có thể nhập URL ảnh ở trên hoặc dùng gợi ý AI để tự động chèn ảnh phòng.</p>
+              <p className="text-xs font-semibold text-zinc-500">{t("landlordListingsCreateNoImages")}</p>
+              <p className="text-[11px] text-zinc-400">{t("landlordListingsCreateNoImagesHelp")}</p>
             </div>
           )}
         </div>
@@ -656,7 +652,7 @@ function CreateListingForm() {
             disabled={isSubmitting}
             className="px-6 py-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
           >
-            Hủy bỏ
+            {t("landlordListingsCreateCancelBtn")}
           </button>
           <button
             type="button"
@@ -664,7 +660,7 @@ function CreateListingForm() {
             disabled={isSubmitting}
             className="px-6 py-3 text-xs font-bold text-zinc-900 bg-white border border-zinc-300 hover:bg-zinc-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
           >
-            Lưu bản nháp
+            {t("landlordListingsCreateSaveDraftBtn")}
           </button>
           <button
             type="button"
@@ -675,12 +671,12 @@ function CreateListingForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Đang xử lý...</span>
+                <span>{t("landlordListingsCreateSubmitting")}</span>
               </>
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                <span>Đăng tin ngay (BHRP)</span>
+                <span>{t("landlordListingsCreatePublishBtn")}</span>
               </>
             )}
           </button>
@@ -701,12 +697,12 @@ function CreateListingForm() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-                    <span>Trợ lý AI soạn tin đăng (UC-L-12)</span>
+                    <span>{t("landlordListingsCreateAiModalTitle")}</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#2AC1BC]/15 text-[#138e89]">
                       Plus Tier
                     </span>
                   </h3>
-                  <p className="text-xs text-zinc-500">Tự động tạo tiêu đề, mô tả và chính sách cọc dựa trên thông số phòng thực tế</p>
+                  <p className="text-xs text-zinc-500">{t("landlordListingsCreateAiModalSubtitle")}</p>
                 </div>
               </div>
               <button
@@ -724,17 +720,17 @@ function CreateListingForm() {
               <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200 flex items-start justify-between gap-3 text-xs">
                 <div className="space-y-1">
                   <div className="font-bold text-teal-950">
-                    Phòng đang chọn: P.{selectedRoom?.roomNumber || "Chưa chọn"} (Tầng {selectedRoom?.floor || 1})
+                    {t("landlordListingsCreateAiSelectedRoom")}: P.{selectedRoom?.roomNumber || t("landlordListingsCreateAiNotSelected")} ({t("landlordListingsCreateFloorPrefix")} {selectedRoom?.floor || 1})
                   </div>
                   <div className="text-teal-800">
-                    Loại phòng: {selectedRoom?.roomType?.name || "Tiêu chuẩn"} • Diện tích: {selectedRoom?.area || "25"} m²
+                    {t("landlordListingsCreateAiRoomType")}: {selectedRoom?.roomType?.name || t("landlordListingsCreateRoomStandard")} • {t("landlordListingsCreateAreaPrefix")}: {selectedRoom?.area || "25"} m²
                   </div>
                   <div className="text-teal-700 text-[11px]">
-                    Cơ sở: {landlordBuildings.find((b) => b.id === selectedBuildingId)?.name || "Nhà trọ"}
+                    {t("landlordListingsCreateAiProperty")}: {landlordBuildings.find((b) => b.id === selectedBuildingId)?.name || t("landlordListingsCreateAiDefaultProperty")}
                   </div>
                 </div>
                 <span className="px-2 py-1 rounded-lg bg-teal-200/80 text-teal-900 font-extrabold text-[10px]">
-                  Dữ liệu BHMS
+                  {isEn ? "BHMS Data" : "Dữ liệu BHMS"}
                 </span>
               </div>
 
@@ -742,13 +738,13 @@ function CreateListingForm() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-700 block">
-                    Phong cách bài viết (Tone of Voice):
+                    {t("landlordListingsCreateAiToneLabel")}:
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {[
-                      { id: "professional", label: "Chuyên nghiệp", desc: "Trang trọng, đầy đủ, tin cậy", icon: "👔" },
-                      { id: "youthful", label: "Sinh viên / Trẻ", desc: "Thân thiện, tự do, sôi nổi", icon: "🎒" },
-                      { id: "budget", label: "Tiết kiệm / Giá tốt", desc: "Tối ưu chi phí, minh bạch", icon: "💰" },
+                      { id: "professional", label: t("landlordListingsCreateAiToneProfessional"), desc: t("landlordListingsCreateAiToneProfessionalDesc"), icon: "👔" },
+                      { id: "youthful", label: t("landlordListingsCreateAiToneYouthful"), desc: t("landlordListingsCreateAiToneYouthfulDesc"), icon: "🎒" },
+                      { id: "budget", label: t("landlordListingsCreateAiToneBudget"), desc: t("landlordListingsCreateAiToneBudgetDesc"), icon: "💰" },
                     ].map((t) => (
                       <button
                         key={t.id}
@@ -772,13 +768,13 @@ function CreateListingForm() {
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-700 block">
-                    Ghi chú điểm nổi bật riêng (Tùy chọn):
+                    {t("landlordListingsCreateAiNotesLabel")}:
                   </label>
                   <input
                     type="text"
                     value={aiCustomNotes}
                     onChange={(e) => setAiCustomNotes(e.target.value)}
-                    placeholder="VD: Miễn phí tiền wifi tháng đầu, gần trạm xe buýt và trường ĐH Quốc Gia..."
+                    placeholder={t("landlordListingsCreateAiNotesPh")}
                     className="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
@@ -800,12 +796,12 @@ function CreateListingForm() {
                   {isGeneratingAi ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang trích xuất dữ liệu và soạn thảo tin đăng...</span>
+                      <span>{t("landlordListingsCreateAiExtracting")}</span>
                     </>
                   ) : (
                     <>
                       <Wand2 className="w-4 h-4" />
-                      <span>{aiDraftResult ? "Tạo lại bản nháp khác" : "Bắt đầu tạo bản nháp bằng AI"}</span>
+                      <span>{aiDraftResult ? t("landlordListingsCreateAiRegenerateBtn") : t("landlordListingsCreateAiGenerateBtn")}</span>
                     </>
                   )}
                 </button>
@@ -817,16 +813,16 @@ function CreateListingForm() {
                   <div className="flex items-center justify-between border-b border-zinc-200 pb-2.5">
                     <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                      Bản nháp AI đề xuất
+                      {t("landlordListingsCreateAiResultTitle")}
                     </span>
                     <span className="text-[10px] text-zinc-400 font-mono">
-                      Phiên #{aiDraftResult.conversationId.slice(0, 8)}
+                      {t("landlordListingsCreateAiSession")} #{aiDraftResult.conversationId.slice(0, 8)}
                     </span>
                   </div>
 
                   {/* Suggested Title */}
                   <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Tiêu đề:</span>
+                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">{t("landlordListingsCreateAiResultTitleLabel")}:</span>
                     <div className="text-xs font-bold text-zinc-900 p-2.5 bg-white rounded-xl border border-zinc-200">
                       {aiDraftResult.title}
                     </div>
@@ -835,7 +831,7 @@ function CreateListingForm() {
                   {/* Suggested Badges */}
                   {aiDraftResult.highlights.length > 0 && (
                     <div className="space-y-1">
-                      <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Điểm nhấn:</span>
+                      <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">{t("landlordListingsCreateAiResultHighlights")}:</span>
                       <div className="flex flex-wrap gap-1.5">
                         {aiDraftResult.highlights.map((h, i) => (
                           <span key={i} className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white text-zinc-700 border border-zinc-200">
@@ -848,7 +844,7 @@ function CreateListingForm() {
 
                   {/* Suggested Deposit */}
                   <div className="flex items-center justify-between text-xs p-2.5 bg-white rounded-xl border border-zinc-200">
-                    <span className="font-bold text-zinc-600">Tiền cọc giữ chỗ đề xuất:</span>
+                    <span className="font-bold text-zinc-600">{t("landlordListingsCreateAiResultDeposit")}:</span>
                     <span className="font-extrabold text-[#2AC1BC]">
                       {formatCurrency(aiDraftResult.depositAmount)}
                     </span>
@@ -856,7 +852,7 @@ function CreateListingForm() {
 
                   {/* Suggested Content Preview */}
                   <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Nội dung chi tiết:</span>
+                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">{t("landlordListingsCreateAiResultContent")}:</span>
                     <div className="text-xs text-zinc-700 p-3 bg-white rounded-xl border border-zinc-200 max-h-56 overflow-y-auto whitespace-pre-line leading-relaxed font-sans">
                       {aiDraftResult.content}
                     </div>
@@ -872,7 +868,7 @@ function CreateListingForm() {
                 onClick={() => setIsAiModalOpen(false)}
                 className="px-4 py-2.5 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
               >
-                Đóng
+                {t("landlordListingsCreateAiCloseBtn")}
               </button>
               {aiDraftResult && (
                 <button
@@ -881,7 +877,7 @@ function CreateListingForm() {
                   className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Áp dụng vào tin đăng</span>
+                  <span>{t("landlordListingsCreateAiApplyBtn")}</span>
                 </button>
               )}
             </div>
@@ -898,13 +894,13 @@ function CreateListingForm() {
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">Xác nhận đóng form</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn thoát?</p>
+                <h3 className="text-base font-black text-zinc-900">{t("landlordListingsCreateConfirmCloseTitle")}</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">{t("landlordListingsCreateConfirmCloseDesc")}</p>
               </div>
             </div>
 
             <div className="text-xs text-zinc-600 bg-zinc-50 p-4 rounded-2xl leading-relaxed">
-              Mọi thông tin tiêu đề, mô tả và hình ảnh bạn vừa nhập sẽ bị hủy nếu bạn đóng form mà không lưu.
+              {t("landlordListingsCreateConfirmCloseWarning")}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -913,7 +909,7 @@ function CreateListingForm() {
                 onClick={() => setIsConfirmCloseModalOpen(false)}
                 className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordListingsCreateConfirmCloseKeep")}
               </button>
               <button
                 type="button"
@@ -924,7 +920,7 @@ function CreateListingForm() {
                 }}
                 className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordListingsCreateConfirmCloseDiscard")}
               </button>
             </div>
           </div>
@@ -935,12 +931,13 @@ function CreateListingForm() {
 }
 
 export default function CreateListingPage() {
+  const t = useTranslations("landlord");
   return (
     <Suspense
       fallback={
         <div className="py-20 text-center text-zinc-400 space-y-3">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
-          <p className="text-xs font-semibold">Đang tải biểu mẫu tin đăng...</p>
+          <p className="text-xs font-semibold">{t("landlordListingsCreateLoadingPage")}</p>
         </div>
       }
     >

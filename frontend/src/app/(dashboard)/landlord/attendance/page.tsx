@@ -29,6 +29,7 @@ import {
   Check,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
   attendanceService,
   AttendanceRecord,
@@ -61,6 +62,9 @@ function formatDisplayTime(isoString: string | null): string {
 
 export default function AttendancePage() {
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
   const buildingId = activeBuilding?.id || "";
 
   // ─── Rule #9: Parallel View & Default Grid ──────────────────────────────
@@ -200,7 +204,7 @@ export default function AttendancePage() {
       }
     } catch (err) {
       console.error("Failed to fetch attendance:", err);
-      showToast("error", "Không thể tải dữ liệu bảng chấm công.");
+      showToast("error", isEn ? "Could not load attendance logs." : "Không thể tải dữ liệu bảng chấm công.");
     } finally {
       setIsLoading(false);
     }
@@ -300,13 +304,13 @@ export default function AttendancePage() {
         note: overrideNote || undefined,
       });
 
-      showToast("success", "Đã cập nhật chấm công thủ công và ghi nhận nhật ký!");
+      showToast("success", t("landlordAttendanceToastManualSuccess"));
       performCloseOverride();
       fetchAttendance();
     } catch (err: any) {
       showToast(
         "error",
-        err?.response?.data?.message || "Lỗi khi cập nhật chấm công"
+        err?.response?.data?.message || (isEn ? "Error updating attendance" : "Lỗi khi cập nhật chấm công")
       );
     } finally {
       setIsSubmittingOverride(false);
@@ -320,28 +324,28 @@ export default function AttendancePage() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200">
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            <span>Đúng giờ</span>
+            <span>{t("landlordAttendanceStatOnTime")}</span>
           </span>
         );
       case "late":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
             <Clock className="w-3 h-3 text-amber-600" />
-            <span>Đi trễ</span>
+            <span>{t("landlordAttendanceStatLate")}</span>
           </span>
         );
       case "absent":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-rose-700 bg-rose-50 rounded-xl border border-rose-200">
             <XCircle className="w-3 h-3 text-rose-600" />
-            <span>Vắng mặt</span>
+            <span>{isEn ? "Absent" : "Vắng mặt"}</span>
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-zinc-600 bg-zinc-100 rounded-xl border border-zinc-200">
             <HelpCircle className="w-3 h-3 text-zinc-400" />
-            <span>Chưa chấm công</span>
+            <span>{isEn ? "Not checked in" : "Chưa chấm công"}</span>
           </span>
         );
     }
@@ -368,19 +372,19 @@ export default function AttendancePage() {
   // ─── Export simulation ─────────────────────────────────────────────────
   const handleExportData = () => {
     if (records.length === 0) {
-      showToast("error", "Không có dữ liệu để xuất bảng công");
+      showToast("error", isEn ? "No attendance data to export" : "Không có dữ liệu để xuất bảng công");
       return;
     }
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [
-        "Ngày,Nhân viên,SĐT,Vị trí,Ca làm việc,Khung giờ,Check-in,Check-out,Trạng thái,Người điều chỉnh",
+        isEn ? "Date,Employee,Phone,Position,Shift,Timeframe,Check-in,Check-out,Status,Adjusted By" : "Ngày,Nhân viên,SĐT,Vị trí,Ca làm việc,Khung giờ,Check-in,Check-out,Trạng thái,Người điều chỉnh",
         ...records.map(
           (r) =>
             `"${formatDisplayDate(r.workDate)}","${r.employeeName}","${
               r.employeePhone
-            }","${r.positionName || "Nhân viên"}","${r.shiftName}","${
+            }","${r.positionName || (isEn ? "Staff" : "Nhân viên")}","${r.shiftName}","${
               r.shiftStartTime
             }-${r.shiftEndTime}","${formatDisplayTime(
               r.checkIn
@@ -406,7 +410,7 @@ export default function AttendancePage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast("success", "Đã xuất bảng chấm công thành công!");
+    showToast("success", t("landlordAttendanceExportSuccess"));
   };
 
   return (
@@ -434,14 +438,13 @@ export default function AttendancePage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
             <Clock className="w-4 h-4" />
-            <span>UC-L-22 · Quản lý nhân sự</span>
+            <span>{isEn ? "UC-L-22 · Staff Management" : "UC-L-22 · Quản lý nhân sự"}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            Bảng chấm công nhân viên
+            {t("landlordAttendanceTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            Theo dõi giờ làm việc, kiểm tra nhật ký check-in/out và điều chỉnh công
-            tại <strong className="text-zinc-800">{activeBuilding?.name || "Tòa nhà"}</strong>
+            {t("landlordAttendanceSubtitleFull")}: <strong className="text-zinc-800">{activeBuilding?.name || (isEn ? "property" : "Tòa nhà")}</strong>
           </p>
         </div>
 
@@ -451,7 +454,7 @@ export default function AttendancePage() {
             className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer"
           >
             <Download className="w-4 h-4 text-zinc-500" />
-            <span>Xuất bảng công (CSV)</span>
+            <span>{t("landlordAttendanceBtnExport")} (CSV)</span>
           </button>
         </div>
       </div>
@@ -460,67 +463,67 @@ export default function AttendancePage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="text-[11px] font-bold uppercase text-zinc-400 mb-1">
-            Tổng số ca
+            {t("landlordAttendanceStatTotal")}
           </div>
           <div className="text-xl sm:text-2xl font-black text-zinc-900">
             {summary.totalShifts}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Trong kỳ lọc</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "Within filter" : "Trong kỳ lọc"}</p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="text-[11px] font-bold uppercase text-emerald-600 mb-1 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            <span>Đúng giờ</span>
+            <span>{t("landlordAttendanceStatOnTime")}</span>
           </div>
           <div className="text-xl sm:text-2xl font-black text-emerald-600">
             {summary.onTimeCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Check-in chuẩn</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "On-time check-in" : "Check-in chuẩn"}</p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="text-[11px] font-bold uppercase text-amber-600 mb-1 flex items-center gap-1">
             <Clock className="w-3 h-3" />
-            <span>Đi trễ</span>
+            <span>{t("landlordAttendanceStatLate")}</span>
           </div>
           <div className="text-xl sm:text-2xl font-black text-amber-600">
             {summary.lateCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Quá giờ quy định</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "Over scheduled time" : "Quá giờ quy định"}</p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="text-[11px] font-bold uppercase text-rose-600 mb-1 flex items-center gap-1">
             <XCircle className="w-3 h-3" />
-            <span>Vắng mặt</span>
+            <span>{isEn ? "Absent" : "Vắng mặt"}</span>
           </div>
           <div className="text-xl sm:text-2xl font-black text-rose-600">
             {summary.absentCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Không check-in</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "No check-in" : "Không check-in"}</p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="text-[11px] font-bold uppercase text-zinc-400 mb-1 flex items-center gap-1">
             <HelpCircle className="w-3 h-3" />
-            <span>Chưa tới giờ</span>
+            <span>{isEn ? "Upcoming" : "Chưa tới giờ"}</span>
           </div>
           <div className="text-xl sm:text-2xl font-black text-zinc-700">
             {summary.notYetCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Ca sắp tới</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "Upcoming shift" : "Ca sắp tới"}</p>
         </div>
 
         <div className="p-4 bg-white border border-[#2AC1BC]/30 rounded-2xl shadow-sm bg-[#2AC1BC]/[0.02]">
           <div className="text-[11px] font-bold uppercase text-[#2AC1BC] mb-1 flex items-center gap-1">
             <Percent className="w-3 h-3" />
-            <span>Chuyên cần</span>
+            <span>{isEn ? "Diligence" : "Chuyên cần"}</span>
           </div>
           <div className="text-xl sm:text-2xl font-black text-[#2AC1BC]">
             {summary.attendanceRate}%
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">Đúng giờ / Đã điểm danh</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">{isEn ? "On-time / Checked in" : "Đúng giờ / Đã điểm danh"}</p>
         </div>
       </div>
 
@@ -538,7 +541,7 @@ export default function AttendancePage() {
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
-                Hôm nay
+                {isEn ? "Today" : "Hôm nay"}
               </button>
               <button
                 onClick={() => handleDatePresetChange("week")}
@@ -548,7 +551,7 @@ export default function AttendancePage() {
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
-                Tuần này
+                {isEn ? "This Week" : "Tuần này"}
               </button>
               <button
                 onClick={() => handleDatePresetChange("month")}
@@ -558,7 +561,7 @@ export default function AttendancePage() {
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
-                Tháng này
+                {isEn ? "This Month" : "Tháng này"}
               </button>
               <button
                 onClick={() => setDatePreset("custom")}
@@ -568,7 +571,7 @@ export default function AttendancePage() {
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
-                Tùy chọn
+                {isEn ? "Custom" : "Tùy chọn"}
               </button>
             </div>
 
@@ -609,7 +612,7 @@ export default function AttendancePage() {
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Lưới</span>
+              <span>{isEn ? "Grid" : "Lưới"}</span>
             </button>
             <button
               onClick={() => handleViewModeChange("table")}
@@ -620,7 +623,7 @@ export default function AttendancePage() {
               }`}
             >
               <List className="w-3.5 h-3.5" />
-              <span>Bảng</span>
+              <span>{isEn ? "Table" : "Bảng"}</span>
             </button>
           </div>
         </div>
@@ -631,7 +634,7 @@ export default function AttendancePage() {
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm theo tên, SĐT nhân viên..."
+              placeholder={t("landlordAttendanceFilterSearchPh")}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -649,10 +652,10 @@ export default function AttendancePage() {
             }}
             className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
           >
-            <option value="">Tất cả nhân viên ({staffList.length})</option>
+            <option value="">{t("landlordAttendanceFilterStaffPh")} ({staffList.length})</option>
             {staffList.map((s) => (
               <option key={s.employeeId} value={s.employeeId}>
-                {s.fullName} ({s.positionName || "Nhân viên"})
+                {s.fullName} ({s.positionName || (isEn ? "Staff" : "Nhân viên")})
               </option>
             ))}
           </select>
@@ -665,7 +668,7 @@ export default function AttendancePage() {
             }}
             className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
           >
-            <option value="">Tất cả ca làm việc ({shifts.length})</option>
+            <option value="">{t("landlordAttendanceFilterShiftPh")} ({shifts.length})</option>
             {shifts.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name} ({s.startTime} - {s.endTime})
@@ -681,11 +684,11 @@ export default function AttendancePage() {
             }}
             className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
           >
-            <option value="all">Tất cả trạng thái chấm công</option>
-            <option value="on_time">Đúng giờ (on_time)</option>
-            <option value="late">Đi trễ (late)</option>
-            <option value="absent">Vắng mặt (absent)</option>
-            <option value="not_yet">Chưa chấm công (not_yet)</option>
+            <option value="all">{t("landlordAttendanceFilterStatusPh")}</option>
+            <option value="on_time">{t("landlordAttendanceStatusOnTime")}</option>
+            <option value="late">{t("landlordAttendanceStatusLate")}</option>
+            <option value="absent">{isEn ? "Absent" : "Vắng mặt"}</option>
+            <option value="not_yet">{isEn ? "Not checked in" : "Chưa chấm công"}</option>
           </select>
         </div>
       </div>
@@ -695,7 +698,7 @@ export default function AttendancePage() {
         <div className="bg-white border border-zinc-200 rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[350px]">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
           <p className="text-xs font-bold text-zinc-500">
-            Đang tải dữ liệu chấm công...
+            {isEn ? "Loading attendance logs..." : "Đang tải dữ liệu chấm công..."}
           </p>
         </div>
       ) : records.length === 0 ? (
@@ -705,18 +708,16 @@ export default function AttendancePage() {
             <Clock className="w-8 h-8" />
           </div>
           <h3 className="text-base font-extrabold text-zinc-900 mb-1">
-            Không có dữ liệu chấm công trong khoảng thời gian này
+            {t("landlordAttendanceEmptyTitle")}
           </h3>
           <p className="max-w-md mx-auto mb-4 text-xs text-zinc-500 leading-relaxed">
-            Chưa có ca làm việc nào được xếp hoặc chưa có ghi nhận chấm công nào
-            phù hợp với bộ lọc ngày {formatDisplayDate(startDate)} đến{" "}
-            {formatDisplayDate(endDate)}.
+            {t("landlordAttendanceEmptyDesc")}
           </p>
           <button
             onClick={() => handleDatePresetChange("month")}
             className="px-4 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 rounded-xl hover:bg-[#2AC1BC]/20 transition-colors cursor-pointer"
           >
-            Xem toàn bộ tháng này
+            {isEn ? "View Entire Month" : "Xem toàn bộ tháng này"}
           </button>
         </div>
       ) : viewMode === "grid" ? (
@@ -758,7 +759,7 @@ export default function AttendancePage() {
                         {item.employeeName}
                       </div>
                       <div className="text-[11px] text-zinc-400 truncate">
-                        {item.positionName || "Nhân viên"} · {item.employeePhone}
+                        {item.positionName || (isEn ? "Staff" : "Nhân viên")} · {item.employeePhone}
                       </div>
                     </div>
                   </div>
@@ -798,7 +799,7 @@ export default function AttendancePage() {
                   {/* Edited by note if manual override */}
                   {item.editedByName && (
                     <div className="text-[10px] text-zinc-400 italic mb-2">
-                      Đã điều chỉnh bởi: {item.editedByName}
+                      {isEn ? `Adjusted by: ${item.editedByName}` : `Đã điều chỉnh bởi: ${item.editedByName}`}
                     </div>
                   )}
                 </div>
@@ -809,7 +810,7 @@ export default function AttendancePage() {
                   className="w-full mt-2 py-2 px-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
-                  <span>Điều chỉnh chấm công</span>
+                  <span>{t("landlordAttendanceBtnEdit")}</span>
                 </button>
               </div>
             ))}
@@ -818,7 +819,7 @@ export default function AttendancePage() {
           {/* Rule #9: Standardized Pagination Bar */}
           <div className="mt-4 p-4 bg-white border border-zinc-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
-              <span>Hiển thị</span>
+              <span>{isEn ? "Showing" : "Hiển thị"}</span>
               <input
                 type="number"
                 min={1}
@@ -834,8 +835,8 @@ export default function AttendancePage() {
               <span className="text-zinc-300">|</span>
               <span>
                 {(currentPage - 1) * pageSize + 1}-
-                {Math.min(currentPage * pageSize, totalItems)} trên {totalItems}{" "}
-                mục
+                {Math.min(currentPage * pageSize, totalItems)} {isEn ? "of" : "trên"} {totalItems}{" "}
+                {isEn ? "items" : "mục"}
               </span>
             </div>
 
@@ -844,7 +845,7 @@ export default function AttendancePage() {
                 disabled={windowStart <= 1}
                 onClick={() => handlePageJump(-5)}
                 className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                title="Lùi 5 trang"
+                title={isEn ? "Back 5 pages" : "Lùi 5 trang"}
               >
                 «
               </button>
@@ -881,7 +882,7 @@ export default function AttendancePage() {
                 disabled={windowStart + 5 > totalPages}
                 onClick={() => handlePageJump(5)}
                 className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                title="Tiến 5 trang"
+                title={isEn ? "Forward 5 pages" : "Tiến 5 trang"}
               >
                 »
               </button>
@@ -897,16 +898,16 @@ export default function AttendancePage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-zinc-100 bg-zinc-50/70 text-zinc-400 font-extrabold uppercase text-[10px] tracking-wider">
-                  <th className="py-3.5 px-4">Ngày</th>
-                  <th className="py-3.5 px-4">Nhân viên</th>
-                  <th className="py-3.5 px-4">Vị trí</th>
-                  <th className="py-3.5 px-4">Ca trực</th>
-                  <th className="py-3.5 px-4">Khung giờ quy định</th>
+                  <th className="py-3.5 px-4">{t("landlordAttendanceColDate")}</th>
+                  <th className="py-3.5 px-4">{t("landlordAttendanceColStaff")}</th>
+                  <th className="py-3.5 px-4">{isEn ? "Position" : "Vị trí"}</th>
+                  <th className="py-3.5 px-4">{t("landlordAttendanceColShift")}</th>
+                  <th className="py-3.5 px-4">{isEn ? "Scheduled Time" : "Khung giờ quy định"}</th>
                   <th className="py-3.5 px-4">Check-in</th>
                   <th className="py-3.5 px-4">Check-out</th>
-                  <th className="py-3.5 px-4">Trạng thái</th>
-                  <th className="py-3.5 px-4">Người điều chỉnh</th>
-                  <th className="py-3.5 px-4 text-right">Thao tác</th>
+                  <th className="py-3.5 px-4">{t("landlordAttendanceColStatus")}</th>
+                  <th className="py-3.5 px-4">{isEn ? "Adjusted By" : "Người điều chỉnh"}</th>
+                  <th className="py-3.5 px-4 text-right">{t("landlordAttendanceColActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-medium text-zinc-700">
@@ -927,7 +928,7 @@ export default function AttendancePage() {
                       </div>
                     </td>
                     <td className="py-3 px-4 text-zinc-500 font-semibold">
-                      {item.positionName || "Nhân viên"}
+                      {item.positionName || (isEn ? "Staff" : "Nhân viên")}
                     </td>
                     <td className="py-3 px-4 font-bold text-zinc-800">
                       {item.shiftName}
@@ -951,7 +952,7 @@ export default function AttendancePage() {
                       <button
                         onClick={() => handleOpenOverride(item)}
                         className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                        title="Điều chỉnh chấm công thủ công"
+                        title={t("landlordAttendanceBtnEdit")}
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
@@ -965,7 +966,7 @@ export default function AttendancePage() {
           {/* Rule #9: Standardized Pagination Bar */}
           <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
-              <span>Hiển thị</span>
+              <span>{isEn ? "Showing" : "Hiển thị"}</span>
               <input
                 type="number"
                 min={1}
@@ -981,8 +982,8 @@ export default function AttendancePage() {
               <span className="text-zinc-300">|</span>
               <span>
                 {(currentPage - 1) * pageSize + 1}-
-                {Math.min(currentPage * pageSize, totalItems)} trên {totalItems}{" "}
-                mục
+                {Math.min(currentPage * pageSize, totalItems)} {isEn ? "of" : "trên"} {totalItems}{" "}
+                {isEn ? "items" : "mục"}
               </span>
             </div>
 
@@ -991,7 +992,7 @@ export default function AttendancePage() {
                 disabled={windowStart <= 1}
                 onClick={() => handlePageJump(-5)}
                 className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                title="Lùi 5 trang"
+                title={isEn ? "Back 5 pages" : "Lùi 5 trang"}
               >
                 «
               </button>
@@ -1028,7 +1029,7 @@ export default function AttendancePage() {
                 disabled={windowStart + 5 > totalPages}
                 onClick={() => handlePageJump(5)}
                 className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                title="Tiến 5 trang"
+                title={isEn ? "Forward 5 pages" : "Tiến 5 trang"}
               >
                 »
               </button>
@@ -1060,10 +1061,10 @@ export default function AttendancePage() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-zinc-900">
-                    Điều chỉnh chấm công thủ công
+                    {t("landlordAttendanceModalManualTitle")}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    UC-L-22: Ghi đè trạng thái và lưu nhật ký kiểm toán (AuditLog)
+                    {isEn ? "UC-L-22: Override status and append to AuditLog transaction" : "UC-L-22: Ghi đè trạng thái và lưu nhật ký kiểm toán (AuditLog)"}
                   </p>
                 </div>
               </div>
@@ -1095,14 +1096,14 @@ export default function AttendancePage() {
                     {selectedRecord.shiftName} ({selectedRecord.shiftStartTime} -{" "}
                     {selectedRecord.shiftEndTime})
                   </span>
-                  <span>{selectedRecord.positionName || "Nhân viên"}</span>
+                  <span>{selectedRecord.positionName || (isEn ? "Staff" : "Nhân viên")}</span>
                 </div>
               </div>
 
               {/* Attendance Status Selector */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                  <span>Trạng thái chấm công</span>
+                  <span>{isEn ? "Attendance Status" : "Trạng thái chấm công"}</span>
                   <span className="text-rose-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1124,7 +1125,7 @@ export default function AttendancePage() {
                       }}
                       className="text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span>Đúng giờ (on_time)</span>
+                    <span>{t("landlordAttendanceStatusOnTime")}</span>
                   </label>
 
                   <label
@@ -1145,7 +1146,7 @@ export default function AttendancePage() {
                       }}
                       className="text-amber-600 focus:ring-amber-500"
                     />
-                    <span>Đi trễ (late)</span>
+                    <span>{t("landlordAttendanceStatusLate")}</span>
                   </label>
 
                   <label
@@ -1166,7 +1167,7 @@ export default function AttendancePage() {
                       }}
                       className="text-rose-600 focus:ring-rose-500"
                     />
-                    <span>Vắng mặt (absent)</span>
+                    <span>{isEn ? "Absent" : "Vắng mặt"}</span>
                   </label>
 
                   <label
@@ -1187,7 +1188,7 @@ export default function AttendancePage() {
                       }}
                       className="text-zinc-600 focus:ring-zinc-500"
                     />
-                    <span>Chưa chấm công</span>
+                    <span>{isEn ? "Not checked in" : "Chưa chấm công"}</span>
                   </label>
                 </div>
               </div>
@@ -1196,7 +1197,7 @@ export default function AttendancePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-700">
-                    Giờ check-in thực tế
+                    {t("landlordAttendanceModalInTime")}
                   </label>
                   <input
                     type="time"
@@ -1211,7 +1212,7 @@ export default function AttendancePage() {
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-700">
-                    Giờ check-out thực tế
+                    {t("landlordAttendanceModalOutTime")}
                   </label>
                   <input
                     type="time"
@@ -1228,7 +1229,7 @@ export default function AttendancePage() {
               {/* Adjustment Reason */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700">
-                  Lý do điều chỉnh (ghi vào AuditLog)
+                  {t("landlordAttendanceModalReasonLabel")}
                 </label>
                 <textarea
                   rows={2}
@@ -1237,7 +1238,7 @@ export default function AttendancePage() {
                     setOverrideNote(e.target.value);
                     setIsDirty(true);
                   }}
-                  placeholder="Ví dụ: Nhân viên báo lỗi GPS thiết bị, chủ nhà xác nhận có mặt qua camera an ninh..."
+                  placeholder={isEn ? "e.g. Employee reported device GPS error, landlord confirmed attendance via security camera..." : "Ví dụ: Nhân viên báo lỗi GPS thiết bị, chủ nhà xác nhận có mặt qua camera an ninh..."}
                   className="w-full px-3 py-2 text-xs font-medium border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
                 />
               </div>
@@ -1246,9 +1247,11 @@ export default function AttendancePage() {
               <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <span className="leading-relaxed text-[11px]">
-                  Hệ thống tuân thủ <strong>Rule #4</strong>: Mọi điều chỉnh chấm
-                  công thủ công của chủ nhà sẽ được lưu vào giao dịch kiểm toán
-                  (AuditLog) cùng ID tài khoản và dấu thời gian thực.
+                  {isEn ? (
+                    <>The system strictly complies with <strong>Rule #4</strong>: Every manual attendance adjustment by the landlord is logged into an AuditLog transaction along with user ID and exact timestamp.</>
+                  ) : (
+                    <>Hệ thống tuân thủ <strong>Rule #4</strong>: Mỗi điều chỉnh chấm công thủ công của chủ nhà sẽ được lưu vào giao dịch kiểm toán (AuditLog) cùng ID tài khoản và dấu thời gian thực.</>
+                  )}
                 </span>
               </div>
 
@@ -1259,7 +1262,7 @@ export default function AttendancePage() {
                   onClick={handleAttemptCloseOverride}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  {t("landlordShiftsModalBtnCancel")}
                 </button>
                 <button
                   type="submit"
@@ -1269,10 +1272,10 @@ export default function AttendancePage() {
                   {isSubmittingOverride ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang lưu...</span>
+                      <span>{isEn ? "Saving..." : "Đang lưu..."}</span>
                     </>
                   ) : (
-                    <span>Xác nhận điều chỉnh</span>
+                    <span>{t("landlordAttendanceModalBtnSubmit")}</span>
                   )}
                 </button>
               </div>
@@ -1298,11 +1301,12 @@ export default function AttendancePage() {
 
             <div className="space-y-1">
               <h4 className="text-base font-black text-zinc-900">
-                Xác nhận đóng form
+                {t("landlordShiftsConfirmCloseTitle")}
               </h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Bạn có thông tin điều chỉnh chấm công chưa lưu. Nếu đóng bây giờ,
-                toàn bộ các thay đổi sẽ bị hủy bỏ.
+                {isEn
+                  ? "You have unsaved attendance adjustment details. If you close now, all changes will be discarded."
+                  : "Bạn có thông tin điều chỉnh chấm công chưa lưu. Nếu đóng bây giờ, toàn bộ các thay đổi sẽ bị hủy bỏ."}
               </p>
             </div>
 
@@ -1312,7 +1316,7 @@ export default function AttendancePage() {
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordShiftsConfirmCloseKeep")}
               </button>
               <button
                 type="button"
@@ -1322,7 +1326,7 @@ export default function AttendancePage() {
                 }}
                 className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordShiftsConfirmCloseDiscard")}
               </button>
             </div>
           </div>

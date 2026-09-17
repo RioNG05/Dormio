@@ -23,3 +23,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Local developer personal docs
+RUN_GUIDE.md

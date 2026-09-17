@@ -123,7 +123,7 @@ export function PublicHeader() {
                   <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white p-3 shadow-2xl border border-zinc-200/80 z-50 flex flex-col gap-2 text-xs">
                     {/* User Info Header */}
                     <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex flex-col">
-                      <span className="font-bold text-zinc-900 text-sm">{user?.name || "Nguyễn Văn A"}</span>
+                      <span className="font-bold text-zinc-900 text-sm">{user?.name || "Tài khoản"}</span>
                       <span className="text-zinc-500 text-[11px]">{user?.email || "user@example.com"}</span>
                       <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-[#2AC1BC] uppercase">
                         ● Khách thuê trọ

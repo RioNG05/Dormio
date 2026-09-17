@@ -25,6 +25,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { getRooms, RoomItem } from "@/services/room.service";
 import {
   getPendingPlatformDeposit,
@@ -53,6 +54,9 @@ function CreateContractPage() {
   const searchParams = useSearchParams();
   const initialRoomId = searchParams.get("roomId") || "";
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
 
   // Wizard Step
   const [step, setStep] = useState(1);
@@ -222,13 +226,13 @@ function CreateContractPage() {
   // Form Submission
   const handleSubmitContract = async () => {
     if (!selectedRoomId) {
-      setErrorMessage("Vui lòng chọn phòng cần lập hợp đồng.");
+      setErrorMessage(t("landlordContractsCreateErrSelectRoom"));
       setStep(1);
       return;
     }
 
     if (!activeBuilding?.id) {
-      setErrorMessage("Chưa xác định được cơ sở nhà trọ đang hoạt động.");
+      setErrorMessage(t("landlordContractsCreateErrNoBuilding"));
       return;
     }
 
@@ -254,7 +258,7 @@ function CreateContractPage() {
           } else {
             // Flow B submission
             if (!tenantPhone || !tenantFullName) {
-              setErrorMessage("Vui lòng điền số điện thoại và tên khách thuê.");
+              setErrorMessage(t("landlordContractsCreateErrTenantInfo"));
               setStep(1);
               return;
             }
@@ -293,7 +297,7 @@ function CreateContractPage() {
         console.error("Submit contract failed:", err);
         setErrorMessage(
           err?.message ||
-            "Có lỗi xảy ra khi tạo hợp đồng. Vui lòng kiểm tra lại thông tin.",
+            t("landlordContractsCreateErrGeneric"),
         );
       }
     });
@@ -308,15 +312,15 @@ function CreateContractPage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
             <Building2 className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>{activeBuilding?.name || "Khu trọ"}</span>
+            <span>{activeBuilding?.name || (isEn ? "Property" : "Khu trọ")}</span>
             <span>&bull;</span>
             <span>UC-L-04</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
-            Lập hợp đồng thuê mới
+            {t("landlordContractsCreateTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-            Hỗ trợ hợp đồng trực tiếp (Flow B) và chuyển đổi đặt cọc nền tảng (Flow A)
+            {t("landlordContractsCreateSubtitle")}
           </p>
         </div>
 
@@ -325,7 +329,7 @@ function CreateContractPage() {
           onClick={handleAttemptClose}
           className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
         >
-          Hủy bỏ
+          {t("landlordContractsCreateCancelBtn")}
         </button>
       </div>
 
@@ -343,7 +347,7 @@ function CreateContractPage() {
           }`}
         >
           {step > 1 ? <Check className="w-3.5 h-3.5" /> : <Home className="w-3.5 h-3.5" />}
-          1. Phòng & Khách thuê
+          {t("landlordContractsCreateStep1Btn")}
         </button>
 
         <ChevronRight className="w-4 h-4 text-zinc-300 shrink-0" />
@@ -360,7 +364,7 @@ function CreateContractPage() {
           }`}
         >
           {step > 2 ? <Check className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
-          2. Điều khoản & Tài chính
+          {t("landlordContractsCreateStep3Btn")}
         </button>
 
         <ChevronRight className="w-4 h-4 text-zinc-300 shrink-0" />
@@ -375,7 +379,7 @@ function CreateContractPage() {
           }`}
         >
           <FileSignature className="w-3.5 h-3.5" />
-          3. Xác nhận & Ký kết
+          {t("landlordContractsCreateStep3Header")}
         </button>
       </div>
 
@@ -401,11 +405,11 @@ function CreateContractPage() {
           <div className="space-y-3 border-b border-zinc-100 pb-6">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-                <Home className="w-4 h-4 text-[#2AC1BC]" /> Chọn phòng thuê
+                <Home className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractsCreateRoomSelectLabel")}
               </h2>
               {isCheckingDeposit && (
                 <span className="flex items-center gap-1.5 text-xs text-[#2AC1BC] font-bold">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang kiểm tra tiền cọc...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t("landlordContractsCreateTenantSearching")}
                 </span>
               )}
             </div>
@@ -413,7 +417,7 @@ function CreateContractPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  Phòng trống / Đã đặt cọc <span className="text-rose-500">*</span>
+                  {t("landlordContractsCreateRoomSelectLabel")} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={selectedRoomId}
@@ -423,10 +427,10 @@ function CreateContractPage() {
                   }}
                   className="w-full px-4 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] transition-all cursor-pointer"
                 >
-                  <option value="">-- Chọn phòng trong nhà trọ --</option>
+                  <option value="">{t("landlordContractsCreateRoomPlaceholder")}</option>
                   {rooms.map((r) => (
                     <option key={r.id} value={r.id}>
-                      Phòng {r.roomNumber} (Tầng {r.floor} - {r.roomType?.name || "Tiêu chuẩn"} - Trạng thái: {r.status})
+                      {t("landlordContractDetailRoomPrefix")} {r.roomNumber} ({t("landlordRoomDetailFloor")} {r.floor} - {r.roomType?.name || "Standard"} - {r.status})
                     </option>
                   ))}
                 </select>
@@ -435,12 +439,12 @@ function CreateContractPage() {
               {selectedRoomObj && (
                 <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center justify-between text-xs font-bold">
                   <div>
-                    <span className="text-zinc-500 block text-[11px]">Thông tin phòng:</span>
+                    <span className="text-zinc-500 block text-[11px]">{t("landlordContractDetailRoomPrefix")}:</span>
                     <span className="text-zinc-900 font-extrabold text-sm">
-                      Phòng {selectedRoomObj.roomNumber}
+                      {t("landlordContractDetailRoomPrefix")} {selectedRoomObj.roomNumber}
                     </span>
                     <span className="text-zinc-500 ml-1 text-xs">
-                      (Tầng {selectedRoomObj.floor}, {selectedRoomObj.area || 20}m²)
+                      ({t("landlordRoomDetailFloor")} {selectedRoomObj.floor}, {selectedRoomObj.area || 20}m²)
                     </span>
                   </div>
                   <span
@@ -461,17 +465,17 @@ function CreateContractPage() {
               <div className="p-4 bg-purple-50 border border-purple-200 rounded-2xl space-y-2 mt-4 animate-in zoom-in-95">
                 <div className="flex items-center gap-2 text-purple-700 font-black text-xs uppercase tracking-wider">
                   <Sparkles className="w-4 h-4 text-purple-600" />
-                  <span>Phát hiện khoản đặt cọc nền tảng Dormio (Flow A)</span>
+                  <span>{t("landlordContractsCreateFlowPlatformBadge")}</span>
                 </div>
                 <p className="text-xs text-purple-900 font-medium leading-relaxed">
-                  Phòng này đã được khách thuê đặt cọc <strong>{pendingDeposit.amount.toLocaleString("vi-VN")} ₫</strong> qua bài đăng tìm phòng. Hợp đồng sẽ được khởi tạo ở trạng thái <strong>Bản nháp (Draft)</strong> để khách thuê xác nhận điện tử (UC-AUTH-04).
+                  {t("landlordContractsCreateFlowPlatformDesc")}
                 </p>
                 <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-purple-800">
-                  <span>Khách đặt cọc: <strong>{pendingDeposit.tenant?.fullName || "Khách nền tảng"}</strong></span>
+                  <span>{t("landlordContractsCreateTenantNameLabel")}: <strong>{pendingDeposit.tenant?.fullName || (isEn ? "Platform Guest" : "Khách nền tảng")}</strong></span>
                   <span>&bull;</span>
-                  <span>SĐT: <strong>{pendingDeposit.tenant?.phoneNumber}</strong></span>
+                  <span>{t("landlordContractDetailMemberPhoneLabel")} <strong>{pendingDeposit.tenant?.phoneNumber}</strong></span>
                   <span>&bull;</span>
-                  <span>Số tiền cọc: <strong>{pendingDeposit.amount.toLocaleString("vi-VN")} ₫</strong> (Cố định)</span>
+                  <span>{t("landlordContractDetailDeposit")} <strong>{pendingDeposit.amount.toLocaleString("vi-VN")} ₫</strong> (Fixed)</span>
                 </div>
               </div>
             )}
@@ -481,11 +485,11 @@ function CreateContractPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-                <User className="w-4 h-4 text-[#2AC1BC]" /> Thông tin khách thuê chính
+                <User className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractsCreateStep1Header")}
               </h2>
               {flowType === "direct" && (
                 <span className="text-[11px] text-zinc-500 font-bold">
-                  Hợp đồng trực tiếp (Flow B) &bull; Kích hoạt ngay
+                  {t("landlordContractsCreateFlowDirectBadge")}
                 </span>
               )}
             </div>
@@ -494,12 +498,12 @@ function CreateContractPage() {
               {/* Phone Input with search lookup */}
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  Số điện thoại <span className="text-rose-500">*</span>
+                  {t("landlordContractsCreateTenantPhoneLabel")}
                 </label>
                 <div className="relative">
                   <input
                     type="tel"
-                    placeholder="VD: 0901234567"
+                    placeholder={t("landlordContractsCreateTenantPhonePlaceholder")}
                     disabled={flowType === "platform"}
                     value={tenantPhone}
                     onChange={(e) => {
@@ -527,12 +531,12 @@ function CreateContractPage() {
                 </div>
                 {tenantFound === true && (
                   <p className="text-[11px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Đã tìm thấy tài khoản trong hệ thống
+                    <ShieldCheck className="w-3.5 h-3.5" /> {t("landlordContractsCreateTenantFound")}
                   </p>
                 )}
                 {tenantFound === false && flowType === "direct" && (
                   <p className="text-[11px] text-amber-600 font-bold mt-1 flex items-center gap-1">
-                    <Info className="w-3.5 h-3.5" /> Khách mới &bull; Hệ thống sẽ tự động tạo tài khoản và gửi mã xác thực
+                    <Info className="w-3.5 h-3.5" /> {t("landlordContractsCreateTenantNotFound")}
                   </p>
                 )}
               </div>
@@ -540,11 +544,11 @@ function CreateContractPage() {
               {/* Full Name */}
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  Họ và tên khách thuê <span className="text-rose-500">*</span>
+                  {t("landlordContractsCreateTenantNameLabel")}
                 </label>
                 <input
                   type="text"
-                  placeholder="VD: Nguyễn Văn A"
+                  placeholder={t("landlordContractsCreateTenantNamePlaceholder")}
                   disabled={flowType === "platform"}
                   value={tenantFullName}
                   onChange={(e) => {
@@ -558,7 +562,7 @@ function CreateContractPage() {
               {/* Email */}
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  Email liên hệ (tùy chọn)
+                  {t("landlordContractsCreateTenantEmailLabel")}
                 </label>
                 <input
                   type="email"
@@ -589,10 +593,8 @@ function CreateContractPage() {
                   <span className="flex items-center gap-2">
                     <IdCard className="w-4 h-4" />
                     {hasIdentification
-                      ? "Đã có CCCD đã xác minh"
-                      : showIdForm
-                      ? "Thu gọn thông tin CCCD"
-                      : "+ Nhập thông tin CCCD / Định danh"}
+                      ? t("landlordContractsCreateCccdToggle")
+                      : t("landlordContractsCreateCccdToggle")}
                   </span>
                   <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showIdForm ? "rotate-90" : ""}`} />
                 </button>
@@ -603,12 +605,12 @@ function CreateContractPage() {
             {showIdForm && (
               <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-4 animate-in fade-in">
                 <h3 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-2">
-                  <IdCard className="w-4 h-4 text-[#2AC1BC]" /> Thông tin căn cước công dân (CCCD)
+                  <IdCard className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractsCreateStep2Header")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-zinc-600 mb-1">
-                      Số CCCD / CMND
+                      {t("landlordContractsCreateCccdNumberLabel")}
                     </label>
                     <input
                       type="text"
@@ -624,11 +626,11 @@ function CreateContractPage() {
 
                   <div>
                     <label className="block text-[11px] font-bold text-zinc-600 mb-1">
-                      Họ tên trên thẻ
+                      {t("landlordContractsCreateCccdNameLabel")}
                     </label>
                     <input
                       type="text"
-                      placeholder={tenantFullName || "Họ và tên"}
+                      placeholder={tenantFullName || t("landlordContractsCreateTenantNamePlaceholder")}
                       value={idFullName}
                       onChange={(e) => {
                         setIdFullName(e.target.value);
@@ -640,7 +642,7 @@ function CreateContractPage() {
 
                   <div>
                     <label className="block text-[11px] font-bold text-zinc-600 mb-1">
-                      Ngày sinh
+                      {t("landlordContractsCreateCccdDobLabel")}
                     </label>
                     <input
                       type="date"
@@ -657,7 +659,7 @@ function CreateContractPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-zinc-600 mb-1">
-                      Giới tính
+                      {t("landlordContractsCreateCccdGenderLabel")}
                     </label>
                     <select
                       value={gender}
@@ -667,14 +669,14 @@ function CreateContractPage() {
                       }}
                       className="w-full px-3 py-2 text-xs font-bold bg-white border border-zinc-200 rounded-lg focus:outline-none focus:border-[#2AC1BC]"
                     >
-                      <option value="male">Nam</option>
-                      <option value="female">Nữ</option>
+                      <option value="male">{t("landlordContractsCreateCccdGenderMale")}</option>
+                      <option value="female">{t("landlordContractsCreateCccdGenderFemale")}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-bold text-zinc-600 mb-1">
-                      Quốc tịch
+                      {t("landlordContractsCreateCccdNationalityLabel")}
                     </label>
                     <input
                       type="text"
@@ -689,11 +691,11 @@ function CreateContractPage() {
 
                   <div>
                     <label className="block text-[11px] font-bold text-zinc-600 mb-1">
-                      Địa chỉ thường trú
+                      {t("landlordContractsCreateCccdResidenceLabel")}
                     </label>
                     <input
                       type="text"
-                      placeholder="Số nhà, phố, quận, tỉnh"
+                      placeholder={t("landlordContractsCreateCccdResidencePlaceholder")}
                       value={placeOfResidence}
                       onChange={(e) => {
                         setPlaceOfResidence(e.target.value);
@@ -714,17 +716,17 @@ function CreateContractPage() {
               onClick={handleAttemptClose}
               className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
             >
-              Hủy bỏ
+              {t("landlordContractsCreateCancelBtn")}
             </button>
             <button
               type="button"
               onClick={() => {
                 if (!selectedRoomId) {
-                  setErrorMessage("Vui lòng chọn phòng trước khi tiếp tục.");
+                  setErrorMessage(t("landlordContractsCreateErrSelectRoom"));
                   return;
                 }
                 if (!tenantPhone || !tenantFullName) {
-                  setErrorMessage("Vui lòng nhập đầy đủ số điện thoại và tên khách thuê.");
+                  setErrorMessage(t("landlordContractsCreateErrTenantInfo"));
                   return;
                 }
                 setErrorMessage(null);
@@ -732,7 +734,7 @@ function CreateContractPage() {
               }}
               className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
             >
-              Tiếp tục <ChevronRight className="w-4 h-4" />
+              {t("landlordContractsCreateNextStep")} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -743,7 +745,7 @@ function CreateContractPage() {
         <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs animate-in fade-in duration-300">
           <div className="border-b border-zinc-100 pb-3">
             <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-[#2AC1BC]" /> Giá thuê & Tiền cọc
+              <DollarSign className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractsCreateStep3Header")}
             </h2>
           </div>
 
@@ -751,7 +753,7 @@ function CreateContractPage() {
             {/* Rent Price */}
             <div>
               <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                Giá thuê phòng (VNĐ/tháng) <span className="text-rose-500">*</span>
+                {t("landlordContractsCreateRentPriceLabel")}
               </label>
               <input
                 type="number"
@@ -765,17 +767,17 @@ function CreateContractPage() {
                 className="w-full px-4 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] transition-all"
               />
               <p className="text-[11px] text-zinc-400 mt-1 font-semibold">
-                Thành tiền: {Number(rentPrice || 0).toLocaleString("vi-VN")} ₫
+                {Number(rentPrice || 0).toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
               </p>
             </div>
 
             {/* Deposit Amount */}
             <div>
               <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                Tiền đặt cọc (VNĐ) <span className="text-rose-500">*</span>
+                {t("landlordContractsCreateDepositLabel")}
                 {flowType === "platform" && (
                   <span className="text-purple-600 text-[10px] ml-1.5 font-bold">
-                    (Khóa - Lấy từ cọc nền tảng)
+                    {t("landlordContractsCreateDepositInheritedNote")}
                   </span>
                 )}
               </label>
@@ -791,14 +793,14 @@ function CreateContractPage() {
                 className="w-full px-4 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] transition-all disabled:opacity-75"
               />
               <p className="text-[11px] text-zinc-400 mt-1 font-semibold">
-                Thành tiền: {Number(depositAmount || 0).toLocaleString("vi-VN")} ₫
+                {Number(depositAmount || 0).toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
               </p>
             </div>
 
             {/* Monthly Payment Date */}
             <div>
               <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                Ngày thu tiền hàng tháng <span className="text-rose-500">*</span>
+                {t("landlordContractsCreatePaymentDateLabel")}
               </label>
               <input
                 type="number"
@@ -812,14 +814,14 @@ function CreateContractPage() {
                 className="w-full px-4 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] transition-all"
               />
               <p className="text-[11px] text-zinc-400 mt-1 font-semibold">
-                Hạn thanh toán định kỳ vào ngày {monthlyPaymentDate} mỗi tháng
+                {t("landlordContractDetailPaymentDayValue", { day: monthlyPaymentDate })}
               </p>
             </div>
 
             {/* Payment Cycle */}
             <div>
               <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                Chu kỳ thanh toán
+                {t("landlordContractsCreatePaymentCycleLabel")}
               </label>
               <select
                 value={rentPaymentCycle}
@@ -829,24 +831,24 @@ function CreateContractPage() {
                 }}
                 className="w-full px-4 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] transition-all cursor-pointer"
               >
-                <option value={1}>1 tháng / lần (Mặc định)</option>
-                <option value={3}>3 tháng / lần</option>
-                <option value={6}>6 tháng / lần</option>
-                <option value={12}>1 năm / lần</option>
+                <option value={1}>{t("landlordContractsCreateCycle1M")}</option>
+                <option value={3}>{t("landlordContractsCreateCycle3M")}</option>
+                <option value={6}>{t("landlordContractsCreateCycle6M")}</option>
+                <option value={12}>{t("landlordContractsCreateCycle12M")}</option>
               </select>
             </div>
           </div>
 
           <div className="border-b border-zinc-100 pb-3 pt-2">
             <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#2AC1BC]" /> Thời hạn hợp đồng
+              <Calendar className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractDetailTimelineSection")}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                Ngày bắt đầu <span className="text-rose-500">*</span>
+                {t("landlordContractsCreateStartDateLabel")}
               </label>
               <input
                 type="date"
@@ -861,7 +863,7 @@ function CreateContractPage() {
 
             <div>
               <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                Ngày kết thúc <span className="text-rose-500">*</span>
+                {t("landlordContractsCreateEndDateLabel")}
               </label>
               <input
                 type="date"
@@ -876,11 +878,11 @@ function CreateContractPage() {
 
             <div className="col-span-full">
               <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                Ghi chú điều khoản bổ sung (nếu có)
+                {t("landlordContractsCreateNoteLabel")}
               </label>
               <textarea
                 rows={3}
-                placeholder="VD: Khách cam kết giữ gìn vệ sinh chung, không nuôi thú cưng..."
+                placeholder={t("landlordContractsCreateNotePlaceholder")}
                 value={note}
                 onChange={(e) => {
                   setNote(e.target.value);
@@ -898,17 +900,17 @@ function CreateContractPage() {
               onClick={() => setStep(1)}
               className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" /> Quay lại
+              <ChevronLeft className="w-4 h-4" /> {t("landlordContractsCreatePrevStep")}
             </button>
             <button
               type="button"
               onClick={() => {
                 if (!startDate || !endDate) {
-                  setErrorMessage("Vui lòng chọn ngày bắt đầu và ngày kết thúc hợp đồng.");
+                  setErrorMessage(t("landlordContractsCreateStartDateLabel"));
                   return;
                 }
                 if (new Date(endDate) <= new Date(startDate)) {
-                  setErrorMessage("Ngày kết thúc hợp đồng phải sau ngày bắt đầu.");
+                  setErrorMessage(t("landlordContractsCreateEndDateLabel"));
                   return;
                 }
                 setErrorMessage(null);
@@ -916,7 +918,7 @@ function CreateContractPage() {
               }}
               className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
             >
-              Tiếp tục <ChevronRight className="w-4 h-4" />
+              {t("landlordContractsCreateNextStep")} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -930,17 +932,17 @@ function CreateContractPage() {
               <FileSignature className="w-6 h-6" />
             </div>
             <h2 className="text-lg font-black text-zinc-900">
-              Xác nhận thông tin hợp đồng
+              {t("landlordContractsCreateStep3Header")}
             </h2>
             <p className="text-xs text-zinc-500">
-              Vui lòng kiểm tra kỹ các thông số trước khi hệ thống tạo bản ghi hợp đồng chính thức
+              {t("landlordContractsCreateStep3Desc")}
             </p>
           </div>
 
           {/* Summary Card */}
           <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-5 space-y-4 text-xs">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200">
-              <span className="font-bold text-zinc-500">Luồng hợp đồng:</span>
+              <span className="font-bold text-zinc-500">{t("landlordContractDetailStatus")}:</span>
               <span
                 className={`px-3 py-1 rounded-full font-black text-[11px] ${
                   flowType === "platform"
@@ -949,58 +951,58 @@ function CreateContractPage() {
                 }`}
               >
                 {flowType === "platform"
-                  ? "Flow A — Cọc nền tảng Dormio (Bản nháp chờ duyệt)"
-                  : "Flow B — Hợp đồng trực tiếp (Kích hoạt ngay)"}
+                  ? t("landlordContractsCreateFlowPlatformBadge")
+                  : t("landlordContractsCreateFlowDirectBadge")}
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">Phòng:</span>
+                <span className="text-zinc-400 block text-[11px] font-semibold">{t("landlordContractDetailRoom")}:</span>
                 <span className="font-black text-zinc-900 text-sm">
-                  Phòng {selectedRoomObj?.roomNumber} (Tầng {selectedRoomObj?.floor})
+                  {t("landlordContractDetailRoomPrefix")} {selectedRoomObj?.roomNumber} ({t("landlordRoomDetailFloor")} {selectedRoomObj?.floor})
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">Đại diện thuê:</span>
+                <span className="text-zinc-400 block text-[11px] font-semibold">{t("landlordContractDetailTenant")}:</span>
                 <span className="font-black text-zinc-900 text-sm">
                   {tenantFullName} ({tenantPhone})
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">Thời hạn thuê:</span>
+                <span className="text-zinc-400 block text-[11px] font-semibold">{t("landlordContractDetailDuration")}:</span>
                 <span className="font-bold text-zinc-800">
                   {startDate} &rarr; {endDate}
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">Chu kỳ & Ngày thanh toán:</span>
+                <span className="text-zinc-400 block text-[11px] font-semibold">{t("landlordContractsCreatePaymentCycleLabel")}:</span>
                 <span className="font-bold text-zinc-800">
-                  Ngày {monthlyPaymentDate} hàng tháng &bull; {rentPaymentCycle} tháng/lần
+                  {t("landlordContractDetailPaymentDayValue", { day: monthlyPaymentDate })} &bull; {rentPaymentCycle} {t("landlordContractsPaymentCycleLabel")}
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">Giá thuê hàng tháng:</span>
+                <span className="text-zinc-400 block text-[11px] font-semibold">{t("landlordContractDetailRentPrice")}:</span>
                 <span className="font-black text-[#2AC1BC] text-sm">
-                  {Number(rentPrice).toLocaleString("vi-VN")} ₫ / tháng
+                  {Number(rentPrice).toLocaleString(isEn ? "en-US" : "vi-VN")} ₫ {t("landlordContractsPerMonth")}
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">Tiền cọc ghi nhận:</span>
+                <span className="text-zinc-400 block text-[11px] font-semibold">{t("landlordContractDetailDeposit")}:</span>
                 <span className="font-black text-purple-700 text-sm">
-                  {Number(depositAmount).toLocaleString("vi-VN")} ₫
+                  {Number(depositAmount).toLocaleString(isEn ? "en-US" : "vi-VN")} ₫
                 </span>
               </div>
             </div>
 
             {note && (
               <div className="pt-2 border-t border-zinc-200">
-                <span className="text-zinc-400 block text-[11px] font-semibold">Ghi chú:</span>
+                <span className="text-zinc-400 block text-[11px] font-semibold">{t("landlordContractsCreateNoteLabel")}:</span>
                 <p className="text-zinc-700 italic">{note}</p>
               </div>
             )}
@@ -1014,7 +1016,7 @@ function CreateContractPage() {
               onClick={() => setStep(2)}
               className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer disabled:opacity-50"
             >
-              <ChevronLeft className="w-4 h-4" /> Quay lại
+              <ChevronLeft className="w-4 h-4" /> {t("landlordContractsCreatePrevStep")}
             </button>
 
             <button
@@ -1025,11 +1027,11 @@ function CreateContractPage() {
             >
               {isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Đang tạo hợp đồng...
+                  <Loader2 className="w-4 h-4 animate-spin" /> {t("landlordContractsCreateSubmitting")}
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4" /> Ký & Tạo hợp đồng
+                  <Check className="w-4 h-4" /> {t("landlordContractsCreateSubmitBtn")}
                 </>
               )}
             </button>
@@ -1052,10 +1054,10 @@ function CreateContractPage() {
 
             <div className="text-center space-y-1">
               <h3 className="text-base font-black text-zinc-900">
-                Xác nhận đóng form
+                {t("landlordContractsCreateConfirmCloseTitle")}
               </h3>
               <p className="text-xs text-zinc-500 font-medium">
-                Bạn có thông tin hợp đồng đang nhập chưa được lưu. Bạn có chắc chắn muốn hủy bỏ và rời khỏi trang này?
+                {t("landlordContractsCreateConfirmCloseDesc")}
               </p>
             </div>
 
@@ -1065,14 +1067,14 @@ function CreateContractPage() {
                 onClick={() => setShowConfirmClose(false)}
                 className="flex-1 py-2.5 px-4 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
-                Tiếp tục chỉnh sửa
+                {t("landlordContractsCreateConfirmCloseKeep")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmClose}
                 className="flex-1 py-2.5 px-4 text-xs font-black text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition-colors cursor-pointer shadow-sm shadow-rose-500/20"
               >
-                Hủy thay đổi & Đóng
+                {t("landlordContractsCreateConfirmCloseDiscard")}
               </button>
             </div>
           </div>

@@ -11,6 +11,7 @@ import {
 import { getContractById, Contract, ContractMember, ContractServiceItem } from "../data";
 import { Customer } from "../../customers/data";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { getContractById as getContractByIdApi } from "@/services/contract.service";
 import ContractPreviewModal from "@/components/landlord/ContractPreviewModal";
 
@@ -18,6 +19,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
   const resolvedParams = use(params);
   const router = useRouter();
   const { activeBuilding } = useAuth();
+  const t = useTranslations("landlord");
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
   const [contract, setContract] = useState<Contract | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -149,7 +153,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   const handleSaveContractEdit = () => {
     if (!editReason.trim()) {
-      showToast("Vui lòng nhập lý do thay đổi hợp đồng!", "error");
+      showToast(t("landlordContractDetailToastEditReasonRequired"), "error");
       return;
     }
 
@@ -168,12 +172,12 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
     setIsEditModalOpen(false);
     setEditReason("");
-    showToast("Đã cập nhật hợp đồng thành công!", "success");
+    showToast(t("landlordContractDetailToastEditSuccess"), "success");
   };
 
   const handleSaveExtension = () => {
     if (!extendEndDate) {
-      showToast("Vui lòng chọn ngày kết thúc mới!", "error");
+      showToast(t("landlordContractDetailToastExtendDateRequired"), "error");
       return;
     }
 
@@ -189,12 +193,12 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     } : null);
 
     setIsExtendModalOpen(false);
-    showToast("Đã gia hạn hợp đồng thành công!", "success");
+    showToast(t("landlordContractDetailToastExtendSuccess"), "success");
   };
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) {
-      showToast("Vui lòng chọn hoặc nhập tên thành viên!", "error");
+      showToast(t("landlordContractDetailToastMemberNameRequired"), "error");
       return;
     }
 
@@ -263,7 +267,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     } : null);
 
     setIsTerminateModalOpen(false);
-    showToast("Đã chấm dứt hợp đồng", "success");
+    showToast(t("landlordContractDetailToastTerminateSuccess"), "success");
   };
 
   if (!isMounted) return null;
@@ -271,10 +275,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
   if (!contract) {
     return (
       <div className="p-8 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 my-6">
-        <p className="font-bold text-lg mb-2 text-zinc-800">Không tìm thấy thông tin hợp đồng</p>
+        <p className="font-bold text-lg mb-2 text-zinc-800">{t("landlordContractsNoContractsFound")}</p>
         <p className="text-xs text-zinc-500 mb-4">Mã HĐ: {resolvedParams.id}</p>
         <Link href="/landlord/contracts" className="inline-flex items-center gap-2 px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors">
-          &larr; Quay lại danh sách hợp đồng
+          &larr; {t("landlordContractDetailBack")}
         </Link>
       </div>
     );
@@ -298,7 +302,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <Link
             href="/landlord/contracts"
             className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-full transition-colors cursor-pointer shrink-0"
-            title="Quay lại danh sách hợp đồng"
+            title={t("landlordContractDetailBack")}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -306,7 +310,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
-                Hợp Đồng Phòng {contract.room}
+                {t("landlordContractDetailRoomPrefix")} {contract.room}
               </h1>
               <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${contract.status === 'Đang hiệu lực' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                 contract.status === 'Quá hạn' ? 'bg-rose-50 text-rose-700 border-rose-200' :
@@ -319,14 +323,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <p className="text-xs text-zinc-500 font-semibold mt-0.5 flex flex-wrap items-center gap-2">
               <span>{contract.buildingName}</span>
               <span>•</span>
-              <span>Mã HĐ: <strong className="text-[#2AC1BC] font-black">{contract.id}</strong></span>
+              <span>{t("landlordContractDetailContractId", { id: contract.id })}</span>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(contract.id);
-                  showToast("Đã sao chép mã hợp đồng!", "success");
+                  showToast(t("landlordContractsToastCodeCopied"), "success");
                 }}
                 className="p-1 hover:bg-zinc-100 rounded-md transition-colors text-zinc-400 hover:text-zinc-700"
-                title="Sao chép mã"
+                title={t("landlordContractsCopyCodeTitle")}
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
@@ -340,13 +344,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             onClick={() => setIsExtendModalOpen(true)}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
           >
-            <CalendarDays className="w-3.5 h-3.5" /> Gia Hạn
+            <CalendarDays className="w-3.5 h-3.5" /> {t("landlordContractDetailBtnExtend")}
           </button>
           <button
             onClick={() => setIsEditModalOpen(true)}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> Sửa HĐ
+            <Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordContractDetailBtnEdit")}
           </button>
 
           <button
@@ -354,14 +358,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
             title="Xem trước và In hợp đồng"
           >
-            <Printer className="w-3.5 h-3.5 text-[#2AC1BC]" /> In / Xuất HĐ
+            <Printer className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordContractDetailBtnPrint")}
           </button>
 
           <button
             onClick={() => setIsTerminateModalOpen(true)}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Ban className="w-3.5 h-3.5" /> Chấm Dứt
+            <Ban className="w-3.5 h-3.5" /> {t("landlordContractDetailBtnTerminate")}
           </button>
         </div>
       </div>
@@ -374,51 +378,51 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#2AC1BC]" /> Chi Tiết Hợp Đồng
+                <FileText className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractDetailFinancialSection")}
               </h3>
               <button
                 onClick={() => setIsEditModalOpen(true)}
                 className="px-2.5 py-1 text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors flex items-center gap-1"
               >
-                <Edit2 className="w-3.5 h-3.5" /> Chỉnh sửa
+                <Edit2 className="w-3.5 h-3.5" /> {t("landlordContractDetailBtnEdit")}
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">Mã Hợp Đồng</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordContractDetailContractId", { id: "" }).replace(":", "")}</span>
                 <p className="font-black text-[#2AC1BC] text-sm tracking-wide">{contract.id}</p>
               </div>
 
               <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">Phòng thuê & Loại phòng</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordContractDetailRoomTypeLabel")}</span>
                 <p className="font-extrabold text-zinc-900 text-sm">Phòng {contract.room} • {contract.roomType}</p>
               </div>
 
               <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">Ngày bắt đầu hiệu lực</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordContractDetailStartDate")}</span>
                 <p className="font-bold text-zinc-800">{contract.startDate}</p>
               </div>
 
               <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">Ngày hết hạn hợp đồng</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordContractDetailEndDate")}</span>
                 <p className="font-bold text-zinc-800">{contract.endDate}</p>
               </div>
 
               <div className="p-3.5 bg-emerald-500/5 rounded-xl border border-emerald-500/20 space-y-1">
-                <span className="text-[10px] font-bold text-emerald-600 uppercase">Giá thuê hàng tháng</span>
+                <span className="text-[10px] font-bold text-emerald-600 uppercase">{t("landlordContractDetailRentPrice")}</span>
                 <p className="font-black text-emerald-600 text-base">{contract.price}</p>
               </div>
 
               <div className="p-3.5 bg-purple-500/5 rounded-xl border border-purple-500/20 space-y-1">
-                <span className="text-[10px] font-bold text-purple-600 uppercase">Tiền cọc</span>
+                <span className="text-[10px] font-bold text-purple-600 uppercase">{t("landlordContractDetailDeposit")}</span>
                 <p className="font-black text-purple-600 text-base">{contract.deposit}</p>
               </div>
 
               <div className="sm:col-span-2 p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">Ngày thu tiền định kỳ hàng tháng</span>
-                  <p className="font-bold text-zinc-800 text-xs">Ngày {contract.paymentDate || '5'} hàng tháng</p>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">{t("landlordContractDetailPaymentDay")}</span>
+                  <p className="font-bold text-zinc-800 text-xs">{t('landlordContractDetailPaymentDayValue', { day: contract.paymentDate || '5' })}</p>
                 </div>
                 <span className="px-2.5 py-1 bg-zinc-200 text-zinc-700 text-[10px] font-extrabold rounded-lg">
                   Tự động VietQR
@@ -431,13 +435,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
-                <User className="w-4 h-4 text-[#2AC1BC]" /> Bên B — Đại Diện Thuê (Chủ Hợp Đồng)
+                <User className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractDetailTenantSection")}
               </h3>
               <Link
                 href={`/landlord/customers/${contract.tenantCccd}`}
                 className="px-3 py-1 bg-[#2AC1BC] text-white text-xs font-bold rounded-lg hover:bg-[#25ad87] transition-all shadow-xs flex items-center gap-1 cursor-pointer"
               >
-                Xem hồ sơ khách &rarr;
+                {t("landlordContractDetailTenantSection")} &rarr;
               </Link>
             </div>
 
@@ -461,7 +465,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   href={`tel:${contract.tenantPhone}`}
                   className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs cursor-pointer"
                 >
-                  Gọi điện
+                  {isEn ? "Call" : "Gọi điện"}
                 </a>
                 <a
                   href={`https://zalo.me/${contract.tenantPhone}`}
@@ -479,19 +483,19 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
               <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#2AC1BC]" /> Thành Viên Ở Cùng ({contract.members?.length || 0})
+                <Users className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractDetailMembersSection", { count: contract.members?.length || 0 })}
               </h3>
               <button
                 onClick={() => setIsAddMemberModalOpen(true)}
                 className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-bold rounded-lg hover:bg-[#2AC1BC]/20 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" /> Thêm thành viên
+                <Plus className="w-3.5 h-3.5" /> {t("landlordContractDetailAddMemberBtn")}
               </button>
             </div>
 
             {(!contract.members || contract.members.length === 0) ? (
               <div className="p-4 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
-                Chưa có thành viên ở cùng nào được đăng ký trong hợp đồng này.
+                {t("landlordContractDetailNoMembers")}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -509,7 +513,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                     <button
                       onClick={() => setContract(prev => prev ? { ...prev, members: prev.members.filter((_, i) => i !== idx) } : null)}
                       className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title="Xóa thành viên"
+                      title={t("landlordStaffConfirmCloseDiscard")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -522,7 +526,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD 4: CẤU HÌNH DỊCH VỤ ĐỊNH KỲ */}
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
             <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Banknote className="w-4 h-4 text-[#2AC1BC]" /> Dịch Vụ Áp Dụng Cho Hợp Đồng
+              <Banknote className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractDetailServicesSection")}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -543,7 +547,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD 5: NHẬT KÝ LỊCH SỬ THAY ĐỔI */}
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
             <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Clock className="w-4 h-4 text-[#2AC1BC]" /> Nhật Ký Thay Đổi Hợp Đồng
+              <Clock className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordContractDetailHistorySection")}
             </h3>
 
             <div className="space-y-2.5">
@@ -553,7 +557,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                     <span>{h.content}</span>
                     <span className="text-[10px] text-zinc-400 font-semibold">{h.date}</span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 font-medium">Người thực hiện: <strong className="text-zinc-700">{h.user}</strong></p>
+                  <p className="text-[10px] text-zinc-500 font-medium">{isEn ? "Updated by:" : "Người thực hiện:"} <strong className="text-zinc-700">{h.user}</strong></p>
                 </div>
               ))}
             </div>
@@ -567,17 +571,17 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD BÊN A (CHỦ TRỌ / BQL) */}
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
             <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> BÊN A — BQL TÒA NHÀ
+              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {isEn ? "PARTY A — PROPERTY MANAGEMENT" : "BÊN A — BQL TÒA NHÀ"}
             </h3>
 
             <div className="space-y-2 text-xs">
               <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">Tên đại diện BQL</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase">{isEn ? "Management Representative" : "Tên đại diện BQL"}</span>
                 <p className="font-extrabold text-zinc-900">Nguyễn Văn Quyền (Chủ trọ Dormio)</p>
               </div>
 
               <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">Số điện thoại hỗ trợ</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase">{isEn ? "Support Phone" : "Số điện thoại hỗ trợ"}</span>
                 <p className="font-bold text-zinc-800">0988 123 456</p>
               </div>
 
@@ -592,7 +596,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2">
-                <Home className="w-4 h-4 text-[#2AC1BC]" /> PHÒNG ĐANG THUÊ
+                <Home className="w-4 h-4 text-[#2AC1BC]" /> {isEn ? "RENTED ROOM" : "PHÒNG ĐANG THUÊ"}
               </h3>
               <span className="text-sm font-black text-[#2AC1BC] bg-[#2AC1BC]/10 border border-[#2AC1BC]/20 px-2.5 py-0.5 rounded-lg">
                 Phòng {contract.room}
@@ -620,7 +624,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   <CalendarDays className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">Gia Hạn Hợp Đồng</h2>
+                  <h2 className="text-base font-black text-zinc-900">{t("landlordContractDetailModalExtendTitle")}</h2>
                   <p className="text-xs text-zinc-500 font-medium">Chọn ngày kết thúc mới cho HĐ phòng {contract.room}</p>
                 </div>
               </div>
@@ -648,13 +652,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
               <button onClick={() => setIsExtendModalOpen(false)} className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
-                Hủy
+                {t("landlordContractsCreateCancelBtn")}
               </button>
               <button
                 onClick={handleSaveExtension}
                 className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
-                Xác Nhận Gia Hạn
+                {t("landlordContractDetailModalExtendSubmit")}
               </button>
             </div>
           </div>
@@ -671,7 +675,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   <Edit2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">Chỉnh Sửa Hợp Đồng {contract.id}</h2>
+                  <h2 className="text-base font-black text-zinc-900">{t("landlordContractDetailModalEditTitle")} {contract.id}</h2>
                   <p className="text-xs text-zinc-500 font-medium">Cập nhật giá thuê, tiền cọc, ngày đóng tiền hàng tháng.</p>
                 </div>
               </div>
@@ -735,7 +739,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 onClick={handleSaveContractEdit}
                 className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
-                Lưu Thay Đổi
+                {t("landlordContractDetailModalEditSubmit")}
               </button>
             </div>
           </div>
@@ -752,7 +756,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">Thêm Thành Viên Ở Cùng</h2>
+                  <h2 className="text-base font-black text-zinc-900">{t("landlordContractDetailModalAddMemberTitle")}</h2>
                   <p className="text-xs text-zinc-500 font-medium">Đăng ký tạm trú cho thành viên phòng {contract.room}</p>
                 </div>
               </div>
@@ -1019,7 +1023,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 onClick={handleAddMember}
                 className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
-                {addMemberTab === 'select' ? 'Thêm Thành Viên' : 'Thêm Khách Thuê Mới'}
+                {addMemberTab === 'select' ? '{t("landlordContractDetailModalAddMemberSubmit")}' : 'Thêm Khách Thuê Mới'}
               </button>
             </div>
           </div>
@@ -1034,7 +1038,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <div className="p-3 bg-rose-100 rounded-full">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-black text-zinc-900">Chấm Dứt Hợp Đồng</h3>
+              <h3 className="text-lg font-black text-zinc-900">{t("landlordContractDetailModalTerminateTitle")}</h3>
             </div>
             <p className="text-xs text-zinc-500 font-medium">
               Bạn có chắc chắn muốn chấm dứt hợp đồng <strong className="text-zinc-900">{contract.id}</strong> (Phòng {contract.room}) không? Thao tác này sẽ chuyển trạng thái HĐ thành "Đã chấm dứt".
