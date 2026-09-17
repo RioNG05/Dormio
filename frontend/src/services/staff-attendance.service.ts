@@ -48,6 +48,13 @@ export interface StaffMonthlySummary {
   earlyCount: number;
 }
 
+export interface StaffShiftType {
+  id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+}
+
 export interface StaffAttendanceHistoryParams {
   search?: string;
   status?: string;
@@ -141,6 +148,14 @@ export const staffAttendanceService = {
   async saveDutyProof(payload: StaffDutyProofPayload): Promise<StaffTodayOverview> {
     const res = await api.post<any>('/v1/staff/attendance/duty-proof', payload);
     return res?.data ?? res;
+  },
+
+  /**
+   * UC-S-01: Fetch available shift types for staff member
+   */
+  async getShifts(): Promise<StaffShiftType[]> {
+    const res = await api.get<any>('/v1/staff/attendance/shifts');
+    return (res?.data ?? res) || [];
   },
 };
 

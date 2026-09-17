@@ -29,6 +29,7 @@ import { StaffMonthlySummaryResponseDto } from './dto/staff-monthly-summary-resp
 import { QueryStaffMonthlyDto } from './dto/query-staff-monthly.dto';
 import { QueryStaffAttendanceHistoryDto } from './dto/query-staff-attendance-history.dto';
 import { StaffAttendanceHistoryResponseDto } from './dto/staff-attendance-history-response.dto';
+import { StaffShiftTypeResponseDto } from './dto/staff-shift-type-response.dto';
 
 @ApiTags('Staff Attendance (UC-S-01 & UC-S-02)')
 @ApiBearerAuth()
@@ -95,6 +96,23 @@ export class StaffAttendanceController {
       `Staff user ${user.id} requested attendance history page=${query.page || 1} limit=${query.limit || 10} search=${query.search || ''} status=${query.status || 'all'}`,
     );
     return this.attendanceService.getStaffAttendanceHistory(user.id, query);
+  }
+
+  @Get('shifts')
+  @ApiOperation({
+    summary: 'UC-S-01: Get distinct shift types for logged-in staff member',
+    description:
+      'Retrieves the shift definitions configured for the staff member\'s assigned properties and work schedules.',
+  })
+  @ApiOkResponse({
+    type: [StaffShiftTypeResponseDto],
+    description: 'List of available shift types for the staff member',
+  })
+  async getShifts(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<StaffShiftTypeResponseDto[]> {
+    this.logger.log(`Staff user ${user.id} requested available shift types`);
+    return this.attendanceService.getStaffShifts(user.id);
   }
 
   @Post('check-in')

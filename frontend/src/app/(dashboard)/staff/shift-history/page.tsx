@@ -21,6 +21,7 @@ import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
+  StaffShiftType,
 } from "@/services/staff-attendance.service";
 
 function StaffShiftHistoryContent() {
@@ -28,29 +29,68 @@ function StaffShiftHistoryContent() {
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
+  // Dynamic Shift Types fetched from Backend (no hardcoded data)
+  const [availableShifts, setAvailableShifts] = useState<StaffShiftType[]>([]);
+  const [isShiftsLoading, setIsShiftsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    let mounted = true;
+    setIsShiftsLoading(true);
+    staffAttendanceService
+      .getShifts()
+      .then((shifts) => {
+        if (mounted) setAvailableShifts(shifts);
+      })
+      .catch((err) => {
+        console.error("Failed to load shift types from backend:", err);
+        if (mounted) setAvailableShifts([]);
+      })
+      .finally(() => {
+        if (mounted) setIsShiftsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Table Inline Filter Draft States (edited by user inside table header controls)
-  const [filterDateDraft, setFilterDateDraft] = useState<string>("");
+  const [filterStartDateDraft, setFilterStartDateDraft] = useState<string>("");
+  const [filterEndDateDraft, setFilterEndDateDraft] = useState<string>("");
   const [filterShiftDraft, setFilterShiftDraft] = useState<string>("all");
   const [filterStatusDraft, setFilterStatusDraft] = useState<"all" | "on_time" | "late" | "absent">("all");
 
   // Applied Filter States (applied to backend query only when clicking "Lọc")
-  const [appliedDate, setAppliedDate] = useState<string>("");
+  const [appliedStartDate, setAppliedStartDate] = useState<string>("");
+  const [appliedEndDate, setAppliedEndDate] = useState<string>("");
   const [appliedShift, setAppliedShift] = useState<string>("all");
   const [appliedStatus, setAppliedStatus] = useState<"all" | "on_time" | "late" | "absent">("all");
 
   const isFilterActive = useMemo(() => {
     return (
-      filterDateDraft.trim() !== "" ||
+      filterStartDateDraft !== "" ||
+      filterEndDateDraft !== "" ||
       filterShiftDraft !== "all" ||
       filterStatusDraft !== "all" ||
-      appliedDate !== "" ||
+      appliedStartDate !== "" ||
+      appliedEndDate !== "" ||
       appliedShift !== "all" ||
       appliedStatus !== "all"
     );
-  }, [filterDateDraft, filterShiftDraft, filterStatusDraft, appliedDate, appliedShift, appliedStatus]);
+  }, [
+    filterStartDateDraft,
+    filterEndDateDraft,
+    filterShiftDraft,
+    filterStatusDraft,
+    appliedStartDate,
+    appliedEndDate,
+    appliedShift,
+    appliedStatus,
+  ]);
 
   const handleApplyFilter = () => {
-    setAppliedDate(filterDateDraft.trim());
+    setAppliedStartDate(filterStartDateDraft);
+    setAppliedEndDate(filterEndDateDraft);
     setAppliedShift(filterShiftDraft);
     setAppliedStatus(filterStatusDraft);
     setCurrentPage(1);
@@ -58,10 +98,12 @@ function StaffShiftHistoryContent() {
   };
 
   const handleResetFilter = () => {
-    setFilterDateDraft("");
+    setFilterStartDateDraft("");
+    setFilterEndDateDraft("");
     setFilterShiftDraft("all");
     setFilterStatusDraft("all");
-    setAppliedDate("");
+    setAppliedStartDate("");
+    setAppliedEndDate("");
     setAppliedShift("all");
     setAppliedStatus("all");
     setCurrentPage(1);
@@ -112,7 +154,8 @@ function StaffShiftHistoryContent() {
         page: currentPage,
         limit: validPageSize,
         status: appliedStatus !== "all" ? appliedStatus : undefined,
-        date: appliedDate || undefined,
+        startDate: appliedStartDate || undefined,
+        endDate: appliedEndDate || undefined,
         shiftName: appliedShift !== "all" ? appliedShift : undefined,
       });
 
@@ -126,7 +169,7 @@ function StaffShiftHistoryContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSizeInput, appliedStatus, appliedDate, appliedShift]);
+  }, [currentPage, pageSizeInput, appliedStatus, appliedStartDate, appliedEndDate, appliedShift]);
 
   useEffect(() => {
     fetchHistory();
@@ -288,8 +331,8 @@ function StaffShiftHistoryContent() {
             <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
               {/* Row 1: Column Titles */}
               <tr>
-                <th className="py-3 px-3 min-w-[130px]">{t("tableColDate")}</th>
-                <th className="py-3 px-3 min-w-[160px]">{t("tableColShift")}</th>
+                <th className="py-3 px-3 min-w-[270px]">{t("tableColDate")}</th>
+                <th className="py-3 px-3 min-w-[170px]">{t("tableColShift")}</th>
                 <th className="py-3 px-3 min-w-[90px]">{t("tableColCheckIn")}</th>
                 <th className="py-3 px-3 min-w-[90px]">{t("tableColCheckOut")}</th>
                 <th className="py-3 px-3 min-w-[130px]">{t("tableColStatus")}</th>
@@ -299,45 +342,58 @@ function StaffShiftHistoryContent() {
               </tr>
               {/* Row 2: Table Inline Filters */}
               <tr className="bg-white border-t border-zinc-100 font-normal lowercase tracking-normal">
-                {/* Ngày trực: input filter */}
-                <th className="py-2.5 px-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={filterDateDraft}
-                      onChange={(e) => setFilterDateDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleApplyFilter();
-                      }}
-                      placeholder={isEn ? "All dates" : "Tất cả ngày trực"}
-                      className="w-full pl-2.5 pr-7 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs"
-                    />
-                    {filterDateDraft ? (
+                {/* Ngày trực: input dạng date lọc từ ngày đến ngày */}
+                <th className="py-2.5 px-3 min-w-[270px]">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex-1 min-w-0">
+                      <input
+                        type="date"
+                        value={filterStartDateDraft}
+                        onChange={(e) => setFilterStartDateDraft(e.target.value)}
+                        className="w-full px-2 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer"
+                        title={isEn ? "From date" : "Từ ngày"}
+                      />
+                    </div>
+                    <span className="text-zinc-400 font-bold text-xs shrink-0">→</span>
+                    <div className="flex-1 min-w-0">
+                      <input
+                        type="date"
+                        value={filterEndDateDraft}
+                        onChange={(e) => setFilterEndDateDraft(e.target.value)}
+                        className="w-full px-2 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer"
+                        title={isEn ? "To date" : "Đến ngày"}
+                      />
+                    </div>
+                    {(filterStartDateDraft || filterEndDateDraft) && (
                       <button
                         type="button"
-                        onClick={() => setFilterDateDraft("")}
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
-                        title={isEn ? "Clear" : "Xoá"}
+                        onClick={() => {
+                          setFilterStartDateDraft("");
+                          setFilterEndDateDraft("");
+                        }}
+                        className="p-1 text-zinc-400 hover:text-zinc-600 rounded-lg transition-colors cursor-pointer shrink-0"
+                        title={isEn ? "Clear dates" : "Xoá khoảng ngày"}
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5" />
                       </button>
-                    ) : (
-                      <Calendar className="w-3.5 h-3.5 text-zinc-300 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                     )}
                   </div>
                 </th>
 
-                {/* Ca làm việc: dropdown shift filter */}
-                <th className="py-2.5 px-3">
+                {/* Ca làm việc: dropdown shift filter lấy từ backend */}
+                <th className="py-2.5 px-3 min-w-[170px]">
                   <select
                     value={filterShiftDraft}
                     onChange={(e) => setFilterShiftDraft(e.target.value)}
+                    disabled={isShiftsLoading}
                     className="w-full px-2.5 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer truncate"
                   >
                     <option value="all">{isEn ? "All shifts" : "Tất cả ca làm việc"}</option>
-                    <option value="Ca Sáng">{isEn ? "Morning Shift" : "Ca Sáng"}</option>
-                    <option value="Ca Chiều">{isEn ? "Afternoon Shift" : "Ca Chiều"}</option>
-                    <option value="Ca Đêm">{isEn ? "Night Shift" : "Ca Đêm"}</option>
+                    {availableShifts.map((shift) => (
+                      <option key={shift.id} value={shift.name}>
+                        {getShiftName(shift.name)}
+                      </option>
+                    ))}
                   </select>
                 </th>
 

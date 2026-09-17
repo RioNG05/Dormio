@@ -26,6 +26,7 @@ import {
   StaffAttendanceHistoryItemDto,
   StaffAttendanceHistoryResponseDto,
 } from './dto/staff-attendance-history-response.dto';
+import { StaffShiftTypeResponseDto } from './dto/staff-shift-type-response.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -1248,6 +1249,111 @@ export class AttendanceService {
       lateCount,
       earlyCount,
     };
+  }
+
+  /**
+   * UC-S-01: Get distinct shifts available for the logged-in staff member
+   */
+  async getStaffShifts(userId: string): Promise<StaffShiftTypeResponseDto[]> {
+    this.logger.log(`getStaffShifts for userId=${userId}`);
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+      include: {
+        employeeAssignments: {
+          where: { status: 'active' },
+          select: { boardingHouseId: true },
+        },
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException(
+        'Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.',
+      );
+    }
+
+    const assignedHouseIds = employee.employeeAssignments.map(
+      (a) => a.boardingHouseId,
+    );
+
+    // Fetch shifts from assigned boarding houses
+    let shiftsFromHouses = await this.prisma.shift.findMany({
+      where: {
+        boardingHouseId: { in: assignedHouseIds },
+      },
+      orderBy: { startTime: 'asc' },
+    });
+
+    // Auto-seed default shifts if none exist yet for the active assigned properties
+    if (shiftsFromHouses.length === 0 && assignedHouseIds.length > 0) {
+      const houseId = assignedHouseIds[0];
+      this.logger.log(`Auto-seeding default shifts for house ${houseId}`);
+      await Promise.all([
+        this.prisma.shift.create({
+          data: {
+            boardingHouseId: houseId,
+            name: 'Ca Sáng (07:00 - 15:00)',
+            startTime: new Date('1970-01-01T07:00:00Z'),
+            endTime: new Date('1970-01-01T15:00:00Z'),
+          },
+        }),
+        this.prisma.shift.create({
+          data: {
+            boardingHouseId: houseId,
+            name: 'Ca Chiều (15:00 - 23:00)',
+            startTime: new Date('1970-01-01T15:00:00Z'),
+            endTime: new Date('1970-01-01T23:00:00Z'),
+          },
+        }),
+        this.prisma.shift.create({
+          data: {
+            boardingHouseId: houseId,
+            name: 'Ca Đêm (23:00 - 07:00)',
+            startTime: new Date('1970-01-01T23:00:00Z'),
+            endTime: new Date('1970-01-01T07:00:00Z'),
+          },
+        }),
+      ]);
+
+      shiftsFromHouses = await this.prisma.shift.findMany({
+        where: {
+          boardingHouseId: { in: assignedHouseIds },
+        },
+        orderBy: { startTime: 'asc' },
+      });
+    }
+
+    const shiftMap = new Map<string, StaffShiftTypeResponseDto>();
+
+    for (const s of shiftsFromHouses) {
+      shiftMap.set(s.id, {
+        id: s.id,
+        name: s.name,
+        startTime: this.formatTime(s.startTime),
+        endTime: this.formatTime(s.endTime),
+      });
+    }
+
+    // Also include any shifts from employee's schedules (e.g. historical or cross-house)
+    const schedules = await this.prisma.workSchedule.findMany({
+      where: { employeeId: employee.id },
+      select: { shift: true },
+      take: 100,
+    });
+
+    for (const item of schedules) {
+      if (item.shift && !shiftMap.has(item.shift.id)) {
+        shiftMap.set(item.shift.id, {
+          id: item.shift.id,
+          name: item.shift.name,
+          startTime: this.formatTime(item.shift.startTime),
+          endTime: this.formatTime(item.shift.endTime),
+        });
+      }
+    }
+
+    return Array.from(shiftMap.values());
   }
 
   /**

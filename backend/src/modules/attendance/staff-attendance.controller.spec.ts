@@ -187,5 +187,16 @@ describe('StaffAttendanceController', () => {
     expect(service.getStaffAttendanceHistory).toHaveBeenCalledWith('user-123', query);
     expect(res).toEqual(mockHistory);
   });
+
+  it('getShifts should return list of available shift types', async () => {
+    const mockShifts = [
+      { id: 'shift-1', name: 'Ca Sáng', startTime: '07:00', endTime: '15:00' },
+    ];
+    service.getStaffShifts = jest.fn().mockResolvedValue(mockShifts);
+
+    const res = await controller.getShifts(mockUser);
+    expect(service.getStaffShifts).toHaveBeenCalledWith('user-123');
+    expect(res).toEqual(mockShifts);
+  });
 });
 

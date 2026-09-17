@@ -93,6 +93,7 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
       },
       shift: {
         findFirst: jest.fn(),
+        findMany: jest.fn(),
         create: jest.fn(),
       },
       attendance: {
@@ -608,6 +609,47 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
       });
       expect(resultByShift.data).toHaveLength(1);
       expect(resultByShift.data[0].shiftName).toBe('Ca Chiều');
+    });
+  });
+
+  describe('getStaffShifts (UC-S-01)', () => {
+    it('should throw NotFoundException if employee not found', async () => {
+      prisma.employee.findUnique.mockResolvedValue(null);
+      await expect(service.getStaffShifts('unknown-user')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should return shift types from assigned houses and work schedules', async () => {
+      prisma.employee.findUnique.mockResolvedValue({
+        id: 'emp-1',
+        employeeAssignments: [{ boardingHouseId: 'bh-1' }],
+      });
+      prisma.shift.findMany.mockResolvedValue([
+        {
+          id: 'shift-1',
+          name: 'Ca Sáng (07:00 - 15:00)',
+          startTime: new Date('1970-01-01T07:00:00Z'),
+          endTime: new Date('1970-01-01T15:00:00Z'),
+        },
+      ]);
+      prisma.workSchedule.findMany.mockResolvedValue([
+        {
+          shift: {
+            id: 'shift-2',
+            name: 'Ca Chiều (15:00 - 23:00)',
+            startTime: new Date('1970-01-01T15:00:00Z'),
+            endTime: new Date('1970-01-01T23:00:00Z'),
+          },
+        },
+      ]);
+
+      const result = await service.getStaffShifts(mockUserId);
+      expect(result).toHaveLength(2);
+      expect(result[0].name).toBe('Ca Sáng (07:00 - 15:00)');
+      expect(result[0].startTime).toBe('07:00');
+      expect(result[1].name).toBe('Ca Chiều (15:00 - 23:00)');
+      expect(result[1].startTime).toBe('15:00');
     });
   });
 });
