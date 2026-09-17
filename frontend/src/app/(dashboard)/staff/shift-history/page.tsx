@@ -54,58 +54,92 @@ function StaffShiftHistoryContent() {
     };
   }, []);
 
-  // Table Inline Filter Draft States (edited by user inside table header controls)
-  const [filterStartDateDraft, setFilterStartDateDraft] = useState<string>("");
-  const [filterEndDateDraft, setFilterEndDateDraft] = useState<string>("");
-  const [filterShiftDraft, setFilterShiftDraft] = useState<string>("all");
-  const [filterStatusDraft, setFilterStatusDraft] = useState<"all" | "on_time" | "late" | "absent">("all");
+  // Filter Modal & Rule #10 Unsaved Confirmation States
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
+  const [showConfirmCloseModal, setShowConfirmCloseModal] = useState<boolean>(false);
 
-  // Applied Filter States (applied to backend query only when clicking "Lọc")
+  // Modal Draft States (edited by user inside the filter modal)
+  const [modalStartDate, setModalStartDate] = useState<string>("");
+  const [modalEndDate, setModalEndDate] = useState<string>("");
+  const [modalShift, setModalShift] = useState<string>("all");
+  const [modalStatus, setModalStatus] = useState<"all" | "on_time" | "late" | "absent">("all");
+
+  // Applied Filter States (active filters applied to backend query)
   const [appliedStartDate, setAppliedStartDate] = useState<string>("");
   const [appliedEndDate, setAppliedEndDate] = useState<string>("");
   const [appliedShift, setAppliedShift] = useState<string>("all");
   const [appliedStatus, setAppliedStatus] = useState<"all" | "on_time" | "late" | "absent">("all");
 
-  const isFilterActive = useMemo(() => {
+  const hasAnyAppliedFilter = useMemo(() => {
     return (
-      filterStartDateDraft !== "" ||
-      filterEndDateDraft !== "" ||
-      filterShiftDraft !== "all" ||
-      filterStatusDraft !== "all" ||
       appliedStartDate !== "" ||
       appliedEndDate !== "" ||
       appliedShift !== "all" ||
       appliedStatus !== "all"
     );
-  }, [
-    filterStartDateDraft,
-    filterEndDateDraft,
-    filterShiftDraft,
-    filterStatusDraft,
-    appliedStartDate,
-    appliedEndDate,
-    appliedShift,
-    appliedStatus,
-  ]);
+  }, [appliedStartDate, appliedEndDate, appliedShift, appliedStatus]);
 
-  const handleApplyFilter = () => {
-    setAppliedStartDate(filterStartDateDraft);
-    setAppliedEndDate(filterEndDateDraft);
-    setAppliedShift(filterShiftDraft);
-    setAppliedStatus(filterStatusDraft);
-    setCurrentPage(1);
-    setWindowStart(1);
+  // Check if draft in modal differs from currently applied values (Rule #10)
+  const hasModalChanges = useMemo(() => {
+    return (
+      modalStartDate !== appliedStartDate ||
+      modalEndDate !== appliedEndDate ||
+      modalShift !== appliedShift ||
+      modalStatus !== appliedStatus
+    );
+  }, [modalStartDate, modalEndDate, modalShift, modalStatus, appliedStartDate, appliedEndDate, appliedShift, appliedStatus]);
+
+  const handleOpenFilterModal = () => {
+    setModalStartDate(appliedStartDate);
+    setModalEndDate(appliedEndDate);
+    setModalShift(appliedShift);
+    setModalStatus(appliedStatus);
+    setIsFilterModalOpen(true);
   };
 
-  const handleResetFilter = () => {
-    setFilterStartDateDraft("");
-    setFilterEndDateDraft("");
-    setFilterShiftDraft("all");
-    setFilterStatusDraft("all");
+  const handleRequestCloseFilterModal = () => {
+    if (hasModalChanges) {
+      setShowConfirmCloseModal(true);
+    } else {
+      setIsFilterModalOpen(false);
+    }
+  };
+
+  const handleConfirmDiscardAndClose = () => {
+    setModalStartDate(appliedStartDate);
+    setModalEndDate(appliedEndDate);
+    setModalShift(appliedShift);
+    setModalStatus(appliedStatus);
+    setShowConfirmCloseModal(false);
+    setIsFilterModalOpen(false);
+  };
+
+  const handleApplyModalFilter = () => {
+    setAppliedStartDate(modalStartDate);
+    setAppliedEndDate(modalEndDate);
+    setAppliedShift(modalShift);
+    setAppliedStatus(modalStatus);
+    setCurrentPage(1);
+    setWindowStart(1);
+    setIsFilterModalOpen(false);
+  };
+
+  const handleResetModalDrafts = () => {
+    setModalStartDate("");
+    setModalEndDate("");
+    setModalShift("all");
+    setModalStatus("all");
+  };
+
+  const handleClearAllFilters = () => {
     setAppliedStartDate("");
     setAppliedEndDate("");
     setAppliedShift("all");
     setAppliedStatus("all");
+    setModalStartDate("");
+    setModalEndDate("");
+    setModalShift("all");
+    setModalStatus("all");
     setCurrentPage(1);
     setWindowStart(1);
   };
@@ -324,137 +358,133 @@ function StaffShiftHistoryContent() {
         )}
       </div>
 
+      {/* FILTER CONTROLS BAR (Above Table) */}
+      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Nút bấm "Sử dụng bộ lọc" */}
+          <button
+            type="button"
+            onClick={handleOpenFilterModal}
+            className="px-4 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-95"
+            title={isEn ? "Open filter dialog" : "Mở hộp thoại bộ lọc"}
+          >
+            <Filter className="w-3.5 h-3.5 text-[#2AC1BC]" />
+            <span>{isEn ? "Use Filters" : "Sử dụng bộ lọc"}</span>
+            {hasAnyAppliedFilter && (
+              <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
+            )}
+          </button>
+
+          {/* Khi ấn apply ở modal thì hiện filter được áp dụng ở bên cạnh */}
+          {hasAnyAppliedFilter ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* Date Range Chip */}
+              {(appliedStartDate || appliedEndDate) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
+                  <Calendar className="w-3 h-3 text-[#2AC1BC]" />
+                  <span>
+                    {appliedStartDate && appliedEndDate
+                      ? `${appliedStartDate} → ${appliedEndDate}`
+                      : appliedStartDate
+                        ? `Từ ${appliedStartDate}`
+                        : `Đến ${appliedEndDate}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedStartDate("");
+                      setAppliedEndDate("");
+                      setCurrentPage(1);
+                      setWindowStart(1);
+                    }}
+                    className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                    title={isEn ? "Remove date filter" : "Bỏ lọc ngày"}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {/* Shift Chip */}
+              {appliedShift !== "all" && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
+                  <Clock className="w-3 h-3 text-[#2AC1BC]" />
+                  <span>{getShiftName(appliedShift)}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedShift("all");
+                      setCurrentPage(1);
+                      setWindowStart(1);
+                    }}
+                    className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                    title={isEn ? "Remove shift filter" : "Bỏ lọc ca trực"}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {/* Status Chip */}
+              {appliedStatus !== "all" && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
+                  <ShieldCheck className="w-3 h-3 text-[#2AC1BC]" />
+                  <span>
+                    {appliedStatus === "on_time" && t("tableStatusOnTime")}
+                    {appliedStatus === "late" && t("tableStatusLate")}
+                    {appliedStatus === "absent" && t("tableStatusAbsent")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedStatus("all");
+                      setCurrentPage(1);
+                      setWindowStart(1);
+                    }}
+                    className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                    title={isEn ? "Remove status filter" : "Bỏ lọc trạng thái"}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {/* Clear All Chip */}
+              <button
+                type="button"
+                onClick={handleClearAllFilters}
+                className="text-xs text-red-600 hover:text-red-700 font-bold ml-1 hover:underline cursor-pointer"
+              >
+                {isEn ? "Clear all" : "Xoá tất cả"}
+              </button>
+            </div>
+          ) : (
+            <span className="text-xs text-zinc-400 font-medium italic">
+              {isEn ? "No active filters" : "Chưa áp dụng bộ lọc nào"}
+            </span>
+          )}
+        </div>
+
+        {/* Total records count */}
+        <div className="text-xs text-zinc-500 font-medium self-start md:self-center">
+          {isEn ? "Total records:" : "Tổng số bản ghi:"} <strong className="text-zinc-900 font-bold">{totalItems}</strong>
+        </div>
+      </div>
+
       {/* TABLE VIEW */}
       <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
-              {/* Row 1: Column Titles */}
               <tr>
-                <th className="py-3 px-3 min-w-[270px]">{t("tableColDate")}</th>
-                <th className="py-3 px-3 min-w-[170px]">{t("tableColShift")}</th>
-                <th className="py-3 px-3 min-w-[90px]">{t("tableColCheckIn")}</th>
-                <th className="py-3 px-3 min-w-[90px]">{t("tableColCheckOut")}</th>
-                <th className="py-3 px-3 min-w-[130px]">{t("tableColStatus")}</th>
-                <th className="py-3 px-3 min-w-[80px]">{t("tableColHours")}</th>
-                <th className="py-3 px-3 min-w-[160px]">{t("tableColNote")}</th>
-                <th className="py-3 px-3 min-w-[90px] text-center">{isEn ? "Action" : "Thao tác"}</th>
-              </tr>
-              {/* Row 2: Table Inline Filters */}
-              <tr className="bg-white border-t border-zinc-100 font-normal lowercase tracking-normal">
-                {/* Ngày trực: input dạng date lọc từ ngày đến ngày */}
-                <th className="py-2.5 px-3 min-w-[270px]">
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex-1 min-w-0">
-                      <input
-                        type="date"
-                        value={filterStartDateDraft}
-                        onChange={(e) => setFilterStartDateDraft(e.target.value)}
-                        className="w-full px-2 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer"
-                        title={isEn ? "From date" : "Từ ngày"}
-                      />
-                    </div>
-                    <span className="text-zinc-400 font-bold text-xs shrink-0">→</span>
-                    <div className="flex-1 min-w-0">
-                      <input
-                        type="date"
-                        value={filterEndDateDraft}
-                        onChange={(e) => setFilterEndDateDraft(e.target.value)}
-                        className="w-full px-2 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer"
-                        title={isEn ? "To date" : "Đến ngày"}
-                      />
-                    </div>
-                    {(filterStartDateDraft || filterEndDateDraft) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFilterStartDateDraft("");
-                          setFilterEndDateDraft("");
-                        }}
-                        className="p-1 text-zinc-400 hover:text-zinc-600 rounded-lg transition-colors cursor-pointer shrink-0"
-                        title={isEn ? "Clear dates" : "Xoá khoảng ngày"}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </th>
-
-                {/* Ca làm việc: dropdown shift filter lấy từ backend */}
-                <th className="py-2.5 px-3 min-w-[170px]">
-                  <select
-                    value={filterShiftDraft}
-                    onChange={(e) => setFilterShiftDraft(e.target.value)}
-                    disabled={isShiftsLoading}
-                    className="w-full px-2.5 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer truncate"
-                  >
-                    <option value="all">{isEn ? "All shifts" : "Tất cả ca làm việc"}</option>
-                    {availableShifts.map((shift) => (
-                      <option key={shift.id} value={shift.name}>
-                        {getShiftName(shift.name)}
-                      </option>
-                    ))}
-                  </select>
-                </th>
-
-                {/* Checkin: no filter */}
-                <th className="py-2.5 px-3 text-center">
-                  <span className="text-zinc-300 font-mono text-xs">-</span>
-                </th>
-
-                {/* Checkout: no filter */}
-                <th className="py-2.5 px-3 text-center">
-                  <span className="text-zinc-300 font-mono text-xs">-</span>
-                </th>
-
-                {/* Trạng thái: dropdown status filter */}
-                <th className="py-2.5 px-3">
-                  <select
-                    value={filterStatusDraft}
-                    onChange={(e) => setFilterStatusDraft(e.target.value as any)}
-                    className="w-full px-2.5 py-1.5 bg-zinc-50 hover:bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all shadow-2xs cursor-pointer truncate"
-                  >
-                    <option value="all">{isEn ? "All statuses" : "Tất cả trạng thái"}</option>
-                    <option value="on_time">{t("tableStatusOnTime")}</option>
-                    <option value="late">{t("tableStatusLate")}</option>
-                    <option value="absent">{t("tableStatusAbsent")}</option>
-                  </select>
-                </th>
-
-                {/* Giờ công: no filter */}
-                <th className="py-2.5 px-3 text-center">
-                  <span className="text-zinc-300 font-mono text-xs">-</span>
-                </th>
-
-                {/* Ghi chú & giải trình: no filter */}
-                <th className="py-2.5 px-3 text-center">
-                  <span className="text-zinc-300 font-mono text-xs">-</span>
-                </th>
-
-                {/* Nút "Lọc" ở ngoài cùng */}
-                <th className="py-2.5 px-3 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <button
-                      type="button"
-                      onClick={handleApplyFilter}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#2AC1BC] hover:bg-[#22a8a4] text-white text-xs font-bold flex items-center justify-center gap-1 transition-all shadow-2xs cursor-pointer active:scale-95"
-                      title={isEn ? "Apply filters" : "Áp dụng bộ lọc"}
-                    >
-                      <Filter className="w-3.5 h-3.5" />
-                      <span>{isEn ? "Filter" : "Lọc"}</span>
-                    </button>
-                    {isFilterActive && (
-                      <button
-                        type="button"
-                        onClick={handleResetFilter}
-                        className="p-1.5 rounded-xl border border-zinc-200 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
-                        title={isEn ? "Reset filters" : "Đặt lại bộ lọc"}
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                </th>
+                <th className="py-3.5 px-4">{t("tableColDate")}</th>
+                <th className="py-3.5 px-3">{t("tableColShift")}</th>
+                <th className="py-3.5 px-3">{t("tableColCheckIn")}</th>
+                <th className="py-3.5 px-3">{t("tableColCheckOut")}</th>
+                <th className="py-3.5 px-3">{t("tableColStatus")}</th>
+                <th className="py-3.5 px-3">{t("tableColHours")}</th>
+                <th className="py-3.5 px-3">{t("tableColNote")}</th>
+                <th className="py-3.5 px-3 text-center">{isEn ? "Action" : "Thao tác"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
@@ -641,11 +671,11 @@ function StaffShiftHistoryContent() {
               ? "Try adjusting your date, shift, or status filters."
               : "Hãy thử thay đổi ngày trực, ca làm việc hoặc bộ lọc trạng thái."}
           </p>
-          {isFilterActive && (
+          {hasAnyAppliedFilter && (
             <div className="pt-1">
               <button
                 type="button"
-                onClick={handleResetFilter}
+                onClick={handleClearAllFilters}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
@@ -812,6 +842,218 @@ function StaffShiftHistoryContent() {
                 className="px-4 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {t("btnClose")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FILTER MODAL */}
+      {isFilterModalOpen && (
+        <div
+          onClick={handleRequestCloseFilterModal}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200 animate-in zoom-in-95 duration-200"
+          >
+            {/* Header */}
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center text-[#2AC1BC]">
+                  <Filter className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-zinc-900">
+                    {isEn ? "Filter Shift History" : "Bộ lọc lịch sử ca trực"}
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 font-medium">
+                    {isEn ? "Select criteria to narrow down records" : "Chọn các tiêu chí để lọc bảng chấm công"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleRequestCloseFilterModal}
+                className="p-1.5 rounded-lg hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+                title={isEn ? "Close" : "Đóng"}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4">
+              {/* Ngày trực: Date Range (From - To) */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <span>{isEn ? "Shift Date Range" : "Khoảng ngày trực"}</span>
+                  </label>
+                  {(modalStartDate || modalEndDate) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalStartDate("");
+                        setModalEndDate("");
+                      }}
+                      className="text-[11px] text-zinc-400 hover:text-red-500 font-semibold cursor-pointer"
+                    >
+                      {isEn ? "Clear dates" : "Xóa ngày"}
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <span className="text-[10px] font-bold text-zinc-400 block mb-1">
+                      {isEn ? "From date" : "Từ ngày"}
+                    </span>
+                    <input
+                      type="date"
+                      value={modalStartDate}
+                      onChange={(e) => setModalStartDate(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-zinc-400 block mb-1">
+                      {isEn ? "To date" : "Đến ngày"}
+                    </span>
+                    <input
+                      type="date"
+                      value={modalEndDate}
+                      min={modalStartDate || undefined}
+                      onChange={(e) => setModalEndDate(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Ca làm việc: Dynamic from backend */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <span>{isEn ? "Shift Type" : "Ca làm việc"}</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={modalShift}
+                    onChange={(e) => setModalShift(e.target.value)}
+                    disabled={isShiftsLoading}
+                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="all">
+                      {isEn ? "All Shifts (Default)" : "Tất cả ca làm việc (Mặc định)"}
+                    </option>
+                    {availableShifts.map((s) => (
+                      <option key={s.id} value={s.name}>
+                        {getShiftName(s.name)} ({s.startTime} - {s.endTime})
+                      </option>
+                    ))}
+                  </select>
+                  {isShiftsLoading && (
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2">
+                      <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Trạng thái chấm công */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <span>{isEn ? "Attendance Status" : "Trạng thái chấm công"}</span>
+                </label>
+                <select
+                  value={modalStatus}
+                  onChange={(e) =>
+                    setModalStatus(
+                      e.target.value as "all" | "on_time" | "late" | "absent"
+                    )
+                  }
+                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                >
+                  <option value="all">
+                    {isEn ? "All Statuses (Default)" : "Tất cả trạng thái (Mặc định)"}
+                  </option>
+                  <option value="on_time">{t("tableStatusOnTime") || (isEn ? "On time" : "Đúng giờ")}</option>
+                  <option value="late">{t("tableStatusLate") || (isEn ? "Late" : "Đi muộn")}</option>
+                  <option value="absent">{t("tableStatusAbsent") || (isEn ? "Absent" : "Vắng mặt")}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleResetModalDrafts}
+                className="px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                title={isEn ? "Reset all fields in dialog" : "Đặt lại tất cả trường trong hộp thoại"}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{isEn ? "Reset" : "Thiết lập lại"}</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleRequestCloseFilterModal}
+                  className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+                >
+                  {isEn ? "Cancel" : "Hủy bỏ"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyModalFilter}
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#22a8a4] rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
+                >
+                  {isEn ? "Apply Filters" : "Áp dụng"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RULE #10 CONFIRMATION MODAL */}
+      {showConfirmCloseModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100"
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-2.5 mb-2 text-amber-600">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                <h3 className="text-base font-bold text-zinc-900">
+                  {isEn ? "Confirm Close Form" : "Xác nhận đóng form"}
+                </h3>
+              </div>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                {isEn
+                  ? "You have unsaved filter changes. Are you sure you want to discard changes and close?"
+                  : "Bạn có những thay đổi trong bộ lọc chưa được áp dụng. Bạn có chắc muốn hủy thay đổi & đóng?"}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 px-6 pb-6">
+              <button
+                type="button"
+                onClick={() => setShowConfirmCloseModal(false)}
+                className="flex-1 px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+              >
+                {isEn ? "Continue Editing" : "Tiếp tục chỉnh sửa"}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDiscardAndClose}
+                className="flex-1 px-4 py-2 text-xs font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors cursor-pointer shadow-2xs"
+              >
+                {isEn ? "Discard & Close" : "Hủy thay đổi & Đóng"}
               </button>
             </div>
           </div>
