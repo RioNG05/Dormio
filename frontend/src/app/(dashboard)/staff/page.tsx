@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Link from "next/link";
 import {
   Clock, CheckCircle2, AlertCircle, Building2, User,
-  Calendar, Shield, Phone, ChevronRight, CheckSquare,
-  Sparkles,  MapPin, LogOut, ArrowRight,
-  RefreshCw, Check, Users, Camera, Image as ImageIcon,
-  Upload, Eye, X, AlertTriangle, ShieldCheck, FileText,
+  Calendar, Shield, Phone, CheckSquare,
+  Sparkles, MapPin, LogOut, ArrowRight,
+  RefreshCw, Check, Users, Camera, Image as
+    Upload, Eye, X, AlertTriangle, ShieldCheck, FileText,
   Info, Lock
 } from "lucide-react";
 import {
@@ -256,8 +256,8 @@ export default function StaffOverviewPage() {
       showToast(
         locale === "en"
           ? (checkInEval.isLate
-              ? "Shift has already ended. Cannot check in."
-              : "Check-in only opens 10 minutes prior to shift start.")
+            ? "Shift has already ended. Cannot check in."
+            : "Check-in only opens 10 minutes prior to shift start.")
           : checkInEval.reason,
         "warning"
       );
@@ -338,11 +338,11 @@ export default function StaffOverviewPage() {
       checkInExplanation: payload.explanation,
       note: isLate
         ? (locale === "en"
-            ? `Checked in late at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}. Explanation: "${getLocalizedExplanation(payload.explanation, true) || "None"}"`
-            : `Check-in muộn lúc ${payload.capturedTime} tại ${payload.watermark.place}. Giải trình: "${payload.explanation || "Chưa có"}"`)
+          ? `Checked in late at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}. Explanation: "${getLocalizedExplanation(payload.explanation, true) || "None"}"`
+          : `Check-in muộn lúc ${payload.capturedTime} tại ${payload.watermark.place}. Giải trình: "${payload.explanation || "Chưa có"}"`)
         : (locale === "en"
-            ? `Checked in on-time at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}.`
-            : `Check-in đúng giờ lúc ${payload.capturedTime} tại ${payload.watermark.place}.`)
+          ? `Checked in on-time at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}.`
+          : `Check-in đúng giờ lúc ${payload.capturedTime} tại ${payload.watermark.place}.`)
     };
 
     setAttendance(updated);
@@ -353,11 +353,11 @@ export default function StaffOverviewPage() {
     showToast(
       isLate
         ? (locale === "en"
-            ? `Checked in successfully (Late at ${payload.capturedTime}) at ${getLocalizedPlace(payload.watermark.place, true)}`
-            : `Đã Check-in thành công (Muộn ${payload.capturedTime}) tại ${payload.watermark.place}`)
+          ? `Checked in successfully (Late at ${payload.capturedTime}) at ${getLocalizedPlace(payload.watermark.place, true)}`
+          : `Đã Check-in thành công (Muộn ${payload.capturedTime}) tại ${payload.watermark.place}`)
         : (locale === "en"
-            ? `Checked in successfully at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)} (On-time!)`
-            : `Đã Check-in thành công lúc ${payload.capturedTime} tại ${payload.watermark.place} (Đúng giờ!)`),
+          ? `Checked in successfully at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)} (On-time!)`
+          : `Đã Check-in thành công lúc ${payload.capturedTime} tại ${payload.watermark.place} (Đúng giờ!)`),
       isLate ? "warning" : "success"
     );
 
@@ -378,7 +378,7 @@ export default function StaffOverviewPage() {
         if (res?.schedule?.duties) {
           setDutyList(res.schedule.duties);
         }
-        staffAttendanceService.getMonthlySummary().then((sum) => sum && setMonthlySummary(sum)).catch(() => {});
+        staffAttendanceService.getMonthlySummary().then((sum) => sum && setMonthlySummary(sum)).catch(() => { });
       })
       .catch((err) => {
         console.warn("Backend check-in sync failed (local state active):", err);
@@ -425,11 +425,11 @@ export default function StaffOverviewPage() {
       checkOutExplanation: payload.explanation,
       note: isEarly
         ? (locale === "en"
-            ? `Checked out early at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}. Explanation: "${getLocalizedExplanation(payload.explanation, true) || "None"}"`
-            : `Check-out sớm lúc ${payload.capturedTime} tại ${payload.watermark.place}. Giải trình: "${payload.explanation || "Chưa có"}"`)
+          ? `Checked out early at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}. Explanation: "${getLocalizedExplanation(payload.explanation, true) || "None"}"`
+          : `Check-out sớm lúc ${payload.capturedTime} tại ${payload.watermark.place}. Giải trình: "${payload.explanation || "Chưa có"}"`)
         : (locale === "en"
-            ? `Checked out completed at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}.`
-            : `Check-out hoàn thành lúc ${payload.capturedTime} tại ${payload.watermark.place}.`)
+          ? `Checked out completed at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}.`
+          : `Check-out hoàn thành lúc ${payload.capturedTime} tại ${payload.watermark.place}.`)
     };
 
     setAttendance(updated);
@@ -440,11 +440,11 @@ export default function StaffOverviewPage() {
     showToast(
       isEarly
         ? (locale === "en"
-            ? `Checked out early at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)} with explanation.`
-            : `Đã Check-out sớm lúc ${payload.capturedTime} tại ${payload.watermark.place} kèm giải trình.`)
+          ? `Checked out early at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)} with explanation.`
+          : `Đã Check-out sớm lúc ${payload.capturedTime} tại ${payload.watermark.place} kèm giải trình.`)
         : (locale === "en"
-            ? `Checked out successfully at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}!`
-            : `Đã Check-out thành công lúc ${payload.capturedTime} tại ${payload.watermark.place}!`),
+          ? `Checked out successfully at ${payload.capturedTime} at ${getLocalizedPlace(payload.watermark.place, true)}!`
+          : `Đã Check-out thành công lúc ${payload.capturedTime} tại ${payload.watermark.place}!`),
       isEarly ? "warning" : "success"
     );
 
@@ -465,7 +465,7 @@ export default function StaffOverviewPage() {
         if (res?.schedule?.duties) {
           setDutyList(res.schedule.duties);
         }
-        staffAttendanceService.getMonthlySummary().then((sum) => sum && setMonthlySummary(sum)).catch(() => {});
+        staffAttendanceService.getMonthlySummary().then((sum) => sum && setMonthlySummary(sum)).catch(() => { });
       })
       .catch((err) => {
         console.warn("Backend check-out sync failed (local state active):", err);
@@ -662,13 +662,12 @@ export default function StaffOverviewPage() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
-      
+
       {/* Toast popup */}
       {toast && (
         <div className="fixed top-5 right-5 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
-          <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white ${
-            toast.type === "success" ? "bg-[#2AC1BC]" : toast.type === "warning" ? "bg-amber-600" : "bg-zinc-800"
-          }`}>
+          <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white ${toast.type === "success" ? "bg-[#2AC1BC]" : toast.type === "warning" ? "bg-amber-600" : "bg-zinc-800"
+            }`}>
             <Sparkles className="w-4 h-4 shrink-0" />
             <span>{toast.message}</span>
           </div>
@@ -709,7 +708,7 @@ export default function StaffOverviewPage() {
 
       {/* MAIN SECTION: 2-COLUMN LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* COLUMN LEFT (2 SPAN): TODAY'S SHIFT CARD & SMART TIMEKEEPING BUTTONS OR EMPTY STATE */}
         {!todaySchedule ? (
           <div className="lg:col-span-2 space-y-6">
@@ -717,7 +716,7 @@ export default function StaffOverviewPage() {
               <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto shadow-inner">
                 <Calendar className="w-8 h-8" />
               </div>
-              
+
               <div className="space-y-2 max-w-md mx-auto">
                 <h2 className="text-xl sm:text-2xl font-black text-zinc-900">
                   {locale === "en" ? "No Shift Scheduled for Today" : "Không có lịch trực hôm nay"}
@@ -726,8 +725,8 @@ export default function StaffOverviewPage() {
                   {fetchError
                     ? fetchError
                     : (locale === "en"
-                        ? "You do not have any work shifts assigned for today. You can check upcoming shifts in the Schedule tab or review past attendance history."
-                        : "Hôm nay bạn không có ca trực nào được phân công. Bạn có thể kiểm tra lịch phân ca sắp tới tại tab Lịch trực & Nhiệm vụ hoặc tra cứu lịch sử chấm công.")}
+                      ? "You do not have any work shifts assigned for today. You can check upcoming shifts in the Schedule tab or review past attendance history."
+                      : "Hôm nay bạn không có ca trực nào được phân công. Bạn có thể kiểm tra lịch phân ca sắp tới tại tab Lịch trực & Nhiệm vụ hoặc tra cứu lịch sử chấm công.")}
                 </p>
               </div>
 
@@ -764,10 +763,10 @@ export default function StaffOverviewPage() {
           </div>
         ) : (
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* TODAY'S SHIFT HERO CARD */}
             <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-6 sm:p-7 space-y-6">
-              
+
               {/* Header of Shift Card */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-zinc-100">
                 <div className="space-y-1">
@@ -863,9 +862,8 @@ export default function StaffOverviewPage() {
                       </div>
                       <div>
                         {attendance?.checkIn ? (
-                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                            attendance.status === "late" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                          }`}>
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${attendance.status === "late" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                            }`}>
                             {attendance.status === "late" ? t("statusLate") : t("statusOnTime")}
                           </span>
                         ) : (
@@ -945,9 +943,8 @@ export default function StaffOverviewPage() {
                       </div>
                       <div>
                         {attendance?.checkOut ? (
-                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                            attendance.isEarlyCheckOut ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                          }`}>
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${attendance.isEarlyCheckOut ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                            }`}>
                             {attendance.isEarlyCheckOut ? t("statusEarly") : t("statusCompleted")}
                           </span>
                         ) : (
@@ -1017,7 +1014,7 @@ export default function StaffOverviewPage() {
 
                 {/* Action Buttons Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  
+
                   {/* Check In Button */}
                   {attendance?.checkIn ? (
                     <button
@@ -1043,11 +1040,10 @@ export default function StaffOverviewPage() {
                       type="button"
                       disabled={!checkInEval.allowed}
                       onClick={handleOpenCheckIn}
-                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                        checkInEval.allowed
+                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${checkInEval.allowed
                           ? "bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25"
                           : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                      }`}
+                        }`}
                     >
                       <Camera className="w-4 h-4" />
                       <span>
@@ -1081,11 +1077,10 @@ export default function StaffOverviewPage() {
                       type="button"
                       disabled={!checkOutEval.allowed}
                       onClick={handleOpenCheckOut}
-                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                        checkOutEval.allowed
+                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${checkOutEval.allowed
                           ? "bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25"
                           : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                      }`}
+                        }`}
                     >
                       <LogOut className="w-4 h-4" />
                       <span>
@@ -1151,14 +1146,13 @@ export default function StaffOverviewPage() {
                     {dutyList.map((duty) => (
                       <div
                         key={duty.id}
-                        className={`p-4 rounded-2xl border transition-all ${
-                          duty.completed
+                        className={`p-4 rounded-2xl border transition-all ${duty.completed
                             ? "bg-emerald-50/40 border-emerald-200/80 text-zinc-800"
                             : "bg-white border-zinc-200 text-zinc-800 hover:border-[#2AC1BC]/40"
-                        }`}
+                          }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                          
+
                           {/* Left: Checkbox + Title + Proof Tag */}
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <input
@@ -1172,7 +1166,7 @@ export default function StaffOverviewPage() {
                                 <span className={`text-xs font-bold leading-snug ${duty.completed ? "line-through text-zinc-400" : "text-zinc-900"}`}>
                                   {getDutyTitle(duty, locale === "en")}
                                 </span>
-                                
+
                                 {/* Requirement Tag */}
                                 {duty.requiresPhoto ? (
                                   <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200/80 inline-flex items-center gap-1 shrink-0">
@@ -1265,7 +1259,7 @@ export default function StaffOverviewPage() {
 
         {/* COLUMN RIGHT (1 SPAN): CO-WORKERS ON SHIFT & QUICK METRICS */}
         <div className="space-y-6">
-          
+
           {/* CO-WORKERS ON THE SAME SHIFT (UC-S-01) */}
           <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
@@ -1458,7 +1452,7 @@ export default function StaffOverviewPage() {
             onClick={(e) => e.stopPropagation()}
             className="bg-zinc-900 text-white rounded-3xl border border-zinc-800 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col cursor-default"
           >
-            
+
             {/* Lightbox Header */}
             <div className="p-4 sm:p-5 flex items-center justify-between border-b border-zinc-800">
               <div className="flex items-center gap-2">
@@ -1645,7 +1639,7 @@ async function resolveRealGpsAddress(lat: number, lng: number, isEn = false): Pr
         const ward = addr.suburb || addr.quarter || addr.neighbourhood || addr.village;
         const district = addr.city_district || addr.district || addr.county;
         const city = addr.city || addr.state || addr.province;
-        
+
         const parts = [street, ward, district, city].filter(Boolean);
         const unique = parts.filter((item, idx) => parts.indexOf(item) === idx);
         if (unique.length >= 2) {
@@ -1914,7 +1908,7 @@ function CheckInOutCameraModal({
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play().catch(() => {});
+        await videoRef.current.play().catch(() => { });
       }
       setCameraStatus("ready");
     } catch (err: any) {
@@ -2135,7 +2129,7 @@ function CheckInOutCameraModal({
         onClick={(e) => e.stopPropagation()}
         className="bg-white rounded-3xl border border-zinc-200 shadow-2xl max-w-xl w-full my-auto overflow-hidden flex flex-col cursor-default"
       >
-        
+
         {/* Modal Header */}
         <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -2286,11 +2280,10 @@ function CheckInOutCameraModal({
                   type="button"
                   disabled={cameraStatus !== "ready" || geoState.status === "locating"}
                   onClick={handleCaptureRealFrame}
-                  className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md ${
-                    cameraStatus === "ready" && geoState.status !== "locating"
+                  className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md ${cameraStatus === "ready" && geoState.status !== "locating"
                       ? "bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-[#2AC1BC]/25"
                       : "bg-zinc-200 text-zinc-500 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   {geoState.status === "locating" ? (
                     <>
@@ -2331,11 +2324,11 @@ function CheckInOutCameraModal({
                   <p className="text-[11px] text-amber-700 leading-relaxed font-medium">
                     {mode === "checkin"
                       ? (isLate
-                          ? t("lateCheckInDesc", { time: shiftStartTime || "07:00" })
-                          : t("onTimeCheckInDesc"))
+                        ? t("lateCheckInDesc", { time: shiftStartTime || "07:00" })
+                        : t("onTimeCheckInDesc"))
                       : (isEarly
-                          ? t("earlyCheckOutDesc", { time: shiftEndTime || "15:00" })
-                          : t("normalCheckOutDesc"))}
+                        ? t("earlyCheckOutDesc", { time: shiftEndTime || "15:00" })
+                        : t("normalCheckOutDesc"))}
                   </p>
                 </div>
               </div>
@@ -2351,11 +2344,10 @@ function CheckInOutCameraModal({
                       key={idx}
                       type="button"
                       onClick={() => handleSelectChip(chip)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
-                        selectedQuickReason === chip
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${selectedQuickReason === chip
                           ? "bg-amber-600 text-white shadow-2xs border border-amber-600"
                           : "bg-white border border-amber-300 text-amber-900 hover:bg-amber-100/80 shadow-2xs"
-                      }`}
+                        }`}
                     >
                       {chip}
                     </button>
@@ -2375,11 +2367,11 @@ function CheckInOutCameraModal({
                   placeholder={
                     mode === "checkin"
                       ? (isLate
-                          ? t("placeholderExplanation")
-                          : t("placeholderNote"))
+                        ? t("placeholderExplanation")
+                        : t("placeholderNote"))
                       : (isEarly
-                          ? t("placeholderExplanation")
-                          : t("placeholderCheckOutNote"))
+                        ? t("placeholderExplanation")
+                        : t("placeholderCheckOutNote"))
                   }
                   className="w-full p-2.5 rounded-xl bg-white border border-amber-300 text-xs text-zinc-900 font-medium focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-500/20"
                 />
@@ -2425,11 +2417,10 @@ function CheckInOutCameraModal({
                 });
               }
             }}
-            className={`py-2.5 px-5 rounded-xl font-bold text-xs text-white transition-all cursor-pointer flex items-center gap-1.5 ${
-              isFormValid
+            className={`py-2.5 px-5 rounded-xl font-bold text-xs text-white transition-all cursor-pointer flex items-center gap-1.5 ${isFormValid
                 ? "bg-[#2AC1BC] hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/25"
                 : "bg-zinc-300 text-zinc-500 cursor-not-allowed"
-            }`}
+              }`}
           >
             <Check className="w-4 h-4" />
             <span>
@@ -2503,7 +2494,7 @@ function DutyProofModal({
         onClick={(e) => e.stopPropagation()}
         className="bg-white rounded-3xl border border-zinc-200 shadow-2xl max-w-lg w-full my-auto overflow-hidden flex flex-col cursor-default"
       >
-        
+
         {/* Header */}
         <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -2530,7 +2521,7 @@ function DutyProofModal({
 
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-4">
-          
+
           <div className="p-3 rounded-xl bg-teal-50 border border-teal-200/80 text-xs text-teal-900 flex items-start gap-2">
             <Info className="w-4 h-4 text-[#2AC1BC] shrink-0 mt-0.5" />
             <p className="leading-relaxed">

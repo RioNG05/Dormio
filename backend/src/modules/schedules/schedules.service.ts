@@ -20,6 +20,9 @@ import { ShiftItemDto } from './dto/shift-response.dto';
 import { UpdateRecurrenceDto } from './dto/update-recurrence.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
+import { QueryStaffSchedulesDto } from './dto/query-staff-schedules.dto';
+import { StaffBoardingHouseResponseDto } from './dto/staff-boarding-house-response.dto';
+import { StaffScheduleItemResponseDto } from './dto/staff-schedule-response.dto';
 
 const DEFAULT_SHIFTS = [
   { name: 'Ca sáng', startTime: '06:00', endTime: '14:00' },
@@ -901,5 +904,290 @@ export class SchedulesService {
       deletedCount: 1,
       message: 'Đã hủy ca làm việc thành công.',
     };
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // STAFF SCHEDULES & BOARDING HOUSES (UC-S-01)
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /**
+   * UC-S-01: Get list of active assigned boarding houses for staff member
+   */
+  async getStaffBoardingHouses(
+    userId: string,
+  ): Promise<StaffBoardingHouseResponseDto[]> {
+    this.logger.log(`getStaffBoardingHouses for userId=${userId}`);
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+    }
+
+    const assignments = await this.prisma.employeeAssignment.findMany({
+      where: {
+        employeeId: employee.id,
+        status: 'active',
+      },
+      include: {
+        boardingHouse: true,
+      },
+      orderBy: { boardingHouse: { name: 'asc' } },
+    });
+
+    const houseMap = new Map<string, StaffBoardingHouseResponseDto>();
+    for (const a of assignments) {
+      if (!houseMap.has(a.boardingHouseId)) {
+        const address = [
+          a.boardingHouse.houseNumber,
+          a.boardingHouse.street,
+          a.boardingHouse.ward,
+          a.boardingHouse.district,
+          a.boardingHouse.city || a.boardingHouse.province,
+        ]
+          .filter(Boolean)
+          .join(', ');
+
+        houseMap.set(a.boardingHouseId, {
+          id: a.boardingHouse.id,
+          name: a.boardingHouse.name,
+          address: address || null,
+        });
+      }
+    }
+
+    return Array.from(houseMap.values());
+  }
+
+  /**
+   * UC-S-01: Get work schedule roster with shift, position, co-workers and duties for staff member
+   */
+  async getStaffSchedules(
+    userId: string,
+    query: QueryStaffSchedulesDto,
+  ): Promise<StaffScheduleItemResponseDto[]> {
+    this.logger.log(
+      `getStaffSchedules for userId=${userId} query=${JSON.stringify(query)}`,
+    );
+
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+    }
+
+    // Determine target start and end dates
+    let startDate: Date;
+    let endDate: Date;
+
+    if (query.startDate) {
+      startDate = this.parseDateOnly(query.startDate);
+    } else {
+      const now = new Date();
+      const day = now.getUTCDay();
+      const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1); // Monday
+      startDate = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0),
+      );
+    }
+
+    if (query.endDate) {
+      endDate = new Date(
+        this.parseDateOnly(query.endDate).getTime() + 86400000 - 1,
+      );
+    } else {
+      endDate = new Date(startDate.getTime() + 7 * 86400000 - 1);
+    }
+
+    // Get active employee assignments
+    const assignments = await this.prisma.employeeAssignment.findMany({
+      where: {
+        employeeId: employee.id,
+        status: 'active',
+      },
+      include: {
+        position: true,
+        boardingHouse: true,
+      },
+    });
+
+    const assignedHouseIds = Array.from(
+      new Set(assignments.map((a) => a.boardingHouseId)),
+    );
+
+    if (assignedHouseIds.length === 0) {
+      return [];
+    }
+
+    let targetHouseIds = assignedHouseIds;
+    if (query.boardingHouseId) {
+      if (!assignedHouseIds.includes(query.boardingHouseId)) {
+        return [];
+      }
+      targetHouseIds = [query.boardingHouseId];
+    }
+
+    // Fetch work schedules for the staff member
+    const schedules = await this.prisma.workSchedule.findMany({
+      where: {
+        employeeId: employee.id,
+        boardingHouseId: { in: targetHouseIds },
+        workDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: { not: 'canceled' },
+      },
+      include: {
+        shift: true,
+        boardingHouse: true,
+        attendances: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: [{ workDate: 'asc' }, { shift: { startTime: 'asc' } }],
+    });
+
+    const result: StaffScheduleItemResponseDto[] = [];
+
+    for (const item of schedules) {
+      const assignment = assignments.find(
+        (a) => a.boardingHouseId === item.boardingHouseId,
+      );
+      const position = assignment?.position || {
+        id: 'default',
+        name: 'Nhân viên vận hành',
+        description:
+          'Kiểm tra an ninh và kiểm soát xe ra vào.\nTuần tra hành lang và khu vực công cộng.\nBàn giao ca trực đầy đủ.',
+      };
+
+      // Query shift colleagues / co-workers on duty
+      const coWorkerSchedules = await this.prisma.workSchedule.findMany({
+        where: {
+          boardingHouseId: item.boardingHouseId,
+          shiftId: item.shiftId,
+          workDate: item.workDate,
+          employeeId: { not: employee.id },
+          status: { not: 'canceled' },
+        },
+        include: {
+          employee: {
+            include: {
+              user: {
+                include: { userIdentification: true },
+              },
+              employeeAssignments: {
+                where: {
+                  boardingHouseId: item.boardingHouseId,
+                  status: 'active',
+                },
+                include: { position: true },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+
+      const coWorkers = coWorkerSchedules.map((cs) => {
+        const empUser = cs.employee.user;
+        const name =
+          empUser.userIdentification?.fullName ||
+          empUser.username ||
+          empUser.phoneNumber;
+        const posName =
+          cs.employee.employeeAssignments[0]?.position?.name || 'Nhân viên';
+
+        return {
+          id: cs.employee.id,
+          name,
+          phone: empUser.phoneNumber,
+          positionName: posName,
+          avatar: empUser.avatarUrl || null,
+        };
+      });
+
+      // Resolve duty checklist items
+      let dutyItems: any[] = [];
+      const att = item.attendances[0];
+      if (
+        att?.dutyTasks &&
+        Array.isArray(att.dutyTasks) &&
+        att.dutyTasks.length > 0
+      ) {
+        dutyItems = att.dutyTasks;
+      } else {
+        const lines = (position.description || '')
+          .split('\n')
+          .map((l) => l.trim().replace(/^[•\s\d.-]+/, ''))
+          .filter(Boolean);
+
+        if (lines.length > 0) {
+          dutyItems = lines.map((title, idx) => ({
+            id: `duty-${idx + 1}`,
+            title,
+            requiresPhoto: idx === 0,
+            completed: false,
+            completedAt: null,
+            photoProof: null,
+            photoProofTime: null,
+            note: null,
+          }));
+        } else {
+          dutyItems = [
+            {
+              id: 'duty-1',
+              title: 'Kiểm tra an ninh và kiểm soát xe ra vào khu vực',
+              requiresPhoto: true,
+              completed: false,
+              completedAt: null,
+              photoProof: null,
+              photoProofTime: null,
+              note: null,
+            },
+            {
+              id: 'duty-2',
+              title: 'Tuần tra hành lang, khuôn viên chung và trang thiết bị',
+              requiresPhoto: false,
+              completed: false,
+              completedAt: null,
+              photoProof: null,
+              photoProofTime: null,
+              note: null,
+            },
+          ];
+        }
+      }
+
+      result.push({
+        id: item.id,
+        workDate: this.formatDateOnly(item.workDate),
+        boardingHouseId: item.boardingHouseId,
+        boardingHouseName: item.boardingHouse.name,
+        shift: {
+          id: item.shift.id,
+          name: item.shift.name,
+          startTime: this.formatTime(item.shift.startTime),
+          endTime: this.formatTime(item.shift.endTime),
+        },
+        position: {
+          id: position.id,
+          name: position.name,
+          description: position.description || null,
+        },
+        isRecurring: item.recurrenceId !== null,
+        status: item.status,
+        coWorkers,
+        duties: dutyItems,
+        additionalTasks: [],
+      });
+    }
+
+    return result;
   }
 }

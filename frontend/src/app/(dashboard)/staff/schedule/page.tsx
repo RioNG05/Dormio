@@ -1,41 +1,58 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense, useRef } from "react";
+import React, { useState, useMemo, useEffect, useCallback, Suspense, useRef } from "react";
 import Link from "next/link";
 import {
   Calendar, Clock, Building2, Shield, Users,
   ChevronLeft, ChevronRight, Info, X, CheckCircle2,
-  AlertTriangle, Phone, Repeat, ArrowLeft, ArrowRight,
+  AlertTriangle, Phone, ArrowLeft, ArrowRight,
   Camera, Eye, CheckSquare, Sparkles, User, FileText,
-  Trash2, Upload, BellRing
+  Trash2, Upload, BellRing, RefreshCw
 } from "lucide-react";
 import {
-  MOCK_WORK_SCHEDULES,
-  WorkScheduleItem,
-  JOB_POSITIONS,
   DutyTaskItem,
   getLocalizedPlace,
   getLocalizedStaffName,
-  getLocalizedExplanation,
   getCurrentWeekDays,
-  getDailyDutiesForPosition,
-  MOCK_STAFF_TASKS,
   getTodayISODate
 } from "../data";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import {
+  staffScheduleService,
+  StaffBoardingHouse,
+  StaffScheduleItem,
+} from "@/services/staff-schedule.service";
+import {
+  staffAttendanceService,
+  StaffTodayOverview,
+} from "@/services/staff-attendance.service";
 
 function StaffScheduleContent() {
   const t = useTranslations("staffPortal");
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
-  // Filter by boarding house
+  // Boarding houses list & filter
+  const [boardingHouses, setBoardingHouses] = useState<StaffBoardingHouse[]>([]);
+  const [isHousesLoading, setIsHousesLoading] = useState<boolean>(true);
   const [selectedHouse, setSelectedHouse] = useState<string>("all");
 
-  // Selected schedule item for detail modal
-  const [selectedSchedule, setSelectedSchedule] = useState<WorkScheduleItem | null>(null);
+  // Week anchor date for navigation (Mon-Sun window)
+  const [weekAnchor, setWeekAnchor] = useState<Date>(() => new Date());
 
-  // Today's date string
+  // Schedules state
+  const [schedules, setSchedules] = useState<StaffScheduleItem[]>([]);
+  const [isSchedulesLoading, setIsSchedulesLoading] = useState<boolean>(true);
+
+  // Selected schedule item for unified detail modal
+  const [selectedSchedule, setSelectedSchedule] = useState<StaffScheduleItem | null>(null);
+
+  // Today's attendance overview & duties checklist state
+  const [todayOverview, setTodayOverview] = useState<StaffTodayOverview | null>(null);
+  const [todayDuties, setTodayDuties] = useState<DutyTaskItem[]>([]);
+  const [isDutiesLoading, setIsDutiesLoading] = useState<boolean>(true);
+
+  // Today's ISO date string
   const todayStr = getTodayISODate();
 
   // Toast notification
@@ -45,7 +62,7 @@ function StaffScheduleContent() {
     setTimeout(() => setToast(null), 3200);
   };
 
-  // Helper translations for dynamic mock data
+  // Helper translations for shift names
   const getShiftName = (name: string) => {
     if (!isEn) return name;
     if (name.includes("Sáng")) return "Morning Shift (07:00 - 15:00)";
@@ -63,15 +80,9 @@ function StaffScheduleContent() {
     return name;
   };
 
-  // Filtered schedules
-  const filteredSchedules = useMemo(() => {
-    if (selectedHouse === "all") return MOCK_WORK_SCHEDULES;
-    return MOCK_WORK_SCHEDULES.filter(s => s.boardingHouseId === selectedHouse);
-  }, [selectedHouse]);
-
-  // Dynamic week days based on actual real date (Current week Mon-Sun)
+  // Dynamic week days based on weekAnchor (Mon-Sun)
   const weekDays = useMemo(() => {
-    const rawDays = getCurrentWeekDays(new Date());
+    const rawDays = getCurrentWeekDays(weekAnchor);
     const labels = [t("dayMon"), t("dayTue"), t("dayWed"), t("dayThu"), t("dayFri"), t("daySat"), t("daySun")];
     return rawDays.map((d, idx) => ({
       label: labels[idx] || d.label,
@@ -79,98 +90,124 @@ function StaffScheduleContent() {
       dayNum: d.dayNum,
       isToday: d.isToday
     }));
-  }, [t]);
+  }, [weekAnchor, t]);
 
-  const getDutyLines = (item: WorkScheduleItem) => {
-    if (!isEn) {
-      return item.position.description.split("\n").filter(Boolean).map(line => line.replace(/^[•\s\d.-]+/, ""));
-    }
-    if (item.position.name.includes("Bảo vệ")) {
-      return [
-        "Check gate security, monitor vehicle entries and exits in the area.",
-        "Patrol corridors, common spaces, and lock building gates at 23:00.",
-        "Handle tenant noise complaints or nighttime incidents."
-      ];
-    }
-    if (item.position.name.includes("Vệ sinh")) {
-      return [
-        "Sweep and mop communal corridors and stairwells.",
-        "Clear trash bins and sanitize shared sanitary areas.",
-        "Check soap and paper amenities in public restrooms."
-      ];
-    }
-    if (item.position.name.includes("Kỹ thuật")) {
-      return [
-        "Check and record water and electrical meters on building panels.",
-        "Inspect emergency lighting, water pumps, and electrical safety.",
-        "Process quick repair requests for room fixtures."
-      ];
-    }
-    return item.position.description.split("\n").filter(Boolean).map(line => line.replace(/^[•\s\d.-]+/, ""));
-  };
+  const startDate = weekDays[0]?.date;
+  const endDate = weekDays[weekDays.length - 1]?.date;
 
-  // Check additional tasks on the selected schedule date
-  const additionalTasksOnSelectedDate = useMemo(() => {
-    if (!selectedSchedule) return [];
-    return MOCK_STAFF_TASKS.filter(
-      task => task.isCustomTask && task.deadline.startsWith(selectedSchedule.workDate)
-    );
-  }, [selectedSchedule]);
-
-  // =========================================================================
-  // NHIỆM VỤ HÔM NAY (TODAY'S TASKS) STATE & LOGIC
-  // =========================================================================
-  const currentPosition = JOB_POSITIONS[0]; // Default role: Bảo vệ & Vận hành sảnh
-  const [todayDuties, setTodayDuties] = useState<DutyTaskItem[]>(() =>
-    getDailyDutiesForPosition(currentPosition.id)
-  );
-
-  // Sync today duties with localStorage
+  // 1. Fetch active assigned boarding houses
   useEffect(() => {
+    let mounted = true;
+    setIsHousesLoading(true);
+    staffScheduleService
+      .getBoardingHouses()
+      .then((houses) => {
+        if (mounted) setBoardingHouses(houses);
+      })
+      .catch((err) => {
+        console.error("Failed to load staff boarding houses:", err);
+        if (mounted) setBoardingHouses([]);
+      })
+      .finally(() => {
+        if (mounted) setIsHousesLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // 2. Fetch schedules for current week window & selected property
+  const fetchSchedules = useCallback(async () => {
+    if (!startDate || !endDate) return;
+    setIsSchedulesLoading(true);
     try {
-      const saved = localStorage.getItem("dormio_staff_today_duties");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setTodayDuties(parsed);
-        }
-      }
-    } catch {
-      // Fallback
+      const items = await staffScheduleService.getSchedules({
+        startDate,
+        endDate,
+        boardingHouseId: selectedHouse,
+      });
+      setSchedules(items);
+    } catch (err) {
+      console.error("Failed to load staff schedules:", err);
+      setSchedules([]);
+    } finally {
+      setIsSchedulesLoading(false);
     }
+  }, [startDate, endDate, selectedHouse]);
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [fetchSchedules]);
+
+  // 3. Fetch today's duties checklist & sync with attendance overview
+  const fetchTodayDuties = useCallback(async () => {
+    setIsDutiesLoading(true);
+    try {
+      const overview = await staffAttendanceService.getTodayOverview();
+      setTodayOverview(overview);
+      if (overview?.schedule?.duties && Array.isArray(overview.schedule.duties)) {
+        setTodayDuties(overview.schedule.duties);
+      } else {
+        setTodayDuties([]);
+      }
+    } catch (err) {
+      console.error("Failed to load today duties overview:", err);
+      setTodayOverview(null);
+      setTodayDuties([]);
+    } finally {
+      setIsDutiesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTodayDuties();
 
     const handleSync = () => {
-      try {
-        const saved = localStorage.getItem("dormio_staff_today_duties");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTodayDuties(parsed);
-          }
-        }
-      } catch {
-        // Fallback
-      }
+      fetchTodayDuties();
     };
+
     window.addEventListener("dormio_attendance_updated", handleSync);
     window.addEventListener("storage", handleSync);
     return () => {
       window.removeEventListener("dormio_attendance_updated", handleSync);
       window.removeEventListener("storage", handleSync);
     };
-  }, []);
+  }, [fetchTodayDuties]);
 
-  const saveTodayDuties = (newDuties: DutyTaskItem[]) => {
-    setTodayDuties(newDuties);
-    try {
-      localStorage.setItem("dormio_staff_today_duties", JSON.stringify(newDuties));
-      window.dispatchEvent(new CustomEvent("dormio_attendance_updated"));
-    } catch {
-      // Fallback
-    }
+  // Navigation handlers
+  const handlePrevWeek = () => {
+    setWeekAnchor((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 7);
+      return d;
+    });
   };
 
-  // Modal for duty proof upload & notes
+  const handleNextWeek = () => {
+    setWeekAnchor((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 7);
+      return d;
+    });
+  };
+
+  const handleCurrentWeek = () => {
+    setWeekAnchor(new Date());
+  };
+
+  // Helper to extract duty lines from item
+  const getDutyLines = (item: StaffScheduleItem) => {
+    if (item.duties && item.duties.length > 0) {
+      return item.duties.map(d => d.title);
+    }
+    if (!item.position.description) return [];
+    return item.position.description.split("\n").filter(Boolean).map(line => line.replace(/^[•\s\d.-]+/, ""));
+  };
+
+  // =========================================================================
+  // NHIỆM VỤ HÔM NAY (TODAY'S TASKS) STATE & HANDLERS
+  // =========================================================================
   const [activeDutyForProof, setActiveDutyForProof] = useState<DutyTaskItem | null>(null);
   const [dutyDraftPhoto, setDutyDraftPhoto] = useState<string | null>(null);
   const [dutyDraftNote, setDutyDraftNote] = useState<string>("");
@@ -190,7 +227,7 @@ function StaffScheduleContent() {
     setDutyDraftNote(duty.note || "");
   };
 
-  const handleToggleDuty = (duty: DutyTaskItem) => {
+  const handleToggleDuty = async (duty: DutyTaskItem) => {
     if (duty.requiresPhoto && !duty.photoProof && !duty.completed) {
       handleOpenDutyProofModal(duty);
       showToast(
@@ -202,27 +239,48 @@ function StaffScheduleContent() {
       return;
     }
 
-    const updated = todayDuties.map((d) => {
-      if (d.id === duty.id) {
-        const nextCompleted = !d.completed;
-        const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} - ${todayStr}`;
-        return {
-          ...d,
-          completed: nextCompleted,
-          completedAt: nextCompleted ? timeStr : undefined
-        };
+    if (!todayOverview?.schedule?.id) {
+      showToast(
+        isEn
+          ? "No active shift today to record task completion."
+          : "Hôm nay bạn không có ca trực hoạt động để ghi nhận nhiệm vụ.",
+        "warning"
+      );
+      return;
+    }
+
+    try {
+      const res = await staffAttendanceService.saveDutyProof({
+        workScheduleId: todayOverview.schedule.id,
+        dutyId: duty.id,
+        markCompleted: !duty.completed,
+      });
+
+      if (res?.schedule?.duties) {
+        setTodayDuties(res.schedule.duties);
       }
-      return d;
-    });
-    saveTodayDuties(updated);
-    showToast(isEn ? "Updated task status successfully" : "Đã cập nhật trạng thái nhiệm vụ");
+      window.dispatchEvent(new CustomEvent("dormio_attendance_updated"));
+      showToast(
+        isEn ? "Updated task status successfully" : "Đã cập nhật trạng thái nhiệm vụ",
+        "success"
+      );
+    } catch (err: any) {
+      showToast(
+        err?.message || (isEn ? "Failed to update task" : "Cập nhật nhiệm vụ thất bại"),
+        "warning"
+      );
+    }
   };
 
-  const handleSaveDutyProof = (markComplete: boolean) => {
+  const handleSaveDutyProof = async (markComplete: boolean) => {
     if (!activeDutyForProof) return;
 
-    if (markComplete && activeDutyForProof.requiresPhoto && !dutyDraftPhoto && !activeDutyForProof.photoProof) {
+    if (
+      markComplete &&
+      activeDutyForProof.requiresPhoto &&
+      !dutyDraftPhoto &&
+      !activeDutyForProof.photoProof
+    ) {
       showToast(
         isEn
           ? "This task requires photo proof before completing!"
@@ -232,31 +290,47 @@ function StaffScheduleContent() {
       return;
     }
 
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} - ${todayStr}`;
+    if (!todayOverview?.schedule?.id) {
+      showToast(
+        isEn
+          ? "No active shift today to attach proof."
+          : "Hôm nay bạn không có ca trực hoạt động để lưu bằng chứng.",
+        "warning"
+      );
+      return;
+    }
 
-    const updated = todayDuties.map((d) => {
-      if (d.id === activeDutyForProof.id) {
-        const isCompleted = markComplete ? true : d.completed;
-        return {
-          ...d,
-          completed: isCompleted,
-          photoProof: dutyDraftPhoto || d.photoProof,
-          photoProofTime: dutyDraftPhoto ? timeStr : d.photoProofTime,
-          completedAt: isCompleted ? (d.completedAt || timeStr) : undefined,
-          note: dutyDraftNote.trim() || d.note
-        };
+    try {
+      const res = await staffAttendanceService.saveDutyProof({
+        workScheduleId: todayOverview.schedule.id,
+        dutyId: activeDutyForProof.id,
+        photo: dutyDraftPhoto || undefined,
+        note: dutyDraftNote.trim() || undefined,
+        markCompleted: markComplete,
+      });
+
+      if (res?.schedule?.duties) {
+        setTodayDuties(res.schedule.duties);
       }
-      return d;
-    });
+      window.dispatchEvent(new CustomEvent("dormio_attendance_updated"));
+      setActiveDutyForProof(null);
 
-    saveTodayDuties(updated);
-    setActiveDutyForProof(null);
-
-    if (markComplete) {
-      showToast(isEn ? "Task completed successfully!" : "Đã hoàn thành nhiệm vụ thành công!", "success");
-    } else {
-      showToast(isEn ? "Progress updated successfully!" : "Đã cập nhật tiến độ nhiệm vụ!", "info");
+      if (markComplete) {
+        showToast(
+          isEn ? "Task completed successfully!" : "Đã hoàn thành nhiệm vụ thành công!",
+          "success"
+        );
+      } else {
+        showToast(
+          isEn ? "Progress updated successfully!" : "Đã cập nhật tiến độ nhiệm vụ!",
+          "info"
+        );
+      }
+    } catch (err: any) {
+      showToast(
+        err?.message || (isEn ? "Failed to save duty proof" : "Lưu ảnh đối chiếu thất bại"),
+        "warning"
+      );
     }
   };
 
@@ -275,22 +349,23 @@ function StaffScheduleContent() {
 
   // Progress metrics
   const totalDuties = todayDuties.length;
-  const completedDuties = todayDuties.filter(d => d.completed).length;
+  const completedDuties = todayDuties.filter((d) => d.completed).length;
   const progressPercent = totalDuties > 0 ? Math.round((completedDuties / totalDuties) * 100) : 0;
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-16">
-      
       {/* TOAST NOTIFICATION */}
       {toast && (
         <div className="fixed top-5 right-5 z-50 animate-in fade-in slide-in-from-top-3 duration-200 pointer-events-none">
-          <div className={`px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2.5 text-xs font-bold ${
-            toast.type === "warning"
-              ? "bg-amber-900 text-amber-100 border-amber-800"
-              : toast.type === "success"
-                ? "bg-emerald-900 text-emerald-100 border-emerald-800"
-                : "bg-zinc-900 text-white border-zinc-800"
-          }`}>
+          <div
+            className={`px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2.5 text-xs font-bold ${
+              toast.type === "warning"
+                ? "bg-amber-900 text-amber-100 border-amber-800"
+                : toast.type === "success"
+                  ? "bg-emerald-900 text-emerald-100 border-emerald-800"
+                  : "bg-zinc-900 text-white border-zinc-800"
+            }`}
+          >
             {toast.type === "warning" && <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />}
             {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
             {(!toast.type || toast.type === "info") && <Sparkles className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
@@ -339,28 +414,39 @@ function StaffScheduleContent() {
       {/* SECTION 1: WORK SCHEDULE ROSTER (LỊCH PHÂN CA TUẦN)                         */}
       {/* ========================================================================= */}
       <div className="space-y-5 animate-in fade-in duration-150">
-        
         {/* Controls Bar */}
         <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* House selector */}
           <div className="flex items-center gap-2">
             <Building2 className="w-4 h-4 text-zinc-400" />
-            <select
-              value={selectedHouse}
-              onChange={(e) => setSelectedHouse(e.target.value)}
-              className="px-3.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
-            >
-              <option value="all">{t("filterAllHouses")}</option>
-              <option value="b1">{isEn ? "HOLA Dormitory (Block A)" : "KTX HOLA (Khu A)"}</option>
-              <option value="b2">{isEn ? "Dormio Campus Cau Giay" : "Dormio Campus Cầu Giấy"}</option>
-            </select>
+            {isHousesLoading ? (
+              <div className="h-8 w-44 bg-zinc-100 rounded-xl animate-pulse" />
+            ) : (
+              <select
+                value={selectedHouse}
+                onChange={(e) => setSelectedHouse(e.target.value)}
+                className="px-3.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
+              >
+                <option value="all">{t("filterAllHouses")}</option>
+                {boardingHouses.map((house) => (
+                  <option key={house.id} value={house.id}>
+                    {getLocalizedPlace(house.name, isEn)}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC]" />
-            <span className="text-xs font-bold text-zinc-600">
-              {t("todayIndicator")}
-            </span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleCurrentWeek}
+              className="text-xs font-bold text-zinc-600 hover:text-[#2AC1BC] flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Về tuần hiện tại"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC]" />
+              <span>{t("todayIndicator")}</span>
+            </button>
           </div>
         </div>
 
@@ -370,15 +456,17 @@ function StaffScheduleContent() {
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                onClick={handlePrevWeek}
                 className="p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
-                title="Tuần trước"
+                title={isEn ? "Previous week" : "Tuần trước"}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 type="button"
+                onClick={handleNextWeek}
                 className="p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
-                title="Tuần sau"
+                title={isEn ? "Next week" : "Tuần sau"}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -389,98 +477,145 @@ function StaffScheduleContent() {
           </div>
 
           <span className="text-xs font-semibold text-zinc-400">
-            {weekDays[0]?.date} — {weekDays[weekDays.length - 1]?.date}
+            {startDate} — {endDate}
           </span>
         </div>
 
-        {/* WEEKLY CALENDAR GRID (7 columns) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
-          {weekDays.map((day, index) => {
-            const schedulesForDay = filteredSchedules.filter(s => s.workDate === day.date);
-
-            return (
+        {/* SKELETON LOADING STATE FOR WEEK CALENDAR */}
+        {isSchedulesLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+            {weekDays.map((_, idx) => (
               <div
-                key={index}
-                className={`min-h-[260px] rounded-2xl border p-3 flex flex-col justify-between transition-all ${
-                  day.isToday
-                    ? "bg-[#2AC1BC]/5 border-[#2AC1BC] shadow-xs"
-                    : "bg-white border-zinc-200/90 shadow-2xs"
-                }`}
+                key={idx}
+                className="min-h-[260px] rounded-2xl border border-zinc-200/90 p-3 bg-white shadow-2xs flex flex-col justify-between animate-pulse"
               >
-                {/* Day Header */}
                 <div className="border-b border-zinc-100 pb-2 mb-2 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                      {day.label}
-                    </span>
-                    <span className={`text-base font-black ${day.isToday ? "text-[#2AC1BC]" : "text-zinc-900"}`}>
-                      {day.dayNum}/09
-                    </span>
+                  <div className="space-y-1">
+                    <div className="h-3 w-10 bg-zinc-200 rounded" />
+                    <div className="h-5 w-12 bg-zinc-200 rounded" />
                   </div>
-                  {day.isToday && (
-                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-[#2AC1BC] text-white">
-                      {t("todayBadge")}
-                    </span>
-                  )}
                 </div>
-
-                {/* Shifts List for Day */}
-                <div className="space-y-2 flex-1">
-                  {schedulesForDay.length > 0 ? (
-                    schedulesForDay.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => setSelectedSchedule(item)}
-                        className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all hover:scale-[1.02] shadow-2xs ${
-                          item.status === "completed"
-                            ? "bg-zinc-50 border-zinc-200 text-zinc-700"
-                            : "bg-white border-[#2AC1BC]/40 hover:border-[#2AC1BC]"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <span className="text-[10px] font-black text-[#2AC1BC] uppercase truncate">
-                            {getShiftName(item.shift.name)}
-                          </span>
-                        </div>
-
-                        <div className="text-[11px] font-bold text-zinc-900">
-                          {item.shift.startTime} - {item.shift.endTime}
-                        </div>
-
-                        <div className="text-[10px] text-zinc-500 font-semibold truncate mt-1">
-                          {getLocalizedPlace(item.boardingHouseName, isEn)}
-                        </div>
-
-                        {item.coWorkers.length > 0 && (
-                          <div className="flex items-center gap-1 text-[10px] text-zinc-400 mt-1.5 pt-1 border-t border-zinc-100">
-                            <Users className="w-3 h-3" />
-                            <span>{t("plusCoworkers", { count: item.coWorkers.length })}</span>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-center py-8 text-[11px] text-zinc-400 font-medium italic">
-                      {t("offShift")}
-                    </div>
-                  )}
+                <div className="space-y-2 flex-1 pt-2">
+                  <div className="h-16 bg-zinc-100 rounded-xl" />
+                  <div className="h-16 bg-zinc-100 rounded-xl" />
                 </div>
-
-                {/* Day Footer note */}
-                <div className="pt-2 text-[10px] text-zinc-400 font-semibold text-center border-t border-zinc-100 mt-2">
-                  {t("shiftCountPerDay", { count: schedulesForDay.length })}
+                <div className="pt-2 border-t border-zinc-100 mt-2">
+                  <div className="h-3 w-14 mx-auto bg-zinc-200 rounded" />
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          /* WEEKLY CALENDAR GRID (7 columns) */
+          <>
+            {schedules.length === 0 && (
+              <div className="p-6 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 text-center space-y-1 text-xs text-zinc-500">
+                <Calendar className="w-6 h-6 text-zinc-400 mx-auto mb-1" />
+                <p className="font-bold text-zinc-800">
+                  {isEn
+                    ? "No shifts scheduled for this week"
+                    : "Tuần này bạn không có ca trực nào được phân công"}
+                </p>
+                <p className="text-zinc-400">
+                  {isEn
+                    ? "Check your property filter or use arrows to view other weeks."
+                    : "Kiểm tra lại bộ lọc nhà trọ hoặc chuyển tuần để xem các ca trực khác."}
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+              {weekDays.map((day, index) => {
+                const schedulesForDay = schedules.filter((s) => s.workDate === day.date);
+
+                return (
+                  <div
+                    key={index}
+                    className={`min-h-[260px] rounded-2xl border p-3 flex flex-col justify-between transition-all ${
+                      day.isToday
+                        ? "bg-[#2AC1BC]/5 border-[#2AC1BC] shadow-xs"
+                        : "bg-white border-zinc-200/90 shadow-2xs"
+                    }`}
+                  >
+                    {/* Day Header */}
+                    <div className="border-b border-zinc-100 pb-2 mb-2 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                          {day.label}
+                        </span>
+                        <span
+                          className={`text-base font-black ${
+                            day.isToday ? "text-[#2AC1BC]" : "text-zinc-900"
+                          }`}
+                        >
+                          {day.dayNum}/{day.date.split("-")[1] || "09"}
+                        </span>
+                      </div>
+                      {day.isToday && (
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-[#2AC1BC] text-white">
+                          {t("todayBadge")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Shifts List for Day */}
+                    <div className="space-y-2 flex-1">
+                      {schedulesForDay.length > 0 ? (
+                        schedulesForDay.map((item) => (
+                          <div
+                            key={item.id}
+                            onClick={() => setSelectedSchedule(item)}
+                            className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all hover:scale-[1.02] shadow-2xs ${
+                              item.status === "completed"
+                                ? "bg-zinc-50 border-zinc-200 text-zinc-700"
+                                : "bg-white border-[#2AC1BC]/40 hover:border-[#2AC1BC]"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="text-[10px] font-black text-[#2AC1BC] uppercase truncate">
+                                {getShiftName(item.shift.name)}
+                              </span>
+                            </div>
+
+                            <div className="text-[11px] font-bold text-zinc-900">
+                              {item.shift.startTime} - {item.shift.endTime}
+                            </div>
+
+                            <div className="text-[10px] text-zinc-500 font-semibold truncate mt-1">
+                              {getLocalizedPlace(item.boardingHouseName, isEn)}
+                            </div>
+
+                            {item.coWorkers && item.coWorkers.length > 0 && (
+                              <div className="flex items-center gap-1 text-[10px] text-zinc-400 mt-1.5 pt-1 border-t border-zinc-100">
+                                <Users className="w-3 h-3" />
+                                <span>{t("plusCoworkers", { count: item.coWorkers.length })}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-center py-8 text-[11px] text-zinc-400 font-medium italic">
+                          {t("offShift")}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Day Footer note */}
+                    <div className="pt-2 text-[10px] text-zinc-400 font-semibold text-center border-t border-zinc-100 mt-2">
+                      {t("shiftCountPerDay", { count: schedulesForDay.length })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* ========================================================================= */}
       {/* SECTION 2: NHIỆM VỤ HÔM NAY (TODAY'S TASKS CHECKLIST)                      */}
       {/* ========================================================================= */}
       <div className="space-y-4 pt-4 border-t border-zinc-200/80">
-        
         {/* Section Header & Progress Card */}
         <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-1 max-w-xl">
@@ -491,9 +626,7 @@ function StaffScheduleContent() {
               <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
                 {isEn ? "TODAY'S DUTIES" : "NHIỆM VỤ HÔM NAY"}
               </span>
-              <span className="text-xs text-zinc-400 font-medium">
-                • {todayStr}
-              </span>
+              <span className="text-xs text-zinc-400 font-medium">• {todayStr}</span>
             </div>
             <h2 className="text-lg sm:text-xl font-black text-zinc-900">
               {isEn ? "Today's Shift Duties Checklist" : "Danh Mục Nhiệm Vụ Ca Trực Hôm Nay"}
@@ -505,7 +638,7 @@ function StaffScheduleContent() {
             </p>
           </div>
 
-          {/* Progress Indicator & Link to Tasks */}
+          {/* Progress Indicator */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-3.5 min-w-[200px] space-y-1.5">
               <div className="flex items-center justify-between text-xs">
@@ -523,12 +656,18 @@ function StaffScheduleContent() {
                 />
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* Duties List */}
-        {todayDuties.length > 0 ? (
+        {/* SKELETON LOADING STATE FOR DUTIES */}
+        {isDutiesLoading ? (
+          <div className="space-y-3 animate-pulse">
+            <div className="h-20 bg-white rounded-2xl border border-zinc-200/90 p-4" />
+            <div className="h-20 bg-white rounded-2xl border border-zinc-200/90 p-4" />
+            <div className="h-20 bg-white rounded-2xl border border-zinc-200/90 p-4" />
+          </div>
+        ) : todayDuties.length > 0 ? (
+          /* Duties List */
           <div className="space-y-3">
             {todayDuties.map((duty, idx) => (
               <div
@@ -552,9 +691,11 @@ function StaffScheduleContent() {
                       <span className="text-xs font-mono font-bold text-zinc-400">
                         #{idx + 1}
                       </span>
-                      <h3 className={`text-sm font-black text-zinc-900 leading-snug ${
-                        duty.completed ? "line-through text-zinc-500" : ""
-                      }`}>
+                      <h3
+                        className={`text-sm font-black text-zinc-900 leading-snug ${
+                          duty.completed ? "line-through text-zinc-500" : ""
+                        }`}
+                      >
                         {duty.title}
                       </h3>
                       {duty.requiresPhoto ? (
@@ -587,12 +728,14 @@ function StaffScheduleContent() {
                 <div className="flex items-center gap-2.5 self-end md:self-center shrink-0">
                   {duty.photoProof && (
                     <div
-                      onClick={() => setPreviewPhotoModal({
-                        isOpen: true,
-                        title: duty.title,
-                        imageUrl: duty.photoProof!,
-                        note: duty.note
-                      })}
+                      onClick={() =>
+                        setPreviewPhotoModal({
+                          isOpen: true,
+                          title: duty.title,
+                          imageUrl: duty.photoProof!,
+                          note: duty.note,
+                        })
+                      }
                       className="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-[#2AC1BC] cursor-pointer group transition-colors"
                       title={isEn ? "View enlarged audit photo" : "Xem ảnh đối chiếu phóng to"}
                     >
@@ -636,7 +779,7 @@ function StaffScheduleContent() {
             <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
               {isEn
                 ? "All routine shift duties and additional landlord reminders will be displayed here once scheduled."
-                : "Mọi nhiệm vụ ca làm hoặc nhắc nhở từ chủ trọ sẽ hiển thị tại đây khi được phân công."}
+                : "Mọi nhiệm vụ ca làm hoặc nhắc nhở từ chủ trọ sẽ hiển thị tại đây khi bạn có ca trực được phân công."}
             </p>
           </div>
         )}
@@ -675,7 +818,6 @@ function StaffScheduleContent() {
 
             {/* UNIFIED CONTENT: SHIFT INFO + CO-WORKERS + DUTIES (NO TABS) */}
             <div className="space-y-5">
-              
               {/* 1. General Shift Info */}
               <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
@@ -684,11 +826,15 @@ function StaffScheduleContent() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-500 font-medium">{t("detailPlace")}</span>
-                  <span className="font-bold text-zinc-900">{getLocalizedPlace(selectedSchedule.boardingHouseName, isEn)}</span>
+                  <span className="font-bold text-zinc-900">
+                    {getLocalizedPlace(selectedSchedule.boardingHouseName, isEn)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-500 font-medium">{t("detailPosition")}</span>
-                  <span className="font-bold text-[#2AC1BC]">{getPositionName(selectedSchedule.position.name)}</span>
+                  <span className="font-bold text-[#2AC1BC]">
+                    {getPositionName(selectedSchedule.position.name)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-500 font-medium">{t("detailShiftType")}</span>
@@ -699,7 +845,7 @@ function StaffScheduleContent() {
               </div>
 
               {/* 2. Co-workers on duty */}
-              {selectedSchedule.coWorkers.length > 0 && (
+              {selectedSchedule.coWorkers && selectedSchedule.coWorkers.length > 0 && (
                 <div className="space-y-2.5">
                   <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-[#2AC1BC]" />
@@ -707,16 +853,28 @@ function StaffScheduleContent() {
                   </h4>
                   <div className="space-y-2">
                     {selectedSchedule.coWorkers.map((cw) => (
-                      <div key={cw.id} className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-between text-xs">
+                      <div
+                        key={cw.id}
+                        className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-between text-xs"
+                      >
                         <div className="flex items-center gap-2.5">
                           <img
-                            src={cw.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(cw.name)}&background=2AC1BC&color=fff`}
+                            src={
+                              cw.avatar ||
+                              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                cw.name
+                              )}&background=2AC1BC&color=fff`
+                            }
                             alt={cw.name}
                             className="w-8 h-8 rounded-full object-cover border border-zinc-200"
                           />
                           <div>
-                            <span className="font-bold text-zinc-900 block">{getLocalizedStaffName(cw.name, isEn)}</span>
-                            <span className="text-[10px] text-zinc-500">{getPositionName(cw.positionName)}</span>
+                            <span className="font-bold text-zinc-900 block">
+                              {getLocalizedStaffName(cw.name, isEn)}
+                            </span>
+                            <span className="text-[10px] text-zinc-500">
+                              {getPositionName(cw.positionName)}
+                            </span>
                           </div>
                         </div>
                         {cw.phone && (
@@ -746,31 +904,37 @@ function StaffScheduleContent() {
                   </span>
                 </div>
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 space-y-2.5">
-                  {getDutyLines(selectedSchedule).map((line, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-[#2AC1BC] mt-1.5 shrink-0" />
-                      <span className="leading-relaxed font-medium">{line}</span>
-                    </div>
-                  ))}
+                  {getDutyLines(selectedSchedule).length > 0 ? (
+                    getDutyLines(selectedSchedule).map((line, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5">
+                        <span className="w-2 h-2 rounded-full bg-[#2AC1BC] mt-1.5 shrink-0" />
+                        <span className="leading-relaxed font-medium">{line}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-zinc-400 italic">
+                      {isEn ? "No specific duty checklist registered." : "Chưa có danh mục nhiệm vụ cụ thể cho ca này."}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* 4. Additional tasks / Landlord reminders deadline on this date */}
+              {/* 4. Additional tasks / Landlord reminders */}
               <div className="space-y-2.5 pt-2 border-t border-zinc-100">
                 <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
                   <BellRing className="w-4 h-4 text-amber-500" />
                   <span>{isEn ? "Landlord Additional Tasks & Reminders" : "Nhắc nhở / Nhiệm vụ bổ sung"}</span>
                 </h4>
 
-                {additionalTasksOnSelectedDate.length > 0 ? (
+                {selectedSchedule.additionalTasks && selectedSchedule.additionalTasks.length > 0 ? (
                   <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                         <span className="text-xs font-black text-amber-900">
                           {isEn
-                            ? `Upcoming Additional Deadlines (${additionalTasksOnSelectedDate.length})`
-                            : `Có ${additionalTasksOnSelectedDate.length} nhiệm vụ bổ sung / nhắc nhở trong ngày!`}
+                            ? `Upcoming Additional Deadlines (${selectedSchedule.additionalTasks.length})`
+                            : `Có ${selectedSchedule.additionalTasks.length} nhiệm vụ bổ sung / nhắc nhở trong ngày!`}
                         </span>
                       </div>
                       <span className="px-2 py-0.5 rounded-md bg-amber-200/70 text-amber-900 font-bold text-[10px]">
@@ -778,14 +942,8 @@ function StaffScheduleContent() {
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
-                      {isEn
-                        ? "Landlord assigned additional ad-hoc tasks or urgent reminders due on this date."
-                        : "Chủ trọ có giao thêm các nhắc nhở, kiểm tra đột xuất hoặc xử lý sự cố có hạn chót trong ngày này."}
-                    </p>
-
                     <div className="space-y-2 pt-1 border-t border-amber-200/60">
-                      {additionalTasksOnSelectedDate.map((task) => (
+                      {selectedSchedule.additionalTasks.map((task) => (
                         <div
                           key={task.id}
                           className="p-2.5 rounded-xl bg-white border border-amber-200 text-xs space-y-1 shadow-2xs"
@@ -793,7 +951,7 @@ function StaffScheduleContent() {
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-zinc-900">{task.title}</span>
                             <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
-                              {task.deadline.split(" ")[1] || task.deadline}
+                              {task.deadline}
                             </span>
                           </div>
                           {task.description && (
@@ -942,7 +1100,11 @@ function StaffScheduleContent() {
                 rows={3}
                 value={dutyDraftNote}
                 onChange={(e) => setDutyDraftNote(e.target.value)}
-                placeholder={isEn ? "e.g. Cleared 45 vehicles, safety latch working properly..." : "VD: Đã kiểm tra cổng chính, bãi xe xếp gọn gàng theo lối thoát nạn..."}
+                placeholder={
+                  isEn
+                    ? "e.g. Cleared 45 vehicles, safety latch working properly..."
+                    : "VD: Đã kiểm tra cổng chính, bãi xe xếp gọn gàng theo lối thoát nạn..."
+                }
                 className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2AC1BC] leading-relaxed"
               />
             </div>
@@ -1040,14 +1202,19 @@ function StaffScheduleContent() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
 export default function StaffSchedulePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-zinc-400 font-bold">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs text-zinc-400 font-bold">
+          Loading...
+        </div>
+      }
+    >
       <StaffScheduleContent />
     </Suspense>
   );
