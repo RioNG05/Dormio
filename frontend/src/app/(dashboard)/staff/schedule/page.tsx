@@ -451,8 +451,8 @@ function StaffScheduleContent() {
         </div>
 
         {/* Week Navigation bar */}
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -471,12 +471,24 @@ function StaffScheduleContent() {
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <span className="text-xs sm:text-sm font-black text-zinc-900">
+
+            {/* Nút bấm "Xem lịch hôm nay" để trở về lịch làm việc của tuần hiện tại */}
+            <button
+              type="button"
+              onClick={handleCurrentWeek}
+              className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+              title={isEn ? "View today's schedule / current week" : "Xem lịch làm việc của tuần hiện tại"}
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
+              <span>{isEn ? "Today's Schedule" : "Xem lịch hôm nay"}</span>
+            </button>
+
+            <span className="text-xs sm:text-sm font-black text-zinc-900 ml-1">
               {t("weekLabel")}
             </span>
           </div>
 
-          <span className="text-xs font-semibold text-zinc-400">
+          <span className="text-xs font-semibold text-zinc-500 bg-zinc-50 px-3 py-1 rounded-xl border border-zinc-200/80 font-mono self-start sm:self-center">
             {startDate} — {endDate}
           </span>
         </div>
@@ -507,24 +519,7 @@ function StaffScheduleContent() {
           </div>
         ) : (
           /* WEEKLY CALENDAR GRID (7 columns) */
-          <>
-            {schedules.length === 0 && (
-              <div className="p-6 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 text-center space-y-1 text-xs text-zinc-500">
-                <Calendar className="w-6 h-6 text-zinc-400 mx-auto mb-1" />
-                <p className="font-bold text-zinc-800">
-                  {isEn
-                    ? "No shifts scheduled for this week"
-                    : "Tuần này bạn không có ca trực nào được phân công"}
-                </p>
-                <p className="text-zinc-400">
-                  {isEn
-                    ? "Check your property filter or use arrows to view other weeks."
-                    : "Kiểm tra lại bộ lọc nhà trọ hoặc chuyển tuần để xem các ca trực khác."}
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
               {weekDays.map((day, index) => {
                 const schedulesForDay = schedules.filter((s) => s.workDate === day.date);
 
@@ -608,7 +603,6 @@ function StaffScheduleContent() {
                 );
               })}
             </div>
-          </>
         )}
       </div>
 
