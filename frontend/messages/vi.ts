@@ -141,7 +141,8 @@ const vi = {
     userMenuTenantDashboard: "Bảng điều khiển Khách thuê",
     userMenuStaffDashboard: "Bảng điều khiển Nhân viên",
     userMenuAdminDashboard: "Bảng điều khiển Quản trị viên",
-    userMenuNoAccess: "Không có quyền truy cập"
+    userMenuNoAccess: "Không có quyền truy cập",
+    manageYourHouse: "Quản lý nhà trọ của bạn"
   },
 
   // ==========================================================================

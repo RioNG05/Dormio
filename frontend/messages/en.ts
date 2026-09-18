@@ -141,7 +141,8 @@ const en = {
     userMenuTenantDashboard: "Tenant Dashboard",
     userMenuStaffDashboard: "Staff Dashboard",
     userMenuAdminDashboard: "Admin Dashboard",
-    userMenuNoAccess: "No access"
+    userMenuNoAccess: "No access",
+    manageYourHouse: "Manage your boarding house"
   },
 
   // ==========================================================================
