@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
-import viMessages from "@/messages/vi";
-import enMessages from "@/messages/en";
+import viMessages from "../../i8n/vi";
+import enMessages from "../../i8n/en";
 import { getStoredLocale, setStoredLocale as persistStoredLocale, type SupportedLocale } from "@/utils";
 
 export type { SupportedLocale };
