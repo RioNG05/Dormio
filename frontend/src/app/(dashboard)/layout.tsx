@@ -271,7 +271,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   };
 
-  const { user, isLoggedIn, logout, buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
+  const { user, isLoggedIn, logout, capabilities, buildings, activeBuildingId, activeBuilding, selectBuilding } = useAuth();
 
   // DYNAMICALLY UPDATE BROWSER DOCUMENT TITLE BASED ON ACTIVE BUILDING & ROUTE
   React.useEffect(() => {
@@ -455,15 +455,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    *  - Logout
    */
   const UserFooter = () => {
-    const userRole = user?.role ?? null;
-
-    // Dashboard options — each entry is shown only when the user has the matching role
+    // Dashboard options — each entry is shown only when the user actually has that capability.
+    // Uses live `capabilities` from AuthContext (derived from backend relationship queries),
+    // NOT user.role, so a user who is simultaneously a landlord AND a tenant sees both entries.
     const dashboardOptions = [
       {
         label: tNav("userMenuLandlordDashboard"),
         href: "/landlord",
         icon: Building2,
-        allowed: userRole === "landlord",
+        allowed: capabilities.isLandlord,
         color: "text-[#2AC1BC]",
         bg: "hover:bg-[#2AC1BC]/5",
       },
@@ -471,7 +471,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         label: tNav("userMenuTenantDashboard"),
         href: "/tenant",
         icon: Home,
-        allowed: userRole === "tenant",
+        allowed: capabilities.isTenant,
         color: "text-blue-500",
         bg: "hover:bg-blue-50",
       },
@@ -479,7 +479,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         label: tNav("userMenuStaffDashboard"),
         href: "/staff",
         icon: UserCircle,
-        allowed: userRole === "employee",
+        allowed: capabilities.isEmployee,
         color: "text-teal-500",
         bg: "hover:bg-teal-50",
       },
@@ -487,7 +487,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         label: tNav("userMenuAdminDashboard"),
         href: "/admin",
         icon: Shield,
-        allowed: userRole === "admin",
+        allowed: capabilities.isAdmin,
         color: "text-orange-500",
         bg: "hover:bg-orange-50",
       },
