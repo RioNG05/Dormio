@@ -25,7 +25,20 @@ export default function PublicLayout({
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
   const tUpgrade = useTranslations("landlordUpgradeModal");
-  const { isLoggedIn, user, login, logout, toggleLoginDemo, upgradeToLandlord } = useAuth();
+  const { isLoggedIn, user, login, logout, toggleLoginDemo, upgradeToLandlord, buildings, capabilities } = useAuth();
+
+  const handleManageBoardingHouse = () => {
+    if (!isLoggedIn) {
+      router.push("/login?from=/landlord");
+      return;
+    }
+    const hasHouse = (buildings && buildings.length > 0) || Boolean(capabilities?.isLandlord);
+    if (hasHouse) {
+      router.push("/landlord");
+    } else {
+      router.push("/landlord/setup");
+    }
+  };
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState("");
@@ -171,33 +184,18 @@ export default function PublicLayout({
 
           {/* Desktop Right Action Buttons & User Menu */}
           <div className="hidden lg:flex items-center gap-3">
-            
+            {/* Nút Quản lý nhà trọ của bạn */}
+            <button
+              onClick={handleManageBoardingHouse}
+              className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white text-xs font-black rounded-full shadow-md shadow-[#2AC1BC]/20 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>{tNav("manageYourHouse")}</span>
+            </button>
 
             {/* Auth Actions Conditional Rendering */}
             {isLoggedIn && user ? (
               <div className="flex items-center gap-3">
-                
-                {/* 🌟 NÚT ĐĂNG KÝ TRỞ THÀNH CHỦ TRỌ BẤM LÀ SANG DASHBOARD CHỦ TRỌ THIẾT LẬP */}
-                {user.role === "tenant" ? (
-                  <button
-                    onClick={() => {
-                      upgradeToLandlord({ houseName: "", houseAddress: "" });
-                      router.push("/landlord");
-                    }}
-                    className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white text-xs font-black rounded-full shadow-md shadow-[#FF6B35]/25 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>{tNav("becomeLandlord")}</span>
-                  </button>
-                ) : (
-                  <Link href="/landlord">
-                    <button className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white text-xs font-black rounded-full shadow-md shadow-[#2AC1BC]/20 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105">
-                      <Building2 className="w-3.5 h-3.5" />
-                      <span>{tNav("dashboard")} →</span>
-                    </button>
-                  </Link>
-                )}
-
                 {/* User Avatar & Dropdown Menu */}
                 <div ref={userMenuRef} className="relative pl-2 border-l border-zinc-200">
                   <button
@@ -313,11 +311,6 @@ export default function PublicLayout({
                 <Link href="/login" className="text-xs font-bold text-zinc-700 hover:text-zinc-900 transition-colors px-2">
                   {tNav("login")}
                 </Link>
-                <Link href="/register">
-                  <button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs font-bold rounded-full shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer">
-                    {tNav("trialBtn")}
-                  </button>
-                </Link>
               </div>
             )}
 
@@ -371,25 +364,16 @@ export default function PublicLayout({
                     </div>
                   </div>
 
-                  {user.role === "tenant" ? (
-                    <button
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        upgradeToLandlord({ houseName: "", houseAddress: "" });
-                        router.push("/landlord");
-                      }}
-                      className="w-full py-3 bg-[#FF6B35] text-white font-black text-xs rounded-2xl shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Building2 className="w-4 h-4" />
-                      <span>{tNav("becomeLandlord")}</span>
-                    </button>
-                  ) : (
-                    <Link href="/landlord" className="block w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                      <button className="w-full py-3 bg-[#2AC1BC] text-white font-black text-xs rounded-2xl shadow-md text-center">
-                        {tNav("dashboard")} &rarr;
-                      </button>
-                    </Link>
-                  )}
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleManageBoardingHouse();
+                    }}
+                    className="w-full py-3 bg-[#2AC1BC] text-white font-black text-xs rounded-2xl shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>{tNav("manageYourHouse")}</span>
+                  </button>
 
                   {/* 4 Inner Profile Links for Mobile/Tablet */}
                   <div className="bg-zinc-50 rounded-2xl p-2 border border-zinc-200 space-y-1">
@@ -474,18 +458,23 @@ export default function PublicLayout({
                   </div>
                 </div>
               ) : (
-                <>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleManageBoardingHouse();
+                    }}
+                    className="w-full py-3 bg-[#2AC1BC] text-white font-black text-xs rounded-2xl shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>{tNav("manageYourHouse")}</span>
+                  </button>
                   <Link href="/login" className="block w-full">
                     <button className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-extrabold text-xs rounded-2xl transition-all text-center">
                       {tNav("login")}
                     </button>
                   </Link>
-                  <Link href="/register" className="block w-full">
-                    <button className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all text-center">
-                      {tNav("trialBtn")} &rarr;
-                    </button>
-                  </Link>
-                </>
+                </div>
               )}
             </div>
           </div>

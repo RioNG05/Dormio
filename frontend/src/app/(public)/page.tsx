@@ -170,11 +170,6 @@ export default function HomePage() {
 
           {/* Action Buttons Below Search */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-            <Link href="/register">
-              <button className="px-7 py-3 bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] hover:from-[#23B3AE] hover:to-[#32C5B5] text-white font-black text-xs sm:text-sm rounded-full shadow-[0_10px_30px_rgba(42,193,188,0.35)] transition-all hover:scale-105 cursor-pointer">
-                {t("guestHomeTrialBtn")} &rarr;
-              </button>
-            </Link>
             <Link href="#features">
               <button className="px-7 py-3 bg-zinc-900/80 hover:bg-[#FF6B35] text-white font-black text-xs sm:text-sm rounded-full border border-zinc-700/80 hover:border-[#FF6B35] backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300 cursor-pointer">
                 {t("guestHomeExploreBtn")}

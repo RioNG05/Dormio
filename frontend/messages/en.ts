@@ -141,7 +141,8 @@ const en = {
     userMenuTenantDashboard: "Tenant Dashboard",
     userMenuStaffDashboard: "Staff Dashboard",
     userMenuAdminDashboard: "Admin Dashboard",
-    userMenuNoAccess: "No access"
+    userMenuNoAccess: "No access",
+    manageYourHouse: "Manage your boarding house"
   },
 
   // ==========================================================================
@@ -268,7 +269,8 @@ const en = {
     unauthorizedDesc: "Your account does not have access to this area. If you believe this is a mistake, please contact your administrator.",
     unauthorizedBtnHome: "Back to Home",
     unauthorizedBtnLogin: "Sign In",
-    unauthorizedBtnSwitchAcc: "Switch Account"
+    unauthorizedBtnSwitchAcc: "Switch Account",
+    unauthorizedBtnBack: "Go Back"
   },
 
   // ==========================================================================

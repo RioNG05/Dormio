@@ -141,7 +141,8 @@ const vi = {
     userMenuTenantDashboard: "Bảng điều khiển Khách thuê",
     userMenuStaffDashboard: "Bảng điều khiển Nhân viên",
     userMenuAdminDashboard: "Bảng điều khiển Quản trị viên",
-    userMenuNoAccess: "Không có quyền truy cập"
+    userMenuNoAccess: "Không có quyền truy cập",
+    manageYourHouse: "Quản lý nhà trọ của bạn"
   },
 
   // ==========================================================================
@@ -268,7 +269,8 @@ const vi = {
     unauthorizedDesc: "Tài khoản của bạn không có quyền truy cập vào khu vực này. Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ quản trị viên.",
     unauthorizedBtnHome: "Về trang chủ",
     unauthorizedBtnLogin: "Đăng nhập",
-    unauthorizedBtnSwitchAcc: "Đổi tài khoản khác"
+    unauthorizedBtnSwitchAcc: "Đổi tài khoản khác",
+    unauthorizedBtnBack: "Quay lại"
   },
 
   // ==========================================================================

@@ -30,6 +30,26 @@ export interface BuildingItem {
 
 export type DemoPreset = "guest" | "tenant" | "landlord_empty" | "landlord_active" | "admin" | "staff";
 
+/**
+ * Live multi-role capabilities for the current user.
+ * Derived from relationship queries on the backend (BoardingHouse, TenantContract, EmployeeAssignment).
+ * Per spec 07-auth_roles.md: User.role is only a display marker — these flags are the real source of truth
+ * for deciding which dashboard links to show.
+ */
+export interface UserCapabilities {
+  isLandlord: boolean;
+  isTenant: boolean;
+  isEmployee: boolean;
+  isAdmin: boolean;
+}
+
+const DEFAULT_CAPABILITIES: UserCapabilities = {
+  isLandlord: false,
+  isTenant: false,
+  isEmployee: false,
+  isAdmin: false,
+};
+
 interface AuthContextType {
   isLoggedIn: boolean;
   /**
@@ -38,12 +58,15 @@ interface AuthContextType {
    */
   isHydrating: boolean;
   user: UserProfile | null;
+  /** Live multi-role capabilities fetched from backend — use these for dashboard switching, not user.role */
+  capabilities: UserCapabilities;
   login: (userData?: Partial<UserProfile>) => void;
   loginWithToken: (token: string, userData: Partial<UserProfile>) => void;
   logout: () => void;
   toggleLoginDemo: () => void;
   upgradeToLandlord: (houseDetails: { houseName: string; houseAddress: string }) => void;
   setDemoPreset: (preset: DemoPreset) => void;
+  refreshCapabilities: () => Promise<void>;
 
   // Multi-Building Management for Landlord Dashboard
   buildings: BuildingItem[];
@@ -70,12 +93,14 @@ const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   isHydrating: true,
   user: null,
+  capabilities: DEFAULT_CAPABILITIES,
   login: () => {},
   loginWithToken: () => {},
   logout: () => {},
   toggleLoginDemo: () => {},
   upgradeToLandlord: () => {},
   setDemoPreset: () => {},
+  refreshCapabilities: async () => {},
 
   buildings: [],
   isBuildingsLoading: true,
@@ -99,6 +124,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // No active building until API loads real data
   const [activeBuildingId, setActiveBuildingId] = useState<string>("");
+
+  // Live multi-role capabilities — fetched from backend after every login
+  const [capabilities, setCapabilities] = useState<UserCapabilities>(DEFAULT_CAPABILITIES);
+
+  /**
+   * Fetch live multi-role capabilities from `GET /v1/users/me/capabilities`.
+   * Called after every successful login (including dev auto-login) and exposed
+   * as `refreshCapabilities()` for callers that need to re-check after a role
+   * transition (e.g. after a tenant contract is created).
+   */
+  const loadCapabilitiesFromApi = useCallback(async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (!token) return;
+    try {
+      const res = await api.get<{ role: string; capabilities: UserCapabilities }>(
+        "/v1/users/me/capabilities",
+        { silent: true }
+      );
+      const data = (res as any)?.data ?? res;
+      if (data?.capabilities) {
+        setCapabilities(data.capabilities);
+      }
+    } catch {
+      // Silently fail — capabilities will remain at DEFAULT_CAPABILITIES
+    }
+  }, []);
 
   /**
    * Fetch real boarding houses from the backend and sync the buildings state.
@@ -227,6 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Hydration complete — user state is resolved from localStorage
       setIsHydrating(false);
       loadBuildingsFromApi();
+      loadCapabilitiesFromApi();
     } else {
       // In local dev, auto-authenticate default test landlord so real API requests are active
       loadBuildingsFromApi().then(() => {
@@ -248,9 +300,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         // Hydration complete — dev auto-login resolved
         setIsHydrating(false);
+        loadCapabilitiesFromApi();
       });
     }
-  }, [loadBuildingsFromApi]);
+  }, [loadBuildingsFromApi, loadCapabilitiesFromApi]);
 
   const selectBuilding = (id: string) => {
     setActiveBuildingId(id);
@@ -307,6 +360,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (resolvedRole === "landlord") {
       loadBuildingsFromApi();
     }
+
+    // Load live capabilities for all roles — a landlord may also be a tenant, etc.
+    loadCapabilitiesFromApi();
   };
 
   const upgradeToLandlord = (houseDetails: { houseName: string; houseAddress: string }) => {
@@ -323,8 +379,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(true);
     setUser(updatedUser);
 
-    // Reload buildings from API after profile upgrade
+    // Reload buildings + capabilities from API after profile upgrade
     loadBuildingsFromApi();
+    loadCapabilitiesFromApi();
 
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", "landlord");
@@ -335,6 +392,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setIsLoggedIn(false);
     setUser(null);
+    setCapabilities(DEFAULT_CAPABILITIES);
     localStorage.removeItem("dormio_logged_in");
     localStorage.removeItem("dormio_user_role");
     localStorage.removeItem("dormio_house_name");
@@ -455,12 +513,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoggedIn,
         isHydrating,
         user,
+        capabilities,
         login,
         loginWithToken,
         logout,
         toggleLoginDemo,
         upgradeToLandlord,
         setDemoPreset,
+        refreshCapabilities: loadCapabilitiesFromApi,
         buildings,
         isBuildingsLoading,
         activeBuildingId,

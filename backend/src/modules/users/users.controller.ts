@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto';
+import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
@@ -31,6 +32,26 @@ export class UsersController {
   private readonly logger = new Logger(UsersController.name);
 
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('me/capabilities')
+  @ApiOperation({
+    summary: 'Get live multi-role capabilities for the authenticated user',
+    description:
+      'Returns which dashboards the user can actually access, determined by relationship queries ' +
+      '(BoardingHouse ownership, TenantContract, EmployeeAssignment), NOT by the User.role field. ' +
+      'Per spec 07-auth_roles.md: User.role is only a highest-achieved display marker. ' +
+      'Use this endpoint to decide which dashboard links to show in the sidebar.',
+  })
+  @ApiOkResponse({
+    description: 'Live capabilities derived from relationship tables',
+    type: UserCapabilitiesResponseDto,
+  })
+  async getCapabilities(@CurrentUser() user: JwtPayload) {
+    this.logger.log(
+      `GET /api/v1/users/me/capabilities called by user ${user.id}`,
+    );
+    return this.usersService.getCapabilities(user.id);
+  }
 
   @Get(['identification', 'me/identification'])
   @ApiOperation({

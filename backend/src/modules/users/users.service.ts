@@ -7,12 +7,72 @@ import {
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto';
+import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Returns the live multi-role capabilities of a user.
+   *
+   * Per spec (07-auth_roles.md): `User.role` is only a "highest-achieved display
+   * marker" — NOT the source of truth for authorization. Actual capability is
+   * determined by querying the relevant relationship tables:
+   *   - isLandlord  → owns ≥1 BoardingHouse
+   *   - isTenant    → has ≥1 active TenantContract (via Contract.status)
+   *   - isEmployee  → has ≥1 active EmployeeAssignment
+   *   - isAdmin     → user.role === 'admin' (the one case the flat field IS authoritative)
+   */
+  async getCapabilities(userId: string): Promise<UserCapabilitiesResponseDto> {
+    this.logger.log(`Fetching capabilities for user ${userId}`);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, status: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Run all three relationship count queries in parallel for efficiency
+    const [boardingHouseCount, activeTenantContractCount, activeEmployeeAssignmentCount] =
+      await Promise.all([
+        // isLandlord: owns at least one boarding house
+        this.prisma.boardingHouse.count({
+          where: { ownerId: userId },
+        }),
+
+        // isTenant: has at least one active tenant contract
+        this.prisma.tenantContract.count({
+          where: {
+            tenantId: userId,
+            contract: { status: 'active' },
+          },
+        }),
+
+        // isEmployee: has at least one active employee assignment
+        this.prisma.employeeAssignment.count({
+          where: {
+            employee: { userId },
+            status: 'active',
+          },
+        }),
+      ]);
+
+    return {
+      role: user.role,
+      capabilities: {
+        isLandlord: boardingHouseCount > 0,
+        isTenant: activeTenantContractCount > 0,
+        isEmployee: activeEmployeeAssignmentCount > 0,
+        isAdmin: user.role === 'admin',
+      },
+    };
+  }
 
   /**
    * Retrieves identity verification details for the given user.
