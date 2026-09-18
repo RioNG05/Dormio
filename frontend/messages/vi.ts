@@ -269,7 +269,8 @@ const vi = {
     unauthorizedDesc: "Tài khoản của bạn không có quyền truy cập vào khu vực này. Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ quản trị viên.",
     unauthorizedBtnHome: "Về trang chủ",
     unauthorizedBtnLogin: "Đăng nhập",
-    unauthorizedBtnSwitchAcc: "Đổi tài khoản khác"
+    unauthorizedBtnSwitchAcc: "Đổi tài khoản khác",
+    unauthorizedBtnBack: "Quay lại"
   },
 
   // ==========================================================================

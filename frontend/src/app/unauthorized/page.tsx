@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShieldOff, Home, LogIn, LogOut } from "lucide-react";
+import { ShieldOff, Home, LogIn, LogOut, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "@/context/LanguageContext";
 
@@ -11,10 +11,11 @@ import { useTranslations } from "@/context/LanguageContext";
  * Unauthorized page — shown when a logged-in user attempts to access a route
  * their role is not permitted to view (HTTP 403 Forbidden).
  *
- * Provides three recovery actions:
- *  1. Return to the public homepage.
- *  2. Go to the login page (without logging out) to log in as a different account.
- *  3. Log out and redirect to login (switch account).
+ * Provides recovery actions:
+ *  1. Go back to previous page.
+ *  2. Return to the public homepage.
+ *  3. Go to the login page (without logging out) to log in as a different account.
+ *  4. Log out and redirect to login (switch account).
  */
 export default function UnauthorizedPage() {
   const t = useTranslations("auth");
@@ -24,6 +25,14 @@ export default function UnauthorizedPage() {
   const handleSwitchAccount = () => {
     logout();
     router.replace("/login");
+  };
+
+  const handleGoBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
   };
 
   return (
@@ -64,14 +73,25 @@ export default function UnauthorizedPage() {
         {/* Actions */}
         <div className="flex flex-col gap-3">
 
-          {/* Primary: Back to home */}
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-semibold shadow-sm hover:bg-[#22a8a4] active:scale-[0.98] transition-all"
-          >
-            <Home className="w-4 h-4" strokeWidth={2.5} />
-            {t("unauthorizedBtnHome")}
-          </Link>
+          {/* Row: Go Back + Back to Home */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={handleGoBack}
+              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-semibold shadow-sm hover:bg-[#22a8a4] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
+              {t("unauthorizedBtnBack")}
+            </button>
+
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-semibold hover:bg-zinc-50 active:scale-[0.98] transition-all"
+            >
+              <Home className="w-4 h-4" strokeWidth={2} />
+              {t("unauthorizedBtnHome")}
+            </Link>
+          </div>
 
           {/* Secondary: Log in (keep session, just navigate) */}
           <Link
