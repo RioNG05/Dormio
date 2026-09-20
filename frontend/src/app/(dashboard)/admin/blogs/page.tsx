@@ -161,8 +161,8 @@ export default function AdminPostModerationPage() {
                 ...item,
                 reportsCount: 3,
                 reportReasons: [
-                  locale === "en" ? "Unrealistic bait pricing" : "Giá ảo câu khách, khi gọi điện báo giá khác",
-                  locale === "en" ? "Suspicious deposit demand" : "Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống",
+                  t("adminBlogsReportReasonBaitPricing"),
+                  t("adminBlogsReportReasonSuspiciousDeposit"),
                 ],
               };
             }

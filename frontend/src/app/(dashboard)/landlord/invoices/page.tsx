@@ -128,7 +128,7 @@ function InvoicesContent() {
  setCreateForm((prev) => ({
  ...prev,
  roomId: prev.roomId || first.id,
- roomName: prev.roomName || (currentLocale === "en" ? `Room ${first.roomNumber}` : `Phòng ${first.roomNumber}`),
+ roomName: prev.roomName || `${t("landlordRoomDetailRoomPrefix")} ${first.roomNumber}`,
  }));
  }
  }
@@ -977,7 +977,7 @@ function InvoicesContent() {
  {/* VietQR Bank Card */}
  <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl flex items-center gap-4">
  <div className="w-24 h-24 bg-white rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-zinc-200">
- <img src={getVietQrUrl(selectedInvoice)} alt={currentLocale === "en" ? "VietQR Code" : "Mã VietQR"} className="w-full h-full object-contain" />
+ <img src={getVietQrUrl(selectedInvoice)} alt={t("landlordInvoicesVietQrAlt")} className="w-full h-full object-contain" />
  </div>
 
  <div className="space-y-1 text-[11px] min-w-0">
@@ -1097,7 +1097,7 @@ function InvoicesContent() {
  setCreateForm({
  ...createForm,
  roomId: selectedId,
- roomName: r ? (currentLocale === "en" ? `Room ${r.roomNumber}` : `Phòng ${r.roomNumber}`) : "",
+ roomName: r ? `${t("landlordRoomDetailRoomPrefix")} ${r.roomNumber}` : "",
  elecRate,
  waterRate,
  });

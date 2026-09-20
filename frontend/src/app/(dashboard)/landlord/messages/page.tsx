@@ -331,7 +331,7 @@ function MessagesContent() {
             if (urlInvId) {
               const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
               const autoMsgContent = t("landlordMessagesAutoInvoiceNotice")
-                .replace("{period}", urlPeriod || (currentLocale === "en" ? "CURRENT" : "NÀY"))
+                .replace("{period}", urlPeriod || t("landlordMessagesCurrentPeriod"))
                 .replace("{room}", roomLabel)
                 .replace("{amount}", formattedAmount)
                 .replace("{invId}", urlInvId);
@@ -1132,7 +1132,7 @@ function MessagesContent() {
                   {activeChat.participant.roomName || t("landlordMessagesNoRoom")}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100">
-                  {activeChat.participant.boardingHouseName || activeBuilding?.name || (currentLocale === "en" ? "Building" : "Tòa nhà")}
+                    {activeChat.participant.boardingHouseName || activeBuilding?.name || t("landlordMessagesDefaultBuilding")}
                 </span>
               </div>
 
@@ -1333,7 +1333,7 @@ function MessagesContent() {
                           )}
                         </div>
                         <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
-                          {contact.phoneNumber || t("landlordDepositsNoPhoneShort")} • {contact.boardingHouseName || (currentLocale === "en" ? "Building" : "Tòa nhà")}
+                          {contact.phoneNumber || t("landlordDepositsNoPhoneShort")} • {contact.boardingHouseName || t("landlordMessagesDefaultBuilding")}
                         </p>
                       </div>
                     </div>

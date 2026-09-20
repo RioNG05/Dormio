@@ -12,7 +12,7 @@ type Message = {
 
 export default function AIChatBot() {
   const { locale } = useLanguage();
-  const tChat = useTranslations("aiChat");
+  const t = useTranslations("common");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -27,15 +27,11 @@ export default function AIChatBot() {
         {
           id: "welcome",
           role: "assistant",
-          content:
-            tChat("welcomeMessage") ||
-            (locale === "en"
-              ? "Hello! I am the Dormio AI Assistant. How can I help you with property management today?"
-              : "Xin chào! Tôi là trợ lý ảo của Dormio. Bạn cần hỗ trợ gì về việc quản lý hệ thống tòa nhà hôm nay?"),
+          content: t("aiChatWelcomeMessage"),
         },
       ]);
     }
-  }, [locale, tChat, messages.length]);
+  }, [locale, t, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -82,7 +78,7 @@ export default function AIChatBot() {
         throw new Error(
           errorData.details?.error?.message ||
             errorData.message ||
-            (locale === "en" ? "Server connection error" : "Lỗi kết nối đến máy chủ")
+            t("aiChatServerError")
         );
       }
 
@@ -98,11 +94,7 @@ export default function AIChatBot() {
         {
           id: Date.now().toString(),
           role: "assistant",
-          content:
-            tChat("errorMessage") ||
-            (locale === "en"
-              ? "Sorry, the AI system is currently experiencing issues. Please try again later."
-              : "Xin lỗi, hiện tại hệ thống AI đang gặp sự cố. Vui lòng thử lại sau."),
+          content: t("aiChatErrorMessage"),
         },
       ]);
     } finally {
@@ -117,8 +109,8 @@ export default function AIChatBot() {
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50 group cursor-pointer"
-          title={tChat("botTitle") || (locale === "en" ? "Dormio AI Assistant" : "Trợ lý ảo Dormio")}
-          aria-label={tChat("botTitle") || (locale === "en" ? "Dormio AI Assistant" : "Trợ lý ảo Dormio")}
+          title={t("aiChatBotTitle")}
+          aria-label={t("aiChatBotTitle")}
         >
           <Bot className="w-7 h-7 group-hover:animate-pulse" />
           <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#FF6B35] border-2 border-white rounded-full"></div>
@@ -136,18 +128,18 @@ export default function AIChatBot() {
               </div>
               <div>
                 <h3 className="font-bold text-base">
-                  {tChat("headerTitle") || (locale === "en" ? "Dormio AI Assistant" : "Trợ lý ảo Dormio")}
+                  {t("aiChatHeaderTitle")}
                 </h3>
                 <p className="text-xs text-teal-100 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                  {tChat("alwaysOnline") || (locale === "en" ? "Always online" : "Luôn trực tuyến")}
+                  {t("aiChatAlwaysOnline")}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
               className="p-2 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
-              aria-label="Close chat"
+              aria-label={t("aiChatCloseAria")}
             >
               <X className="w-5 h-5" />
             </button>
@@ -225,7 +217,7 @@ export default function AIChatBot() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={tChat("inputPlaceholder") || "Nhập câu hỏi của bạn..."}
+                placeholder={t("aiChatInputPlaceholder")}
                 className="w-full pl-4 pr-12 py-3 bg-zinc-100 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all text-sm outline-none"
                 disabled={isLoading}
               />
@@ -243,7 +235,7 @@ export default function AIChatBot() {
             </form>
             <div className="text-center mt-2">
               <span className="text-[10px] text-zinc-400">
-                {tChat("poweredBy") || "Powered by Gemini AI"}
+                {t("aiChatPoweredBy")}
               </span>
             </div>
           </div>

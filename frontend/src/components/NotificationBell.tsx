@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/context/LanguageContext";
+import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import {
   notificationService,
   InAppNotification,
@@ -29,6 +29,7 @@ interface NotificationBellProps {
 export default function NotificationBell({ align = "right", className = "" }: NotificationBellProps) {
   const router = useRouter();
   const { locale } = useLanguage();
+  const t = useTranslations("common");
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<InAppNotification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -117,14 +118,14 @@ export default function NotificationBell({ align = "right", className = "" }: No
       const diffMs = Date.now() - new Date(isoDate).getTime();
       const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
       if (diffMins < 60) {
-        return locale === "en" ? `${diffMins}m ago` : `${diffMins} phút trước`;
+        return t("notificationsTimeMinutesAgo").replace("{mins}", String(diffMins));
       }
       const diffHours = Math.floor(diffMins / 60);
       if (diffHours < 24) {
-        return locale === "en" ? `${diffHours}h ago` : `${diffHours} giờ trước`;
+        return t("notificationsTimeHoursAgo").replace("{hours}", String(diffHours));
       }
       const diffDays = Math.floor(diffHours / 24);
-      return locale === "en" ? `${diffDays}d ago` : `${diffDays} ngày trước`;
+      return t("notificationsTimeDaysAgo").replace("{days}", String(diffDays));
     } catch {
       return "";
     }
@@ -189,8 +190,8 @@ export default function NotificationBell({ align = "right", className = "" }: No
           if (!isOpen) loadNotifications();
         }}
         className="relative p-2 rounded-xl text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-all cursor-pointer focus:outline-none"
-        aria-label={locale === "en" ? "Notifications" : "Thông báo"}
-        title={locale === "en" ? "Notifications" : "Thông báo"}
+        aria-label={t("notifications")}
+        title={t("notifications")}
       >
         <Bell className="w-5 h-5 transition-transform duration-200 active:scale-90" />
         {unreadCount > 0 && (
@@ -211,11 +212,11 @@ export default function NotificationBell({ align = "right", className = "" }: No
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-100 bg-zinc-50/70">
             <div className="flex items-center gap-2">
               <h3 className="font-black text-xs text-zinc-900 uppercase tracking-wider">
-                {locale === "en" ? "Notifications" : "Thông báo"}
+                {t("notifications")}
               </h3>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">
-                  {unreadCount} {locale === "en" ? "new" : "mới"}
+                  {unreadCount} {t("notificationsNew")}
                 </span>
               )}
             </div>
@@ -227,7 +228,7 @@ export default function NotificationBell({ align = "right", className = "" }: No
                 className="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
-                <span>{locale === "en" ? "Mark all read" : "Đọc tất cả"}</span>
+                <span>{t("notificationsMarkAllRead")}</span>
               </button>
             )}
           </div>
@@ -237,7 +238,7 @@ export default function NotificationBell({ align = "right", className = "" }: No
             {loading ? (
               <div className="py-8 text-center text-xs text-zinc-400 flex items-center justify-center gap-2">
                 <div className="w-4 h-4 rounded-full border-2 border-orange-500/20 border-t-orange-600 animate-spin" />
-                <span>{locale === "en" ? "Loading notifications..." : "Đang tải thông báo..."}</span>
+                <span>{t("notificationsLoading")}</span>
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-10 px-4 text-center space-y-2">
@@ -245,12 +246,10 @@ export default function NotificationBell({ align = "right", className = "" }: No
                   <Bell className="w-5 h-5" />
                 </div>
                 <p className="text-xs font-bold text-zinc-700">
-                  {locale === "en" ? "No notifications yet" : "Chưa có thông báo nào"}
+                  {t("notificationsEmptyTitle")}
                 </p>
                 <p className="text-[11px] text-zinc-400">
-                  {locale === "en"
-                    ? "You will be notified about rental bills and updates."
-                    : "Hệ thống sẽ gửi thông báo đến bạn khi có cập nhật mới."}
+                  {t("notificationsEmptyDesc")}
                 </p>
               </div>
             ) : (
@@ -293,13 +292,13 @@ export default function NotificationBell({ align = "right", className = "" }: No
 
                         {hasRedirect ? (
                           <span className="font-bold text-orange-600 hover:underline flex items-center gap-0.5">
-                            <span>{locale === "en" ? "View details" : "Xem chi tiết"}</span>
+                            <span>{t("viewDetail")}</span>
                             <ChevronRight className="w-3 h-3" />
                           </span>
                         ) : (
                           <span className="text-zinc-400 flex items-center gap-1 font-medium">
                             <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                            <span>{locale === "en" ? "System announcement" : "Thông báo chung"}</span>
+                            <span>{t("notificationsSystemAnnouncement")}</span>
                           </span>
                         )}
                       </div>
@@ -317,7 +316,7 @@ export default function NotificationBell({ align = "right", className = "" }: No
               onClick={() => setIsOpen(false)}
               className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
             >
-              {locale === "en" ? "Close" : "Đóng"}
+              {t("close")}
             </button>
           </div>
         </div>

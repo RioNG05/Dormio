@@ -75,8 +75,8 @@ export default function AdminPostDetailPage() {
         if (!res.reportsCount && (res.title?.toLowerCase().includes("report") || res.id.endsWith("2"))) {
           res.reportsCount = 3;
           res.reportReasons = [
-            locale === "en" ? "Unrealistic bait pricing" : "Giá ảo câu khách, khi gọi điện báo giá khác",
-            locale === "en" ? "Suspicious deposit demand" : "Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống",
+            t("adminBlogsReportReasonBaitPricing"),
+            t("adminBlogsReportReasonSuspiciousDeposit"),
           ];
         }
         setPost(res);
@@ -114,7 +114,7 @@ export default function AdminPostDetailPage() {
       setPost((prev) => (prev ? { ...prev, status: "draft" } : null));
       setFeedbackMsg({
         type: "success",
-        text: locale === "en" ? "Post reverted to draft." : "Đã chuyển bài viết về bản nháp.",
+        text: t("adminBlogsDetailRevertedDraft"),
       });
     } catch (err: any) {
       console.error("Failed to revert to draft:", err);
@@ -136,7 +136,7 @@ export default function AdminPostDetailPage() {
       setPost((prev) => (prev ? { ...prev, status: "posted" } : null));
       setFeedbackMsg({
         type: "success",
-        text: locale === "en" ? "Post published successfully." : "Đã xuất bản bài viết thành công.",
+        text: t("adminBlogsDetailPublishedSuccess"),
       });
     } catch (err: any) {
       console.error("Failed to publish post:", err);
@@ -196,7 +196,7 @@ export default function AdminPostDetailPage() {
       setIsEditModalOpen(false);
       setFeedbackMsg({
         type: "success",
-        text: locale === "en" ? "Post updated successfully." : "Cập nhật bài viết thành công.",
+        text: t("adminBlogsDetailUpdatedSuccess"),
       });
       await fetchPostDetail(true);
     } catch (err: any) {
@@ -572,7 +572,7 @@ export default function AdminPostDetailPage() {
           <ul className="list-disc pl-5 space-y-1 text-xs font-medium text-amber-800">
             {(post.reportReasons && post.reportReasons.length > 0
               ? post.reportReasons
-              : [locale === "en" ? "Unrealistic bait pricing" : "Giá ảo câu khách, khi gọi điện báo giá khác"]
+              : [t("adminBlogsReportReasonBaitPricing")]
             ).map((reason, idx) => (
               <li key={idx}>{reason}</li>
             ))}

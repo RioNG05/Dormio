@@ -61,10 +61,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         setEditCccd(found.cccd);
         setEditDob(found.dob || "2000-01-01");
         setEditGender(found.gender || "nam");
-        setEditAddress(found.address || (currentLocale === "vi" ? "Khu công nghệ cao, TP.HCM" : "High-Tech Park, HCMC"));
+        setEditAddress(found.address || t("landlordCustomersDefaultAddressShort"));
         setEditEmail(found.email || `kh${found.room}@gmail.com`);
-        setEditJob(found.job || (currentLocale === "vi" ? "Sinh viên" : "Student"));
-        setEditWorkplace(found.workplace || (currentLocale === "vi" ? "Đại học SPKT" : "HCMUTE"));
+        setEditJob(found.job || t("landlordCustomersDefaultJobStudent"));
+        setEditWorkplace(found.workplace || t("landlordCustomersDefaultWorkplace"));
         setEditNote(found.note || "");
       }
     }
@@ -215,7 +215,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
               <div className="sm:col-span-2 p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordCustomersPermanentAddressLabel")}</span>
-                <p className="font-bold text-zinc-800">{customer.address || (currentLocale === "vi" ? "Khu công nghệ cao, Phường Tân Phú, TP. Thủ Đức, TP.HCM" : "High-Tech Park, Tan Phu Ward, Thu Duc City, HCMC")}</p>
+                <p className="font-bold text-zinc-800">{customer.address || t("landlordCustomersDefaultAddressLong")}</p>
               </div>
             </div>
           </div>
@@ -238,12 +238,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
               <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordCustomersJobLabel")}</span>
-                <p className="font-bold text-zinc-800">{customer.job || (currentLocale === "vi" ? "Sinh viên / Kỹ sư" : "Student / Engineer")}</p>
+                <p className="font-bold text-zinc-800">{customer.job || t("landlordCustomersDefaultJobFull")}</p>
               </div>
 
               <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase">{t("landlordCustomersWorkplaceLabel")}</span>
-                <p className="font-bold text-zinc-800">{customer.workplace || (currentLocale === "vi" ? "Đại học SPKT / FPT Software" : "HCMUTE / FPT Software")}</p>
+                <p className="font-bold text-zinc-800">{customer.workplace || t("landlordCustomersDefaultWorkplaceFull")}</p>
               </div>
             </div>
           </div>

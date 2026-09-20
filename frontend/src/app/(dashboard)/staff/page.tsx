@@ -2514,7 +2514,7 @@ function DutyProofModal({
  📍 {getLocalizedPlace(boardingHouseName, locale === "en")}
  </div>
  <div className="text-zinc-400 text-[9px]">
- 👤 {getLocalizedStaffName(staffName || (locale === "en" ? "Staff Member" : "Nhân viên"), locale === "en")}
+ 👤 {getLocalizedStaffName(staffName || t("employeeDefaultStaffName"), locale === "en")}
  </div>
  </div>
  </div>
