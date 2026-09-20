@@ -15,12 +15,17 @@ interface ErrorResponse {
   error: string | string[];
   path: string;
   timestamp: string;
+  code?: string;
+  requiredTier?: string;
+  currentTier?: string;
+  upgradeUrl?: string;
+  [key: string]: unknown;
 }
 
 /**
  * Global HTTP exception filter.
  * Normalizes all errors to a consistent JSON structure:
- * { success: false, statusCode, message, error, path, timestamp }
+ * { success: false, statusCode, message, error, path, timestamp, ...extraPayload }
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -33,6 +38,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     let statusCode: number;
     let error: string | string[];
+    let extraFields: Record<string, unknown> = {};
 
     if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
@@ -47,6 +53,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const res = exceptionResponse as Record<string, unknown>;
         // class-validator returns { message: string[] }
         error = (res.message as string | string[]) ?? (res.error as string) ?? exception.message;
+        const { message: _m, error: _e, statusCode: _s, ...rest } = res;
+        extraFields = rest;
       } else {
         error = exception.message;
       }
@@ -74,6 +82,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error,
       path: request.url,
       timestamp: new Date().toISOString(),
+      ...extraFields,
     };
 
     response.status(statusCode).json(body);

@@ -28,6 +28,7 @@ import { SchedulesModule } from './modules/schedules/schedules.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { SubscriptionTierGuard } from './common/guards/subscription-tier.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -103,6 +104,11 @@ import { AppService } from './app.service';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Subscription tier guard applied globally — enforces @RequireTier()
+    {
+      provide: APP_GUARD,
+      useClass: SubscriptionTierGuard,
     },
     // Rate limiting guard applied globally
     {

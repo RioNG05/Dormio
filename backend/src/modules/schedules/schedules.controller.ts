@@ -42,6 +42,8 @@ import { UpdateRecurrenceDto } from './dto/update-recurrence.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
 import { SchedulesService } from './schedules.service';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { SubscriptionPackage } from '@prisma';
 
 @ApiTags('Landlord - Shift Scheduling (UC-L-21)')
 @ApiBearerAuth()
@@ -51,6 +53,7 @@ import { SchedulesService } from './schedules.service';
   required: true,
 })
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+@RequireTier(SubscriptionPackage.pro)
 @Controller('landlord')
 export class SchedulesController {
   private readonly logger = new Logger(SchedulesController.name);

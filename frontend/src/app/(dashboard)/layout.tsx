@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
+import TierUpgradeModal from "@/components/TierUpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
@@ -733,6 +734,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {!isTenant && !isAdmin && !isStaff && <AIChatBot />}
+      <TierUpgradeModal />
     </div>
     </AuthGuard>
   );

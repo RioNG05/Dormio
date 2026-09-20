@@ -36,6 +36,8 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { SubscriptionPackage } from '@prisma';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
 
 @ApiTags('Landlord Deposits')
@@ -96,6 +98,7 @@ export class DepositsController {
   // ─── GET /api/v1/landlord/deposits ─────────────────────────────────────────
 
   @Get()
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'List Boarding House Deposits (UC-L-14)',
     description:
@@ -120,6 +123,7 @@ export class DepositsController {
   // ─── GET /api/v1/landlord/deposits/:id ─────────────────────────────────────
 
   @Get(':id')
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'Get Deposit Details',
     description: 'Retrieves single deposit details with room, contract, tenant, and payment relations.',
@@ -147,6 +151,7 @@ export class DepositsController {
   // ─── PATCH /api/v1/landlord/deposits/:id/refund ────────────────────────────
 
   @Patch(':id/refund')
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'Refund Deposit',
     description:
@@ -180,6 +185,7 @@ export class DepositsController {
   // ─── PATCH /api/v1/landlord/deposits/:id/forfeit ───────────────────────────
 
   @Patch(':id/forfeit')
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'Forfeit Deposit',
     description:

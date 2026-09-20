@@ -28,6 +28,34 @@ type FetchOptions = RequestInit & {
   silent?: boolean;
 };
 
+export interface TierRequiredEventDetail {
+  message: string;
+  requiredTier: string;
+  currentTier: string;
+  upgradeUrl: string;
+}
+
+export class ApiError extends Error {
+  statusCode: number;
+  code?: string;
+  requiredTier?: string;
+  currentTier?: string;
+  upgradeUrl?: string;
+  data?: unknown;
+
+  constructor(message: string, statusCode: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+    this.code = data?.code;
+    this.requiredTier = data?.requiredTier;
+    this.currentTier = data?.currentTier;
+    this.upgradeUrl = data?.upgradeUrl;
+    this.data = data;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
+}
+
 class ApiClient {
   private async request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
     const { params, headers, silent, ...customOptions } = options;
@@ -103,9 +131,27 @@ class ApiClient {
         } else if (Array.isArray(errorData.error) && errorData.error.length > 0) {
           message = errorData.error.join(". ");
         } else {
-          message = `Yêu cầu không thành công (Mã lỗi ${response.status})`;
+          message = `Request failed with status ${response.status}`;
         }
-        throw new Error(message);
+
+        // Notify client application when action requires a subscription tier upgrade
+        if (
+          typeof window !== "undefined" &&
+          (errorData.code === "SUBSCRIPTION_TIER_REQUIRED" || errorData.requiredTier)
+        ) {
+          window.dispatchEvent(
+            new CustomEvent<TierRequiredEventDetail>("dormio:tier-required", {
+              detail: {
+                message,
+                requiredTier: errorData.requiredTier || "plus",
+                currentTier: errorData.currentTier || "free",
+                upgradeUrl: errorData.upgradeUrl || "/pricing",
+              },
+            }),
+          );
+        }
+
+        throw new ApiError(message, response.status, errorData);
       }
 
       // Trả về dữ liệu JSON hoặc rỗng nếu 204 No Content
