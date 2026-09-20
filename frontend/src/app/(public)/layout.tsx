@@ -675,8 +675,12 @@ export default function PublicLayout({
 
           <div className="space-y-2">
             <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">{tFooter("contactTitle")}</h4>
-            <p className="text-xs text-zinc-400 font-medium">{tFooter("hotline")}</p>
-            <p className="text-xs text-zinc-400 font-medium">{tFooter("email")}</p>
+            <p className="text-xs text-zinc-400 font-medium">
+              <a href="tel:0344265925" className="hover:text-[#2AC1BC] transition-colors">{tFooter("hotline")}</a>
+            </p>
+            <p className="text-xs text-zinc-400 font-medium">
+              <a href="mailto:ngquanghuy.work@gmail.com" className="hover:text-[#2AC1BC] transition-colors">{tFooter("email")}</a>
+            </p>
             <p className="text-xs text-zinc-400 font-medium">{tFooter("address")}</p>
           </div>
         </div>

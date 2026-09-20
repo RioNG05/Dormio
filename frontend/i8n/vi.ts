@@ -149,15 +149,15 @@ const vi = {
   // 3. FOOTER (Chân trang - Folder: components/layout/)
   // ==========================================================================
   footer: {
-    address: "Địa chỉ: Hòa Lạc, Hà Nội",
+    address: "Địa chỉ: Trường Đại học FPT Hà Nội, Khu CNC Hòa Lạc, Thạch Thất, Hà Nội",
     aiOcr: "AI OCR Quét chỉ số điện nước",
     bhms: "BHMS - Vận hành nhà trọ",
     bhrp: "BHRP - Sàn cho thuê phòng",
     contactTitle: "Liên Hệ",
     customerSupport: "Hỗ Trợ Khách Hàng",
     desc: "Nền tảng quản lý nhà trọ và tìm phòng trọ chính chủ số 1 Việt Nam. Tự động hóa 90% quy trình vận hành.",
-    email: "Email: support@dormio.vn",
-    hotline: "Hotline: 1900 8888 (24/7)",
+    email: "Email: ngquanghuy.work@gmail.com",
+    hotline: "Hotline: 0344 265 925 (24/7)",
     privacy: "Chính sách bảo mật",
     rights: "© Dormio Platform. Đã đăng ký bản quyền.",
     systemModules: "Mô-đun Hệ Thống",
@@ -369,7 +369,7 @@ const vi = {
     guestContactHotlineTitle: "Hotline & Zalo OA Khẩn Cấp",
     guestContactHours: "Đội ngũ CSKH Dormio làm việc từ 08:00 - 21:00 tất cả các ngày trong tuần.",
     guestContactMaps: "Mở Google Maps chỉ đường",
-    guestContactOfficeAddress: "Tòa nhà FPT, Khu Công Nghệ Cao, Q.9, TP. Thủ Đức, TP. HCM",
+    guestContactOfficeAddress: "Trường Đại học FPT Hà Nội, Khu Công Nghệ Cao Hòa Lạc, Km29 Đại lộ Thăng Long, Thạch Thất, Hà Nội",
     guestContactOfficeTitle: "Văn Phòng Trụ Sở Dormio",
     guestContactPhoneLabel: "Số điện thoại liên hệ *",
     guestContactPhonePlaceholder: "Nhập số điện thoại...",
@@ -385,6 +385,7 @@ const vi = {
     guestContactTopicOpt2: "Hỗ trợ đăng tin cho thuê phòng (BHRP)",
     guestContactTopicOpt3: "Báo lỗi kỹ thuật & Thanh toán VietQR",
     guestContactTopicOpt4: "Khác (Chủ đề khác)",
+    guestContactUseFreeBtn: "Dùng miễn phí ngay",
 
     // --- Features presentation (app/(public)/features) ---
     guestFeaturesBadge: "BỘ TÍNH NĂNG NỔI BẬT DORMIO",

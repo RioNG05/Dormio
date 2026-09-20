@@ -149,15 +149,15 @@ const en = {
   // 3. FOOTER (Chân trang - Folder: components/layout/)
   // ==========================================================================
   footer: {
-    address: "Address: Ho Chi Minh City & Hanoi",
+    address: "Address: FPT University Hanoi, Hoa Lac Hi-Tech Park, Thach That, Hanoi",
     aiOcr: "AI OCR Meter Scanning",
     bhms: "BHMS - Boarding House Management",
     bhrp: "BHRP - Rental Listing Platform",
     contactTitle: "Contact Us",
     customerSupport: "Customer Support",
     desc: "Vietnam's top 1 boarding house management & verified rental platform. Automates 90% of operations.",
-    email: "Email: support@dormio.vn",
-    hotline: "Hotline: 1900 8888 (24/7)",
+    email: "Email: ngquanghuy.work@gmail.com",
+    hotline: "Hotline: 0344 265 925 (24/7)",
     privacy: "Privacy Policy",
     rights: "© Dormio Platform. All rights reserved. Designed for Vietnamese Boarding House Management.",
     systemModules: "System Modules",
@@ -369,7 +369,7 @@ const en = {
     guestContactHotlineTitle: "Emergency Hotline & Zalo OA",
     guestContactHours: "Dormio customer support operates 08:00 - 21:00 every day of the week.",
     guestContactMaps: "Open Google Maps for directions",
-    guestContactOfficeAddress: "FPT Building, High-Tech Park, Dist. 9, Thu Duc City, HCMC",
+    guestContactOfficeAddress: "FPT University Hanoi, Hoa Lac Hi-Tech Park, Km29 Thang Long Boulevard, Thach That, Hanoi",
     guestContactOfficeTitle: "Dormio Headquarters Office",
     guestContactPhoneLabel: "Contact Phone *",
     guestContactPhonePlaceholder: "Enter your phone number...",
@@ -385,6 +385,7 @@ const en = {
     guestContactTopicOpt2: "Rental Listing Support (BHRP)",
     guestContactTopicOpt3: "Technical Bugs & VietQR Payments",
     guestContactTopicOpt4: "Other (Custom Topic)",
+    guestContactUseFreeBtn: "Use as free now",
 
     // --- Features presentation (app/(public)/features) ---
     guestFeaturesBadge: "FEATURE HIGHLIGHTS OF DORMIO",
