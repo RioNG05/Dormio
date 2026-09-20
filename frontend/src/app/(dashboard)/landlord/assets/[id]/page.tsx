@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { Asset, initialMockAssets, MaintenanceLog, calculateDepreciation } from "../data";
+import { Asset, MaintenanceLog, calculateDepreciation } from "../data";
+import { assetService, AssetCondition } from "@/services/asset.service";
 
 // Mock Room Tenants dictionary for automatic tenant reflection when room changes
 const mockRoomTenants: Record<string, { name: string; phone: string }> = {
@@ -98,36 +99,48 @@ export default function AssetDetailPage() {
   };
 
   useEffect(() => {
-    if (id) {
-      const found = initialMockAssets.find(a => a.id === id || a.id.toLowerCase() === String(id).toLowerCase() || a.sku === id);
-      if (found) {
-        setAsset(found);
-        setMaintenanceLogs(found.maintenanceLogs || []);
-      } else {
-        setAsset({
-          id: String(id),
-          sku: "ML-DK-101",
-          name: "Thiết bị tài sản #" + id,
-          category: "Điện lạnh",
-          building: "dormio",
-          room: "101",
-          status: "Đang sử dụng",
-          dateAdded: "10/01/2024",
-          purchaseDate: "10/01/2024",
-          purchaseValue: 8500000,
-          depreciationYears: 5,
-          value: "8.500.000 ₫",
-          numericValue: 8500000,
-          modelCode: "MODEL-2026-X",
-          serialNumber: "SN-99812-VN",
-          warrantyPeriod: "24 tháng (đến 2028)",
-          supplier: "Điện Máy Xanh",
-          note: "",
-          maintenanceLogs: []
+    if (id && activeBuilding?.id) {
+      assetService
+        .getAssetDetail(activeBuilding.id, String(id))
+        .then((res) => {
+          if (res?.data) {
+            const item = res.data;
+            const statusLabel =
+              item.condition === "good"
+                ? "Đang sử dụng"
+                : item.condition === "new"
+                ? "Sẵn sàng"
+                : item.condition === "under_repair"
+                ? "Bảo trì"
+                : "Hỏng hóc";
+
+            setAsset({
+              id: item.id,
+              sku: item.code,
+              name: item.name,
+              category: item.category || "Điện lạnh",
+              building: activeBuilding.id,
+              buildingName: activeBuilding.name,
+              room: item.roomNumber ? `Phòng ${item.roomNumber}` : item.location,
+              roomId: item.roomId,
+              status: statusLabel,
+              dateAdded: item.createdAt ? item.createdAt.split("T")[0] : "",
+              purchaseDate: item.purchaseDate ? item.purchaseDate.split("T")[0] : "",
+              purchaseValue: item.purchasePrice ? Number(item.purchasePrice) : 0,
+              numericValue: item.purchasePrice ? Number(item.purchasePrice) : 0,
+              value: item.purchasePrice
+                ? `${Number(item.purchasePrice).toLocaleString("vi-VN")} ₫`
+                : "0 ₫",
+              note: item.note || "",
+              maintenanceLogs: [],
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load asset detail:", err);
         });
-      }
     }
-  }, [id]);
+  }, [id, activeBuilding?.id]);
 
   if (!asset) {
     return (
