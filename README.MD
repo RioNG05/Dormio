@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Giải pháp SaaS toàn diện cho mô hình quản lý phòng trọ (BHMS) và sàn kết nối người thuê trọ (BHRP) tại Việt Nam.</strong>
+  <strong>Giải pháp SaaS toàn diện cho mô hình quản lý phòng trọ  và sàn kết nối người thuê trọ (BHRP) tại Việt Nam.</strong>
 </p>
 
 <p align="center">
