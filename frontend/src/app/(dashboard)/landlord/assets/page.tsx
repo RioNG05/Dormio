@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -8,11 +8,18 @@ import {
   CheckCircle2, AlertTriangle, Wrench, Box, Filter,
   Building2, ArrowUpDown, ChevronDown, UploadCloud, FileSpreadsheet,
   MapPin, Eye, Edit3, Trash2, Tag, ShieldCheck, Sparkles, LayoutGrid, List,
-  DollarSign, Home, AlertCircle, Info, Calendar, ArrowRight, BarChart3
+  DollarSign, Home, AlertCircle, Info, Calendar, ArrowRight, BarChart3, Loader2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { Asset, initialMockAssets, calculateDepreciation } from "./data";
+import {
+  assetService,
+  AssetItem,
+  AssetCondition,
+  AssetsSummary,
+} from "@/services/asset.service";
+import { getRooms, RoomItem } from "@/services/room.service";
+import { calculateDepreciation } from "./data";
 
 export default function AssetsPage() {
   const { activeBuilding } = useAuth();
@@ -21,38 +28,54 @@ export default function AssetsPage() {
   const { locale } = useLanguage();
   const isEn = locale === "en";
 
-  const [assets, setAssets] = useState<Asset[]>(initialMockAssets);
+  // Data & Loading States
+  const [assets, setAssets] = useState<AssetItem[]>([]);
+  const [availableRooms, setAvailableRooms] = useState<RoomItem[]>([]);
+  const [summary, setSummary] = useState<AssetsSummary>({
+    totalItems: 0,
+    totalQuantity: 0,
+    totalValue: 0,
+    goodConditionCount: 0,
+    needsRepairCount: 0,
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Pagination States
+  // Pagination States (Rule #9: Grid=6, Table=10 default)
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<AssetItem | null>(null);
 
-  // Form Field States (with SKU & Depreciation)
-  const [formSku, setFormSku] = useState("");
+  // Form Field States
   const [formName, setFormName] = useState("");
   const [formCategory, setFormCategory] = useState("Điện lạnh");
-  const [formRoom, setFormRoom] = useState("101");
+  const [formRoomId, setFormRoomId] = useState<string>("");
+  const [formLocation, setFormLocation] = useState("101");
+  const [formQuantity, setFormQuantity] = useState<number>(1);
+  const [formCondition, setFormCondition] = useState<AssetCondition>("good");
   const [formValue, setFormValue] = useState("3.000.000 ₫");
-  const [formPurchaseDate, setFormPurchaseDate] = useState("10/01/2025");
+  const [formPurchaseDate, setFormPurchaseDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [formDepreciationYears, setFormDepreciationYears] = useState(5);
-  const [formStatus, setFormStatus] = useState("Đang sử dụng");
-  const [formModelCode, setFormModelCode] = useState("");
-  const [formSerialNumber, setFormSerialNumber] = useState("");
-  const [formWarrantyPeriod, setFormWarrantyPeriod] = useState("");
-  const [formSupplier, setFormSupplier] = useState("");
   const [formNote, setFormNote] = useState("");
 
-  // Building Code Prefix for Asset ID (e.g. DORMIO-Q1)
-  const buildingPrefix = activeBuilding?.id ? activeBuilding.id.toUpperCase() : "DORMIO-Q1";
+  // Building Code Prefix for Asset ID
+  const buildingPrefix = activeBuilding?.id
+    ? activeBuilding.id.slice(0, 8).toUpperCase()
+    : "DORMIO";
 
   // Alert & Confirm Modals
   const [alertModal, setAlertModal] = useState<{
@@ -64,7 +87,7 @@ export default function AssetsPage() {
     isOpen: false,
     title: isEn ? "Notification" : "Thông báo",
     message: "",
-    type: "info"
+    type: "info",
   });
 
   const [confirmModal, setConfirmModal] = useState<{
@@ -74,12 +97,114 @@ export default function AssetsPage() {
     confirmText?: string;
     cancelText?: string;
     onConfirm: () => void;
-  }>({ isOpen: false, title: "", message: "", onConfirm: () => { } });
+  }>({ isOpen: false, title: "", message: "", onConfirm: () => {} });
 
-  const showAlert = (message: string, type: "warning" | "error" | "success" | "info" = "warning", title?: string) => {
-    setAlertModal({ isOpen: true, title: title || (isEn ? "Notification" : "Thông báo"), message, type });
+  const showAlert = (
+    message: string,
+    type: "warning" | "error" | "success" | "info" = "warning",
+    title?: string
+  ) => {
+    setAlertModal({
+      isOpen: true,
+      title: title || (isEn ? "Notification" : "Thông báo"),
+      message,
+      type,
+    });
   };
 
+  // Map condition to UI label
+  const getStatusLabel = (cond: AssetCondition | string) => {
+    switch (cond) {
+      case "new":
+        return t("landlordAssetsStatusReady");
+      case "good":
+        return t("landlordAssetsStatusInUse");
+      case "under_repair":
+        return t("landlordAssetsStatusMaintenance");
+      case "damaged":
+        return t("landlordAssetsStatusBroken");
+      case "lost":
+        return isEn ? "Lost" : "Đã mất";
+      case "disposed":
+        return isEn ? "Disposed" : "Đã thanh lý";
+      default:
+        return cond;
+    }
+  };
+
+  // Map UI status filter to backend condition
+  const mapUiStatusToCondition = (uiStatus: string): string => {
+    if (uiStatus === "Đang sử dụng") return "good";
+    if (uiStatus === "Sẵn sàng") return "new";
+    if (uiStatus === "Bảo trì") return "under_repair";
+    if (uiStatus === "Hỏng hóc") return "damaged";
+    return uiStatus;
+  };
+
+  const getCategoryLabel = (category: string | null) => {
+    if (!category) return isEn ? "General" : "Chung";
+    if (category === "Điện lạnh") return t("landlordAssetsCatRefrigeration");
+    if (category === "Nội thất") return t("landlordAssetsCatFurniture");
+    if (category === "Gia dụng") return t("landlordAssetsCatAppliances");
+    if (category === "Điện nước") return t("landlordAssetsCatUtilities");
+    if (category === "An ninh") return t("landlordAssetsCatSecurity");
+    return category;
+  };
+
+  // Fetch Rooms
+  useEffect(() => {
+    if (!activeBuilding?.id) return;
+    getRooms(activeBuilding.id)
+      .then((res) => {
+        if (res && res.data) {
+          setAvailableRooms(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load rooms:", err);
+      });
+  }, [activeBuilding?.id]);
+
+  // Fetch Assets from Backend API
+  const fetchAssets = useCallback(async () => {
+    if (!activeBuilding?.id) return;
+    setIsLoading(true);
+    try {
+      const conditionParam = statusFilter ? mapUiStatusToCondition(statusFilter) : undefined;
+      const res = await assetService.getAssets(activeBuilding.id, {
+        search: searchQuery || undefined,
+        category: categoryFilter || undefined,
+        condition: conditionParam || undefined,
+        page: currentPage,
+        limit: itemsPerPage,
+      });
+
+      if (res && res.success) {
+        setAssets(res.data || []);
+        if (res.summary) {
+          setSummary(res.summary);
+        }
+        if (res.pagination) {
+          setTotalRecords(res.pagination.total);
+          setTotalPages(res.pagination.totalPages);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error loading assets:", error);
+      showAlert(
+        error?.message || (isEn ? "Failed to load assets" : "Không thể tải danh sách tài sản."),
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeBuilding?.id, searchQuery, categoryFilter, statusFilter, currentPage, itemsPerPage, isEn]);
+
+  useEffect(() => {
+    fetchAssets();
+  }, [fetchAssets]);
+
+  // Rule #10: Modal Reset & Confirmation on Close
   const handleCloseModal = () => {
     if (isDirty) {
       setConfirmModal({
@@ -90,9 +215,9 @@ export default function AssetsPage() {
         cancelText: t("landlordAssetsConfirmCloseKeep"),
         onConfirm: () => {
           setIsModalOpen(false);
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
           setTimeout(() => setIsDirty(false), 200);
-        }
+        },
       });
     } else {
       setIsModalOpen(false);
@@ -101,147 +226,125 @@ export default function AssetsPage() {
 
   const handleOpenAddModal = () => {
     setSelectedAsset(null);
-    setFormSku(`TS-${Math.floor(100 + Math.random() * 900)}`);
     setFormName("");
     setFormCategory("Điện lạnh");
-    setFormRoom("101");
+    setFormRoomId(availableRooms.length > 0 ? availableRooms[0].id : "");
+    setFormLocation(availableRooms.length > 0 ? `Phòng ${availableRooms[0].roomNumber}` : "Kho chứa đồ");
+    setFormQuantity(1);
+    setFormCondition("good");
     setFormValue("3.000.000 ₫");
-    setFormPurchaseDate(new Date().toLocaleDateString("vi-VN"));
+    setFormPurchaseDate(new Date().toISOString().split("T")[0]);
     setFormDepreciationYears(5);
-    setFormStatus("Đang sử dụng");
-    setFormModelCode("");
-    setFormSerialNumber("");
-    setFormWarrantyPeriod("");
-    setFormSupplier("");
     setFormNote("");
     setIsDirty(false);
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (asset: Asset, e?: React.MouseEvent) => {
+  const handleOpenEditModal = (asset: AssetItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setSelectedAsset(asset);
-    setFormSku(asset.sku || asset.id);
     setFormName(asset.name);
-    setFormCategory(asset.category);
-    setFormRoom(asset.room);
-    setFormValue(asset.value);
-    setFormPurchaseDate(asset.purchaseDate || asset.dateAdded || "10/01/2025");
-    setFormDepreciationYears(asset.depreciationYears || 5);
-    setFormStatus(asset.status);
-    setFormModelCode(asset.modelCode || "");
-    setFormSerialNumber(asset.serialNumber || "");
-    setFormWarrantyPeriod(asset.warrantyPeriod || "");
-    setFormSupplier(asset.supplier || "");
+    setFormCategory(asset.category || "Điện lạnh");
+    setFormRoomId(asset.roomId || "");
+    setFormLocation(asset.location || asset.roomName);
+    setFormQuantity(asset.quantity || 1);
+    setFormCondition(asset.condition || "good");
+    setFormValue(
+      asset.purchasePrice
+        ? `${Number(asset.purchasePrice).toLocaleString("vi-VN")} ₫`
+        : "0 ₫"
+    );
+    setFormPurchaseDate(
+      asset.purchaseDate
+        ? asset.purchaseDate.split("T")[0]
+        : new Date().toISOString().split("T")[0]
+    );
+    setFormDepreciationYears(5);
     setFormNote(asset.note || "");
     setIsDirty(false);
     setIsModalOpen(true);
   };
 
-  const handleSaveAsset = () => {
+  const handleSaveAsset = async () => {
     if (!formName.trim()) {
       showAlert(t("landlordAssetsNameRequired"), "warning", t("landlordAssetsInfoMissing"));
       return;
     }
-    if (!formSku.trim()) {
-      showAlert(t("landlordAssetsSkuRequired"), "warning", t("landlordAssetsInfoMissing"));
-      return;
-    }
 
     const numVal = parseInt(formValue.replace(/\D/g, "")) || 0;
-    const formattedVal = numVal > 0 ? `${numVal.toLocaleString("vi-VN")} ₫` : formValue;
-    const cleanSku = formSku.trim().toUpperCase();
-    const generatedId = `${buildingPrefix}-${cleanSku}`;
+    if (!activeBuilding?.id) return;
 
-    if (selectedAsset) {
-      setAssets(prev => prev.map(a => a.id === selectedAsset.id ? {
-        ...a,
-        id: generatedId,
-        sku: cleanSku,
+    setIsSubmitting(true);
+    try {
+      const payload = {
         name: formName.trim(),
         category: formCategory,
-        room: formRoom,
-        value: formattedVal,
-        numericValue: numVal,
-        purchaseValue: numVal,
-        purchaseDate: formPurchaseDate,
-        depreciationYears: Number(formDepreciationYears) || 5,
-        status: formStatus,
-        modelCode: formModelCode.trim(),
-        serialNumber: formSerialNumber.trim(),
-        warrantyPeriod: formWarrantyPeriod.trim(),
-        supplier: formSupplier.trim(),
-        note: formNote.trim(),
-      } : a));
-      showAlert(t("landlordAssetsToastEditSuccess"), "success", t("landlordAssetsToastEditSuccess"));
-    } else {
-      const newAsset: Asset = {
-        id: generatedId,
-        sku: cleanSku,
-        name: formName.trim(),
-        category: formCategory,
-        building: activeBuilding?.id || "dormio",
-        buildingName: activeBuilding?.name || "Dormio Premier Quận 1",
-        room: formRoom,
-        status: formStatus,
-        dateAdded: new Date().toLocaleDateString("vi-VN"),
-        purchaseDate: formPurchaseDate,
-        purchaseValue: numVal,
-        depreciationYears: Number(formDepreciationYears) || 5,
-        value: formattedVal,
-        numericValue: numVal,
-        modelCode: formModelCode.trim(),
-        serialNumber: formSerialNumber.trim(),
-        warrantyPeriod: formWarrantyPeriod.trim(),
-        supplier: formSupplier.trim(),
-        note: formNote.trim(),
-        maintenanceLogs: []
+        location: formLocation.trim() || "Chung",
+        roomId: formRoomId || null,
+        quantity: Number(formQuantity) || 1,
+        condition: formCondition,
+        purchasePrice: numVal,
+        purchaseDate: formPurchaseDate ? new Date(formPurchaseDate).toISOString() : undefined,
+        note: formNote.trim() || undefined,
       };
-      setAssets(prev => [newAsset, ...prev]);
-      showAlert(t("landlordAssetsToastAddSuccess"), "success", t("landlordAssetsToastAddSuccess"));
+
+      if (selectedAsset) {
+        await assetService.updateAsset(activeBuilding.id, selectedAsset.id, payload);
+        showAlert(t("landlordAssetsToastEditSuccess"), "success", t("landlordAssetsToastEditSuccess"));
+      } else {
+        await assetService.createAsset(activeBuilding.id, payload);
+        showAlert(t("landlordAssetsToastAddSuccess"), "success", t("landlordAssetsToastAddSuccess"));
+      }
+
+      setIsModalOpen(false);
+      setIsDirty(false);
+      fetchAssets();
+    } catch (err: any) {
+      console.error("Save asset error:", err);
+      showAlert(
+        err?.message || (isEn ? "Failed to save asset" : "Lưu tài sản thất bại."),
+        "error"
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsModalOpen(false);
-    setIsDirty(false);
   };
 
-  const filteredAssets = assets.filter(asset => {
-    const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      asset.room.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      asset.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (asset.sku && asset.sku.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = statusFilter === "" || asset.status === statusFilter;
-    const matchesCategory = categoryFilter === "" || asset.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
+  const handleDeleteAsset = (asset: AssetItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!activeBuilding?.id) return;
 
-  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage) || 1;
-  const paginatedAssets = filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const inUseCount = assets.filter(a => a.status === "Đang sử dụng").length;
-  const maintenanceCount = assets.filter(a => a.status === "Bảo trì" || a.status === "Hỏng hóc").length;
-  const stockCount = assets.filter(a => a.status === "Sẵn sàng" || a.room === "Kho").length;
-
-  // Calculate sum of initial values & sum of depreciated current values
-  const totalPurchaseValueSum = assets.reduce((sum, a) => sum + (a.purchaseValue || a.numericValue || 0), 0);
-  const totalCurrentValueSum = assets.reduce((sum, a) => sum + calculateDepreciation(a).currentValue, 0);
-
-  const getStatusLabel = (status: string) => {
-    if (status === "Đang sử dụng") return t("landlordAssetsStatusInUse");
-    if (status === "Sẵn sàng") return t("landlordAssetsStatusReady");
-    if (status === "Bảo trì") return t("landlordAssetsStatusMaintenance");
-    if (status === "Hỏng hóc") return t("landlordAssetsStatusBroken");
-    return status;
+    setConfirmModal({
+      isOpen: true,
+      title: isEn ? "Delete Asset" : "Xác nhận xóa tài sản",
+      message: isEn
+        ? `Are you sure you want to permanently delete "${asset.name}" (${asset.code})?`
+        : `Bạn có chắc chắn muốn xóa vĩnh viễn tài sản "${asset.name}" (${asset.code}) không? Hành động này sẽ được ghi vào nhật ký kiểm toán.`,
+      confirmText: isEn ? "Delete Permanently" : "Xóa vĩnh viễn",
+      cancelText: isEn ? "Cancel" : "Hủy bỏ",
+      onConfirm: async () => {
+        try {
+          await assetService.deleteAsset(activeBuilding.id, asset.id);
+          showAlert(isEn ? "Asset deleted successfully." : "Đã xóa tài sản thành công.", "success");
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+          fetchAssets();
+        } catch (err: any) {
+          showAlert(err?.message || (isEn ? "Delete failed" : "Xóa thất bại."), "error");
+        }
+      },
+    });
   };
 
-  const getCategoryLabel = (category: string) => {
-    if (category === "Điện lạnh") return t("landlordAssetsCatRefrigeration");
-    if (category === "Nội thất") return t("landlordAssetsCatFurniture");
-    if (category === "Gia dụng") return t("landlordAssetsCatAppliances");
-    if (category === "Điện nước") return t("landlordAssetsCatUtilities");
-    if (category === "An ninh") return t("landlordAssetsCatSecurity");
-    return category;
-  };
+  // Financial Valuation Calculation (Original vs Depreciated Current Value)
+  const totalPurchaseValueSum = summary.totalValue || 0;
+  const totalCurrentValueSum = assets.reduce((sum, a) => {
+    const dep = calculateDepreciation({
+      purchasePrice: a.purchasePrice,
+      purchaseDate: a.purchaseDate,
+      depreciationYears: 5,
+    });
+    return sum + dep.currentValue;
+  }, 0);
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
@@ -287,7 +390,7 @@ export default function AssetsPage() {
           <div className="space-y-2.5 max-w-xl w-full">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                {activeBuilding.name}
+                {activeBuilding?.name || "Dormio"}
               </h2>
               <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
                 {t("landlordAssetsCodePrefix", { code: buildingPrefix })}
@@ -297,16 +400,20 @@ export default function AssetsPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
               <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
+                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
+                  {activeBuilding?.address || (isEn ? "Address not updated" : "Chưa cập nhật địa chỉ")}
+                </span>
               </div>
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-              >
-                <span>{t("landlordAssetsBtnViewMap")}</span> &rarr;
-              </a>
+              {activeBuilding?.address && (
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <span>{t("landlordAssetsBtnViewMap")}</span> &rarr;
+                </a>
+              )}
             </div>
 
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
@@ -318,32 +425,48 @@ export default function AssetsPage() {
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full md:w-[135px]">
               <Package className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordAssetsTotalAssetsShort")}</span>
-                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{t("landlordAssetsItemsCount", { count: assets.length })}</span>
+                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
+                  {t("landlordAssetsTotalAssetsShort")}
+                </span>
+                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">
+                  {t("landlordAssetsItemsCount", { count: summary.totalItems })}
+                </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full md:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordAssetsInUse")}</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{inUseCount}</span>
+                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
+                  {t("landlordAssetsInUse")}
+                </span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
+                  {summary.goodConditionCount}
+                </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full md:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordAssetsUnderMaintenance")}</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{maintenanceCount}</span>
+                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">
+                  {t("landlordAssetsUnderMaintenance")}
+                </span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
+                  {summary.needsRepairCount}
+                </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full md:w-[135px]">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordAssetsInStock")}</span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{stockCount}</span>
+                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
+                  {isEn ? "Total Units" : "Tổng số lượng"}
+                </span>
+                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
+                  {summary.totalQuantity}
+                </span>
               </div>
             </div>
           </div>
@@ -354,43 +477,81 @@ export default function AssetsPage() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-zinc-200/80 shadow-xs">
         {/* Category Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {["", "Điện lạnh", "Nội thất", "Gia dụng", "Điện nước", "An ninh"].map(cat => (
+          {["", "Điện lạnh", "Nội thất", "Gia dụng", "Điện nước", "An ninh"].map((cat) => (
             <button
               key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${categoryFilter === cat
-                ? "bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
-                }`}
+              onClick={() => {
+                setCategoryFilter(cat);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                categoryFilter === cat
+                  ? "bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
+              }`}
             >
-              {cat === "" ? t("landlordAssetsFilterAllCategories") : (cat === "Điện lạnh" ? t("landlordAssetsCatRefrigeration") : cat === "Nội thất" ? t("landlordAssetsCatFurniture") : cat === "Gia dụng" ? t("landlordAssetsCatAppliances") : cat === "Điện nước" ? t("landlordAssetsCatUtilities") : cat === "An ninh" ? t("landlordAssetsCatSecurity") : cat)}
+              {cat === ""
+                ? t("landlordAssetsFilterAllCategories")
+                : cat === "Điện lạnh"
+                ? t("landlordAssetsCatRefrigeration")
+                : cat === "Nội thất"
+                ? t("landlordAssetsCatFurniture")
+                : cat === "Gia dụng"
+                ? t("landlordAssetsCatAppliances")
+                : cat === "Điện nước"
+                ? t("landlordAssetsCatUtilities")
+                : cat === "An ninh"
+                ? t("landlordAssetsCatSecurity")
+                : cat}
             </button>
           ))}
         </div>
 
-        {/* Financial Valuation Summary (Initial vs Depreciated Current Value) */}
+        {/* Financial Valuation Summary */}
         <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0">
           <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs font-black text-emerald-800 flex items-center gap-1.5">
             <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{t("landlordAssetsOriginalValueLabel")} {totalPurchaseValueSum.toLocaleString("vi-VN")} ₫</span>
+            <span>
+              {t("landlordAssetsOriginalValueLabel")}{" "}
+              {totalPurchaseValueSum.toLocaleString("vi-VN")} ₫
+            </span>
           </div>
 
           <div className="px-3 py-1.5 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-black text-blue-800 flex items-center gap-1.5">
             <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
-            <span>{t("landlordAssetsCurrentValueLabel")} {totalCurrentValueSum.toLocaleString("vi-VN")} ₫</span>
+            <span>
+              {t("landlordAssetsCurrentValueLabel")}{" "}
+              {totalCurrentValueSum.toLocaleString("vi-VN")} ₫
+            </span>
           </div>
 
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
             <button
-              onClick={() => { setViewMode("grid"); setItemsPerPage(6); setCurrentPage(1); }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-600"}`}
+              onClick={() => {
+                setViewMode("grid");
+                setItemsPerPage(6);
+                setCurrentPage(1);
+              }}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-white text-zinc-900 shadow-2xs"
+                  : "text-zinc-400 hover:text-zinc-600"
+              }`}
               title={t("landlordAssetsViewGrid")}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
-              onClick={() => { setViewMode("list"); setItemsPerPage(10); setCurrentPage(1); }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-400 hover:text-zinc-600"}`}
+              onClick={() => {
+                setViewMode("list");
+                setItemsPerPage(10);
+                setCurrentPage(1);
+              }}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                viewMode === "list"
+                  ? "bg-white text-zinc-900 shadow-2xs"
+                  : "text-zinc-400 hover:text-zinc-600"
+              }`}
               title={t("landlordAssetsViewTable")}
             >
               <List className="w-4 h-4" />
@@ -409,7 +570,10 @@ export default function AssetsPage() {
               type="text"
               placeholder={t("landlordAssetsSearchPh")}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
             />
           </div>
@@ -417,7 +581,10 @@ export default function AssetsPage() {
           <div className="relative shrink-0">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full sm:w-auto pl-4 pr-10 py-2 text-xs font-semibold text-zinc-900 bg-white border border-zinc-200 rounded-xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 cursor-pointer transition-all min-w-[150px]"
             >
               <option value="">{t("landlordAssetsFilterAllStatuses")}</option>
@@ -430,17 +597,29 @@ export default function AssetsPage() {
           </div>
         </div>
 
-        {/* GRID VIEW */}
-        {viewMode === "grid" ? (
+        {/* Loading Indicator */}
+        {isLoading ? (
+          <div className="py-20 text-center text-zinc-500 font-medium">
+            <Loader2 className="w-8 h-8 mx-auto text-[#2AC1BC] animate-spin mb-3" />
+            <p className="text-xs font-bold text-zinc-500">
+              {isEn ? "Loading assets data..." : "Đang tải dữ liệu tài sản..."}
+            </p>
+          </div>
+        ) : viewMode === "grid" ? (
+          /* GRID VIEW */
           <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAssets.length === 0 ? (
+            {assets.length === 0 ? (
               <div className="col-span-full py-12 text-center text-zinc-500 font-medium">
                 <Package className="w-10 h-10 mx-auto text-zinc-300 mb-2" />
                 {t("landlordAssetsEmptyTitle")}
               </div>
             ) : (
-              paginatedAssets.map(asset => {
-                const dep = calculateDepreciation(asset);
+              assets.map((asset) => {
+                const dep = calculateDepreciation({
+                  purchasePrice: asset.purchasePrice,
+                  purchaseDate: asset.purchaseDate,
+                  depreciationYears: 5,
+                });
                 return (
                   <div
                     key={asset.id}
@@ -454,15 +633,21 @@ export default function AssetsPage() {
                             {getCategoryLabel(asset.category)}
                           </span>
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30">
-                            SKU: {asset.sku || asset.id}
+                            {asset.code}
                           </span>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${asset.status === 'Đang sử dụng' ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30' :
-                          asset.status === 'Sẵn sàng' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                            asset.status === 'Bảo trì' ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse' :
-                              'bg-rose-50 text-rose-600 border-rose-200'
-                          }`}>
-                          {getStatusLabel(asset.status)}
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${
+                            asset.condition === "good"
+                              ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
+                              : asset.condition === "new"
+                              ? "bg-blue-50 text-blue-600 border-blue-200"
+                              : asset.condition === "under_repair"
+                              ? "bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse"
+                              : "bg-rose-50 text-rose-600 border-rose-200"
+                          }`}
+                        >
+                          {getStatusLabel(asset.condition)}
                         </span>
                       </div>
 
@@ -470,35 +655,56 @@ export default function AssetsPage() {
                         <h3 className="text-base font-black text-zinc-900 group-hover:text-[#2AC1BC] transition-colors leading-snug">
                           {asset.name}
                         </h3>
+                        {asset.quantity > 1 && (
+                          <span className="text-[11px] font-bold text-zinc-400 block mt-0.5">
+                            {isEn ? `Quantity: ${asset.quantity}` : `Số lượng: ${asset.quantity}`}
+                          </span>
+                        )}
                       </div>
 
                       <div className="p-3 bg-zinc-50 rounded-xl space-y-2 text-xs">
                         <div className="flex justify-between items-center text-zinc-600">
                           <span className="text-zinc-400 font-medium">{t("landlordAssetsLocation")}</span>
                           <span className="font-bold text-zinc-900 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
-                            {asset.room}
+                            {asset.roomName || asset.location}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-zinc-600">
                           <span className="text-zinc-400 font-medium">{t("landlordAssetsOriginalValueLabel")}</span>
-                          <span className="font-bold text-zinc-900">{asset.value}</span>
+                          <span className="font-bold text-zinc-900">
+                            {asset.purchasePrice
+                              ? `${Number(asset.purchasePrice).toLocaleString("vi-VN")} ₫`
+                              : "0 ₫"}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center text-zinc-600">
                           <span className="text-zinc-400 font-medium">{t("landlordAssetsCurrentValueLabel")}</span>
                           <span className="font-black text-emerald-600">
-                            {dep.currentValue.toLocaleString("vi-VN")} ₫ <span className="text-[10px] text-zinc-400 font-normal">({dep.remainingPercent}%)</span>
+                            {dep.currentValue.toLocaleString("vi-VN")} ₫{" "}
+                            <span className="text-[10px] text-zinc-400 font-normal">
+                              ({dep.remainingPercent}%)
+                            </span>
                           </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-xs">
-                      <button
-                        onClick={(e) => handleOpenEditModal(asset, e)}
-                        className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordAssetsBtnEditSku")}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => handleOpenEditModal(asset, e)}
+                          className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordAssetsBtnEditSku")}
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteAsset(asset, e)}
+                          className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors"
+                          title={isEn ? "Delete" : "Xóa"}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                       <span className="text-xs font-black text-[#2AC1BC] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
                         {t("landlordAssetsBtnDetails")} <ArrowRight className="w-3.5 h-3.5" />
                       </span>
@@ -525,15 +731,19 @@ export default function AssetsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 font-medium">
-                {filteredAssets.length === 0 ? (
+                {assets.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
                       {t("landlordAssetsEmptyTitle")}
                     </td>
                   </tr>
                 ) : (
-                  paginatedAssets.map((asset) => {
-                    const dep = calculateDepreciation(asset);
+                  assets.map((asset) => {
+                    const dep = calculateDepreciation({
+                      purchasePrice: asset.purchasePrice,
+                      purchaseDate: asset.purchaseDate,
+                      depreciationYears: 5,
+                    });
                     return (
                       <tr
                         key={asset.id}
@@ -541,34 +751,60 @@ export default function AssetsPage() {
                         className="hover:bg-zinc-50/80 transition-colors cursor-pointer group"
                       >
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span className="font-black text-[#2AC1BC] block font-mono">{asset.sku || asset.id}</span>
+                          <span className="font-black text-[#2AC1BC] block font-mono">{asset.code}</span>
                         </td>
                         <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors whitespace-nowrap">
                           {asset.name}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 text-zinc-500 whitespace-nowrap">{getCategoryLabel(asset.category)}</td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-800 whitespace-nowrap">{asset.room}</td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 whitespace-nowrap">{asset.value}</td>
+                        <td className="px-4 sm:px-6 py-4 text-zinc-500 whitespace-nowrap">
+                          {getCategoryLabel(asset.category)}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-800 whitespace-nowrap">
+                          {asset.roomName || asset.location}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 whitespace-nowrap">
+                          {asset.purchasePrice
+                            ? `${Number(asset.purchasePrice).toLocaleString("vi-VN")} ₫`
+                            : "0 ₫"}
+                        </td>
                         <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 whitespace-nowrap">
                           {dep.currentValue.toLocaleString("vi-VN")} ₫
-                          <span className="text-[10px] text-zinc-400 font-medium block">{t("landlordAssetsRemaining")} {dep.remainingPercent}%</span>
+                          <span className="text-[10px] text-zinc-400 font-medium block">
+                            {t("landlordAssetsRemaining")} {dep.remainingPercent}%
+                          </span>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${asset.status === 'Đang sử dụng' ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30' :
-                            asset.status === 'Sẵn sàng' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                              asset.status === 'Bảo trì' ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse' :
-                                'bg-rose-50 text-rose-600 border-rose-200'
-                            }`}>
-                            {getStatusLabel(asset.status)}
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${
+                              asset.condition === "good"
+                                ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
+                                : asset.condition === "new"
+                                ? "bg-blue-50 text-blue-600 border-blue-200"
+                                : asset.condition === "under_repair"
+                                ? "bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse"
+                                : "bg-rose-50 text-rose-600 border-rose-200"
+                            }`}
+                          >
+                            {getStatusLabel(asset.condition)}
                           </span>
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <div
+                            className="flex items-center justify-end gap-1.5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
                               onClick={(e) => handleOpenEditModal(asset, e)}
                               className="px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors flex items-center gap-1"
                             >
                               <Edit3 className="w-3 h-3 text-[#2AC1BC]" /> {t("landlordAssetsBtnEdit")}
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteAsset(asset, e)}
+                              className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                              title={isEn ? "Delete" : "Xóa"}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                             <Link
                               href={`/landlord/assets/${asset.id}`}
@@ -611,14 +847,27 @@ export default function AssetsPage() {
           <span className="hidden sm:inline text-zinc-300">|</span>
 
           <div>
-            <span className="font-extrabold text-zinc-800">{filteredAssets.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(currentPage * itemsPerPage, filteredAssets.length)}</span> {t("landlordAssetsOfTotal")} <span className="font-extrabold text-zinc-800">{filteredAssets.length}</span> {t("landlordAssetsAssetsUnit")}
+            <span className="font-extrabold text-zinc-800">
+              {totalRecords === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
+            </span>{" "}
+            -{" "}
+            <span className="font-extrabold text-zinc-800">
+              {Math.min(currentPage * itemsPerPage, totalRecords)}
+            </span>{" "}
+            {t("landlordAssetsOfTotal")}{" "}
+            <span className="font-extrabold text-zinc-800">{totalRecords}</span>{" "}
+            {t("landlordAssetsAssetsUnit")}
           </div>
         </div>
+
         {(() => {
           const windowSize = 5;
           const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
           const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
-          const visiblePages = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+          const visiblePages = Array.from(
+            { length: Math.max(0, windowEnd - windowStart + 1) },
+            (_, i) => windowStart + i
+          );
 
           return (
             <div className="flex items-center gap-1.5">
@@ -629,7 +878,7 @@ export default function AssetsPage() {
               >
                 &larr; {t("landlordAssetsPrev")}
               </button>
-              {visiblePages.map(page => (
+              {visiblePages.map((page) => (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
@@ -643,7 +892,7 @@ export default function AssetsPage() {
                 </button>
               ))}
               <button
-                disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
+                disabled={currentPage >= totalPages || windowStart + windowSize > totalPages}
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
                 className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
@@ -654,11 +903,13 @@ export default function AssetsPage() {
         })()}
       </div>
 
-      {/* ADD / EDIT ASSET MODAL WITH SKU & DEPRECIATION */}
+      {/* ADD / EDIT ASSET MODAL */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleCloseModal();
+          }}
         >
           <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]">
             <div className="px-5 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
@@ -668,33 +919,25 @@ export default function AssetsPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-base sm:text-lg text-zinc-900">
-                    {selectedAsset ? `${t("landlordAssetsModalEditTitle")} [${t("landlordAssetsFieldSku")}: ${formSku}]` : t("landlordAssetsModalAddTitle")}
+                    {selectedAsset
+                      ? `${t("landlordAssetsModalEditTitle")} [${selectedAsset.code}]`
+                      : t("landlordAssetsModalAddTitle")}
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium">{t("landlordAssetsModalSub")}</p>
                 </div>
               </div>
-              <button onClick={handleCloseModal} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors">
+              <button
+                onClick={handleCloseModal}
+                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+              >
                 <Plus className="w-5 h-5 rotate-45" />
               </button>
             </div>
 
             <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                {/* SKU Code Input */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t("landlordAssetsFieldSku")} <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: ML-DK-101"
-                    value={formSku}
-                    onChange={(e) => { setFormSku(e.target.value); setIsDirty(true); }}
-                    className="w-full px-3.5 py-2.5 text-xs font-bold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none uppercase font-mono"
-                  />
-                </div>
-
-                <div>
+                {/* Name */}
+                <div className="sm:col-span-2">
                   <label className="block text-xs font-extrabold text-zinc-700 mb-1">
                     {t("landlordAssetsFieldName")} <span className="text-rose-500">*</span>
                   </label>
@@ -702,16 +945,25 @@ export default function AssetsPage() {
                     type="text"
                     placeholder={t("landlordAssetsFieldNamePh")}
                     value={formName}
-                    onChange={(e) => { setFormName(e.target.value); setIsDirty(true); }}
+                    onChange={(e) => {
+                      setFormName(e.target.value);
+                      setIsDirty(true);
+                    }}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
                   />
                 </div>
 
+                {/* Category */}
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldCategory")}</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {t("landlordAssetsFieldCategory")}
+                  </label>
                   <select
                     value={formCategory}
-                    onChange={(e) => { setFormCategory(e.target.value); setIsDirty(true); }}
+                    onChange={(e) => {
+                      setFormCategory(e.target.value);
+                      setIsDirty(true);
+                    }}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
                     <option value="Điện lạnh">{t("landlordAssetsCatRefrigeration")}</option>
@@ -722,101 +974,158 @@ export default function AssetsPage() {
                   </select>
                 </div>
 
+                {/* Room Selection */}
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldRoom")}</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {t("landlordAssetsFieldRoom")}
+                  </label>
                   <select
-                    value={formRoom}
-                    onChange={(e) => { setFormRoom(e.target.value); setIsDirty(true); }}
+                    value={formRoomId}
+                    onChange={(e) => {
+                      const selectedVal = e.target.value;
+                      setFormRoomId(selectedVal);
+                      setIsDirty(true);
+                      if (!selectedVal) {
+                        setFormLocation("Khu sinh hoạt chung / Kho");
+                      } else {
+                        const targetRoom = availableRooms.find((r) => r.id === selectedVal);
+                        if (targetRoom) {
+                          setFormLocation(`Phòng ${targetRoom.roomNumber}`);
+                        }
+                      }
+                    }}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="101">{isEn ? "Room 101" : "Phòng 101"}</option>
-                    <option value="102">{isEn ? "Room 102" : "Phòng 102"}</option>
-                    <option value="103">{isEn ? "Room 103" : "Phòng 103"}</option>
-                    <option value="201">{isEn ? "Room 201" : "Phòng 201"}</option>
-                    <option value="Kho">{isEn ? "Storage" : "Kho chứa đồ"}</option>
-                    <option value="Khu sinh hoạt chung">{isEn ? "Common Area" : "Khu sinh hoạt chung"}</option>
+                    <option value="">{isEn ? "Shared / Unassigned (Common Area)" : "Khu vực chung / Chưa gán phòng"}</option>
+                    {availableRooms.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        {isEn ? `Room ${room.roomNumber}` : `Phòng ${room.roomNumber}`}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
+                {/* Location Detail */}
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldPurchaseValue")}</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {isEn ? "Location Details" : "Vị trí cụ thể"}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={isEn ? "e.g. Balcony, Room 101, Floor 2" : "VD: Ban công, Góc phòng 101"}
+                    value={formLocation}
+                    onChange={(e) => {
+                      setFormLocation(e.target.value);
+                      setIsDirty(true);
+                    }}
+                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                  />
+                </div>
+
+                {/* Quantity */}
+                <div>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {isEn ? "Quantity" : "Số lượng"}
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={formQuantity}
+                    onChange={(e) => {
+                      setFormQuantity(Math.max(1, parseInt(e.target.value) || 1));
+                      setIsDirty(true);
+                    }}
+                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                  />
+                </div>
+
+                {/* Purchase Value */}
+                <div>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {t("landlordAssetsFieldPurchaseValue")}
+                  </label>
                   <input
                     type="text"
                     placeholder="VD: 8.500.000 ₫"
                     value={formValue}
-                    onChange={(e) => { setFormValue(e.target.value); setIsDirty(true); }}
+                    onChange={(e) => {
+                      setFormValue(e.target.value);
+                      setIsDirty(true);
+                    }}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
                   />
                 </div>
 
+                {/* Purchase Date */}
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldPurchaseDate")}</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {t("landlordAssetsFieldPurchaseDate")}
+                  </label>
                   <input
-                    type="text"
-                    placeholder="VD: 10/01/2025"
+                    type="date"
                     value={formPurchaseDate}
-                    onChange={(e) => { setFormPurchaseDate(e.target.value); setIsDirty(true); }}
+                    onChange={(e) => {
+                      setFormPurchaseDate(e.target.value);
+                      setIsDirty(true);
+                    }}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
                   />
                 </div>
 
+                {/* Condition / Status */}
                 <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldDepreciationYears")}</label>
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {t("landlordAssetsFieldStatus")}
+                  </label>
                   <select
-                    value={formDepreciationYears}
-                    onChange={(e) => { setFormDepreciationYears(Number(e.target.value)); setIsDirty(true); }}
+                    value={formCondition}
+                    onChange={(e) => {
+                      setFormCondition(e.target.value as AssetCondition);
+                      setIsDirty(true);
+                    }}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value={3}>3 {isEn ? "years (36 months)" : "năm (36 tháng)"}</option>
-                    <option value={5}>5 {isEn ? "years (60 months)" : "năm (60 tháng)"}</option>
-                    <option value={8}>8 {isEn ? "years (96 months)" : "năm (96 tháng)"}</option>
-                    <option value={10}>10 {isEn ? "years (120 months)" : "năm (120 tháng)"}</option>
+                    <option value="good">{t("landlordAssetsStatusInUse")}</option>
+                    <option value="new">{t("landlordAssetsStatusReady")}</option>
+                    <option value="under_repair">{t("landlordAssetsStatusMaintenance")}</option>
+                    <option value="damaged">{t("landlordAssetsStatusBroken")}</option>
+                    <option value="lost">{isEn ? "Lost" : "Đã mất"}</option>
+                    <option value="disposed">{isEn ? "Disposed" : "Đã thanh lý"}</option>
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldStatus")}</label>
-                  <select
-                    value={formStatus}
-                    onChange={(e) => { setFormStatus(e.target.value); setIsDirty(true); }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="Đang sử dụng">{t("landlordAssetsStatusInUse")}</option>
-                    <option value="Sẵn sàng">{t("landlordAssetsStatusReady")}</option>
-                    <option value="Bảo trì">{t("landlordAssetsStatusMaintenance")}</option>
-                    <option value="Hỏng hóc">{t("landlordAssetsStatusBroken")}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldModelCode")}</label>
-                  <input
-                    type="text"
-                    placeholder="VD: FTKF35XVMV"
-                    value={formModelCode}
-                    onChange={(e) => { setFormModelCode(e.target.value); setIsDirty(true); }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">{t("landlordAssetsFieldWarranty")}</label>
-                  <input
-                    type="text"
-                    placeholder={isEn ? "e.g. 12 months (until 2027)" : "VD: 12 tháng (đến 2027)"}
-                    value={formWarrantyPeriod}
-                    onChange={(e) => { setFormWarrantyPeriod(e.target.value); setIsDirty(true); }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                {/* Note */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
+                    {isEn ? "Note / Warranty" : "Ghi chú / Thông tin bảo hành"}
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder={isEn ? "e.g. 2 years official warranty, model code..." : "VD: Bảo hành chính hãng 2 năm, mã model..."}
+                    value={formNote}
+                    onChange={(e) => {
+                      setFormNote(e.target.value);
+                      setIsDirty(true);
+                    }}
+                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none resize-none"
                   />
                 </div>
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
-              <button onClick={handleCloseModal} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer">
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
+              >
                 {t("landlordAssetsBtnCancel")}
               </button>
-              <button onClick={handleSaveAsset} className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
+              <button
+                onClick={handleSaveAsset}
+                disabled={isSubmitting}
+                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all flex items-center gap-1.5"
+              >
+                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {t("landlordAssetsModalBtnSave")}
               </button>
             </div>
@@ -832,7 +1141,7 @@ export default function AssetsPage() {
         confirmText={confirmModal.confirmText}
         cancelText={confirmModal.cancelText}
         onConfirm={confirmModal.onConfirm}
-        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
 
       {/* ALERT MODAL */}
@@ -841,7 +1150,7 @@ export default function AssetsPage() {
         title={alertModal.title}
         message={alertModal.message}
         type={alertModal.type}
-        onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setAlertModal((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
   );
@@ -854,7 +1163,7 @@ function ConfirmModal({
   confirmText = "OK",
   cancelText = "Cancel",
   onConfirm,
-  onCancel
+  onCancel,
 }: {
   isOpen: boolean;
   title: string;
@@ -869,7 +1178,9 @@ function ConfirmModal({
   return (
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
     >
       <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
         <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-200 mx-auto flex items-center justify-center shadow-inner">
@@ -903,7 +1214,7 @@ function AlertModal({
   title,
   message,
   type = "info",
-  onClose
+  onClose,
 }: {
   isOpen: boolean;
   title: string;
@@ -918,29 +1229,31 @@ function AlertModal({
     warning: {
       bgColor: "bg-amber-500/10 text-amber-600 border-amber-200",
       icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
-      btnColor: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
+      btnColor: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20",
     },
     error: {
       bgColor: "bg-rose-500/10 text-rose-600 border-rose-200",
       icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
-      btnColor: "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20"
+      btnColor: "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20",
     },
     success: {
       bgColor: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
       icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
-      btnColor: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+      btnColor: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20",
     },
     info: {
       bgColor: "bg-orange-50 text-[#FF6B35] border-orange-200",
       icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
-      btnColor: "bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20"
-    }
+      btnColor: "bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20",
+    },
   }[type];
 
   return (
     <div
       className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
         <div className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}>

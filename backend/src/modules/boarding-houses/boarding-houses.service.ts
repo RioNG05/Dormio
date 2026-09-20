@@ -1163,7 +1163,6 @@ export class BoardingHousesService {
     const existingCount = await this.prisma.boardingHouse.count({
       where: {
         ownerId: userId,
-        status: { not: 'deleted' },
       },
     });
 

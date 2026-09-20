@@ -983,15 +983,15 @@ model OtpCode {
 }
 
 model Asset {
-  id              String         @id @default(uuid())
-  boardingHouseId String         @map("boarding_house_id")
-  roomId          String?        @map("room_id")
-  name            String
-  category        String?
-  location        String
+  id              String         @id @default(uuid()) @db.Uuid
+  boardingHouseId String         @map("boarding_house_id") @db.Uuid
+  roomId          String?        @map("room_id") @db.Uuid
+  name            String         @db.VarChar(255)
+  category        String?        @db.VarChar(100)
+  location        String         @db.VarChar(255)
   quantity        Int            @default(1)
   condition       AssetCondition @default(good)
-  purchasePrice   Decimal?       @map("purchase_price")
+  purchasePrice   Decimal?       @map("purchase_price") @db.Decimal(12, 2)
   purchaseDate    DateTime?      @map("purchase_date")
   imageUrl        String?        @map("image_url")
   note            String?
@@ -1001,5 +1001,7 @@ model Asset {
   boardingHouse BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
   room          Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
 
+  @@index([boardingHouseId])
+  @@index([boardingHouseId, condition])
   @@map("assets")
 }
