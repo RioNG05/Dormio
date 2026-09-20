@@ -17,8 +17,8 @@ export interface CreateBoardingHousePayload {
   description?: string;
   country: string;
   province: string;
-  city: string;
-  district: string;
+  city?: string;
+  district?: string;
   ward: string;
   street: string;
   houseNumber: string;
@@ -93,7 +93,7 @@ export interface SetupBoardingHousePayload {
   houseNumber: string;
   street: string;
   ward: string;
-  district: string;
+  district?: string;
   province: string;
   city?: string;
   country: string;
