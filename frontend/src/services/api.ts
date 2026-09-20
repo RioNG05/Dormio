@@ -137,13 +137,15 @@ class ApiClient {
         // Notify client application when action requires a subscription tier upgrade
         if (
           typeof window !== "undefined" &&
-          (errorData.code === "SUBSCRIPTION_TIER_REQUIRED" || errorData.requiredTier)
+          (errorData.code === "SUBSCRIPTION_TIER_REQUIRED" ||
+            errorData.code === "BOARDING_HOUSE_LIMIT_REACHED" ||
+            errorData.requiredTier)
         ) {
           window.dispatchEvent(
             new CustomEvent<TierRequiredEventDetail>("dormio:tier-required", {
               detail: {
                 message,
-                requiredTier: errorData.requiredTier || "plus",
+                requiredTier: errorData.requiredTier || (errorData.currentTier === "free" ? "plus" : "pro"),
                 currentTier: errorData.currentTier || "free",
                 upgradeUrl: errorData.upgradeUrl || "/pricing",
               },

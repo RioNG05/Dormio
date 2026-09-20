@@ -114,6 +114,7 @@ export class LandlordNotificationsController {
   // ─── DELETE /api/v1/landlord/notifications/:id ────────────────────────────
 
   @Delete(':id')
+  @RequireTier(SubscriptionPackage.plus)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete an announcement',

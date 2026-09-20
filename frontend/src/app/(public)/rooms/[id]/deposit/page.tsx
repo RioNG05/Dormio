@@ -500,7 +500,7 @@ export default function DepositPage() {
                       Yêu cầu xác minh danh tính công dân
                     </h2>
                     <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
-                      Để bảo vệ quyền lợi tiền cọc theo cơ chế <strong>Dormio Escrow (UC-PU-04)</strong>, bạn cần hoàn tất thông tin CCCD/CMND chính chủ ở <strong>Bước 1</strong>.
+                      Để bảo vệ quyền lợi tiền cọc theo cơ chế <strong>Dormio Escrow</strong>, bạn cần hoàn tất thông tin CCCD/CMND chính chủ ở <strong>Bước 1</strong>.
                     </p>
                   </div>
 
