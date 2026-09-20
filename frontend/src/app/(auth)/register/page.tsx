@@ -119,10 +119,6 @@ export default function RegisterPage() {
 
       {/* Top Header & Badge */}
       <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#FF6B35] text-[11px] font-black rounded-full border border-rose-200 uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 fill-[#FF6B35]" /> {t("authRegisterBadge")}
-        </span>
-
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
           {t("authRegisterTitle")}
         </h1>
@@ -131,31 +127,21 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      {/* Tenant Default Notice */}
-      <div className="p-3.5 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center gap-3 text-xs text-zinc-700 font-semibold">
-        <ShieldCheck className="w-5 h-5 text-[#2AC1BC] shrink-0" />
-        <span>
-          {t("authRegisterNoticePrefix")} <strong>{t("authRegisterNoticeTenantRole")}</strong>{t("authRegisterNoticeMid")} <strong className="text-[#FF6B35]">{t("authRegisterNoticeUpgradeAction")}</strong> {t("authRegisterNoticeSuffix")}
-        </span>
-      </div>
-
       {/* Input Method Selector Tabs (Phone vs Email) */}
       <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60">
         <button
           type="button"
           onClick={() => { setMethod("phone"); setError(null); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
-          }`}
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
+            }`}
         >
           <Phone className="w-3.5 h-3.5" /> {t("authLoginMethodPhone")}
         </button>
         <button
           type="button"
           onClick={() => { setMethod("email"); setError(null); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
-          }`}
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
+            }`}
         >
           <Mail className="w-3.5 h-3.5" /> {t("authLoginMethodEmail")}
         </button>

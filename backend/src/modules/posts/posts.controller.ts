@@ -266,8 +266,8 @@ export class PostsController {
     @Query() query: BrowsePostsQueryDto,
   ): Promise<PaginatedPublicPostsResponseDto> {
     this.logger.log(
-      `GET /posts/browse called (public) — search="${query.search ?? ''}", province="${query.province ?? ''}", ` +
-      `district="${query.district ?? ''}", ward="${query.ward ?? ''}", ` +
+      `GET /posts/browse called (public) — search="${query.search ?? ''}", roomType="${query.roomType ?? ''}", ` +
+      `province="${query.province ?? ''}", district="${query.district ?? ''}", ward="${query.ward ?? ''}", ` +
       `price=[${query.minPrice ?? '-'}, ${query.maxPrice ?? '-'}], ` +
       `area=[${query.minArea ?? '-'}, ${query.maxArea ?? '-'}], ` +
       `page=${query.page ?? 1}, limit=${query.limit ?? 12}`,

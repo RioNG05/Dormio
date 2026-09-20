@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
   MapPin,
@@ -21,6 +21,7 @@ import {
   Check,
   User,
   Maximize2,
+  ChevronDown,
 } from "lucide-react";
 import { formatVND } from "@/utils";
 import { useTranslations } from "@/context/LanguageContext";
@@ -117,10 +118,41 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
   );
 }
 
-// ─── Main page component ──────────────────────────────────────────────────────
-export default function RoomsPage() {
+// ─── Full Page Skeleton for Suspense Fallback ────────────────────────────────
+function RoomsPageSkeleton() {
+  return (
+    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+      <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center text-white shadow-2xl bg-zinc-950">
+        <div className="max-w-4xl mx-auto flex flex-col items-center space-y-4 animate-pulse">
+          <div className="h-6 w-48 bg-zinc-800 rounded-full" />
+          <div className="h-10 w-96 bg-zinc-800 rounded-xl" />
+          <div className="h-4 w-72 bg-zinc-800 rounded-md" />
+        </div>
+      </section>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-4 bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs space-y-4">
+            <div className="h-6 bg-zinc-200 rounded w-1/3" />
+            <div className="h-10 bg-zinc-100 rounded-2xl" />
+            <div className="h-10 bg-zinc-100 rounded-2xl" />
+            <div className="h-10 bg-zinc-100 rounded-2xl" />
+          </div>
+          <div className="lg:col-span-8 space-y-4">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page content component ─────────────────────────────────────────────
+function RoomsContent() {
   const t = useTranslations("guest");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isLoggedIn } = useAuth();
 
   // Filter state
@@ -132,6 +164,7 @@ export default function RoomsPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [minArea, setMinArea] = useState("");
   const [maxArea, setMaxArea] = useState("");
+  const [roomType, setRoomType] = useState("all");
 
   // Applied filter (submitted)
   const [appliedFilters, setAppliedFilters] = useState<BrowsePostsParams>({});
@@ -209,18 +242,94 @@ export default function RoomsPage() {
     fetchListings(appliedFilters, currentPage);
   }, [appliedFilters, currentPage, fetchListings]);
 
-  const handleApplyFilters = () => {
+  // Synchronize state and trigger real search whenever searchParams change
+  useEffect(() => {
+    const qSearch = searchParams.get("search") ?? searchParams.get("q") ?? searchParams.get("keyword") ?? "";
+    const qProvince = searchParams.get("province") ?? "";
+    const qDistrict = searchParams.get("district") ?? "";
+    const qWard = searchParams.get("ward") ?? "";
+    let qMinPrice = searchParams.get("minPrice") ?? "";
+    let qMaxPrice = searchParams.get("maxPrice") ?? "";
+    const qPrice = searchParams.get("price");
+    if (qPrice === "under3") qMaxPrice = qMaxPrice || "3000000";
+    else if (qPrice === "3to5") {
+      qMinPrice = qMinPrice || "3000000";
+      qMaxPrice = qMaxPrice || "5000000";
+    } else if (qPrice === "above5") {
+      qMinPrice = qMinPrice || "5000000";
+    }
+    const qMinArea = searchParams.get("minArea") ?? "";
+    const qMaxArea = searchParams.get("maxArea") ?? "";
+    const qType = searchParams.get("type") ?? searchParams.get("category") ?? searchParams.get("roomType") ?? "all";
+    const qPage = searchParams.get("page") ? Math.max(1, parseInt(searchParams.get("page")!, 10)) : 1;
+
+    setSearch(qSearch);
+    setProvince(qProvince);
+    setDistrict(qDistrict);
+    setWard(qWard);
+    setMinPrice(qMinPrice);
+    setMaxPrice(qMaxPrice);
+    setMinArea(qMinArea);
+    setMaxArea(qMaxArea);
+    setRoomType(qType);
+    setCurrentPage(qPage);
+
     const filters: BrowsePostsParams = {};
-    if (search.trim()) filters.search = search.trim();
-    if (province.trim()) filters.province = province.trim();
-    if (district.trim()) filters.district = district.trim();
-    if (ward.trim()) filters.ward = ward.trim();
-    if (minPrice) filters.minPrice = Number(minPrice);
-    if (maxPrice) filters.maxPrice = Number(maxPrice);
-    if (minArea) filters.minArea = Number(minArea);
-    if (maxArea) filters.maxArea = Number(maxArea);
-    setCurrentPage(1);
+    if (qSearch.trim()) filters.search = qSearch.trim();
+    if (qProvince.trim()) filters.province = qProvince.trim();
+    if (qDistrict.trim()) filters.district = qDistrict.trim();
+    if (qWard.trim()) filters.ward = qWard.trim();
+    if (qMinPrice) filters.minPrice = Number(qMinPrice);
+    if (qMaxPrice) filters.maxPrice = Number(qMaxPrice);
+    if (qMinArea) filters.minArea = Number(qMinArea);
+    if (qMaxArea) filters.maxArea = Number(qMaxArea);
+    if (qType && qType !== "all") filters.roomType = qType;
+
     setAppliedFilters(filters);
+  }, [searchParams]);
+
+  const updateUrlWithFilters = (newFilters: {
+    search?: string;
+    province?: string;
+    district?: string;
+    ward?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    minArea?: string;
+    maxArea?: string;
+    roomType?: string;
+    page?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (newFilters.search?.trim()) params.set("search", newFilters.search.trim());
+    if (newFilters.roomType && newFilters.roomType !== "all") params.set("type", newFilters.roomType);
+    if (newFilters.province?.trim()) params.set("province", newFilters.province.trim());
+    if (newFilters.district?.trim()) params.set("district", newFilters.district.trim());
+    if (newFilters.ward?.trim()) params.set("ward", newFilters.ward.trim());
+    if (newFilters.minPrice) params.set("minPrice", newFilters.minPrice);
+    if (newFilters.maxPrice) params.set("maxPrice", newFilters.maxPrice);
+    if (newFilters.minArea) params.set("minArea", newFilters.minArea);
+    if (newFilters.maxArea) params.set("maxArea", newFilters.maxArea);
+    if (newFilters.page && newFilters.page > 1) params.set("page", String(newFilters.page));
+
+    const qs = params.toString();
+    router.push(qs ? `/rooms?${qs}` : "/rooms", { scroll: false });
+  };
+
+  const handleApplyFilters = () => {
+    setCurrentPage(1);
+    updateUrlWithFilters({
+      search,
+      province,
+      district,
+      ward,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+      roomType,
+      page: 1,
+    });
   };
 
   const handleResetFilter = () => {
@@ -232,14 +341,109 @@ export default function RoomsPage() {
     setMaxPrice("");
     setMinArea("");
     setMaxArea("");
+    setRoomType("all");
     setCurrentPage(1);
-    setAppliedFilters({});
+    router.push("/rooms", { scroll: false });
+  };
+
+  const handleSelectType = (selected: string) => {
+    setRoomType(selected);
+    setCurrentPage(1);
+    updateUrlWithFilters({
+      search,
+      province,
+      district,
+      ward,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+      roomType: selected,
+      page: 1,
+    });
+  };
+
+  const handleRemoveFilter = (filterKey: "search" | "roomType" | "price" | "province" | "district" | "ward" | "area") => {
+    let nextSearch = search;
+    let nextType = roomType;
+    let nextMinPrice = minPrice;
+    let nextMaxPrice = maxPrice;
+    let nextProvince = province;
+    let nextDistrict = district;
+    let nextWard = ward;
+    let nextMinArea = minArea;
+    let nextMaxArea = maxArea;
+
+    if (filterKey === "search") {
+      nextSearch = "";
+      setSearch("");
+    } else if (filterKey === "roomType") {
+      nextType = "all";
+      setRoomType("all");
+    } else if (filterKey === "price") {
+      nextMinPrice = "";
+      nextMaxPrice = "";
+      setMinPrice("");
+      setMaxPrice("");
+    } else if (filterKey === "province") {
+      nextProvince = "";
+      setProvince("");
+    } else if (filterKey === "district") {
+      nextDistrict = "";
+      setDistrict("");
+    } else if (filterKey === "ward") {
+      nextWard = "";
+      setWard("");
+    } else if (filterKey === "area") {
+      nextMinArea = "";
+      nextMaxArea = "";
+      setMinArea("");
+      setMaxArea("");
+    }
+
+    setCurrentPage(1);
+    updateUrlWithFilters({
+      search: nextSearch,
+      roomType: nextType,
+      minPrice: nextMinPrice,
+      maxPrice: nextMaxPrice,
+      province: nextProvince,
+      district: nextDistrict,
+      ward: nextWard,
+      minArea: nextMinArea,
+      maxArea: nextMaxArea,
+      page: 1,
+    });
   };
 
   const handlePageChange = (p: number) => {
     setCurrentPage(p);
+    updateUrlWithFilters({
+      search,
+      province,
+      district,
+      ward,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+      roomType,
+      page: p,
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const hasActiveFilters = Boolean(
+    search.trim() ||
+    (roomType && roomType !== "all") ||
+    minPrice ||
+    maxPrice ||
+    province.trim() ||
+    district.trim() ||
+    ward.trim() ||
+    minArea ||
+    maxArea
+  );
 
   const toggleSave = async (id: string) => {
     if (!isLoggedIn) {
@@ -352,6 +556,25 @@ export default function RoomsPage() {
               </button>
             </div>
 
+            {/* Filter 0: Room Type / Category */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-700">Loại hình / Danh mục</label>
+              <div className="relative">
+                <select
+                  id="filter-room-type"
+                  value={roomType}
+                  onChange={(e) => setRoomType(e.target.value)}
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200/80 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer"
+                >
+                  <option value="all">Tất cả loại phòng</option>
+                  <option value="phong">{t("guestHomeTabRent")}</option>
+                  <option value="studio">{t("guestHomeTabStudio")}</option>
+                  <option value="nguyencan">{t("guestHomeTabWhole")}</option>
+                </select>
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              </div>
+            </div>
+
             {/* Filter 1: Keyword */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsKeywordLabel")}</label>
@@ -378,6 +601,7 @@ export default function RoomsPage() {
                 placeholder={t("guestRoomsProvincePlaceholder")}
                 value={province}
                 onChange={(e) => setProvince(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
             </div>
@@ -391,6 +615,7 @@ export default function RoomsPage() {
                 placeholder={t("guestRoomsDistrictPlaceholder")}
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
             </div>
@@ -404,6 +629,7 @@ export default function RoomsPage() {
                 placeholder={t("guestRoomsWardPlaceholder")}
                 value={ward}
                 onChange={(e) => setWard(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
             </div>
@@ -417,6 +643,7 @@ export default function RoomsPage() {
                 placeholder={t("guestRoomsMinPricePlaceholder")}
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMaxPriceLabel")}</label>
@@ -426,6 +653,7 @@ export default function RoomsPage() {
                 placeholder={t("guestRoomsMaxPricePlaceholder")}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
             </div>
@@ -439,6 +667,7 @@ export default function RoomsPage() {
                 placeholder={t("guestRoomsMinAreaPlaceholder")}
                 value={minArea}
                 onChange={(e) => setMinArea(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsMaxAreaLabel")}</label>
@@ -448,6 +677,7 @@ export default function RoomsPage() {
                 placeholder={t("guestRoomsMaxAreaPlaceholder")}
                 value={maxArea}
                 onChange={(e) => setMaxArea(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                 className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
               />
             </div>
@@ -463,9 +693,131 @@ export default function RoomsPage() {
           </div>
 
           {/* Right Main Room Cards / Map Area */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-5">
+            {/* Category Pills Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {[
+                { id: "all", label: "Tất cả" },
+                { id: "phong", label: t("guestHomeTabRent") },
+                { id: "studio", label: t("guestHomeTabStudio") },
+                { id: "nguyencan", label: t("guestHomeTabWhole") },
+              ].map((tab) => {
+                const isActive = roomType === tab.id || (!roomType && tab.id === "all");
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleSelectType(tab.id)}
+                    className={`px-4 py-2 rounded-2xl text-xs font-black shrink-0 transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-102"
+                        : "bg-white text-zinc-600 border border-zinc-200/80 hover:border-zinc-300 hover:text-zinc-900"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Filter Chips / Badges (if any filter active) */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
+                <span className="text-[11px] font-bold text-zinc-400">Đang lọc:</span>
+                {search && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                    Từ khóa: &ldquo;{search}&rdquo;
+                    <button
+                      onClick={() => handleRemoveFilter("search")}
+                      className="hover:text-red-500 cursor-pointer"
+                      title="Xóa từ khóa"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {roomType && roomType !== "all" && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                    Loại: {roomType === "phong" ? t("guestHomeTabRent") : roomType === "studio" ? t("guestHomeTabStudio") : t("guestHomeTabWhole")}
+                    <button
+                      onClick={() => handleRemoveFilter("roomType")}
+                      className="hover:text-red-500 cursor-pointer"
+                      title="Xóa loại phòng"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {(minPrice || maxPrice) && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                    Giá: {minPrice ? formatVND(Number(minPrice)) : "0₫"} - {maxPrice ? formatVND(Number(maxPrice)) : "Vô hạn"}
+                    <button
+                      onClick={() => handleRemoveFilter("price")}
+                      className="hover:text-red-500 cursor-pointer"
+                      title="Xóa lọc giá"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {province && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                    Tỉnh/Thành: {province}
+                    <button
+                      onClick={() => handleRemoveFilter("province")}
+                      className="hover:text-red-500 cursor-pointer"
+                      title="Xóa lọc tỉnh thành"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {district && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                    Quận/Huyện: {district}
+                    <button
+                      onClick={() => handleRemoveFilter("district")}
+                      className="hover:text-red-500 cursor-pointer"
+                      title="Xóa lọc quận huyện"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {ward && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                    Phường/Xã: {ward}
+                    <button
+                      onClick={() => handleRemoveFilter("ward")}
+                      className="hover:text-red-500 cursor-pointer"
+                      title="Xóa lọc phường xã"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {(minArea || maxArea) && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                    Diện tích: {minArea || 0}m² - {maxArea || "∞"}m²
+                    <button
+                      onClick={() => handleRemoveFilter("area")}
+                      className="hover:text-red-500 cursor-pointer"
+                      title="Xóa lọc diện tích"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  onClick={handleResetFilter}
+                  className="text-[11px] font-bold text-zinc-400 hover:text-red-600 underline cursor-pointer transition-colors ml-1"
+                >
+                  {t("guestRoomsResetFilter")}
+                </button>
+              </div>
+            )}
+
             {/* Results count + view toggle */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-1">
               <div className="text-xs text-zinc-500 font-bold">
                 {isLoading ? (
                   <span className="text-zinc-400">{t("guestRoomsLoading")}</span>
@@ -912,3 +1264,12 @@ export default function RoomsPage() {
     </div>
   );
 }
+
+export default function RoomsPage() {
+  return (
+    <Suspense fallback={<RoomsPageSkeleton />}>
+      <RoomsContent />
+    </Suspense>
+  );
+}
+

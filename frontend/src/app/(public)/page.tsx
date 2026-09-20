@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building, CreditCard, ShieldCheck, ChevronDown, ArrowRight, Banknote, Sparkles, Star, Zap } from "lucide-react";
 import { formatVND } from "@/utils";
@@ -10,12 +11,35 @@ import { useTranslations, useLanguage } from "@/context/LanguageContext";
 export default function HomePage() {
   const t = useTranslations("guest");
   const { locale } = useLanguage();
+  const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<"phong" | "studio" | "nguyencan">("phong");
   const [processTab, setProcessTab] = useState<"tenant" | "landlord">("tenant");
   const [searchQuery, setSearchQuery] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
   const [selectedCityFilter, setSelectedCityFilter] = useState<"all" | "hcm" | "hanoi">("all");
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const params = new URLSearchParams();
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      params.set("search", trimmed);
+    }
+    if (activeTab) {
+      params.set("type", activeTab);
+    }
+    if (priceFilter === "under3") {
+      params.set("maxPrice", "3000000");
+    } else if (priceFilter === "3to5") {
+      params.set("minPrice", "3000000");
+      params.set("maxPrice", "5000000");
+    } else if (priceFilter === "above5") {
+      params.set("minPrice", "5000000");
+    }
+    const query = params.toString();
+    router.push(query ? `/rooms?${query}` : "/rooms");
+  };
 
   const featuredRooms = [
     {
@@ -124,7 +148,7 @@ export default function HomePage() {
             </div>
 
             {/* Inputs Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end">
+            <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end">
               <div className="sm:col-span-5 space-y-1">
                 <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">{t("guestHomeKeywordLabel")}</label>
                 <div className="relative">
@@ -134,6 +158,12 @@ export default function HomePage() {
                     placeholder={t("guestHomeKeywordPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSearch();
+                      }
+                    }}
                     className="w-full pl-9 pr-3 h-11 text-xs font-semibold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
                   />
                 </div>
@@ -159,13 +189,14 @@ export default function HomePage() {
 
               <div className="sm:col-span-3 space-y-1">
                 <span className="text-[10px] font-black text-transparent select-none uppercase tracking-wider block hidden sm:block">&nbsp;</span>
-                <Link href="/rooms" className="block w-full">
-                  <button className="w-full h-11 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#FF6B35]/25 flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
-                    <Search className="w-3.5 h-3.5" /> {t("guestHomeSearchNow")}
-                  </button>
-                </Link>
+                <button
+                  type="submit"
+                  className="w-full h-11 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#FF6B35]/25 flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                >
+                  <Search className="w-3.5 h-3.5" /> {t("guestHomeSearchNow")}
+                </button>
               </div>
-            </div>
+            </form>
           </div>
 
           {/* Action Buttons Below Search */}
