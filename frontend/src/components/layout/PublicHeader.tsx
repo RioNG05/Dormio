@@ -11,7 +11,6 @@ import {
   Home,
   Building2,
   Layers,
-  Tag,
   BookOpen,
   Mail,
   User,
@@ -35,8 +34,7 @@ export function PublicHeader() {
   const navLinks = [
     { href: "/", label: "Trang chủ", icon: Home },
     { href: "/rooms", label: "Phòng trọ", icon: Building2 },
-    { href: "/features", label: "Tính năng", icon: Layers },
-    { href: "/pricing", label: "Bảng giá", icon: Tag },
+    { href: "/pricing", label: "Tính năng & Giá", icon: Layers },
     { href: "/blog", label: "Blog", icon: BookOpen },
     { href: "/contact", label: "Liên hệ", icon: Mail },
   ];

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -27,6 +27,18 @@ import {
   type SetupRoomTypePayload,
   type SetupServicePayload,
 } from "@/services/boarding-house.service";
+import {
+  fetchProvinces,
+  fetchWardsByProvince,
+  type Province,
+  type Ward,
+  FALLBACK_PROVINCES,
+} from "@/services/vietnam-address.service";
+import {
+  MapAddressPicker,
+  type SelectedMapAddress,
+} from "@/components/landlord/MapAddressPicker";
+import { CoverPhotoUpload } from "@/components/landlord/CoverPhotoUpload";
 
 // ─── TYPES & CONSTANTS ────────────────────────────────────────────────────────
 
@@ -60,10 +72,9 @@ export default function SetupWizardPage() {
   const [info, setInfo] = useState({
     name: "",
     description: "",
-    country: t("landlordSetupCountryDefault"),
+    country: "Việt Nam",
     province: "",
     city: "",
-    district: "",
     ward: "",
     street: "",
     houseNumber: "",
@@ -71,6 +82,14 @@ export default function SetupWizardPage() {
     builtAt: new Date().toISOString().slice(0, 10),
     thumbnail: "",
   });
+
+  // Vietnam Administrative Address States
+  const [provinces, setProvinces] = useState<Province[]>(FALLBACK_PROVINCES);
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
+  const [isLoadingWards, setIsLoadingWards] = useState(false);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   // ─── STEP 2 STATE: SERVICES & ROOM TYPES ─────────────────────────────────────
   const [services, setServices] = useState<ServiceItem[]>(() => [
@@ -132,6 +151,114 @@ export default function SetupWizardPage() {
     [t]
   );
 
+  // Fetch Vietnam provinces on mount
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingProvinces(true);
+    fetchProvinces()
+      .then((data) => {
+        if (isMounted && data.length > 0) {
+          setProvinces(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load provinces:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingProvinces(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // When a user selects a province
+  const handleProvinceSelect = async (provinceName: string) => {
+    const prov = provinces.find((p) => p.name === provinceName);
+    setInfo((prev) => ({
+      ...prev,
+      province: provinceName,
+      city: provinceName,
+      ward: "", // Reset ward when province changes
+    }));
+
+    if (!prov) {
+      setSelectedProvinceCode(null);
+      setWards([]);
+      return;
+    }
+
+    setSelectedProvinceCode(prov.code);
+    setIsLoadingWards(true);
+    try {
+      const wardList = await fetchWardsByProvince(prov.code);
+      setWards(wardList);
+    } catch (err) {
+      console.error("Failed to fetch wards:", err);
+      setWards([]);
+    } finally {
+      setIsLoadingWards(false);
+    }
+  };
+
+  // When a user picks address from Google Maps / Map picker
+  const handleMapAddressSelect = async (selected: SelectedMapAddress) => {
+    if (selected.province) {
+      const prov = provinces.find(
+        (p) =>
+          p.name === selected.province ||
+          p.name.includes(selected.province) ||
+          selected.province.includes(p.name)
+      );
+
+      if (prov) {
+        setSelectedProvinceCode(prov.code);
+        setIsLoadingWards(true);
+        try {
+          const wardList = await fetchWardsByProvince(prov.code);
+          setWards(wardList);
+
+          // Find matching ward in wardList
+          let matchedWard = selected.ward;
+          if (selected.ward) {
+            const foundWard = wardList.find(
+              (w) =>
+                w.name === selected.ward ||
+                w.name.includes(selected.ward) ||
+                selected.ward.includes(w.name)
+            );
+            if (foundWard) matchedWard = foundWard.name;
+          }
+
+          setInfo((prev) => ({
+            ...prev,
+            province: prov.name,
+            city: prov.name,
+            ward: matchedWard || prev.ward,
+            street: selected.street || prev.street,
+            houseNumber: selected.houseNumber || prev.houseNumber,
+          }));
+        } catch (err) {
+          console.error("Failed to fetch wards for map selection:", err);
+        } finally {
+          setIsLoadingWards(false);
+        }
+        return;
+      }
+    }
+
+    // Direct assignment if province wasn't matched
+    setInfo((prev) => ({
+      ...prev,
+      province: selected.province || prev.province,
+      city: selected.province || prev.city,
+      ward: selected.ward || prev.ward,
+      street: selected.street || prev.street,
+      houseNumber: selected.houseNumber || prev.houseNumber,
+    }));
+  };
+
   // ─── HELPERS & TOUCHED DETECTION ─────────────────────────────────────────────
   const isDirty = useMemo(() => {
     return (
@@ -139,11 +266,11 @@ export default function SetupWizardPage() {
       info.street.trim() !== "" ||
       info.province.trim() !== "" ||
       info.houseNumber.trim() !== "" ||
-      info.district.trim() !== "" ||
       info.ward.trim() !== "" ||
+      Boolean(thumbnailFile) ||
       step > 1
     );
-  }, [info, step]);
+  }, [info, thumbnailFile, step]);
 
   const updateInfo = (field: keyof typeof info, value: string) => {
     setInfo((prev) => {
@@ -166,7 +293,6 @@ export default function SetupWizardPage() {
       info.houseNumber.trim() &&
       info.street.trim() &&
       info.ward.trim() &&
-      info.district.trim() &&
       info.province.trim() &&
       info.country.trim() &&
       info.builtAt
@@ -331,9 +457,9 @@ export default function SetupWizardPage() {
       houseNumber: info.houseNumber.trim(),
       street: info.street.trim(),
       ward: info.ward.trim(),
-      district: info.district.trim(),
+      district: "N/A", // District deleted from UI, sending placeholder to satisfy backend @Matches(/\S/)
       province: info.province.trim(),
-      city: info.city.trim() || undefined,
+      city: info.city.trim() || info.province.trim() || undefined,
       country: info.country.trim() || t("landlordSetupCountryDefault"),
       totalFloor: info.totalFloor ? parseInt(info.totalFloor, 10) : undefined,
       builtAt: info.builtAt,
@@ -362,7 +488,6 @@ export default function SetupWizardPage() {
           newHouse.houseNumber,
           newHouse.street,
           newHouse.ward,
-          newHouse.district,
           newHouse.province,
         ]
           .filter(Boolean)
@@ -499,35 +624,86 @@ export default function SetupWizardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="md:col-span-2">
-                <Field
-                  label={t("landlordSetupNameLabel")}
-                  required
-                  hint={t("landlordSetupNameHint")}
-                >
-                  <input
-                    type="text"
-                    required
-                    value={info.name}
-                    onChange={(e) => updateInfo("name", e.target.value)}
-                    placeholder={t("landlordSetupNamePlaceholder")}
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                  />
-                </Field>
-              </div>
+            {/* Google Maps / Interactive Map Address Picker */}
+            <MapAddressPicker
+              provinces={provinces}
+              onSelectAddress={handleMapAddressSelect}
+              initialAddress={
+                [info.houseNumber, info.street, info.ward, info.province]
+                  .filter(Boolean)
+                  .join(", ")
+              }
+            />
 
-              <Field label={t("landlordSetupHouseNumberLabel")} required>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+              {/* Country (Locked) */}
+              <Field
+                label={t("landlordSetupCountryLabel")}
+                hint={t("landlordSetupCountryLockedNotice")}
+                required
+              >
                 <input
                   type="text"
-                  required
-                  value={info.houseNumber}
-                  onChange={(e) => updateInfo("houseNumber", e.target.value)}
-                  placeholder={t("landlordSetupHouseNumberPlaceholder")}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
+                  readOnly
+                  disabled
+                  value="Việt Nam"
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-semibold text-zinc-500 cursor-not-allowed select-none"
                 />
               </Field>
 
+              {/* Province / City Dropdown */}
+              <Field label={t("landlordSetupProvinceLabel")} required>
+                <select
+                  required
+                  value={info.province}
+                  onChange={(e) => handleProvinceSelect(e.target.value)}
+                  disabled={isLoadingProvinces}
+                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15 disabled:bg-zinc-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {isLoadingProvinces
+                      ? t("landlordSetupProvinceLoading")
+                      : `-- ${t("landlordSetupProvinceSelect")} --`}
+                  </option>
+                  {provinces.map((prov) => (
+                    <option key={prov.code} value={prov.name}>
+                      {prov.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              {/* Ward Dropdown */}
+              <Field label={t("landlordSetupWardLabel")} required>
+                <select
+                  required
+                  value={info.ward}
+                  onChange={(e) => updateInfo("ward", e.target.value)}
+                  disabled={!selectedProvinceCode || isLoadingWards}
+                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15 disabled:bg-zinc-50 disabled:cursor-not-allowed"
+                >
+                  {!selectedProvinceCode ? (
+                    <option value="">
+                      {t("landlordSetupWardSelectProvinceFirst")}
+                    </option>
+                  ) : isLoadingWards ? (
+                    <option value="">
+                      {t("landlordSetupWardLoading")}
+                    </option>
+                  ) : (
+                    <>
+                      <option value="">-- {t("landlordSetupWardSelect")} --</option>
+                      {wards.map((w) => (
+                        <option key={w.code} value={w.name}>
+                          {w.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </Field>
+
+              {/* Street */}
               <Field label={t("landlordSetupStreetLabel")} required>
                 <input
                   type="text"
@@ -539,49 +715,35 @@ export default function SetupWizardPage() {
                 />
               </Field>
 
-              <Field label={t("landlordSetupWardLabel")} required>
+              {/* House Number */}
+              <Field label={t("landlordSetupHouseNumberLabel")} required>
                 <input
                   type="text"
                   required
-                  value={info.ward}
-                  onChange={(e) => updateInfo("ward", e.target.value)}
-                  placeholder={t("landlordSetupWardPlaceholder")}
+                  value={info.houseNumber}
+                  onChange={(e) => updateInfo("houseNumber", e.target.value)}
+                  placeholder={t("landlordSetupHouseNumberPlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label={t("landlordSetupDistrictLabel")} required>
+              {/* Building Name */}
+              <Field
+                label={t("landlordSetupNameLabel")}
+                required
+                hint={t("landlordSetupNameHint")}
+              >
                 <input
                   type="text"
                   required
-                  value={info.district}
-                  onChange={(e) => updateInfo("district", e.target.value)}
-                  placeholder={t("landlordSetupDistrictPlaceholder")}
+                  value={info.name}
+                  onChange={(e) => updateInfo("name", e.target.value)}
+                  placeholder={t("landlordSetupNamePlaceholder")}
                   className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
                 />
               </Field>
 
-              <Field label={t("landlordSetupProvinceLabel")} required>
-                <input
-                  type="text"
-                  required
-                  value={info.province}
-                  onChange={(e) => updateInfo("province", e.target.value)}
-                  placeholder={t("landlordSetupProvincePlaceholder")}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                />
-              </Field>
-
-              <Field label={t("landlordSetupCountryLabel")} required>
-                <input
-                  type="text"
-                  required
-                  value={info.country}
-                  onChange={(e) => updateInfo("country", e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                />
-              </Field>
-
+              {/* Total Floors */}
               <Field
                 label={t("landlordSetupTotalFloorLabel")}
                 hint={t("landlordSetupTotalFloorHint")}
@@ -597,6 +759,7 @@ export default function SetupWizardPage() {
                 />
               </Field>
 
+              {/* Built At Date */}
               <Field label={t("landlordSetupBuiltAtLabel")} required>
                 <input
                   type="date"
@@ -607,21 +770,18 @@ export default function SetupWizardPage() {
                 />
               </Field>
 
+              {/* Cover Photo Upload */}
               <div className="md:col-span-2">
-                <Field
+                <CoverPhotoUpload
+                  value={info.thumbnail}
+                  onChange={(url) => updateInfo("thumbnail", url)}
+                  onFileChange={(file) => setThumbnailFile(file)}
                   label={t("landlordSetupThumbnailLabel")}
                   hint={t("landlordSetupThumbnailHint")}
-                >
-                  <input
-                    type="url"
-                    value={info.thumbnail}
-                    onChange={(e) => updateInfo("thumbnail", e.target.value)}
-                    placeholder={t("landlordSetupThumbnailPlaceholder")}
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                  />
-                </Field>
+                />
               </div>
 
+              {/* Summary Description */}
               <div className="md:col-span-2">
                 <Field
                   label={t("landlordSetupDescriptionLabel")}

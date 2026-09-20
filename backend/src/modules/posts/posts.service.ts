@@ -881,6 +881,7 @@ export class PostsService {
       district,
       ward,
       property,
+      roomType,
       minPrice,
       maxPrice,
       minArea,
@@ -902,13 +903,64 @@ export class PostsService {
       where.status = PostStatus.posted;
     }
 
-    // Keyword filter: title, content, or author username (case-insensitive)
+    // Keyword filter: title, content, author username, boardingHouse address fields, or room type name (case-insensitive)
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { content: { contains: search, mode: 'insensitive' } },
         { postedByUser: { username: { contains: search, mode: 'insensitive' } } },
+        {
+          room: {
+            boardingHouse: {
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { province: { contains: search, mode: 'insensitive' } },
+                { district: { contains: search, mode: 'insensitive' } },
+                { ward: { contains: search, mode: 'insensitive' } },
+                { street: { contains: search, mode: 'insensitive' } },
+              ],
+            },
+          },
+        },
+        {
+          room: {
+            roomType: {
+              name: { contains: search, mode: 'insensitive' },
+            },
+          },
+        },
       ];
+    }
+
+    // Room type / Category filter
+    if (roomType && roomType !== 'all') {
+      const typeKeywords: Record<string, string[]> = {
+        phong: ['phòng', 'common', 'trọ'],
+        studio: ['studio', 'căn hộ', 'duplex', 'mini'],
+        nguyencan: ['nguyên căn', 'nhà', 'house'],
+      };
+      const keywords = typeKeywords[roomType] ?? [roomType];
+      const typeConditions: Prisma.PostWhereInput[] = [
+        ...keywords.map((kw) => ({ title: { contains: kw, mode: 'insensitive' as const } })),
+        ...keywords.map((kw) => ({ content: { contains: kw, mode: 'insensitive' as const } })),
+        ...keywords.map((kw) => ({
+          room: {
+            roomType: {
+              name: { contains: kw, mode: 'insensitive' as const },
+            },
+          },
+        })),
+      ];
+
+      if (where.AND) {
+        if (Array.isArray(where.AND)) {
+          where.AND.push({ OR: typeConditions });
+        } else {
+          where.AND = [where.AND, { OR: typeConditions }];
+        }
+      } else {
+        where.AND = [{ OR: typeConditions }];
+      }
     }
 
     // Build room+boardingHouse filter for location, property & area
@@ -922,15 +974,18 @@ export class PostsService {
       hasLocationFilter = true;
     }
     if (province) {
-      boardingHouseFilter.province = { equals: province, mode: 'insensitive' };
+      const cleanProv = province.replace(/^(Thành phố|Tỉnh|TP\.?)\s+/i, '').trim();
+      boardingHouseFilter.province = { contains: cleanProv, mode: 'insensitive' };
       hasLocationFilter = true;
     }
     if (district) {
-      boardingHouseFilter.district = { equals: district, mode: 'insensitive' };
+      const cleanDistrict = district.replace(/^(Quận|Huyện|Thị xã|Thành phố)\s+/i, '').trim();
+      boardingHouseFilter.district = { contains: cleanDistrict, mode: 'insensitive' };
       hasLocationFilter = true;
     }
     if (ward) {
-      boardingHouseFilter.ward = { equals: ward, mode: 'insensitive' };
+      const cleanWard = ward.replace(/^(Phường|Xã|Thị trấn)\s+/i, '').trim();
+      boardingHouseFilter.ward = { contains: cleanWard, mode: 'insensitive' };
       hasLocationFilter = true;
     }
     if (hasLocationFilter) {

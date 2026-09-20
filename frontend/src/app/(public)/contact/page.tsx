@@ -69,7 +69,7 @@ export default function ContactPage() {
             <div className="space-y-4 pt-2">
               {/* Channel 1: Phone / Zalo */}
               <a
-                href="tel:0901234567"
+                href="tel:0344265925"
                 className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#FF6B35] transition-all group shadow-xs cursor-pointer block"
                 title={t("guestContactCallTooltip")}
               >
@@ -79,7 +79,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-extrabold text-zinc-900 text-sm">{t("guestContactHotlineTitle")}</h3>
                   <p className="text-xs font-black text-[#FF6B35] mt-0.5 group-hover:underline">
-                    0901.234.567 {t("guestContact247Support")}
+                    0344.265.925 {t("guestContact247Support")}
                   </p>
                   <span className="text-[10px] text-zinc-400 font-medium block mt-1">
                     {t("guestContactHotlineSub")}
@@ -89,7 +89,7 @@ export default function ContactPage() {
 
               {/* Channel 2: Email */}
               <a
-                href="mailto:support@dormio.vn"
+                href="mailto:ngquanghuy.work@gmail.com"
                 className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#2AC1BC] transition-all group shadow-xs cursor-pointer block"
                 title={t("guestContactEmailTooltip")}
               >
@@ -98,7 +98,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-zinc-900 text-sm">{t("guestContactEmailTitle")}</h3>
-                  <p className="text-xs font-semibold text-zinc-800 mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline">support@dormio.vn</p>
+                  <p className="text-xs font-semibold text-zinc-800 mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline">ngquanghuy.work@gmail.com</p>
                   <span className="text-[10px] text-zinc-400 font-medium block mt-1">
                     {t("guestContactEmailSub")}
                   </span>
@@ -117,7 +117,7 @@ export default function ContactPage() {
                   </p>
 
                   <a
-                    href="https://www.google.com/maps/search/?api=1&query=T%C3%B2a+nh%C3%A0+FPT+Khu+C%C3%B4ng+Ngh%E1%BB%87+Cao+Quan+9+Ho+Chi+Minh"
+                    href="https://www.google.com/maps/search/?api=1&query=Tr%C6%B0%E1%BB%9Dng+%C4%90%E1%BA%A1i+h%E1%BB%8Dc+FPT+H%C3%A0+N%E1%BB%99i"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2AC1BC] hover:underline pt-1"
@@ -246,9 +246,9 @@ export default function ContactPage() {
             {t("guestContactCtaSubtitle")}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link href="/register" className="w-full sm:w-auto">
+            <Link href="/landlord/setup" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105">
-                {t("guestFeaturesTrialBtn")} &rarr;
+                {t("guestContactUseFreeBtn")} &rarr;
               </button>
             </Link>
             <Link href="/pricing" className="w-full sm:w-auto">

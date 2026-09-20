@@ -95,6 +95,7 @@ export interface BrowsePostsParams {
   district?: string;
   ward?: string;
   property?: string;
+  roomType?: string;
   minPrice?: number;
   maxPrice?: number;
   minArea?: number;
@@ -203,6 +204,7 @@ export const postService = {
     if (params?.district) queryParams.district = params.district;
     if (params?.ward) queryParams.ward = params.ward;
     if (params?.property && params.property !== "all") queryParams.property = params.property;
+    if (params?.roomType && params.roomType !== "all") queryParams.roomType = params.roomType;
     if (params?.minPrice !== undefined) queryParams.minPrice = String(params.minPrice);
     if (params?.maxPrice !== undefined) queryParams.maxPrice = String(params.maxPrice);
     if (params?.minArea !== undefined) queryParams.minArea = String(params.minArea);

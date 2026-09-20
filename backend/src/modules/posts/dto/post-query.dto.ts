@@ -105,6 +105,14 @@ export class BrowsePostsQueryDto {
   property?: string;
 
   @ApiPropertyOptional({
+    description: 'Filter by room type name or category (e.g. phong, studio, nguyencan)',
+    example: 'studio',
+  })
+  @IsOptional()
+  @IsString()
+  roomType?: string;
+
+  @ApiPropertyOptional({
     description: 'Minimum deposit amount in VND (inclusive)',
     example: 500000,
   })

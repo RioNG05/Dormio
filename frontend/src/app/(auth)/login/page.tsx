@@ -11,18 +11,6 @@ import { useTranslations } from "@/context/LanguageContext";
 import { api } from "@/services/api";
 import { getHighestRoleRedirect } from "@/utils";
 
-interface LoginApiResponse {
-  token: string;
-  mustChangePassword: boolean;
-  user: {
-    id: string;
-    phoneNumber?: string;
-    email?: string;
-    username?: string;
-    role: string;
-  };
-}
-
 export default function LoginPage() {
   const t = useTranslations("auth");
   const router = useRouter();
@@ -93,10 +81,6 @@ export default function LoginPage() {
 
       {/* Top Header & Badge */}
       <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t("authLoginBadge")}
-        </span>
-
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
           {t("authLoginWelcomeTitle")}
         </h1>
@@ -110,18 +94,16 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => { setMethod("phone"); setAccountIdentifier(""); setError(null); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
-          }`}
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
+            }`}
         >
           <Phone className="w-3.5 h-3.5" /> {t("authLoginMethodPhone")}
         </button>
         <button
           type="button"
           onClick={() => { setMethod("email"); setAccountIdentifier(""); setError(null); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
-          }`}
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
+            }`}
         >
           <Mail className="w-3.5 h-3.5" /> {t("authLoginMethodEmail")}
         </button>

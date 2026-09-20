@@ -631,7 +631,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
+    <AuthGuard>
+      <div className="flex min-h-screen bg-zinc-50">
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-zinc-200 bg-white z-20">
         <div className="flex flex-col flex-1 min-h-0">
@@ -727,11 +728,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
-          <AuthGuard>{children}</AuthGuard>
+          {children}
         </main>
       </div>
 
       {!isTenant && !isAdmin && !isStaff && <AIChatBot />}
     </div>
+    </AuthGuard>
   );
 }

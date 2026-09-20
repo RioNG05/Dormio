@@ -19,8 +19,8 @@
       }
     ],
     "paths": {
-      "@/messages/*": ["i8n/*"],
-      "@/messages": ["i8n/index.ts"],
+      "@/messages/*": ["./i8n/*"],
+      "@/messages": ["./i8n/index.ts"],
       "@/*": ["./src/*"]
     }
   },

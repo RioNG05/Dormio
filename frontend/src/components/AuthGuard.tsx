@@ -109,14 +109,14 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // While redirect is pending (not logged in or wrong role), render nothing
+  // While redirect is pending (not logged in or wrong role), render spinner
   if (!isLoggedIn || user === null) {
-    return null;
+    return <HydrationSpinner />;
   }
 
   const hasPermission = checkUserPermission(pathname ?? "", user, capabilities);
   if (!hasPermission) {
-    return null;
+    return <HydrationSpinner />;
   }
 
   return <>{children}</>;
