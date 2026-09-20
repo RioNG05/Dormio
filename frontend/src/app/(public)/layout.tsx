@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  Search, Command, X, MapPin, Building, ArrowRight, Menu, 
+import {
+  Search, Command, X, MapPin, Building, ArrowRight, Menu,
   Building2, UserCheck, Sparkles, CheckCircle2, LogOut, ShieldCheck, Heart, ChevronDown,
   PlusCircle, BarChart3, Clock
 } from "lucide-react";
@@ -137,7 +137,6 @@ export default function PublicLayout({
   const navItems = [
     { href: "/", label: tNav("home") },
     { href: "/rooms", label: tNav("rooms") },
-    { href: "/features", label: tNav("features") },
     { href: "/pricing", label: tNav("pricing") },
     { href: "/blog", label: tNav("blog") },
     { href: "/contact", label: tNav("contact") },
@@ -148,7 +147,7 @@ export default function PublicLayout({
       {/* Public Header */}
       <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 md:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          
+
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#2AC1BC] flex items-center justify-center text-white font-black text-base shadow-md shadow-[#2AC1BC]/20">
@@ -170,11 +169,10 @@ export default function PublicLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`text-xs font-bold transition-all relative py-1 ${
-                    isActive
+                  className={`text-xs font-bold transition-all relative py-1 ${isActive
                       ? "text-[#2AC1BC] font-extrabold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#2AC1BC] after:rounded-full"
                       : "text-zinc-700 hover:text-[#2AC1BC]"
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </Link>
@@ -483,12 +481,12 @@ export default function PublicLayout({
 
       {/* 🏠 LANDLORD UPGRADE FORM MODAL (Khi người dùng bấm Đăng ký trở thành chủ trọ) */}
       {isLandlordModalOpen && (
-        <div 
+        <div
           onClick={(e) => { if (e.target === e.currentTarget) setIsLandlordModalOpen(false); }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 border border-zinc-200 cursor-default relative">
-            
+
             <button
               onClick={() => setIsLandlordModalOpen(false)}
               className="absolute right-5 top-5 p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
@@ -576,7 +574,7 @@ export default function PublicLayout({
 
       {/* Search Command Palette Modal */}
       {isCommandOpen && (
-        <div 
+        <div
           onClick={(e) => { if (e.target === e.currentTarget) setIsCommandOpen(false); }}
           className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
@@ -661,10 +659,10 @@ export default function PublicLayout({
           <div className="space-y-2">
             <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">{tFooter("systemModules")}</h4>
             <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
-              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("bhms")}</Link></li>
-              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("bhrp")}</Link></li>
-              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("vietqr")}</Link></li>
-              <li><Link href="/features" className="hover:text-white transition-colors">{tFooter("aiOcr")}</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("bhms")}</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("bhrp")}</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("vietqr")}</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("aiOcr")}</Link></li>
             </ul>
           </div>
 
