@@ -1445,6 +1445,12 @@ const en = {
     landlordCustomersPaginationOf: "of",
     landlordCustomersPaginationPrev: "Prev",
     landlordCustomersPaginationNext: "Next",
+    landlordCustomersAutoFillBadge: "100% Auto-filled",
+    landlordCustomersCccdPlaceholder: "e.g. 001201099882",
+    landlordCustomersPhonePlaceholder: "e.g. 0987654321",
+    landlordCustomersEmailPlaceholder: "e.g. email@example.com",
+    landlordCustomersRoomPlaceholder: "e.g. 101, 202...",
+    landlordCustomersNotesPlaceholder: "Enter additional notes about tenant...",
 
     // --- Debt tracking & collection (app/(dashboard)/landlord/debts) ---
     landlordDebtsAllDurations: "All debt durations",

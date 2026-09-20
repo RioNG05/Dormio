@@ -1445,6 +1445,12 @@ const vi = {
     landlordCustomersPaginationOf: "trên",
     landlordCustomersPaginationPrev: "Trước",
     landlordCustomersPaginationNext: "Sau",
+    landlordCustomersAutoFillBadge: "Tự động điền 100%",
+    landlordCustomersCccdPlaceholder: "VD: 001201099882",
+    landlordCustomersPhonePlaceholder: "VD: 0987654321",
+    landlordCustomersEmailPlaceholder: "VD: email@example.com",
+    landlordCustomersRoomPlaceholder: "VD: 101, 202...",
+    landlordCustomersNotesPlaceholder: "Nhập ghi chú thêm về khách thuê...",
 
     // --- Debt tracking & collection (app/(dashboard)/landlord/debts) ---
     landlordDebtsAllDurations: "Tất cả thời gian nợ",

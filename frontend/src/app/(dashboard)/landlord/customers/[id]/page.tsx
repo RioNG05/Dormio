@@ -9,6 +9,8 @@ import {
   CheckCircle2, X, Upload, ExternalLink, Calendar, MapPin, Mail, Sparkles
 } from "lucide-react";
 import { getCustomerById, Customer } from "../data";
+import { getLandlordContracts } from "@/services/contract.service";
+import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -50,25 +52,91 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [editWorkplace, setEditWorkplace] = useState("");
   const [editNote, setEditNote] = useState("");
 
+  const { activeBuilding } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     setIsMounted(true);
-    if (resolvedParams.id) {
-      const found = getCustomerById(decodeURIComponent(resolvedParams.id));
+    async function loadCustomerDetail() {
+      const rawId = decodeURIComponent(resolvedParams.id || "");
+      if (!rawId) return;
+
+      let found = getCustomerById(rawId);
+
+      if (!found && activeBuilding?.id) {
+        try {
+          setIsLoading(true);
+          const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
+          const list: any[] = res?.data || [];
+          for (const c of list) {
+            const tContracts = c.tenantContracts || [];
+            if (tContracts.length === 0) {
+              if (`cust_${c.id}` === rawId || c.room?.roomNumber === rawId) {
+                found = {
+                  id: `cust_${c.id}`,
+                  name: t("landlordCustomersDefaultName"),
+                  phone: "—",
+                  room: c.room?.roomNumber || "—",
+                  building: activeBuilding.name || activeBuilding.id,
+                  cccd: "—",
+                  joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString("vi-VN") : "—",
+                  status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
+                  hasAccount: false,
+                };
+                break;
+              }
+            } else {
+              for (const tc of tContracts) {
+                const tenantUser = tc.tenant;
+                const ident = tenantUser?.userIdentification;
+                const tenantId = tenantUser?.id || `cust_${c.id}`;
+                const cccdNum = ident?.identityNumber || "";
+                if (tenantId === rawId || cccdNum === rawId || `cust_${c.id}` === rawId) {
+                  found = {
+                    id: tenantId,
+                    name: ident?.fullName || tenantUser?.username || t("landlordCustomersDefaultName"),
+                    phone: tenantUser?.phoneNumber || "—",
+                    room: c.room?.roomNumber || "—",
+                    building: activeBuilding.name || activeBuilding.id,
+                    cccd: cccdNum || "—",
+                    joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString("vi-VN") : "—",
+                    status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
+                    email: tenantUser?.email || undefined,
+                    dob: ident?.dateOfBirth ? new Date(ident.dateOfBirth).toLocaleDateString("vi-VN") : undefined,
+                    gender: ident?.gender || "nam",
+                    address: ident?.permanentAddress || undefined,
+                    hasAccount: !!tenantUser?.id,
+                  };
+                  break;
+                }
+              }
+              if (found) break;
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to load customer from contract in [id]:", err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
       setCustomer(found);
       if (found) {
         setEditName(found.name);
         setEditPhone(found.phone);
         setEditCccd(found.cccd);
-        setEditDob(found.dob || "2000-01-01");
+        setEditDob(found.dob || "");
         setEditGender(found.gender || "nam");
-        setEditAddress(found.address || t("landlordCustomersDefaultAddressShort"));
-        setEditEmail(found.email || `kh${found.room}@gmail.com`);
-        setEditJob(found.job || t("landlordCustomersDefaultJobStudent"));
-        setEditWorkplace(found.workplace || t("landlordCustomersDefaultWorkplace"));
+        setEditAddress(found.address || "");
+        setEditEmail(found.email || "");
+        setEditJob(found.job || "");
+        setEditWorkplace(found.workplace || "");
         setEditNote(found.note || "");
       }
     }
-  }, [resolvedParams.id]);
+
+    loadCustomerDetail();
+  }, [resolvedParams.id, activeBuilding?.id]);
 
   if (!isMounted) return null;
 
@@ -320,8 +388,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     </Link>
                   </div>
                   <div className="text-[10px] text-zinc-500 font-semibold border-t border-[#2AC1BC]/20 pt-2 flex justify-between">
-                    <span>{t("landlordCustomersBuilding")}: {customer.building === "vinahouse" ? "Dormio Campus" : "Dormio Premier"}</span>
-                    <span>{t("landlordCustomersFloorPrefix")} {customer.room.charAt(0)}</span>
+                    <span>{t("landlordCustomersBuilding")}: {activeBuilding?.name || customer.building}</span>
+                    <span>{t("landlordCustomersFloorPrefix")} {customer.room.charAt(0) || "1"}</span>
                   </div>
                 </div>
 
@@ -369,7 +437,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <div className="space-y-2.5">
               <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 text-xs space-y-1">
                 <div className="flex justify-between items-center font-bold">
-                  <span className="text-zinc-900">{t("landlordCustomersRoomWord")} {customer.room} ({customer.building === "vinahouse" ? "Campus" : "Premier"})</span>
+                  <span className="text-zinc-900">{t("landlordCustomersRoomWord")} {customer.room} ({activeBuilding?.name || customer.building})</span>
                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full">
                     {t("landlordCustomersStaying")}
                   </span>

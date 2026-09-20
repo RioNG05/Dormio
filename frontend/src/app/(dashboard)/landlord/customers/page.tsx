@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin, AlertCircle, CheckCircle2, Info, UserCheck, FileSpreadsheet, UserCircle2, PhoneCall, MessageCircle, Eye, Edit3, Link2, Mail, LogOut, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
 import { Customer, SystemTenantUser } from "./data";
 import { getLandlordContracts, searchTenantByPhone } from "@/services/contract.service";
+import { getRooms } from "@/services/room.service";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "@/context/LanguageContext";
 
@@ -85,10 +86,11 @@ export default function CustomersPage() {
     const [emailInput, setEmailInput] = useState("");
     const [jobInput, setJobInput] = useState("");
     const [workplaceInput, setWorkplaceInput] = useState("");
-    const [roomInput, setRoomInput] = useState("101");
+    const [roomInput, setRoomInput] = useState("");
     const [buildingInput, setBuildingInput] = useState("");
     const [noteInput, setNoteInput] = useState("");
     const [hasAccountState, setHasAccountState] = useState(false);
+    const [availableRooms, setAvailableRooms] = useState<any[]>([]);
 
     // Link Account Modal State
     const [linkAccountModal, setLinkAccountModal] = useState<{ isOpen: boolean; customer: any | null }>({
@@ -126,7 +128,29 @@ export default function CustomersPage() {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    // Load real customers from active property contracts (, )
+    // Load available rooms for active building
+    useEffect(() => {
+        async function loadRooms() {
+            if (!activeBuilding?.id) {
+                setAvailableRooms([]);
+                return;
+            }
+            const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!UUID_RE.test(activeBuilding.id)) {
+                setAvailableRooms([]);
+                return;
+            }
+            try {
+                const res = await getRooms(activeBuilding.id, { limit: 100 });
+                setAvailableRooms(res.data || []);
+            } catch {
+                setAvailableRooms([]);
+            }
+        }
+        loadRooms();
+    }, [activeBuilding?.id]);
+
+    // Load real customers from active property contracts
     useEffect(() => {
         async function loadCustomers() {
             if (!activeBuilding?.id) {
@@ -145,6 +169,15 @@ export default function CustomersPage() {
                 const list = res?.data || [];
                 const mapped: Customer[] = list.flatMap((c: any) => {
                     const tContracts = c.tenantContracts || [];
+                    const daysRemaining = c.endDate
+                        ? Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+                        : undefined;
+                    const contractStatus = c.status === "active"
+                        ? (daysRemaining !== undefined && daysRemaining <= 30 ? "Sắp hết hợp đồng" : "Đang ở")
+                        : c.status === "draft"
+                            ? "Sắp hết hợp đồng"
+                            : "Đã rời";
+
                     if (tContracts.length === 0) {
                         return [{
                             id: `cust_${c.id}`,
@@ -153,28 +186,32 @@ export default function CustomersPage() {
                             room: c.room?.roomNumber || "—",
                             building: activeBuilding.id,
                             cccd: "—",
-                            joinDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
-                            status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
+                            joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString("vi-VN") : "—",
+                            endDate: c.endDate ? new Date(c.endDate).toLocaleDateString("vi-VN") : undefined,
+                            daysRemaining,
+                            status: contractStatus,
                             hasAccount: false,
                         }];
                     }
                     return tContracts.map((tc: any) => {
-                        const t = tc.tenant;
-                        const ident = t?.userIdentification;
+                        const tenantUser = tc.tenant;
+                        const ident = tenantUser?.userIdentification;
                         return {
-                            id: t?.id || `cust_${c.id}`,
-                            name: ident?.fullName || t?.username || t("landlordCustomersDefaultName"),
-                            phone: t?.phoneNumber || "—",
+                            id: tenantUser?.id || `cust_${c.id}`,
+                            name: ident?.fullName || tenantUser?.username || t("landlordCustomersDefaultName"),
+                            phone: tenantUser?.phoneNumber || "—",
                             room: c.room?.roomNumber || "—",
                             building: activeBuilding.id,
                             cccd: ident?.identityNumber || "—",
-                            joinDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
-                            status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
-                            email: t?.email || undefined,
+                            joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString("vi-VN") : "—",
+                            endDate: c.endDate ? new Date(c.endDate).toLocaleDateString("vi-VN") : undefined,
+                            daysRemaining,
+                            status: contractStatus,
+                            email: tenantUser?.email || undefined,
                             dob: ident?.dateOfBirth ? new Date(ident.dateOfBirth).toLocaleDateString("vi-VN") : undefined,
                             gender: ident?.gender || "nam",
                             address: ident?.permanentAddress || undefined,
-                            hasAccount: !!t?.id,
+                            hasAccount: !!tenantUser?.id,
                         };
                     });
                 });
@@ -204,7 +241,7 @@ export default function CustomersPage() {
         setEmailInput("");
         setJobInput("");
         setWorkplaceInput("");
-        setRoomInput("101");
+        setRoomInput(availableRooms[0]?.roomNumber || "");
         setBuildingInput(activeBuilding?.id || "");
         setNoteInput("");
         setHasAccountState(false);
@@ -264,17 +301,17 @@ export default function CustomersPage() {
                 name: nameInput.trim(),
                 phone: phoneInput.trim(),
                 cccd: cccdInput.trim() || c.cccd,
-                dob: dobInput,
+                dob: dobInput || undefined,
                 gender: genderInput,
-                address: addressInput,
-                email: emailInput,
-                job: jobInput,
-                workplace: workplaceInput,
-                room: roomInput,
-                building: buildingInput,
-                note: noteInput,
+                address: addressInput.trim() || undefined,
+                email: emailInput.trim() || undefined,
+                job: jobInput.trim() || undefined,
+                workplace: workplaceInput.trim() || undefined,
+                room: roomInput.trim() || c.room,
+                building: buildingInput || activeBuilding?.id || c.building,
+                note: noteInput.trim() || undefined,
                 hasAccount: hasAccountState,
-                accountEmail: hasAccountState ? emailInput : undefined,
+                accountEmail: hasAccountState ? (emailInput.trim() || undefined) : undefined,
                 updatedAt: new Date().toLocaleDateString("vi-VN")
             } : c));
             showAlert(t("landlordCustomersAlertUpdateSuccess"), "success", t("landlordCustomersAlertUpdateTitle"));
@@ -285,25 +322,25 @@ export default function CustomersPage() {
                 return;
             }
 
-            const newId = targetCCCD || `00109${Math.floor(1000000 + Math.random() * 9000000)}`;
-            const newCust = {
+            const newId = targetCCCD || (selectedSystemUser?.userId ? selectedSystemUser.userId : `cust_${Date.now()}`);
+            const newCust: Customer = {
                 id: newId,
                 name: nameInput.trim(),
                 phone: phoneInput.trim(),
-                cccd: newId,
-                room: roomInput || "101",
-                building: buildingInput || "dormio",
+                cccd: targetCCCD || "—",
+                room: roomInput.trim() || "—",
+                building: buildingInput || activeBuilding?.id || "",
                 joinDate: new Date().toLocaleDateString("vi-VN"),
                 status: "Đang ở",
-                dob: dobInput || "2000-01-01",
+                dob: dobInput || undefined,
                 gender: genderInput,
-                address: addressInput || t("landlordCustomersDefaultAddress"),
-                email: emailInput,
-                job: jobInput || t("landlordCustomersDefaultJob"),
-                workplace: workplaceInput || "TP.HCM",
-                note: noteInput,
+                address: addressInput.trim() || undefined,
+                email: emailInput.trim() || undefined,
+                job: jobInput.trim() || undefined,
+                workplace: workplaceInput.trim() || undefined,
+                note: noteInput.trim() || undefined,
                 hasAccount: hasAccountState,
-                accountEmail: hasAccountState ? emailInput : undefined,
+                accountEmail: hasAccountState ? (emailInput.trim() || undefined) : undefined,
                 createdAt: new Date().toLocaleDateString("vi-VN"),
                 updatedAt: new Date().toLocaleDateString("vi-VN")
             };
@@ -436,13 +473,13 @@ export default function CustomersPage() {
                         onClick={() => showAlert(t("landlordCustomersAlertImportExcel"), "info", t("landlordCustomersAlertExperimentalTitle"))}
                         className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
                     >
-                        <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
+                        <UploadCloud className="w-4 h-4 text-emerald-600" /> {t("landlordCustomersImportBtn")}
                     </button>
                     <button
                         onClick={() => showAlert(t("landlordCustomersAlertExportExcel"), "success", t("landlordCustomersAlertExportTitle"))}
                         className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
                     >
-                        <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
+                        <FileSpreadsheet className="w-4 h-4 text-blue-600" /> {t("landlordCustomersExportBtn")}
                     </button>
                     <button
                         onClick={handleOpenAddModal}
@@ -651,7 +688,7 @@ export default function CustomersPage() {
                                                 <Link href={`/landlord/customers/${customer.id}`} className="font-bold text-zinc-900 text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block">
                                                     {customer.name}
                                                 </Link>
-                                                <p className="text-xs text-zinc-500 font-medium truncate">CCCD: {customer.cccd}</p>
+                                                <p className="text-xs text-zinc-500 font-medium truncate">{t("landlordCustomersIdCardHeader")}: {customer.cccd}</p>
                                             </div>
                                         </div>
                                         <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
@@ -676,7 +713,11 @@ export default function CustomersPage() {
                                         {customer.status === 'Sắp hết hợp đồng' && (
                                             <div className="flex justify-between items-center pt-1 border-t border-orange-200/60 text-orange-800 font-bold">
                                                 <span className="whitespace-nowrap">⏳ {t("landlordCustomersContractExpiry")}</span>
-                                                <span className="text-orange-600 animate-pulse whitespace-nowrap">{t("landlordCustomersDaysRemainingShort")}</span>
+                                                <span className="text-orange-600 animate-pulse whitespace-nowrap">
+                                                    {customer.daysRemaining !== undefined
+                                                        ? t("landlordCustomersContractDaysRemaining").replace("{days}", String(customer.daysRemaining))
+                                                        : t("landlordCustomersDaysRemainingShort")}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
@@ -697,13 +738,13 @@ export default function CustomersPage() {
                                             onClick={(e) => e.stopPropagation()}
                                             className="py-1.5 bg-[#0068FF] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                                         >
-                                            <MessageCircle className="w-3 h-3" /> Zalo
+                                            <MessageCircle className="w-3 h-3" /> {t("landlordCustomersZaloBtn")}
                                         </a>
                                         <Link
                                             href={`/landlord/customers/${customer.id}`}
                                             className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                                         >
-                                            <Eye className="w-3 h-3" /> Xem
+                                            <Eye className="w-3 h-3" /> {t("landlordCustomersViewBtn")}
                                         </Link>
                                     </div>
                                 </div>
@@ -785,16 +826,16 @@ export default function CustomersPage() {
                                                             href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            title="Chat Zalo"
+                                                            title={t("landlordCustomersMessageZalo")}
                                                             className="px-2.5 py-1 bg-[#0068FF] text-white rounded-lg text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs flex items-center gap-1"
                                                         >
-                                                            <MessageCircle className="w-3 h-3" /> Zalo
+                                                            <MessageCircle className="w-3 h-3" /> {t("landlordCustomersZaloBtn")}
                                                         </a>
                                                         <Link
                                                             href={`/landlord/customers/${customer.id}`}
                                                             className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
                                                         >
-                                                            <Eye className="w-3 h-3" /> Xem
+                                                            <Eye className="w-3 h-3" /> {t("landlordCustomersViewBtn")}
                                                         </Link>
                                                     </div>
                                                 </td>
@@ -954,7 +995,7 @@ export default function CustomersPage() {
                                                     <Users className="w-4 h-4 text-[#FF6B35]" /> {t("landlordCustomersSystemSearchLabel")}
                                                 </label>
                                                 <span className="text-[10px] font-black text-[#FF6B35] bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
-                                                    Auto-Fill 100%
+                                                    {t("landlordCustomersAutoFillBadge")}
                                                 </span>
                                             </div>
 
@@ -1004,7 +1045,7 @@ export default function CustomersPage() {
                                                                             </div>
                                                                             <div className="flex items-center gap-1.5 text-zinc-500">
                                                                                 <CreditCard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                                                                                <span>CCCD: {user.cccd}</span>
+                                                                                <span>{t("landlordCustomersIdCardHeader")}: {user.cccd}</span>
                                                                             </div>
                                                                             <div className="flex items-center gap-1.5 text-zinc-500 truncate">
                                                                                 <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
@@ -1060,7 +1101,7 @@ export default function CustomersPage() {
                                             type="text"
                                             value={cccdInput}
                                             onChange={(e) => setCccdInput(e.target.value)}
-                                            placeholder="VD: 001201099882"
+                                            placeholder={t("landlordCustomersCccdPlaceholder")}
                                             className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                                         />
                                     </div>
@@ -1073,7 +1114,7 @@ export default function CustomersPage() {
                                             type="tel"
                                             value={phoneInput}
                                             onChange={(e) => setPhoneInput(e.target.value)}
-                                            placeholder="VD: 0987654321"
+                                            placeholder={t("landlordCustomersPhonePlaceholder")}
                                             className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
                                         />
                                     </div>
@@ -1083,8 +1124,45 @@ export default function CustomersPage() {
                                             type="email"
                                             value={emailInput}
                                             onChange={(e) => setEmailInput(e.target.value)}
-                                            placeholder="VD: email@example.com"
+                                            placeholder={t("landlordCustomersEmailPlaceholder")}
                                             className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersRoomWord")}</label>
+                                        {availableRooms.length > 0 ? (
+                                            <select
+                                                value={roomInput}
+                                                onChange={(e) => setRoomInput(e.target.value)}
+                                                className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                                            >
+                                                <option value="">{t("landlordCustomersRoomSelectLabel")}</option>
+                                                {availableRooms.map((r: any) => (
+                                                    <option key={r.id} value={r.roomNumber}>
+                                                        {t("landlordCustomersRoomWord")} {r.roomNumber}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value={roomInput}
+                                                onChange={(e) => setRoomInput(e.target.value)}
+                                                placeholder={t("landlordCustomersRoomPlaceholder")}
+                                                className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersBuilding")}</label>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={activeBuilding?.name || t("landlordCustomersBuildingFallback")}
+                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl bg-zinc-100 font-bold text-zinc-600 cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -1147,15 +1225,13 @@ export default function CustomersPage() {
                                     </div>
                                 </div>
 
-
-
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersNotesMoreLabel")}</label>
                                     <textarea
                                         rows={2}
                                         value={noteInput}
                                         onChange={(e) => setNoteInput(e.target.value)}
-                                        placeholder={t("landlordCustomersPermanentAddressPlaceholder")}
+                                        placeholder={t("landlordCustomersNotesPlaceholder")}
                                         className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
                                     ></textarea>
                                 </div>
@@ -1243,7 +1319,7 @@ export default function CustomersPage() {
                                                             {u.cccd && (
                                                                 <div className="flex items-center gap-1.5">
                                                                     <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
-                                                                    <span>CCCD: {u.cccd}</span>
+                                                                    <span>{t("landlordCustomersIdCardHeader")}: {u.cccd}</span>
                                                                 </div>
                                                             )}
                                                             {u.email && (
