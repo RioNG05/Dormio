@@ -89,6 +89,35 @@ const EMPTY_BUILDING: BuildingItem = {
   occupancyRate: "0%",
 };
 
+/**
+ * Synchronize auth state into browser cookies so Next.js middleware can perform
+ * instant server-side redirects on unauthorized routes before HTML rendering.
+ */
+function syncAuthCookies(
+  role?: string | null,
+  token?: string | null,
+  capabilities?: UserCapabilities | null
+) {
+  if (typeof document === "undefined") return;
+  if (role) {
+    document.cookie = `dormio_user_role=${encodeURIComponent(role)}; path=/; max-age=2592000; SameSite=Lax`;
+    document.cookie = `dormio_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;
+  } else if (role === null) {
+    document.cookie = `dormio_user_role=; path=/; max-age=0; SameSite=Lax`;
+    document.cookie = `dormio_logged_in=; path=/; max-age=0; SameSite=Lax`;
+  }
+  if (token) {
+    document.cookie = `auth_token=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax`;
+  } else if (token === null) {
+    document.cookie = `auth_token=; path=/; max-age=0; SameSite=Lax`;
+  }
+  if (capabilities) {
+    document.cookie = `dormio_user_capabilities=${encodeURIComponent(JSON.stringify(capabilities))}; path=/; max-age=2592000; SameSite=Lax`;
+  } else if (capabilities === null) {
+    document.cookie = `dormio_user_capabilities=; path=/; max-age=0; SameSite=Lax`;
+  }
+}
+
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   isHydrating: true,
@@ -145,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = (res as any)?.data ?? res;
       if (data?.capabilities) {
         setCapabilities(data.capabilities);
+        syncAuthCookies(undefined, undefined, data.capabilities);
       }
     } catch {
       // Silently fail — capabilities will remain at DEFAULT_CAPABILITIES
@@ -277,6 +307,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Hydration complete — user state is resolved from localStorage
       setIsHydrating(false);
+      syncAuthCookies(resolvedRole, savedToken || undefined);
       loadBuildingsFromApi();
       loadCapabilitiesFromApi();
     } else {
@@ -300,6 +331,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         // Hydration complete — dev auto-login resolved
         setIsHydrating(false);
+        syncAuthCookies("landlord", null);
         loadCapabilitiesFromApi();
       });
     }
@@ -326,6 +358,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updatedUser);
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", updatedUser.role);
+    syncAuthCookies(updatedUser.role);
     if (updatedUser.id) localStorage.setItem("dormio_user_id", updatedUser.id);
     if (updatedUser.name) localStorage.setItem("dormio_user_name", updatedUser.name);
     if (updatedUser.email) localStorage.setItem("dormio_user_email", updatedUser.email);
@@ -351,6 +384,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("auth_token", token);
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", resolvedRole);
+    syncAuthCookies(resolvedRole, token);
     if (userData.id) localStorage.setItem("dormio_user_id", userData.id);
     if (userData.name) localStorage.setItem("dormio_user_name", userData.name);
     if (userData.email) localStorage.setItem("dormio_user_email", userData.email);
@@ -385,6 +419,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", "landlord");
+    syncAuthCookies("landlord");
     localStorage.setItem("dormio_house_name", houseDetails.houseName);
     localStorage.setItem("dormio_house_address", houseDetails.houseAddress);
   };
@@ -393,6 +428,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(false);
     setUser(null);
     setCapabilities(DEFAULT_CAPABILITIES);
+    syncAuthCookies(null, null, null);
     localStorage.removeItem("dormio_logged_in");
     localStorage.removeItem("dormio_user_role");
     localStorage.removeItem("dormio_house_name");

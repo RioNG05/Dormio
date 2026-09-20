@@ -207,9 +207,6 @@ export default function PublicLayout({
                     />
                     <div className="hidden sm:block text-left">
                       <span className="text-xs font-black text-zinc-900 block leading-tight truncate max-w-[100px]">{user.name}</span>
-                      <span className="text-[9px] font-bold text-zinc-400 block">
-                        {user.role === "landlord" ? tNav("landlordRole") : user.role === "employee" ? tNav("staffRole") : tNav("tenantRole")}
-                      </span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
                   </button>

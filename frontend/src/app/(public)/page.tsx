@@ -1,12 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building, CreditCard, ShieldCheck, ChevronDown, ArrowRight, Banknote, Sparkles, Star, Zap } from "lucide-react";
 import { formatVND } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { postService, type PublicPostListing } from "@/services/post.service";
+
+// Helper: build address string from structured fields
+function buildAddressString(listing: PublicPostListing): string {
+  const addr = listing.address;
+  if (!addr) return listing.room?.boardingHouseName ?? "";
+  const parts = [addr.houseNumber, addr.street, addr.ward, addr.district, addr.province].filter(Boolean);
+  return parts.join(", ");
+}
 
 export default function HomePage() {
   const t = useTranslations("guest");
@@ -41,53 +50,55 @@ export default function HomePage() {
     router.push(query ? `/rooms?${query}` : "/rooms");
   };
 
-  const featuredRooms = [
-    {
-      id: "1",
-      title: t("guestHomeRoom1Title"),
-      price: 4500000,
-      area: 25,
-      address: t("guestHomeRoom1Address"),
-      image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: "2",
-      title: t("guestHomeRoom2Title"),
-      price: 5500000,
-      area: 30,
-      address: t("guestHomeRoom2Address"),
-      image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: "3",
-      title: t("guestHomeRoom3Title"),
-      price: 2500000,
-      area: 18,
-      address: t("guestHomeRoom3Address"),
-      image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
-    },
-  ];
+  const [featuredRooms, setFeaturedRooms] = useState<PublicPostListing[]>([]);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
 
-  const filteredFeaturedRooms = featuredRooms.filter((room) => {
-    if (selectedCityFilter === "hcm") return room.address.includes("TP. HCM") || room.address.includes("Ho Chi Minh");
-    if (selectedCityFilter === "hanoi") return room.address.includes("Hà Nội") || room.address.includes("Hanoi");
-    return true;
-  });
+  // Fetch real featured rooms from backend API based on selected city filter
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingFeatured(true);
+
+    const params: { province?: string; limit: number } = { limit: 6 };
+    if (selectedCityFilter === "hcm") {
+      params.province = "Hồ Chí Minh";
+    } else if (selectedCityFilter === "hanoi") {
+      params.province = "Hà Nội";
+    }
+
+    postService
+      .browsePosts(params)
+      .then((res) => {
+        if (isMounted) {
+          setFeaturedRooms(res.data || []);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load featured rooms:", err);
+        if (isMounted) setFeaturedRooms([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingFeatured(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCityFilter]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* High-End Professional Hero Section (Fit Screen Height & Seamless Section Transition Divider) */}
       <section className="relative min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center overflow-hidden border-b border-zinc-800">
-        
+
         {/* Dark Radial Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
-        
+
         {/* Soft Ambient Glow Orbs behind text */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#2AC1BC]/20 rounded-full blur-[140px] pointer-events-none z-0" />
         <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-[#FF6B35]/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-          
+
           {/* Glowing Glassmorphism Pill Badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 sm:mb-6 shadow-[0_0_25px_rgba(42,193,188,0.25)] backdrop-blur-xl transition-transform hover:scale-105">
             <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
@@ -112,36 +123,33 @@ export default function HomePage() {
 
           {/* Floating Search Card Widget with Premium Shadows */}
           <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-zinc-900 border border-white/80 animate-in fade-in duration-700">
-            
+
             {/* Category Tabs */}
             <div className="flex items-center justify-center sm:justify-start gap-2 mb-3.5 border-b border-zinc-100 pb-3">
               <button
                 onClick={() => setActiveTab("phong")}
-                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
-                  activeTab === "phong"
-                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                    : "text-zinc-500 font-bold hover:text-zinc-900"
-                }`}
+                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "phong"
+                  ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                  : "text-zinc-500 font-bold hover:text-zinc-900"
+                  }`}
               >
                 {t("guestHomeTabRent")}
               </button>
               <button
                 onClick={() => setActiveTab("studio")}
-                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
-                  activeTab === "studio"
-                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                    : "text-zinc-500 font-bold hover:text-zinc-900"
-                }`}
+                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "studio"
+                  ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                  : "text-zinc-500 font-bold hover:text-zinc-900"
+                  }`}
               >
                 {t("guestHomeTabStudio")}
               </button>
               <button
                 onClick={() => setActiveTab("nguyencan")}
-                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
-                  activeTab === "nguyencan"
-                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                    : "text-zinc-500 font-bold hover:text-zinc-900"
-                }`}
+                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "nguyencan"
+                  ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                  : "text-zinc-500 font-bold hover:text-zinc-900"
+                  }`}
               >
                 {t("guestHomeTabWhole")}
               </button>
@@ -221,7 +229,7 @@ export default function HomePage() {
       {/* Process 3 Steps Section based on exact user reference image */}
       <section id="features" className="py-20 bg-zinc-50/50 border-b border-zinc-100 animate-in fade-in duration-500">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          
+
           {/* Top Pill Badge */}
           <div className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-extrabold tracking-wider uppercase mb-3 border border-[#2AC1BC]/20">
             {t("guestHomeProcessBadge")}
@@ -240,21 +248,19 @@ export default function HomePage() {
           <div className="inline-flex items-center p-1 sm:p-1.5 bg-white border border-zinc-200/80 rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
             <button
               onClick={() => setProcessTab("tenant")}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                processTab === "tenant"
-                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
-                  : "text-zinc-500 hover:text-zinc-900"
-              }`}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "tenant"
+                ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
+                : "text-zinc-500 hover:text-zinc-900"
+                }`}
             >
               {t("guestHomeForTenant")}
             </button>
             <button
               onClick={() => setProcessTab("landlord")}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                processTab === "landlord"
-                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
-                  : "text-zinc-500 hover:text-zinc-900"
-              }`}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "landlord"
+                ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
+                : "text-zinc-500 hover:text-zinc-900"
+                }`}
             >
               {t("guestHomeForLandlord")}
             </button>
@@ -353,7 +359,6 @@ export default function HomePage() {
       <section className="py-20 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
           <div>
-            <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block mb-1">{t("guestHomeBhrpBadge")}</span>
             <h2 className="text-3xl font-black tracking-tight text-zinc-900">
               {t("guestHomeFeaturedRoomsTitle")}
             </h2>
@@ -361,80 +366,100 @@ export default function HomePage() {
               {t("guestHomeFeaturedRoomsSub")}
             </p>
           </div>
-
-          {/* City Filter Tabs */}
-          <div className="flex items-center gap-2 bg-zinc-100 p-1.5 rounded-2xl">
-            <button
-              onClick={() => setSelectedCityFilter("all")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                selectedCityFilter === "all" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-              }`}
-            >
-              {t("guestHomeAllCities")}
-            </button>
-            <button
-              onClick={() => setSelectedCityFilter("hcm")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                selectedCityFilter === "hcm" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-              }`}
-            >
-              {t("guestHomeHcm")}
-            </button>
-            <button
-              onClick={() => setSelectedCityFilter("hanoi")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                selectedCityFilter === "hanoi" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-              }`}
-            >
-              {t("guestHomeHanoi")}
-            </button>
-          </div>
         </div>
 
-        {/* Room Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredFeaturedRooms.map((room) => (
-            <div
-              key={room.id}
-              className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm border border-zinc-200 hover:shadow-xl transition-all duration-300"
-            >
-              <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
-                <img
-                  src={room.image}
-                  alt={room.title}
-                  className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white shadow-sm flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestHomeVerified")}
-                </div>
-              </div>
-
-              <div className="flex flex-1 flex-col p-6 gap-3">
-                <h3 className="font-extrabold text-base text-zinc-900 leading-snug line-clamp-2 group-hover:text-[#2AC1BC] transition-colors">
-                  {room.title}
-                </h3>
-                <div className="flex items-center text-xs text-zinc-500 font-semibold gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                  <span className="truncate">{room.address}</span>
-                </div>
-
-                <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-lg font-black text-rose-600">
-                      {formatVND(room.price)}
-                    </span>
-                    <span className="text-xs text-zinc-400 font-normal">{t("guestHomeMonth")}</span>
+        {/* Room Grid / Loading Skeleton / Empty State */}
+        {isLoadingFeatured ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="rounded-3xl bg-white shadow-sm border border-zinc-200 overflow-hidden animate-pulse">
+                <div className="aspect-video w-full bg-zinc-200" />
+                <div className="p-6 space-y-3">
+                  <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                  <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                  <div className="pt-4 border-t border-zinc-100 flex justify-between items-center">
+                    <div className="h-6 w-24 bg-zinc-200 rounded" />
+                    <div className="h-8 w-24 bg-zinc-200 rounded-xl" />
                   </div>
-                  <Link href={`/rooms/${room.id}`}>
-                    <button className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                      {t("guestHomeViewDetail")} <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </Link>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : featuredRooms.length === 0 ? (
+          <div className="rounded-3xl bg-zinc-50 border border-zinc-200 p-12 text-center space-y-3">
+            <p className="text-zinc-500 font-bold text-sm">
+              Hiện chưa có phòng trọ nào được đăng tại khu vực này.
+            </p>
+            <Link href="/rooms">
+              <button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                Khám phá tất cả phòng trọ
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredRooms.map((room) => {
+              const image = room.images?.[0]?.url || "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
+              const address = buildAddressString(room);
+              return (
+                <div
+                  key={room.id}
+                  className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm border border-zinc-200 hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
+                    <img
+                      src={image}
+                      alt={room.title}
+                      className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white shadow-sm flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestHomeVerified")}
+                    </div>
+                    {room.room?.roomTypeName && (
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-zinc-700 shadow-sm">
+                        {room.room.roomTypeName}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-1 flex-col p-6 gap-3">
+                    <h3 className="font-extrabold text-base text-zinc-900 leading-snug line-clamp-2 group-hover:text-[#2AC1BC] transition-colors">
+                      {room.title}
+                    </h3>
+                    <div className="flex items-center text-xs text-zinc-500 font-semibold gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                      <span className="truncate">{address || "Việt Nam"}</span>
+                    </div>
+
+                    <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
+                      <div>
+                        <span className="text-lg font-black text-rose-600">
+                          {formatVND(room.depositAmount)}
+                        </span>
+                        <span className="text-xs text-zinc-400 font-normal">{t("guestHomeMonth")}</span>
+                      </div>
+                      <Link href={`/rooms/${room.id}`}>
+                        <button className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                          {t("guestHomeViewDetail")} <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {featuredRooms.length > 0 && (
+          <div className="mt-12 text-center">
+            <Link href="/rooms">
+              <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
+                Khám phá thêm phòng trọ trên sàn <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
+              </button>
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* Verified Tenant Reviews & Social Proof Section */}
