@@ -624,7 +624,18 @@ export default function SetupWizardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Google Maps / Interactive Map Address Picker */}
+            <MapAddressPicker
+              provinces={provinces}
+              onSelectAddress={handleMapAddressSelect}
+              initialAddress={
+                [info.houseNumber, info.street, info.ward, info.province]
+                  .filter(Boolean)
+                  .join(", ")
+              }
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
               {/* Country (Locked) */}
               <Field
                 label={t("landlordSetupCountryLabel")}
@@ -784,19 +795,6 @@ export default function SetupWizardPage() {
                     className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15 resize-none"
                   />
                 </Field>
-              </div>
-
-              {/* Google Maps / Interactive Map Address Picker */}
-              <div className="md:col-span-2 pt-2">
-                <MapAddressPicker
-                  provinces={provinces}
-                  onSelectAddress={handleMapAddressSelect}
-                  initialAddress={
-                    [info.houseNumber, info.street, info.ward, info.province]
-                      .filter(Boolean)
-                      .join(", ")
-                  }
-                />
               </div>
             </div>
           </div>
