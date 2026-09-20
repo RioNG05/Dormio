@@ -39,6 +39,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { SubscriptionPackage } from '@prisma';
 
 @ApiTags('Landlord Invoices')
 @ApiBearerAuth()
@@ -128,6 +130,7 @@ export class LandlordInvoicesController {
   // ─── POST /api/v1/landlord/invoices/debts/flip-overdue ──────────────────────
 
   @Post('debts/flip-overdue')
+  @RequireTier(SubscriptionPackage.plus)
   @UseGuards(PropertyOwnershipGuard)
   @ApiHeader({
     name: 'X-Boarding-House-Id',
@@ -157,6 +160,7 @@ export class LandlordInvoicesController {
   // ─── POST /api/v1/landlord/invoices/debts/remind ────────────────────────────
 
   @Post('debts/remind')
+  @RequireTier(SubscriptionPackage.plus)
   @UseGuards(PropertyOwnershipGuard)
   @ApiHeader({
     name: 'X-Boarding-House-Id',
@@ -233,6 +237,7 @@ export class LandlordInvoicesController {
   // ─── POST /api/v1/landlord/invoices/manual ──────────────────────────────────
 
   @Post('manual')
+  @RequireTier(SubscriptionPackage.plus)
   @UseGuards(PropertyOwnershipGuard)
   @ApiHeader({
     name: 'X-Boarding-House-Id',
@@ -272,6 +277,7 @@ export class LandlordInvoicesController {
   // ─── POST /api/v1/landlord/invoices/:id/pay ─────────────────────────────────
 
   @Post(':id/pay')
+  @RequireTier(SubscriptionPackage.plus)
   @UseGuards(PropertyOwnershipGuard)
   @ApiHeader({
     name: 'X-Boarding-House-Id',

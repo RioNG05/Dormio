@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma';
+import { Prisma, SubscriptionPackage, SubscriptionStatus, UserRole } from '@prisma';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
 import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto';
@@ -26,6 +27,13 @@ import {
 /** Default maxRoom quota for users with no active subscription (free tier). */
 const FREE_TIER_MAX_ROOM = 10;
 
+/** Max boarding houses per subscription tier. */
+const MAX_BOARDING_HOUSES: Record<SubscriptionPackage, number> = {
+  [SubscriptionPackage.free]: 1,
+  [SubscriptionPackage.plus]: 3,
+  [SubscriptionPackage.pro]: 10,
+};
+
 @Injectable()
 export class BoardingHousesService {
   private readonly logger = new Logger(BoardingHousesService.name);
@@ -41,6 +49,9 @@ export class BoardingHousesService {
     this.logger.log(
       `Setting up boarding house for user ${userId} via 3-step wizard`,
     );
+
+    // Enforce per-tier boarding house creation limit
+    await this.enforceMaxBoardingHousesQuota(userId);
 
     // Resolve subscription quota before entering the transaction
     const maxRoom = await this.resolveMaxRoom(userId);
@@ -211,6 +222,9 @@ export class BoardingHousesService {
     dto: CreateBoardingHouseDto,
   ): Promise<BoardingHouseResponseDto> {
     this.logger.log(`Creating initial property profile for user ${userId}`);
+
+    // Enforce per-tier boarding house creation limit
+    await this.enforceMaxBoardingHousesQuota(userId);
 
     const boardingHouse = await this.prisma.$transaction(async (tx) => {
       const createdBoardingHouse = await tx.boardingHouse.create({
@@ -1118,6 +1132,54 @@ export class BoardingHousesService {
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  /**
+   * Resolve the user's active subscription tier.
+   * Falls back to free if no active subscription exists.
+   */
+  private async resolveCurrentTier(userId: string): Promise<SubscriptionPackage> {
+    const now = new Date();
+    const activeSub = await this.prisma.userSubscription.findFirst({
+      where: {
+        userId,
+        status: SubscriptionStatus.active,
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { planName: true },
+    });
+    return activeSub?.planName ?? SubscriptionPackage.free;
+  }
+
+  /**
+   * Enforces the boarding house creation quota for the user's current tier.
+   * Throws ForbiddenException if the limit is already reached.
+   */
+  private async enforceMaxBoardingHousesQuota(userId: string): Promise<void> {
+    const tier = await this.resolveCurrentTier(userId);
+    const maxHouses = MAX_BOARDING_HOUSES[tier];
+
+    const existingCount = await this.prisma.boardingHouse.count({
+      where: {
+        ownerId: userId,
+        status: { not: 'deleted' },
+      },
+    });
+
+    if (existingCount >= maxHouses) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: 'Forbidden',
+        code: 'BOARDING_HOUSE_LIMIT_REACHED',
+        message: `Your ${tier} plan allows a maximum of ${maxHouses} boarding house(s). You currently have ${existingCount}. Please upgrade your plan to add more properties.`,
+        currentTier: tier,
+        maxAllowed: maxHouses,
+        currentCount: existingCount,
+        upgradeUrl: '/pricing',
+      });
+    }
+  }
 
   /**
    * Resolve the user's current room quota.

@@ -14,7 +14,7 @@
 | `03-bhms-tenant.md` | UC-T-01 → UC-T-07: Tenant notifications, meter-first billing, grievances |
 | `04-bhrp-poster.md` | UC-P-01, UC-P-02: Landlord acting as poster on the rental platform |
 | `05-bhrp-platform-user.md` | UC-PU-01 → UC-PU-05: Prospective tenant — browsing, identity + deposit, chat |
-| `06-admin.md` | UC-A-01 → UC-A-06: Admin analytics, grievance resolution, mass notifications, platform revenue dashboard |
+| `06-admin.md` | UC-A-01 → UC-A-05: Admin analytics, grievance resolution, mass notifications |
 
 ---
 
@@ -85,6 +85,7 @@ These model a state that only exists *after* some later event — as written, Pr
 | Addition | Needed for |
 |---|---|
 | `MeterReading.invoiceId` (nullable FK → `Invoice`) | UC-L-06/UC-T-03's meter-first billing flow — without this there's no way to tell which readings are "unconsumed" vs already billed into a past invoice. |
+| `Asset` model (new table entirely) | UC-L-25 — property asset/inventory management (Plus tier). See `01-bhms-landlord.md` for the full field list and `boarding_house_erd_v2.mermaid` for the ERD entry. |
 | `Contract.confirmedAt`, `Contract.rejectedAt`, `Contract.rejectionReason` (nullable) | UC-AUTH-04 — the tenant confirm/reject step for platform-originated contracts. |
 | `OtpCode` model (new table: `id`, `userId`, `codeHash`, `purpose`, `expiresAt`, `verifiedAt`, `attemptCount`, `createdAt`) | UC-AUTH-03 — first-login SMS verification for accounts created via the manual phone-entry flow. |
 | `Grievance.resolutionNote` (nullable text) | UC-A-04 — `GrievenceStatus` already includes `rejected`, but there's no field to record *why* something was resolved or rejected. |
@@ -115,6 +116,7 @@ Two providers, split strictly by **sensitivity** — not a single provider, and 
 | **Public, display-optimized images** | `User.avatarUrl`, `Room.image_url`, `PostImage.url`, `BoardingHouse.thumbnail` | **Cloudinary** | `type: upload` (public). Enable `f_auto,q_auto` for automatic format/compression, and eager transformations at upload time to pre-generate thumbnails. This is Cloudinary's strength — image CDN + on-the-fly transforms — keep it scoped to exactly this group. |
 | **Private images (PII)** | `UserIdentification.cardFrontUrl`/`cardBackUrl`, `GrievanceImage.url`, `MessageAttachment.url` (when `type='image'`) | **AWS S3** | Private bucket, `Block Public Access` fully enabled. Store only the **S3 object key** in the DB field, never a URL. Generate a **pre-signed URL** (`GetObjectCommand` + `getSignedUrl`, short expiry — e.g. 5–15 minutes) at request time via the AWS SDK, on every read. Never persist a signed URL anywhere — it expires and leaks the signature if cached. |
 | **Documents (non-image)** | `ContractDocument.url`, `MessageAttachment.url` (when `type='file'`) | **AWS S3** | Same private-bucket + presigned-URL pattern. S3 is the right home for this from the start — proper Lifecycle rules (e.g. transition old contract documents to Glacier/Deep Archive after N months), and no image-CDN features are relevant to a PDF/Word file, so there's no reason to route it through Cloudinary even temporarily. |
+| **Internal operational photos (not public-facing)** | `Asset.imageUrl` | **AWS S3** (private) | Not a legal document or PII, but never shown to prospective tenants either (unlike `Room.image_url`, which feeds public listings) — defaults to the private tier since there's no specific reason to make it public. Same presigned-URL pattern as the row above. |
 
 **Why split this way instead of one provider for everything:** Cloudinary's value (transforms, CDN, `f_auto/q_auto`) only applies to images meant for public display — it adds nothing for a private ID card photo or a contract PDF, where the actual requirement is strict access control and durable storage, which is S3's strength. Running both from day one avoids a later migration and keeps each provider doing only what it's good at.
 

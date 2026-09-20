@@ -34,6 +34,8 @@ import {
   LandlordAnnouncementsResponseDto,
 } from './dto/landlord-announcement-response.dto';
 import { NotificationsService } from './notifications.service';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { SubscriptionPackage } from '@prisma';
 
 @ApiTags('Landlord Notifications')
 @ApiAuth()
@@ -48,6 +50,7 @@ export class LandlordNotificationsController {
   // ─── POST /api/v1/landlord/notifications/broadcast (UC-L-13) ───────────────
 
   @Post('broadcast')
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'Broadcast announcement to boarding house (UC-L-13)',
     description:
@@ -111,6 +114,7 @@ export class LandlordNotificationsController {
   // ─── DELETE /api/v1/landlord/notifications/:id ────────────────────────────
 
   @Delete(':id')
+  @RequireTier(SubscriptionPackage.plus)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete an announcement',

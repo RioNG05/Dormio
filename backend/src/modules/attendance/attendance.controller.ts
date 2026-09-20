@@ -29,6 +29,8 @@ import {
 import { OverrideAttendanceDto } from './dto/override-attendance.dto';
 import { QueryAttendanceDto } from './dto/query-attendance.dto';
 import { AttendanceService } from './attendance.service';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { SubscriptionPackage } from '@prisma';
 
 @ApiTags('Landlord - Attendance Management (UC-L-22)')
 @ApiBearerAuth()
@@ -38,6 +40,7 @@ import { AttendanceService } from './attendance.service';
   required: true,
 })
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+@RequireTier(SubscriptionPackage.pro)
 @Controller('landlord/attendance')
 export class AttendanceController {
   private readonly logger = new Logger(AttendanceController.name);

@@ -26,6 +26,7 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { QueryServicesDto } from './dto/query-services.dto';
 import {
@@ -35,6 +36,7 @@ import {
 } from './dto/service-response.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServicesService } from './services.service';
+import { SubscriptionPackage } from '@prisma';
 
 @ApiTags('Landlord - Services')
 @ApiBearerAuth()
@@ -69,6 +71,7 @@ export class ServicesController {
   }
 
   @Post()
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'UC-L-18: Create a custom service',
     description:
@@ -105,6 +108,7 @@ export class ServicesController {
   }
 
   @Patch(':id')
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'UC-L-18: Update a service',
     description: 'Updates an existing service configuration and attached room assignments.',
@@ -122,6 +126,7 @@ export class ServicesController {
   }
 
   @Delete(':id')
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'UC-L-18: Delete a service',
     description:

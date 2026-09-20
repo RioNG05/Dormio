@@ -1055,7 +1055,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      {/* UC-L-15: Contract Preview & Export Modal */}
+      {/* Contract Preview & Export Modal */}
       {isPreviewModalOpen && activeBuilding?.id && contract && (
         <ContractPreviewModal
           isOpen={isPreviewModalOpen}

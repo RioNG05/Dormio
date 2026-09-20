@@ -44,6 +44,8 @@ import {
 import { UpdatePositionDto } from './dto/update-position.dto';
 import { UpdateStaffStatusDto } from './dto/update-staff-status.dto';
 import { EmployeesService } from './employees.service';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { SubscriptionPackage } from '@prisma';
 
 @ApiTags('Landlord - Staff Management (UC-L-19, UC-L-20)')
 @ApiBearerAuth()
@@ -53,6 +55,7 @@ import { EmployeesService } from './employees.service';
   required: true,
 })
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+@RequireTier(SubscriptionPackage.pro)
 @Controller('landlord/staff')
 export class EmployeesController {
   private readonly logger = new Logger(EmployeesController.name);

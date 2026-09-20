@@ -208,6 +208,15 @@ enum OtpPurpose {
   reset_password
 }
 
+enum AssetCondition {
+  new
+  good
+  damaged
+  under_repair
+  lost
+  disposed
+}
+
 model User {
   id                 String     @id @default(uuid()) @db.Uuid
   username           String?    @db.VarChar(255)
@@ -308,6 +317,7 @@ model BoardingHouse {
   shifts              Shift[]
   workSchedules       WorkSchedule[]
   recurrencePatterns  RecurrencePattern[]
+  assets              Asset[]
 
   @@map("boarding_houses")
 }
@@ -438,6 +448,7 @@ model Room {
   posts         Post[]
   invoices      Invoice[]
   grievences    Grievance[]
+  assets        Asset[]
 
   @@unique([boardingHouseId, roomNumber])
   @@index([boardingHouseId])
@@ -915,14 +926,14 @@ model WorkSchedule {
 }
 
 model Attendance {
-  id             String           @id @default(uuid()) @db.Uuid
-  workScheduleId String           @map("work_schedule_id") @db.Uuid
-  workSchedule   WorkSchedule     @relation(fields: [workScheduleId], references: [id])
-  employeeId     String           @map("employee_id") @db.Uuid
-  employee       Employee         @relation(fields: [employeeId], references: [id])
-  checkIn        DateTime?        @map("check_in")
-  checkOut       DateTime?        @map("check_out")
-  status         AttendanceStatus @default(not_yet)
+  id                  String           @id @default(uuid()) @db.Uuid
+  workScheduleId      String           @map("work_schedule_id") @db.Uuid
+  workSchedule        WorkSchedule     @relation(fields: [workScheduleId], references: [id])
+  employeeId          String           @map("employee_id") @db.Uuid
+  employee            Employee         @relation(fields: [employeeId], references: [id])
+  checkIn             DateTime?        @map("check_in")
+  checkOut            DateTime?        @map("check_out")
+  status              AttendanceStatus @default(not_yet)
   editedBy            String?          @map("edited_by") @db.Uuid
   editedByUser        User?            @relation(fields: [editedBy], references: [id])
   note                String?
@@ -969,4 +980,26 @@ model OtpCode {
   createdAt    DateTime   @default(now()) @map("created_at")
 
   @@map("otp_codes")
+}
+
+model Asset {
+  id              String         @id @default(uuid())
+  boardingHouseId String         @map("boarding_house_id")
+  roomId          String?        @map("room_id")
+  name            String
+  category        String?
+  location        String
+  quantity        Int            @default(1)
+  condition       AssetCondition @default(good)
+  purchasePrice   Decimal?       @map("purchase_price")
+  purchaseDate    DateTime?      @map("purchase_date")
+  imageUrl        String?        @map("image_url")
+  note            String?
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  boardingHouse BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
+  room          Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@map("assets")
 }

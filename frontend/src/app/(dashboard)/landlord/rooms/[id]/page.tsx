@@ -205,7 +205,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const [formWater, setFormWater] = useState("");
   const [isSubmittingMeter, setIsSubmittingMeter] = useState(false);
 
-  // Meter Readings History & Active Services Data (UC-L-09)
+  // Meter Readings History & Active Services Data
   const [meterHistory, setMeterHistory] = useState<MeterHistoryRecord[]>([]);
   const [meterHistoryRaw, setMeterHistoryRaw] = useState<LandlordMeterPeriodHistory[]>([]);
   const [roomMeteredServices, setRoomMeteredServices] = useState<LandlordActiveMeteredService[]>([]);
@@ -259,7 +259,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     resolvedParams.id && UUID_REGEX.test(resolvedParams.id)
   );
 
-  // Load Dashboard Data (Aggregated query UC-L-05) or fallback to mock
+  // Load Dashboard Data (Aggregated query) or fallback to mock
   useEffect(() => {
     setIsMounted(true);
 
@@ -353,7 +353,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             );
           }
 
-          // Load active metered services & meter history (UC-L-09)
+          // Load active metered services & meter history
           try {
             const [meterServicesRes, meterHistoryRes] = await Promise.all([
               meterReadingService.getLandlordRoomMeteredServices(activeBuilding.id, resolvedParams.id),
@@ -613,7 +613,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     }
   };
 
-  // Save correction action with mandatory reason check (UC-L-09)
+  // Save correction action with mandatory reason check
   const handleSaveCorrection = async () => {
     if (!correctModal.reason.trim()) {
       setCorrectModal(prev => ({ ...prev, error: t("landlordRoomDetailToastReasonRequired") }));
@@ -741,7 +741,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     }, 800);
   };
 
-  // Save new meter reading from main modal (UC-L-09)
+  // Save new meter reading from main modal
   const handleSaveNewMeterReading = async () => {
     if (!formElec && !formWater) {
       showToast(t("landlordRoomDetailToastMeterInputRequired"), "error");
@@ -1288,7 +1288,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
 
-          {/* SECTION: LỊCH SỬ THUÊ PHÒNG (RENTAL HISTORY - UC-L-05) */}
+          {/* SECTION: LỊCH SỬ THUÊ PHÒNG (RENTAL HISTORY) */}
           <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h2 className="font-black text-zinc-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
@@ -1931,7 +1931,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI (UC-L-09) */}
+      {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI */}
       {isMeterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseMeterModal(); }}>
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">

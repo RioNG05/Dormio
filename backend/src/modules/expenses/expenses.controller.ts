@@ -34,11 +34,14 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { SubscriptionPackage } from '@prisma';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
 
 @ApiTags('Landlord Expenses')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@RequireTier(SubscriptionPackage.plus)
 @Controller('landlord/expenses')
 export class ExpensesController {
   private readonly logger = new Logger(ExpensesController.name);
