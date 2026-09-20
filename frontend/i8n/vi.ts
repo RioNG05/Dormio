@@ -3932,6 +3932,22 @@ const vi = {
     landlordAssetsDetailSerial: "Số Serial máy",
     landlordAssetsDetailWarranty: "Hạn bảo hành nhà sản xuất",
     landlordAssetsDetailNotUpdated: "Chưa cập nhật",
+
+    // --- Assets page keys (page-level, list view) ---
+    landlordAssetsPageTitle: "Quản Lý Tài Sản & Thiết Bị",
+    landlordAssetsPageSubtitle: "Theo dõi tài sản, trang thiết bị theo từng phòng, khấu hao và lịch bảo trì.",
+    landlordAssetsAddBtn: "Thêm tài sản mới",
+    landlordAssetsSearchPh: "Tìm mã SKU, tên tài sản, số phòng...",
+    landlordAssetsViewGrid: "Xem dạng lưới",
+    landlordAssetsViewTable: "Xem dạng bảng",
+    landlordAssetsColName: "Tên tài sản",
+    landlordAssetsConfirmCloseTitle: "Xác nhận đóng form",
+    landlordAssetsConfirmCloseDesc: "Bạn có thay đổi chưa được lưu. Bạn có muốn hủy bỏ và đóng không?",
+    landlordAssetsConfirmCloseKeep: "Tiếp tục chỉnh sửa",
+    landlordAssetsConfirmCloseDiscard: "Hủy thay đổi & Đóng",
+    landlordAssetsToastAddSuccess: "Đã thêm tài sản mới thành công!",
+    landlordAssetsToastEditSuccess: "Đã cập nhật thông tin tài sản thành công!",
+
     landlordShiftsMorningShift: "Ca sáng",
     landlordShiftsAfternoonShift: "Ca chiều",
     landlordShiftsNightShift: "Ca tối / đêm",
