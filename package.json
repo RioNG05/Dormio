@@ -1,4 +1,5 @@
 {
+	"packageManager": "pnpm@11.21.0",
 	"scripts": {
 		"install:all": "pnpm install && pnpm --filter backend install && pnpm --filter frontend install",
 		"install:be": "pnpm --filter backend install",
@@ -25,7 +26,6 @@
 		"db:studio": "pnpm --filter backend db:studio",
 		"db:reset": "pnpm --filter backend db:reset",
 		"seed": "pnpm --filter backend seed",
-
 		"docker:up": "docker compose up -d",
 		"docker:down": "docker compose down",
 		"docker:restart": "docker compose restart",
