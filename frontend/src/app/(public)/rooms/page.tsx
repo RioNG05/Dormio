@@ -31,6 +31,13 @@ import {
   type PublicPostListing,
   type BrowsePostsParams,
 } from "@/services/post.service";
+import {
+  fetchProvinces,
+  fetchWardsByProvince,
+  type Province,
+  type Ward,
+  FALLBACK_PROVINCES,
+} from "@/services/vietnam-address.service";
 
 const DEFAULT_ROOM_IMAGE = "/house-placeholder.jpg";
 
@@ -165,6 +172,88 @@ function RoomsContent() {
   const [minArea, setMinArea] = useState("");
   const [maxArea, setMaxArea] = useState("");
   const [roomType, setRoomType] = useState("all");
+
+  // Vietnam Administrative Address States (Cascading)
+  const [provinces, setProvinces] = useState<Province[]>(FALLBACK_PROVINCES);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
+  const [isLoadingWards, setIsLoadingWards] = useState(false);
+
+  // Fetch Vietnam provinces on mount
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingProvinces(true);
+    fetchProvinces()
+      .then((data) => {
+        if (isMounted && data.length > 0) {
+          setProvinces(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load provinces:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingProvinces(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Handle cascading province selection
+  const handleProvinceSelect = async (selectedProvince: string) => {
+    setProvince(selectedProvince);
+    setWard(""); // Reset ward when province changes
+
+    if (!selectedProvince) {
+      setWards([]);
+      return;
+    }
+
+    const prov = provinces.find(
+      (p) =>
+        p.name === selectedProvince ||
+        p.name.toLowerCase().includes(selectedProvince.toLowerCase()) ||
+        selectedProvince.toLowerCase().includes(p.name.toLowerCase())
+    );
+
+    if (prov) {
+      setIsLoadingWards(true);
+      try {
+        const wardList = await fetchWardsByProvince(prov.code);
+        setWards(wardList);
+      } catch (err) {
+        console.error("Failed to fetch wards:", err);
+        setWards([]);
+      } finally {
+        setIsLoadingWards(false);
+      }
+    } else {
+      setWards([]);
+    }
+  };
+
+  // Sync wards when province is populated from URL searchParams
+  useEffect(() => {
+    if (!province) {
+      setWards([]);
+      return;
+    }
+    const prov = provinces.find(
+      (p) =>
+        p.name === province ||
+        p.name.toLowerCase().includes(province.toLowerCase()) ||
+        province.toLowerCase().includes(p.name.toLowerCase())
+    );
+    if (prov) {
+      setIsLoadingWards(true);
+      fetchWardsByProvince(prov.code)
+        .then((wList) => setWards(wList))
+        .catch(() => setWards([]))
+        .finally(() => setIsLoadingWards(false));
+    }
+  }, [province, provinces]);
 
   // Applied filter (submitted)
   const [appliedFilters, setAppliedFilters] = useState<BrowsePostsParams>({});
@@ -337,6 +426,7 @@ function RoomsContent() {
     setProvince("");
     setDistrict("");
     setWard("");
+    setWards([]);
     setMinPrice("");
     setMaxPrice("");
     setMinArea("");
@@ -387,7 +477,10 @@ function RoomsContent() {
       setMaxPrice("");
     } else if (filterKey === "province") {
       nextProvince = "";
+      nextWard = "";
       setProvince("");
+      setWard("");
+      setWards([]);
     } else if (filterKey === "district") {
       nextDistrict = "";
       setDistrict("");
@@ -592,46 +685,53 @@ function RoomsContent() {
               </div>
             </div>
 
-            {/* Filter 2: Province */}
+            {/* Filter 2: Province (Cascading Step 1) */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsProvinceLabel")}</label>
-              <input
-                id="filter-province"
-                type="text"
-                placeholder={t("guestRoomsProvincePlaceholder")}
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
-              />
+              <div className="relative">
+                <select
+                  id="filter-province"
+                  value={province}
+                  onChange={(e) => handleProvinceSelect(e.target.value)}
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200/80 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer"
+                >
+                  <option value="">{t("guestRoomsAllCities") || "Tất cả tỉnh / thành"}</option>
+                  {provinces.map((p) => (
+                    <option key={p.code} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              </div>
             </div>
 
-            {/* Filter 3: District */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">{t("guestRoomsDistrictLabel")}</label>
-              <input
-                id="filter-district"
-                type="text"
-                placeholder={t("guestRoomsDistrictPlaceholder")}
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
-              />
-            </div>
-
-            {/* Filter 4: Ward */}
+            {/* Filter 3: Ward (Cascading Step 2 based on selected Province) */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700">{t("guestRoomsWardLabel")}</label>
-              <input
-                id="filter-ward"
-                type="text"
-                placeholder={t("guestRoomsWardPlaceholder")}
-                value={ward}
-                onChange={(e) => setWard(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
-              />
+              <div className="relative">
+                <select
+                  id="filter-ward"
+                  value={ward}
+                  onChange={(e) => setWard(e.target.value)}
+                  disabled={!province || isLoadingWards}
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200/80 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {isLoadingWards
+                      ? "Đang tải danh sách phường / xã..."
+                      : !province
+                      ? "Vui lòng chọn Tỉnh / Thành trước"
+                      : "Tất cả phường / xã"}
+                  </option>
+                  {wards.map((w) => (
+                    <option key={w.code} value={w.name}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* Filter 5: Price range */}

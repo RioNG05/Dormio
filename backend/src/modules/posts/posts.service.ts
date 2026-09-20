@@ -974,15 +974,18 @@ export class PostsService {
       hasLocationFilter = true;
     }
     if (province) {
-      boardingHouseFilter.province = { equals: province, mode: 'insensitive' };
+      const cleanProv = province.replace(/^(Thành phố|Tỉnh|TP\.?)\s+/i, '').trim();
+      boardingHouseFilter.province = { contains: cleanProv, mode: 'insensitive' };
       hasLocationFilter = true;
     }
     if (district) {
-      boardingHouseFilter.district = { equals: district, mode: 'insensitive' };
+      const cleanDistrict = district.replace(/^(Quận|Huyện|Thị xã|Thành phố)\s+/i, '').trim();
+      boardingHouseFilter.district = { contains: cleanDistrict, mode: 'insensitive' };
       hasLocationFilter = true;
     }
     if (ward) {
-      boardingHouseFilter.ward = { equals: ward, mode: 'insensitive' };
+      const cleanWard = ward.replace(/^(Phường|Xã|Thị trấn)\s+/i, '').trim();
+      boardingHouseFilter.ward = { contains: cleanWard, mode: 'insensitive' };
       hasLocationFilter = true;
     }
     if (hasLocationFilter) {
