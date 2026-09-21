@@ -86,6 +86,7 @@ function MessagesContent() {
   const t = useTranslations("landlord");
   const { currentLocale } = useLanguage();
 
+  const urlConversationId = searchParams.get("conversationId") || searchParams.get("id") || "";
   const urlRoom = searchParams.get("room") || searchParams.get("search") || "";
   const urlTenant = searchParams.get("tenant") || "";
   const urlUserId = searchParams.get("userId") || searchParams.get("participantId") || "";
@@ -129,12 +130,21 @@ function MessagesContent() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const socketRef = useRef<any>(null);
   const activeChatRef = useRef<ConversationItem | null>(null);
+  const conversationsRef = useRef<ConversationItem[]>([]);
+  const contactsRef = useRef<ContactItem[]>([]);
   const autoSentKeysRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     activeChatRef.current = activeChat;
   }, [activeChat]);
 
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  useEffect(() => {
+    contactsRef.current = contacts;
+  }, [contacts]);
 
   // Preset Smart Quick Replies
   const quickReplies = [
@@ -157,9 +167,16 @@ function MessagesContent() {
         ]);
         setConversations(convList);
         setContacts(contactList);
+        conversationsRef.current = convList;
+        contactsRef.current = contactList;
 
-        if (convList.length > 0) {
-          setActiveChat(convList[0]);
+        if (urlConversationId) {
+          const match = convList.find((c) => c.id === urlConversationId);
+          if (match) {
+            activeChatRef.current = match;
+            setActiveChat(match);
+            setMobileShowChat(true);
+          }
         }
       } catch (error) {
         console.error("Failed to load conversations:", error);
@@ -191,7 +208,7 @@ function MessagesContent() {
         setMessages((prev) => appendOrUpdateMessage(prev, newMsg));
         // Auto mark as read if received in active chat
         if (newMsg.senderId !== user?.id) {
-          markAsRead(activeChatRef.current.id).catch(() => {});
+          markAsRead(activeChatRef.current.id).catch(() => { });
         }
       }
 
@@ -261,7 +278,7 @@ function MessagesContent() {
 
     // Mark as read on open
     if (activeChat.unreadCount > 0) {
-      markAsRead(activeChat.id).catch(() => {});
+      markAsRead(activeChat.id).catch(() => { });
       setConversations((prev) =>
         prev.map((c) => (c.id === activeChat.id ? { ...c, unreadCount: 0 } : c))
       );
@@ -275,102 +292,156 @@ function MessagesContent() {
     };
   }, [activeChat?.id]);
 
-  // 4. Handle URL Navigation query params (?room=..., ?tenant=..., ?userId=..., autoSend=true)
+  // 4. Handle URL Navigation query params & synchronize active conversation
   useEffect(() => {
     if (!isMounted || isLoadingConversations) return;
 
-    async function handleUrlParams() {
-      let match: ConversationItem | undefined = undefined;
-
-      // 1. If urlUserId is provided, find or create conversation for this exact user
-      if (urlUserId) {
-        match = conversations.find((c) => c.participant.id === urlUserId);
-        if (!match) {
-          try {
-            const newConv = await getOrCreateConversation(urlUserId);
-            if (newConv) {
-              setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== newConv.id)]);
-              match = newConv;
-            }
-          } catch (e) {
-            console.error("Failed to get/create conversation with userId:", e);
-          }
+    // Case 1: Direct conversationId in URL
+    if (urlConversationId) {
+      if (activeChatRef.current?.id !== urlConversationId) {
+        const match = conversationsRef.current.find((c) => c.id === urlConversationId);
+        if (match) {
+          activeChatRef.current = match;
+          setActiveChat(match);
+          setMobileShowChat(true);
         }
-      } else if (urlRoom || urlTenant) {
-        // 2. Fallback to matching by room or tenant name if urlUserId not provided
-        match = conversations.find((c) => {
-          if (urlRoom && (c.participant.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
-            c.participant.roomName?.replace("Phòng ", "") === urlRoom)) return true;
-          if (urlTenant && c.participant.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
-          return false;
-        });
+      }
+      return;
+    }
 
-        if (!match) {
-          const targetContact = contacts.find((ct) => {
-            if (urlRoom && (ct.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
-              ct.roomName?.replace("Phòng ", "") === urlRoom)) return true;
-            if (urlTenant && ct.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
-            return false;
-          });
+    // Case 2: External query params (?room=..., ?tenant=..., ?userId=..., autoSend=true)
+    if (urlUserId || urlRoom || urlTenant || urlInvId) {
+      let isCancelled = false;
 
-          if (targetContact) {
+      async function handleUrlParams() {
+        let match: ConversationItem | undefined = undefined;
+
+        // 1. If urlUserId is provided, find or create conversation for this exact user
+        if (urlUserId) {
+          match = conversationsRef.current.find((c) => c.participant.id === urlUserId);
+          if (!match) {
             try {
-              const newConv = await getOrCreateConversation(targetContact.id);
-              if (newConv) {
-                setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== newConv.id)]);
+              const newConv = await getOrCreateConversation(urlUserId);
+              if (newConv && !isCancelled) {
+                setConversations((prev) => {
+                  const updated = [newConv, ...prev.filter((c) => c.id !== newConv.id)];
+                  conversationsRef.current = updated;
+                  return updated;
+                });
                 match = newConv;
               }
             } catch (e) {
-              console.error("Failed to auto-create conversation from contact:", e);
+              console.error("Failed to get/create conversation with userId:", e);
             }
           }
-        }
-      }
+        } else if (urlRoom || urlTenant) {
+          // 2. Fallback to matching by room or tenant name if urlUserId not provided
+          match = conversationsRef.current.find((c) => {
+            if (urlRoom && (c.participant.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
+              c.participant.roomName?.replace("Phòng ", "") === urlRoom)) return true;
+            if (urlTenant && c.participant.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
+            return false;
+          });
 
-      if (match) {
-        setActiveChat(match);
-        setMobileShowChat(true);
+          if (!match) {
+            const targetContact = contactsRef.current.find((ct) => {
+              if (urlRoom && (ct.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
+                ct.roomName?.replace("Phòng ", "") === urlRoom)) return true;
+              if (urlTenant && ct.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
+              return false;
+            });
 
-        // Handle autoSend if present
-        if (autoSend) {
-          const autoKey = `${match.id}_${urlInvId || urlDepId || urlType || "auto"}`;
-          if (!autoSentKeysRef.current[autoKey]) {
-            autoSentKeysRef.current[autoKey] = true;
-            const roomLabel = match.participant.roomName || t("landlordMessagesYourRoom");
-            if (urlInvId) {
-              const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
-              const autoMsgContent = t("landlordMessagesAutoInvoiceNotice")
-                .replace("{period}", urlPeriod || t("landlordMessagesCurrentPeriod"))
-                .replace("{room}", roomLabel)
-                .replace("{amount}", formattedAmount)
-                .replace("{invId}", urlInvId);
-              sendMessage(match.id, { content: autoMsgContent })
-                .then((savedMsg) => {
-                  setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
-                })
-                .catch(console.error);
-            } else if (urlType === "upgrade" || urlDepId) {
-              const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "2.500.000 ₫";
-              const autoMsgContent = t("landlordMessagesAutoDepositNotice")
-                .replace("{room}", roomLabel)
-                .replace("{tenant}", match.participant.fullName)
-                .replace("{amount}", formattedAmount);
-              sendMessage(match.id, { content: autoMsgContent })
-                .then((savedMsg) => {
-                  setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
-                })
-                .catch(console.error);
+            if (targetContact) {
+              try {
+                const newConv = await getOrCreateConversation(targetContact.id);
+                if (newConv && !isCancelled) {
+                  setConversations((prev) => {
+                    const updated = [newConv, ...prev.filter((c) => c.id !== newConv.id)];
+                    conversationsRef.current = updated;
+                    return updated;
+                  });
+                  match = newConv;
+                }
+              } catch (e) {
+                console.error("Failed to auto-create conversation from contact:", e);
+              }
             }
           }
         }
 
-      }
-    }
+        if (match && !isCancelled) {
+          activeChatRef.current = match;
+          setActiveChat(match);
+          setMobileShowChat(true);
 
-    if (urlRoom || urlTenant || urlUserId || urlInvId) {
+          // Handle autoSend if present
+          if (autoSend) {
+            const autoKey = `${match.id}_${urlInvId || urlDepId || urlType || "auto"}`;
+            if (!autoSentKeysRef.current[autoKey]) {
+              autoSentKeysRef.current[autoKey] = true;
+              const roomLabel = match.participant.roomName || t("landlordMessagesYourRoom");
+              if (urlInvId) {
+                const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
+                const autoMsgContent = t("landlordMessagesAutoInvoiceNotice")
+                  .replace("{period}", urlPeriod || t("landlordMessagesCurrentPeriod"))
+                  .replace("{room}", roomLabel)
+                  .replace("{amount}", formattedAmount)
+                  .replace("{invId}", urlInvId);
+                sendMessage(match.id, { content: autoMsgContent })
+                  .then((savedMsg) => {
+                    setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
+                  })
+                  .catch(console.error);
+              } else if (urlType === "upgrade" || urlDepId) {
+                const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "2.500.000 ₫";
+                const autoMsgContent = t("landlordMessagesAutoDepositNotice")
+                  .replace("{room}", roomLabel)
+                  .replace("{tenant}", match.participant.fullName)
+                  .replace("{amount}", formattedAmount);
+                sendMessage(match.id, { content: autoMsgContent })
+                  .then((savedMsg) => {
+                    setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
+                  })
+                  .catch(console.error);
+              }
+            }
+          }
+
+          // Synchronize URL with conversationId
+          const newParams = new URLSearchParams();
+          newParams.set("conversationId", match.id);
+          router.replace(`/landlord/messages?${newParams.toString()}`, { scroll: false });
+        }
+      }
+
       handleUrlParams();
+      return () => {
+        isCancelled = true;
+      };
     }
-  }, [isMounted, isLoadingConversations, urlRoom, urlTenant, urlUserId, urlInvId, urlAmount, urlPeriod, autoSend, urlType, urlDepId]);
+
+    // Case 3: No conversation query in URL -> reset activeChat to null
+    if (!urlConversationId && !urlUserId && !urlRoom && !urlTenant && !urlInvId) {
+      if (activeChatRef.current !== null) {
+        activeChatRef.current = null;
+        setActiveChat(null);
+        setMobileShowChat(false);
+      }
+    }
+  }, [
+    isMounted,
+    isLoadingConversations,
+    urlConversationId,
+    urlRoom,
+    urlTenant,
+    urlUserId,
+    urlInvId,
+    urlAmount,
+    urlPeriod,
+    autoSend,
+    urlType,
+    urlDepId,
+  ]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -427,6 +498,17 @@ function MessagesContent() {
 
     return { images, files, total: images.length + files.length };
   }, [messages]);
+
+  // Select conversation and synchronize with URL
+  const handleSelectConversation = (chat: ConversationItem) => {
+    if (activeChatRef.current?.id === chat.id) return;
+    activeChatRef.current = chat;
+    setActiveChat(chat);
+    setMobileShowChat(true);
+    const params = new URLSearchParams();
+    params.set("conversationId", chat.id);
+    router.replace(`/landlord/messages?${params.toString()}`, { scroll: false });
+  };
 
   // Send message handler
   const handleSendMessage = async (textToSend?: string) => {
@@ -503,10 +585,9 @@ function MessagesContent() {
         const exists = prev.some((c) => c.id === conv.id);
         return exists ? prev : [conv, ...prev];
       });
-      setActiveChat(conv);
-      setMobileShowChat(true);
       setShowNewChatModal(false);
       setNewChatSearch("");
+      handleSelectConversation(conv);
     } catch (error) {
       console.error("Failed to create conversation:", error);
     } finally {
@@ -542,9 +623,8 @@ function MessagesContent() {
     <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100vh-4.5rem)] bg-white border-y border-zinc-200/80 overflow-hidden flex">
       {/* PANE 1: Left Conversation List */}
       <div
-        className={`w-full lg:w-96 border-r border-zinc-200/80 flex-col bg-zinc-50/50 shrink-0 ${
-          mobileShowChat ? "hidden lg:flex" : "flex"
-        }`}
+        className={`w-full lg:w-96 border-r border-zinc-200/80 flex-col bg-zinc-50/50 shrink-0 ${mobileShowChat ? "hidden lg:flex" : "flex"
+          }`}
       >
         {/* Top Search & Filter Tabs */}
         <div className="p-3.5 border-b border-zinc-200/80 space-y-3 bg-white">
@@ -572,55 +652,50 @@ function MessagesContent() {
           <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px] font-extrabold">
             <button
               onClick={() => setActiveTab("all")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === "all"
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "all"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-              }`}
+                }`}
             >
               {t("landlordMessagesAll").replace("{count}", String(conversations.length))}
             </button>
 
             <button
               onClick={() => setActiveTab("unread")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === "unread"
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "unread"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-              }`}
+                }`}
             >
               {t("landlordMessagesUnread").replace("{count}", String(conversations.filter((c) => c.unreadCount > 0).length))}
             </button>
 
             <button
               onClick={() => setActiveTab("read")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === "read"
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "read"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-              }`}
+                }`}
             >
               {t("landlordMessagesRead").replace("{count}", String(conversations.filter((c) => c.unreadCount === 0).length))}
             </button>
 
             <button
               onClick={() => setActiveTab("tenant")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === "tenant"
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "tenant"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-              }`}
+                }`}
             >
               {t("landlordMessagesTenant").replace("{count}", String(conversations.filter((c) => c.participant.role === "tenant").length))}
             </button>
 
             <button
               onClick={() => setActiveTab("lead")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === "lead"
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "lead"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-              }`}
+                }`}
             >
               {t("landlordMessagesTabNewGuests").replace("{count}", String(conversations.filter((c) => c.participant.role !== "tenant").length))}
             </button>
@@ -657,16 +732,12 @@ function MessagesContent() {
               return (
                 <div
                   key={`conv-${chat.id}-${chatIdx}`}
-                  onClick={() => {
-                    setActiveChat(chat);
-                    setMobileShowChat(true);
-                  }}
+                  onClick={() => handleSelectConversation(chat)}
 
-                  className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${
-                    isSelected
+                  className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${isSelected
                       ? "bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]"
                       : "hover:bg-zinc-100/80"
-                  }`}
+                    }`}
                 >
                   {/* Avatar with Status */}
                   <div className="relative shrink-0 pt-0.5">
@@ -684,9 +755,8 @@ function MessagesContent() {
                         {p.roomName || p.fullName}
                       </span>
                       <span
-                        className={`text-[10px] font-bold shrink-0 ${
-                          chat.unreadCount > 0 ? "text-[#2AC1BC]" : "text-zinc-400"
-                        }`}
+                        className={`text-[10px] font-bold shrink-0 ${chat.unreadCount > 0 ? "text-[#2AC1BC]" : "text-zinc-400"
+                          }`}
                       >
                         {chat.lastMessage
                           ? formatConversationTime(chat.lastMessage.sentAt)
@@ -711,11 +781,10 @@ function MessagesContent() {
 
                     <div className="flex items-center justify-between gap-2">
                       <p
-                        className={`text-xs truncate ${
-                          chat.unreadCount > 0
+                        className={`text-xs truncate ${chat.unreadCount > 0
                             ? "font-extrabold text-zinc-900"
                             : "font-medium text-zinc-500"
-                        }`}
+                          }`}
                       >
                         {chat.lastMessage?.content || t("landlordMessagesNoMessageYet")}
                       </p>
@@ -735,9 +804,8 @@ function MessagesContent() {
 
       {/* PANE 2: Center Main Chat Stream */}
       <div
-        className={`flex-1 flex-col min-w-0 bg-white ${
-          mobileShowChat ? "flex" : "hidden lg:flex"
-        }`}
+        className={`flex-1 flex-col min-w-0 bg-white ${mobileShowChat ? "flex" : "hidden lg:flex"
+          }`}
       >
         {activeChat ? (
           <>
@@ -746,7 +814,12 @@ function MessagesContent() {
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {/* Mobile Back Button */}
                 <button
-                  onClick={() => setMobileShowChat(false)}
+                  onClick={() => {
+                    activeChatRef.current = null;
+                    setActiveChat(null);
+                    setMobileShowChat(false);
+                    router.replace("/landlord/messages", { scroll: false });
+                  }}
                   className="lg:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
                   title={t("landlordMessagesTooltipBackToList")}
                 >
@@ -809,11 +882,10 @@ function MessagesContent() {
                 )}
                 <button
                   onClick={() => setShowRightDrawer(!showRightDrawer)}
-                  className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
-                    showRightDrawer
+                  className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${showRightDrawer
                       ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
                       : "hover:bg-zinc-100 text-zinc-600"
-                  }`}
+                    }`}
                   title={t("landlordMessagesTooltipInfo")}
                 >
                   <Info className="w-4.5 h-4.5" />
@@ -867,11 +939,10 @@ function MessagesContent() {
                       className={`flex flex-col ${isMe ? "items-end" : "items-start"} space-y-1`}
                     >
                       <div
-                        className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${
-                          isMe
+                        className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${isMe
                             ? "bg-[#2AC1BC] text-white rounded-br-xs font-medium"
                             : "bg-white border border-zinc-200/80 text-zinc-900 rounded-bl-xs font-medium"
-                        }`}
+                          }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
 
@@ -900,11 +971,10 @@ function MessagesContent() {
                                   href={att.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold transition-colors ${
-                                    isMe
+                                  className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold transition-colors ${isMe
                                       ? "bg-white/20 text-white hover:bg-white/30"
                                       : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200"
-                                  }`}
+                                    }`}
                                 >
 
                                   <File className="w-4 h-4 shrink-0" />
@@ -920,17 +990,15 @@ function MessagesContent() {
                       </div>
 
                       <div
-                        className={`flex items-center gap-1 text-[10px] font-bold ${
-                          isMe ? "text-zinc-400" : "text-zinc-400"
-                        }`}
+                        className={`flex items-center gap-1 text-[10px] font-bold ${isMe ? "text-zinc-400" : "text-zinc-400"
+                          }`}
                       >
                         <span>{formatMessageTime(msg.sentAt)}</span>
                         {isMe && (
                           <span title={msg.readAt ? t("landlordMessagesStatusSeen") : t("landlordMessagesStatusSent")}>
                             <CheckCheck
-                              className={`w-3 h-3 ${
-                                msg.readAt ? "text-[#2AC1BC]" : "text-zinc-300"
-                              }`}
+                              className={`w-3 h-3 ${msg.readAt ? "text-[#2AC1BC]" : "text-zinc-300"
+                                }`}
                             />
                           </span>
                         )}
@@ -1068,20 +1136,10 @@ function MessagesContent() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400 space-y-3">
-            <MessageSquare className="w-12 h-12 text-zinc-300 stroke-1" />
-            <h3 className="font-extrabold text-sm text-zinc-700">{t("landlordMessagesNoChatSelectedTitle")}</h3>
-            <p className="text-xs max-w-sm">
-              {t("landlordMessagesNoChatSelectedDesc")}
+          <div className="flex-1 flex items-center justify-center p-8 text-center">
+            <p className="text-sm font-medium text-zinc-400">
+              {t("landlordMessagesSelectPrompt")}
             </p>
-            {contacts.length > 0 && (
-              <button
-                onClick={() => setShowNewChatModal(true)}
-                className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-bold rounded-xl text-xs transition-all cursor-pointer shadow-xs"
-              >
-                {t("landlordMessagesBtnStartChatAction")}
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -1141,7 +1199,7 @@ function MessagesContent() {
                   {activeChat.participant.roomName || t("landlordMessagesNoRoom")}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100">
-                    {activeChat.participant.boardingHouseName || activeBuilding?.name || t("landlordMessagesDefaultBuilding")}
+                  {activeChat.participant.boardingHouseName || activeBuilding?.name || t("landlordMessagesDefaultBuilding")}
                 </span>
               </div>
 

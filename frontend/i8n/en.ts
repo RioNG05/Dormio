@@ -2174,6 +2174,7 @@ const en = {
     landlordMessagesTooltipAttachFile: "Attach file",
     landlordMessagesTooltipSendImage: "Send image",
     landlordMessagesComposePlaceholder: "Compose message to {name}...",
+    landlordMessagesSelectPrompt: "Select a conversation to view messages",
     landlordMessagesNoChatSelectedTitle: "No conversation selected",
     landlordMessagesNoChatSelectedDesc: "Select a conversation from the left list or click " + " to start chatting with tenants.",
     landlordMessagesBtnStartChatAction: "Start chatting",

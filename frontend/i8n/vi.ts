@@ -2174,6 +2174,7 @@ const vi = {
     landlordMessagesTooltipAttachFile: "Đính kèm tệp",
     landlordMessagesTooltipSendImage: "Gửi hình ảnh",
     landlordMessagesComposePlaceholder: "Soạn tin nhắn gửi đến {name}...",
+    landlordMessagesSelectPrompt: "Lựa chọn cuộc trò chuyện để xem tin nhắn",
     landlordMessagesNoChatSelectedTitle: "Chưa chọn cuộc trò chuyện",
     landlordMessagesNoChatSelectedDesc: "Chọn một cuộc hội thoại từ danh sách bên trái hoặc nhấn nút " + " để bắt đầu nhắn tin với khách thuê.",
     landlordMessagesBtnStartChatAction: "Bắt đầu trò chuyện",
