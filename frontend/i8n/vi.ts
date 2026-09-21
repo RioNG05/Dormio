@@ -1394,6 +1394,7 @@ const vi = {
     landlordCustomersWorkplacePlaceholder: "VD: Công ty FPT, Đại học SPKT...",
     landlordCustomersWorkplaceUpper: "NƠI LÀM VIỆC / TRƯỜNG HỌC",
     landlordCustomersZaloBtn: "Zalo",
+    landlordCustomersMessageBtn: "Nhắn tin",
     landlordCustomersAlertDefaultTitle: "Thông báo",
     landlordCustomersAlertMissingInfo: "Thiếu thông tin",
     landlordCustomersAlertMissingName: "Vui lòng nhập Họ và tên khách thuê!",

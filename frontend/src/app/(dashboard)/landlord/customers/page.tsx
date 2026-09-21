@@ -16,6 +16,7 @@ import {
     Info,
     FileSpreadsheet,
     PhoneCall,
+    Phone,
     MessageCircle,
     Eye,
     AlertTriangle,
@@ -25,7 +26,7 @@ import { Customer } from "./data";
 import { getLandlordContracts } from "@/services/contract.service";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "@/context/LanguageContext";
-import { Button, TextInput, SelectInput } from "@/components/ui";
+import { Button, TextInput, SelectInput, NumberInput } from "@/components/ui";
 
 export default function CustomersPage() {
     const { activeBuilding } = useAuth();
@@ -85,6 +86,29 @@ export default function CustomersPage() {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    const handleOpenChat = (cust: Customer) => {
+        const targetUserId = cust.userId || (cust.id && !cust.id.startsWith("cust_") ? cust.id : "");
+        if (!targetUserId && !cust.hasAccount) {
+            showAlert(
+                `Khách thuê ${cust.name} chưa có tài khoản trên hệ thống Dormio để nhắn tin trực tiếp. Vui lòng liên hệ qua số điện thoại ${cust.phone !== "—" ? cust.phone : "đã lưu"}.`,
+                "info",
+                "Chưa có tài khoản liên kết"
+            );
+            return;
+        }
+        const query = new URLSearchParams();
+        if (targetUserId) {
+            query.set("userId", targetUserId);
+        }
+        if (cust.name) {
+            query.set("tenant", cust.name);
+        }
+        if (cust.room && cust.room !== "—") {
+            query.set("room", cust.room);
+        }
+        router.push(`/landlord/messages?${query.toString()}`);
+    };
+
     // Load real customers from active property contracts
     useEffect(() => {
         async function loadCustomers() {
@@ -102,8 +126,7 @@ export default function CustomersPage() {
                 setIsLoading(true);
                 const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
                 const list = res?.data || [];
-                const mapped: Customer[] = list.flatMap((c: any) => {
-                    const tContracts = c.tenantContracts || [];
+                const mapped: Customer[] = list.flatMap((c: any): Customer[] => {
                     const daysRemaining = c.endDate
                         ? Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
                         : undefined;
@@ -113,9 +136,19 @@ export default function CustomersPage() {
                             ? "Sắp hết hợp đồng"
                             : "Đã rời";
 
-                    if (tContracts.length === 0) {
+                    const tContracts = c.tenantContracts && c.tenantContracts.length > 0 ? c.tenantContracts : [];
+                    let tenantsToMap: any[] = [];
+
+                    if (tContracts.length > 0) {
+                        tenantsToMap = tContracts.map((tc: any) => tc.tenant).filter(Boolean);
+                    } else if (c.tenant) {
+                        tenantsToMap = [c.tenant];
+                    }
+
+                    if (tenantsToMap.length === 0) {
                         return [{
                             id: `cust_${c.id}`,
+                            contractId: c.id,
                             name: t("landlordCustomersDefaultName"),
                             phone: "—",
                             room: c.room?.roomNumber || "—",
@@ -128,12 +161,25 @@ export default function CustomersPage() {
                             hasAccount: false,
                         }];
                     }
-                    return tContracts.map((tc: any) => {
-                        const tenantUser = tc.tenant;
+
+                    return tenantsToMap.map((tenantUser: any) => {
                         const ident = tenantUser?.userIdentification;
+                        let formattedAddress = "";
+                        if (ident?.placeOfResidence) {
+                            if (typeof ident.placeOfResidence === "string") {
+                                formattedAddress = ident.placeOfResidence;
+                            } else if (typeof ident.placeOfResidence === "object") {
+                                formattedAddress = Object.values(ident.placeOfResidence).filter(Boolean).join(", ");
+                            }
+                        } else if (ident?.permanentAddress) {
+                            formattedAddress = ident.permanentAddress;
+                        }
+
                         return {
                             id: tenantUser?.id || `cust_${c.id}`,
-                            name: ident?.fullName || tenantUser?.username || t("landlordCustomersDefaultName"),
+                            userId: tenantUser?.id,
+                            contractId: c.id,
+                            name: ident?.fullName || tenantUser?.fullName || tenantUser?.username || t("landlordCustomersDefaultName"),
                             phone: tenantUser?.phoneNumber || "—",
                             room: c.room?.roomNumber || "—",
                             building: activeBuilding.id,
@@ -145,7 +191,9 @@ export default function CustomersPage() {
                             email: tenantUser?.email || undefined,
                             dob: ident?.dateOfBirth ? new Date(ident.dateOfBirth).toLocaleDateString("vi-VN") : undefined,
                             gender: ident?.gender || "nam",
-                            address: ident?.permanentAddress || undefined,
+                            address: formattedAddress || undefined,
+                            cardFrontUrl: ident?.cardFrontUrl,
+                            cardBackUrl: ident?.cardBackUrl,
                             hasAccount: !!tenantUser?.id,
                         };
                     });
@@ -437,10 +485,13 @@ export default function CustomersPage() {
                                             {customer.name.charAt(0)}
                                         </div>
                                         <div className="min-w-0">
-                                            <Link href={`/landlord/customers/${customer.id}`} className="font-bold text-zinc-900 text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block">
+                                            <Link href={`/landlord/customers/${customer.contractId || customer.id}`} className="font-bold text-zinc-900 text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block">
                                                 {customer.name}
                                             </Link>
-                                            <p className="text-xs text-zinc-500 font-medium truncate">{t("landlordCustomersIdCardHeader")}: {customer.cccd}</p>
+                                            <p className="text-xs text-zinc-600 font-semibold truncate flex items-center gap-1.5 mt-0.5">
+                                                <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                                <span>{customer.phone || "—"}</span>
+                                            </p>
                                         </div>
                                     </div>
                                     <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
@@ -483,17 +534,18 @@ export default function CustomersPage() {
                                     >
                                         <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
                                     </a>
-                                    <a
-                                        href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="py-1.5 bg-[#0068FF] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenChat(customer);
+                                        }}
+                                        className="py-1.5 bg-[#2AC1BC] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#25ad87] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
                                     >
-                                        <MessageCircle className="w-3 h-3" /> {t("landlordCustomersZaloBtn")}
-                                    </a>
+                                        <MessageCircle className="w-3 h-3" /> {t("landlordCustomersMessageBtn")}
+                                    </button>
                                     <Link
-                                        href={`/landlord/customers/${customer.id}`}
+                                        href={`/landlord/customers/${customer.contractId || customer.id}`}
                                         className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                                     >
                                         <Eye className="w-3 h-3" /> {t("landlordCustomersViewBtn")}
@@ -511,7 +563,6 @@ export default function CustomersPage() {
                                 <tr>
                                     <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCustomerName")}</th>
                                     <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersPhone")}</th>
-                                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersIdCardHeader")}</th>
                                     <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersBuilding")}</th>
                                     <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCurrentRoom")}</th>
                                     <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersStatus")}</th>
@@ -521,7 +572,7 @@ export default function CustomersPage() {
                             <tbody className="divide-y divide-zinc-100">
                                 {sortedCustomers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
                                             {isLoading ? (
                                                 <div className="flex items-center justify-center gap-2">
                                                     <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
@@ -541,7 +592,7 @@ export default function CustomersPage() {
                                         <tr
                                             key={customer.id}
                                             className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
-                                            onClick={() => router.push(`/landlord/customers/${customer.id}`)}
+                                            onClick={() => router.push(`/landlord/customers/${customer.contractId || customer.id}`)}
                                         >
                                             <td className="px-6 py-3.5 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
@@ -551,16 +602,15 @@ export default function CustomersPage() {
                                                     <span className="font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">{customer.name}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.phone}</td>
-                                            <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.cccd}</td>
+                                            <td className="px-6 py-3.5 font-bold text-zinc-800 whitespace-nowrap">{customer.phone}</td>
                                             <td className="px-6 py-3.5 font-medium text-zinc-700 capitalize whitespace-nowrap">{activeBuilding?.name || t("landlordCustomersBuildingFallback")}</td>
                                             <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.status === 'Đã rời' ? "—" : customer.room}</td>
                                             <td className="px-6 py-3.5 whitespace-nowrap">
                                                 <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
                                                     ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
                                                     : customer.status === 'Sắp hết hợp đồng'
-                                                        ? 'bg-orange-50 text-orange-700 border-orange-200 animate-pulse'
-                                                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                                                        ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
+                                                        : 'bg-blue-50 text-blue-700 border border-blue-200'
                                                     }`}>
                                                     {getCustomerStatusLabel(customer.status)}
                                                 </span>
@@ -574,17 +624,16 @@ export default function CustomersPage() {
                                                     >
                                                         <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
                                                     </a>
-                                                    <a
-                                                        href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        title={t("landlordCustomersMessageZalo")}
-                                                        className="px-2.5 py-1 bg-[#0068FF] text-white rounded-lg text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs flex items-center gap-1"
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenChat(customer)}
+                                                        title={t("landlordCustomersMessageBtn")}
+                                                        className="px-2.5 py-1 bg-[#2AC1BC] text-white rounded-lg text-xs font-bold hover:bg-[#25ad87] transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
                                                     >
-                                                        <MessageCircle className="w-3 h-3" /> {t("landlordCustomersZaloBtn")}
-                                                    </a>
+                                                        <MessageCircle className="w-3 h-3" /> {t("landlordCustomersMessageBtn")}
+                                                    </button>
                                                     <Link
-                                                        href={`/landlord/customers/${customer.id}`}
+                                                        href={`/landlord/customers/${customer.contractId || customer.id}`}
                                                         className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
                                                     >
                                                         <Eye className="w-3 h-3" /> {t("landlordCustomersViewBtn")}
@@ -605,8 +654,7 @@ export default function CustomersPage() {
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                     <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
                         <span>{t("landlordCustomersPaginationShowing")}</span>
-                        <input
-                            type="number"
+                        <NumberInput
                             min={1}
                             max={500}
                             value={itemsPerPage || ""}
@@ -615,7 +663,8 @@ export default function CustomersPage() {
                                 setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
                                 setCurrentPage(1);
                             }}
-                            className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                            containerClassName="w-14 space-y-0"
+                            className="text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 text-xs h-7"
                         />
                         <span>{t("landlordCustomersPaginationPerPage")}</span>
                     </div>

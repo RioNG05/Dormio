@@ -280,40 +280,49 @@ function MessagesContent() {
     if (!isMounted || isLoadingConversations) return;
 
     async function handleUrlParams() {
-      // Match from existing conversations
-      let match = conversations.find((c) => {
-        if (urlUserId && (c.participant.id === urlUserId)) return true;
-        if (urlRoom && (c.participant.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
-          c.participant.roomName?.replace("Phòng ", "") === urlRoom)) return true;
-        if (urlTenant && c.participant.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
-        return false;
-      });
+      let match: ConversationItem | undefined = undefined;
 
-      // If not in existing conversations, search contacts or create conversation
-      if (!match) {
-        let targetContact = contacts.find((ct) => {
-          if (urlUserId && ct.id === urlUserId) return true;
-          if (urlRoom && (ct.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
-            ct.roomName?.replace("Phòng ", "") === urlRoom)) return true;
-          if (urlTenant && ct.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
+      // 1. If urlUserId is provided, find or create conversation for this exact user
+      if (urlUserId) {
+        match = conversations.find((c) => c.participant.id === urlUserId);
+        if (!match) {
+          try {
+            const newConv = await getOrCreateConversation(urlUserId);
+            if (newConv) {
+              setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== newConv.id)]);
+              match = newConv;
+            }
+          } catch (e) {
+            console.error("Failed to get/create conversation with userId:", e);
+          }
+        }
+      } else if (urlRoom || urlTenant) {
+        // 2. Fallback to matching by room or tenant name if urlUserId not provided
+        match = conversations.find((c) => {
+          if (urlRoom && (c.participant.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
+            c.participant.roomName?.replace("Phòng ", "") === urlRoom)) return true;
+          if (urlTenant && c.participant.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
           return false;
         });
 
-        if (targetContact) {
-          try {
-            const newConv = await getOrCreateConversation(targetContact.id);
-            setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== newConv.id)]);
-            match = newConv;
-          } catch (e) {
-            console.error("Failed to auto-create conversation from contact:", e);
-          }
-        } else if (urlUserId) {
-          try {
-            const newConv = await getOrCreateConversation(urlUserId);
-            setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== newConv.id)]);
-            match = newConv;
-          } catch (e) {
-            console.error("Failed to auto-create conversation from userId:", e);
+        if (!match) {
+          const targetContact = contacts.find((ct) => {
+            if (urlRoom && (ct.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
+              ct.roomName?.replace("Phòng ", "") === urlRoom)) return true;
+            if (urlTenant && ct.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
+            return false;
+          });
+
+          if (targetContact) {
+            try {
+              const newConv = await getOrCreateConversation(targetContact.id);
+              if (newConv) {
+                setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== newConv.id)]);
+                match = newConv;
+              }
+            } catch (e) {
+              console.error("Failed to auto-create conversation from contact:", e);
+            }
           }
         }
       }

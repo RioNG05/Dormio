@@ -18,6 +18,15 @@ export interface Customer {
   note?: string;
   hasAccount?: boolean;
   accountEmail?: string;
+  contractId?: string;
+  userId?: string;
+  roomId?: string;
+  floor?: number;
+  rentPrice?: number;
+  depositAmount?: number;
+  cardFrontUrl?: string;
+  cardBackUrl?: string;
+  recentInvoices?: any[];
   createdAt?: string;
   updatedAt?: string;
 }

@@ -656,8 +656,23 @@ export class ContractsService {
                   'Khách thuê',
                 phoneNumber: primaryTenant.phoneNumber,
                 email: primaryTenant.email,
+                userIdentification: primaryTenant.userIdentification,
               }
             : null,
+          tenantContracts: c.tenantContracts.map((tc) => ({
+            id: tc.id,
+            isPrimary: tc.isPrimary,
+            tenant: {
+              id: tc.tenant.id,
+              fullName:
+                tc.tenant.userIdentification?.fullName ||
+                tc.tenant.username ||
+                'Khách thuê',
+              phoneNumber: tc.tenant.phoneNumber,
+              email: tc.tenant.email,
+              userIdentification: tc.tenant.userIdentification,
+            },
+          })),
           documentsCount: c.contractDocuments.length,
           createdAt: c.createdAt,
         };
@@ -751,6 +766,20 @@ export class ContractsService {
             userIdentification: primaryTenant.userIdentification,
           }
         : null,
+      tenantContracts: contract.tenantContracts.map((tc) => ({
+        id: tc.id,
+        isPrimary: tc.isPrimary,
+        tenant: {
+          id: tc.tenant.id,
+          fullName:
+            tc.tenant.userIdentification?.fullName ||
+            tc.tenant.username ||
+            'Khách thuê',
+          phoneNumber: tc.tenant.phoneNumber,
+          email: tc.tenant.email,
+          userIdentification: tc.tenant.userIdentification,
+        },
+      })),
       deposit: contract.deposit
         ? {
             id: contract.deposit.id,

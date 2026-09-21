@@ -1394,6 +1394,7 @@ const en = {
     landlordCustomersWorkplacePlaceholder: "e.g. FPT Software, Tech University...",
     landlordCustomersWorkplaceUpper: "WORKPLACE / SCHOOL",
     landlordCustomersZaloBtn: "Zalo",
+    landlordCustomersMessageBtn: "Message",
     landlordCustomersAlertDefaultTitle: "Notification",
     landlordCustomersAlertMissingInfo: "Missing Information",
     landlordCustomersAlertMissingName: "Please enter the tenant full name!",
