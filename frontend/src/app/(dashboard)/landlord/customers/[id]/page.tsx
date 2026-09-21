@@ -12,6 +12,13 @@ import { getCustomerById, Customer } from "../data";
 import { getLandlordContracts } from "@/services/contract.service";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import {
+  Button,
+  TextInput,
+  DateInput,
+  SelectInput,
+  TextareaInput,
+} from "@/components/ui";
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -226,13 +233,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           >
             {t("landlordCustomersZaloBtn")}
           </a>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setIsEditModalOpen(true)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 sm:flex-initial gap-1.5 text-zinc-700 bg-white border-zinc-200 hover:bg-zinc-50 whitespace-nowrap"
           >
             <Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordCustomersEditInfo")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => {
               setConfirmModal({
                 isOpen: true,
@@ -244,10 +255,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 }
               });
             }}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 sm:flex-initial gap-1.5 text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 shadow-none whitespace-nowrap"
           >
             <Trash2 className="w-3.5 h-3.5" /> {t("landlordCustomersDeleteBtn")}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -491,120 +502,99 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="p-6 overflow-y-auto max-h-[75vh] space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersFullNameLabel")} *</label>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
-                  />
-                </div>
+                <TextInput
+                  label={t("landlordCustomersFullNameLabel")}
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                />
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersPhoneLabel")} *</label>
-                  <input
-                    type="text"
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
-                  />
-                </div>
+                <TextInput
+                  label={t("landlordCustomersPhoneLabel")}
+                  required
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                />
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersCccdLabel")} *</label>
-                  <input
-                    type="text"
-                    value={editCccd}
-                    onChange={(e) => setEditCccd(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-[#2AC1BC]"
-                  />
-                </div>
+                <TextInput
+                  label={t("landlordCustomersCccdLabel")}
+                  required
+                  value={editCccd}
+                  onChange={(e) => setEditCccd(e.target.value)}
+                  className="font-bold text-[#2AC1BC]"
+                />
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersDobLabel")}</label>
-                  <input
-                    type="date"
-                    value={editDob}
-                    onChange={(e) => setEditDob(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                  />
-                </div>
+                <DateInput
+                  label={t("landlordCustomersDobLabel")}
+                  value={editDob}
+                  onChange={(e) => setEditDob(e.target.value)}
+                />
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersGenderLabel")}</label>
-                  <select
-                    value={editGender}
-                    onChange={(e) => setEditGender(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                  >
-                    <option value="nam">{t("landlordCustomersGenderMale")}</option>
-                    <option value="nu">{t("landlordCustomersGenderFemale")}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t("landlordCustomersGenderLabel")}
+                  value={editGender}
+                  onChange={(e) => setEditGender(e.target.value)}
+                  options={[
+                    { value: "nam", label: t("landlordCustomersGenderMale") },
+                    { value: "nu", label: t("landlordCustomersGenderFemale") },
+                  ]}
+                />
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersEmailLabel")}</label>
-                  <input
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                  />
-                </div>
+                <TextInput
+                  label={t("landlordCustomersEmailLabel")}
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                />
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersPermanentAddressLabel")}</label>
-                  <input
-                    type="text"
+                  <TextInput
+                    label={t("landlordCustomersPermanentAddressLabel")}
                     value={editAddress}
                     onChange={(e) => setEditAddress(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersJobLabel")}</label>
-                  <input
-                    type="text"
-                    value={editJob}
-                    onChange={(e) => setEditJob(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                  />
-                </div>
+                <TextInput
+                  label={t("landlordCustomersJobLabel")}
+                  value={editJob}
+                  onChange={(e) => setEditJob(e.target.value)}
+                />
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersWorkplaceLabel")}</label>
-                  <input
-                    type="text"
-                    value={editWorkplace}
-                    onChange={(e) => setEditWorkplace(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                  />
-                </div>
+                <TextInput
+                  label={t("landlordCustomersWorkplaceLabel")}
+                  value={editWorkplace}
+                  onChange={(e) => setEditWorkplace(e.target.value)}
+                />
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">{t("landlordCustomersNotesLabel")}</label>
-                  <textarea
+                  <TextareaInput
+                    label={t("landlordCustomersNotesLabel")}
                     rows={3}
                     value={editNote}
                     onChange={(e) => setEditNote(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                  ></textarea>
+                  />
                 </div>
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border-zinc-200 rounded-xl hover:bg-zinc-50"
+              >
                 {t("landlordCustomersCancelBtn")}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleSaveCustomer}
-                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20"
               >
                 {t("landlordCustomersSaveChangesBtn")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -637,12 +627,22 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             </div>
             <p className="text-xs text-zinc-500 font-medium">{confirmModal.message}</p>
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl"
+              >
                 {t("landlordCustomersCancelBtn")}
-              </button>
-              <button onClick={confirmModal.onConfirm} className="px-5 py-2 text-xs font-black text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs">
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={confirmModal.onConfirm}
+                className="px-5 py-2 text-xs font-black text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs"
+              >
                 {t("landlordCustomersConfirmDeleteBtn")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

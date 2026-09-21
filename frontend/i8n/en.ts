@@ -1412,6 +1412,7 @@ const en = {
     landlordCustomersPageHeading: "Tenant Management",
     landlordCustomersPageSubheading: "Tenant list by building, room, and account link status",
     landlordCustomersBtnAdd: "Add Tenant",
+    landlordCustomersBtnAddContract: "Add Contract",
     landlordCustomersStatTotalShort: "Total Tenants",
     landlordCustomersStatStayingShort: "Staying",
     landlordCustomersStatExpiringShort: "Expiring soon",

@@ -1412,6 +1412,7 @@ const vi = {
     landlordCustomersPageHeading: "Quản lý khách thuê",
     landlordCustomersPageSubheading: "Danh sách khách thuê theo tòa nhà, phòng và trạng thái liên kết",
     landlordCustomersBtnAdd: "Thêm khách thuê",
+    landlordCustomersBtnAddContract: "Thêm hợp đồng",
     landlordCustomersStatTotalShort: "Tổng khách",
     landlordCustomersStatStayingShort: "Đang ở",
     landlordCustomersStatExpiringShort: "Sắp hết HĐ",
