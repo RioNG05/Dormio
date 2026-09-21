@@ -10,6 +10,7 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
+import { uploadImageToBackend } from '@/services/upload.service';
 
 interface CoverPhotoUploadProps {
   value?: string;
@@ -33,10 +34,6 @@ export function CoverPhotoUpload({
   const [fileSize, setFileSize] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-  const hasCloudinary = Boolean(cloudName && uploadPreset);
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
@@ -67,40 +64,28 @@ export function CoverPhotoUpload({
     setFileSize(formatBytes(file.size));
     onFileChange?.(file);
 
-    // If Cloudinary is configured, upload to Cloudinary
-    if (hasCloudinary) {
-      setIsUploading(true);
+    // Convert file to base64 data URL and delegate upload to backend
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', uploadPreset!);
-
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error('Lỗi khi tải ảnh lên máy chủ');
-        }
-
-        const data = await res.json();
-        if (data.secure_url) {
-          onChange(data.secure_url);
+        const base64Data = reader.result as string;
+        const result = await uploadImageToBackend(base64Data, 'dormio/buildings');
+        if (result?.url) {
+          onChange(result.url);
         }
       } catch (err: any) {
-        console.error('Cloudinary upload error:', err);
-        setErrorMessage('Không thể tải ảnh lên đám mây. Đang sử dụng bản xem trước.');
+        console.error('Backend upload error:', err);
+        setErrorMessage('Không thể tải ảnh lên máy chủ. Đang sử dụng bản xem trước.');
       } finally {
         setIsUploading(false);
       }
-    } else {
-      // No cloud storage configured: keep local preview, don't pass fake URL to prevent @IsUrl failure
-      onChange('');
-    }
+    };
+    reader.onerror = () => {
+      setIsUploading(false);
+      setErrorMessage('Lỗi khi đọc tệp ảnh.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
