@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: tNav("assets"), href: "/landlord/assets", icon: Package },
                 { name: tNav("services"), href: "/landlord/services", icon: Wrench },
                 { name: tNav("messages"), href: "/landlord/messages", icon: MessageCircle },
-                { name: tNav("reminders"), href: "/landlord/notifications", icon: Bell },
+                { name: tNav("notification"), href: "/landlord/notifications", icon: Bell },
             ]
         },
         {

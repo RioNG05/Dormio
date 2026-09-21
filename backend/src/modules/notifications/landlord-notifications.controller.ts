@@ -56,14 +56,15 @@ export class LandlordNotificationsController {
     description:
       'Creates a broadcast announcement for all residents in the specified boarding house. ' +
       'Stores a Notification record with receiverId = NULL (broadcast convention) ' +
-      'and triggers async multi-channel dispatch via BullMQ job queue.',
+      'and triggers async multi-channel dispatch via BullMQ job queue. ' +
+      'Requires Plus subscription tier or higher.',
   })
   @ApiCreatedResponse({
     description: 'Broadcast announcement successfully published',
     type: LandlordAnnouncementItemDto,
   })
   @ApiForbiddenResponse({
-    description: 'Landlord does not own this boarding house',
+    description: 'Forbidden - Landlord does not own this boarding house or requires Plus subscription tier or higher',
   })
   async broadcast(
     @Headers('x-boarding-house-id') boardingHouseId: string,

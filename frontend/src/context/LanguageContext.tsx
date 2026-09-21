@@ -48,6 +48,7 @@ const legacyNamespaceMap: Record<string, ValidNamespace> = {
   deposits: "landlord",
   debts: "landlord",
   reminders: "landlord",
+  notification: "landlord",
   listings: "landlord",
   workforce: "landlord",
   operations: "landlord",

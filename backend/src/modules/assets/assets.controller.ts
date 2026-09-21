@@ -19,8 +19,6 @@ import {
   ApiOperation,
   ApiOkResponse,
   ApiCreatedResponse,
-  ApiBearerAuth,
-  ApiHeader,
   ApiResponse,
 } from '@nestjs/swagger';
 import { AssetsService } from './assets.service';
@@ -35,12 +33,14 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RequireTier } from '../../common/decorators/require-tier.decorator';
+import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
 import { SubscriptionPackage } from '@prisma';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
 
 @ApiTags('Landlord Assets')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@ApiAuth()
+@ApiBoardingHouseHeader()
+@UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 @RequireTier(SubscriptionPackage.plus)
 @Controller('landlord/assets')
 export class AssetsController {
@@ -51,17 +51,12 @@ export class AssetsController {
   // ─── POST /api/v1/landlord/assets ─────────────────────────────────────────
 
   @Post()
-  @UseGuards(PropertyOwnershipGuard)
-  @ApiHeader({
-    name: 'X-Boarding-House-Id',
-    required: true,
-    description: 'Active Boarding House UUID context',
-  })
+  @RequireTier(SubscriptionPackage.plus)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create Asset (UC-L-25)',
     description:
-      'Creates a new asset record (room-linked or common area) for the active boarding house.',
+      'Creates a new asset record (room-linked or common area) for the active boarding house. Requires Plus subscription tier or higher.',
   })
   @ApiCreatedResponse({
     description: 'Asset record created successfully',
@@ -69,7 +64,7 @@ export class AssetsController {
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
-    description: 'User is not authorized for this boarding house or tier limit reached',
+    description: 'Requires Plus subscription tier or landlord does not own this boarding house',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -94,17 +89,12 @@ export class AssetsController {
   // ─── GET /api/v1/landlord/assets ──────────────────────────────────────────
 
   @Get()
-  @UseGuards(PropertyOwnershipGuard)
-  @ApiHeader({
-    name: 'X-Boarding-House-Id',
-    required: true,
-    description: 'Active Boarding House UUID context',
-  })
+  @RequireTier(SubscriptionPackage.plus)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'List Assets (UC-L-25)',
     description:
-      'Retrieves paginated assets for the active boarding house context with category, condition, roomId, and search filters alongside summary counts.',
+      'Retrieves paginated assets for the active boarding house context with category, condition, roomId, and search filters alongside summary counts. Requires Plus subscription tier or higher.',
   })
   @ApiOkResponse({
     description: 'Assets list retrieved successfully',
@@ -112,7 +102,7 @@ export class AssetsController {
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
-    description: 'User is not authorized for this boarding house',
+    description: 'Requires Plus subscription tier or landlord does not own this boarding house',
   })
   async getAssets(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -128,20 +118,20 @@ export class AssetsController {
   // ─── GET /api/v1/landlord/assets/:id ──────────────────────────────────────
 
   @Get(':id')
-  @UseGuards(PropertyOwnershipGuard)
-  @ApiHeader({
-    name: 'X-Boarding-House-Id',
-    required: true,
-    description: 'Active Boarding House UUID context',
-  })
+  @RequireTier(SubscriptionPackage.plus)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Get Asset Detail (UC-L-25)',
-    description: 'Retrieves details of a specific asset by UUID.',
+    description:
+      'Retrieves details of a specific asset by UUID. Requires Plus subscription tier or higher.',
   })
   @ApiOkResponse({
     description: 'Asset details retrieved successfully',
     type: AssetItemDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires Plus subscription tier or landlord does not own this boarding house',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -162,21 +152,20 @@ export class AssetsController {
   // ─── PATCH /api/v1/landlord/assets/:id ────────────────────────────────────
 
   @Patch(':id')
-  @UseGuards(PropertyOwnershipGuard)
-  @ApiHeader({
-    name: 'X-Boarding-House-Id',
-    required: true,
-    description: 'Active Boarding House UUID context',
-  })
+  @RequireTier(SubscriptionPackage.plus)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Update Asset (UC-L-25)',
     description:
-      'Updates asset information, room reassignment, condition status, or warranty notes.',
+      'Updates asset information, room reassignment, condition status, or warranty notes. Requires Plus subscription tier or higher.',
   })
   @ApiOkResponse({
     description: 'Asset updated successfully',
     type: AssetItemDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires Plus subscription tier or landlord does not own this boarding house',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -207,16 +196,12 @@ export class AssetsController {
   // ─── DELETE /api/v1/landlord/assets/:id ───────────────────────────────────
 
   @Delete(':id')
-  @UseGuards(PropertyOwnershipGuard)
-  @ApiHeader({
-    name: 'X-Boarding-House-Id',
-    required: true,
-    description: 'Active Boarding House UUID context',
-  })
+  @RequireTier(SubscriptionPackage.plus)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Delete Asset (UC-L-25)',
-    description: 'Deletes an asset record permanently and records an AuditLog.',
+    description:
+      'Deletes an asset record permanently and records an AuditLog. Requires Plus subscription tier or higher.',
   })
   @ApiOkResponse({
     description: 'Asset deleted successfully',
@@ -227,6 +212,10 @@ export class AssetsController {
         message: { type: 'string', example: 'Đã xóa tài sản thành công.' },
       },
     },
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires Plus subscription tier or landlord does not own this boarding house',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,

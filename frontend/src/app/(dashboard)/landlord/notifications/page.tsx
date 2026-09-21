@@ -48,7 +48,6 @@ export default function NotificationsPage() {
 
     // Modals & Forms State
     const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
-    const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
     const [selectedNotifDetail, setSelectedNotifDetail] = useState<LandlordAnnouncementItem | null>(null);
     const [deletingNotifId, setDeletingNotifId] = useState<string | null>(null);
 
@@ -78,18 +77,7 @@ export default function NotificationsPage() {
         }
     }, [activeBuilding?.name]);
 
-    // Check if form has unsaved modifications
-    const isFormDirty = useMemo(() => {
-        return Boolean(
-            notifTitle.trim() ||
-            notifContent.trim() ||
-            notifCategory !== "Điện nước" ||
-            notifChannel !== "Thông báo hệ thống" ||
-            (notifTargetScope.trim() && notifTargetScope !== (activeBuilding?.name || ""))
-        );
-    }, [notifTitle, notifContent, notifCategory, notifChannel, notifTargetScope, activeBuilding?.name]);
-
-    // Reset draft fields completely (Rule #10)
+    // Reset draft fields completely
     const resetNotifForm = useCallback(() => {
         setNotifTitle("");
         setNotifContent("");
@@ -98,19 +86,9 @@ export default function NotificationsPage() {
         setNotifChannel("Thông báo hệ thống");
     }, [activeBuilding?.name]);
 
-    // Handle modal exit with unsaved changes prompt (Rule #10)
+    // Directly close modal and reset form
     const requestCloseNotifModal = useCallback(() => {
-        if (isFormDirty) {
-            setIsDiscardConfirmOpen(true);
-        } else {
-            resetNotifForm();
-            setIsNotifModalOpen(false);
-        }
-    }, [isFormDirty, resetNotifForm]);
-
-    const confirmDiscardChanges = useCallback(() => {
         resetNotifForm();
-        setIsDiscardConfirmOpen(false);
         setIsNotifModalOpen(false);
     }, [resetNotifForm]);
 
@@ -942,49 +920,6 @@ export default function NotificationsPage() {
                 </div>
             )}
 
-            {/* 6. MODAL: Confirm Discard Modal (Rule #10) */}
-            {isDiscardConfirmOpen && (
-                <div
-                    className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-                    onMouseDown={(e) => {
-                        if (e.target === e.currentTarget) setIsDiscardConfirmOpen(false);
-                    }}
-                >
-                    <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-                        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
-                            <AlertCircle className="w-7 h-7" />
-                        </div>
-
-                        <div className="space-y-2">
-                            <h3 className="text-xl font-black text-zinc-900 tracking-tight">
-                                {isEn ? "Discard Draft Notice?" : "Xác nhận đóng form"}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-                                {isEn
-                                    ? "You have unsaved changes in this form. Are you sure you want to discard your draft and close?"
-                                    : "Bạn đang có thông tin chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thông tin đã nhập?"}
-                            </p>
-                        </div>
-
-                        <div className="flex items-center justify-center gap-3 pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setIsDiscardConfirmOpen(false)}
-                                className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
-                            >
-                                {isEn ? "Keep Editing" : "Tiếp tục chỉnh sửa"}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={confirmDiscardChanges}
-                                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/30"
-                            >
-                                {isEn ? "Discard & Close" : "Hủy thay đổi & Đóng"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* 7. MODAL: View Announcement Details */}
             {selectedNotifDetail && (
