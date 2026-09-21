@@ -111,7 +111,6 @@ function CreateContractPage() {
     const [hasIdentification, setHasIdentification] = useState(false);
 
     // Identification (CCCD) Fields (from UserIdentification schema)
-    const [showIdForm, setShowIdForm] = useState(false);
     const [identityNumber, setIdentityNumber] = useState("");
     const [idFullName, setIdFullName] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState("2000-01-01");
@@ -244,7 +243,6 @@ function CreateContractPage() {
                             setIdNote(id.note || "");
                             setCardFrontUrl(id.cardFrontUrl || "");
                             setCardBackUrl(id.cardBackUrl || "");
-                            setShowIdForm(true);
                         }
                     }
                 } else {
@@ -341,7 +339,6 @@ function CreateContractPage() {
                     setIdNote(id.note || "");
                     setCardFrontUrl(id.cardFrontUrl || "");
                     setCardBackUrl(id.cardBackUrl || "");
-                    setShowIdForm(true);
                 } else {
                     setIdentityNumber("");
                     setIdFullName("");
@@ -352,7 +349,6 @@ function CreateContractPage() {
                     setIdNote("");
                     setCardFrontUrl("");
                     setCardBackUrl("");
-                    setShowIdForm(false);
                 }
             } else {
                 setTenantFound(false);
@@ -371,13 +367,11 @@ function CreateContractPage() {
                 setIdNote("");
                 setCardFrontUrl("");
                 setCardBackUrl("");
-                setShowIdForm(true);
             }
         } catch (err) {
             console.error("Search tenant failed:", err);
             setTenantFound(false);
             setHasIdentification(false);
-            setShowIdForm(true);
         } finally {
             setIsSearchingPhone(false);
         }
@@ -549,6 +543,22 @@ function CreateContractPage() {
                             return;
                         }
 
+                        if (tenantFound === false) {
+                            if (
+                                !identityNumber.trim() ||
+                                !placeOfOrigin.trim() ||
+                                !placeOfResidence.trim() ||
+                                !dateOfBirth
+                            ) {
+                                setErrorMessage(
+                                    t("landlordContractsCreateErrIdentification") ||
+                                    "Vui lòng nhập đầy đủ thông tin định danh"
+                                );
+                                setStep(1);
+                                return;
+                            }
+                        }
+
                         const payload: any = {
                             roomId: selectedRoomId,
                             startDate: new Date(startDate).toISOString(),
@@ -563,7 +573,7 @@ function CreateContractPage() {
                             tenantEmail: tenantEmail?.trim() || undefined,
                         };
 
-                        if (showIdForm && identityNumber.trim()) {
+                        if (identityNumber.trim()) {
                             payload.identification = {
                                 identityNumber: identityNumber.trim(),
                                 fullName: (idFullName || tenantFullName).trim(),
@@ -874,484 +884,466 @@ function CreateContractPage() {
                                 </div>
                             </div>
                         )}
+                    </div>
 
-                        {/* Citizen Identification (CCCD) Section Toggle */}
-                        <div className="pt-2">
-                            <div className="flex items-center justify-between p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl">
-                                <div className="flex items-center gap-2.5">
-                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                                        hasIdentification
-                                            ? "bg-emerald-100 text-emerald-700"
-                                            : canEditTenantInfo
-                                                ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
-                                                : "bg-zinc-200 text-zinc-500"
+                    {/* Citizen Identification (CCCD) Section (Direct display, no toggle) */}
+                    <div className="p-5 bg-zinc-50/80 border border-zinc-200 rounded-2xl space-y-4 animate-in fade-in duration-200">
+                        <div className="flex items-center justify-between border-b border-zinc-200/60 pb-2.5">
+                            <div className="flex items-center gap-2.5">
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${hasIdentification
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : canEditTenantInfo
+                                        ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
+                                        : "bg-zinc-200 text-zinc-500"
                                     }`}>
-                                        <IdCard className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xs font-black text-zinc-900 flex items-center gap-2">
-                                            <span>{t("landlordContractsCreateStep2Header")}</span>
-                                            {hasIdentification && (
-                                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">
-                                                    {t("landlordContractsCreateTenantHasIdBadge")}
-                                                </span>
-                                            )}
-                                        </h3>
-                                        <p className="text-[11px] text-zinc-500 font-medium">
-                                            {hasIdentification
-                                                ? (isEn ? "Citizen ID verified on system (Read-only)" : "Định danh công dân đã có trên hệ thống (Chỉ đọc)")
-                                                : canEditTenantInfo
-                                                    ? (isEn ? "Fill citizen ID details for new tenant profile" : "Nhập thông tin CCCD để tạo hồ sơ khách thuê mới")
-                                                    : (isEn ? "Citizen ID section locked until phone is verified" : "Mục CCCD bị khóa cho đến khi xác minh SĐT")}
-                                        </p>
-                                    </div>
+                                    <IdCard className="w-3.5 h-3.5" />
+                                </div>
+                                <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-2">
+                                    <span>{t("landlordContractsCreateStep2Header")}</span>
+                                    {hasIdentification && (
+                                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px] normal-case">
+                                            {t("landlordContractsCreateTenantHasIdBadge")}
+                                        </span>
+                                    )}
+                                </h4>
+                            </div>
+                            {!canEditTenantInfo ? (
+                                <span className="text-[11px] text-zinc-500 font-bold flex items-center gap-1">
+                                    <Lock className="w-3 h-3 text-zinc-400" />
+                                    {isEn ? "Read-only" : "Chỉ đọc (Đã khóa)"}
+                                </span>
+                            ) : (
+                                <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                                    <Unlock className="w-3 h-3 text-emerald-500" />
+                                    {isEn ? "Editable" : "Được phép chỉnh sửa"}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Alert inside CCCD form if missing identification fields */}
+                        {errorMessage === (t("landlordContractsCreateErrIdentification") || "Vui lòng nhập đầy đủ thông tin định danh") && (
+                            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                                <span>{errorMessage}</span>
+                            </div>
+                        )}
+
+                        {/* Row 1: Số CCCD, Họ tên trên CCCD, Ngày sinh */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                            <TextInput
+                                label={t("landlordContractsCreateCccdNumberLabel")}
+                                required={canEditTenantInfo}
+                                placeholder={t("landlordContractsCreateCccdNumberPlaceholder") || "001201012345"}
+                                disabled={!canEditTenantInfo}
+                                value={identityNumber}
+                                onChange={(e) => {
+                                    setIdentityNumber(e.target.value);
+                                    setIsDirty(true);
+                                    if (errorMessage) setErrorMessage(null);
+                                }}
+                            />
+
+                            <TextInput
+                                label={t("landlordContractsCreateCccdNameLabel")}
+                                required={canEditTenantInfo}
+                                placeholder={tenantFullName || (t("landlordContractsCreateCccdNamePlaceholder") || "NGUYEN VAN AN")}
+                                disabled={!canEditTenantInfo}
+                                value={idFullName}
+                                onChange={(e) => {
+                                    setIdFullName(e.target.value);
+                                    setIsDirty(true);
+                                    if (errorMessage) setErrorMessage(null);
+                                }}
+                            />
+
+                            <DateInput
+                                label={t("landlordContractsCreateCccdDobLabel")}
+                                required={canEditTenantInfo}
+                                disabled={!canEditTenantInfo}
+                                value={dateOfBirth}
+                                onChange={(e) => {
+                                    setDateOfBirth(e.target.value);
+                                    setIsDirty(true);
+                                    if (errorMessage) setErrorMessage(null);
+                                }}
+                            />
+                        </div>
+
+                        {/* Row 2: Giới tính, Quốc tịch, Quê quán */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                            <SelectInput
+                                label={t("landlordContractsCreateCccdGenderLabel")}
+                                required={canEditTenantInfo}
+                                disabled={!canEditTenantInfo}
+                                value={gender}
+                                onChange={(e) => {
+                                    setGender(e.target.value as "male" | "female");
+                                    setIsDirty(true);
+                                }}
+                            >
+                                <option value="male">{t("landlordContractsCreateCccdGenderMale")}</option>
+                                <option value="female">{t("landlordContractsCreateCccdGenderFemale")}</option>
+                            </SelectInput>
+
+                            <TextInput
+                                label={t("landlordContractsCreateCccdNationalityLabel")}
+                                disabled={!canEditTenantInfo}
+                                value={nationality}
+                                onChange={(e) => {
+                                    setNationality(e.target.value);
+                                    setIsDirty(true);
+                                }}
+                            />
+
+                            <TextInput
+                                label={t("landlordContractsCreateCccdOriginLabel")}
+                                required={canEditTenantInfo}
+                                placeholder={t("landlordContractsCreateCccdOriginPlaceholder")}
+                                disabled={!canEditTenantInfo}
+                                value={placeOfOrigin}
+                                onChange={(e) => {
+                                    setPlaceOfOrigin(e.target.value);
+                                    setIsDirty(true);
+                                    if (errorMessage) setErrorMessage(null);
+                                }}
+                            />
+                        </div>
+
+                        {/* Row 3: Nơi thường trú, Ngày cấp, Ngày hết hạn */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                            <TextInput
+                                label={t("landlordContractsCreateCccdResidenceLabel")}
+                                required={canEditTenantInfo}
+                                placeholder={t("landlordContractsCreateCccdResidencePlaceholder")}
+                                disabled={!canEditTenantInfo}
+                                value={placeOfResidence}
+                                onChange={(e) => {
+                                    setPlaceOfResidence(e.target.value);
+                                    setIsDirty(true);
+                                    if (errorMessage) setErrorMessage(null);
+                                }}
+                            />
+
+                            <DateInput
+                                label={t("landlordContractsCreateCccdIssueDateLabel")}
+                                disabled={!canEditTenantInfo}
+                                value={issueDate}
+                                onChange={(e) => {
+                                    setIssueDate(e.target.value);
+                                    setIsDirty(true);
+                                }}
+                            />
+
+                            <DateInput
+                                label={t("landlordContractsCreateCccdExpiryDateLabel")}
+                                disabled={!canEditTenantInfo}
+                                value={expiryDate}
+                                onChange={(e) => {
+                                    setExpiryDate(e.target.value);
+                                    setIsDirty(true);
+                                }}
+                            />
+                        </div>
+
+                        {/* Row 4: Đặc điểm nhận dạng / Ghi chú */}
+                        <TextInput
+                            label={t("landlordContractsCreateCccdNoteLabel")}
+                            placeholder={
+                                t("landlordContractsCreateCccdNotePlaceholder")
+                            }
+                            disabled={!canEditTenantInfo}
+                            value={idNote}
+                            onChange={(e) => {
+                                setIdNote(e.target.value);
+                                setIsDirty(true);
+                            }}
+                        />
+
+                        {/* Row 5: Ảnh mặt trước & mặt sau CCCD (Tải ảnh trực tiếp) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                            {/* Mặt trước CCCD */}
+                            <div>
+                                <input
+                                    id="cccd-front-file"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="hidden"
+                                    disabled={!canEditTenantInfo}
+                                    onChange={(e) => handlePhotoUpload(e, "front")}
+                                />
+                                <div className="block text-[11px] font-bold text-zinc-700 mb-1 flex items-center justify-between">
+                                    <span className="flex items-center gap-1.5">
+                                        <IdCard className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                                        {t("landlordContractsCreateCccdFrontUrlLabel")}
+                                    </span>
+                                    {cardFrontUrl && (
+                                        <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                                            Đã có ảnh
+                                        </span>
+                                    )}
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => setShowIdForm(!showIdForm)}
-                                    className="px-3.5 py-1.5 text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
-                                >
-                                    <span>{showIdForm ? (isEn ? "Collapse" : "Thu gọn") : (isEn ? "View / Edit" : "Xem / Nhập")}</span>
-                                    <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showIdForm ? "rotate-90" : ""}`} />
-                                </button>
-                            </div>
+                                {cardFrontUrl ? (
+                                    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 space-y-2">
+                                        <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-zinc-200/60">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={cardFrontUrl}
+                                                alt={t("landlordContractsCreateCccdFrontUrlLabel")}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            {uploadingFront && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white">
+                                                    <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
+                                                    <span className="text-[11px] font-bold mt-1.5">Đang xử lý ảnh...</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setPreviewModalImg({
+                                                        url: cardFrontUrl,
+                                                        title: t("landlordContractsCreateCccdFrontUrlLabel"),
+                                                    })
+                                                }
+                                                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                                            >
+                                                <Eye className="w-3 h-3 text-[#2AC1BC]" />
+                                                {t("landlordContractsCreateCccdViewPhoto")}
+                                            </button>
 
-                            {/* Full UserIdentification Form from Schema */}
-                            {showIdForm && (
-                                <div className="mt-3 p-5 bg-zinc-50/80 border border-zinc-200 rounded-2xl space-y-4 animate-in fade-in duration-200">
-                                    <div className="flex items-center justify-between border-b border-zinc-200/60 pb-2.5">
-                                        <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-2">
-                                            <IdCard className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                                            {t("landlordContractsCreateStep2Header")}
-                                        </h4>
-                                        {!canEditTenantInfo ? (
-                                            <span className="text-[11px] text-zinc-500 font-bold flex items-center gap-1">
-                                                <Lock className="w-3 h-3 text-zinc-400" />
-                                                {isEn ? "Read-only" : "Chỉ đọc (Đã khóa)"}
-                                            </span>
+                                            {canEditTenantInfo ? (
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        disabled={uploadingFront}
+                                                        onClick={() => document.getElementById("cccd-front-file")?.click()}
+                                                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                                                    >
+                                                        <RefreshCw className="w-3 h-3" />
+                                                        {t("landlordContractsCreateCccdChangePhoto")}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={uploadingFront}
+                                                        onClick={() => {
+                                                            setCardFrontUrl("");
+                                                            setIsDirty(true);
+                                                        }}
+                                                        className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                                                        title={t("landlordContractsCreateCccdRemovePhoto")}
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                                                    <Lock className="w-3 h-3" />
+                                                    <span>Đã khóa</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : !canEditTenantInfo ? (
+                                    <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-100/70 p-4 text-center cursor-not-allowed select-none">
+                                        <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
+                                        <span className="text-xs font-bold text-zinc-500">
+                                            {tenantPhone.trim().length < 10
+                                                ? "Nhập số điện thoại để mở khóa"
+                                                : "Khách thuê chưa cập nhật ảnh mặt trước"}
+                                        </span>
+                                        <span className="text-[10px] text-zinc-400 mt-0.5">
+                                            {tenantPhone.trim().length < 10
+                                                ? "Cần xác thực số điện thoại trước"
+                                                : "Tài khoản đã có trên hệ thống"}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => document.getElementById("cccd-front-file")?.click()}
+                                        onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsDraggingFront(true);
+                                        }}
+                                        onDragLeave={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsDraggingFront(false);
+                                        }}
+                                        onDrop={(e) => handleDropFile(e, "front")}
+                                        className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${isDraggingFront
+                                            ? "border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]"
+                                            : "border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50"
+                                            }`}
+                                    >
+                                        {uploadingFront ? (
+                                            <div className="flex flex-col items-center justify-center text-[#2AC1BC]">
+                                                <Loader2 className="w-7 h-7 animate-spin mb-1.5" />
+                                                <span className="text-xs font-bold">Đang tải ảnh lên...</span>
+                                            </div>
                                         ) : (
-                                            <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
-                                                <Unlock className="w-3 h-3 text-emerald-500" />
-                                                {isEn ? "Editable" : "Được phép chỉnh sửa"}
-                                            </span>
+                                            <>
+                                                <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-1.5 shadow-2xs">
+                                                    <UploadCloud className="w-5 h-5" />
+                                                </div>
+                                                <p className="text-xs font-bold text-zinc-800">
+                                                    {t("landlordContractsCreateCccdUploadPrompt")}
+                                                </p>
+                                                <p className="text-[10px] text-zinc-400 mt-0.5">
+                                                    {t("landlordContractsCreateCccdUploadHint")}
+                                                </p>
+                                            </>
                                         )}
                                     </div>
+                                )}
+                            </div>
 
-                                    {/* Row 1: Số CCCD, Họ tên trên CCCD, Ngày sinh */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                                        <TextInput
-                                            label={t("landlordContractsCreateCccdNumberLabel")}
-                                            required={canEditTenantInfo}
-                                            placeholder={t("landlordContractsCreateCccdNumberPlaceholder") || "001201012345"}
-                                            disabled={!canEditTenantInfo}
-                                            value={identityNumber}
-                                            onChange={(e) => {
-                                                setIdentityNumber(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-
-                                        <TextInput
-                                            label={t("landlordContractsCreateCccdNameLabel")}
-                                            required={canEditTenantInfo}
-                                            placeholder={tenantFullName || (t("landlordContractsCreateCccdNamePlaceholder") || "NGUYEN VAN AN")}
-                                            disabled={!canEditTenantInfo}
-                                            value={idFullName}
-                                            onChange={(e) => {
-                                                setIdFullName(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-
-                                        <DateInput
-                                            label={t("landlordContractsCreateCccdDobLabel")}
-                                            required={canEditTenantInfo}
-                                            disabled={!canEditTenantInfo}
-                                            value={dateOfBirth}
-                                            onChange={(e) => {
-                                                setDateOfBirth(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* Row 2: Giới tính, Quốc tịch, Quê quán */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                                        <SelectInput
-                                            label={t("landlordContractsCreateCccdGenderLabel")}
-                                            required={canEditTenantInfo}
-                                            disabled={!canEditTenantInfo}
-                                            value={gender}
-                                            onChange={(e) => {
-                                                setGender(e.target.value as "male" | "female");
-                                                setIsDirty(true);
-                                            }}
-                                        >
-                                            <option value="male">{t("landlordContractsCreateCccdGenderMale")}</option>
-                                            <option value="female">{t("landlordContractsCreateCccdGenderFemale")}</option>
-                                        </SelectInput>
-
-                                        <TextInput
-                                            label={t("landlordContractsCreateCccdNationalityLabel")}
-                                            disabled={!canEditTenantInfo}
-                                            value={nationality}
-                                            onChange={(e) => {
-                                                setNationality(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-
-                                        <TextInput
-                                            label={t("landlordContractsCreateCccdOriginLabel")}
-                                            required={canEditTenantInfo}
-                                            placeholder={t("landlordContractsCreateCccdOriginPlaceholder")}
-                                            disabled={!canEditTenantInfo}
-                                            value={placeOfOrigin}
-                                            onChange={(e) => {
-                                                setPlaceOfOrigin(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* Row 3: Nơi thường trú, Ngày cấp, Ngày hết hạn */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                                        <TextInput
-                                            label={t("landlordContractsCreateCccdResidenceLabel")}
-                                            required={canEditTenantInfo}
-                                            placeholder={t("landlordContractsCreateCccdResidencePlaceholder")}
-                                            disabled={!canEditTenantInfo}
-                                            value={placeOfResidence}
-                                            onChange={(e) => {
-                                                setPlaceOfResidence(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-
-                                        <DateInput
-                                            label={t("landlordContractsCreateCccdIssueDateLabel")}
-                                            disabled={!canEditTenantInfo}
-                                            value={issueDate}
-                                            onChange={(e) => {
-                                                setIssueDate(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-
-                                        <DateInput
-                                            label={t("landlordContractsCreateCccdExpiryDateLabel")}
-                                            disabled={!canEditTenantInfo}
-                                            value={expiryDate}
-                                            onChange={(e) => {
-                                                setExpiryDate(e.target.value);
-                                                setIsDirty(true);
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* Row 4: Đặc điểm nhận dạng / Ghi chú */}
-                                    <TextInput
-                                        label={t("landlordContractsCreateCccdNoteLabel")}
-                                        placeholder={t("landlordContractsCreateCccdNotePlaceholder")}
-                                        disabled={!canEditTenantInfo}
-                                        value={idNote}
-                                        onChange={(e) => {
-                                            setIdNote(e.target.value);
-                                            setIsDirty(true);
-                                        }}
-                                    />
-
-                                    {/* Row 5: Ảnh mặt trước & mặt sau CCCD (Tải ảnh trực tiếp) */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                                        {/* Mặt trước CCCD */}
-                                        <div>
-                                            <input
-                                                id="cccd-front-file"
-                                                type="file"
-                                                accept="image/jpeg,image/png,image/webp"
-                                                className="hidden"
-                                                disabled={!canEditTenantInfo}
-                                                onChange={(e) => handlePhotoUpload(e, "front")}
-                                            />
-                                            <label className="block text-[11px] font-bold text-zinc-700 mb-1 flex items-center justify-between">
-                                                <span className="flex items-center gap-1.5">
-                                                    <IdCard className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                                                    {t("landlordContractsCreateCccdFrontUrlLabel")}
-                                                </span>
-                                                {cardFrontUrl && (
-                                                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                                                        Đã có ảnh
-                                                    </span>
-                                                )}
-                                            </label>
-
-                                            {cardFrontUrl ? (
-                                                <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 space-y-2">
-                                                    <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-zinc-200/60">
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img
-                                                            src={cardFrontUrl}
-                                                            alt={t("landlordContractsCreateCccdFrontUrlLabel")}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                        {uploadingFront && (
-                                                            <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white">
-                                                                <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
-                                                                <span className="text-[11px] font-bold mt-1.5">Đang xử lý ảnh...</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center justify-between gap-1.5 pt-0.5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                setPreviewModalImg({
-                                                                    url: cardFrontUrl,
-                                                                    title: t("landlordContractsCreateCccdFrontUrlLabel"),
-                                                                })
-                                                            }
-                                                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
-                                                        >
-                                                            <Eye className="w-3 h-3 text-[#2AC1BC]" />
-                                                            {t("landlordContractsCreateCccdViewPhoto")}
-                                                        </button>
-
-                                                        {canEditTenantInfo ? (
-                                                            <div className="flex items-center gap-1.5">
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={uploadingFront}
-                                                                    onClick={() => document.getElementById("cccd-front-file")?.click()}
-                                                                    className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
-                                                                >
-                                                                    <RefreshCw className="w-3 h-3" />
-                                                                    {t("landlordContractsCreateCccdChangePhoto")}
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={uploadingFront}
-                                                                    onClick={() => {
-                                                                        setCardFrontUrl("");
-                                                                        setIsDirty(true);
-                                                                    }}
-                                                                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
-                                                                    title={t("landlordContractsCreateCccdRemovePhoto")}
-                                                                >
-                                                                    <Trash2 className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
-                                                                <Lock className="w-3 h-3" />
-                                                                <span>Đã khóa</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ) : !canEditTenantInfo ? (
-                                                <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-100/70 p-4 text-center cursor-not-allowed select-none">
-                                                    <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
-                                                    <span className="text-xs font-bold text-zinc-500">
-                                                        {tenantPhone.trim().length < 10
-                                                            ? "Nhập số điện thoại để mở khóa"
-                                                            : "Khách thuê chưa cập nhật ảnh mặt trước"}
-                                                    </span>
-                                                    <span className="text-[10px] text-zinc-400 mt-0.5">
-                                                        {tenantPhone.trim().length < 10
-                                                            ? "Cần xác thực số điện thoại trước"
-                                                            : "Tài khoản đã có trên hệ thống"}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onClick={() => document.getElementById("cccd-front-file")?.click()}
-                                                    onDragOver={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setIsDraggingFront(true);
-                                                    }}
-                                                    onDragLeave={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setIsDraggingFront(false);
-                                                    }}
-                                                    onDrop={(e) => handleDropFile(e, "front")}
-                                                    className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
-                                                        isDraggingFront
-                                                            ? "border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]"
-                                                            : "border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50"
-                                                    }`}
-                                                >
-                                                    {uploadingFront ? (
-                                                        <div className="flex flex-col items-center justify-center text-[#2AC1BC]">
-                                                            <Loader2 className="w-7 h-7 animate-spin mb-1.5" />
-                                                            <span className="text-xs font-bold">Đang tải ảnh lên...</span>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-1.5 shadow-2xs">
-                                                                <UploadCloud className="w-5 h-5" />
-                                                            </div>
-                                                            <p className="text-xs font-bold text-zinc-800">
-                                                                {t("landlordContractsCreateCccdUploadPrompt")}
-                                                            </p>
-                                                            <p className="text-[10px] text-zinc-400 mt-0.5">
-                                                                {t("landlordContractsCreateCccdUploadHint")}
-                                                            </p>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Mặt sau CCCD */}
-                                        <div>
-                                            <input
-                                                id="cccd-back-file"
-                                                type="file"
-                                                accept="image/jpeg,image/png,image/webp"
-                                                className="hidden"
-                                                disabled={!canEditTenantInfo}
-                                                onChange={(e) => handlePhotoUpload(e, "back")}
-                                            />
-                                            <label className="block text-[11px] font-bold text-zinc-700 mb-1 flex items-center justify-between">
-                                                <span className="flex items-center gap-1.5">
-                                                    <IdCard className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                                                    {t("landlordContractsCreateCccdBackUrlLabel")}
-                                                </span>
-                                                {cardBackUrl && (
-                                                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                                                        Đã có ảnh
-                                                    </span>
-                                                )}
-                                            </label>
-
-                                            {cardBackUrl ? (
-                                                <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 space-y-2">
-                                                    <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-zinc-200/60">
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img
-                                                            src={cardBackUrl}
-                                                            alt={t("landlordContractsCreateCccdBackUrlLabel")}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                        {uploadingBack && (
-                                                            <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white">
-                                                                <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
-                                                                <span className="text-[11px] font-bold mt-1.5">Đang xử lý ảnh...</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center justify-between gap-1.5 pt-0.5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                setPreviewModalImg({
-                                                                    url: cardBackUrl,
-                                                                    title: t("landlordContractsCreateCccdBackUrlLabel"),
-                                                                })
-                                                            }
-                                                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
-                                                        >
-                                                            <Eye className="w-3 h-3 text-[#2AC1BC]" />
-                                                            {t("landlordContractsCreateCccdViewPhoto")}
-                                                        </button>
-
-                                                        {canEditTenantInfo ? (
-                                                            <div className="flex items-center gap-1.5">
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={uploadingBack}
-                                                                    onClick={() => document.getElementById("cccd-back-file")?.click()}
-                                                                    className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
-                                                                >
-                                                                    <RefreshCw className="w-3 h-3" />
-                                                                    {t("landlordContractsCreateCccdChangePhoto")}
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={uploadingBack}
-                                                                    onClick={() => {
-                                                                        setCardBackUrl("");
-                                                                        setIsDirty(true);
-                                                                    }}
-                                                                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
-                                                                    title={t("landlordContractsCreateCccdRemovePhoto")}
-                                                                >
-                                                                    <Trash2 className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
-                                                                <Lock className="w-3 h-3" />
-                                                                <span>Đã khóa</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ) : !canEditTenantInfo ? (
-                                                <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-100/70 p-4 text-center cursor-not-allowed select-none">
-                                                    <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
-                                                    <span className="text-xs font-bold text-zinc-500">
-                                                        {tenantPhone.trim().length < 10
-                                                            ? "Nhập số điện thoại để mở khóa"
-                                                            : "Khách thuê chưa cập nhật ảnh mặt sau"}
-                                                    </span>
-                                                    <span className="text-[10px] text-zinc-400 mt-0.5">
-                                                        {tenantPhone.trim().length < 10
-                                                            ? "Cần xác thực số điện thoại trước"
-                                                            : "Tài khoản đã có trên hệ thống"}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onClick={() => document.getElementById("cccd-back-file")?.click()}
-                                                    onDragOver={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setIsDraggingBack(true);
-                                                    }}
-                                                    onDragLeave={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setIsDraggingBack(false);
-                                                    }}
-                                                    onDrop={(e) => handleDropFile(e, "back")}
-                                                    className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
-                                                        isDraggingBack
-                                                            ? "border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]"
-                                                            : "border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50"
-                                                    }`}
-                                                >
-                                                    {uploadingBack ? (
-                                                        <div className="flex flex-col items-center justify-center text-[#2AC1BC]">
-                                                            <Loader2 className="w-7 h-7 animate-spin mb-1.5" />
-                                                            <span className="text-xs font-bold">Đang tải ảnh lên...</span>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-1.5 shadow-2xs">
-                                                                <UploadCloud className="w-5 h-5" />
-                                                            </div>
-                                                            <p className="text-xs font-bold text-zinc-800">
-                                                                {t("landlordContractsCreateCccdUploadBackPrompt")}
-                                                            </p>
-                                                            <p className="text-[10px] text-zinc-400 mt-0.5">
-                                                                {t("landlordContractsCreateCccdUploadHint")}
-                                                            </p>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                            {/* Mặt sau CCCD */}
+                            <div>
+                                <input
+                                    id="cccd-back-file"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="hidden"
+                                    disabled={!canEditTenantInfo}
+                                    onChange={(e) => handlePhotoUpload(e, "back")}
+                                />
+                                <div className="block text-[11px] font-bold text-zinc-700 mb-1 flex items-center justify-between">
+                                    <span className="flex items-center gap-1.5">
+                                        <IdCard className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                                        {t("landlordContractsCreateCccdBackUrlLabel")}
+                                    </span>
+                                    {cardBackUrl && (
+                                        <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                                            Đã có ảnh
+                                        </span>
+                                    )}
                                 </div>
-                            )}
+
+                                {cardBackUrl ? (
+                                    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 space-y-2">
+                                        <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-zinc-200/60">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={cardBackUrl}
+                                                alt={t("landlordContractsCreateCccdBackUrlLabel")}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            {uploadingBack && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white">
+                                                    <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
+                                                    <span className="text-[11px] font-bold mt-1.5">Đang xử lý ảnh...</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setPreviewModalImg({
+                                                        url: cardBackUrl,
+                                                        title: t("landlordContractsCreateCccdBackUrlLabel"),
+                                                    })
+                                                }
+                                                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                                            >
+                                                <Eye className="w-3 h-3 text-[#2AC1BC]" />
+                                                {t("landlordContractsCreateCccdViewPhoto")}
+                                            </button>
+
+                                            {canEditTenantInfo ? (
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        disabled={uploadingBack}
+                                                        onClick={() => document.getElementById("cccd-back-file")?.click()}
+                                                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                                                    >
+                                                        <RefreshCw className="w-3 h-3" />
+                                                        {t("landlordContractsCreateCccdChangePhoto")}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={uploadingBack}
+                                                        onClick={() => {
+                                                            setCardBackUrl("");
+                                                            setIsDirty(true);
+                                                        }}
+                                                        className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                                                        title={t("landlordContractsCreateCccdRemovePhoto")}
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                                                    <Lock className="w-3 h-3" />
+                                                    <span>Đã khóa</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : !canEditTenantInfo ? (
+                                    <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-100/70 p-4 text-center cursor-not-allowed select-none">
+                                        <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
+                                        <span className="text-xs font-bold text-zinc-500">
+                                            {tenantPhone.trim().length < 10
+                                                ? "Nhập số điện thoại để mở khóa"
+                                                : "Khách thuê chưa cập nhật ảnh mặt sau"}
+                                        </span>
+                                        <span className="text-[10px] text-zinc-400 mt-0.5">
+                                            {tenantPhone.trim().length < 10
+                                                ? "Cần xác thực số điện thoại trước"
+                                                : "Tài khoản đã có trên hệ thống"}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => document.getElementById("cccd-back-file")?.click()}
+                                        onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsDraggingBack(true);
+                                        }}
+                                        onDragLeave={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsDraggingBack(false);
+                                        }}
+                                        onDrop={(e) => handleDropFile(e, "back")}
+                                        className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${isDraggingBack
+                                            ? "border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]"
+                                            : "border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50"
+                                            }`}
+                                    >
+                                        {uploadingBack ? (
+                                            <div className="flex flex-col items-center justify-center text-[#2AC1BC]">
+                                                <Loader2 className="w-7 h-7 animate-spin mb-1.5" />
+                                                <span className="text-xs font-bold">Đang tải ảnh lên...</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-1.5 shadow-2xs">
+                                                    <UploadCloud className="w-5 h-5" />
+                                                </div>
+                                                <p className="text-xs font-bold text-zinc-800">
+                                                    {t("landlordContractsCreateCccdUploadBackPrompt")}
+                                                </p>
+                                                <p className="text-[10px] text-zinc-400 mt-0.5">
+                                                    {t("landlordContractsCreateCccdUploadHint")}
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -1398,6 +1390,20 @@ function CreateContractPage() {
                                     if (tenantFound === false && !tenantFullName.trim()) {
                                         setErrorMessage(t("landlordContractsCreateErrTenantInfo"));
                                         return;
+                                    }
+                                    if (tenantFound === false) {
+                                        if (
+                                            !identityNumber.trim() ||
+                                            !placeOfOrigin.trim() ||
+                                            !placeOfResidence.trim() ||
+                                            !dateOfBirth
+                                        ) {
+                                            setErrorMessage(
+                                                t("landlordContractsCreateErrIdentification") ||
+                                                "Vui lòng nhập đầy đủ thông tin định danh"
+                                            );
+                                            return;
+                                        }
                                     }
                                 }
                                 setErrorMessage(null);
