@@ -11,7 +11,7 @@ import {
   DollarSign, Home, AlertCircle, Info, Calendar, ArrowRight, BarChart3, Loader2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { useTranslations } from "@/context/LanguageContext";
 import {
   assetService,
   AssetItem,
@@ -25,8 +25,11 @@ export default function AssetsPage() {
   const { activeBuilding } = useAuth();
   const router = useRouter();
   const t = useTranslations("landlord");
-  const { locale } = useLanguage();
-  const isEn = locale === "en";
+  const tRef = React.useRef(t);
+
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   // Data & Loading States
   const [assets, setAssets] = useState<AssetItem[]>([]);
@@ -85,19 +88,11 @@ export default function AssetsPage() {
     type: "warning" | "error" | "success" | "info";
   }>({
     isOpen: false,
-    title: isEn ? "Notification" : "Thông báo",
+    title: t("landlordAssetsAlertTitle"),
     message: "",
     type: "info",
   });
 
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    confirmText?: string;
-    cancelText?: string;
-    onConfirm: () => void;
-  }>({ isOpen: false, title: "", message: "", onConfirm: () => {} });
 
   const showAlert = (
     message: string,
@@ -106,7 +101,7 @@ export default function AssetsPage() {
   ) => {
     setAlertModal({
       isOpen: true,
-      title: title || (isEn ? "Notification" : "Thông báo"),
+      title: title || tRef.current("landlordAssetsAlertTitle"),
       message,
       type,
     });
@@ -124,9 +119,9 @@ export default function AssetsPage() {
       case "damaged":
         return t("landlordAssetsStatusBroken");
       case "lost":
-        return isEn ? "Lost" : "Đã mất";
+        return t("landlordAssetsStatusLost");
       case "disposed":
-        return isEn ? "Disposed" : "Đã thanh lý";
+        return t("landlordAssetsStatusDisposed");
       default:
         return cond;
     }
@@ -142,7 +137,7 @@ export default function AssetsPage() {
   };
 
   const getCategoryLabel = (category: string | null) => {
-    if (!category) return isEn ? "General" : "Chung";
+    if (!category) return t("landlordAssetsCatGeneral");
     if (category === "Điện lạnh") return t("landlordAssetsCatRefrigeration");
     if (category === "Nội thất") return t("landlordAssetsCatFurniture");
     if (category === "Gia dụng") return t("landlordAssetsCatAppliances");
@@ -192,36 +187,21 @@ export default function AssetsPage() {
     } catch (error: any) {
       console.error("Error loading assets:", error);
       showAlert(
-        error?.message || (isEn ? "Failed to load assets" : "Không thể tải danh sách tài sản."),
+        error?.message || tRef.current("landlordAssetsLoadFailed"),
         "error"
       );
     } finally {
       setIsLoading(false);
     }
-  }, [activeBuilding?.id, searchQuery, categoryFilter, statusFilter, currentPage, itemsPerPage, isEn]);
+  }, [activeBuilding?.id, searchQuery, categoryFilter, statusFilter, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchAssets();
   }, [fetchAssets]);
 
-  // Rule #10: Modal Reset & Confirmation on Close
   const handleCloseModal = () => {
-    if (isDirty) {
-      setConfirmModal({
-        isOpen: true,
-        title: t("landlordAssetsConfirmCloseTitle"),
-        message: t("landlordAssetsConfirmCloseDesc"),
-        confirmText: t("landlordAssetsConfirmCloseDiscard"),
-        cancelText: t("landlordAssetsConfirmCloseKeep"),
-        onConfirm: () => {
-          setIsModalOpen(false);
-          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-          setTimeout(() => setIsDirty(false), 200);
-        },
-      });
-    } else {
-      setIsModalOpen(false);
-    }
+    setIsModalOpen(false);
+    setIsDirty(false);
   };
 
   const handleOpenAddModal = () => {
@@ -229,7 +209,11 @@ export default function AssetsPage() {
     setFormName("");
     setFormCategory("Điện lạnh");
     setFormRoomId(availableRooms.length > 0 ? availableRooms[0].id : "");
-    setFormLocation(availableRooms.length > 0 ? `Phòng ${availableRooms[0].roomNumber}` : "Kho chứa đồ");
+    setFormLocation(
+      availableRooms.length > 0
+        ? t("landlordAssetsRoomPrefix", { room: availableRooms[0].roomNumber })
+        : t("landlordAssetsLocationStorage")
+    );
     setFormQuantity(1);
     setFormCondition("good");
     setFormValue("3.000.000 ₫");
@@ -302,7 +286,7 @@ export default function AssetsPage() {
     } catch (err: any) {
       console.error("Save asset error:", err);
       showAlert(
-        err?.message || (isEn ? "Failed to save asset" : "Lưu tài sản thất bại."),
+        err?.message || tRef.current("landlordAssetsSaveFailed"),
         "error"
       );
     } finally {
@@ -310,29 +294,17 @@ export default function AssetsPage() {
     }
   };
 
-  const handleDeleteAsset = (asset: AssetItem, e?: React.MouseEvent) => {
+  const handleDeleteAsset = async (asset: AssetItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (!activeBuilding?.id) return;
 
-    setConfirmModal({
-      isOpen: true,
-      title: isEn ? "Delete Asset" : "Xác nhận xóa tài sản",
-      message: isEn
-        ? `Are you sure you want to permanently delete "${asset.name}" (${asset.code})?`
-        : `Bạn có chắc chắn muốn xóa vĩnh viễn tài sản "${asset.name}" (${asset.code}) không? Hành động này sẽ được ghi vào nhật ký kiểm toán.`,
-      confirmText: isEn ? "Delete Permanently" : "Xóa vĩnh viễn",
-      cancelText: isEn ? "Cancel" : "Hủy bỏ",
-      onConfirm: async () => {
-        try {
-          await assetService.deleteAsset(activeBuilding.id, asset.id);
-          showAlert(isEn ? "Asset deleted successfully." : "Đã xóa tài sản thành công.", "success");
-          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-          fetchAssets();
-        } catch (err: any) {
-          showAlert(err?.message || (isEn ? "Delete failed" : "Xóa thất bại."), "error");
-        }
-      },
-    });
+    try {
+      await assetService.deleteAsset(activeBuilding.id, asset.id);
+      showAlert(t("landlordAssetsToastDeleteSuccess"), "success");
+      fetchAssets();
+    } catch (err: any) {
+      showAlert(err?.message || tRef.current("landlordAssetsDeleteFailed"), "error");
+    }
   };
 
   // Financial Valuation Calculation (Original vs Depreciated Current Value)
@@ -359,18 +331,6 @@ export default function AssetsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => showAlert(t("landlordAssetsImportDeveloping"), "info", t("landlordAssetsNotice"))}
-            className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
-          >
-            <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
-          </button>
-          <button
-            onClick={() => showAlert(t("landlordAssetsExportSuccess"), "success", t("landlordAssetsExportSuccess"))}
-            className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
-          </button>
           <button
             onClick={handleOpenAddModal}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
@@ -401,7 +361,7 @@ export default function AssetsPage() {
               <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                 <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                  {activeBuilding?.address || (isEn ? "Address not updated" : "Chưa cập nhật địa chỉ")}
+                  {activeBuilding?.address || t("landlordAssetsNoAddress")}
                 </span>
               </div>
               {activeBuilding?.address && (
@@ -462,7 +422,7 @@ export default function AssetsPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
-                  {isEn ? "Total Units" : "Tổng số lượng"}
+                  {t("landlordAssetsTotalQuantity")}
                 </span>
                 <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
                   {summary.totalQuantity}
@@ -484,25 +444,24 @@ export default function AssetsPage() {
                 setCategoryFilter(cat);
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                categoryFilter === cat
-                  ? "bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
-              }`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${categoryFilter === cat
+                ? "bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20"
+                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
+                }`}
             >
               {cat === ""
                 ? t("landlordAssetsFilterAllCategories")
                 : cat === "Điện lạnh"
-                ? t("landlordAssetsCatRefrigeration")
-                : cat === "Nội thất"
-                ? t("landlordAssetsCatFurniture")
-                : cat === "Gia dụng"
-                ? t("landlordAssetsCatAppliances")
-                : cat === "Điện nước"
-                ? t("landlordAssetsCatUtilities")
-                : cat === "An ninh"
-                ? t("landlordAssetsCatSecurity")
-                : cat}
+                  ? t("landlordAssetsCatRefrigeration")
+                  : cat === "Nội thất"
+                    ? t("landlordAssetsCatFurniture")
+                    : cat === "Gia dụng"
+                      ? t("landlordAssetsCatAppliances")
+                      : cat === "Điện nước"
+                        ? t("landlordAssetsCatUtilities")
+                        : cat === "An ninh"
+                          ? t("landlordAssetsCatSecurity")
+                          : cat}
             </button>
           ))}
         </div>
@@ -532,11 +491,10 @@ export default function AssetsPage() {
                 setItemsPerPage(6);
                 setCurrentPage(1);
               }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === "grid"
-                  ? "bg-white text-zinc-900 shadow-2xs"
-                  : "text-zinc-400 hover:text-zinc-600"
-              }`}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid"
+                ? "bg-white text-zinc-900 shadow-2xs"
+                : "text-zinc-400 hover:text-zinc-600"
+                }`}
               title={t("landlordAssetsViewGrid")}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -547,11 +505,10 @@ export default function AssetsPage() {
                 setItemsPerPage(10);
                 setCurrentPage(1);
               }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === "list"
-                  ? "bg-white text-zinc-900 shadow-2xs"
-                  : "text-zinc-400 hover:text-zinc-600"
-              }`}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list"
+                ? "bg-white text-zinc-900 shadow-2xs"
+                : "text-zinc-400 hover:text-zinc-600"
+                }`}
               title={t("landlordAssetsViewTable")}
             >
               <List className="w-4 h-4" />
@@ -602,7 +559,7 @@ export default function AssetsPage() {
           <div className="py-20 text-center text-zinc-500 font-medium">
             <Loader2 className="w-8 h-8 mx-auto text-[#2AC1BC] animate-spin mb-3" />
             <p className="text-xs font-bold text-zinc-500">
-              {isEn ? "Loading assets data..." : "Đang tải dữ liệu tài sản..."}
+              {t("landlordAssetsLoading")}
             </p>
           </div>
         ) : viewMode === "grid" ? (
@@ -637,15 +594,14 @@ export default function AssetsPage() {
                           </span>
                         </div>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${
-                            asset.condition === "good"
-                              ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
-                              : asset.condition === "new"
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${asset.condition === "good"
+                            ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
+                            : asset.condition === "new"
                               ? "bg-blue-50 text-blue-600 border-blue-200"
                               : asset.condition === "under_repair"
-                              ? "bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse"
-                              : "bg-rose-50 text-rose-600 border-rose-200"
-                          }`}
+                                ? "bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse"
+                                : "bg-rose-50 text-rose-600 border-rose-200"
+                            }`}
                         >
                           {getStatusLabel(asset.condition)}
                         </span>
@@ -657,7 +613,7 @@ export default function AssetsPage() {
                         </h3>
                         {asset.quantity > 1 && (
                           <span className="text-[11px] font-bold text-zinc-400 block mt-0.5">
-                            {isEn ? `Quantity: ${asset.quantity}` : `Số lượng: ${asset.quantity}`}
+                            {t("landlordAssetsQuantityCount", { count: asset.quantity })}
                           </span>
                         )}
                       </div>
@@ -700,7 +656,7 @@ export default function AssetsPage() {
                         <button
                           onClick={(e) => handleDeleteAsset(asset, e)}
                           className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors"
-                          title={isEn ? "Delete" : "Xóa"}
+                          title={t("landlordAssetsBtnDelete")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -775,15 +731,14 @@ export default function AssetsPage() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${
-                              asset.condition === "good"
-                                ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
-                                : asset.condition === "new"
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${asset.condition === "good"
+                              ? "bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30"
+                              : asset.condition === "new"
                                 ? "bg-blue-50 text-blue-600 border-blue-200"
                                 : asset.condition === "under_repair"
-                                ? "bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse"
-                                : "bg-rose-50 text-rose-600 border-rose-200"
-                            }`}
+                                  ? "bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse"
+                                  : "bg-rose-50 text-rose-600 border-rose-200"
+                              }`}
                           >
                             {getStatusLabel(asset.condition)}
                           </span>
@@ -802,7 +757,7 @@ export default function AssetsPage() {
                             <button
                               onClick={(e) => handleDeleteAsset(asset, e)}
                               className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
-                              title={isEn ? "Delete" : "Xóa"}
+                              title={t("landlordAssetsBtnDelete")}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -882,11 +837,10 @@ export default function AssetsPage() {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                    currentPage === page
-                      ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
-                      : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                  }`}
+                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${currentPage === page
+                    ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
+                    : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                    }`}
                 >
                   {page}
                 </button>
@@ -986,20 +940,20 @@ export default function AssetsPage() {
                       setFormRoomId(selectedVal);
                       setIsDirty(true);
                       if (!selectedVal) {
-                        setFormLocation("Khu sinh hoạt chung / Kho");
+                        setFormLocation(t("landlordAssetsLocationSharedOrStorage"));
                       } else {
                         const targetRoom = availableRooms.find((r) => r.id === selectedVal);
                         if (targetRoom) {
-                          setFormLocation(`Phòng ${targetRoom.roomNumber}`);
+                          setFormLocation(t("landlordAssetsRoomPrefix", { room: targetRoom.roomNumber }));
                         }
                       }
                     }}
                     className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
                   >
-                    <option value="">{isEn ? "Shared / Unassigned (Common Area)" : "Khu vực chung / Chưa gán phòng"}</option>
+                    <option value="">{t("landlordAssetsRoomSharedOption")}</option>
                     {availableRooms.map((room) => (
                       <option key={room.id} value={room.id}>
-                        {isEn ? `Room ${room.roomNumber}` : `Phòng ${room.roomNumber}`}
+                        {t("landlordAssetsRoomPrefix", { room: room.roomNumber })}
                       </option>
                     ))}
                   </select>
@@ -1008,11 +962,11 @@ export default function AssetsPage() {
                 {/* Location Detail */}
                 <div>
                   <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {isEn ? "Location Details" : "Vị trí cụ thể"}
+                    {t("landlordAssetsFieldLocationDetail")}
                   </label>
                   <input
                     type="text"
-                    placeholder={isEn ? "e.g. Balcony, Room 101, Floor 2" : "VD: Ban công, Góc phòng 101"}
+                    placeholder={t("landlordAssetsFieldLocationDetailPh")}
                     value={formLocation}
                     onChange={(e) => {
                       setFormLocation(e.target.value);
@@ -1025,7 +979,7 @@ export default function AssetsPage() {
                 {/* Quantity */}
                 <div>
                   <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {isEn ? "Quantity" : "Số lượng"}
+                    {t("landlordAssetsFieldQuantity")}
                   </label>
                   <input
                     type="number"
@@ -1089,19 +1043,19 @@ export default function AssetsPage() {
                     <option value="new">{t("landlordAssetsStatusReady")}</option>
                     <option value="under_repair">{t("landlordAssetsStatusMaintenance")}</option>
                     <option value="damaged">{t("landlordAssetsStatusBroken")}</option>
-                    <option value="lost">{isEn ? "Lost" : "Đã mất"}</option>
-                    <option value="disposed">{isEn ? "Disposed" : "Đã thanh lý"}</option>
+                    <option value="lost">{t("landlordAssetsStatusLost")}</option>
+                    <option value="disposed">{t("landlordAssetsStatusDisposed")}</option>
                   </select>
                 </div>
 
                 {/* Note */}
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {isEn ? "Note / Warranty" : "Ghi chú / Thông tin bảo hành"}
+                    {t("landlordAssetsFieldNoteWarranty")}
                   </label>
                   <textarea
                     rows={2}
-                    placeholder={isEn ? "e.g. 2 years official warranty, model code..." : "VD: Bảo hành chính hãng 2 năm, mã model..."}
+                    placeholder={t("landlordAssetsFieldNoteWarrantyPh")}
                     value={formNote}
                     onChange={(e) => {
                       setFormNote(e.target.value);
@@ -1133,145 +1087,6 @@ export default function AssetsPage() {
         </div>
       )}
 
-      {/* CONFIRM MODAL */}
-      <ConfirmModal
-        isOpen={confirmModal.isOpen}
-        title={confirmModal.title}
-        message={confirmModal.message}
-        confirmText={confirmModal.confirmText}
-        cancelText={confirmModal.cancelText}
-        onConfirm={confirmModal.onConfirm}
-        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
-      />
-
-      {/* ALERT MODAL */}
-      <AlertModal
-        isOpen={alertModal.isOpen}
-        title={alertModal.title}
-        message={alertModal.message}
-        type={alertModal.type}
-        onClose={() => setAlertModal((prev) => ({ ...prev, isOpen: false }))}
-      />
-    </div>
-  );
-}
-
-function ConfirmModal({
-  isOpen,
-  title,
-  message,
-  confirmText = "OK",
-  cancelText = "Cancel",
-  onConfirm,
-  onCancel,
-}: {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onCancel();
-      }}
-    >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-200 mx-auto flex items-center justify-center shadow-inner">
-          <AlertTriangle className="w-7 h-7" />
-        </div>
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
-        </div>
-        <div className="grid grid-cols-2 gap-2.5 pt-2">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20 transition-all cursor-pointer"
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AlertModal({
-  isOpen,
-  title,
-  message,
-  type = "info",
-  onClose,
-}: {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  type?: "warning" | "error" | "success" | "info";
-  onClose: () => void;
-}) {
-  const t = useTranslations("landlord");
-  if (!isOpen) return null;
-
-  const config = {
-    warning: {
-      bgColor: "bg-amber-500/10 text-amber-600 border-amber-200",
-      icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
-      btnColor: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20",
-    },
-    error: {
-      bgColor: "bg-rose-500/10 text-rose-600 border-rose-200",
-      icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
-      btnColor: "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20",
-    },
-    success: {
-      bgColor: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-      icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
-      btnColor: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20",
-    },
-    info: {
-      bgColor: "bg-orange-50 text-[#FF6B35] border-orange-200",
-      icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
-      btnColor: "bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20",
-    },
-  }[type];
-
-  return (
-    <div
-      className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-        <div className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}>
-          {config.icon}
-        </div>
-
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
-        </div>
-
-        <button
-          onClick={onClose}
-          className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
-        >
-          {t("landlordAssetsBtnUnderstood")}
-        </button>
-      </div>
     </div>
   );
 }
