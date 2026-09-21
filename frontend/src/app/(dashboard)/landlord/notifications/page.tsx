@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
-    Plus, BellRing, CheckCircle2, X, Send, Users, Building2, Eye,
+    Plus, CheckCircle2, X, Send, Users, Building2, Eye,
     Sparkles, Search, LayoutGrid, List, RefreshCw, MapPin,
     ShieldAlert, Smartphone, Trash2, Loader2, AlertCircle
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useLanguage, useTranslations } from "@/context/LanguageContext";
+import { useTranslations } from "@/context/LanguageContext";
 import {
     announcementService,
     LandlordAnnouncementItem,
@@ -18,10 +18,13 @@ import { Button, TextInput, SelectInput, TextareaInput } from "@/components/ui";
 
 export default function NotificationsPage() {
     const { activeBuilding } = useAuth();
-    const { locale } = useLanguage();
-    const isEn = locale === "en";
     const t = useTranslations("landlord");
     const tCommon = useTranslations("common");
+
+    const tRef = useRef(t);
+    useEffect(() => {
+        tRef.current = t;
+    }, [t]);
 
     const [isMounted, setIsMounted] = useState(false);
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -77,6 +80,42 @@ export default function NotificationsPage() {
         }
     }, [activeBuilding?.name]);
 
+    // Localized category label helper
+    const getCategoryLabel = useCallback((category: string) => {
+        switch (category) {
+            case "Điện nước":
+            case "Utilities":
+                return t("landlordNotificationsCatUtilities");
+            case "Tiền nhà":
+            case "Rent":
+            case "Rent & Billing":
+                return t("landlordNotificationsCatRent");
+            case "Nội quy":
+            case "Rules":
+            case "Rules & Policies":
+                return t("landlordNotificationsCatRules");
+            case "Khẩn cấp":
+            case "Emergency":
+                return t("landlordNotificationsCatEmergency");
+            default:
+                return category;
+        }
+    }, [t]);
+
+    // Localized channel label helper
+    const getChannelLabel = useCallback((channel: string) => {
+        switch (channel) {
+            case "Thông báo hệ thống":
+            case "System In-App":
+            case "In-App Notice":
+                return t("landlordNotificationsChannelInApp");
+            case "SMS":
+                return t("landlordNotificationsChannelSms");
+            default:
+                return channel;
+        }
+    }, [t]);
+
     // Reset draft fields completely
     const resetNotifForm = useCallback(() => {
         setNotifTitle("");
@@ -115,12 +154,12 @@ export default function NotificationsPage() {
             console.error("Failed to fetch announcements:", err);
             setToast({
                 type: "error",
-                text: err?.message || (isEn ? "Failed to load announcements" : "Không thể tải danh sách thông báo"),
+                text: err?.message || tRef.current("landlordNotificationsToastFetchError"),
             });
         } finally {
             setIsLoading(false);
         }
-    }, [activeBuilding?.id, page, itemsPerPage, searchQuery, categoryFilter, channelFilter, isEn]);
+    }, [activeBuilding?.id, page, itemsPerPage, searchQuery, categoryFilter, channelFilter]);
 
     useEffect(() => {
         fetchAnnouncements();
@@ -142,7 +181,7 @@ export default function NotificationsPage() {
                 title: notifTitle.trim(),
                 content: notifContent.trim(),
                 category: notifCategory,
-                targetScope: notifTargetScope.trim() || activeBuilding.name || (isEn ? "Entire building" : "Toàn bộ tòa nhà"),
+                targetScope: notifTargetScope.trim() || activeBuilding.name || tRef.current("landlordNotificationsEntireBuilding"),
                 channel: notifChannel,
             });
 
@@ -150,13 +189,13 @@ export default function NotificationsPage() {
             setIsNotifModalOpen(false);
             setToast({
                 type: "success",
-                text: isEn ? "Announcement broadcasted successfully!" : "Đã phát thông báo thành công đến cư dân!",
+                text: tRef.current("landlordNotificationsToastBroadcastSuccess"),
             });
             await fetchAnnouncements();
         } catch (err: any) {
             setToast({
                 type: "error",
-                text: err?.message || (isEn ? "Failed to broadcast announcement" : "Không thể phát thông báo"),
+                text: err?.message || tRef.current("landlordNotificationsToastBroadcastError"),
             });
         } finally {
             setIsSubmitting(false);
@@ -175,13 +214,13 @@ export default function NotificationsPage() {
             }
             setToast({
                 type: "success",
-                text: isEn ? "Announcement deleted successfully" : "Đã xóa thông báo thành công",
+                text: tRef.current("landlordNotificationsToastDeleteSuccess"),
             });
             await fetchAnnouncements();
         } catch (err: any) {
             setToast({
                 type: "error",
-                text: err?.message || (isEn ? "Failed to delete announcement" : "Không thể xóa thông báo"),
+                text: err?.message || tRef.current("landlordNotificationsToastDeleteError"),
             });
         } finally {
             setIsDeleting(false);
@@ -191,34 +230,30 @@ export default function NotificationsPage() {
     // Quick Announcement Templates
     const notificationTemplates = useMemo(() => [
         {
-            title: isEn ? "Notice: Power grid maintenance interruption" : "Thông báo cúp điện bảo trì lưới điện",
+            title: t("landlordNotificationsTmpl1Title"),
             category: "Điện nước",
-            content: isEn
-                ? `Dear residents of ${activeBuilding?.name || "the building"},\n\nThe regional power authority will perform grid maintenance from 08:00 to 12:00 tomorrow. Please plan accordingly and disconnect high-power appliances before this period.\n\nThank you for your cooperation!`
-                : `Kính gửi quý khách thuê phòng tại ${activeBuilding?.name || "tòa nhà"},\n\nHệ thống điện lực khu vực sẽ tiến hành bảo trì lưới điện từ 08:00 đến 12:00 ngày tới. Rất mong quý khách chủ động sắp xếp công việc và ngắt các thiết bị điện công suất lớn trước thời gian trên.\n\nTrân trọng thông báo!`,
+            content: t("landlordNotificationsTmpl1Content", {
+                building: activeBuilding?.name || t("landlordNotificationsBuildingFallback"),
+            }),
         },
         {
-            title: isEn ? "Reminder: Monthly rent settlement" : "Nhắc nhở quyết toán tiền nhà tháng này",
+            title: t("landlordNotificationsTmpl2Title"),
             category: "Tiền nhà",
-            content: isEn
-                ? `Dear residents,\n\nThis month's rent & service invoices have been updated on the Dormio app. Please review and settle payment prior to the due date to avoid late fees.\n\nThank you!`
-                : `Kính báo quý khách thuê phòng,\n\nHóa đơn tiền nhà & dịch vụ tháng này đã được cập nhật trên ứng dụng. Đề nghị quý khách kiểm tra và thanh toán trước hạn để tránh phát sinh phí chậm nộp.\n\nCảm ơn sự hợp tác của quý khách!`,
+            content: t("landlordNotificationsTmpl2Content"),
         },
         {
-            title: isEn ? "Building pest control routine schedule" : "Thông báo lịch diệt côn trùng toàn tòa nhà",
+            title: t("landlordNotificationsTmpl3Title"),
             category: "Nội quy",
-            content: isEn
-                ? `Building Management of ${activeBuilding?.name || "the building"} will conduct routine mosquito and pest spraying in corridors and common areas. Please keep room doors closed and cover food carefully.`
-                : `Ban quản lý tòa nhà ${activeBuilding?.name || "tòa nhà"} sẽ tiến hành xịt muỗi và diệt côn trùng định kỳ khu vực hành lang và các tầng. Vui lòng đóng kín cửa phòng và che đậy thực phẩm cẩn thận.`,
+            content: t("landlordNotificationsTmpl3Content", {
+                building: activeBuilding?.name || t("landlordNotificationsBuildingFallback"),
+            }),
         },
         {
-            title: isEn ? "URGENT: Emergency water pump maintenance" : "THÔNG BÁO KHẨN: Bảo trì máy bơm nước khẩn cấp",
+            title: t("landlordNotificationsTmpl4Title"),
             category: "Khẩn cấp",
-            content: isEn
-                ? `Due to unexpected technical failure of the primary water pump, clean water supply will be temporarily suspended for approximately 2 hours. Technicians are working urgently to restore service.`
-                : `Do sự cố kỹ thuật máy bơm chính, hệ thống nước sạch sẽ tạm ngưng trong khoảng 2 tiếng tới. Kỹ thuật viên đang xử lý gấp. Rất mong quý khách thông cảm!`,
+            content: t("landlordNotificationsTmpl4Content"),
         },
-    ], [activeBuilding?.name, isEn]);
+    ], [activeBuilding?.name, t]);
 
     if (!isMounted) return null;
 
@@ -260,7 +295,7 @@ export default function NotificationsPage() {
                     <div className="space-y-3 max-w-xl w-full">
                         <div className="flex flex-wrap items-center gap-2">
                             <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                                {activeBuilding?.name || (isEn ? "Building Announcements" : "Quản lý thông báo tòa nhà")}
+                                {activeBuilding?.name || t("landlordNotificationsHeroTitle")}
                             </h1>
                         </div>
 
@@ -284,9 +319,7 @@ export default function NotificationsPage() {
                         )}
 
                         <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-                            {isEn
-                                ? "Manage and broadcast official announcements directly to all residents in your boarding house."
-                                : "Quản lý và phát thông báo trực tiếp đến cư dân toàn tòa nhà qua ứng dụng, Zalo và SMS."}
+                            {t("landlordNotificationsHeroSubtitle")}
                         </p>
                     </div>
 
@@ -297,7 +330,7 @@ export default function NotificationsPage() {
                             <Send className="w-5 h-5 text-[#2AC1BC] shrink-0" />
                             <div className="flex flex-col">
                                 <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                                    {isEn ? "Announcements" : "Tổng thông báo"}
+                                    {t("landlordNotificationsStatTotal")}
                                 </span>
                                 <span className="font-black text-white text-lg leading-none mt-1">
                                     {summary.totalAnnouncements}
@@ -310,7 +343,7 @@ export default function NotificationsPage() {
                             <Users className="w-5 h-5 text-blue-400 shrink-0" />
                             <div className="flex flex-col">
                                 <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
-                                    {isEn ? "Reached Tenants" : "Cư dân tiếp cận"}
+                                    {t("landlordNotificationsStatReached")}
                                 </span>
                                 <span className="font-black text-white text-lg leading-none mt-1">
                                     {summary.totalTargetTenants}
@@ -323,7 +356,7 @@ export default function NotificationsPage() {
                             <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0" />
                             <div className="flex flex-col">
                                 <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
-                                    {isEn ? "Urgent Notices" : "Thông báo khẩn"}
+                                    {t("landlordNotificationsStatUrgent")}
                                 </span>
                                 <span className="font-black text-rose-500 text-lg leading-none mt-1">
                                     {summary.emergencyCount}
@@ -339,7 +372,7 @@ export default function NotificationsPage() {
                 {/* Search Input */}
                 <div className="relative flex-1">
                     <TextInput
-                        placeholder={isEn ? "Search by title, content..." : "Tìm kiếm theo tiêu đề, nội dung..."}
+                        placeholder={t("landlordNotificationsSearchPlaceholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         leftIcon={<Search className="w-4 h-4" />}
@@ -365,11 +398,11 @@ export default function NotificationsPage() {
                             value={categoryFilter}
                             onChange={(e) => setCategoryFilter(e.target.value)}
                             options={[
-                                { value: "", label: isEn ? "All Categories" : "Tất cả danh mục" },
-                                { value: "Điện nước", label: isEn ? "Utilities" : "Điện nước" },
-                                { value: "Tiền nhà", label: isEn ? "Rent & Billing" : "Tiền nhà" },
-                                { value: "Nội quy", label: isEn ? "Rules & Policies" : "Nội quy" },
-                                { value: "Khẩn cấp", label: isEn ? "Emergency" : "Khẩn cấp" },
+                                { value: "", label: t("landlordNotificationsFilterAllCategories") },
+                                { value: "Điện nước", label: t("landlordNotificationsCatUtilities") },
+                                { value: "Tiền nhà", label: t("landlordNotificationsCatRent") },
+                                { value: "Nội quy", label: t("landlordNotificationsCatRules") },
+                                { value: "Khẩn cấp", label: t("landlordNotificationsCatEmergency") },
                             ]}
                         />
                     </div>
@@ -380,10 +413,10 @@ export default function NotificationsPage() {
                             value={channelFilter}
                             onChange={(e) => setChannelFilter(e.target.value)}
                             options={[
-                                { value: "", label: isEn ? "All Channels" : "Tất cả kênh" },
-                                { value: "Thông báo hệ thống", label: isEn ? "In-App Notice" : "Thông báo hệ thống" },
-                                { value: "Zalo OA", label: "Zalo OA" },
-                                { value: "SMS", label: "SMS" },
+                                { value: "", label: t("landlordNotificationsFilterAllChannels") },
+                                { value: "Thông báo hệ thống", label: t("landlordNotificationsChannelInApp") },
+                                { value: "Zalo OA", label: t("landlordNotificationsChannelZalo") },
+                                { value: "SMS", label: t("landlordNotificationsChannelSms") },
                             ]}
                         />
                     </div>
@@ -396,7 +429,7 @@ export default function NotificationsPage() {
                                 setViewMode("grid");
                                 if (itemsPerPage === 10) setItemsPerPage(6);
                             }}
-                            title={isEn ? "Grid view" : "Xem dạng lưới"}
+                            title={t("landlordNotificationsViewGrid")}
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "grid"
                                 ? "bg-white text-zinc-900 shadow-2xs"
                                 : "text-zinc-400 hover:text-zinc-700"
@@ -410,7 +443,7 @@ export default function NotificationsPage() {
                                 setViewMode("list");
                                 if (itemsPerPage === 6) setItemsPerPage(10);
                             }}
-                            title={isEn ? "List view" : "Xem dạng danh sách"}
+                            title={t("landlordNotificationsViewList")}
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${viewMode === "list"
                                 ? "bg-white text-zinc-900 shadow-2xs"
                                 : "text-zinc-400 hover:text-zinc-700"
@@ -425,7 +458,7 @@ export default function NotificationsPage() {
                         type="button"
                         onClick={() => fetchAnnouncements()}
                         disabled={isLoading}
-                        title={isEn ? "Refresh list" : "Làm mới danh sách"}
+                        title={t("landlordNotificationsRefreshList")}
                         className="p-2.5 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-600 hover:text-zinc-900 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
                     >
                         <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-[#2AC1BC]" : ""}`} />
@@ -437,7 +470,7 @@ export default function NotificationsPage() {
                         className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm shadow-[#2AC1BC]/20 flex items-center gap-1.5 py-2 px-4"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>{isEn ? "Broadcast Announcement" : "Phát thông báo mới"}</span>
+                        <span>{t("landlordNotificationsBtnBroadcast")}</span>
                     </Button>
                 </div>
             </div>
@@ -448,7 +481,7 @@ export default function NotificationsPage() {
                     <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-zinc-200 text-center">
                         <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
                         <p className="text-xs font-bold text-zinc-600">
-                            {isEn ? "Loading announcements..." : "Đang tải danh sách thông báo..."}
+                            {t("landlordNotificationsLoading")}
                         </p>
                     </div>
                 ) : notifications.length === 0 ? (
@@ -457,19 +490,17 @@ export default function NotificationsPage() {
                             <Send className="w-8 h-8" />
                         </div>
                         <h3 className="text-base font-bold text-zinc-800">
-                            {isEn ? "No announcements yet" : "Chưa có thông báo nào"}
+                            {t("landlordNotificationsEmptyTitle")}
                         </h3>
                         <p className="text-xs text-zinc-500 mt-1 max-w-sm">
-                            {isEn
-                                ? "No broadcast announcements have been sent to residents yet. Click 'Broadcast Announcement' to send the first one."
-                                : "Chưa có thông báo nào được phát sóng tới cư dân. Hãy nhấn nút 'Phát thông báo mới' để gửi thông báo đầu tiên."}
+                            {t("landlordNotificationsEmptyDesc")}
                         </p>
                         <Button
                             onClick={() => setIsNotifModalOpen(true)}
                             className="mt-4 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl shadow-sm shadow-[#2AC1BC]/20 flex items-center gap-1.5"
                         >
                             <Plus className="w-4 h-4" />
-                            <span>{isEn ? "Create First Announcement" : "Tạo thông báo đầu tiên"}</span>
+                            <span>{t("landlordNotificationsCreateFirstNotif")}</span>
                         </Button>
                     </div>
                 ) : viewMode === "grid" ? (
@@ -500,7 +531,7 @@ export default function NotificationsPage() {
                                                             : "bg-blue-500/15 text-blue-600 border border-blue-500/30"
                                                     }`}
                                             >
-                                                {notif.category}
+                                                {getCategoryLabel(notif.category)}
                                             </span>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[11px] font-semibold text-zinc-400">{notif.sentAt}</span>
@@ -511,7 +542,7 @@ export default function NotificationsPage() {
                                                         setDeletingNotifId(notif.id);
                                                     }}
                                                     className="text-zinc-300 hover:text-rose-500 transition-colors p-1 cursor-pointer"
-                                                    title={isEn ? "Delete announcement" : "Xóa thông báo"}
+                                                    title={t("landlordNotificationsDeleteAction")}
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
@@ -536,7 +567,7 @@ export default function NotificationsPage() {
                                             </span>
                                             <span className="inline-flex items-center gap-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] px-2.5 py-1 rounded-full text-[11px]">
                                                 <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                                                <span>{notif.channel}</span>
+                                                <span>{getChannelLabel(notif.channel)}</span>
                                             </span>
                                         </div>
 
@@ -544,7 +575,7 @@ export default function NotificationsPage() {
                                         <div className="pt-2 border-t border-zinc-100">
                                             <div className="flex items-center justify-between text-[11px] font-bold mb-1">
                                                 <span className="text-zinc-600">
-                                                    {isEn ? "Read reach" : "Đã đọc"}: {notif.readCount}/{notif.totalTarget} {isEn ? "Tenants" : "Khách"}
+                                                    {t("landlordNotificationsReadPrefix")}: {notif.readCount}/{notif.totalTarget} {t("landlordNotificationsTenantsUnit")}
                                                 </span>
                                                 <span className="text-[#2AC1BC]">{readPct}%</span>
                                             </div>
@@ -565,7 +596,7 @@ export default function NotificationsPage() {
                                             className="w-full px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                                         >
                                             <Eye className="w-3.5 h-3.5" />
-                                            <span>{isEn ? "View Details" : "Xem chi tiết"}</span>
+                                            <span>{t("landlordNotificationsViewDetails")}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -580,22 +611,22 @@ export default function NotificationsPage() {
                                 <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
                                     <tr>
                                         <th className="px-4 py-3.5 whitespace-nowrap w-80">
-                                            {isEn ? "Category & Title" : "Phân loại & Tiêu đề"}
+                                            {t("landlordNotificationsColCategoryTitle")}
                                         </th>
                                         <th className="px-4 py-3.5 whitespace-nowrap">
-                                            {isEn ? "Target Audience" : "Đối tượng nhận"}
+                                            {t("landlordNotificationsColTargetAudience")}
                                         </th>
                                         <th className="px-4 py-3.5 whitespace-nowrap">
-                                            {isEn ? "Channel" : "Kênh gửi"}
+                                            {t("landlordNotificationsColChannel")}
                                         </th>
                                         <th className="px-4 py-3.5 whitespace-nowrap">
-                                            {isEn ? "Read Rate" : "Tỷ lệ đã đọc"}
+                                            {t("landlordNotificationsColReadRate")}
                                         </th>
                                         <th className="px-4 py-3.5 whitespace-nowrap">
-                                            {isEn ? "Sent At" : "Thời gian đăng"}
+                                            {t("landlordNotificationsColSentAt")}
                                         </th>
                                         <th className="px-4 py-3.5 text-right whitespace-nowrap">
-                                            {isEn ? "Actions" : "Hành động"}
+                                            {t("landlordNotificationsColActions")}
                                         </th>
                                     </tr>
                                 </thead>
@@ -620,7 +651,7 @@ export default function NotificationsPage() {
                                                                         : "bg-blue-500/15 text-blue-600 border border-blue-500/30"
                                                                 }`}
                                                         >
-                                                            {notif.category}
+                                                            {getCategoryLabel(notif.category)}
                                                         </span>
                                                         <span className="font-bold text-zinc-900 text-sm truncate">{notif.title}</span>
                                                     </div>
@@ -637,7 +668,7 @@ export default function NotificationsPage() {
                                                 <td className="px-4 py-4 whitespace-nowrap">
                                                     <span className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 whitespace-nowrap">
                                                         <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                                                        <span>{notif.channel}</span>
+                                                        <span>{getChannelLabel(notif.channel)}</span>
                                                     </span>
                                                 </td>
 
@@ -645,7 +676,7 @@ export default function NotificationsPage() {
                                                     <div className="flex flex-col gap-1">
                                                         <div className="flex items-center justify-between text-[11px] font-bold">
                                                             <span className="text-zinc-700">
-                                                                {notif.readCount}/{notif.totalTarget} {isEn ? "Tenants" : "Khách"}
+                                                                {notif.readCount}/{notif.totalTarget} {t("landlordNotificationsTenantsUnit")}
                                                             </span>
                                                             <span className="text-[#2AC1BC]">{readPct}%</span>
                                                         </div>
@@ -667,13 +698,13 @@ export default function NotificationsPage() {
                                                             className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
                                                         >
                                                             <Eye className="w-3.5 h-3.5" />
-                                                            <span>{isEn ? "Details" : "Chi tiết"}</span>
+                                                            <span>{t("landlordNotificationsBtnDetails")}</span>
                                                         </button>
                                                         <button
                                                             type="button"
                                                             onClick={() => setDeletingNotifId(notif.id)}
                                                             className="p-1.5 text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer"
-                                                            title={isEn ? "Delete" : "Xóa"}
+                                                            title={t("landlordNotificationsBtnDelete")}
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5" />
                                                         </button>
@@ -692,7 +723,7 @@ export default function NotificationsPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
                     <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                         <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                            <span>{isEn ? "Showing" : "Hiển thị"}</span>
+                            <span>{t("landlordNotificationsPaginationShowing")}</span>
                             <input
                                 type="number"
                                 min={1}
@@ -705,7 +736,7 @@ export default function NotificationsPage() {
                                 }}
                                 className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
                             />
-                            <span>{isEn ? "/ page" : "/ trang"}</span>
+                            <span>{t("landlordNotificationsPaginationPerPage")}</span>
                         </div>
 
                         <span className="hidden sm:inline text-zinc-300">|</span>
@@ -718,9 +749,9 @@ export default function NotificationsPage() {
                             <span className="font-extrabold text-zinc-800">
                                 {Math.min(page * itemsPerPage, totalItems)}
                             </span>
-                            {isEn ? " of " : " trên "}
+                            {` ${t("landlordNotificationsPaginationOf")} `}
                             <span className="font-extrabold text-zinc-800">{totalItems}</span>
-                            {isEn ? " announcements" : " thông báo"}
+                            {` ${t("landlordNotificationsPaginationAnnouncements")}`}
                         </div>
                     </div>
 
@@ -739,7 +770,7 @@ export default function NotificationsPage() {
                                     onClick={() => setPage(Math.max(windowStart - windowSize, 1))}
                                     className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                                 >
-                                    &larr; {isEn ? "Prev" : "Trước"}
+                                    &larr; {t("landlordNotificationsPaginationPrev")}
                                 </button>
                                 {visiblePages.map((p) => (
                                     <button
@@ -760,7 +791,7 @@ export default function NotificationsPage() {
                                     onClick={() => setPage(Math.min(windowStart + windowSize, totalPages))}
                                     className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                                 >
-                                    {isEn ? "Next" : "Sau"} &rarr;
+                                    {t("landlordNotificationsPaginationNext")} &rarr;
                                 </button>
                             </div>
                         );
@@ -785,12 +816,10 @@ export default function NotificationsPage() {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black tracking-tight text-white">
-                                        {isEn ? "Broadcast Announcement" : "Phát thông báo tòa nhà"}
+                                        {t("landlordNotificationsModalTitle")}
                                     </h2>
                                     <p className="text-xs text-zinc-400 mt-0.5">
-                                        {isEn
-                                            ? "Dispatches a notice to all tenant devices and selected channels"
-                                            : "Gửi thông báo nhanh đến thiết bị cư dân và các kênh liên kết"}
+                                        {t("landlordNotificationsModalSubtitle")}
                                     </p>
                                 </div>
                             </div>
@@ -809,7 +838,7 @@ export default function NotificationsPage() {
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1">
                                     <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                                    <span>{isEn ? "Quick Templates" : "Mẫu thông báo nhanh"}</span>
+                                    <span>{t("landlordNotificationsTemplatesLabel")}</span>
                                 </label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {notificationTemplates.map((tmpl) => (
@@ -827,7 +856,7 @@ export default function NotificationsPage() {
                                                 {tmpl.title}
                                             </div>
                                             <div className="text-[10px] text-zinc-500 mt-0.5 font-medium">
-                                                {tmpl.category}
+                                                {getCategoryLabel(tmpl.category)}
                                             </div>
                                         </button>
                                     ))}
@@ -836,9 +865,9 @@ export default function NotificationsPage() {
 
                             {/* Title */}
                             <TextInput
-                                label={isEn ? "Announcement Title" : "Tiêu đề thông báo"}
+                                label={t("landlordNotificationsFieldTitle")}
                                 required
-                                placeholder={isEn ? "e.g. Electricity outage notice on 30/08" : "VD: Lịch cúp điện ngày 30/08"}
+                                placeholder={t("landlordNotificationsFieldTitlePlaceholder")}
                                 value={notifTitle}
                                 onChange={(e) => setNotifTitle(e.target.value)}
                             />
@@ -846,43 +875,43 @@ export default function NotificationsPage() {
                             {/* Target & Channel */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <TextInput
-                                    label={isEn ? "Target Scope" : "Đối tượng nhận"}
+                                    label={t("landlordNotificationsFieldTargetScope")}
                                     value={notifTargetScope}
                                     onChange={(e) => setNotifTargetScope(e.target.value)}
-                                    placeholder={isEn ? "e.g. Entire building" : "VD: Toàn bộ tòa nhà"}
+                                    placeholder={t("landlordNotificationsFieldTargetScopePlaceholder")}
                                 />
 
                                 <SelectInput
-                                    label={isEn ? "Delivery Channel" : "Kênh gửi"}
+                                    label={t("landlordNotificationsFieldChannel")}
                                     value={notifChannel}
                                     onChange={(e) => setNotifChannel(e.target.value)}
                                     options={[
-                                        { value: "Thông báo hệ thống", label: isEn ? "In-App Notice (Dormio)" : "Thông báo hệ thống (Dormio)" },
-                                        { value: "Zalo OA", label: "Zalo Official Account" },
-                                        { value: "SMS", label: isEn ? "Direct SMS Message" : "Tin nhắn SMS trực tiếp" },
+                                        { value: "Thông báo hệ thống", label: t("landlordNotificationsChannelInAppFull") },
+                                        { value: "Zalo OA", label: t("landlordNotificationsChannelZalo") },
+                                        { value: "SMS", label: t("landlordNotificationsChannelSmsDirect") },
                                     ]}
                                 />
                             </div>
 
                             {/* Category */}
                             <SelectInput
-                                label={isEn ? "Category" : "Phân loại"}
+                                label={t("landlordNotificationsFieldCategory")}
                                 value={notifCategory}
                                 onChange={(e) => setNotifCategory(e.target.value)}
                                 options={[
-                                    { value: "Điện nước", label: isEn ? "Utilities" : "Điện nước" },
-                                    { value: "Tiền nhà", label: isEn ? "Rent & Billing" : "Tiền nhà" },
-                                    { value: "Nội quy", label: isEn ? "Rules & Policies" : "Nội quy" },
-                                    { value: "Khẩn cấp", label: isEn ? "Emergency" : "Khẩn cấp" },
+                                    { value: "Điện nước", label: t("landlordNotificationsCatUtilities") },
+                                    { value: "Tiền nhà", label: t("landlordNotificationsCatRent") },
+                                    { value: "Nội quy", label: t("landlordNotificationsCatRules") },
+                                    { value: "Khẩn cấp", label: t("landlordNotificationsCatEmergency") },
                                 ]}
                             />
 
                             {/* Content */}
                             <TextareaInput
-                                label={isEn ? "Detailed Content" : "Nội dung chi tiết"}
+                                label={t("landlordNotificationsFieldContent")}
                                 required
                                 rows={5}
-                                placeholder={isEn ? "Enter announcement body text..." : "Nhập nội dung thông báo gửi đến cư dân..."}
+                                placeholder={t("landlordNotificationsFieldContentPlaceholder")}
                                 value={notifContent}
                                 onChange={(e) => setNotifContent(e.target.value)}
                             />
@@ -895,7 +924,7 @@ export default function NotificationsPage() {
                                     disabled={isSubmitting}
                                     className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer disabled:opacity-50"
                                 >
-                                    {isEn ? "Cancel" : "Hủy bỏ"}
+                                    {t("landlordNotificationsBtnCancel")}
                                 </button>
                                 <Button
                                     type="submit"
@@ -905,12 +934,12 @@ export default function NotificationsPage() {
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin" />
-                                            <span>{isEn ? "Broadcasting..." : "Đang phát sóng..."}</span>
+                                            <span>{t("landlordNotificationsBroadcasting")}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Send className="w-4 h-4" />
-                                            <span>{isEn ? "Broadcast Now" : "Phát thông báo ngay"}</span>
+                                            <span>{t("landlordNotificationsBtnBroadcastNow")}</span>
                                         </>
                                     )}
                                 </Button>
@@ -920,8 +949,7 @@ export default function NotificationsPage() {
                 </div>
             )}
 
-
-            {/* 7. MODAL: View Announcement Details */}
+            {/* 6. MODAL: View Announcement Details */}
             {selectedNotifDetail && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
@@ -934,10 +962,10 @@ export default function NotificationsPage() {
                         <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-900 text-white">
                             <div className="flex items-center gap-2.5">
                                 <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase">
-                                    {selectedNotifDetail.category}
+                                    {getCategoryLabel(selectedNotifDetail.category)}
                                 </span>
                                 <h3 className="text-sm font-bold text-white">
-                                    {isEn ? "Announcement Details" : "Chi tiết thông báo"}
+                                    {t("landlordNotificationsDetailTitle")}
                                 </h3>
                             </div>
                             <button
@@ -957,11 +985,11 @@ export default function NotificationsPage() {
                                 </h2>
                                 <div className="flex items-center gap-3 text-zinc-400 text-[11px] font-bold">
                                     <span>
-                                        {isEn ? `Sent at: ${selectedNotifDetail.sentAt}` : `Gửi lúc: ${selectedNotifDetail.sentAt}`}
+                                        {t("landlordNotificationsDetailSentAt", { time: selectedNotifDetail.sentAt })}
                                     </span>
                                     <span>•</span>
                                     <span>
-                                        {isEn ? `Channel: ${selectedNotifDetail.channel}` : `Kênh: ${selectedNotifDetail.channel}`}
+                                        {t("landlordNotificationsDetailChannel", { channel: getChannelLabel(selectedNotifDetail.channel) })}
                                     </span>
                                 </div>
                             </div>
@@ -974,11 +1002,11 @@ export default function NotificationsPage() {
                                 <div className="flex items-center gap-2">
                                     <Users className="w-4 h-4 text-blue-600" />
                                     <span className="text-zinc-700 font-bold">
-                                        {isEn ? "Resident Reach" : "Cư dân tiếp cận"}
+                                        {t("landlordNotificationsDetailTargetReach")}
                                     </span>
                                 </div>
                                 <span className="font-black text-blue-600 text-sm">
-                                    {selectedNotifDetail.totalTarget} {isEn ? "Residents" : "Cư dân"}
+                                    {t("landlordNotificationsDetailResidentsUnit", { count: selectedNotifDetail.totalTarget })}
                                 </span>
                             </div>
                         </div>
@@ -994,7 +1022,7 @@ export default function NotificationsPage() {
                                 className="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
                             >
                                 <Trash2 className="w-4 h-4" />
-                                <span>{isEn ? "Delete Notice" : "Xóa thông báo"}</span>
+                                <span>{t("landlordNotificationsDetailDelete")}</span>
                             </button>
 
                             <button
@@ -1002,14 +1030,14 @@ export default function NotificationsPage() {
                                 onClick={() => setSelectedNotifDetail(null)}
                                 className="px-5 py-2 text-xs font-bold text-white bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
                             >
-                                {isEn ? "Close" : "Đóng"}
+                                {t("landlordNotificationsDetailClose")}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* 8. MODAL: Confirm Delete Modal */}
+            {/* 7. MODAL: Confirm Delete Modal */}
             {deletingNotifId && (
                 <div
                     className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
@@ -1024,12 +1052,10 @@ export default function NotificationsPage() {
 
                         <div className="space-y-2">
                             <h3 className="text-xl font-black text-zinc-900 tracking-tight">
-                                {isEn ? "Confirm Deletion" : "Xác nhận xóa thông báo"}
+                                {t("landlordNotificationsConfirmDeleteTitle")}
                             </h3>
                             <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-                                {isEn
-                                    ? "Are you sure you want to delete this announcement? This action cannot be undone."
-                                    : "Bạn có chắc chắn muốn xóa thông báo này? Hành động này không thể hoàn tác."}
+                                {t("landlordNotificationsConfirmDeleteDesc")}
                             </p>
                         </div>
 
@@ -1040,7 +1066,7 @@ export default function NotificationsPage() {
                                 onClick={() => setDeletingNotifId(null)}
                                 className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
                             >
-                                {isEn ? "Cancel" : "Hủy bỏ"}
+                                {t("landlordNotificationsBtnCancel")}
                             </button>
                             <button
                                 type="button"
@@ -1053,7 +1079,7 @@ export default function NotificationsPage() {
                                 ) : (
                                     <Trash2 className="w-4 h-4" />
                                 )}
-                                <span>{isEn ? "Confirm Delete" : "Xác nhận xóa"}</span>
+                                <span>{t("landlordNotificationsConfirmDeleteBtn")}</span>
                             </button>
                         </div>
                     </div>
