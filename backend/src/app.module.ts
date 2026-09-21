@@ -28,6 +28,7 @@ import { SchedulesModule } from './modules/schedules/schedules.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AssetsModule } from './modules/assets/assets.module';
+import { UploadModule } from './modules/upload/upload.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { SubscriptionTierGuard } from './common/guards/subscription-tier.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -95,6 +96,7 @@ import { AppService } from './app.service';
     AttendanceModule,
     AdminModule,
     AssetsModule,
+    UploadModule,
   ],
 
   controllers: [AppController],
