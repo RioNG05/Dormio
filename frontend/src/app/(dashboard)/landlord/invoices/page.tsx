@@ -3,1397 +3,1394 @@
 import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
- Plus, Search, Filter, FileText, Download, MoreHorizontal, Receipt, Building2,
- ChevronDown, Sparkles, MapPin, FileSpreadsheet, Eye, Calendar, DollarSign,
- CheckCircle2, Clock, AlertTriangle, ChevronLeft, ChevronRight, Copy, QrCode,
- Printer, X, Check, LayoutGrid, List, Zap, Droplets, Wifi, ShieldCheck,
- Send, Smartphone, ArrowUpRight, User, RefreshCw, Loader2
+    Plus, Search, Filter, FileText, Download, MoreHorizontal, Receipt, Building2,
+    ChevronDown, Sparkles, MapPin, FileSpreadsheet, Eye, Calendar, DollarSign,
+    CheckCircle2, Clock, AlertTriangle, ChevronLeft, ChevronRight, Copy, QrCode,
+    Printer, X, Check, LayoutGrid, List, Zap, Droplets, Wifi, ShieldCheck,
+    Send, Smartphone, ArrowUpRight, User, RefreshCw, Loader2
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
- landlordInvoiceService,
- LandlordInvoiceItem,
- LandlordInvoicesSummary,
+    landlordInvoiceService,
+    LandlordInvoiceItem,
+    LandlordInvoicesSummary,
 } from "@/services/landlord-invoice.service";
 import { getRooms, RoomItem } from "@/services/room.service";
 
 type InvoiceItem = LandlordInvoiceItem;
 
 function InvoicesContent() {
- const { activeBuilding } = useAuth();
- const router = useRouter();
- const searchParams = useSearchParams();
- const t = useTranslations("landlord");
- const { currentLocale } = useLanguage();
-
- const getInvoiceStatusLabel = (status: string) => {
- switch (status) {
- case "Đã thu":
- case "Đã thanh toán":
- case "paid":
- return t("landlordInvoicesStatusPaid");
- case "Quá hạn":
- case "overdue":
- return t("landlordInvoicesStatusOverdue");
- case "Chưa thu":
- case "Chờ thanh toán":
- case "unpaid":
- default:
- return t("landlordInvoicesStatusUnpaid");
- }
- };
-
- // URL Params parsing
- const urlSearch = searchParams.get("search") || searchParams.get("room") || "";
- const urlId = searchParams.get("id") || "";
-
- const [isMounted, setIsMounted] = useState(false);
- const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
- const [activeTab, setActiveTab] = useState<"all" | "unpaid" | "paid" | "overdue">("all");
- const [searchTerm, setSearchTerm] = useState(urlSearch);
- const [selectedMonth, setSelectedMonth] = useState("all");
- const [selectedYear, setSelectedYear] = useState("2026");
-
- // Pagination State (Rule #9: Grid=6, Table=10, 5-page window jumping)
- const [pageSize, setPageSize] = useState<number>(viewMode === "grid" ? 6 : 10);
- const [currentPage, setCurrentPage] = useState<number>(1);
- const [totalRecords, setTotalRecords] = useState<number>(0);
-
- // Loading & Data States
- const [isLoading, setIsLoading] = useState(false);
- const [isSubmitting, setIsSubmitting] = useState(false);
- const [availableRooms, setAvailableRooms] = useState<RoomItem[]>([]);
- const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
- const [serverSummary, setServerSummary] = useState<LandlordInvoicesSummary>({
- totalInvoicesCount: 0,
- paidCount: 0,
- unpaidCount: 0,
- overdueCount: 0,
- totalPaidAmount: 0,
- totalUnpaidAmount: 0,
- });
-
- // Modals & Drawer States
- const [selectedInvoice, setSelectedInvoice] = useState<InvoiceItem | null>(null);
- const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
- const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
- const [confirmCloseTarget, setConfirmCloseTarget] = useState<"create" | "ocr" | "detail" | null>(null);
- const [isCopied, setIsCopied] = useState(false);
-
- // Form State for Create Invoice
- const [createForm, setCreateForm] = useState({
- roomId: "",
- roomName: "",
- tenantName: "",
- period: `${String(new Date().getMonth() + 1).padStart(2, "0")}/${new Date().getFullYear()}`,
- rentAmount: 0,
- elecOld: 0,
- elecNew: 0,
- elecRate: 3500,
- waterOld: 0,
- waterNew: 0,
- waterRate: 15000,
- wifiFee: 100000,
- trashFee: 50000,
- discount: 0,
- deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
- });
- const [isCreateFormDirty, setIsCreateFormDirty] = useState(false);
-
- // Form State for AI OCR Modal
- const [ocrMeterValue, setOcrMeterValue] = useState("0");
- const [isOcrFormDirty, setIsOcrFormDirty] = useState(false);
-
- useEffect(() => {
- setIsMounted(true);
- }, []);
-
- // Update default pageSize on viewMode change (Rule #9)
- useEffect(() => {
- setPageSize(viewMode === "grid" ? 6 : 10);
- setCurrentPage(1);
- }, [viewMode]);
-
- // Fetch available rooms for active building
- useEffect(() => {
- if (!activeBuilding?.id) return;
- getRooms(activeBuilding.id)
- .then((res) => {
- if (res?.data) {
- setAvailableRooms(res.data);
- if (res.data.length > 0) {
- const first = res.data[0];
- setCreateForm((prev) => ({
- ...prev,
- roomId: prev.roomId || first.id,
- roomName: prev.roomName || (currentLocale === "en" ? `Room ${first.roomNumber}` : `Phòng ${first.roomNumber}`),
- }));
- }
- }
- })
- .catch((err) => {
- console.error("Failed to load rooms:", err);
- });
- }, [activeBuilding?.id]);
-
- // Fetch invoices from backend
- const fetchInvoices = useCallback(async () => {
- if (!activeBuilding?.id) return;
- try {
- setIsLoading(true);
- const res = await landlordInvoiceService.getLandlordInvoices(
- activeBuilding.id,
- {
- search: searchTerm,
- status: activeTab,
- month: selectedMonth,
- year: selectedYear,
- page: currentPage,
- limit: pageSize,
- },
- );
- if (res && res.success) {
- setInvoices(res.data || []);
- setServerSummary(res.summary);
- setTotalRecords(res.meta.total || 0);
- }
- } catch (err) {
- console.error("Failed to fetch landlord invoices:", err);
- } finally {
- setIsLoading(false);
- }
- }, [
- activeBuilding?.id,
- searchTerm,
- activeTab,
- selectedMonth,
- selectedYear,
- currentPage,
- pageSize,
- ]);
-
- useEffect(() => {
- fetchInvoices();
- }, [fetchInvoices]);
-
- // Handle URL deep-linking: ?id=INV-... or ?search=... or ?room=101
- useEffect(() => {
- if (urlId) {
- const matchInv = invoices.find(
- (i) =>
- i.id.toLowerCase() === urlId.toLowerCase() ||
- i.roomId.toLowerCase() === urlId.toLowerCase(),
- );
- if (matchInv) {
- setSelectedInvoice(matchInv);
- }
- } else if (urlSearch) {
- const matchInv = invoices.find(
- (i) =>
- i.roomId === urlSearch ||
- i.roomName.toLowerCase().includes(urlSearch.toLowerCase()),
- );
- if (matchInv) {
- setSelectedInvoice(matchInv);
- }
- }
- }, [urlId, urlSearch, invoices]);
-
- if (!isMounted) return null;
-
- // Calculate Metrics from serverSummary
- const totalInvoicesCount = serverSummary.totalInvoicesCount;
- const paidCount = serverSummary.paidCount;
- const unpaidCount = serverSummary.unpaidCount;
- const overdueCount = serverSummary.overdueCount;
- const totalPaidAmount = serverSummary.totalPaidAmount;
- const totalUnpaidAmount = serverSummary.totalUnpaidAmount;
-
- // Pagination Logic with 5-page window jumping (Rule #9)
- const totalPages = Math.ceil(totalRecords / pageSize) || 1;
- const windowSize = 5;
- const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
- const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
- const visiblePages = Array.from(
- { length: windowEnd - windowStart + 1 },
- (_, i) => windowStart + i,
- );
- const startIndex = (currentPage - 1) * pageSize;
- const endIndex = Math.min(startIndex + pageSize, totalRecords);
-
- const paginatedInvoices = invoices;
- const totalItems = totalRecords;
-
- // Format large money amounts cleanly without wrapping
- const formatLargeMoney = (amount: number) => {
- if (amount >= 1_000_000_000) {
- return `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, '')} ${t("landlordInvoicesUnitBillion")}`;
- }
- if (amount >= 100_000_000) {
- return `${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '')} ${t("landlordInvoicesUnitMillion")}`;
- }
- return `${amount.toLocaleString("vi-VN")} ₫`;
- };
-
- // Handlers for Modals
- const handleOpenCreateModal = () => {
- setIsCreateFormDirty(false);
- setIsCreateModalOpen(true);
- };
-
- const handleRequestCloseCreate = () => {
- if (isCreateFormDirty) {
- setConfirmCloseTarget("create");
- } else {
- setIsCreateModalOpen(false);
- }
- };
-
- const handleOpenOcrModal = () => {
- setOcrMeterValue(String(createForm.elecNew || createForm.elecOld || "0"));
- setIsOcrFormDirty(false);
- setIsOcrModalOpen(true);
- };
-
- const handleRequestCloseOcr = () => {
- if (isOcrFormDirty) {
- setConfirmCloseTarget("ocr");
- } else {
- setIsOcrModalOpen(false);
- }
- };
-
- const handleConfirmCloseModal = () => {
- if (confirmCloseTarget === "create") {
- setIsCreateModalOpen(false);
- setIsCreateFormDirty(false);
- } else if (confirmCloseTarget === "ocr") {
- setIsOcrModalOpen(false);
- setIsOcrFormDirty(false);
- }
- setConfirmCloseTarget(null);
- };
-
- // Mark Paid Handler with real backend recording ( Part 3)
- const handleMarkAsPaid = async (
- invId: string,
- method = t("landlordInvoicesPaymentMethodManual"),
- ) => {
- if (!activeBuilding?.id) return;
- try {
- const isCash = method.toLowerCase().includes("tiền mặt") || method.toLowerCase().includes("cash");
- await landlordInvoiceService.recordManualPayment(activeBuilding.id, invId, {
- method: isCash ? "cash" : "banking",
- note: method,
- });
- await fetchInvoices();
- if (selectedInvoice && selectedInvoice.id === invId) {
- const detail = await landlordInvoiceService.getLandlordInvoiceDetail(
- activeBuilding.id,
- invId,
- );
- if (detail?.data) setSelectedInvoice(detail.data);
- }
- } catch (err: any) {
- console.error("Lỗi cập nhật thanh toán:", err);
- alert(err?.message || t("landlordInvoicesAlertUpdateStatusFailed"));
- }
- };
-
- // Create Manual Invoice Handler
- const handleCreateInvoiceSubmit = async () => {
- if (!activeBuilding?.id) return;
- if (!createForm.roomId) {
- alert(t("landlordInvoicesAlertSelectRoom"));
- return;
- }
- try {
- setIsSubmitting(true);
- await landlordInvoiceService.createManualInvoice(activeBuilding.id, {
- roomId: createForm.roomId,
- period: createForm.period,
- dueDate: createForm.deadline ? new Date(createForm.deadline).toISOString() : new Date().toISOString(),
- rentAmount: createForm.rentAmount,
- elecOld: createForm.elecOld,
- elecNew: createForm.elecNew,
- elecRate: createForm.elecRate,
- waterOld: createForm.waterOld,
- waterNew: createForm.waterNew,
- waterRate: createForm.waterRate,
- serviceFees: [
- { name: "Internet / Wifi", amount: createForm.wifiFee },
- { name: t("landlordInvoicesFeeTrash"), amount: createForm.trashFee },
- ],
- discount: createForm.discount,
- });
- setIsCreateModalOpen(false);
- setIsCreateFormDirty(false);
- await fetchInvoices();
- } catch (err: any) {
- console.error("Lỗi tạo hóa đơn:", err);
- alert(err?.message || t("landlordInvoicesAlertCreateFailed"));
- } finally {
- setIsSubmitting(false);
- }
- };
-
- // VietQR Code Generator URL
- const getVietQrUrl = (inv: InvoiceItem) => {
- const bankBin = "970422"; // MBBank BIN
- const accountNo = "0988123456";
- const amount = inv.totalAmount;
- const memo = encodeURIComponent(`${inv.id} ${inv.roomName.replace(' ', '')}`);
- return `https://img.vietqr.io/image/${bankBin}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=DORMIO%20BHMS`;
- };
-
- return (
- <div className="space-y-6 animate-in fade-in duration-300 pb-16">
- {/* Top Header & Actions Bar */}
- <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
- <div>
- <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
- <Receipt className="w-6 h-6 text-[#2AC1BC]" /> {t("landlordInvoicesTitle")}
- </h1>
- <p className="text-xs text-zinc-500 font-semibold mt-0.5">
- {t("landlordInvoicesSubtitle")}
- </p>
- </div>
-
- <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
- <button
- onClick={handleOpenOcrModal}
- className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-amber-900 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
- >
- <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" /> {t("landlordInvoicesBtnOcrScan")}
- </button>
-
- <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200/80 rounded-xl hover:bg-zinc-50 transition-all cursor-pointer shadow-2xs whitespace-nowrap">
- <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" /> {t("landlordInvoicesBtnExportExcel")}
- </button>
-
- <button
- onClick={handleOpenCreateModal}
- className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
- >
- <Plus className="w-4 h-4 shrink-0" /> {t("landlordInvoicesBtnCreateInvoice")}
- </button>
- </div>
- </div>
-
- {/* Dark Hero Summary Banner (Matching Image 2 Design) */}
- <div className="bg-zinc-900 rounded-3xl p-5 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
- <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
- <Receipt className="w-64 h-64" />
- </div>
-
- <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
- {/* Left Title, Address Pill with Map button, and Description */}
- <div className="space-y-3 max-w-xl">
- <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
- {activeBuilding.name}
- </h2>
-
- {/* Address Pill with Integrated Map Link */}
- <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all max-w-full">
- <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
- <span className="text-xs font-bold text-zinc-200 truncate max-w-[200px] sm:max-w-none">{activeBuilding.address}</span>
- <a
- href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
- target="_blank"
- rel="noreferrer"
- className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
- >
- <span>{t("landlordInvoicesViewMap")}</span> &rarr;
- </a>
- </div>
-
- <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
- {t("landlordInvoicesBannerSub")}
- </p>
- </div>
-
- {/* Right Stat Cards (2 Rows, 2 Cards per Row, Non-wrapping Money Amounts) */}
- <div className="flex flex-col items-stretch sm:items-end gap-3 w-full lg:w-auto">
- <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto">
- {/* Card 1: Tổng Hóa Đơn */}
- <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
- <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 shrink-0" />
- <div className="flex flex-col min-w-0">
- <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesTotalInvoicesShort")}</span>
- <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{totalInvoicesCount}</span>
- </div>
- </div>
-
- {/* Card 2: Quá Hạn */}
- <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
- <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
- <div className="flex flex-col min-w-0">
- <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesOverdueShort")}</span>
- <span className="font-black text-rose-400 text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{overdueCount}</span>
- </div>
- </div>
-
- {/* Card 3: Đã Thu */}
- <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors rounded-2xl border border-emerald-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
- <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
- <div className="flex flex-col min-w-0">
- <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesPaidShort").replace("{count}", String(paidCount))}</span>
- <span className="font-black text-emerald-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
- {formatLargeMoney(totalPaidAmount)}
- </span>
- </div>
- </div>
-
- {/* Card 4: Chưa Thu */}
- <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
- <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
- <div className="flex flex-col min-w-0">
- <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesUnpaidShort").replace("{count}", String(unpaidCount))}</span>
- <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
- {formatLargeMoney(totalUnpaidAmount)}
- </span>
- </div>
- </div>
- </div>
- </div>
- </div>
- </div>
-
- {/* Main Filter & Tabs Control Bar */}
- <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
- <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
- {/* Search Box */}
- <div className="relative flex-1">
- <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
- <input
- type="text"
- placeholder={t("landlordInvoicesSearchPlaceholder")}
- value={searchTerm}
- onChange={(e) => {
- setSearchTerm(e.target.value);
- setCurrentPage(1);
- }}
- className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
- />
- </div>
-
- {/* Month, Year & View Switcher Row on Mobile */}
- <div className="flex items-center gap-2 justify-between shrink-0 flex-wrap sm:flex-nowrap">
- <div className="flex items-center gap-2 flex-1 min-w-0">
- {/* Month Filter Dropdown */}
- <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
- <div className="flex items-center gap-1 shrink-0">
- <Calendar className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
- <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">{t("landlordInvoicesFilterMonth")}</span>
- </div>
- <select
- value={selectedMonth}
- onChange={(e) => {
- setSelectedMonth(e.target.value);
- setCurrentPage(1);
- }}
- className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
- >
- <option value="all">{t("landlordInvoicesAllMonths")}</option>
- <option value="01">{t("landlordInvoicesMonthPrefix").replace("{month}", "01")}</option>
- <option value="02">{t("landlordInvoicesMonthPrefix").replace("{month}", "02")}</option>
- <option value="03">{t("landlordInvoicesMonthPrefix").replace("{month}", "03")}</option>
- <option value="04">{t("landlordInvoicesMonthPrefix").replace("{month}", "04")}</option>
- <option value="05">{t("landlordInvoicesMonthPrefix").replace("{month}", "05")}</option>
- <option value="06">{t("landlordInvoicesMonthPrefix").replace("{month}", "06")}</option>
- <option value="07">{t("landlordInvoicesMonthPrefix").replace("{month}", "07")}</option>
- <option value="08">{t("landlordInvoicesMonthPrefix").replace("{month}", "08")}</option>
- <option value="09">{t("landlordInvoicesMonthPrefix").replace("{month}", "09")}</option>
- <option value="10">{t("landlordInvoicesMonthPrefix").replace("{month}", "10")}</option>
- <option value="11">{t("landlordInvoicesMonthPrefix").replace("{month}", "11")}</option>
- <option value="12">{t("landlordInvoicesMonthPrefix").replace("{month}", "12")}</option>
- </select>
- </div>
-
- {/* Year Filter Dropdown */}
- <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
- <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">{t("landlordInvoicesFilterYear")}</span>
- <select
- value={selectedYear}
- onChange={(e) => {
- setSelectedYear(e.target.value);
- setCurrentPage(1);
- }}
- className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
- >
- <option value="all">{t("landlordInvoicesAllYears")}</option>
- <option value="2026">2026</option>
- <option value="2025">2025</option>
- <option value="2024">2024</option>
- </select>
- </div>
- </div>
-
- {/* View Switcher */}
- <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
- <button
- onClick={() => setViewMode("grid")}
- className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
- }`}
- title={t("landlordInvoicesViewGrid")}
- >
- <LayoutGrid className="w-3.5 h-3.5" />
- </button>
- <button
- onClick={() => setViewMode("table")}
- className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "table" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
- }`}
- title={t("landlordInvoicesViewTable")}
- >
- <List className="w-3.5 h-3.5" />
- </button>
- </div>
- </div>
- </div>
-
- {/* Quick Filter Tabs */}
- <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-zinc-100 pt-3">
- <button
- onClick={() => { setActiveTab("all"); setCurrentPage(1); }}
- className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "all" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
- }`}
- >
- {t("landlordInvoicesTabAll").replace("{count}", String(totalInvoicesCount))}
- </button>
-
- <button
- onClick={() => { setActiveTab("unpaid"); setCurrentPage(1); }}
- className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "unpaid" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
- }`}
- >
- {t("landlordInvoicesTabUnpaid").replace("{count}", String(unpaidCount))}
- </button>
-
- <button
- onClick={() => { setActiveTab("paid"); setCurrentPage(1); }}
- className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "paid" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
- }`}
- >
- {t("landlordInvoicesTabPaid").replace("{count}", String(paidCount))}
- </button>
-
- <button
- onClick={() => { setActiveTab("overdue"); setCurrentPage(1); }}
- className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "overdue" ? "bg-rose-500 text-white shadow-2xs" : "bg-rose-50 text-rose-700 hover:bg-rose-100"
- }`}
- >
- {t("landlordInvoicesTabOverdue").replace("{count}", String(overdueCount))}
- </button>
- </div>
- </div>
-
- {/* Main Content Display (Grid or Table View) */}
- {invoices.length === 0 ? (
- <div className="py-16 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
- <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
- <Receipt className="w-8 h-8" />
- </div>
- <div className="space-y-1.5 max-w-md mx-auto">
- <h3 className="font-black text-base text-zinc-900">{t("landlordInvoicesNoDataTitle")}</h3>
- <p className="text-xs text-zinc-500 font-medium leading-relaxed">
- {t("landlordInvoicesNoDataDesc")}
- </p>
- </div>
- <button
- onClick={handleOpenCreateModal}
- className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25aca7] text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer hover:scale-105"
- >
- <Plus className="w-4 h-4" />
- <span>{t("landlordInvoicesBtnCreateInvoice")}</span>
- </button>
- </div>
- ) : paginatedInvoices.length === 0 ? (
- <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
- <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
- <h3 className="font-extrabold text-sm text-zinc-800">{t("landlordInvoicesEmptyTitle")}</h3>
- <p className="text-xs text-zinc-400">{t("landlordInvoicesEmptyDesc")}</p>
- </div>
- ) : viewMode === "grid" ? (
- /* GRID VIEW (Rule #9 Default) */
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
- {paginatedInvoices.map((inv) => {
- const isPaid = inv.status === "Đã thu";
- const isOverdue = inv.status === "Quá hạn";
-
- return (
- <div
- key={inv.id}
- className={`bg-white border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${isPaid ? "border-emerald-200 hover:border-emerald-300" :
- isOverdue ? "border-rose-200 hover:border-rose-300 bg-rose-50/20" :
- "border-zinc-200/80 hover:border-[#2AC1BC]/40"
- }`}
- >
- {/* Header info */}
- <div className="space-y-2">
- <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100">
- <span className="font-extrabold text-sm text-zinc-900 flex items-center gap-1.5">
- <FileText className="w-4 h-4 text-[#2AC1BC]" /> {inv.roomName}
- </span>
- <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${isPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
- isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" :
- "bg-amber-50 text-amber-700 border-amber-200"
- }`}>
- {inv.status}
- </span>
- </div>
-
- <div className="space-y-1">
- <div className="flex items-center justify-between text-xs">
- <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelTenant")}</span>
- <span className="font-bold text-zinc-900">{inv.tenantName}</span>
- </div>
- <div className="flex items-center justify-between text-xs">
- <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelPeriod")}</span>
- <span className="font-bold text-zinc-800">{t("landlordInvoicesLabelPeriodMonth").replace("{period}", inv.period)}</span>
- </div>
- <div className="flex items-center justify-between text-xs">
- <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelInvoiceId")}</span>
- <span className="font-mono text-zinc-600 text-[11px]">{inv.id}</span>
- </div>
- </div>
-
- {/* Fee Items Breakdown Summary */}
- <div className="p-3 bg-zinc-50 rounded-xl space-y-1.5 text-[11px]">
- <div className="flex justify-between text-zinc-600">
- <span>{t("landlordInvoicesFeeRent")}</span>
- <span className="font-bold text-zinc-800">{inv.rentAmount.toLocaleString("vi-VN")} ₫</span>
- </div>
- <div className="flex justify-between text-zinc-600">
- <span>{t("landlordInvoicesFeeElec").replace("{usage}", String(inv.elecNew - inv.elecOld))}</span>
- <span className="font-bold text-zinc-800">{((inv.elecNew - inv.elecOld) * inv.elecRate).toLocaleString("vi-VN")} ₫</span>
- </div>
- <div className="flex justify-between text-zinc-600">
- <span>{t("landlordInvoicesFeeWater").replace("{usage}", String(inv.waterNew - inv.waterOld))}</span>
- <span className="font-bold text-zinc-800">{((inv.waterNew - inv.waterOld) * inv.waterRate).toLocaleString("vi-VN")} ₫</span>
- </div>
- </div>
- </div>
-
- {/* Total & Action Footer */}
- <div className="pt-3 border-t border-zinc-100 space-y-3">
- <div className="flex items-center justify-between">
- <div>
- <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">{t("landlordInvoicesLabelTotal")}</span>
- <span className="font-black text-base text-[#2AC1BC]">
- {inv.totalAmount.toLocaleString("vi-VN")} ₫
- </span>
- </div>
- <span className={`text-[10px] font-bold ${isOverdue ? "text-rose-600 font-black" : "text-zinc-400"}`}>
- {t("landlordInvoicesLabelDeadline").replace("{deadline}", inv.deadline)}
- </span>
- </div>
-
- <div className="flex items-center gap-2">
- <button
- onClick={() => setSelectedInvoice(inv)}
- className="flex-1 py-2 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
- >
- <Eye className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnViewDetail")}
- </button>
- {!isPaid && (
- <button
- onClick={() => handleMarkAsPaid(inv.id)}
- className="py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
- title={t("landlordInvoicesTooltipMarkPaid")}
- >
- <Check className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnCollect")}
- </button>
- )}
- </div>
- </div>
- </div>
- );
- })}
- </div>
- ) : (
- /* TABLE VIEW (Rule #9 Alternative) */
- <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
- <div className="overflow-x-auto">
- <table className="w-full text-xs text-left">
- <thead className="text-[11px] text-zinc-500 bg-zinc-50 border-b border-zinc-200 uppercase font-black tracking-wider">
- <tr>
- <th className="px-4 py-3">{t("landlordInvoicesColInvoiceId")}</th>
- <th className="px-4 py-3">{t("landlordInvoicesRoom")}</th>
- <th className="px-4 py-3">{t("landlordInvoicesSectionTenant")}</th>
- <th className="px-4 py-3">{t("landlordInvoicesColPeriod")}</th>
- <th className="px-4 py-3">{t("landlordInvoicesColTotal")}</th>
- <th className="px-4 py-3">{t("landlordInvoicesColDeadline")}</th>
- <th className="px-4 py-3">{t("landlordInvoicesColStatus")}</th>
- <th className="px-4 py-3 text-right">{t("landlordInvoicesColActions")}</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-zinc-100 font-semibold">
- {paginatedInvoices.map((inv) => (
- <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
- <td className="px-4 py-3.5 font-bold font-mono text-zinc-900 flex items-center gap-2">
- <FileText className="w-4 h-4 text-[#2AC1BC]" />
- {inv.id}
- </td>
- <td className="px-4 py-3.5 font-black text-zinc-900">{inv.roomName}</td>
- <td className="px-4 py-3.5 text-zinc-700">{inv.tenantName}</td>
- <td className="px-4 py-3.5 text-zinc-600">{t("landlordInvoicesLabelPeriodMonth").replace("{period}", inv.period)}</td>
- <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">{inv.totalAmount.toLocaleString("vi-VN")} ₫</td>
- <td className={`px-4 py-3.5 font-bold ${inv.status === "Quá hạn" ? "text-rose-600 font-black" : "text-zinc-600"}`}>
- {inv.deadline}
- </td>
- <td className="px-4 py-3.5">
- <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${inv.status === "Đã thu" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
- inv.status === "Quá hạn" ? "bg-rose-50 text-rose-700 border-rose-200" :
- "bg-amber-50 text-amber-700 border-amber-200"
- }`}>
- {getInvoiceStatusLabel(inv.status)}
- </span>
- </td>
- <td className="px-4 py-3.5 text-right">
- <button
- onClick={() => setSelectedInvoice(inv)}
- className="px-2.5 py-1 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
- >
- <Eye className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnViewDetail")}
- </button>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- )}
-
- {/* Pagination Bar (Standard Dormio Rule #9) */}
- {totalItems > 0 && (
- <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
- <div className="flex items-center gap-2 text-zinc-600">
- <span>{t("landlordInvoicesPaginationShow")}</span>
- <input
- type="number"
- min={1}
- max={50}
- value={pageSize}
- onChange={(e) => {
- const val = parseInt(e.target.value) || 1;
- setPageSize(val);
- setCurrentPage(1);
- }}
- className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
- />
- <span>{t("landlordInvoicesPaginationPerPage")}</span>
- <span className="text-zinc-400">|</span>
- <span>
- {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} {t("landlordInvoicesPaginationOf")} {totalItems} {t("landlordInvoicesPaginationItems")}
- </span>
- </div>
-
- {/* Page Jumping Controls */}
- <div className="flex items-center gap-1">
- <button
- disabled={currentPage === 1}
- onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
- className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
- >
- <ChevronLeft className="w-4 h-4 text-zinc-600" />
- </button>
-
- {windowStart > 1 && (
- <button
- onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
- className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
- title={t("landlordInvoicesTooltipPrev5")}
- >
- &laquo;
- </button>
- )}
-
- {visiblePages.map((p) => (
- <button
- key={p}
- onClick={() => setCurrentPage(p)}
- className={`w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer transition-all ${currentPage === p ? "bg-[#2AC1BC] text-white shadow-2xs" : "hover:bg-zinc-100 text-zinc-700"
- }`}
- >
- {p}
- </button>
- ))}
-
- {windowStart + windowSize <= totalPages && (
- <button
- onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
- className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
- title={t("landlordInvoicesTooltipNext5")}
- >
- &raquo;
- </button>
- )}
-
- <button
- disabled={currentPage === totalPages}
- onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
- className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
- >
- <ChevronRight className="w-4 h-4 text-zinc-600" />
- </button>
- </div>
- </div>
- )}
-
- {/* 📄 DETAILED INVOICE LIGHTBOX MODAL / DRAWER */}
- {selectedInvoice && (
- <div
- className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
- onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedInvoice(null); }}
- >
- <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-200">
- {/* Modal Header */}
- <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
- <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
- <Receipt className="w-5 h-5" />
- </div>
- <div>
- <h3 className="font-black text-base text-zinc-900 flex items-center gap-2">
- {t("landlordInvoicesModalDetailTitle").replace("{room}", selectedInvoice.roomName)}
- <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${selectedInvoice.status === "Đã thu" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
- selectedInvoice.status === "Quá hạn" ? "bg-rose-50 text-rose-700 border-rose-200" :
- "bg-amber-50 text-amber-700 border-amber-200"
- }`}>
- {getInvoiceStatusLabel(selectedInvoice.status)}
- </span>
- </h3>
- <p className="text-xs text-zinc-500 font-semibold">{t("landlordInvoicesModalDetailSub").replace("{id}", selectedInvoice.id).replace("{period}", selectedInvoice.period)}</p>
- </div>
- </div>
-
- <button
- onClick={() => setSelectedInvoice(null)}
- className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
- >
- <X className="w-5 h-5" />
- </button>
- </div>
-
- {/* Modal Scroll Content */}
- <div className="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
- {/* Tenant & Building Info Card */}
- <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
- <div className="space-y-1">
- <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("landlordInvoicesSectionTenant")}</span>
- <p className="font-black text-sm text-zinc-900">{selectedInvoice.tenantName}</p>
- <p className="text-zinc-500 font-semibold">{selectedInvoice.tenantPhone}</p>
- </div>
-
- <div className="space-y-1 sm:text-right">
- <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("landlordInvoicesSectionDeadlineAndCreated")}</span>
- <p className="font-bold text-zinc-800">
- {t("landlordInvoicesDeadlinePrefix")} <span className={`font-black ${selectedInvoice.status === "Quá hạn" ? "text-rose-600 font-extrabold" : "text-zinc-800"}`}>{selectedInvoice.deadline}</span>
- {selectedInvoice.status === "Quá hạn" && (
- <span className="ml-1.5 px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-black rounded-md border border-rose-200">{t("landlordInvoicesStatusOverdue")}</span>
- )}
- </p>
- <p className="text-zinc-500 font-medium">{t("landlordInvoicesCreatedPrefix")} {selectedInvoice.createdAt}</p>
- </div>
- </div>
-
- {/* Fee Breakdown Table */}
- <div className="space-y-3">
- <h4 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
- <FileText className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordInvoicesSectionFeeBreakdown")}
- </h4>
-
- <div className="border border-zinc-200 rounded-2xl overflow-x-auto custom-scrollbar">
- <table className="w-full text-xs text-left min-w-[500px]">
- <thead className="bg-zinc-50 border-b border-zinc-200 font-black text-zinc-500 uppercase text-[10px]">
- <tr>
- <th className="px-4 py-2.5">{t("landlordInvoicesColItem")}</th>
- <th className="px-4 py-2.5">{t("landlordInvoicesColOldNewIndex")}</th>
- <th className="px-4 py-2.5 text-right">{t("landlordInvoicesColUnitPrice")}</th>
- <th className="px-4 py-2.5 text-right">{t("landlordInvoicesColAmount")}</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-zinc-100 font-semibold">
- <tr>
- <td className="px-4 py-3 font-bold text-zinc-900">{t("landlordInvoicesItemRoomRent").replace("{room}", selectedInvoice.roomName)}</td>
- <td className="px-4 py-3 text-zinc-400">-</td>
- <td className="px-4 py-3 text-right">{selectedInvoice.rentAmount.toLocaleString("vi-VN")} ₫</td>
- <td className="px-4 py-3 text-right font-black text-zinc-900">{selectedInvoice.rentAmount.toLocaleString("vi-VN")} ₫</td>
- </tr>
-
- <tr>
- <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
- <Zap className="w-3.5 h-3.5 text-amber-500" /> {t("landlordInvoicesItemElec")}
- </td>
- <td className="px-4 py-3 text-zinc-600">
- {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} ({selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
- </td>
- <td className="px-4 py-3 text-right">{selectedInvoice.elecRate.toLocaleString("vi-VN")} ₫</td>
- <td className="px-4 py-3 text-right font-black text-zinc-900">
- {((selectedInvoice.elecNew - selectedInvoice.elecOld) * selectedInvoice.elecRate).toLocaleString("vi-VN")} ₫
- </td>
- </tr>
-
- <tr>
- <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
- <Droplets className="w-3.5 h-3.5 text-blue-500" /> {t("landlordInvoicesItemWater")}
- </td>
- <td className="px-4 py-3 text-zinc-600">
- {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} ({selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
- </td>
- <td className="px-4 py-3 text-right">{selectedInvoice.waterRate.toLocaleString("vi-VN")} ₫</td>
- <td className="px-4 py-3 text-right font-black text-zinc-900">
- {((selectedInvoice.waterNew - selectedInvoice.waterOld) * selectedInvoice.waterRate).toLocaleString("vi-VN")} ₫
- </td>
- </tr>
-
- {selectedInvoice.serviceFees.map((fee, idx) => (
- <tr key={idx}>
- <td className="px-4 py-3 font-bold text-zinc-900">{fee.name}</td>
- <td className="px-4 py-3 text-zinc-400">{t("landlordInvoicesItemFixedMonthly")}</td>
- <td className="px-4 py-3 text-right">{fee.amount.toLocaleString("vi-VN")} ₫</td>
- <td className="px-4 py-3 text-right font-black text-zinc-900">{fee.amount.toLocaleString("vi-VN")} ₫</td>
- </tr>
- ))}
-
- {selectedInvoice.discount > 0 && (
- <tr className="bg-rose-50/40">
- <td className="px-4 py-3 font-bold text-rose-700">{t("landlordInvoicesItemDiscount")}</td>
- <td className="px-4 py-3 text-zinc-400">-</td>
- <td className="px-4 py-3 text-right text-rose-700">-{selectedInvoice.discount.toLocaleString("vi-VN")} ₫</td>
- <td className="px-4 py-3 text-right font-black text-rose-700">-{selectedInvoice.discount.toLocaleString("vi-VN")} ₫</td>
- </tr>
- )}
- </tbody>
- </table>
- </div>
- </div>
-
- {/* Total Calculation Card & VietQR Section */}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
- {/* VietQR Bank Card */}
- <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl flex items-center gap-4">
- <div className="w-24 h-24 bg-white rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-zinc-200">
- <img src={getVietQrUrl(selectedInvoice)} alt={currentLocale === "en" ? "VietQR Code" : "Mã VietQR"} className="w-full h-full object-contain" />
- </div>
-
- <div className="space-y-1 text-[11px] min-w-0">
- <span className="font-extrabold text-[#2AC1BC] flex items-center gap-1">
- <QrCode className="w-3.5 h-3.5" /> {t("landlordInvoicesVietQrAuto")}
- </span>
- <p className="font-bold text-zinc-900">{t("landlordInvoicesVietQrBank")}</p>
- <p className="font-mono text-zinc-700 font-bold">STK: 0988123456</p>
- <p className="text-zinc-500 font-medium truncate">{t("landlordInvoicesVietQrMemo").replace("{memo}", `${selectedInvoice.id} ${selectedInvoice.roomName.replace(" ", "")}`)}</p>
- </div>
- </div>
-
- {/* Grand Total */}
- <div className="p-5 bg-zinc-900 text-white rounded-2xl space-y-2 text-right shadow-inner">
- <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">{t("landlordInvoicesGrandTotal")}</span>
- <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] block">
- {selectedInvoice.totalAmount.toLocaleString("vi-VN")} ₫
- </span>
- {selectedInvoice.paidAt && (
- <span className="text-[10px] font-bold text-emerald-400 block">
- {t("landlordInvoicesPaidAtBadgeDetail").replace("{time}", selectedInvoice.paidAt || "").replace("{method}", selectedInvoice.paymentMethod || "")}
- </span>
- )}
- </div>
- </div>
- </div>
-
- {/* Modal Footer Actions */}
- <div className="p-4 border-t border-zinc-100 bg-white flex flex-wrap items-center justify-between gap-3">
- {/* If UNPAID: Show "Nhắc Thu Tiền Qua Chat" button */}
- {selectedInvoice.status !== "Đã thu" ? (
- <button
- onClick={() => {
- const roomNum = selectedInvoice.roomId;
- const tenantName = selectedInvoice.tenantName;
- setSelectedInvoice(null);
- router.push(
- `/landlord/messages?room=${encodeURIComponent(roomNum)}&tenant=${encodeURIComponent(tenantName)}&invId=${encodeURIComponent(selectedInvoice.id)}&amount=${selectedInvoice.totalAmount}&period=${encodeURIComponent(selectedInvoice.period)}&autoSend=true`
- );
- }}
- className="px-4 py-2 bg-zinc-100 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
- >
- <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordInvoicesBtnRemindChat")}
- </button>
- ) : (
- /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
- <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-black rounded-xl">
- <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
- <span>{t("landlordInvoicesPaidAtBadge").replace("{time}", selectedInvoice.paidAt || "").replace("{method}", selectedInvoice.paymentMethod || "")}</span>
- </div>
- )}
-
- <div className="flex items-center gap-2">
- {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
- {selectedInvoice.status !== "Đã thu" && (
- <button
- onClick={() => handleMarkAsPaid(selectedInvoice.id, t("landlordInvoicesPaymentMethodManual"))}
- className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
- >
- <Check className="w-4 h-4" /> {t("landlordInvoicesBtnConfirmPaid")}
- </button>
- )}
- </div>
- </div>
- </div>
- </div>
- )}
-
- {/* ➕ CREATE NEW INVOICE MODAL */}
- {isCreateModalOpen && (
- <div
- className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
- onMouseDown={(e) => { if (e.target === e.currentTarget) handleRequestCloseCreate(); }}
- >
- <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
- {/* Modal Header */}
- <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
- <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
- <Plus className="w-5 h-5" />
- </div>
- <div>
- <h3 className="font-black text-base text-zinc-900">{t("landlordInvoicesModalCreateTitle")}</h3>
- <p className="text-xs text-zinc-500 font-semibold">{t("landlordInvoicesModalCreateSub")}</p>
- </div>
- </div>
- <button
- onClick={handleRequestCloseCreate}
- className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
- >
- <X className="w-5 h-5" />
- </button>
- </div>
-
- {/* Modal Form Content */}
- <div className="p-6 overflow-y-auto space-y-4 text-xs custom-scrollbar">
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
- <div className="space-y-1">
- <label className="font-bold text-zinc-700">{t("landlordInvoicesFieldRoom")}</label>
- <select
- value={createForm.roomId}
- onChange={(e) => {
- const selectedId = e.target.value;
- const r = availableRooms.find((rm) => rm.id === selectedId);
- let elecRate = createForm.elecRate;
- let waterRate = createForm.waterRate;
- if (r?.services) {
- const elec = r.services.find(
- (s) => s.isMetered && (s.name.toLowerCase().includes("điện") || s.name.toLowerCase().includes("electric")),
- );
- if (elec) elecRate = Number(elec.price) || elecRate;
- const water = r.services.find(
- (s) => s.isMetered && (s.name.toLowerCase().includes("nước") || s.name.toLowerCase().includes("water")),
- );
- if (water) waterRate = Number(water.price) || waterRate;
- }
- setCreateForm({
- ...createForm,
- roomId: selectedId,
- roomName: r ? (currentLocale === "en" ? `Room ${r.roomNumber}` : `Phòng ${r.roomNumber}`) : "",
- elecRate,
- waterRate,
- });
- setIsCreateFormDirty(true);
- }}
- className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
- >
- <option value="">{t("landlordInvoicesSelectRoomPlaceholder")}</option>
- {availableRooms.map((r) => (
- <option key={r.id} value={r.id}>
- {t("landlordInvoicesRoomOption").replace("{roomNumber}", r.roomNumber).replace("{floor}", String(r.floor)).replace("{roomType}", r.roomType?.name || t("landlordInvoicesStandardRoom"))}
- </option>
- ))}
- </select>
- </div>
-
- <div className="space-y-1">
- <label className="font-bold text-zinc-700">{t("landlordInvoicesFieldPeriod")}</label>
- <input
- type="text"
- value={createForm.period}
- onChange={(e) => {
- setCreateForm({ ...createForm, period: e.target.value });
- setIsCreateFormDirty(true);
- }}
- placeholder="08/2026"
- className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
- />
- </div>
- </div>
-
- {/* Meter Readings Inputs */}
- <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
- <span className="font-black text-xs text-zinc-900 uppercase tracking-wider block">{t("landlordInvoicesMeterReadingsTitle")}</span>
-
- <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
- <div className="space-y-1">
- <label className="text-[10px] font-extrabold text-zinc-500">{t("landlordInvoicesElecOld")}</label>
- <input
- type="number"
- value={createForm.elecOld}
- onChange={(e) => {
- setCreateForm({ ...createForm, elecOld: parseInt(e.target.value) || 0 });
- setIsCreateFormDirty(true);
- }}
- className="w-full p-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold"
- />
- </div>
-
- <div className="space-y-1">
- <label className="text-[10px] font-extrabold text-amber-700">{t("landlordInvoicesElecNew")}</label>
- <input
- type="number"
- value={createForm.elecNew}
- onChange={(e) => {
- setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 });
- setIsCreateFormDirty(true);
- }}
- className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs font-bold text-amber-800"
- />
- </div>
-
- <div className="space-y-1">
- <label className="text-[10px] font-extrabold text-zinc-500">{t("landlordInvoicesWaterOld")}</label>
- <input
- type="number"
- value={createForm.waterOld}
- onChange={(e) => {
- setCreateForm({ ...createForm, waterOld: parseInt(e.target.value) || 0 });
- setIsCreateFormDirty(true);
- }}
- className="w-full p-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold"
- />
- </div>
-
- <div className="space-y-1">
- <label className="text-[10px] font-extrabold text-blue-700">{t("landlordInvoicesWaterNew")}</label>
- <input
- type="number"
- value={createForm.waterNew}
- onChange={(e) => {
- setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 });
- setIsCreateFormDirty(true);
- }}
- className="w-full p-2 bg-white border border-blue-300 rounded-lg text-xs font-bold text-blue-800"
- />
- </div>
- </div>
- </div>
-
- {/* Total Summary preview */}
- <div className="p-4 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between">
- <div>
- <span className="text-[10px] font-extrabold text-zinc-500 block uppercase">{t("landlordInvoicesPreviewTotal")}</span>
- <span className="text-xl font-black text-[#2AC1BC]">
- {(
- createForm.rentAmount +
- Math.max(0, (createForm.elecNew - createForm.elecOld)) * createForm.elecRate +
- Math.max(0, (createForm.waterNew - createForm.waterOld)) * createForm.waterRate +
- createForm.wifiFee + createForm.trashFee - createForm.discount
- ).toLocaleString("vi-VN")} ₫
- </span>
- </div>
- <span className="text-[11px] font-bold text-zinc-500">{t("landlordInvoicesDeadlinePrefix")} {createForm.deadline}</span>
- </div>
- </div>
-
- {/* Footer */}
- <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
- <button
- onClick={handleRequestCloseCreate}
- className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
- >
- {t("landlordInvoicesBtnCancel")}
- </button>
- <button
- disabled={isSubmitting}
- onClick={handleCreateInvoiceSubmit}
- className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
- >
- {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
- <span>{isSubmitting ? t("landlordInvoicesBtnSubmitting") : t("landlordInvoicesBtnSubmitCreate")}</span>
- </button>
- </div>
- </div>
- </div>
- )}
-
- {/* 🤖 AI OCR METER READING SPLIT-SCREEN VERIFICATION MODAL */}
- {isOcrModalOpen && (
- <div
- className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
- onMouseDown={(e) => { if (e.target === e.currentTarget) handleRequestCloseOcr(); }}
- >
- <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
- {/* Header */}
- <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-white">
- <div className="flex items-center gap-3">
- <div className="p-3 bg-amber-500/10 text-amber-600 rounded-2xl">
- <Sparkles className="w-6 h-6 fill-amber-500" />
- </div>
- <div>
- <h2 className="text-xl font-black text-zinc-900">{t("landlordInvoicesOcrModalTitle")}</h2>
- <p className="text-xs text-zinc-500 font-medium">{t("landlordInvoicesOcrModalSub")}</p>
- </div>
- </div>
- <button
- onClick={handleRequestCloseOcr}
- className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
- >
- <X className="w-5 h-5" />
- </button>
- </div>
-
- {/* Split Screen Content */}
- <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto custom-scrollbar">
- {/* Left Side: Photo with AI Bounding Box */}
- <div className="space-y-3">
- <div className="flex items-center justify-between">
- <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">{t("landlordInvoicesOcrPhotoTitle")}</span>
- <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-extrabold">
- {t("landlordInvoicesOcrAccuracy")}
- </span>
- </div>
-
- <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
- <div className="text-center space-y-2">
- <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
- {ocrMeterValue}
- <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full animate-bounce">
- OCR Box
- </span>
- </div>
- <p className="text-[11px] text-zinc-400">{t("landlordInvoicesOcrMeterDesc")}</p>
- </div>
- </div>
- </div>
-
- {/* Right Side: AI Extracted Details & Inputs */}
- <div className="space-y-4 bg-zinc-50 p-5 rounded-2xl border border-zinc-200/80 flex flex-col justify-between">
- <div className="space-y-4">
- <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">{t("landlordInvoicesOcrDetailsTitle")}</span>
-
- <div className="grid grid-cols-2 gap-3">
- <div className="p-3 bg-white rounded-xl border border-zinc-200">
- <span className="text-[10px] font-extrabold text-zinc-400 block">{t("landlordInvoicesOcrOldIndex")}</span>
- <span className="text-base font-black text-zinc-800">1.318 kWh</span>
- </div>
- <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
- <span className="text-[10px] font-extrabold text-amber-700 block">{t("landlordInvoicesOcrNewIndex")}</span>
- <input
- type="text"
- value={ocrMeterValue}
- onChange={(e) => {
- setOcrMeterValue(e.target.value);
- setIsOcrFormDirty(true);
- }}
- className="w-full text-base font-black text-amber-700 bg-transparent outline-none border-b border-amber-500/50"
- />
- </div>
- </div>
-
- <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2">
- <div className="flex justify-between text-xs font-bold text-zinc-600">
- <span>{t("landlordInvoicesOcrUsage")}</span>
- <span className="text-zinc-900 font-black">{Math.max(0, parseInt(ocrMeterValue || "0") - 1318)} kWh</span>
- </div>
- <div className="flex justify-between text-xs font-bold text-zinc-600">
- <span>{t("landlordInvoicesOcrUnitPrice")}</span>
- <span className="text-zinc-900">3.500 ₫ / kWh</span>
- </div>
- <div className="border-t border-zinc-100 pt-2 flex justify-between text-sm font-black text-zinc-900">
- <span>{t("landlordInvoicesOcrAmount")}</span>
- <span className="text-[#2AC1BC]">
- {(
- Math.max(0, parseInt(ocrMeterValue || "0") - createForm.elecOld) *
- createForm.elecRate
- ).toLocaleString("vi-VN")}{" "}
- ₫
- </span>
- </div>
- </div>
- </div>
-
- <div className="pt-2 flex gap-3">
- <button
- onClick={handleRequestCloseOcr}
- className="flex-1 py-3 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
- >
- {t("landlordInvoicesBtnCancel")}
- </button>
- <button
- onClick={() => {
- setIsOcrModalOpen(false);
- setIsOcrFormDirty(false);
- }}
- className="flex-1 py-3 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md transition-all cursor-pointer"
- >
- {t("landlordInvoicesOcrConfirm")}
- </button>
- </div>
- </div>
- </div>
- </div>
- </div>
- )}
-
- {/* ⚠️ SYSTEM POP-UP CONFIRMATION MODAL (Rule #10 Dormio Standard) */}
- {confirmCloseTarget && (
- <div
- className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
- onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmCloseTarget(null); }}
- >
- <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-zinc-200 text-center space-y-5 animate-in zoom-in-95 duration-200">
- <div className="w-14 h-14 bg-amber-50 text-amber-500 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
- <AlertTriangle className="w-7 h-7" />
- </div>
-
- <div className="space-y-2">
- <h3 className="text-lg font-black text-zinc-900">{t("landlordInvoicesConfirmCloseTitle")}</h3>
- <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
- {t("landlordInvoicesConfirmCloseDesc")}
- </p>
- </div>
-
- <div className="flex items-center gap-3 pt-2">
- <button
- onClick={() => setConfirmCloseTarget(null)}
- className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
- >
- {t("landlordInvoicesConfirmCloseKeep")}
- </button>
-
- <button
- onClick={handleConfirmCloseModal}
- className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer"
- >
- {t("landlordInvoicesConfirmCloseDiscard")}
- </button>
- </div>
- </div>
- </div>
- )}
- </div>
- );
+    const { activeBuilding } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const t = useTranslations("landlord");
+
+    const getInvoiceStatusLabel = (status: string) => {
+        switch (status) {
+            case "Đã thu":
+            case "Đã thanh toán":
+            case "paid":
+                return t("landlordInvoicesStatusPaid");
+            case "Quá hạn":
+            case "overdue":
+                return t("landlordInvoicesStatusOverdue");
+            case "Chưa thu":
+            case "Chờ thanh toán":
+            case "unpaid":
+            default:
+                return t("landlordInvoicesStatusUnpaid");
+        }
+    };
+
+    // URL Params parsing
+    const urlSearch = searchParams.get("search") || searchParams.get("room") || "";
+    const urlId = searchParams.get("id") || "";
+
+    const [isMounted, setIsMounted] = useState(false);
+    const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+    const [activeTab, setActiveTab] = useState<"all" | "unpaid" | "paid" | "overdue">("all");
+    const [searchTerm, setSearchTerm] = useState(urlSearch);
+    const [selectedMonth, setSelectedMonth] = useState("all");
+    const [selectedYear, setSelectedYear] = useState("2026");
+
+    // Pagination State (Rule #9: Grid=6, Table=10, 5-page window jumping)
+    const [pageSize, setPageSize] = useState<number>(viewMode === "grid" ? 6 : 10);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [totalRecords, setTotalRecords] = useState<number>(0);
+
+    // Loading & Data States
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [availableRooms, setAvailableRooms] = useState<RoomItem[]>([]);
+    const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
+    const [serverSummary, setServerSummary] = useState<LandlordInvoicesSummary>({
+        totalInvoicesCount: 0,
+        paidCount: 0,
+        unpaidCount: 0,
+        overdueCount: 0,
+        totalPaidAmount: 0,
+        totalUnpaidAmount: 0,
+    });
+
+    // Modals & Drawer States
+    const [selectedInvoice, setSelectedInvoice] = useState<InvoiceItem | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
+    const [confirmCloseTarget, setConfirmCloseTarget] = useState<"create" | "ocr" | "detail" | null>(null);
+
+    // Form State for Create Invoice
+    const [createForm, setCreateForm] = useState({
+        roomId: "",
+        roomName: "",
+        tenantName: "",
+        period: `${String(new Date().getMonth() + 1).padStart(2, "0")}/${new Date().getFullYear()}`,
+        rentAmount: 0,
+        elecOld: 0,
+        elecNew: 0,
+        elecRate: 3500,
+        waterOld: 0,
+        waterNew: 0,
+        waterRate: 15000,
+        wifiFee: 100000,
+        trashFee: 50000,
+        discount: 0,
+        deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
+    });
+    const [isCreateFormDirty, setIsCreateFormDirty] = useState(false);
+
+    // Form State for AI OCR Modal
+    const [ocrMeterValue, setOcrMeterValue] = useState("0");
+    const [isOcrFormDirty, setIsOcrFormDirty] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // Update default pageSize on viewMode change (Rule #9)
+    useEffect(() => {
+        setPageSize(viewMode === "grid" ? 6 : 10);
+        setCurrentPage(1);
+    }, [viewMode]);
+
+    // Fetch available rooms for active building
+    useEffect(() => {
+        if (!activeBuilding?.id) return;
+        getRooms(activeBuilding.id)
+            .then((res) => {
+                if (res?.data) {
+                    setAvailableRooms(res.data);
+                    if (res.data.length > 0) {
+                        const first = res.data[0];
+                        setCreateForm((prev) => ({
+                            ...prev,
+                            roomId: prev.roomId || first.id,
+                            roomName: prev.roomName || `${t("landlordRoomDetailRoomPrefix")} ${first.roomNumber}`,
+                        }));
+                    }
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to load rooms:", err);
+            });
+    }, [activeBuilding?.id]);
+
+    // Fetch invoices from backend
+    const fetchInvoices = useCallback(async () => {
+        if (!activeBuilding?.id) return;
+        try {
+            setIsLoading(true);
+            const res = await landlordInvoiceService.getLandlordInvoices(
+                activeBuilding.id,
+                {
+                    search: searchTerm,
+                    status: activeTab,
+                    month: selectedMonth,
+                    year: selectedYear,
+                    page: currentPage,
+                    limit: pageSize,
+                },
+            );
+            if (res && res.success) {
+                setInvoices(res.data || []);
+                setServerSummary(res.summary);
+                setTotalRecords(res.meta.total || 0);
+            }
+        } catch (err) {
+            console.error("Failed to fetch landlord invoices:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [
+        activeBuilding?.id,
+        searchTerm,
+        activeTab,
+        selectedMonth,
+        selectedYear,
+        currentPage,
+        pageSize,
+    ]);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
+
+    // Handle URL deep-linking: ?id=INV-... or ?search=... or ?room=101
+    useEffect(() => {
+        if (urlId) {
+            const matchInv = invoices.find(
+                (i) =>
+                    i.id.toLowerCase() === urlId.toLowerCase() ||
+                    i.roomId.toLowerCase() === urlId.toLowerCase(),
+            );
+            if (matchInv) {
+                setSelectedInvoice(matchInv);
+            }
+        } else if (urlSearch) {
+            const matchInv = invoices.find(
+                (i) =>
+                    i.roomId === urlSearch ||
+                    i.roomName.toLowerCase().includes(urlSearch.toLowerCase()),
+            );
+            if (matchInv) {
+                setSelectedInvoice(matchInv);
+            }
+        }
+    }, [urlId, urlSearch, invoices]);
+
+    if (!isMounted) return null;
+
+    // Calculate Metrics from serverSummary
+    const totalInvoicesCount = serverSummary.totalInvoicesCount;
+    const paidCount = serverSummary.paidCount;
+    const unpaidCount = serverSummary.unpaidCount;
+    const overdueCount = serverSummary.overdueCount;
+    const totalPaidAmount = serverSummary.totalPaidAmount;
+    const totalUnpaidAmount = serverSummary.totalUnpaidAmount;
+
+    // Pagination Logic with 5-page window jumping (Rule #9)
+    const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+    const windowSize = 5;
+    const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1;
+    const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
+    const visiblePages = Array.from(
+        { length: windowEnd - windowStart + 1 },
+        (_, i) => windowStart + i,
+    );
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalRecords);
+
+    const paginatedInvoices = invoices;
+    const totalItems = totalRecords;
+
+    // Format large money amounts cleanly without wrapping
+    const formatLargeMoney = (amount: number) => {
+        if (amount >= 1_000_000_000) {
+            return `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, '')} ${t("landlordInvoicesUnitBillion")}`;
+        }
+        if (amount >= 100_000_000) {
+            return `${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '')} ${t("landlordInvoicesUnitMillion")}`;
+        }
+        return `${amount.toLocaleString("vi-VN")} ₫`;
+    };
+
+    // Handlers for Modals
+    const handleOpenCreateModal = () => {
+        setIsCreateFormDirty(false);
+        setIsCreateModalOpen(true);
+    };
+
+    const handleRequestCloseCreate = () => {
+        if (isCreateFormDirty) {
+            setConfirmCloseTarget("create");
+        } else {
+            setIsCreateModalOpen(false);
+        }
+    };
+
+    const handleOpenOcrModal = () => {
+        setOcrMeterValue(String(createForm.elecNew || createForm.elecOld || "0"));
+        setIsOcrFormDirty(false);
+        setIsOcrModalOpen(true);
+    };
+
+    const handleRequestCloseOcr = () => {
+        if (isOcrFormDirty) {
+            setConfirmCloseTarget("ocr");
+        } else {
+            setIsOcrModalOpen(false);
+        }
+    };
+
+    const handleConfirmCloseModal = () => {
+        if (confirmCloseTarget === "create") {
+            setIsCreateModalOpen(false);
+            setIsCreateFormDirty(false);
+        } else if (confirmCloseTarget === "ocr") {
+            setIsOcrModalOpen(false);
+            setIsOcrFormDirty(false);
+        }
+        setConfirmCloseTarget(null);
+    };
+
+    // Mark Paid Handler with real backend recording ( Part 3)
+    const handleMarkAsPaid = async (
+        invId: string,
+        method = t("landlordInvoicesPaymentMethodManual"),
+    ) => {
+        if (!activeBuilding?.id) return;
+        try {
+            const isCash = method.toLowerCase().includes("tiền mặt") || method.toLowerCase().includes("cash");
+            await landlordInvoiceService.recordManualPayment(activeBuilding.id, invId, {
+                method: isCash ? "cash" : "banking",
+                note: method,
+            });
+            await fetchInvoices();
+            if (selectedInvoice && selectedInvoice.id === invId) {
+                const detail = await landlordInvoiceService.getLandlordInvoiceDetail(
+                    activeBuilding.id,
+                    invId,
+                );
+                if (detail?.data) setSelectedInvoice(detail.data);
+            }
+        } catch (err: any) {
+            console.error("Lỗi cập nhật thanh toán:", err);
+            alert(err?.message || t("landlordInvoicesAlertUpdateStatusFailed"));
+        }
+    };
+
+    // Create Manual Invoice Handler
+    const handleCreateInvoiceSubmit = async () => {
+        if (!activeBuilding?.id) return;
+        if (!createForm.roomId) {
+            alert(t("landlordInvoicesAlertSelectRoom"));
+            return;
+        }
+        try {
+            setIsSubmitting(true);
+            await landlordInvoiceService.createManualInvoice(activeBuilding.id, {
+                roomId: createForm.roomId,
+                period: createForm.period,
+                dueDate: createForm.deadline ? new Date(createForm.deadline).toISOString() : new Date().toISOString(),
+                rentAmount: createForm.rentAmount,
+                elecOld: createForm.elecOld,
+                elecNew: createForm.elecNew,
+                elecRate: createForm.elecRate,
+                waterOld: createForm.waterOld,
+                waterNew: createForm.waterNew,
+                waterRate: createForm.waterRate,
+                serviceFees: [
+                    { name: "Internet / Wifi", amount: createForm.wifiFee },
+                    { name: t("landlordInvoicesFeeTrash"), amount: createForm.trashFee },
+                ],
+                discount: createForm.discount,
+            });
+            setIsCreateModalOpen(false);
+            setIsCreateFormDirty(false);
+            await fetchInvoices();
+        } catch (err: any) {
+            console.error("Lỗi tạo hóa đơn:", err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // VietQR Code Generator URL
+    const getVietQrUrl = (inv: InvoiceItem) => {
+        const bankBin = "970422"; // MBBank BIN
+        const accountNo = "0988123456";
+        const amount = inv.totalAmount;
+        const memo = encodeURIComponent(`${inv.id} ${inv.roomName.replace(' ', '')}`);
+        return `https://img.vietqr.io/image/${bankBin}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=DORMIO%20BHMS`;
+    };
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-300 pb-16">
+            {/* Top Header & Actions Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+                        <Receipt className="w-6 h-6 text-[#2AC1BC]" /> {t("landlordInvoicesTitle")}
+                    </h1>
+                    <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+                        {t("landlordInvoicesSubtitle")}
+                    </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                    <button
+                        onClick={handleOpenOcrModal}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-amber-900 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+                    >
+                        <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" /> {t("landlordInvoicesBtnOcrScan")}
+                    </button>
+
+                    <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200/80 rounded-xl hover:bg-zinc-50 transition-all cursor-pointer shadow-2xs whitespace-nowrap">
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" /> {t("landlordInvoicesBtnExportExcel")}
+                    </button>
+
+                    <button
+                        onClick={handleOpenCreateModal}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                        <Plus className="w-4 h-4 shrink-0" /> {t("landlordInvoicesBtnCreateInvoice")}
+                    </button>
+                </div>
+            </div>
+
+            {/* Dark Hero Summary Banner (Matching Image 2 Design) */}
+            <div className="bg-zinc-900 rounded-3xl p-5 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
+                    <Receipt className="w-64 h-64" />
+                </div>
+
+                <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    {/* Left Title, Address Pill with Map button, and Description */}
+                    <div className="space-y-3 max-w-xl">
+                        <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
+                            {activeBuilding.name}
+                        </h2>
+
+                        {/* Address Pill with Integrated Map Link */}
+                        <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all max-w-full">
+                            <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                            <span className="text-xs font-bold text-zinc-200 truncate max-w-[200px] sm:max-w-none">{activeBuilding.address}</span>
+                            <a
+                                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                            >
+                                <span>{t("landlordInvoicesViewMap")}</span> &rarr;
+                            </a>
+                        </div>
+
+                        <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                            {t("landlordInvoicesBannerSub")}
+                        </p>
+                    </div>
+
+                    {/* Right Stat Cards (2 Rows, 2 Cards per Row, Non-wrapping Money Amounts) */}
+                    <div className="flex flex-col items-stretch sm:items-end gap-3 w-full lg:w-auto">
+                        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto">
+                            {/* Card 1: Tổng Hóa Đơn */}
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
+                                <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesTotalInvoicesShort")}</span>
+                                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{totalInvoicesCount}</span>
+                                </div>
+                            </div>
+
+                            {/* Card 2: Quá Hạn */}
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
+                                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesOverdueShort")}</span>
+                                    <span className="font-black text-rose-400 text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">{overdueCount}</span>
+                                </div>
+                            </div>
+
+                            {/* Card 3: Đã Thu */}
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors rounded-2xl border border-emerald-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesPaidShort").replace("{count}", String(paidCount))}</span>
+                                    <span className="font-black text-emerald-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
+                                        {formatLargeMoney(totalPaidAmount)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Card 4: Chưa Thu */}
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">{t("landlordInvoicesUnpaidShort").replace("{count}", String(unpaidCount))}</span>
+                                    <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
+                                        {formatLargeMoney(totalUnpaidAmount)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Filter & Tabs Control Bar */}
+            <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                    {/* Search Box */}
+                    <div className="relative flex-1">
+                        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                        <input
+                            type="text"
+                            placeholder={t("landlordInvoicesSearchPlaceholder")}
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+                        />
+                    </div>
+
+                    {/* Month, Year & View Switcher Row on Mobile */}
+                    <div className="flex items-center gap-2 justify-between shrink-0 flex-wrap sm:flex-nowrap">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {/* Month Filter Dropdown */}
+                            <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <Calendar className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                    <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">{t("landlordInvoicesFilterMonth")}</span>
+                                </div>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => {
+                                        setSelectedMonth(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
+                                >
+                                    <option value="all">{t("landlordInvoicesAllMonths")}</option>
+                                    <option value="01">{t("landlordInvoicesMonthPrefix").replace("{month}", "01")}</option>
+                                    <option value="02">{t("landlordInvoicesMonthPrefix").replace("{month}", "02")}</option>
+                                    <option value="03">{t("landlordInvoicesMonthPrefix").replace("{month}", "03")}</option>
+                                    <option value="04">{t("landlordInvoicesMonthPrefix").replace("{month}", "04")}</option>
+                                    <option value="05">{t("landlordInvoicesMonthPrefix").replace("{month}", "05")}</option>
+                                    <option value="06">{t("landlordInvoicesMonthPrefix").replace("{month}", "06")}</option>
+                                    <option value="07">{t("landlordInvoicesMonthPrefix").replace("{month}", "07")}</option>
+                                    <option value="08">{t("landlordInvoicesMonthPrefix").replace("{month}", "08")}</option>
+                                    <option value="09">{t("landlordInvoicesMonthPrefix").replace("{month}", "09")}</option>
+                                    <option value="10">{t("landlordInvoicesMonthPrefix").replace("{month}", "10")}</option>
+                                    <option value="11">{t("landlordInvoicesMonthPrefix").replace("{month}", "11")}</option>
+                                    <option value="12">{t("landlordInvoicesMonthPrefix").replace("{month}", "12")}</option>
+                                </select>
+                            </div>
+
+                            {/* Year Filter Dropdown */}
+                            <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
+                                <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">{t("landlordInvoicesFilterYear")}</span>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => {
+                                        setSelectedYear(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
+                                >
+                                    <option value="all">{t("landlordInvoicesAllYears")}</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* View Switcher */}
+                        <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+                            <button
+                                onClick={() => setViewMode("grid")}
+                                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "grid" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
+                                    }`}
+                                title={t("landlordInvoicesViewGrid")}
+                            >
+                                <LayoutGrid className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode("table")}
+                                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === "table" ? "bg-white text-zinc-900 shadow-2xs" : "text-zinc-500 hover:text-zinc-900"
+                                    }`}
+                                title={t("landlordInvoicesViewTable")}
+                            >
+                                <List className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Quick Filter Tabs */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-zinc-100 pt-3">
+                    <button
+                        onClick={() => { setActiveTab("all"); setCurrentPage(1); }}
+                        className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "all" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
+                            }`}
+                    >
+                        {t("landlordInvoicesTabAll").replace("{count}", String(totalInvoicesCount))}
+                    </button>
+
+                    <button
+                        onClick={() => { setActiveTab("unpaid"); setCurrentPage(1); }}
+                        className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "unpaid" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
+                            }`}
+                    >
+                        {t("landlordInvoicesTabUnpaid").replace("{count}", String(unpaidCount))}
+                    </button>
+
+                    <button
+                        onClick={() => { setActiveTab("paid"); setCurrentPage(1); }}
+                        className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "paid" ? "bg-[#2AC1BC] text-white shadow-2xs" : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
+                            }`}
+                    >
+                        {t("landlordInvoicesTabPaid").replace("{count}", String(paidCount))}
+                    </button>
+
+                    <button
+                        onClick={() => { setActiveTab("overdue"); setCurrentPage(1); }}
+                        className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${activeTab === "overdue" ? "bg-rose-500 text-white shadow-2xs" : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+                            }`}
+                    >
+                        {t("landlordInvoicesTabOverdue").replace("{count}", String(overdueCount))}
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content Display (Grid or Table View) */}
+            {invoices.length === 0 ? (
+                <div className="py-16 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
+                    <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+                        <Receipt className="w-8 h-8" />
+                    </div>
+                    <div className="space-y-1.5 max-w-md mx-auto">
+                        <h3 className="font-black text-base text-zinc-900">{t("landlordInvoicesNoDataTitle")}</h3>
+                        <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                            {t("landlordInvoicesNoDataDesc")}
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleOpenCreateModal}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25aca7] text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer hover:scale-105"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>{t("landlordInvoicesBtnCreateInvoice")}</span>
+                    </button>
+                </div>
+            ) : paginatedInvoices.length === 0 ? (
+                <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
+                    <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
+                    <h3 className="font-extrabold text-sm text-zinc-800">{t("landlordInvoicesEmptyTitle")}</h3>
+                    <p className="text-xs text-zinc-400">{t("landlordInvoicesEmptyDesc")}</p>
+                </div>
+            ) : viewMode === "grid" ? (
+                /* GRID VIEW (Rule #9 Default) */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paginatedInvoices.map((inv) => {
+                        const isPaid = inv.status === "Đã thu";
+                        const isOverdue = inv.status === "Quá hạn";
+
+                        return (
+                            <div
+                                key={inv.id}
+                                className={`bg-white border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${isPaid ? "border-emerald-200 hover:border-emerald-300" :
+                                    isOverdue ? "border-rose-200 hover:border-rose-300 bg-rose-50/20" :
+                                        "border-zinc-200/80 hover:border-[#2AC1BC]/40"
+                                    }`}
+                            >
+                                {/* Header info */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100">
+                                        <span className="font-extrabold text-sm text-zinc-900 flex items-center gap-1.5">
+                                            <FileText className="w-4 h-4 text-[#2AC1BC]" /> {inv.roomName}
+                                        </span>
+                                        <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${isPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                            isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" :
+                                                "bg-amber-50 text-amber-700 border-amber-200"
+                                            }`}>
+                                            {inv.status}
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelTenant")}</span>
+                                            <span className="font-bold text-zinc-900">{inv.tenantName}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelPeriod")}</span>
+                                            <span className="font-bold text-zinc-800">{t("landlordInvoicesLabelPeriodMonth").replace("{period}", inv.period)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-zinc-500 font-semibold">{t("landlordInvoicesLabelInvoiceId")}</span>
+                                            <span className="font-mono text-zinc-600 text-[11px]">{inv.id}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Fee Items Breakdown Summary */}
+                                    <div className="p-3 bg-zinc-50 rounded-xl space-y-1.5 text-[11px]">
+                                        <div className="flex justify-between text-zinc-600">
+                                            <span>{t("landlordInvoicesFeeRent")}</span>
+                                            <span className="font-bold text-zinc-800">{inv.rentAmount.toLocaleString("vi-VN")} ₫</span>
+                                        </div>
+                                        <div className="flex justify-between text-zinc-600">
+                                            <span>{t("landlordInvoicesFeeElec").replace("{usage}", String(inv.elecNew - inv.elecOld))}</span>
+                                            <span className="font-bold text-zinc-800">{((inv.elecNew - inv.elecOld) * inv.elecRate).toLocaleString("vi-VN")} ₫</span>
+                                        </div>
+                                        <div className="flex justify-between text-zinc-600">
+                                            <span>{t("landlordInvoicesFeeWater").replace("{usage}", String(inv.waterNew - inv.waterOld))}</span>
+                                            <span className="font-bold text-zinc-800">{((inv.waterNew - inv.waterOld) * inv.waterRate).toLocaleString("vi-VN")} ₫</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Total & Action Footer */}
+                                <div className="pt-3 border-t border-zinc-100 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">{t("landlordInvoicesLabelTotal")}</span>
+                                            <span className="font-black text-base text-[#2AC1BC]">
+                                                {inv.totalAmount.toLocaleString("vi-VN")} ₫
+                                            </span>
+                                        </div>
+                                        <span className={`text-[10px] font-bold ${isOverdue ? "text-rose-600 font-black" : "text-zinc-400"}`}>
+                                            {t("landlordInvoicesLabelDeadline").replace("{deadline}", inv.deadline)}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setSelectedInvoice(inv)}
+                                            className="flex-1 py-2 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                        >
+                                            <Eye className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnViewDetail")}
+                                        </button>
+                                        {!isPaid && (
+                                            <button
+                                                onClick={() => handleMarkAsPaid(inv.id)}
+                                                className="py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                                                title={t("landlordInvoicesTooltipMarkPaid")}
+                                            >
+                                                <Check className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnCollect")}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                /* TABLE VIEW (Rule #9 Alternative) */
+                <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left">
+                            <thead className="text-[11px] text-zinc-500 bg-zinc-50 border-b border-zinc-200 uppercase font-black tracking-wider">
+                                <tr>
+                                    <th className="px-4 py-3">{t("landlordInvoicesColInvoiceId")}</th>
+                                    <th className="px-4 py-3">{t("landlordInvoicesRoom")}</th>
+                                    <th className="px-4 py-3">{t("landlordInvoicesSectionTenant")}</th>
+                                    <th className="px-4 py-3">{t("landlordInvoicesColPeriod")}</th>
+                                    <th className="px-4 py-3">{t("landlordInvoicesColTotal")}</th>
+                                    <th className="px-4 py-3">{t("landlordInvoicesColDeadline")}</th>
+                                    <th className="px-4 py-3">{t("landlordInvoicesColStatus")}</th>
+                                    <th className="px-4 py-3 text-right">{t("landlordInvoicesColActions")}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-100 font-semibold">
+                                {paginatedInvoices.map((inv) => (
+                                    <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
+                                        <td className="px-4 py-3.5 font-bold font-mono text-zinc-900 flex items-center gap-2">
+                                            <FileText className="w-4 h-4 text-[#2AC1BC]" />
+                                            {inv.id}
+                                        </td>
+                                        <td className="px-4 py-3.5 font-black text-zinc-900">{inv.roomName}</td>
+                                        <td className="px-4 py-3.5 text-zinc-700">{inv.tenantName}</td>
+                                        <td className="px-4 py-3.5 text-zinc-600">{t("landlordInvoicesLabelPeriodMonth").replace("{period}", inv.period)}</td>
+                                        <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">{inv.totalAmount.toLocaleString("vi-VN")} ₫</td>
+                                        <td className={`px-4 py-3.5 font-bold ${inv.status === "Quá hạn" ? "text-rose-600 font-black" : "text-zinc-600"}`}>
+                                            {inv.deadline}
+                                        </td>
+                                        <td className="px-4 py-3.5">
+                                            <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${inv.status === "Đã thu" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                                inv.status === "Quá hạn" ? "bg-rose-50 text-rose-700 border-rose-200" :
+                                                    "bg-amber-50 text-amber-700 border-amber-200"
+                                                }`}>
+                                                {getInvoiceStatusLabel(inv.status)}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3.5 text-right">
+                                            <button
+                                                onClick={() => setSelectedInvoice(inv)}
+                                                className="px-2.5 py-1 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" /> {t("landlordInvoicesBtnViewDetail")}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Pagination Bar (Standard Dormio Rule #9) */}
+            {totalItems > 0 && (
+                <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
+                    <div className="flex items-center gap-2 text-zinc-600">
+                        <span>{t("landlordInvoicesPaginationShow")}</span>
+                        <input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={pageSize}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value) || 1;
+                                setPageSize(val);
+                                setCurrentPage(1);
+                            }}
+                            className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
+                        />
+                        <span>{t("landlordInvoicesPaginationPerPage")}</span>
+                        <span className="text-zinc-400">|</span>
+                        <span>
+                            {totalItems === 0 ? "0" : `${startIndex + 1}-${endIndex}`} {t("landlordInvoicesPaginationOf")} {totalItems} {t("landlordInvoicesPaginationItems")}
+                        </span>
+                    </div>
+
+                    {/* Page Jumping Controls */}
+                    <div className="flex items-center gap-1">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
+                        >
+                            <ChevronLeft className="w-4 h-4 text-zinc-600" />
+                        </button>
+
+                        {windowStart > 1 && (
+                            <button
+                                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                                className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
+                                title={t("landlordInvoicesTooltipPrev5")}
+                            >
+                                &laquo;
+                            </button>
+                        )}
+
+                        {visiblePages.map((p) => (
+                            <button
+                                key={p}
+                                onClick={() => setCurrentPage(p)}
+                                className={`w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer transition-all ${currentPage === p ? "bg-[#2AC1BC] text-white shadow-2xs" : "hover:bg-zinc-100 text-zinc-700"
+                                    }`}
+                            >
+                                {p}
+                            </button>
+                        ))}
+
+                        {windowStart + windowSize <= totalPages && (
+                            <button
+                                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
+                                className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
+                                title={t("landlordInvoicesTooltipNext5")}
+                            >
+                                &raquo;
+                            </button>
+                        )}
+
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
+                        >
+                            <ChevronRight className="w-4 h-4 text-zinc-600" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 📄 DETAILED INVOICE LIGHTBOX MODAL / DRAWER */}
+            {selectedInvoice && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+                    onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedInvoice(null); }}
+                >
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-200">
+                        {/* Modal Header */}
+                        <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
+                                    <Receipt className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-base text-zinc-900 flex items-center gap-2">
+                                        {t("landlordInvoicesModalDetailTitle").replace("{room}", selectedInvoice.roomName)}
+                                        <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${selectedInvoice.status === "Đã thu" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                            selectedInvoice.status === "Quá hạn" ? "bg-rose-50 text-rose-700 border-rose-200" :
+                                                "bg-amber-50 text-amber-700 border-amber-200"
+                                            }`}>
+                                            {getInvoiceStatusLabel(selectedInvoice.status)}
+                                        </span>
+                                    </h3>
+                                    <p className="text-xs text-zinc-500 font-semibold">{t("landlordInvoicesModalDetailSub").replace("{id}", selectedInvoice.id).replace("{period}", selectedInvoice.period)}</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setSelectedInvoice(null)}
+                                className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Scroll Content */}
+                        <div className="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
+                            {/* Tenant & Building Info Card */}
+                            <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("landlordInvoicesSectionTenant")}</span>
+                                    <p className="font-black text-sm text-zinc-900">{selectedInvoice.tenantName}</p>
+                                    <p className="text-zinc-500 font-semibold">{selectedInvoice.tenantPhone}</p>
+                                </div>
+
+                                <div className="space-y-1 sm:text-right">
+                                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("landlordInvoicesSectionDeadlineAndCreated")}</span>
+                                    <p className="font-bold text-zinc-800">
+                                        {t("landlordInvoicesDeadlinePrefix")} <span className={`font-black ${selectedInvoice.status === "Quá hạn" ? "text-rose-600 font-extrabold" : "text-zinc-800"}`}>{selectedInvoice.deadline}</span>
+                                        {selectedInvoice.status === "Quá hạn" && (
+                                            <span className="ml-1.5 px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-black rounded-md border border-rose-200">{t("landlordInvoicesStatusOverdue")}</span>
+                                        )}
+                                    </p>
+                                    <p className="text-zinc-500 font-medium">{t("landlordInvoicesCreatedPrefix")} {selectedInvoice.createdAt}</p>
+                                </div>
+                            </div>
+
+                            {/* Fee Breakdown Table */}
+                            <div className="space-y-3">
+                                <h4 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                                    <FileText className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordInvoicesSectionFeeBreakdown")}
+                                </h4>
+
+                                <div className="border border-zinc-200 rounded-2xl overflow-x-auto custom-scrollbar">
+                                    <table className="w-full text-xs text-left min-w-[500px]">
+                                        <thead className="bg-zinc-50 border-b border-zinc-200 font-black text-zinc-500 uppercase text-[10px]">
+                                            <tr>
+                                                <th className="px-4 py-2.5">{t("landlordInvoicesColItem")}</th>
+                                                <th className="px-4 py-2.5">{t("landlordInvoicesColOldNewIndex")}</th>
+                                                <th className="px-4 py-2.5 text-right">{t("landlordInvoicesColUnitPrice")}</th>
+                                                <th className="px-4 py-2.5 text-right">{t("landlordInvoicesColAmount")}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-zinc-100 font-semibold">
+                                            <tr>
+                                                <td className="px-4 py-3 font-bold text-zinc-900">{t("landlordInvoicesItemRoomRent").replace("{room}", selectedInvoice.roomName)}</td>
+                                                <td className="px-4 py-3 text-zinc-400">-</td>
+                                                <td className="px-4 py-3 text-right">{selectedInvoice.rentAmount.toLocaleString("vi-VN")} ₫</td>
+                                                <td className="px-4 py-3 text-right font-black text-zinc-900">{selectedInvoice.rentAmount.toLocaleString("vi-VN")} ₫</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
+                                                    <Zap className="w-3.5 h-3.5 text-amber-500" /> {t("landlordInvoicesItemElec")}
+                                                </td>
+                                                <td className="px-4 py-3 text-zinc-600">
+                                                    {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} ({selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
+                                                </td>
+                                                <td className="px-4 py-3 text-right">{selectedInvoice.elecRate.toLocaleString("vi-VN")} ₫</td>
+                                                <td className="px-4 py-3 text-right font-black text-zinc-900">
+                                                    {((selectedInvoice.elecNew - selectedInvoice.elecOld) * selectedInvoice.elecRate).toLocaleString("vi-VN")} ₫
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
+                                                    <Droplets className="w-3.5 h-3.5 text-blue-500" /> {t("landlordInvoicesItemWater")}
+                                                </td>
+                                                <td className="px-4 py-3 text-zinc-600">
+                                                    {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} ({selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
+                                                </td>
+                                                <td className="px-4 py-3 text-right">{selectedInvoice.waterRate.toLocaleString("vi-VN")} ₫</td>
+                                                <td className="px-4 py-3 text-right font-black text-zinc-900">
+                                                    {((selectedInvoice.waterNew - selectedInvoice.waterOld) * selectedInvoice.waterRate).toLocaleString("vi-VN")} ₫
+                                                </td>
+                                            </tr>
+
+                                            {selectedInvoice.serviceFees.map((fee, idx) => (
+                                                <tr key={idx}>
+                                                    <td className="px-4 py-3 font-bold text-zinc-900">{fee.name}</td>
+                                                    <td className="px-4 py-3 text-zinc-400">{t("landlordInvoicesItemFixedMonthly")}</td>
+                                                    <td className="px-4 py-3 text-right">{fee.amount.toLocaleString("vi-VN")} ₫</td>
+                                                    <td className="px-4 py-3 text-right font-black text-zinc-900">{fee.amount.toLocaleString("vi-VN")} ₫</td>
+                                                </tr>
+                                            ))}
+
+                                            {selectedInvoice.discount > 0 && (
+                                                <tr className="bg-rose-50/40">
+                                                    <td className="px-4 py-3 font-bold text-rose-700">{t("landlordInvoicesItemDiscount")}</td>
+                                                    <td className="px-4 py-3 text-zinc-400">-</td>
+                                                    <td className="px-4 py-3 text-right text-rose-700">-{selectedInvoice.discount.toLocaleString("vi-VN")} ₫</td>
+                                                    <td className="px-4 py-3 text-right font-black text-rose-700">-{selectedInvoice.discount.toLocaleString("vi-VN")} ₫</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Total Calculation Card & VietQR Section */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                                {/* VietQR Bank Card */}
+                                <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl flex items-center gap-4">
+                                    <div className="w-24 h-24 bg-white rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-zinc-200">
+                                        <img src={getVietQrUrl(selectedInvoice)} alt={t("landlordInvoicesVietQrAlt")} className="w-full h-full object-contain" />
+                                    </div>
+
+                                    <div className="space-y-1 text-[11px] min-w-0">
+                                        <span className="font-extrabold text-[#2AC1BC] flex items-center gap-1">
+                                            <QrCode className="w-3.5 h-3.5" /> {t("landlordInvoicesVietQrAuto")}
+                                        </span>
+                                        <p className="font-bold text-zinc-900">{t("landlordInvoicesVietQrBank")}</p>
+                                        <p className="font-mono text-zinc-700 font-bold">STK: 0988123456</p>
+                                        <p className="text-zinc-500 font-medium truncate">{t("landlordInvoicesVietQrMemo").replace("{memo}", `${selectedInvoice.id} ${selectedInvoice.roomName.replace(" ", "")}`)}</p>
+                                    </div>
+                                </div>
+
+                                {/* Grand Total */}
+                                <div className="p-5 bg-zinc-900 text-white rounded-2xl space-y-2 text-right shadow-inner">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">{t("landlordInvoicesGrandTotal")}</span>
+                                    <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] block">
+                                        {selectedInvoice.totalAmount.toLocaleString("vi-VN")} ₫
+                                    </span>
+                                    {selectedInvoice.paidAt && (
+                                        <span className="text-[10px] font-bold text-emerald-400 block">
+                                            {t("landlordInvoicesPaidAtBadgeDetail").replace("{time}", selectedInvoice.paidAt || "").replace("{method}", selectedInvoice.paymentMethod || "")}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer Actions */}
+                        <div className="p-4 border-t border-zinc-100 bg-white flex flex-wrap items-center justify-between gap-3">
+                            {/* If UNPAID: Show "Nhắc Thu Tiền Qua Chat" button */}
+                            {selectedInvoice.status !== "Đã thu" ? (
+                                <button
+                                    onClick={() => {
+                                        const roomNum = selectedInvoice.roomId;
+                                        const tenantName = selectedInvoice.tenantName;
+                                        setSelectedInvoice(null);
+                                        router.push(
+                                            `/landlord/messages?room=${encodeURIComponent(roomNum)}&tenant=${encodeURIComponent(tenantName)}&invId=${encodeURIComponent(selectedInvoice.id)}&amount=${selectedInvoice.totalAmount}&period=${encodeURIComponent(selectedInvoice.period)}&autoSend=true`
+                                        );
+                                    }}
+                                    className="px-4 py-2 bg-zinc-100 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+                                >
+                                    <Send className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("landlordInvoicesBtnRemindChat")}
+                                </button>
+                            ) : (
+                                /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
+                                <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-black rounded-xl">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                                    <span>{t("landlordInvoicesPaidAtBadge").replace("{time}", selectedInvoice.paidAt || "").replace("{method}", selectedInvoice.paymentMethod || "")}</span>
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-2">
+                                {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
+                                {selectedInvoice.status !== "Đã thu" && (
+                                    <button
+                                        onClick={() => handleMarkAsPaid(selectedInvoice.id, t("landlordInvoicesPaymentMethodManual"))}
+                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
+                                    >
+                                        <Check className="w-4 h-4" /> {t("landlordInvoicesBtnConfirmPaid")}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ➕ CREATE NEW INVOICE MODAL */}
+            {isCreateModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+                    onMouseDown={(e) => { if (e.target === e.currentTarget) handleRequestCloseCreate(); }}
+                >
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
+                        {/* Modal Header */}
+                        <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
+                                    <Plus className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-base text-zinc-900">{t("landlordInvoicesModalCreateTitle")}</h3>
+                                    <p className="text-xs text-zinc-500 font-semibold">{t("landlordInvoicesModalCreateSub")}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleRequestCloseCreate}
+                                className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Form Content */}
+                        <div className="p-6 overflow-y-auto space-y-4 text-xs custom-scrollbar">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="font-bold text-zinc-700">{t("landlordInvoicesFieldRoom")}</label>
+                                    <select
+                                        value={createForm.roomId}
+                                        onChange={(e) => {
+                                            const selectedId = e.target.value;
+                                            const r = availableRooms.find((rm) => rm.id === selectedId);
+                                            let elecRate = createForm.elecRate;
+                                            let waterRate = createForm.waterRate;
+                                            if (r?.services) {
+                                                const elec = r.services.find(
+                                                    (s) => s.isMetered && (s.name.toLowerCase().includes("điện") || s.name.toLowerCase().includes("electric")),
+                                                );
+                                                if (elec) elecRate = Number(elec.price) || elecRate;
+                                                const water = r.services.find(
+                                                    (s) => s.isMetered && (s.name.toLowerCase().includes("nước") || s.name.toLowerCase().includes("water")),
+                                                );
+                                                if (water) waterRate = Number(water.price) || waterRate;
+                                            }
+                                            setCreateForm({
+                                                ...createForm,
+                                                roomId: selectedId,
+                                                roomName: r ? `${t("landlordRoomDetailRoomPrefix")} ${r.roomNumber}` : "",
+                                                elecRate,
+                                                waterRate,
+                                            });
+                                            setIsCreateFormDirty(true);
+                                        }}
+                                        className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
+                                    >
+                                        <option value="">{t("landlordInvoicesSelectRoomPlaceholder")}</option>
+                                        {availableRooms.map((r) => (
+                                            <option key={r.id} value={r.id}>
+                                                {t("landlordInvoicesRoomOption").replace("{roomNumber}", r.roomNumber).replace("{floor}", String(r.floor)).replace("{roomType}", r.roomType?.name || t("landlordInvoicesStandardRoom"))}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="font-bold text-zinc-700">{t("landlordInvoicesFieldPeriod")}</label>
+                                    <input
+                                        type="text"
+                                        value={createForm.period}
+                                        onChange={(e) => {
+                                            setCreateForm({ ...createForm, period: e.target.value });
+                                            setIsCreateFormDirty(true);
+                                        }}
+                                        placeholder="08/2026"
+                                        className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Meter Readings Inputs */}
+                            <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
+                                <span className="font-black text-xs text-zinc-900 uppercase tracking-wider block">{t("landlordInvoicesMeterReadingsTitle")}</span>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-extrabold text-zinc-500">{t("landlordInvoicesElecOld")}</label>
+                                        <input
+                                            type="number"
+                                            value={createForm.elecOld}
+                                            onChange={(e) => {
+                                                setCreateForm({ ...createForm, elecOld: parseInt(e.target.value) || 0 });
+                                                setIsCreateFormDirty(true);
+                                            }}
+                                            className="w-full p-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-extrabold text-amber-700">{t("landlordInvoicesElecNew")}</label>
+                                        <input
+                                            type="number"
+                                            value={createForm.elecNew}
+                                            onChange={(e) => {
+                                                setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 });
+                                                setIsCreateFormDirty(true);
+                                            }}
+                                            className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs font-bold text-amber-800"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-extrabold text-zinc-500">{t("landlordInvoicesWaterOld")}</label>
+                                        <input
+                                            type="number"
+                                            value={createForm.waterOld}
+                                            onChange={(e) => {
+                                                setCreateForm({ ...createForm, waterOld: parseInt(e.target.value) || 0 });
+                                                setIsCreateFormDirty(true);
+                                            }}
+                                            className="w-full p-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-extrabold text-blue-700">{t("landlordInvoicesWaterNew")}</label>
+                                        <input
+                                            type="number"
+                                            value={createForm.waterNew}
+                                            onChange={(e) => {
+                                                setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 });
+                                                setIsCreateFormDirty(true);
+                                            }}
+                                            className="w-full p-2 bg-white border border-blue-300 rounded-lg text-xs font-bold text-blue-800"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Total Summary preview */}
+                            <div className="p-4 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between">
+                                <div>
+                                    <span className="text-[10px] font-extrabold text-zinc-500 block uppercase">{t("landlordInvoicesPreviewTotal")}</span>
+                                    <span className="text-xl font-black text-[#2AC1BC]">
+                                        {(
+                                            createForm.rentAmount +
+                                            Math.max(0, (createForm.elecNew - createForm.elecOld)) * createForm.elecRate +
+                                            Math.max(0, (createForm.waterNew - createForm.waterOld)) * createForm.waterRate +
+                                            createForm.wifiFee + createForm.trashFee - createForm.discount
+                                        ).toLocaleString("vi-VN")} ₫
+                                    </span>
+                                </div>
+                                <span className="text-[11px] font-bold text-zinc-500">{t("landlordInvoicesDeadlinePrefix")} {createForm.deadline}</span>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
+                            <button
+                                onClick={handleRequestCloseCreate}
+                                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                            >
+                                {t("landlordInvoicesBtnCancel")}
+                            </button>
+                            <button
+                                disabled={isSubmitting}
+                                onClick={handleCreateInvoiceSubmit}
+                                className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                <span>{isSubmitting ? t("landlordInvoicesBtnSubmitting") : t("landlordInvoicesBtnSubmitCreate")}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🤖 AI OCR METER READING SPLIT-SCREEN VERIFICATION MODAL */}
+            {isOcrModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+                    onMouseDown={(e) => { if (e.target === e.currentTarget) handleRequestCloseOcr(); }}
+                >
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-white">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-amber-500/10 text-amber-600 rounded-2xl">
+                                    <Sparkles className="w-6 h-6 fill-amber-500" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black text-zinc-900">{t("landlordInvoicesOcrModalTitle")}</h2>
+                                    <p className="text-xs text-zinc-500 font-medium">{t("landlordInvoicesOcrModalSub")}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleRequestCloseOcr}
+                                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Split Screen Content */}
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto custom-scrollbar">
+                            {/* Left Side: Photo with AI Bounding Box */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">{t("landlordInvoicesOcrPhotoTitle")}</span>
+                                    <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-extrabold">
+                                        {t("landlordInvoicesOcrAccuracy")}
+                                    </span>
+                                </div>
+
+                                <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
+                                    <div className="text-center space-y-2">
+                                        <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
+                                            {ocrMeterValue}
+                                            <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full animate-bounce">
+                                                OCR Box
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-zinc-400">{t("landlordInvoicesOcrMeterDesc")}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Side: AI Extracted Details & Inputs */}
+                            <div className="space-y-4 bg-zinc-50 p-5 rounded-2xl border border-zinc-200/80 flex flex-col justify-between">
+                                <div className="space-y-4">
+                                    <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">{t("landlordInvoicesOcrDetailsTitle")}</span>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-3 bg-white rounded-xl border border-zinc-200">
+                                            <span className="text-[10px] font-extrabold text-zinc-400 block">{t("landlordInvoicesOcrOldIndex")}</span>
+                                            <span className="text-base font-black text-zinc-800">1.318 kWh</span>
+                                        </div>
+                                        <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
+                                            <span className="text-[10px] font-extrabold text-amber-700 block">{t("landlordInvoicesOcrNewIndex")}</span>
+                                            <input
+                                                type="text"
+                                                value={ocrMeterValue}
+                                                onChange={(e) => {
+                                                    setOcrMeterValue(e.target.value);
+                                                    setIsOcrFormDirty(true);
+                                                }}
+                                                className="w-full text-base font-black text-amber-700 bg-transparent outline-none border-b border-amber-500/50"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2">
+                                        <div className="flex justify-between text-xs font-bold text-zinc-600">
+                                            <span>{t("landlordInvoicesOcrUsage")}</span>
+                                            <span className="text-zinc-900 font-black">{Math.max(0, parseInt(ocrMeterValue || "0") - 1318)} kWh</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs font-bold text-zinc-600">
+                                            <span>{t("landlordInvoicesOcrUnitPrice")}</span>
+                                            <span className="text-zinc-900">3.500 ₫ / kWh</span>
+                                        </div>
+                                        <div className="border-t border-zinc-100 pt-2 flex justify-between text-sm font-black text-zinc-900">
+                                            <span>{t("landlordInvoicesOcrAmount")}</span>
+                                            <span className="text-[#2AC1BC]">
+                                                {(
+                                                    Math.max(0, parseInt(ocrMeterValue || "0") - createForm.elecOld) *
+                                                    createForm.elecRate
+                                                ).toLocaleString("vi-VN")}{" "}
+                                                ₫
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 flex gap-3">
+                                    <button
+                                        onClick={handleRequestCloseOcr}
+                                        className="flex-1 py-3 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                                    >
+                                        {t("landlordInvoicesBtnCancel")}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsOcrModalOpen(false);
+                                            setIsOcrFormDirty(false);
+                                        }}
+                                        className="flex-1 py-3 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md transition-all cursor-pointer"
+                                    >
+                                        {t("landlordInvoicesOcrConfirm")}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ⚠️ SYSTEM POP-UP CONFIRMATION MODAL (Rule #10 Dormio Standard) */}
+            {confirmCloseTarget && (
+                <div
+                    className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
+                    onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmCloseTarget(null); }}
+                >
+                    <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-zinc-200 text-center space-y-5 animate-in zoom-in-95 duration-200">
+                        <div className="w-14 h-14 bg-amber-50 text-amber-500 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
+                            <AlertTriangle className="w-7 h-7" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-black text-zinc-900">{t("landlordInvoicesConfirmCloseTitle")}</h3>
+                            <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
+                                {t("landlordInvoicesConfirmCloseDesc")}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-2">
+                            <button
+                                onClick={() => setConfirmCloseTarget(null)}
+                                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                            >
+                                {t("landlordInvoicesConfirmCloseKeep")}
+                            </button>
+
+                            <button
+                                onClick={handleConfirmCloseModal}
+                                className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                            >
+                                {t("landlordInvoicesConfirmCloseDiscard")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }
 
 function InvoicesFallback() {
- const t = useTranslations("landlord");
- return <div className="p-8 text-center text-xs font-bold text-zinc-400">{t("landlordInvoicesLoading")}</div>;
+    const t = useTranslations("landlord");
+    return <div className="p-8 text-center text-xs font-bold text-zinc-400">{t("landlordInvoicesLoading")}</div>;
 }
 
 export default function InvoicesPage() {
- return (
- <Suspense fallback={<InvoicesFallback />}>
- <InvoicesContent />
- </Suspense>
- );
+    return (
+        <Suspense fallback={<InvoicesFallback />}>
+            <InvoicesContent />
+        </Suspense>
+    );
 }

@@ -4,6 +4,8 @@ import {
   Delete,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
   ParseUUIDPipe,
@@ -15,6 +17,7 @@ import {
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiCreatedResponse,
   ApiHeader,
   ApiOkResponse,
   ApiOperation,
@@ -72,16 +75,20 @@ export class ServicesController {
 
   @Post()
   @RequireTier(SubscriptionPackage.plus)
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'UC-L-18: Create a custom service',
     description:
-      'Creates a new custom service for the active boarding house and optionally attaches it to specific rooms.',
+      'Creates a new custom service for the active boarding house and optionally attaches it to specific rooms. Requires Plus subscription tier or higher.',
   })
   @ApiBody({ type: CreateServiceDto })
-  @ApiResponse({
-    status: 201,
+  @ApiCreatedResponse({
     type: ServiceItemDto,
     description: 'The created service record',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - Requires Plus subscription tier or higher',
   })
   async createService(
     @CurrentUser('id') landlordId: string,
@@ -111,11 +118,15 @@ export class ServicesController {
   @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'UC-L-18: Update a service',
-    description: 'Updates an existing service configuration and attached room assignments.',
+    description: 'Updates an existing service configuration and attached room assignments. Requires Plus subscription tier or higher.',
   })
   @ApiParam({ name: 'id', description: 'Service UUID' })
   @ApiBody({ type: UpdateServiceDto })
   @ApiOkResponse({ type: ServiceItemDto })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - Requires Plus subscription tier or higher',
+  })
   async updateService(
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) serviceId: string,
@@ -130,7 +141,7 @@ export class ServicesController {
   @ApiOperation({
     summary: 'UC-L-18: Delete a service',
     description:
-      'Deletes a service if not locked by invoice items or meter readings. Automatically removes associated room_service bindings.',
+      'Deletes a service if not locked by invoice items or meter readings. Automatically removes associated room_service bindings. Requires Plus subscription tier or higher.',
   })
   @ApiParam({ name: 'id', description: 'Service UUID' })
   @ApiOkResponse({
@@ -141,6 +152,10 @@ export class ServicesController {
         message: { type: 'string', example: 'Đã xóa dịch vụ thành công' },
       },
     },
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - Requires Plus subscription tier or higher',
   })
   async deleteService(
     @Headers('x-boarding-house-id') boardingHouseId: string,

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -17,11 +18,16 @@ describe('UsersService', () => {
     },
   };
 
+  const mockUploadService = {
+    ensureCloudinaryUrl: jest.fn((url) => Promise.resolve(url)),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: UploadService, useValue: mockUploadService },
       ],
     }).compile();
 

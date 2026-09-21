@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
 import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto';
 import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
 
@@ -13,7 +14,10 @@ import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   /**
    * Returns the live multi-role capabilities of a user.
@@ -139,6 +143,15 @@ export class UsersService {
       ? new Date(dto.expiryDate)
       : new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000);
 
+    const frontUrl = await this.uploadService.ensureCloudinaryUrl(
+      dto.cardFrontUrl,
+      'dormio/identifications',
+    );
+    const backUrl = await this.uploadService.ensureCloudinaryUrl(
+      dto.cardBackUrl,
+      'dormio/identifications',
+    );
+
     const saved = await this.prisma.userIdentification.upsert({
       where: { userId },
       create: {
@@ -154,8 +167,8 @@ export class UsersService {
         expiryDate,
         personalIdentification: randomUUID(),
         note: dto.note?.trim() || '',
-        cardFrontUrl: dto.cardFrontUrl?.trim() || '',
-        cardBackUrl: dto.cardBackUrl?.trim() || '',
+        cardFrontUrl: frontUrl?.trim() || '',
+        cardBackUrl: backUrl?.trim() || '',
       },
       update: {
         identityNumber: dto.identityNumber,
@@ -168,8 +181,8 @@ export class UsersService {
         issueDate,
         expiryDate,
         note: dto.note?.trim() || '',
-        cardFrontUrl: dto.cardFrontUrl?.trim() || '',
-        cardBackUrl: dto.cardBackUrl?.trim() || '',
+        cardFrontUrl: frontUrl?.trim() || '',
+        cardBackUrl: backUrl?.trim() || '',
       },
     });
 

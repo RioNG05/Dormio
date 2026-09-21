@@ -201,11 +201,6 @@ export default function PricingPage() {
   // Derived helpers
   const isBhms = activeSection === "bhms";
   const accentColor = isBhms ? "#2AC1BC" : "#FF6B35";
-  const accentShadow = isBhms ? "shadow-[#2AC1BC]/30" : "shadow-[#FF6B35]/30";
-  const accentBg = isBhms ? "bg-[#2AC1BC]" : "bg-[#FF6B35]";
-  const accentTab = isBhms
-    ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30"
-    : "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30";
 
   const currentFeatures = isBhms ? bhmsFeatures : bhrpFeatures;
   const currentPlans = isBhms ? bhmsPlans : bhrpPlans;
@@ -247,9 +242,8 @@ export default function PricingPage() {
             <button
               id="tab-bhms"
               onClick={() => setActiveSection("bhms")}
-              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-                isBhms ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30" : "text-zinc-500 hover:text-zinc-900"
-              }`}
+              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${isBhms ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30" : "text-zinc-500 hover:text-zinc-900"
+                }`}
             >
               <Building2 className="w-4 h-4" /> {t("guestFeaturesBhmsTab")}
             </button>
@@ -257,9 +251,8 @@ export default function PricingPage() {
             <button
               id="tab-bhrp"
               onClick={() => setActiveSection("bhrp")}
-              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-                !isBhms ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30" : "text-zinc-500 hover:text-zinc-900"
-              }`}
+              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${!isBhms ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30" : "text-zinc-500 hover:text-zinc-900"
+                }`}
             >
               <QrCode className="w-4 h-4" /> {t("guestFeaturesBhrpTab")}
             </button>
@@ -267,89 +260,7 @@ export default function PricingPage() {
         </div>
 
         {/* ════════════════════════════════════════════════════════════════════
-            SECTION 1 — FEATURES
-        ════════════════════════════════════════════════════════════════════ */}
-        <section className="space-y-8 animate-in fade-in duration-300">
-          {/* Section header */}
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span
-              className="px-3.5 py-1 text-xs font-black rounded-full border uppercase inline-block whitespace-nowrap"
-              style={{ backgroundColor: `${accentColor}1A`, color: accentColor, borderColor: `${accentColor}33` }}
-            >
-              {isBhms ? t("guestFeaturesBhmsBadge") : t("guestFeaturesBhrpBadge")}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
-              {isBhms ? (
-                <>
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhmsTitle1")}</span>{" "}
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhmsTitle2")}</span>
-                </>
-              ) : (
-                <>
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhrpTitle1")}</span>{" "}
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhrpTitle2")}</span>
-                </>
-              )}
-            </h2>
-          </div>
-
-          {/* Feature cards grid */}
-          <div className={`grid grid-cols-1 gap-6 sm:gap-8 ${isBhms ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2 max-w-5xl mx-auto"}`}>
-            {currentFeatures.map((feat, idx) => {
-              const Icon = feat.icon;
-              return (
-                <div
-                  key={idx}
-                  className="bg-white rounded-3xl p-7 sm:p-8 border shadow-xs hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between space-y-6 group cursor-pointer"
-                  style={{
-                    borderColor: `${accentColor}33`,
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = accentColor)}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = `${accentColor}33`)}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center font-black group-hover:scale-110 transition-transform"
-                        style={{ backgroundColor: `${accentColor}1A`, color: accentColor }}
-                      >
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <span
-                        className="px-3 py-1 rounded-full text-[10px] font-black whitespace-nowrap"
-                        style={{ backgroundColor: `${accentColor}1A`, color: accentColor }}
-                      >
-                        {feat.tag}
-                      </span>
-                    </div>
-
-                    <h3
-                      className="text-lg font-black text-zinc-900 transition-colors leading-snug group-hover:text-current"
-                      style={{ "--hover-color": accentColor } as React.CSSProperties}
-                    >
-                      {feat.title}
-                    </h3>
-
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {feat.desc}
-                    </p>
-                  </div>
-
-                  <div
-                    className="pt-4 border-t border-zinc-100 flex items-center justify-between text-xs font-bold"
-                    style={{ color: accentColor }}
-                  >
-                    <span className="whitespace-nowrap">{t("guestFeaturesExplore")}</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════════
-            SECTION 2 — PRICING
+            SECTION 1 — PRICING
         ════════════════════════════════════════════════════════════════════ */}
         <section className="space-y-8 animate-in fade-in duration-300">
           {/* Section header + billing toggle */}
@@ -381,18 +292,16 @@ export default function PricingPage() {
               <button
                 id="billing-monthly"
                 onClick={() => setBillingCycle("monthly")}
-                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer ${
-                  billingCycle === "monthly" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                }`}
+                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+                  }`}
               >
                 {t("guestPricingPayMonthly")}
               </button>
               <button
                 id="billing-yearly"
                 onClick={() => setBillingCycle("yearly")}
-                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  billingCycle === "yearly" ? "bg-zinc-900 text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                }`}
+                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${billingCycle === "yearly" ? "bg-zinc-900 text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
+                  }`}
               >
                 <span>{t("guestPricingPayYearly")}</span>
                 <span className="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full uppercase">
@@ -409,16 +318,15 @@ export default function PricingPage() {
               return (
                 <div
                   key={idx}
-                  className={`bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${
-                    plan.popular ? "-translate-y-2" : "hover:shadow-md"
-                  }`}
+                  className={`bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${plan.popular ? "-translate-y-2" : "hover:shadow-md"
+                    }`}
                   style={
                     plan.popular
                       ? {
-                          borderColor: accentColor,
-                          boxShadow: `0 20px 40px ${accentColor}26`,
-                          outline: `2px solid ${accentColor}33`,
-                        }
+                        borderColor: accentColor,
+                        boxShadow: `0 20px 40px ${accentColor}26`,
+                        outline: `2px solid ${accentColor}33`,
+                      }
                       : { borderColor: "#e4e4e7" }
                   }
                 >
@@ -490,6 +398,80 @@ export default function PricingPage() {
                       {plan.cta} &rarr;
                     </button>
                   </Link>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════════════
+            SECTION 2 — FEATURES
+        ════════════════════════════════════════════════════════════════════ */}
+        <section className="space-y-8 animate-in fade-in duration-300">
+          {/* Section header */}
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span
+              className="px-3.5 py-1 text-xs font-black rounded-full border uppercase inline-block whitespace-nowrap"
+              style={{ backgroundColor: `${accentColor}1A`, color: accentColor, borderColor: `${accentColor}33` }}
+            >
+              {isBhms ? t("guestFeaturesBhmsBadge") : t("guestFeaturesBhrpBadge")}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
+              {isBhms ? (
+                <>
+                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhmsTitle1")}</span>{" "}
+                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhmsTitle2")}</span>
+                </>
+              ) : (
+                <>
+                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhrpTitle1")}</span>{" "}
+                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhrpTitle2")}</span>
+                </>
+              )}
+            </h2>
+          </div>
+
+          {/* Feature cards grid */}
+          <div className={`grid grid-cols-1 gap-6 sm:gap-8 ${isBhms ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2 max-w-5xl mx-auto"}`}>
+            {currentFeatures.map((feat, idx) => {
+              const Icon = feat.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white rounded-3xl p-7 sm:p-8 border shadow-xs hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between space-y-6 group"
+                  style={{
+                    borderColor: `${accentColor}33`,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = accentColor)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = `${accentColor}33`)}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center font-black group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: `${accentColor}1A`, color: accentColor }}
+                      >
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span
+                        className="px-3 py-1 rounded-full text-[10px] font-black whitespace-nowrap"
+                        style={{ backgroundColor: `${accentColor}1A`, color: accentColor }}
+                      >
+                        {feat.tag}
+                      </span>
+                    </div>
+
+                    <h3
+                      className="text-lg font-black text-zinc-900 transition-colors leading-snug group-hover:text-current"
+                      style={{ "--hover-color": accentColor } as React.CSSProperties}
+                    >
+                      {feat.title}
+                    </h3>
+
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                      {feat.desc}
+                    </p>
+                  </div>
                 </div>
               );
             })}

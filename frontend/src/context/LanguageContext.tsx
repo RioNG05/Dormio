@@ -48,6 +48,7 @@ const legacyNamespaceMap: Record<string, ValidNamespace> = {
   deposits: "landlord",
   debts: "landlord",
   reminders: "landlord",
+  notification: "landlord",
   listings: "landlord",
   workforce: "landlord",
   operations: "landlord",
@@ -132,12 +133,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // 4. Default to key if nothing was matched
+        // 4. Check root level in current locale, then fallback locale
+        if (text === undefined) {
+          text = (messages as any)[key] ?? (fallbackMessages as any)[key];
+        }
+
+        // 5. Default to key if nothing was matched
         if (text === undefined) {
           text = key;
         }
 
-        // 5. Replace placeholders
+        // 6. Replace placeholders
         if (typeof text === "string" && values) {
           Object.entries(values).forEach(([k, v]) => {
             text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
@@ -166,7 +172,7 @@ export function useLanguage() {
       t: (namespace?: string) => (key: string, values?: Record<string, any>) => {
         const resolved = namespace ? legacyNamespaceMap[namespace] || namespace : undefined;
         const scoped = resolved ? (viMessages as any)[resolved] || {} : viMessages;
-        let text = scoped[key] ?? key;
+        let text = scoped[key] ?? (viMessages as any)[key] ?? key;
         if (typeof text === "string" && values) {
           Object.entries(values).forEach(([k, v]) => {
             text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));

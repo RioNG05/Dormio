@@ -3,17 +3,35 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Filter, MoreHorizontal, UserPlus, X, UploadCloud, User, Plus, Building2, Activity, ArrowUpDown, LayoutGrid, List, ChevronDown, Upload, Download, Target, Users, ChevronLeft, ChevronRight, ArrowLeft, Edit2, Trash2, Phone, Briefcase, CreditCard, Home, Clock, Image as ImageIcon, AlertTriangle, MapPin, AlertCircle, CheckCircle2, Info, UserCheck, FileSpreadsheet, UserCircle2, PhoneCall, MessageCircle, Eye, Edit3, Link2, Mail, LogOut, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
-import { Customer, SystemTenantUser } from "./data";
-import { getLandlordContracts, searchTenantByPhone } from "@/services/contract.service";
+import {
+    Search,
+    UploadCloud,
+    Plus,
+    LayoutGrid,
+    List,
+    Users,
+    MapPin,
+    AlertCircle,
+    CheckCircle2,
+    Info,
+    FileSpreadsheet,
+    PhoneCall,
+    Phone,
+    MessageCircle,
+    Eye,
+    AlertTriangle,
+    Loader2,
+} from "lucide-react";
+import { Customer } from "./data";
+import { getLandlordContracts } from "@/services/contract.service";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { useTranslations } from "@/context/LanguageContext";
+import { Button, TextInput, SelectInput, NumberInput } from "@/components/ui";
 
 export default function CustomersPage() {
     const { activeBuilding } = useAuth();
     const router = useRouter();
     const t = useTranslations("landlord");
-    const { currentLocale } = useLanguage();
 
     const getCustomerStatusLabel = (status: string) => {
         switch (status) {
@@ -28,8 +46,6 @@ export default function CustomersPage() {
         }
     };
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isDirty, setIsDirty] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -42,16 +58,6 @@ export default function CustomersPage() {
     const [sortFilter, setSortFilter] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(6);
-    const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-    const [confirmModal, setConfirmModal] = useState<{
-        isOpen: boolean;
-        title: string;
-        message: string;
-        confirmText?: string;
-        cancelText?: string;
-        type?: "danger" | "warning" | "info";
-        onConfirm: () => void;
-    }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
 
     // Professional Alert Popup Modal State
     const [alertModal, setAlertModal] = useState<{
@@ -71,63 +77,39 @@ export default function CustomersPage() {
         setAlertModal({ isOpen: true, title: finalTitle, message, type });
     };
 
-    // 2-Way Add Tenant State
-    const [addMode, setAddMode] = useState<"manual" | "existing_user">("manual");
-    const [selectedSystemUser, setSelectedSystemUser] = useState<any | null>(null);
-    const [systemSearchTerm, setSystemSearchTerm] = useState("");
-
-    // Form Controlled States
-    const [nameInput, setNameInput] = useState("");
-    const [cccdInput, setCccdInput] = useState("");
-    const [dobInput, setDobInput] = useState("");
-    const [genderInput, setGenderInput] = useState("nam");
-    const [addressInput, setAddressInput] = useState("");
-    const [phoneInput, setPhoneInput] = useState("");
-    const [emailInput, setEmailInput] = useState("");
-    const [jobInput, setJobInput] = useState("");
-    const [workplaceInput, setWorkplaceInput] = useState("");
-    const [roomInput, setRoomInput] = useState("101");
-    const [buildingInput, setBuildingInput] = useState("");
-    const [noteInput, setNoteInput] = useState("");
-    const [hasAccountState, setHasAccountState] = useState(false);
-
-    // Link Account Modal State
-    const [linkAccountModal, setLinkAccountModal] = useState<{ isOpen: boolean; customer: any | null }>({
-        isOpen: false,
-        customer: null
-    });
-    const [linkSearchQuery, setLinkSearchQuery] = useState("");
-
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery, buildingFilter, statusFilter, sortFilter, itemsPerPage]);
 
-    const handleCloseModal = () => {
-        if (isDirty) {
-            setConfirmModal({
-                isOpen: true,
-                title: t("landlordCustomersConfirmCloseTitle"),
-                message: t("landlordCustomersConfirmCloseDesc"),
-                confirmText: t("landlordCustomersConfirmCloseDiscard"),
-                cancelText: t("landlordCustomersConfirmCloseKeep"),
-                type: "warning",
-                onConfirm: () => {
-                    setIsModalOpen(false);
-                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                    setTimeout(() => setIsDirty(false), 200);
-                }
-            });
-        } else {
-            setIsModalOpen(false);
-        }
-    };
-
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    // Load real customers from active property contracts (, )
+    const handleOpenChat = (cust: Customer) => {
+        const targetUserId = cust.userId || (cust.id && !cust.id.startsWith("cust_") ? cust.id : "");
+        if (!targetUserId && !cust.hasAccount) {
+            showAlert(
+                `Khách thuê ${cust.name} chưa có tài khoản trên hệ thống Dormio để nhắn tin trực tiếp. Vui lòng liên hệ qua số điện thoại ${cust.phone !== "—" ? cust.phone : "đã lưu"}.`,
+                "info",
+                "Chưa có tài khoản liên kết"
+            );
+            return;
+        }
+        const query = new URLSearchParams();
+        if (targetUserId) {
+            query.set("userId", targetUserId);
+        }
+        if (cust.name) {
+            query.set("tenant", cust.name);
+        }
+        if (cust.room && cust.room !== "—") {
+            query.set("room", cust.room);
+        }
+        router.push(`/landlord/messages?${query.toString()}`);
+    };
+
+    // Load real customers from active property contracts
     useEffect(() => {
         async function loadCustomers() {
             if (!activeBuilding?.id) {
@@ -144,38 +126,75 @@ export default function CustomersPage() {
                 setIsLoading(true);
                 const res = await getLandlordContracts(activeBuilding.id, { limit: 100 });
                 const list = res?.data || [];
-                const mapped: Customer[] = list.flatMap((c: any) => {
-                    const tContracts = c.tenantContracts || [];
-                    if (tContracts.length === 0) {
+                const mapped: Customer[] = list.flatMap((c: any): Customer[] => {
+                    const daysRemaining = c.endDate
+                        ? Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+                        : undefined;
+                    const contractStatus = c.status === "active"
+                        ? (daysRemaining !== undefined && daysRemaining <= 30 ? "Sắp hết hợp đồng" : "Đang ở")
+                        : c.status === "draft"
+                            ? "Sắp hết hợp đồng"
+                            : "Đã rời";
+
+                    const tContracts = c.tenantContracts && c.tenantContracts.length > 0 ? c.tenantContracts : [];
+                    let tenantsToMap: any[] = [];
+
+                    if (tContracts.length > 0) {
+                        tenantsToMap = tContracts.map((tc: any) => tc.tenant).filter(Boolean);
+                    } else if (c.tenant) {
+                        tenantsToMap = [c.tenant];
+                    }
+
+                    if (tenantsToMap.length === 0) {
                         return [{
                             id: `cust_${c.id}`,
-                            name: "Khách thuê",
+                            contractId: c.id,
+                            name: t("landlordCustomersDefaultName"),
                             phone: "—",
                             room: c.room?.roomNumber || "—",
                             building: activeBuilding.id,
                             cccd: "—",
-                            joinDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
-                            status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
+                            joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString("vi-VN") : "—",
+                            endDate: c.endDate ? new Date(c.endDate).toLocaleDateString("vi-VN") : undefined,
+                            daysRemaining,
+                            status: contractStatus,
                             hasAccount: false,
                         }];
                     }
-                    return tContracts.map((tc: any) => {
-                        const t = tc.tenant;
-                        const ident = t?.userIdentification;
+
+                    return tenantsToMap.map((tenantUser: any) => {
+                        const ident = tenantUser?.userIdentification;
+                        let formattedAddress = "";
+                        if (ident?.placeOfResidence) {
+                            if (typeof ident.placeOfResidence === "string") {
+                                formattedAddress = ident.placeOfResidence;
+                            } else if (typeof ident.placeOfResidence === "object") {
+                                formattedAddress = Object.values(ident.placeOfResidence).filter(Boolean).join(", ");
+                            }
+                        } else if (ident?.permanentAddress) {
+                            formattedAddress = ident.permanentAddress;
+                        }
+
                         return {
-                            id: t?.id || `cust_${c.id}`,
-                            name: ident?.fullName || t?.username || "Khách thuê",
-                            phone: t?.phoneNumber || "—",
+                            id: tenantUser?.id || `cust_${c.id}`,
+                            userId: tenantUser?.id,
+                            contractId: c.id,
+                            name: ident?.fullName || tenantUser?.fullName || tenantUser?.username || t("landlordCustomersDefaultName"),
+                            phone: tenantUser?.phoneNumber || "—",
                             room: c.room?.roomNumber || "—",
                             building: activeBuilding.id,
                             cccd: ident?.identityNumber || "—",
-                            joinDate: new Date(c.startDate).toLocaleDateString("vi-VN"),
-                            status: c.status === "active" ? "Đang ở" : c.status === "draft" ? "Sắp hết hợp đồng" : "Đã rời",
-                            email: t?.email || undefined,
+                            joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString("vi-VN") : "—",
+                            endDate: c.endDate ? new Date(c.endDate).toLocaleDateString("vi-VN") : undefined,
+                            daysRemaining,
+                            status: contractStatus,
+                            email: tenantUser?.email || undefined,
                             dob: ident?.dateOfBirth ? new Date(ident.dateOfBirth).toLocaleDateString("vi-VN") : undefined,
                             gender: ident?.gender || "nam",
-                            address: ident?.permanentAddress || undefined,
-                            hasAccount: !!t?.id,
+                            address: formattedAddress || undefined,
+                            cardFrontUrl: ident?.cardFrontUrl,
+                            cardBackUrl: ident?.cardBackUrl,
+                            hasAccount: !!tenantUser?.id,
                         };
                     });
                 });
@@ -191,196 +210,6 @@ export default function CustomersPage() {
         loadCustomers();
     }, [activeBuilding?.id]);
 
-    const handleOpenAddModal = () => {
-        setSelectedCustomer(null);
-        setAddMode("manual");
-        setSelectedSystemUser(null);
-        setSystemSearchTerm("");
-        setNameInput("");
-        setCccdInput("");
-        setDobInput("");
-        setGenderInput("nam");
-        setAddressInput("");
-        setPhoneInput("");
-        setEmailInput("");
-        setJobInput("");
-        setWorkplaceInput("");
-        setRoomInput("101");
-        setBuildingInput(activeBuilding?.id || "");
-        setNoteInput("");
-        setHasAccountState(false);
-        setIsDirty(false);
-        setIsModalOpen(true);
-    };
-
-    const handleOpenEditModal = (cust: any) => {
-        setSelectedCustomer(cust);
-        setAddMode(cust.hasAccount ? "existing_user" : "manual");
-        setSelectedSystemUser(null);
-        setNameInput(cust.name || "");
-        setCccdInput(cust.cccd || "");
-        setDobInput(cust.dob || "");
-        setGenderInput(cust.gender || "nam");
-        setAddressInput(cust.address || "");
-        setPhoneInput(cust.phone || "");
-        setEmailInput(cust.email || "");
-        setJobInput(cust.job || "");
-        setWorkplaceInput(cust.workplace || "");
-        setRoomInput(cust.room || "");
-        setBuildingInput(cust.building || activeBuilding?.id || "");
-        setNoteInput(cust.note || "");
-        setHasAccountState(!!cust.hasAccount);
-        setIsDirty(false);
-        setIsModalOpen(true);
-    };
-
-    const handleSelectSystemUser = (user: SystemTenantUser) => {
-        setSelectedSystemUser(user);
-        setNameInput(user.name);
-        setCccdInput(user.cccd);
-        setDobInput(user.dob);
-        setGenderInput(user.gender);
-        setAddressInput(user.address);
-        setPhoneInput(user.phone);
-        setEmailInput(user.email);
-        setJobInput(user.job);
-        setWorkplaceInput(user.workplace);
-        setHasAccountState(true);
-        setIsDirty(true);
-    };
-
-    const handleSaveCustomer = () => {
-        if (!nameInput.trim()) {
-            showAlert(t("landlordCustomersAlertMissingName"), "warning", t("landlordCustomersAlertMissingInfo"));
-            return;
-        }
-        if (!phoneInput.trim()) {
-            showAlert(t("landlordCustomersAlertMissingPhone"), "warning", t("landlordCustomersAlertMissingInfo"));
-            return;
-        }
-
-        if (selectedCustomer) {
-            setCustomers(prev => prev.map(c => c.id === selectedCustomer.id ? {
-                ...c,
-                name: nameInput.trim(),
-                phone: phoneInput.trim(),
-                cccd: cccdInput.trim() || c.cccd,
-                dob: dobInput,
-                gender: genderInput,
-                address: addressInput,
-                email: emailInput,
-                job: jobInput,
-                workplace: workplaceInput,
-                room: roomInput,
-                building: buildingInput,
-                note: noteInput,
-                hasAccount: hasAccountState,
-                accountEmail: hasAccountState ? emailInput : undefined,
-                updatedAt: new Date().toLocaleDateString("vi-VN")
-            } : c));
-            showAlert(t("landlordCustomersAlertUpdateSuccess"), "success", t("landlordCustomersAlertUpdateTitle"));
-        } else {
-            const targetCCCD = cccdInput.trim();
-            if (targetCCCD && customers.some(c => c.cccd === targetCCCD)) {
-                showAlert(t("landlordCustomersAlertDuplicateCccd").replace("{cccd}", targetCCCD), "error", t("landlordCustomersAlertDuplicateTitle"));
-                return;
-            }
-
-            const newId = targetCCCD || `00109${Math.floor(1000000 + Math.random() * 9000000)}`;
-            const newCust = {
-                id: newId,
-                name: nameInput.trim(),
-                phone: phoneInput.trim(),
-                cccd: newId,
-                room: roomInput || "101",
-                building: buildingInput || "dormio",
-                joinDate: new Date().toLocaleDateString("vi-VN"),
-                status: "Đang ở",
-                dob: dobInput || "2000-01-01",
-                gender: genderInput,
-                address: addressInput || (currentLocale === "vi" ? "TP. Thủ Đức, TP.HCM" : "Thu Duc City, HCMC"),
-                email: emailInput,
-                job: jobInput || (currentLocale === "vi" ? "Tự do" : "Freelancer"),
-                workplace: workplaceInput || "TP.HCM",
-                note: noteInput,
-                hasAccount: hasAccountState,
-                accountEmail: hasAccountState ? emailInput : undefined,
-                createdAt: new Date().toLocaleDateString("vi-VN"),
-                updatedAt: new Date().toLocaleDateString("vi-VN")
-            };
-            setCustomers(prev => [newCust, ...prev]);
-            showAlert(t("landlordCustomersAlertAddSuccess"), "success", t("landlordCustomersAlertAddTitle"));
-        }
-
-        setIsModalOpen(false);
-        setIsDirty(false);
-    };
-
-    const handleLinkAccountSubmit = (user: SystemTenantUser) => {
-        if (!linkAccountModal.customer) return;
-
-        setCustomers(prev => prev.map(c => c.id === linkAccountModal.customer.id ? {
-            ...c,
-            name: user.name,
-            phone: user.phone,
-            email: user.email,
-            cccd: user.cccd,
-            dob: user.dob,
-            gender: user.gender,
-            address: user.address,
-            job: user.job,
-            workplace: user.workplace,
-            hasAccount: true,
-            accountEmail: user.email,
-            updatedAt: new Date().toLocaleDateString("vi-VN")
-        } : c));
-
-        setLinkAccountModal({ isOpen: false, customer: null });
-        showAlert(t("landlordCustomersAlertLinkSuccess").replace("{name}", user.name).replace("{email}", user.email), "success", t("landlordCustomersAlertLinkTitle"));
-    };
-
-    const [searchedUser, setSearchedUser] = useState<any | null>(null);
-    const [isSearchingUser, setIsSearchingUser] = useState(false);
-
-    useEffect(() => {
-        const term = (systemSearchTerm || linkSearchQuery).trim();
-        if (!term || term.length < 9) {
-            setSearchedUser(null);
-            return;
-        }
-        const timer = setTimeout(async () => {
-            try {
-                setIsSearchingUser(true);
-                const res = await searchTenantByPhone(term);
-                if (res?.data?.exists && res.data.user) {
-                    const u = res.data.user;
-                    const ident = u.identification;
-                    setSearchedUser({
-                        userId: u.id,
-                        name: ident?.fullName || u.fullName || "Khách thuê",
-                        phone: u.phoneNumber,
-                        email: u.email || "",
-                        cccd: ident?.identityNumber || "",
-                        dob: ident?.dateOfBirth ? new Date(ident.dateOfBirth).toLocaleDateString("vi-VN") : "",
-                        gender: ident?.gender || "nam",
-                        address: ident?.permanentAddress || "",
-                        job: "",
-                        workplace: "",
-                    });
-                } else {
-                    setSearchedUser(null);
-                }
-            } catch {
-                setSearchedUser(null);
-            } finally {
-                setIsSearchingUser(false);
-            }
-        }, 400);
-        return () => clearTimeout(timer);
-    }, [systemSearchTerm, linkSearchQuery]);
-
-    const filteredSystemUsers = searchedUser ? [searchedUser] : [];
-
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
@@ -390,7 +219,6 @@ export default function CustomersPage() {
             }
         }
     }, [router]);
-
 
     if (!isMounted) {
         return null;
@@ -433,102 +261,113 @@ export default function CustomersPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <button
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => showAlert(t("landlordCustomersAlertImportExcel"), "info", t("landlordCustomersAlertExperimentalTitle"))}
-                        className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+                        className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border-zinc-200 rounded-xl hover:bg-zinc-100 shadow-2xs gap-1.5"
                     >
-                        <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
-                    </button>
-                    <button
+                        <UploadCloud className="w-4 h-4 text-emerald-600" />
+                        <span>{t("landlordCustomersImportBtn")}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => showAlert(t("landlordCustomersAlertExportExcel"), "success", t("landlordCustomersAlertExportTitle"))}
-                        className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+                        className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border-zinc-200 rounded-xl hover:bg-zinc-100 shadow-2xs gap-1.5"
                     >
-                        <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
-                    </button>
-                    <button
-                        onClick={handleOpenAddModal}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+                        <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                        <span>{t("landlordCustomersExportBtn")}</span>
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => router.push("/landlord/contracts/create")}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-xl"
                     >
-                        <UserPlus className="w-4 h-4" /> {t("landlordCustomersBtnAdd")}
-                    </button>
+                        <Plus className="w-4 h-4" />
+                        <span>{t("landlordCustomersBtnAddContract")}</span>
+                    </Button>
                 </div>
             </div>
 
             {/* Building Overview Banner */}
-            <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
-                {/* Background Decoration */}
-                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-                    <Users className="w-64 h-64" />
-                </div>
-
-                <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
-                    <div className="space-y-3 max-w-xl w-full">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                                {activeBuilding.name}
-                            </h2>
-                            <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                                {t("landlordContractsBannerOperating")}
-                            </span>
-                        </div>
-
-                        {/* Separated Address Line with Integrated Map Link */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-                            <div className="flex items-center gap-2 min-w-0">
-                                <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
-                            </div>
-                            <a
-                                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                            >
-                                <span>{t("landlordInvoicesViewMap")}</span> &rarr;
-                            </a>
-                        </div>
-
-                        <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-                            {t("landlordCustomersBannerSub")}
-                        </p>
+            {activeBuilding && (
+                <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
+                    {/* Background Decoration */}
+                    <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
+                        <Users className="w-64 h-64" />
                     </div>
 
-                    {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets & Services) */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-                        <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                            <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
-                            <div className="flex flex-col">
-                                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordCustomersStatTotalShort")}</span>
-                                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{totalCustomers}</span>
+                    <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+                        <div className="space-y-3 max-w-xl w-full">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
+                                    {activeBuilding.name}
+                                </h2>
+                                <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
+                                    {t("landlordContractsBannerOperating")}
+                                </span>
                             </div>
+
+                            {/* Separated Address Line with Integrated Map Link */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                                    <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">{activeBuilding.address}</span>
+                                </div>
+                                <a
+                                    href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                                >
+                                    <span>{t("landlordInvoicesViewMap")}</span> &rarr;
+                                </a>
+                            </div>
+
+                            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                                {t("landlordCustomersBannerSub")}
+                            </p>
                         </div>
 
-                        <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                            <div className="flex flex-col">
-                                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordCustomersStatStayingShort")}</span>
-                                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{stayingCount}</span>
+                        {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets & Services) */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                                <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">{t("landlordCustomersStatTotalShort")}</span>
+                                    <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">{totalCustomers}</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-                            <div className="flex flex-col">
-                                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordCustomersStatExpiringShort")}</span>
-                                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{expiringCount}</span>
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
+                                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">{t("landlordCustomersStatStayingShort")}</span>
+                                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{stayingCount}</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-                            <div className="flex flex-col">
-                                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordCustomersStatLeftShort")}</span>
-                                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{leftCount}</span>
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
+                                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">{t("landlordCustomersStatExpiringShort")}</span>
+                                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{expiringCount}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">{t("landlordCustomersStatLeftShort")}</span>
+                                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">{leftCount}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* SINGLE ROW TOOLBAR (Filter Pills + Search + Sort + View Switcher all in 1 Row) */}
             <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
@@ -561,32 +400,28 @@ export default function CustomersPage() {
                         {/* Separator Line */}
                         <div className="hidden xl:block h-6 w-px bg-zinc-200 mx-1 shrink-0" />
 
-                        {/* Search Input */}
-                        <div className="relative w-full sm:w-52 shrink-0">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                            <input
-                                type="text"
-                                placeholder={t("landlordCustomersSearchPlaceholder")}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-3 py-1.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                            />
-                        </div>
+                        {/* Search Input using Base Component */}
+                        <TextInput
+                            leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+                            placeholder={t("landlordCustomersSearchPlaceholder")}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            containerClassName="w-full sm:w-52 shrink-0 space-y-0"
+                            className="py-1.5 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
+                        />
 
-                        {/* Sort Select */}
-                        <div className="relative shrink-0">
-                            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
-                            <select
-                                value={sortFilter}
-                                onChange={(e) => setSortFilter(e.target.value)}
-                                className="pl-8 pr-7 py-1.5 text-xs font-semibold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-100 focus:outline-none focus:border-[#2AC1BC] cursor-pointer transition-colors whitespace-nowrap"
-                            >
-                                <option value="">{t("landlordCustomersSort")}</option>
-                                <option value="name_asc">{t("landlordCustomersSortName")}</option>
-                                <option value="room_asc">{t("landlordCustomersSortRoom")}</option>
-                            </select>
-                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                        </div>
+                        {/* Sort Select using Base Component */}
+                        <SelectInput
+                            value={sortFilter}
+                            onChange={(e) => setSortFilter(e.target.value)}
+                            containerClassName="w-auto shrink-0 space-y-0"
+                            className="py-1.5 pl-3 pr-8 text-xs font-semibold text-zinc-700 bg-zinc-50 border-zinc-200 rounded-xl"
+                            options={[
+                                { value: "", label: t("landlordCustomersSort") },
+                                { value: "name_asc", label: t("landlordCustomersSortName") },
+                                { value: "room_asc", label: t("landlordCustomersSortRoom") },
+                            ]}
+                        />
                     </div>
 
                     {/* Right Controls: View Mode Switcher */}
@@ -612,210 +447,214 @@ export default function CustomersPage() {
             </div>
 
             {/* Customer View: Grid or List */}
-            {
-                viewMode === "grid" ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {sortedCustomers.length === 0 ? (
-                            <div className="col-span-full py-14 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500">
-                                {isLoading ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
-                                        <span className="text-xs font-bold">Đang tải danh sách khách thuê...</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Users className="w-8 h-8 text-zinc-300" />
-                                        <p className="text-sm font-bold text-zinc-700">Chưa có khách thuê nào tại cơ sở này</p>
-                                        <p className="text-xs text-zinc-400">Khách thuê sẽ tự động được ghi nhận khi bạn lập hợp đồng thuê phòng.</p>
-                                        <Link
-                                            href="/landlord/contracts/create"
-                                            className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs"
-                                        >
-                                            <Plus className="w-3.5 h-3.5" />
-                                            <span>Lập hợp đồng mới</span>
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            paginatedCustomers.map((customer) => (
-                                <div
-                                    key={customer.id}
-                                    className="bg-white rounded-2xl border border-zinc-200/80 p-4 shadow-xs hover:shadow-md transition-all space-y-3 relative group"
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-sm uppercase shrink-0">
-                                                {customer.name.charAt(0)}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <Link href={`/landlord/customers/${customer.id}`} className="font-bold text-zinc-900 text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block">
-                                                    {customer.name}
-                                                </Link>
-                                                <p className="text-xs text-zinc-500 font-medium truncate">CCCD: {customer.cccd}</p>
-                                            </div>
-                                        </div>
-                                        <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
-                                            ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
-                                            : customer.status === 'Sắp hết hợp đồng'
-                                                ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
-                                                : 'bg-blue-50 text-blue-700 border border-blue-200'
-                                            }`}>
-                                            {getCustomerStatusLabel(customer.status)}
-                                        </span>
-                                    </div>
-
-                                    <div className="p-2.5 bg-zinc-50 rounded-xl space-y-1.5 text-xs text-zinc-600">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-zinc-400 font-medium whitespace-nowrap">Tòa & Phòng:</span>
-                                            <span className="font-bold text-zinc-900 whitespace-nowrap">{activeBuilding?.name || "Cơ sở"} — Phòng {customer.status === 'Đã rời' ? "—" : customer.room}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-zinc-400 font-medium whitespace-nowrap">{t("landlordCustomersStayDate")}</span>
-                                            <span className="font-semibold text-zinc-800 whitespace-nowrap">{customer.joinDate}</span>
-                                        </div>
-                                        {customer.status === 'Sắp hết hợp đồng' && (
-                                            <div className="flex justify-between items-center pt-1 border-t border-orange-200/60 text-orange-800 font-bold">
-                                                <span className="whitespace-nowrap">⏳ {t("landlordCustomersContractExpiry")}</span>
-                                                <span className="text-orange-600 animate-pulse whitespace-nowrap">{t("landlordCustomersDaysRemainingShort")}</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Quick Inline Action Buttons */}
-                                    <div className="grid grid-cols-3 gap-1.5 pt-1">
-                                        <a
-                                            href={`tel:${customer.phone}`}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-[11px] font-extrabold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
-                                        >
-                                            <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
-                                        </a>
-                                        <a
-                                            href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="py-1.5 bg-[#0068FF] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#0052cc] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
-                                        >
-                                            <MessageCircle className="w-3 h-3" /> Zalo
-                                        </a>
-                                        <Link
-                                            href={`/landlord/customers/${customer.id}`}
-                                            className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                                        >
-                                            <Eye className="w-3 h-3" /> Xem
-                                        </Link>
-                                    </div>
+            {viewMode === "grid" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sortedCustomers.length === 0 ? (
+                        <div className="col-span-full py-14 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500">
+                            {isLoading ? (
+                                <div className="flex flex-col items-center gap-2">
+                                    <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
+                                    <span className="text-xs font-bold">{t("landlordCustomersLoading")}</span>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                ) : (
-                    <div className="bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden flex flex-col">
-                        <div className="overflow-auto max-h-[500px]">
-                            <table className="w-full text-sm text-left relative">
-                                <thead className="text-[11px] font-bold text-zinc-500 uppercase bg-zinc-50/80 border-b border-zinc-100 sticky top-0 z-10">
+                            ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                    <Users className="w-8 h-8 text-zinc-300" />
+                                    <p className="text-sm font-bold text-zinc-700">{t("landlordCustomersEmptyTitle")}</p>
+                                    <p className="text-xs text-zinc-400">{t("landlordCustomersEmptyDesc")}</p>
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={() => router.push("/landlord/contracts/create")}
+                                        className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        <span>{t("landlordCustomersBtnCreateContract")}</span>
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        paginatedCustomers.map((customer) => (
+                            <div
+                                key={customer.id}
+                                className="bg-white rounded-2xl border border-zinc-200/80 p-4 shadow-xs hover:shadow-md transition-all space-y-3 relative group"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-sm uppercase shrink-0">
+                                            {customer.name.charAt(0)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <Link href={`/landlord/customers/${customer.contractId || customer.id}`} className="font-bold text-zinc-900 text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block">
+                                                {customer.name}
+                                            </Link>
+                                            <p className="text-xs text-zinc-600 font-semibold truncate flex items-center gap-1.5 mt-0.5">
+                                                <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                                <span>{customer.phone || "—"}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
+                                        ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
+                                        : customer.status === 'Sắp hết hợp đồng'
+                                            ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
+                                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                        }`}>
+                                        {getCustomerStatusLabel(customer.status)}
+                                    </span>
+                                </div>
+
+                                <div className="p-2.5 bg-zinc-50 rounded-xl space-y-1.5 text-xs text-zinc-600">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-zinc-400 font-medium whitespace-nowrap">{t("landlordCustomersBuildingAndRoomLabel")}</span>
+                                        <span className="font-bold text-zinc-900 whitespace-nowrap">{activeBuilding?.name || t("landlordCustomersBuildingFallback")} — {t("landlordCustomersRoomWord")} {customer.status === 'Đã rời' ? "—" : customer.room}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-zinc-400 font-medium whitespace-nowrap">{t("landlordCustomersStayDate")}</span>
+                                        <span className="font-semibold text-zinc-800 whitespace-nowrap">{customer.joinDate}</span>
+                                    </div>
+                                    {customer.status === 'Sắp hết hợp đồng' && (
+                                        <div className="flex justify-between items-center pt-1 border-t border-orange-200/60 text-orange-800 font-bold">
+                                            <span className="whitespace-nowrap">⏳ {t("landlordCustomersContractExpiry")}</span>
+                                            <span className="text-orange-600 animate-pulse whitespace-nowrap">
+                                                {customer.daysRemaining !== undefined
+                                                    ? t("landlordCustomersContractDaysRemaining").replace("{days}", String(customer.daysRemaining))
+                                                    : t("landlordCustomersDaysRemainingShort")}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Quick Inline Action Buttons */}
+                                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                                    <a
+                                        href={`tel:${customer.phone}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-[11px] font-extrabold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
+                                    >
+                                        <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenChat(customer);
+                                        }}
+                                        className="py-1.5 bg-[#2AC1BC] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#25ad87] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
+                                    >
+                                        <MessageCircle className="w-3 h-3" /> {t("landlordCustomersMessageBtn")}
+                                    </button>
+                                    <Link
+                                        href={`/landlord/customers/${customer.contractId || customer.id}`}
+                                        className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                                    >
+                                        <Eye className="w-3 h-3" /> {t("landlordCustomersViewBtn")}
+                                    </Link>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            ) : (
+                <div className="bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden flex flex-col">
+                    <div className="overflow-auto max-h-[500px]">
+                        <table className="w-full text-sm text-left relative">
+                            <thead className="text-[11px] font-bold text-zinc-500 uppercase bg-zinc-50/80 border-b border-zinc-100 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCustomerName")}</th>
+                                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersPhone")}</th>
+                                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersBuilding")}</th>
+                                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCurrentRoom")}</th>
+                                    <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersStatus")}</th>
+                                    <th className="px-6 py-4 text-right whitespace-nowrap">{t("landlordCustomersActions")}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-100">
+                                {sortedCustomers.length === 0 ? (
                                     <tr>
-                                        <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCustomerName")}</th>
-                                        <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersPhone")}</th>
-                                        <th className="px-6 py-4 whitespace-nowrap">CCCD/CMND</th>
-                                        <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersBuilding")}</th>
-                                        <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersCurrentRoom")}</th>
-                                        <th className="px-6 py-4 whitespace-nowrap">{t("landlordCustomersStatus")}</th>
-                                        <th className="px-6 py-4 text-right whitespace-nowrap">{t("landlordCustomersActions")}</th>
+                                        <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
+                                            {isLoading ? (
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+                                                    <span className="text-xs font-bold">{t("landlordCustomersLoading")}</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-1.5 py-4">
+                                                    <Users className="w-7 h-7 text-zinc-300" />
+                                                    <p className="text-xs font-bold text-zinc-700">{t("landlordCustomersEmptyTitle")}</p>
+                                                    <p className="text-[11px] text-zinc-400">{t("landlordCustomersEmptyDescTable")}</p>
+                                                </div>
+                                            )}
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-zinc-100">
-                                    {sortedCustomers.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
-                                                {isLoading ? (
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-                                                        <span className="text-xs font-bold">Đang tải danh sách khách thuê...</span>
+                                ) : (
+                                    paginatedCustomers.map((customer) => (
+                                        <tr
+                                            key={customer.id}
+                                            className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
+                                            onClick={() => router.push(`/landlord/customers/${customer.contractId || customer.id}`)}
+                                        >
+                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-xs uppercase shrink-0">
+                                                        {customer.name.charAt(0)}
                                                     </div>
-                                                ) : (
-                                                    <div className="flex flex-col items-center gap-1.5 py-4">
-                                                        <Users className="w-7 h-7 text-zinc-300" />
-                                                        <p className="text-xs font-bold text-zinc-700">Chưa có khách thuê nào tại cơ sở này</p>
-                                                        <p className="text-[11px] text-zinc-400">Khách thuê sẽ được tự động liệt kê khi có hợp đồng thuê.</p>
-                                                    </div>
-                                                )}
+                                                    <span className="font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">{customer.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3.5 font-bold text-zinc-800 whitespace-nowrap">{customer.phone}</td>
+                                            <td className="px-6 py-3.5 font-medium text-zinc-700 capitalize whitespace-nowrap">{activeBuilding?.name || t("landlordCustomersBuildingFallback")}</td>
+                                            <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.status === 'Đã rời' ? "—" : customer.room}</td>
+                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
+                                                    ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                                                    : customer.status === 'Sắp hết hợp đồng'
+                                                        ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
+                                                        : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                                    }`}>
+                                                    {getCustomerStatusLabel(customer.status)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-3.5 text-right whitespace-nowrap">
+                                                <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                    <a
+                                                        href={`tel:${customer.phone}`}
+                                                        title={t("landlordCustomersCallNow")}
+                                                        className="px-2.5 py-1 bg-red-600 text-white border border-zinc-200 rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
+                                                    >
+                                                        <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenChat(customer)}
+                                                        title={t("landlordCustomersMessageBtn")}
+                                                        className="px-2.5 py-1 bg-[#2AC1BC] text-white rounded-lg text-xs font-bold hover:bg-[#25ad87] transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                                                    >
+                                                        <MessageCircle className="w-3 h-3" /> {t("landlordCustomersMessageBtn")}
+                                                    </button>
+                                                    <Link
+                                                        href={`/landlord/customers/${customer.contractId || customer.id}`}
+                                                        className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                                                    >
+                                                        <Eye className="w-3 h-3" /> {t("landlordCustomersViewBtn")}
+                                                    </Link>
+                                                </div>
                                             </td>
                                         </tr>
-                                    ) : (
-                                        paginatedCustomers.map((customer) => (
-                                            <tr
-                                                key={customer.id}
-                                                className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
-                                                onClick={() => router.push(`/landlord/customers/${customer.id}`)}
-                                            >
-                                                <td className="px-6 py-3.5 whitespace-nowrap">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-xs uppercase shrink-0">
-                                                            {customer.name.charAt(0)}
-                                                        </div>
-                                                        <span className="font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">{customer.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.phone}</td>
-                                                <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.cccd}</td>
-                                                <td className="px-6 py-3.5 font-medium text-zinc-700 capitalize whitespace-nowrap">{activeBuilding?.name || "Cơ sở"}</td>
-                                                <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">{customer.status === 'Đã rời' ? "—" : customer.room}</td>
-                                                <td className="px-6 py-3.5 whitespace-nowrap">
-                                                    <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
-                                                        ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                                                        : customer.status === 'Sắp hết hợp đồng'
-                                                            ? 'bg-orange-50 text-orange-700 border-orange-200 animate-pulse'
-                                                            : 'bg-blue-50 text-blue-700 border-blue-200'
-                                                        }`}>
-                                                        {getCustomerStatusLabel(customer.status)}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-3.5 text-right whitespace-nowrap">
-                                                    <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                                        <a
-                                                            href={`tel:${customer.phone}`}
-                                                            title={t("landlordCustomersCallNow")}
-                                                            className="px-2.5 py-1 bg-red-600 text-white border border-zinc-200 rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
-                                                        >
-                                                            <PhoneCall className="w-3 h-3" /> {t("landlordCustomersCallBtn")}
-                                                        </a>
-                                                        <a
-                                                            href={`https://zalo.me/${customer.phone.replace(/\D/g, '')}`}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            title="Chat Zalo"
-                                                            className="px-2.5 py-1 bg-[#0068FF] text-white rounded-lg text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs flex items-center gap-1"
-                                                        >
-                                                            <MessageCircle className="w-3 h-3" /> Zalo
-                                                        </a>
-                                                        <Link
-                                                            href={`/landlord/customers/${customer.id}`}
-                                                            className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
-                                                        >
-                                                            <Eye className="w-3 h-3" /> Xem
-                                                        </Link>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                     <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                        <span>{t("landlordInvoicesPaginationShow")}</span>
-                        <input
-                            type="number"
+                        <span>{t("landlordCustomersPaginationShowing")}</span>
+                        <NumberInput
                             min={1}
                             max={500}
                             value={itemsPerPage || ""}
@@ -824,15 +663,16 @@ export default function CustomersPage() {
                                 setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val);
                                 setCurrentPage(1);
                             }}
-                            className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                            containerClassName="w-14 space-y-0"
+                            className="text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 text-xs h-7"
                         />
-                        <span>/ trang</span>
+                        <span>{t("landlordCustomersPaginationPerPage")}</span>
                     </div>
 
                     <span className="hidden sm:inline text-zinc-300">|</span>
 
                     <div>
-                        <span className="font-extrabold text-zinc-800">{sortedCustomers.length === 0 ? 0 : startIndex + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(startIndex + itemsPerPage, sortedCustomers.length)}</span> {t("landlordCustomersOf")} <span className="font-extrabold text-zinc-800">{sortedCustomers.length}</span> {t("landlordCustomersTotalCustomers").toLowerCase()}
+                        <span className="font-extrabold text-zinc-800">{sortedCustomers.length === 0 ? 0 : startIndex + 1}</span> - <span className="font-extrabold text-zinc-800">{Math.min(startIndex + itemsPerPage, sortedCustomers.length)}</span> {t("landlordCustomersPaginationOf")} <span className="font-extrabold text-zinc-800">{sortedCustomers.length}</span> {t("landlordCustomersTotalCustomers").toLowerCase()}
                     </div>
                 </div>
                 {(() => {
@@ -843,460 +683,42 @@ export default function CustomersPage() {
 
                     return (
                         <div className="flex items-center gap-1.5">
-                            <button
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                &larr; {t("landlordContractsPaginationPrev")}
-                            </button>
+                                &larr; {t("landlordCustomersPaginationPrev")}
+                            </Button>
                             {visiblePages.map(page => (
-                                <button
+                                <Button
                                     key={page}
+                                    variant={currentPage === page ? "primary" : "outline"}
+                                    size="sm"
                                     onClick={() => setCurrentPage(page)}
-                                    className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${currentPage === page
+                                    className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all p-0 ${currentPage === page
                                         ? "bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30"
-                                        : "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                        : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
                                         }`}
                                 >
                                     {page}
-                                </button>
+                                </Button>
                             ))}
-                            <button
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
                                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                {t("landlordContractsPaginationNext")} &rarr;
-                            </button>
+                                {t("landlordCustomersPaginationNext")} &rarr;
+                            </Button>
                         </div>
                     );
                 })()}
             </div>
-
-            {/* Add / Edit Tenant Modal */}
-            {isModalOpen && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                    onMouseDown={(e) => {
-                        if (e.target === e.currentTarget) handleCloseModal();
-                    }}
-                >
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onInput={() => setIsDirty(true)} onChange={() => setIsDirty(true)}>
-                        <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-lg">
-                                    <User className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-zinc-900">{selectedCustomer ? t("landlordCustomersEditCustomerTitle") : t("landlordCustomersAddCustomerTitle")}</h2>
-                                    <p className="text-xs text-zinc-500 font-medium">{t("landlordCustomersCustomerModalSubtitle")}</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleCloseModal}
-                                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar bg-zinc-50/50">
-
-                            {/* 2-WAY ADD TENANT SELECTION TABS */}
-                            {!selectedCustomer && (
-                                <div className="space-y-3">
-                                    <div className="p-1.5 bg-zinc-200/60 rounded-2xl border border-zinc-200 grid grid-cols-2 gap-1.5 font-bold text-xs">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setAddMode("manual");
-                                                setSelectedSystemUser(null);
-                                                setHasAccountState(false);
-                                            }}
-                                            className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${addMode === "manual"
-                                                ? "bg-white text-zinc-900 shadow-xs font-black border border-zinc-200"
-                                                : "text-zinc-500 hover:text-zinc-800"
-                                                }`}
-                                        >
-                                            <UserPlus className="w-4 h-4 text-[#2AC1BC]" />
-                                            <span>{t("landlordCustomersNoAccountTab")}</span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setAddMode("existing_user")}
-                                            className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${addMode === "existing_user"
-                                                ? "bg-[#FF6B35] text-white shadow-xs font-black"
-                                                : "text-zinc-500 hover:text-zinc-800"
-                                                }`}
-                                        >
-                                            <Users className="w-4 h-4" />
-                                            <span>{t("landlordCustomersHasAccountTab")}</span>
-                                        </button>
-                                    </div>
-
-                                    {/* WAY 1 BANNER */}
-                                    {addMode === "manual" && (
-                                        <div className="p-3 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-medium text-blue-800 flex items-start gap-2.5">
-                                            <AlertTriangle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                                            <div>
-                                                <span className="font-extrabold block text-blue-900 mb-0.5">{t("landlordCustomersManualAdd")}</span>
-                                                {t("landlordCustomersManualAddDesc")}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* WAY 2 SYSTEM USER SEARCH & AUTO POPULATE */}
-                                    {addMode === "existing_user" && (
-                                        <div className="p-4 bg-orange-50/60 border border-orange-200/80 rounded-2xl space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-xs font-black text-orange-950 uppercase tracking-wider flex items-center gap-1.5">
-                                                    <Users className="w-4 h-4 text-[#FF6B35]" /> {t("landlordCustomersSystemSearchLabel")}
-                                                </label>
-                                                <span className="text-[10px] font-black text-[#FF6B35] bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
-                                                    Auto-Fill 100%
-                                                </span>
-                                            </div>
-
-                                            <div className="relative">
-                                                <Search className="w-4 h-4 text-[#FF6B35] absolute left-3 top-1/2 -translate-y-1/2" />
-                                                <input
-                                                    type="text"
-                                                    value={systemSearchTerm}
-                                                    onChange={(e) => setSystemSearchTerm(e.target.value)}
-                                                    placeholder={t("landlordCustomersSystemSearchPlaceholder")}
-                                                    className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] bg-white font-bold text-zinc-900 shadow-2xs"
-                                                />
-                                            </div>
-
-                                            <div className="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar pr-1">
-                                                {filteredSystemUsers.length === 0 ? (
-                                                    <p className="text-xs text-zinc-400 italic p-4 text-center bg-white/60 rounded-xl border border-dashed border-zinc-200">{t("landlordCustomersSystemSearchEmpty")}</p>
-                                                ) : (
-                                                    filteredSystemUsers.map((user) => {
-                                                        const isSelected = selectedSystemUser?.userId === user.userId;
-                                                        return (
-                                                            <div
-                                                                key={user.userId}
-                                                                onClick={() => handleSelectSystemUser(user)}
-                                                                className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isSelected
-                                                                    ? "bg-gradient-to-r from-orange-50 to-amber-50/50 border-[#FF6B35] ring-2 ring-[#FF6B35]/20 shadow-xs"
-                                                                    : "bg-white border-zinc-200/80 hover:border-orange-300 hover:bg-orange-50/30 hover:shadow-2xs"
-                                                                    }`}
-                                                            >
-                                                                <div className="flex items-center gap-3 min-w-0">
-                                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-[#FF6B35] text-white flex items-center justify-center font-black text-sm uppercase shrink-0 shadow-2xs">
-                                                                        {user.name.charAt(0)}
-                                                                    </div>
-                                                                    <div className="space-y-1 min-w-0">
-                                                                        <div className="font-black text-zinc-900 text-sm truncate flex items-center gap-1.5">
-                                                                            <span>{user.name}</span>
-                                                                            {isSelected && (
-                                                                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black">
-                                                                                    {t("landlordCustomersSelected")}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="flex flex-col gap-0.5 text-xs text-zinc-600 font-medium">
-                                                                            <div className="flex items-center gap-1.5 text-zinc-700">
-                                                                                <Phone className="w-3.5 h-3.5 text-[#FF6B35] shrink-0" />
-                                                                                <span className="font-bold text-zinc-800">{user.phone}</span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-1.5 text-zinc-500">
-                                                                                <CreditCard className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                                                                                <span>CCCD: {user.cccd}</span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-1.5 text-zinc-500 truncate">
-                                                                                <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                                                                                <span className="truncate">{user.email}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <button
-                                                                    type="button"
-                                                                    className={`px-3.5 py-1.5 text-xs font-black rounded-xl transition-all shrink-0 cursor-pointer ${isSelected
-                                                                        ? "bg-[#FF6B35] text-white shadow-xs"
-                                                                        : "bg-orange-50 text-[#FF6B35] border border-orange-200 hover:bg-[#FF6B35] hover:text-white"
-                                                                        }`}
-                                                                >
-                                                                    {isSelected ? t("landlordCustomersSelected") : t("landlordCustomersSelectMore")}
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    })
-                                                )}
-                                            </div>
-
-                                            {selectedSystemUser && (
-                                                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 font-bold flex items-center gap-2">
-                                                    <span>{t("landlordCustomersAutoPopulatedNotice")} <strong>{selectedSystemUser.name}</strong> ({selectedSystemUser.email})!</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* PERSONAL INFO FIELDS */}
-                            <div className="space-y-4">
-                                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider border-b border-zinc-200 pb-1">{t("landlordCustomersTenantProfileSection")}</h3>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersFullNameLabel")} <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            value={nameInput}
-                                            onChange={(e) => setNameInput(e.target.value)}
-                                            placeholder={t("landlordCustomersFullNamePlaceholder")}
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersCccdLabel")} <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            value={cccdInput}
-                                            onChange={(e) => setCccdInput(e.target.value)}
-                                            placeholder="VD: 001201099882"
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersPhoneLabel")} <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="tel"
-                                            value={phoneInput}
-                                            onChange={(e) => setPhoneInput(e.target.value)}
-                                            placeholder="VD: 0987654321"
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersEmailLabel")}</label>
-                                        <input
-                                            type="email"
-                                            value={emailInput}
-                                            onChange={(e) => setEmailInput(e.target.value)}
-                                            placeholder="VD: email@example.com"
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersDobLabel")}</label>
-                                        <input
-                                            type="date"
-                                            value={dobInput}
-                                            onChange={(e) => setDobInput(e.target.value)}
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-800 bg-white"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersGenderLabel")}</label>
-                                        <select
-                                            value={genderInput}
-                                            onChange={(e) => setGenderInput(e.target.value)}
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                                        >
-                                            <option value="nam">{t("landlordCustomersGenderMale")}</option>
-                                            <option value="nu">{t("landlordCustomersGenderFemale")}</option>
-                                            <option value="khac">{t("landlordCustomersGenderOther")}</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersPermanentAddressLabel")}</label>
-                                    <textarea
-                                        rows={2}
-                                        value={addressInput}
-                                        onChange={(e) => setAddressInput(e.target.value)}
-                                        placeholder={t("landlordCustomersPermanentAddressPlaceholder")}
-                                        className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
-                                    ></textarea>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersJobLabel")}</label>
-                                        <input
-                                            type="text"
-                                            value={jobInput}
-                                            onChange={(e) => setJobInput(e.target.value)}
-                                            placeholder={t("landlordCustomersJobPlaceholder")}
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersWorkplaceLabel")}</label>
-                                        <input
-                                            type="text"
-                                            value={workplaceInput}
-                                            onChange={(e) => setWorkplaceInput(e.target.value)}
-                                            placeholder={t("landlordCustomersWorkplacePlaceholder")}
-                                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-
-
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-zinc-700">{t("landlordCustomersNotesMoreLabel")}</label>
-                                    <textarea
-                                        rows={2}
-                                        value={noteInput}
-                                        onChange={(e) => setNoteInput(e.target.value)}
-                                        placeholder={t("landlordCustomersPermanentAddressPlaceholder")}
-                                        className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white resize-none"
-                                    ></textarea>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div className="p-4 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-                            <div className="text-xs font-bold text-zinc-500">
-                                {t("landlordCustomersAccountStatusLabel")} {hasAccountState ? <span className="text-emerald-600 font-extrabold">✓ {t("landlordCustomersAccountLinked")}</span> : <span className="text-amber-600 font-extrabold">{t("landlordCustomersAccountUnlinked")}</span>}
-                            </div>
-
-                            <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={handleCloseModal}
-                                    className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
-                                >
-                                    {t("landlordCustomersCancelBtn")}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleSaveCustomer}
-                                    className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
-                                >
-                                    {selectedCustomer ? t("landlordCustomersSaveChangesBtn") : t("landlordCustomersSaveCustomerBtn")}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )
-            }
-
-            {/* QUICK LINK ACCOUNT MODAL */}
-            {
-                linkAccountModal.isOpen && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                        onMouseDown={(e) => { if (e.target === e.currentTarget) setLinkAccountModal({ isOpen: false, customer: null }); }}
-                    >
-                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-                            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-orange-50/80">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-[#FF6B35] text-white rounded-xl">
-                                        <Users className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-base font-black text-zinc-900">{t("landlordCustomersLinkAccountTitle")}</h2>
-                                        <p className="text-xs text-zinc-500 font-medium">{t("landlordCustomersProfilePrefix")} {linkAccountModal.customer?.name} ({linkAccountModal.customer?.phone})</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full transition-colors cursor-pointer">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <div className="p-5 space-y-4">
-                                <div className="relative">
-                                    <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                                    <input
-                                        type="text"
-                                        value={linkSearchQuery}
-                                        onChange={(e) => setLinkSearchQuery(e.target.value)}
-                                        placeholder={t("landlordCustomersSearchAccountPlaceholder")}
-                                        className="w-full pl-9 pr-3 py-2 text-xs border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] font-bold text-zinc-900 bg-white"
-                                    />
-                                </div>
-
-                                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                                    {filteredSystemUsers.length > 0 ? (
-                                        filteredSystemUsers.map((u) => (
-                                            <div key={u.userId} className="p-3 bg-white border border-zinc-200/80 hover:border-orange-300 hover:bg-orange-50/30 rounded-2xl flex items-center justify-between gap-3 text-xs transition-all shadow-2xs">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-[#FF6B35] text-white flex items-center justify-center font-black text-xs uppercase shrink-0 shadow-2xs">
-                                                        {u.name.charAt(0)}
-                                                    </div>
-                                                    <div className="space-y-0.5 min-w-0">
-                                                        <div className="font-extrabold text-zinc-900 text-xs truncate">{u.name}</div>
-                                                        <div className="flex flex-col gap-0.5 text-[11px] text-zinc-500 font-medium">
-                                                            <div className="flex items-center gap-1.5 text-zinc-700">
-                                                                <Phone className="w-3 h-3 text-[#FF6B35] shrink-0" />
-                                                                <span className="font-bold">{u.phone}</span>
-                                                            </div>
-                                                            {u.cccd && (
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <CreditCard className="w-3 h-3 text-zinc-400 shrink-0" />
-                                                                    <span>CCCD: {u.cccd}</span>
-                                                                </div>
-                                                            )}
-                                                            {u.email && (
-                                                                <div className="flex items-center gap-1.5 truncate">
-                                                                    <User className="w-3 h-3 text-zinc-400 shrink-0" />
-                                                                    <span className="truncate">{u.email}</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => handleLinkAccountSubmit(u)}
-                                                    className="px-3.5 py-1.5 bg-[#FF6B35] hover:bg-[#e05a2b] text-white font-black text-xs rounded-xl transition-all shadow-2xs shrink-0 cursor-pointer"
-                                                >
-                                                    {t("landlordCustomersLinkAction")}
-                                                </button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="py-8 text-center text-zinc-400 text-xs space-y-1">
-                                            <p className="font-bold text-zinc-600">
-                                                {isSearchingUser ? "Đang tìm kiếm tài khoản..." : "Nhập số điện thoại (từ 9 số) để tìm tài khoản"}
-                                            </p>
-                                            <p className="text-[11px] text-zinc-400">
-                                                Hệ thống sẽ tra cứu tài khoản khách thuê thực tế đã đăng ký trong hệ thống Dormio.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="p-4 border-t border-zinc-100 flex justify-end bg-zinc-50">
-                                <button onClick={() => setLinkAccountModal({ isOpen: false, customer: null })} className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100">
-                                    {t("landlordCustomersCloseModal")}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-            <ConfirmModal
-                isOpen={confirmModal.isOpen}
-                title={confirmModal.title}
-                message={confirmModal.message}
-                confirmText={confirmModal.confirmText}
-                cancelText={confirmModal.cancelText}
-                type={confirmModal.type}
-                onConfirm={confirmModal.onConfirm}
-                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-            />
 
             <AlertModal
                 isOpen={alertModal.isOpen}
@@ -1305,70 +727,6 @@ export default function CustomersPage() {
                 type={alertModal.type}
                 onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
             />
-        </div>
-    );
-}
-
-function ConfirmModal({
-    isOpen,
-    title,
-    message,
-    confirmText,
-    cancelText,
-    type = "warning",
-    onConfirm,
-    onCancel
-}: {
-    isOpen: boolean;
-    title: string;
-    message: string;
-    confirmText?: string;
-    cancelText?: string;
-    type?: "danger" | "warning" | "info";
-    onConfirm: () => void;
-    onCancel: () => void;
-}) {
-    const t = useTranslations("landlord");
-    if (!isOpen) return null;
-
-    const actualConfirm = confirmText || t("landlordCustomersConfirmCloseDiscard");
-    const actualCancel = cancelText || t("landlordCustomersConfirmCloseKeep");
-
-    return (
-        <div
-            className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-            onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
-        >
-            <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-                {/* Warning Amber Icon Badge */}
-                <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
-                    <AlertTriangle className="w-7 h-7" />
-                </div>
-
-                {/* Header Title & Subtitle */}
-                <div className="space-y-2">
-                    <h3 className="text-xl font-black text-zinc-900 tracking-tight">{title}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">{message}</p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-center gap-3 pt-2">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
-                    >
-                        {actualCancel}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onConfirm}
-                        className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
-                    >
-                        {actualConfirm}
-                    </button>
-                </div>
-            </div>
         </div>
     );
 }
@@ -1427,12 +785,12 @@ function AlertModal({
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
                 </div>
 
-                <button
+                <Button
                     onClick={onClose}
                     className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
                 >
                     {t("landlordCustomersUnderstood")}
-                </button>
+                </Button>
             </div>
         </div>
     );

@@ -41,6 +41,7 @@ import { SubscriptionPackage } from '@prisma';
 @ApiAuth()
 @ApiBoardingHouseHeader()
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+@RequireTier(SubscriptionPackage.plus)
 @Controller('landlord/notifications')
 export class LandlordNotificationsController {
   private readonly logger = new Logger(LandlordNotificationsController.name);
@@ -56,14 +57,15 @@ export class LandlordNotificationsController {
     description:
       'Creates a broadcast announcement for all residents in the specified boarding house. ' +
       'Stores a Notification record with receiverId = NULL (broadcast convention) ' +
-      'and triggers async multi-channel dispatch via BullMQ job queue.',
+      'and triggers async multi-channel dispatch via BullMQ job queue. ' +
+      'Requires Plus subscription tier or higher.',
   })
   @ApiCreatedResponse({
     description: 'Broadcast announcement successfully published',
     type: LandlordAnnouncementItemDto,
   })
   @ApiForbiddenResponse({
-    description: 'Landlord does not own this boarding house',
+    description: 'Forbidden - Landlord does not own this boarding house or requires Plus subscription tier or higher',
   })
   async broadcast(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -86,15 +88,20 @@ export class LandlordNotificationsController {
   // ─── GET /api/v1/landlord/notifications/announcements ─────────────────────
 
   @Get('announcements')
+  @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'List announcements for boarding house',
     description:
       'Returns a paginated list of broadcast announcements for the specified boarding house, ' +
-      'with search and category filtering, plus reach metrics.',
+      'with search and category filtering, plus reach metrics. ' +
+      'Requires Plus subscription tier or higher.',
   })
   @ApiOkResponse({
     description: 'Announcements retrieved successfully',
     type: LandlordAnnouncementsResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Landlord does not own this boarding house or requires Plus subscription tier or higher',
   })
   async getAnnouncements(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -120,12 +127,13 @@ export class LandlordNotificationsController {
     summary: 'Delete an announcement',
     description:
       'Removes a broadcast announcement from the boarding house. ' +
-      'Only the owner of the boarding house can delete its announcements.',
+      'Only the owner of the boarding house can delete its announcements. ' +
+      'Requires Plus subscription tier or higher.',
   })
   @ApiNoContentResponse({ description: 'Announcement deleted successfully' })
   @ApiNotFoundResponse({ description: 'Announcement not found' })
   @ApiForbiddenResponse({
-    description: 'Announcement does not belong to this boarding house',
+    description: 'Forbidden - Announcement does not belong to this boarding house or requires Plus subscription tier or higher',
   })
   async deleteAnnouncement(
     @Headers('x-boarding-house-id') boardingHouseId: string,

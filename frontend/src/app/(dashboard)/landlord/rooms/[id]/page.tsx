@@ -71,19 +71,22 @@ interface MaintenanceRecord {
 }
 
 
-const AMENITY_LABELS: Record<string, { vi: string; en: string }> = {
-  WiFi: { vi: "WiFi", en: "WiFi" },
-  "Điều hòa": { vi: "Điều hòa", en: "Air Conditioner" },
-  "Nóng lạnh": { vi: "Nóng lạnh", en: "Water Heater" },
-  "Tủ quần áo": { vi: "Tủ quần áo", en: "Wardrobe" },
-  Giường: { vi: "Giường", en: "Bed" },
-  "Kệ bếp": { vi: "Kệ bếp", en: "Kitchen Shelf" },
-  "Ban công": { vi: "Ban công", en: "Balcony" },
-  "WC riêng": { vi: "WC riêng", en: "Private Bathroom" },
-  "Máy giặt": { vi: "Máy giặt", en: "Washing Machine" },
-  Tivi: { vi: "Tivi", en: "TV" },
-  "Tủ lạnh": { vi: "Tủ lạnh", en: "Refrigerator" },
-  "Bảo vệ": { vi: "Bảo vệ", en: "Security Guard" },
+const getAmenityLabel = (item: string, t: (key: string) => string): string => {
+  const map: Record<string, string> = {
+    WiFi: t("landlordRoomAmenityWiFi"),
+    "Điều hòa": t("landlordRoomAmenityAirConditioner"),
+    "Nóng lạnh": t("landlordRoomAmenityWaterHeater"),
+    "Tủ quần áo": t("landlordRoomAmenityWardrobe"),
+    Giường: t("landlordRoomAmenityBed"),
+    "Kệ bếp": t("landlordRoomAmenityKitchenShelf"),
+    "Ban công": t("landlordRoomAmenityBalcony"),
+    "WC riêng": t("landlordRoomAmenityPrivateBathroom"),
+    "Máy giặt": t("landlordRoomAmenityWashingMachine"),
+    Tivi: t("landlordRoomAmenityTv"),
+    "Tủ lạnh": t("landlordRoomAmenityRefrigerator"),
+    "Bảo vệ": t("landlordRoomAmenitySecurityGuard"),
+  };
+  return map[item] || item;
 };
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -1789,7 +1792,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         key={idx}
                         className="px-2.5 py-1 bg-zinc-100 text-zinc-700 border border-zinc-200/80 rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs"
                       >
-                        {(AMENITY_LABELS[item]?.[currentLocale === "en" ? "en" : "vi"] || item)}
+                        {getAmenityLabel(item, t)}
                       </span>
                     ))}
                   </div>
@@ -2121,7 +2124,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
                       }`}
                     >
-                      {(AMENITY_LABELS[item]?.[currentLocale === "en" ? "en" : "vi"] || item)}
+                      {getAmenityLabel(item, t)}
                     </button>
                   ))}
                 </div>

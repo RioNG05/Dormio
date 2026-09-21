@@ -562,7 +562,7 @@ export default function ContractsPage() {
  {isEditingContract ? (
  <div className="relative">
  <input type="text" name="price" defaultValue={selectedContract.price.replace(' ₫', '')} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
- <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
+ <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{t("landlordContractsCurrencyVnd")}</span>
  </div>
  ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{selectedContract.price}</div>}
  </div>
@@ -571,7 +571,7 @@ export default function ContractsPage() {
  {isEditingContract ? (
  <div className="relative">
  <input type="text" name="deposit" defaultValue={selectedContract.deposit?.replace(' ₫', '') || '0'} className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
- <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
+ <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{t("landlordContractsCurrencyVnd")}</span>
  </div>
  ) : <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">{selectedContract.deposit}</div>}
  </div>
@@ -767,7 +767,7 @@ export default function ContractsPage() {
  <div key={service.id} className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors">
  <div className="flex items-center gap-2">
  <span className="text-sm font-medium text-zinc-900">{service.name}</span>
- <span className="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded">{service.type === 'Cố định' ? (currentLocale === 'en' ? 'Fixed' : 'Cố định') : service.type === 'Đồng hồ' ? (currentLocale === 'en' ? 'Metered' : 'Đồng hồ') : service.type}</span>
+ <span className="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded">{service.type === "Cố định" ? t("landlordContractsServiceTypeFixed") : service.type === "Đồng hồ" ? t("landlordContractsServiceTypeMetered") : service.type}</span>
  </div>
  <div className="flex items-center gap-2">
  <span className="text-sm font-bold text-orange-600">
@@ -869,7 +869,7 @@ export default function ContractsPage() {
  <label className="block text-sm font-medium text-zinc-700 mb-2">{t("landlordContractsServiceCustomPriceLabel")}</label>
  <div className="relative">
  <input type="number" name="price" defaultValue={editingService?.price || ""} placeholder="0" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
- <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
+ <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{t("landlordContractsCurrencyVnd")}</span>
  </div>
  </div>
  <div>
@@ -1525,7 +1525,7 @@ export default function ContractsPage() {
  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustNewValue")}</label>
  <div className="relative">
  <input type="text" placeholder="VND" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
- <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
+ <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">{t("landlordContractsCurrencyVnd")}</span>
  </div>
  </div>
  )}
@@ -1588,7 +1588,7 @@ export default function ContractsPage() {
  <label className="block text-sm font-bold text-zinc-800 mb-2">{t("landlordContractsAdjustNewValue")}</label>
  <div className="relative">
  <input type="text" placeholder="VND" className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
- <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
+ <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">{t("landlordContractsCurrencyVnd")}</span>
  </div>
  </div>
  )}
@@ -1651,7 +1651,7 @@ export default function ContractsPage() {
  <label className="block text-sm font-medium text-zinc-900 mb-1.5">{t("landlordContractsExtendNewRentLabel")}</label>
  <div className="relative">
  <input type="text" placeholder="3.000.000" className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
- <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{currentLocale === "en" ? "VND" : "VNĐ"}</span>
+ <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">{t("landlordContractsCurrencyVnd")}</span>
  </div>
  <p className="text-xs text-zinc-500 mt-1.5 font-medium">{t("landlordContractsExtendNewRentHint")}</p>
  </div>
@@ -1808,7 +1808,7 @@ export default function ContractsPage() {
  <label className="text-sm font-bold text-zinc-700">{t("landlordSetupTotalFloorLabel")} <span className="text-red-500">*</span></label>
  <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
  <option value="">{t("landlordContractsSelectBuildingPlaceholder")}</option>
- <option value="toaa">{currentLocale === 'en' ? 'Building A' : 'Tòa A'}</option>
+ <option value="toaa">{t("landlordContractsMockBuildingA")}</option>
  </select>
  </div>
  <div className="space-y-2">
@@ -1944,7 +1944,7 @@ export default function ContractsPage() {
  <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 space-y-3 text-sm">
  <div className="flex justify-between">
  <span className="text-zinc-500 font-medium">{t("landlordRoomDetailRoomPrefix")}:</span>
- <span className="font-bold text-zinc-900">101 - {currentLocale === 'en' ? 'Building A' : 'Tòa A'}</span>
+ <span className="font-bold text-zinc-900">101 - {t("landlordContractsMockBuildingA")}</span>
  </div>
  <div className="flex justify-between">
  <span className="text-zinc-500 font-medium">{t("landlordContractsTenantLabel")}:</span>
@@ -1952,7 +1952,7 @@ export default function ContractsPage() {
  </div>
  <div className="flex justify-between">
  <span className="text-zinc-500 font-medium">{t("landlordContractsDurationLabel")}</span>
- <span className="font-bold text-zinc-900">{currentLocale === 'en' ? '1 year (15/08/2023 - 15/08/2024)' : '1 năm (15/08/2023 - 15/08/2024)'}</span>
+ <span className="font-bold text-zinc-900">{t("landlordContractsMockOneYearDuration")}</span>
  </div>
  <div className="flex justify-between pt-3 border-t border-zinc-200">
  <span className="text-zinc-500 font-medium">{t("landlordContractsTotalDepositDue")}</span>

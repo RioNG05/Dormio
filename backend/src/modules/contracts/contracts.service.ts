@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuthService } from '../auth/auth.service';
+import { UploadService } from '../upload/upload.service';
 import { TenancyDetailsDto } from './dto/tenancy-details.dto';
 import { CreateContractPlatformDto } from './dto/create-contract-platform.dto';
 import { CreateContractDirectDto } from './dto/create-contract-direct.dto';
@@ -33,6 +34,7 @@ export class ContractsService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly authService: AuthService,
+    private readonly uploadService: UploadService,
   ) {}
 
   // ─── UC-L-04: Flow A Check — Get Pending Platform Deposit ──────────────────
@@ -403,6 +405,15 @@ export class ContractsService {
     });
 
     if (!existingId && dto.identification) {
+      const cardFrontUrl = await this.uploadService.ensureCloudinaryUrl(
+        dto.identification.cardFrontUrl,
+        'dormio/identifications',
+      );
+      const cardBackUrl = await this.uploadService.ensureCloudinaryUrl(
+        dto.identification.cardBackUrl,
+        'dormio/identifications',
+      );
+
       await this.prisma.userIdentification.create({
         data: {
           userId: tenantUser.id,
@@ -421,8 +432,8 @@ export class ContractsService {
             : new Date(Date.now() + 15 * 365 * 24 * 3600 * 1000),
           personalIdentification: randomUUID(),
           note: dto.identification.note || '',
-          cardFrontUrl: dto.identification.cardFrontUrl || '',
-          cardBackUrl: dto.identification.cardBackUrl || '',
+          cardFrontUrl: cardFrontUrl || '',
+          cardBackUrl: cardBackUrl || '',
         },
       });
     }
@@ -645,8 +656,23 @@ export class ContractsService {
                   'Khách thuê',
                 phoneNumber: primaryTenant.phoneNumber,
                 email: primaryTenant.email,
+                userIdentification: primaryTenant.userIdentification,
               }
             : null,
+          tenantContracts: c.tenantContracts.map((tc) => ({
+            id: tc.id,
+            isPrimary: tc.isPrimary,
+            tenant: {
+              id: tc.tenant.id,
+              fullName:
+                tc.tenant.userIdentification?.fullName ||
+                tc.tenant.username ||
+                'Khách thuê',
+              phoneNumber: tc.tenant.phoneNumber,
+              email: tc.tenant.email,
+              userIdentification: tc.tenant.userIdentification,
+            },
+          })),
           documentsCount: c.contractDocuments.length,
           createdAt: c.createdAt,
         };
@@ -740,6 +766,20 @@ export class ContractsService {
             userIdentification: primaryTenant.userIdentification,
           }
         : null,
+      tenantContracts: contract.tenantContracts.map((tc) => ({
+        id: tc.id,
+        isPrimary: tc.isPrimary,
+        tenant: {
+          id: tc.tenant.id,
+          fullName:
+            tc.tenant.userIdentification?.fullName ||
+            tc.tenant.username ||
+            'Khách thuê',
+          phoneNumber: tc.tenant.phoneNumber,
+          email: tc.tenant.email,
+          userIdentification: tc.tenant.userIdentification,
+        },
+      })),
       deposit: contract.deposit
         ? {
             id: contract.deposit.id,

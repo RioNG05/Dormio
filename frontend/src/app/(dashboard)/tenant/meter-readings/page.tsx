@@ -90,7 +90,7 @@ export default function TenantMeterReadingsPage() {
           meteredServices: [
             {
               serviceId: "srv-elec-demo",
-              serviceName: locale === "en" ? "Electricity" : "Điện sinh hoạt",
+              serviceName: t("tenantServiceElectricity"),
               unitPrice: 3500,
               unit: "kWh",
               currentReading: null,
@@ -103,7 +103,7 @@ export default function TenantMeterReadingsPage() {
             },
             {
               serviceId: "srv-water-demo",
-              serviceName: locale === "en" ? "Domestic Water" : "Nước sinh hoạt",
+              serviceName: t("tenantServiceWater"),
               unitPrice: 25000,
               unit: "m³",
               currentReading: null,

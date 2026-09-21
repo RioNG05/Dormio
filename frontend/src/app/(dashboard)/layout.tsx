@@ -11,13 +11,13 @@ import NotificationBell from "@/components/NotificationBell";
 import AuthGuard from "@/components/AuthGuard";
 import {
     LayoutDashboard, Home, Users, FileText, Bell,
-    Wallet, CreditCard,
+    Wallet,
     Receipt, BarChart2,
     UserCircle, Calendar, Clock,
     Settings, HelpCircle,
     LogOut, Menu, X, ChevronDown, ChevronUp, ChevronRight,
-    AlertTriangle, Shield, Package, Hammer, Wrench, Gauge, History, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2,
-    Megaphone, Newspaper, ShieldCheck, Check, Plus, Layers, ExternalLink
+    AlertTriangle, Shield, Package, Wrench, Globe, DoorOpen, Building, MessageSquare, MessageCircle, Building2,
+    Megaphone, ShieldCheck, Check, Plus, Layers, ExternalLink
 } from "lucide-react";
 
 import { useTranslations } from "@/context/LanguageContext";
@@ -68,8 +68,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: tNav("contracts"), href: "/landlord/contracts", icon: FileText },
                 { name: tNav("assets"), href: "/landlord/assets", icon: Package },
                 { name: tNav("services"), href: "/landlord/services", icon: Wrench },
-                { name: tNav("reminders"), href: "/landlord/reminders", icon: Bell },
                 { name: tNav("messages"), href: "/landlord/messages", icon: MessageCircle },
+                { name: tNav("notification"), href: "/landlord/notifications", icon: Bell },
             ]
         },
         {
@@ -397,8 +397,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                             setBuildingDropdownOpen(false);
                                         }}
                                         className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${isActive
-                                                ? "bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs"
-                                                : "hover:bg-zinc-50 text-zinc-700 font-bold"
+                                            ? "bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs"
+                                            : "hover:bg-zinc-50 text-zinc-700 font-bold"
                                             }`}
                                     >
                                         <div className="min-w-0 flex-1 pr-2">
