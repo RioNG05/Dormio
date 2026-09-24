@@ -180,28 +180,30 @@ Whenever writing or modifying any backend endpoint in NestJS:
 
 Whenever creating or modifying **any frontend page, component, or layout**:
 
-1. **Use `next-intl`** as the i18n library (`next-intl` package). Do NOT use any other i18n library.
-2. **Locale routing**: All routes must be nested under a `[locale]` dynamic segment (e.g. `src/app/[locale]/...`). The `middleware.ts` must use `createMiddleware` from `next-intl/middleware` to negotiate locale from `Accept-Language` and redirect accordingly.
-3. **Supported locales**: `vi` (Vietnamese, default) and `en` (English). The default locale is **`vi`**.
-4. **Message files**: Store translation strings in `frontend/messages/<locale>.json` (e.g. `vi.json`, `en.json`). Mirror the same key structure across all locale files.
-5. **No hardcoded user-facing strings**: Every user-visible string (labels, buttons, placeholders, headings, toast/error messages, aria-labels) **MUST** use `useTranslations()` hook (client) or `getTranslations()` (server). Hardcoded Vietnamese or English UI strings are **NOT allowed**.
-6. **Translation key naming**: Use dot-notation namespacing matching the feature module (e.g. `rooms.createModal.title`, `common.actions.save`).
-7. **Setup checklist** — when i18n is not yet configured in the project, set it up first:
-   - Install: `pnpm add next-intl`
-   - Create `frontend/messages/vi.json` and `frontend/messages/en.json`
-   - Create `frontend/src/i18n/request.ts` (server-side locale config)
-   - Wrap layout with `NextIntlClientProvider`
-   - Configure `middleware.ts` with `createMiddleware`
+1. **Centralized Message Repository**: All user-visible messages and translations MUST be defined in the `frontend/i8n/` directory:
+   - `frontend/i8n/vi.ts` (Vietnamese, default)
+   - `frontend/i8n/en.ts` (English)
+2. **STRICTLY NO INLINE i18n ON PAGES/COMPONENTS**: Absolutely NEVER resolve messages or handle translations directly inside page or component JSX using ternary operators (e.g., `isEn ? "..." : "..."`, `currentLocale === "en" ? ... : ...`, `lang === "vi" ? ... : ...`) or hardcoded strings. Every translation key MUST be declared in `frontend/i8n/`.
+3. **Usage via Hook**: Always import and use `useTranslations` from `@/context/LanguageContext`:
+   ```tsx
+   import { useTranslations } from "@/context/LanguageContext";
+
+   export default function MyPage() {
+     const t = useTranslations("guest"); // or "common", "landlord", "tenant", "auth", etc.
+     return <h1>{t("myPageTitle")}</h1>;
+   }
+   ```
+4. **Namespaces**: Place strings in their appropriate namespace: `common`, `nav`, `footer`, `auth`, `guest`, `landlord`, `tenant`, `employee`, `admin`. Keep `vi.ts` and `en.ts` strictly synchronized with matching key names.
+5. **No hardcoded user-facing strings**: Every user-visible string (labels, buttons, placeholders, headings, toast/error messages, aria-labels) **MUST** use the translation function `t(...)`.
 
 ---
 
 ## Language Rules
 
 - **Backend (NestJS)**: All code, comments, log messages, error codes, DTO field names, Swagger `@ApiOperation` summaries/descriptions, `@ApiProperty` descriptions, and `@ApiResponse` descriptions MUST be written in **English**.
-- **Frontend (Next.js)**: All source code (variables, functions, components, hooks, types) MUST be in **English**. User-visible strings MUST be served via `next-intl` translation keys — **never hardcoded in source**. The only place translated text lives is in `frontend/messages/<locale>.json` files.
+- **Frontend (Next.js)**: All source code (variables, functions, components, hooks, types) MUST be in **English**. User-visible strings MUST be served via `useTranslations` from `frontend/i8n/` (`vi.ts`, `en.ts`) — **never inline ternary operators or hardcoded in source files**.
 - **Spec documents** (`docs/spec/*.md`): Vietnamese is acceptable since they target internal stakeholders.
 - **This rules file and AGENTS.md files**: English.
-
 
 ---
 
@@ -216,6 +218,6 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 - Do NOT insert a new `DEPOSIT` when converting platform deposit to contract — update the existing row.
 - Do NOT generate `POST` when landlord uses AI draft — create only on explicit publish action.
 - Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `backend/`.
-- Do NOT hardcode user-facing strings in frontend source code — all UI text must live in `frontend/messages/<locale>.json` and be accessed via `next-intl`.
-- Do NOT skip `next-intl` setup when working on any frontend page or component — check and configure it if not already present.
+- Do NOT handle i18n messages directly on pages/components using inline ternary operators (e.g., `isEn ? ... : ...`) or hardcoded strings — all translations MUST be defined in `frontend/i8n/` (`vi.ts`, `en.ts`) and accessed via `useTranslations`.
 - Do NOT bypass the platform's central payOS gateway for financial transactions — all monetary payments (invoices, platform deposits, subscriptions, post purchases) MUST go through payOS.
+
