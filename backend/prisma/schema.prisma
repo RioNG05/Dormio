@@ -66,6 +66,7 @@ enum SubscriptionStatus {
 
 enum BillingCycle {
   monthly
+  quarterly
   yearly
 }
 
@@ -503,6 +504,7 @@ model SubscriptionPlan {
   planName       SubscriptionPackage @unique @map("plan_name")
   dailyPostQuote Int                 @map("daily_post_quote")
   priceMonthly   Decimal             @map("price_monthly")
+  priceQuarterly Decimal?            @map("price_quarterly")
   priceYearly    Decimal             @map("price_yearly")
   maxRoom        Int                 @map("max_room")
   description    String?
@@ -679,7 +681,9 @@ model Payment {
   status          PaymentStatus
   transactionRef  String?           @map("transaction_ref")
   receiptNumber   String?           @map("receipt_number") @db.VarChar(255)
-  paidAt          DateTime          @map("paid_at")
+  paidAt          DateTime?         @map("paid_at")
+  orderCode       BigInt?           @unique @map("order_code")
+  paymentLinkId   String?           @map("payment_link_id")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime?         @updatedAt @map("updated_at")
 
