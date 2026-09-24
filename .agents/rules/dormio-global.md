@@ -218,3 +218,4 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 - Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `backend/`.
 - Do NOT hardcode user-facing strings in frontend source code — all UI text must live in `frontend/messages/<locale>.json` and be accessed via `next-intl`.
 - Do NOT skip `next-intl` setup when working on any frontend page or component — check and configure it if not already present.
+- Do NOT bypass the platform's central payOS gateway for financial transactions — all monetary payments (invoices, platform deposits, subscriptions, post purchases) MUST go through payOS.

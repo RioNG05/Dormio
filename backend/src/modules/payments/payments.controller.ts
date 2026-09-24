@@ -34,7 +34,7 @@ import {
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name);
 
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
   @Get('tenant/payments/instruction/:invoiceId')
   @ApiBearerAuth('JWT')
