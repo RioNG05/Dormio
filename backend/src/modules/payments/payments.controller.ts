@@ -123,4 +123,27 @@ export class PaymentsController {
     );
     return this.paymentsService.handleVietQrWebhook(dto);
   }
+
+  @Public()
+  @Post('payments/webhook/payos')
+  @ApiOperation({
+    summary: 'Webhook tiếp nhận thông báo thanh toán từ cổng payOS',
+    description:
+      'Xác thực chữ ký checksum payOS, đối soát đơn hàng (Hóa đơn hoặc Gói đăng ký SaaS), và cập nhật trạng thái tự động.',
+  })
+  @ApiOkResponse({
+    description: 'Xử lý webhook payOS thành công',
+    schema: {
+      example: {
+        success: true,
+        message: 'Giao dịch payOS đã được quyết toán thành công.',
+      },
+    },
+  })
+  async handlePayOsWebhook(
+    @Body() body: any,
+  ): Promise<{ success: boolean; message: string }> {
+    this.logger.log('POST /api/v1/payments/webhook/payos received payload');
+    return this.paymentsService.handlePayOsWebhook(body);
+  }
 }

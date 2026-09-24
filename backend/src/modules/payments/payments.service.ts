@@ -23,6 +23,8 @@ import {
   PaymentMeterReadingDto,
 } from './dto/landlord-payments-response.dto';
 
+import { PayOsService } from './payos.service';
+
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
@@ -33,7 +35,10 @@ export class PaymentsService {
   private readonly DEFAULT_ACCOUNT_NUMBER = '0912345678';
   private readonly DEFAULT_ACCOUNT_NAME = 'DORMIO MANAGEMENT';
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly payOsService: PayOsService,
+  ) {}
 
   /**
    * Helper to format period string from date
@@ -166,7 +171,7 @@ export class PaymentsService {
         invoiceId: invoice.id,
         receiptNumber: invoice.payment.receiptNumber || 'REC-PAID',
         invoiceStatus: 'paid',
-        paidAt: invoice.payment.paidAt.toISOString(),
+        paidAt: invoice.payment.paidAt ? invoice.payment.paidAt.toISOString() : new Date().toISOString(),
         message: 'Hóa đơn đã được thanh toán thành công trước đó.',
       };
     }
@@ -188,7 +193,7 @@ export class PaymentsService {
         invoiceId: invoice.id,
         receiptNumber: existingPaymentByRef.receiptNumber || 'REC-PROCESSED',
         invoiceStatus: 'paid',
-        paidAt: existingPaymentByRef.paidAt.toISOString(),
+        paidAt: existingPaymentByRef.paidAt ? existingPaymentByRef.paidAt.toISOString() : new Date().toISOString(),
         message: 'Giao dịch đã được ghi nhận thành công.',
       };
     }
@@ -729,6 +734,125 @@ export class PaymentsService {
     }
 
     return this.mapPaymentToDto(payment);
+  }
+
+  /**
+   * Process PayOS Webhook notification and update Payment, Subscription, or Invoice
+   */
+  async handlePayOsWebhook(
+    body: any,
+  ): Promise<{ success: boolean; message: string }> {
+    this.logger.log('Processing PayOS webhook...');
+
+    let webhookData: any;
+    try {
+      webhookData = await this.payOsService.verifyWebhook(body);
+    } catch (err: any) {
+      this.logger.error(`PayOS webhook verification failed: ${err.message}`);
+      return { success: false, message: 'Invalid webhook signature' };
+    }
+
+    const orderCode = webhookData.orderCode;
+    if (!orderCode) {
+      return { success: false, message: 'Missing orderCode in webhook data' };
+    }
+
+    const payment = await this.prisma.payment.findFirst({
+      where: { orderCode: BigInt(orderCode) },
+      include: {
+        subscription: true,
+        invoice: true,
+      },
+    });
+
+    if (!payment) {
+      this.logger.warn(`No payment record found for orderCode: ${orderCode}`);
+      return { success: false, message: 'Payment record not found' };
+    }
+
+    // Idempotency: already marked as success
+    if (payment.status === 'success') {
+      this.logger.log(
+        `Payment for orderCode ${orderCode} already marked as success`,
+      );
+      return { success: true, message: 'Payment already processed' };
+    }
+
+    const paidAtDate = webhookData.transactionDateTime
+      ? new Date(webhookData.transactionDateTime)
+      : new Date();
+    const transactionRef =
+      webhookData.reference || `TXN-PAYOS-${orderCode}-${Date.now()}`;
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Update Payment status
+      await tx.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: 'success',
+          paidAt: paidAtDate,
+          transactionRef,
+        },
+      });
+
+      // 2. If this is a Landlord Subscription payment
+      if (payment.subscriptionId && payment.subscription) {
+        await tx.userSubscription.update({
+          where: { id: payment.subscriptionId },
+          data: { status: 'active' },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            action: 'update',
+            entityType: 'USER_SUBSCRIPTION',
+            entityId: payment.subscriptionId,
+            userId: payment.payerId,
+            ipAddress: '127.0.0.1',
+            newValue: {
+              status: 'active',
+              planName: payment.subscription.planName,
+              billingCycle: payment.subscription.billingCycle,
+              orderCode,
+              paidAt: paidAtDate.toISOString(),
+            },
+          },
+        });
+        this.logger.log(
+          `Activated subscription ${payment.subscriptionId} for user ${payment.payerId}`,
+        );
+      }
+
+      // 3. If this is a Tenant Invoice payment
+      if (payment.invoiceId && payment.invoice) {
+        await tx.invoice.update({
+          where: { id: payment.invoiceId },
+          data: { status: 'paid' },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            action: 'update',
+            entityType: 'INVOICE',
+            entityId: payment.invoiceId,
+            userId: payment.payerId,
+            ipAddress: '127.0.0.1',
+            newValue: {
+              status: 'paid',
+              orderCode,
+              amount: Number(payment.amount),
+              paidAt: paidAtDate.toISOString(),
+            },
+          },
+        });
+        this.logger.log(`Marked invoice ${payment.invoiceId} as paid via PayOS`);
+      }
+    });
+
+    return {
+      success: true,
+      message: 'PayOS webhook processed successfully',
+    };
   }
 }
 

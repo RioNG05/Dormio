@@ -439,7 +439,8 @@ export class InvoicesService {
     // 5. Map Standalone / Upfront payments
     const upfrontRecords: PaymentHistoryRecordDto[] = standalonePayments.map(
       (p) => {
-        const d = new Date(p.paidAt);
+        const paymentDate = p.paidAt || p.createdAt;
+        const d = new Date(paymentDate);
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
         const period = `T${month}/${year}`;
@@ -461,8 +462,8 @@ export class InvoicesService {
           boardingHouseName: 'Dormio System',
           roomNumber: '-',
           totalAmount: Number(p.amount),
-          paidAt: p.paidAt.toISOString(),
-          dueDate: p.paidAt.toISOString(),
+          paidAt: p.paidAt ? p.paidAt.toISOString() : null,
+          dueDate: (p.paidAt || p.createdAt).toISOString(),
           period,
           status: p.status === 'success' ? 'paid' : p.status,
           paymentMethod: (p.method as 'cash' | 'banking') || null,
@@ -470,7 +471,7 @@ export class InvoicesService {
           receiptNumber: p.receiptNumber || null,
           qrCodeUrl: p.qrCodeUrl || null,
           breakdown,
-          createdAt: p.paidAt.toISOString(),
+          createdAt: p.createdAt.toISOString(),
         };
       },
     );
