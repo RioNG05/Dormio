@@ -114,4 +114,23 @@ export class PlatformDepositInstructionDto {
 
   @ApiProperty()
   message: string;
+
+  @ApiPropertyOptional({ description: 'PayOS Order Code' })
+  orderCode?: number;
+
+  @ApiPropertyOptional({ description: 'PayOS Payment Link ID' })
+  paymentLinkId?: string;
+
+  @ApiPropertyOptional({ description: 'PayOS Checkout Web URL' })
+  checkoutUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Bank Bin Code' })
+  bin?: string;
+
+  @ApiPropertyOptional({ description: 'Countdown seconds until QR expiration' })
+  expiresIn?: number;
+
+  @ApiPropertyOptional({ description: 'Whether this session was reused from an active pending deposit' })
+  isReused?: boolean;
 }
+

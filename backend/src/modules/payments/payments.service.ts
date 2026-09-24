@@ -762,6 +762,13 @@ export class PaymentsService {
       include: {
         subscription: true,
         invoice: true,
+        deposit: {
+          include: {
+            room: true,
+            boardingHouse: true,
+            post: true,
+          },
+        },
       },
     });
 
@@ -846,6 +853,56 @@ export class PaymentsService {
           },
         });
         this.logger.log(`Marked invoice ${payment.invoiceId} as paid via PayOS`);
+      }
+
+      // 4. If this is a Platform Deposit payment (UC-PU-04 Step 5)
+      if (payment.depositId && payment.deposit) {
+        await tx.deposit.update({
+          where: { id: payment.depositId },
+          data: { status: 'paid' },
+        });
+
+        await tx.room.update({
+          where: { id: payment.deposit.roomId },
+          data: { status: 'deposited' },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            action: 'update',
+            entityType: 'DEPOSIT',
+            entityId: payment.depositId,
+            userId: payment.payerId,
+            ipAddress: '127.0.0.1',
+            newValue: {
+              status: 'paid',
+              roomId: payment.deposit.roomId,
+              orderCode,
+              amount: Number(payment.amount),
+              paidAt: paidAtDate.toISOString(),
+            },
+          },
+        });
+
+        const recipientId =
+          payment.deposit.boardingHouse?.ownerId ||
+          payment.deposit.post?.postedBy;
+        if (recipientId) {
+          const roomNumber = payment.deposit.room?.roomNumber || '';
+          await tx.notification.create({
+            data: {
+              receiverId: recipientId,
+              senderId: payment.payerId || recipientId,
+              boardingHouseId: payment.deposit.boardingHouseId,
+              type: 'deposit_received',
+              content: `Phòng ${roomNumber} vừa nhận được tiền đặt cọc giữ chỗ ${Number(payment.amount).toLocaleString('vi-VN')} đ qua sàn Dormio. Vui lòng kiểm tra và tạo hợp đồng cho khách thuê.`,
+              isRead: false,
+            },
+          });
+        }
+        this.logger.log(
+          `Processed platform deposit ${payment.depositId} for room ${payment.deposit.roomId} via PayOS`,
+        );
       }
     });
 
