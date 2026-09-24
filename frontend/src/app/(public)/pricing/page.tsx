@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { Button } from "@/components/ui/button";
 
 export default function PricingPage() {
   const { currentLocale } = useLanguage();
@@ -239,23 +240,31 @@ export default function PricingPage() {
         {/* ── Shared Tab Switcher (controls both Features & Pricing) ───────── */}
         <div className="flex justify-center w-full">
           <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-zinc-100 rounded-3xl border border-zinc-200/80 max-w-xl w-full gap-2 sm:gap-0">
-            <button
+            <Button
               id="tab-bhms"
+              variant="ghost"
               onClick={() => setActiveSection("bhms")}
-              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${isBhms ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30" : "text-zinc-500 hover:text-zinc-900"
-                }`}
+              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
+                isBhms
+                  ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30 hover:bg-[#25aba6] hover:text-white"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
             >
               <Building2 className="w-4 h-4" /> {t("guestFeaturesBhmsTab")}
-            </button>
+            </Button>
 
-            <button
+            <Button
               id="tab-bhrp"
+              variant="ghost"
               onClick={() => setActiveSection("bhrp")}
-              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${!isBhms ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30" : "text-zinc-500 hover:text-zinc-900"
-                }`}
+              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
+                !isBhms
+                  ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30 hover:bg-[#e85a26] hover:text-white"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
             >
               <QrCode className="w-4 h-4" /> {t("guestFeaturesBhrpTab")}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -289,25 +298,29 @@ export default function PricingPage() {
 
             {/* Billing cycle toggle */}
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 p-2 sm:p-1.5 bg-zinc-50 rounded-2xl border border-zinc-200 text-xs font-bold w-full sm:w-auto">
-              <button
+              <Button
                 id="billing-monthly"
+                variant="ghost"
                 onClick={() => setBillingCycle("monthly")}
-                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer h-auto ${
+                  billingCycle === "monthly" ? "bg-white text-zinc-900 shadow-xs hover:bg-white" : "text-zinc-500 hover:text-zinc-900"
+                }`}
               >
                 {t("guestPricingPayMonthly")}
-              </button>
-              <button
+              </Button>
+              <Button
                 id="billing-yearly"
+                variant="ghost"
                 onClick={() => setBillingCycle("yearly")}
-                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${billingCycle === "yearly" ? "bg-zinc-900 text-white shadow-xs" : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 h-auto ${
+                  billingCycle === "yearly" ? "bg-zinc-900 text-white shadow-xs hover:bg-zinc-800 hover:text-white" : "text-zinc-500 hover:text-zinc-900"
+                }`}
               >
                 <span>{t("guestPricingPayYearly")}</span>
                 <span className="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full uppercase">
                   {t("guestPricingSave20")}
                 </span>
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -378,9 +391,20 @@ export default function PricingPage() {
                     </div>
                   </div>
 
-                  <Link href="/register" className="pt-4">
-                    <button
-                      className="w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer shadow-md text-white"
+                  <Link
+                    href={
+                      isBhms
+                        ? idx === 1
+                          ? "/pricing/plus"
+                          : idx === 2
+                          ? "/pricing/pro"
+                          : "/register/landlord"
+                        : "/register"
+                    }
+                    className="pt-4"
+                  >
+                    <Button
+                      className="w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer shadow-md text-white h-auto"
                       style={
                         plan.popular
                           ? { backgroundColor: accentColor }
@@ -396,7 +420,7 @@ export default function PricingPage() {
                       }}
                     >
                       {plan.cta} &rarr;
-                    </button>
+                    </Button>
                   </Link>
                 </div>
               );
@@ -522,9 +546,9 @@ export default function PricingPage() {
           </p>
           <div className="flex justify-center">
             <Link href="/register">
-              <button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105">
+              <Button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105 h-auto">
                 {t("guestPricingCtaBtn")} &rarr;
-              </button>
+              </Button>
             </Link>
           </div>
         </section>
