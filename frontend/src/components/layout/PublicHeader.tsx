@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -43,14 +44,7 @@ export function PublicHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md transition-all">
       <div className="mx-auto flex h-16 md:h-20 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#2AC1BC] flex items-center justify-center text-white font-black text-base md:text-lg shadow-md shadow-[#2AC1BC]/25 group-hover:scale-105 transition-transform">
-            D
-          </div>
-          <span className="text-xl md:text-2xl font-black tracking-tight text-zinc-900">
-            Dormio<span className="text-[#FF6B35]">.</span>
-          </span>
-        </Link>
+        <Logo size="md" />
 
         {/* Desktop & Tablet Navigation Links */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-8">

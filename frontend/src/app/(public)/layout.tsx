@@ -12,6 +12,7 @@ import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
+import Logo from "@/components/Logo";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function PublicLayout({
@@ -148,15 +149,8 @@ export default function PublicLayout({
  <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md">
  <div className="mx-auto flex h-16 md:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
- {/* Logo */}
- <Link href="/" className="flex items-center gap-2 group">
- <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#2AC1BC] flex items-center justify-center text-white font-black text-base shadow-md shadow-[#2AC1BC]/20">
- D
- </div>
- <span className="text-xl md:text-2xl font-black tracking-tight text-zinc-900">
- Dormio<span className="text-[#FF6B35]">.</span>
- </span>
- </Link>
+          {/* Logo */}
+          <Logo size="md" />
 
  {/* Desktop Navigation Links */}
  <nav className="hidden lg:flex items-center gap-6">
