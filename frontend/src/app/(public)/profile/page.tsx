@@ -14,7 +14,7 @@ import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import { formatCurrency } from "@/utils";
 import { userService } from "@/services/user.service";
 
-export default function UniversalProfilePage() {
+function UniversalProfilePage() {
   const t = useTranslations("guest");
   const { currentLocale } = useLanguage();
   const { isLoggedIn, user } = useAuth();
@@ -1073,5 +1073,13 @@ export default function UniversalProfilePage() {
 
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-zinc-50 flex items-center justify-center p-8 text-xs font-bold text-zinc-400">Loading profile...</div>}>
+      <UniversalProfilePage />
+    </React.Suspense>
   );
 }

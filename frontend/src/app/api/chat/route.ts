@@ -1,17 +1,44 @@
 import { NextResponse } from 'next/server';
 import { DORMIO_SYSTEM_CONTEXT } from '@/lib/dormio-context';
 
-const GEMINI_API_KEY = "AQ.Ab8RN6LnZ9CSBpMqmLp56X-JdrMcpyTR8SS9mccvB3s1m0fx9A";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const GEMINI_API_KEY = process.env.AI_API_KEY;
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const body = await req.json();
+    const { messages, locale, boardingHouseId } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid messages format' }, { status: 400 });
     }
 
-    // Filter out the initial welcome message from the client
+    // 1. Try forwarding to backend NestJS centralized AI chat endpoint
+    try {
+      const backendRes = await fetch(`${BACKEND_URL}/api/v1/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages,
+          locale: locale || 'vi',
+          boardingHouseId,
+        }),
+      });
+
+      if (backendRes.ok) {
+        const backendData = await backendRes.json();
+        const reply = backendData?.data?.reply || backendData?.reply;
+        if (reply) {
+          return NextResponse.json({ reply });
+        }
+      }
+    } catch (backendErr) {
+      console.warn('Backend AI endpoint not reachable, falling back to direct Gemini API:', backendErr);
+    }
+
+    // 2. Direct fallback to Gemini 3.5 Flash Lite
     let filteredMessages = messages;
     if (filteredMessages.length > 0 && filteredMessages[0].role === 'assistant') {
       filteredMessages = filteredMessages.slice(1);
@@ -40,13 +67,12 @@ export async function POST(req: Request) {
     // Inject system prompt into the very first user message
     if (contents.length > 0 && contents[0].role === 'user') {
       const originalText = contents[0].parts[0].text;
-      // Only inject if it hasn't been injected yet
       if (!originalText.includes('[SYSTEM CONTEXT START]')) {
         contents[0].parts[0].text = `[SYSTEM CONTEXT START]\n${DORMIO_SYSTEM_CONTEXT}\n[SYSTEM CONTEXT END]\n\nNgười dùng: ${originalText}`;
       }
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,7 +87,7 @@ export async function POST(req: Request) {
       let errorData;
       try {
         errorData = JSON.parse(errorText);
-      } catch(e) {
+      } catch (e) {
         errorData = errorText;
       }
       console.error('Gemini API Error details:', errorData);
