@@ -636,12 +636,7 @@ export default function PublicLayout({
  <footer className="border-t border-zinc-200 bg-zinc-900 text-white py-12 px-4 sm:px-6 lg:px-8">
  <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-8">
  <div className="space-y-3">
- <div className="flex items-center gap-2">
- <div className="w-7 h-7 rounded-lg bg-[#2AC1BC] flex items-center justify-center font-black text-sm text-white">
- D
- </div>
- <span className="text-xl font-black text-white">Dormio.</span>
- </div>
+ <Logo size="md" priority={false} />
  <p className="text-xs text-zinc-400 leading-relaxed font-medium">
  {tFooter("desc")}
  </p>
