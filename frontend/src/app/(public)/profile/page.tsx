@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { 
   User, Phone, Mail, MapPin, ShieldCheck, Camera, CheckCircle2, Lock, 
   Building, Calendar, CreditCard, Sparkles, Save, Edit3, KeyRound, QrCode, 
@@ -11,11 +12,13 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import { formatCurrency } from "@/utils";
+import { userService } from "@/services/user.service";
 
 export default function UniversalProfilePage() {
   const t = useTranslations("guest");
   const { currentLocale } = useLanguage();
   const { isLoggedIn, user } = useAuth();
+  const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<"info" | "role_data" | "bank" | "security">("info");
   
@@ -26,6 +29,8 @@ export default function UniversalProfilePage() {
   // Tab 3 Edit Mode
   const [isEditingBank, setIsEditingBank] = useState(false);
   const [bankSavedSuccess, setBankSavedSuccess] = useState(false);
+  const [isSavingBank, setIsSavingBank] = useState(false);
+  const [bankSaveError, setBankSaveError] = useState("");
 
   // Personal Info Form States
   const [fullName, setFullName] = useState(user?.name || t("guestProfileDefaultFullName"));
@@ -43,9 +48,9 @@ export default function UniversalProfilePage() {
   const [emergencyPhone, setEmergencyPhone] = useState("0912.345.678");
 
   // Bank Info for VietQR
-  const [bankName, setBankName] = useState("TPBank");
-  const [bankAccount, setBankAccount] = useState("0987654321");
-  const [bankAccountName, setBankAccountName] = useState((user?.name || "NGUYEN VAN A").toUpperCase());
+  const [bankName, setBankName] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [bankAccountName, setBankAccountName] = useState("");
 
   // Password States
   const [currentPassword, setCurrentPassword] = useState("");
@@ -74,11 +79,28 @@ export default function UniversalProfilePage() {
   };
 
   // Save Bank Info
-  const handleSaveBank = (e: React.FormEvent) => {
+  const handleSaveBank = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsEditingBank(false);
-    setBankSavedSuccess(true);
-    setTimeout(() => setBankSavedSuccess(false), 3000);
+    if (!bankName.trim() || !bankAccount.trim() || !bankAccountName.trim()) {
+      setBankSaveError("Vui lòng điền đầy đủ thông tin ngân hàng.");
+      return;
+    }
+    setIsSavingBank(true);
+    setBankSaveError("");
+    try {
+      await userService.upsertBankAccount({
+        bankName: bankName.trim(),
+        accountNumber: bankAccount.trim(),
+        accountName: bankAccountName.trim().toUpperCase(),
+      });
+      setIsEditingBank(false);
+      setBankSavedSuccess(true);
+      setTimeout(() => setBankSavedSuccess(false), 3000);
+    } catch {
+      setBankSaveError("Không thể lưu thông tin ngân hàng. Vui lòng thử lại.");
+    } finally {
+      setIsSavingBank(false);
+    }
   };
 
   // Save Password
@@ -94,6 +116,28 @@ export default function UniversalProfilePage() {
     setConfirmPassword("");
     setTimeout(() => setPasswordSavedSuccess(false), 3000);
   };
+
+  // Auto-switch to bank tab when redirected from IdentityGuard
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "bank") {
+      setActiveTab("bank");
+    }
+  }, [searchParams]);
+
+  // Load bank account data from backend on mount
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    userService.getBankAccount().then((res) => {
+      if (res.bankAccount) {
+        setBankName(res.bankAccount.bankName);
+        setBankAccount(res.bankAccount.accountNumber);
+        setBankAccountName(res.bankAccount.accountName);
+      }
+    }).catch(() => {
+      // silently fail — user can still fill in the form
+    });
+  }, [isLoggedIn]);
 
   if (!isLoggedIn) {
     return (
@@ -796,21 +840,31 @@ export default function UniversalProfilePage() {
 
             {/* Bottom Save Action Button when Editing Bank */}
             {isEditingBank && (
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingBank(false)}
-                  className="w-full sm:w-auto px-6 py-3.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-extrabold text-xs rounded-2xl transition-all cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  {t("guestProfileBtnCancel")}
-                </button>
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 inline-flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-105 whitespace-nowrap shrink-0"
-                >
-                  <Save className="w-4 h-4 shrink-0" />
-                  <span>{t("guestProfileBankBtnSave")} &rarr;</span>
-                </button>
+              <div className="space-y-2 pt-2">
+                {bankSaveError && (
+                  <p className="text-xs font-bold text-red-600 text-right">{bankSaveError}</p>
+                )}
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setIsEditingBank(false); setBankSaveError(""); }}
+                    disabled={isSavingBank}
+                    className="w-full sm:w-auto px-6 py-3.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-extrabold text-xs rounded-2xl transition-all cursor-pointer whitespace-nowrap shrink-0 disabled:opacity-60"
+                  >
+                    {t("guestProfileBtnCancel")}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingBank}
+                    className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 inline-flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-105 whitespace-nowrap shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isSavingBank ? (
+                      <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" /><span>Đang lưu...</span></>
+                    ) : (
+                      <><Save className="w-4 h-4 shrink-0" /><span>{t("guestProfileBankBtnSave")} &rarr;</span></>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 

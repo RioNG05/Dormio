@@ -905,6 +905,17 @@ const vi = {
     guestProfileTenantRoomDashboard: "Dashboard Quản Lý Phòng Trọ",
     guestProfileUploadNewPhoto: "Tải ảnh mới",
 
+    // --- Identity Guard (components/IdentityGuard) ---
+    identityGuardCheckingTitle: "Kiểm tra thông tin tài khoản...",
+    identityGuardCheckingDesc: "Đang xác minh thông tin định danh và tài khoản ngân hàng của bạn.",
+    identityGuardToastTitle: "Vui lòng điền đầy đủ thông tin",
+    identityGuardToastDesc: "Bạn cần điền thông tin định danh cá nhân (CCCD) và thông tin tài khoản ngân hàng trước khi thực hiện thao tác này.",
+    identityGuardMissingTitle: "Thông tin chưa đầy đủ",
+    identityGuardMissingDesc: "Để đảm bảo an toàn và hoàn tiền khi cần, vui lòng cập nhật thông tin định danh và tài khoản ngân hàng tại trang hồ sơ.",
+    identityGuardGoToProfile: "Cập nhật hồ sơ ngay →",
+    identityGuardMissingId: "Chưa có thông tin định danh (CCCD)",
+    identityGuardMissingBank: "Chưa có thông tin tài khoản ngân hàng",
+
     // --- Public room detail page (app/(public)/rooms/[id]) ---
     guestRoomDetailAreaLabel: "Diện tích",
     guestRoomDetailBackToList: "Quay lại danh sách phòng trọ",

@@ -236,6 +236,7 @@ model User {
   boardingHouses        BoardingHouse[]
   tenantContracts       TenantContract[]
   userIdentification    UserIdentification?
+  bankAccount           BankAccount?
   userSubscriptions     UserSubscription[]
   deposits              Deposit[]
   posts                 Post[]
@@ -281,6 +282,19 @@ model UserIdentification {
   updatedAt              DateTime? @updatedAt @map("updated_at")
 
   @@map("user_identifications")
+}
+
+model BankAccount {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @unique @map("user_id") @db.Uuid
+  user           User      @relation(fields: [userId], references: [id])
+  bankName       String    @map("bank_name") @db.VarChar(255)
+  accountNumber  String    @map("account_number") @db.VarChar(50)
+  accountName    String    @map("account_name") @db.VarChar(255)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  @@map("bank_accounts")
 }
 
 model BoardingHouse {

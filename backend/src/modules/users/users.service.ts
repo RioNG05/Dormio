@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto';
+import { UpsertBankAccountDto } from './dto/upsert-bank-account.dto';
 import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
 
 @Injectable()
@@ -193,6 +194,61 @@ export class UsersService {
     return {
       hasIdentification: true,
       identification: saved,
+    };
+  }
+
+  /**
+   * Retrieves bank account information for the given user.
+   */
+  async getBankAccount(userId: string) {
+    this.logger.log(`Fetching bank account for user ${userId}`);
+
+    const bankAccount = await this.prisma.bankAccount.findUnique({
+      where: { userId },
+    });
+
+    return {
+      hasBankAccount: !!bankAccount,
+      bankAccount: bankAccount || null,
+    };
+  }
+
+  /**
+   * Creates or updates BankAccount for the given user.
+   */
+  async upsertBankAccount(userId: string, dto: UpsertBankAccountDto) {
+    this.logger.log(`Upserting bank account for user ${userId}`);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const saved = await this.prisma.bankAccount.upsert({
+      where: { userId },
+      create: {
+        userId,
+        bankName: dto.bankName.trim(),
+        accountNumber: dto.accountNumber.trim(),
+        accountName: dto.accountName.trim().toUpperCase(),
+      },
+      update: {
+        bankName: dto.bankName.trim(),
+        accountNumber: dto.accountNumber.trim(),
+        accountName: dto.accountName.trim().toUpperCase(),
+      },
+    });
+
+    this.logger.log(
+      `Successfully saved bank account ${saved.id} for user ${userId}`,
+    );
+
+    return {
+      hasBankAccount: true,
+      bankAccount: saved,
     };
   }
 }

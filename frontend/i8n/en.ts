@@ -905,6 +905,17 @@ const en = {
     guestProfileTenantRoomDashboard: "Room Tenant Dashboard",
     guestProfileUploadNewPhoto: "Upload new photo",
 
+    // --- Identity Guard (components/IdentityGuard) ---
+    identityGuardCheckingTitle: "Verifying your account...",
+    identityGuardCheckingDesc: "Checking your identity and bank account information.",
+    identityGuardToastTitle: "Please complete your profile",
+    identityGuardToastDesc: "You need to provide your identity (National ID) and bank account information before proceeding with this action.",
+    identityGuardMissingTitle: "Profile Incomplete",
+    identityGuardMissingDesc: "To ensure safety and enable refunds when needed, please update your identity and bank account information in your profile.",
+    identityGuardGoToProfile: "Update profile now →",
+    identityGuardMissingId: "Missing identity information (National ID)",
+    identityGuardMissingBank: "Missing bank account information",
+
     // --- Public room detail page (app/(public)/rooms/[id]) ---
     guestRoomDetailAreaLabel: "Area",
     guestRoomDetailBackToList: "Back to room listings",

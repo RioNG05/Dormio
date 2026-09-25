@@ -21,13 +21,13 @@ import {
   TextareaInput,
 } from "@/components/ui";
 import { ImageUpload } from "@/components/ImageUpload";
-import {
-  postService,
+import { postService,
   type PublicPostListing,
   type PlatformDepositInstruction,
 } from "@/services/post.service";
 import { userService, type UserIdentification } from "@/services/user.service";
 import { getOrCreateConversation } from "@/services/message.service";
+import IdentityGuard from "@/components/IdentityGuard";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function SkeletonDeposit() {
@@ -40,6 +40,15 @@ function SkeletonDeposit() {
         <div className="h-64 bg-zinc-200 rounded-3xl" />
       </div>
     </div>
+  );
+}
+
+// ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
+export default function DepositPage() {
+  return (
+    <IdentityGuard>
+      <DepositPageInner />
+    </IdentityGuard>
   );
 }
 
@@ -59,7 +68,7 @@ const PHONE_REGEX = /^(03|05|07|08|09)[0-9]{8}$/;
 const isPhoneValid = (p: string) => PHONE_REGEX.test(p.replace(/\s/g, ""));
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
-export default function DepositPage() {
+function DepositPageInner() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { currentLocale } = useLanguage();

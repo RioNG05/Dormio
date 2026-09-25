@@ -30,6 +30,7 @@ import {
   TierStatusResponse,
   SubscriptionCheckoutResponse,
 } from "@/services/subscription.service";
+import IdentityGuard from "@/components/IdentityGuard";
 
 const BANK_NAMES: Record<string, string> = {
   "970422": "MB Bank (Quân Đội)",
@@ -72,7 +73,7 @@ interface PageProps {
   }>;
 }
 
-export default function PricingCheckoutPage({ params }: PageProps) {
+function PricingCheckoutPageInner({ params }: PageProps) {
   const resolvedParams = use(params);
   const planParam = resolvedParams.plan?.toLowerCase() as "plus" | "pro";
   const router = useRouter();
@@ -736,5 +737,14 @@ export default function PricingCheckoutPage({ params }: PageProps) {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
+export default function PricingCheckoutPage({ params }: PageProps) {
+  return (
+    <IdentityGuard>
+      <PricingCheckoutPageInner params={params} />
+    </IdentityGuard>
   );
 }
