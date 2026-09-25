@@ -55,6 +55,10 @@ import {
   PlatformDepositInstructionDto,
 } from './dto/create-platform-deposit.dto';
 
+import { VisionService } from '../ai/vision.service';
+import { AiService } from '../ai/ai.service';
+import { Optional } from '@nestjs/common';
+
 export const BASE_DAILY_FREE_POST_QUOTA = 3;
 
 export interface QuotaAllocation {
@@ -70,6 +74,8 @@ export class PostsService {
     private readonly prisma: PrismaService,
     private readonly payOsService: PayOsService,
     private readonly configService: ConfigService,
+    @Optional() private readonly visionService?: VisionService,
+    @Optional() private readonly aiService?: AiService,
   ) {}
 
   /**
@@ -2286,6 +2292,30 @@ export class PostsService {
       imageUrls.push(house.thumbnail);
     }
 
+    // Call Gemini Vision to analyze room photos if available
+    let visionDescription = '';
+    if (this.visionService && imageUrls.length > 0) {
+      try {
+        const photoAnalysis = await this.visionService.analyzeRoomPhotos(imageUrls);
+        if (photoAnalysis?.features && photoAnalysis.features.length > 0) {
+          for (const feat of photoAnalysis.features) {
+            if (!highlights.includes(feat)) {
+              highlights.push(feat);
+            }
+          }
+        }
+        if (photoAnalysis?.description) {
+          visionDescription = `\n📸 ĐẶC ĐIỂM KHÔNG GIAN THỰC TẾ (QUA ẢNH):\n${photoAnalysis.description}\n`;
+        }
+      } catch (visErr) {
+        this.logger.warn(`Photo analysis failed for room ${room.id}: ${visErr}`);
+      }
+    }
+
+    const finalContent = visionDescription
+      ? content.replace('✨ TỔNG QUAN PHÒNG TRỌ:', `✨ TỔNG QUAN PHÒNG TRỌ:${visionDescription}`)
+      : content;
+
     // Persist AiConversation and AiMessage per UC-L-12 spec
     let conversation = await this.prisma.aiConversation.findFirst({
       where: {
@@ -2312,7 +2342,7 @@ export class PostsService {
           aiConversationId: conversation.id,
           role: 'user',
           content: userPrompt,
-          model: 'dormio-gpt-plus',
+          model: 'gemini-3.5-flash-lite',
         },
       });
 
@@ -2320,8 +2350,8 @@ export class PostsService {
         data: {
           aiConversationId: conversation.id,
           role: 'assistant',
-          content: content,
-          model: 'dormio-gpt-plus',
+          content: finalContent,
+          model: 'gemini-3.5-flash-lite',
           tokenUsage: 520,
         },
       });
@@ -2332,7 +2362,7 @@ export class PostsService {
     return {
       conversationId: conversation.id,
       title,
-      content,
+      content: finalContent,
       depositAmount,
       highlights,
       imageUrls,

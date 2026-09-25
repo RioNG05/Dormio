@@ -29,4 +29,10 @@ export default () => ({
     apiKey: process.env.CLOUDINARY_API_KEY,
     apiSecret: process.env.CLOUDINARY_API_SECRET,
   },
+
+  ai: {
+    apiKey: process.env.AI_API_KEY,
+    modelImage: process.env.AI_MODEL_IMAGE ?? 'gemini-3.5-flash-lite',
+    modelText: process.env.AI_MODEL_TEXT ?? 'gemini-3.5-flash-lite',
+  },
 });
