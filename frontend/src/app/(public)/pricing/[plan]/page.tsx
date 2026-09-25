@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/ui/button";
 import {
   subscriptionService,
@@ -96,18 +97,19 @@ function PricingCheckoutPageInner({ params }: PageProps) {
   const [isCopiedAcc, setIsCopiedAcc] = useState(false);
   const [isCopiedSyntax, setIsCopiedSyntax] = useState(false);
 
-  // Toast notification state
-  const [toast, setToast] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  // Toast notification hook
+  const { toast } = useToast();
 
-  const showToast = useCallback((type: "success" | "error", text: string) => {
-    setToast({ type, text });
-    setTimeout(() => {
-      setToast(null);
-    }, 6000);
-  }, []);
+  const showToast = useCallback(
+    (type: "success" | "error", text: string) => {
+      if (type === "success") {
+        toast.success(text);
+      } else {
+        toast.error(text);
+      }
+    },
+    [toast]
+  );
 
   // Auth requirement check: Must be logged in to checkout
   useEffect(() => {
@@ -295,23 +297,6 @@ function PricingCheckoutPageInner({ params }: PageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen pb-28 animate-in fade-in duration-300">
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-[999] max-w-md px-5 py-4 rounded-2xl shadow-2xl border flex items-start gap-3.5 text-xs sm:text-sm font-semibold animate-in slide-in-from-bottom-5 duration-200 ${toast.type === "success"
-              ? "bg-emerald-950/90 text-emerald-100 border-emerald-500/40 backdrop-blur-md"
-              : "bg-rose-950/90 text-rose-100 border-rose-500/40 backdrop-blur-md"
-            }`}
-        >
-          {toast.type === "success" ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-          )}
-          <div className="flex-1 leading-relaxed">{toast.text}</div>
-        </div>
-      )}
-
       {/* Header bar */}
       <div className="mb-8">
         <Link

@@ -12,6 +12,7 @@ import {
 import { formatCurrency } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import {
   Button,
   TextInput,
@@ -123,16 +124,7 @@ function DepositPageInner() {
   // Rule 10: Discard confirmation modal
   const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
 
-  const [toastMessage, setToastMessage] = useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
-
-  useEffect(() => {
-    if (!toastMessage) return;
-    const t = setTimeout(() => setToastMessage(null), 4000);
-    return () => clearTimeout(t);
-  }, [toastMessage]);
+  const { toast } = useToast();
 
   // ─── 1. Load post (Depends ONLY on id, NEVER on language) ───────────────────
   useEffect(() => {
@@ -276,10 +268,7 @@ function DepositPageInner() {
         const statusRes = await postService.getDepositOrderStatus(id, orderCode);
         if (statusRes.isPaid || statusRes.status === "PAID" || statusRes.status === "paid") {
           setDepositStep("success");
-          setToastMessage({
-            type: "success",
-            text: tGuestRef.current("guestDepositSuccessToast"),
-          });
+          toast.success(tGuestRef.current("guestDepositSuccessToast"));
         }
       } catch {
         // Silent polling failure
@@ -355,7 +344,7 @@ function DepositPageInner() {
       setTenantName(saved.fullName || idFullName || user?.name || (user as any)?.username || "");
       setTenantPhone(user?.phone || (user as any)?.phoneNumber || "");
       setDepositStep("confirm_amount");
-      setToastMessage({ type: "success", text: tGuestRef.current("guestDepositIdentityPassedBadge") });
+      toast.success(tGuestRef.current("guestDepositIdentityPassedBadge"));
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || tGuestRef.current("guestRoomDetailSaveError");
       setIdentityError(typeof msg === "string" ? msg : JSON.stringify(msg));
@@ -384,10 +373,7 @@ function DepositPageInner() {
       setCountdown(instruction.expiresIn || 900);
       setDepositStep("qr_payment");
       if (instruction.isReused) {
-        setToastMessage({
-          type: "info",
-          text: tGuestRef.current("guestDepositResumeSession"),
-        });
+        toast.info(tGuestRef.current("guestDepositResumeSession"));
       }
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || tGuestRef.current("guestPricingCheckoutGenerateQrError");
@@ -442,7 +428,7 @@ function DepositPageInner() {
       );
       router.push(conv?.id ? `/messages?conversationId=${conv.id}` : "/messages");
     } catch {
-      setToastMessage({ type: "error", text: tGuestRef.current("guestRoomDetailSaveError") });
+      toast.error(tGuestRef.current("guestRoomDetailSaveError"));
     }
   };
 
@@ -1254,27 +1240,6 @@ function DepositPageInner() {
                 {tGuest("guestDepositDiscardAndClose")}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
-          <div
-            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${toastMessage.type === "error"
-                ? "bg-rose-500 text-white border-rose-400"
-                : "bg-zinc-900/95 text-white border-zinc-700"
-              }`}
-          >
-            {toastMessage.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-            ) : toastMessage.type === "error" ? (
-              <AlertCircle className="w-4 h-4 text-white shrink-0" />
-            ) : (
-              <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-            )}
-            <span>{toastMessage.text}</span>
           </div>
         </div>
       )}

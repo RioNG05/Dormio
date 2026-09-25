@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { ShieldCheck, AlertTriangle, Loader2, User, CreditCard } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "@/context/LanguageContext";
+import { useToast } from "@/context/ToastContext";
 import { userService } from "@/services/user.service";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,46 +13,6 @@ interface IdentityCheckResult {
   checked: boolean;
   hasIdentification: boolean;
   hasBankAccount: boolean;
-}
-
-// ─── Toast component ──────────────────────────────────────────────────────────
-function GuardToast({
-  title,
-  desc,
-  onDismiss,
-}: {
-  title: string;
-  desc: string;
-  onDismiss: () => void;
-}) {
-  useEffect(() => {
-    const t = setTimeout(onDismiss, 6000);
-    return () => clearTimeout(t);
-  }, [onDismiss]);
-
-  return (
-    <div
-      className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-2rem)] max-w-md
-        bg-amber-50 border border-amber-300 rounded-2xl shadow-2xl shadow-amber-500/20
-        p-4 flex items-start gap-3 animate-in slide-in-from-top-3 duration-300"
-      role="alert"
-    >
-      <div className="mt-0.5 flex-shrink-0 w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
-        <AlertTriangle className="w-5 h-5 text-amber-600" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-extrabold text-amber-900 leading-snug">{title}</p>
-        <p className="text-xs font-medium text-amber-700 mt-0.5 leading-relaxed">{desc}</p>
-      </div>
-      <button
-        onClick={onDismiss}
-        className="flex-shrink-0 text-amber-400 hover:text-amber-600 transition-colors p-1 cursor-pointer"
-        aria-label="Dismiss"
-      >
-        ✕
-      </button>
-    </div>
-  );
 }
 
 // ─── Checking spinner screen ──────────────────────────────────────────────────
@@ -191,6 +152,7 @@ function IdentityBlockerScreen({
 export default function IdentityGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, isHydrating } = useAuth();
   const t = useTranslations("guest");
+  const { toast } = useToast();
   const pathname = usePathname();
 
   const [status, setStatus] = useState<"checking" | "ok" | "blocked">("checking");
@@ -199,7 +161,6 @@ export default function IdentityGuard({ children }: { children: React.ReactNode 
     hasIdentification: false,
     hasBankAccount: false,
   });
-  const [showToast, setShowToast] = useState(false);
 
   // Track which path was already checked to avoid re-running on locale switch
   const [checkedForPath, setCheckedForPath] = useState<string | null>(null);
@@ -229,13 +190,16 @@ export default function IdentityGuard({ children }: { children: React.ReactNode 
         setStatus("ok");
       } else {
         setStatus("blocked");
-        setShowToast(true);
+        toast.warning(t("identityGuardToastDesc"), {
+          title: t("identityGuardToastTitle"),
+          duration: 6000,
+        });
       }
     } catch {
       // On error, allow through — do not block the user
       setStatus("ok");
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, t, toast]);
 
   useEffect(() => {
     // Wait for auth hydration before checking
@@ -260,20 +224,11 @@ export default function IdentityGuard({ children }: { children: React.ReactNode 
 
   if (status === "blocked") {
     return (
-      <>
-        {showToast && (
-          <GuardToast
-            title={t("identityGuardToastTitle")}
-            desc={t("identityGuardToastDesc")}
-            onDismiss={() => setShowToast(false)}
-          />
-        )}
-        <IdentityBlockerScreen
-          missingId={!checkResult.hasIdentification}
-          missingBank={!checkResult.hasBankAccount}
-          t={t}
-        />
-      </>
+      <IdentityBlockerScreen
+        missingId={!checkResult.hasIdentification}
+        missingBank={!checkResult.hasBankAccount}
+        t={t}
+      />
     );
   }
 
