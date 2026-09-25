@@ -194,6 +194,24 @@ export class BoardingHousesService {
         data: { role: UserRole.landlord },
       });
 
+      // Step 9 — Upsert bank account if provided
+      if (dto.bankAccount) {
+        await tx.bankAccount.upsert({
+          where: { userId },
+          create: {
+            userId,
+            bankName: dto.bankAccount.bankName.trim(),
+            accountNumber: dto.bankAccount.accountNumber.trim(),
+            accountName: dto.bankAccount.accountName.trim().toUpperCase(),
+          },
+          update: {
+            bankName: dto.bankAccount.bankName.trim(),
+            accountNumber: dto.bankAccount.accountNumber.trim(),
+            accountName: dto.bankAccount.accountName.trim().toUpperCase(),
+          },
+        });
+      }
+
       return {
         boardingHouse: {
           ...boardingHouse,

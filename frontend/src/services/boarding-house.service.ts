@@ -103,6 +103,11 @@ export interface SetupBoardingHousePayload {
  services?: SetupServicePayload[];
  roomTypes: SetupRoomTypePayload[];
  rooms: SetupRoomsPayload;
+ bankAccount?: {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+ };
 }
 
 export interface SetupBoardingHouseResponse {

@@ -18,6 +18,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { UpsertBankAccountDto } from '../../users/dto/upsert-bank-account.dto';
+
 const MONEY_PATTERN = /^(?:0|[1-9]\d{0,9})(?:\.\d{1,2})?$/;
 
 // ─── Step 2a: Services ────────────────────────────────────────────────────────
@@ -240,4 +242,15 @@ export class SetupBoardingHouseDto {
   @ValidateNested()
   @Type(() => SetupRoomsDto)
   rooms: SetupRoomsDto;
+
+  // ── Step 4: Bank Account ───────────────────────────────────────────────
+
+  @ApiPropertyOptional({
+    type: UpsertBankAccountDto,
+    description: 'Bank account information for receiving payouts and VietQR collections',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpsertBankAccountDto)
+  bankAccount?: UpsertBankAccountDto;
 }
