@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage, useTranslations } from "@/context/LanguageContext";
+import { useToast } from "@/context/ToastContext";
 import { formatCurrency } from "@/utils";
 import { postService, type PublicPostListing } from "@/services/post.service";
 
@@ -36,12 +37,10 @@ export default function SavedPostsPage() {
   const isEn = currentLocale === "en";
   const { isLoggedIn } = useAuth();
 
+  const { toast } = useToast();
+
   const [savedRooms, setSavedRooms] = useState<PublicPostListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [toastMessage, setToastMessage] = useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
 
   // Selected Room IDs for Side-by-Side Comparison
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
@@ -76,13 +75,6 @@ export default function SavedPostsPage() {
     };
   }, [isLoggedIn]);
 
-  // Auto clear toast
-  useEffect(() => {
-    if (!toastMessage) return;
-    const timer = setTimeout(() => setToastMessage(null), 3000);
-    return () => clearTimeout(timer);
-  }, [toastMessage]);
-
   const toggleSelectCompare = (id: string) => {
     setSelectedForCompare((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -96,17 +88,11 @@ export default function SavedPostsPage() {
 
     try {
       await postService.unsavePost(id);
-      setToastMessage({
-        type: "success",
-        text: t("guestSavedPostsRemoveSuccess"),
-      });
+      toast.success(t("guestSavedPostsRemoveSuccess"));
     } catch (err) {
       console.error("Failed to remove saved post:", err);
       setSavedRooms(previous);
-      setToastMessage({
-        type: "error",
-        text: t("guestSavedPostsRemoveError"),
-      });
+      toast.error(t("guestSavedPostsRemoveError"));
     }
   };
 
@@ -186,25 +172,6 @@ export default function SavedPostsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-20 right-4 z-50 animate-in fade-in slide-in-from-top-3 duration-300">
-          <div
-            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-xs font-bold text-white ${
-              toastMessage.type === "success"
-                ? "bg-emerald-600"
-                : toastMessage.type === "error"
-                ? "bg-rose-600"
-                : "bg-blue-600"
-            }`}
-          >
-            {toastMessage.type === "success" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
-            {toastMessage.type === "error" && <AlertCircle className="w-4 h-4 shrink-0" />}
-            <span>{toastMessage.text}</span>
-          </div>
-        </div>
-      )}
-
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />

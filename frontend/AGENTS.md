@@ -117,4 +117,21 @@ NEXT_PUBLIC_WS_URL=ws://localhost:3001
 JWT_SECRET=... (for middleware server-side verify)
 ```
 
+## Internationalization (i18n) Rules
+
+- **Strict Centralization**: Strictly NEVER handle i18n messages directly on pages or components using inline ternary operators (e.g. `isEn ? "..." : "..."`, `currentLocale === "en" ? ... : ...`) or hardcoded display strings.
+- **Repository Location**: All localization messages MUST be defined in the `frontend/i8n/` directory:
+  - `frontend/i8n/vi.ts` (Vietnamese, default)
+  - `frontend/i8n/en.ts` (English)
+- **Usage**: Import `useTranslations` from `@/context/LanguageContext`:
+  ```tsx
+  import { useTranslations } from "@/context/LanguageContext";
+
+  export default function MyComponent() {
+    const t = useTranslations("guest"); // or "common", "landlord", "tenant", "auth", etc.
+    return <h1>{t("myKey")}</h1>;
+  }
+  ```
+- **Namespaces**: Keep keys organized under the appropriate namespace (`common`, `nav`, `footer`, `auth`, `guest`, `landlord`, `tenant`, `employee`, `admin`). Maintain 1-to-1 parity between `vi.ts` and `en.ts`.
+
 ## Load the `nextjs-page` skill for detailed Next.js patterns.

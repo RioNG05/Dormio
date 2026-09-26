@@ -16,6 +16,7 @@ import {
  exportContract,
 } from "@/services/contract.service";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { useToast } from "@/context/ToastContext";
 
 interface ContractPreviewModalProps {
  isOpen: boolean;
@@ -44,13 +45,16 @@ export default function ContractPreviewModal({
  const [isLoading, setIsLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
  const [isExporting, setIsExporting] = useState(false);
- const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+ const { toast } = useToast();
 
  const iframeRef = useRef<HTMLIFrameElement>(null);
 
  const showToast = (message: string, type: "success" | "error") => {
- setToast({ message, type });
- setTimeout(() => setToast(null), 3000);
+   if (type === "success") {
+     toast.success(message);
+   } else {
+     toast.error(message);
+   }
  };
 
  function generateFallbackContractHtml(cid: string, rNum: string, tName?: string): string {
@@ -225,22 +229,6 @@ export default function ContractPreviewModal({
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
- {/* Toast Notice */}
- {toast && (
- <div
- className={`fixed top-5 right-5 z-60 px-4 py-2.5 rounded-xl font-bold text-xs shadow-xl flex items-center gap-2 animate-in slide-in-from-top-3 ${
- toast.type === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
- }`}
- >
- {toast.type === "success" ? (
- <CheckCircle2 className="w-4 h-4" />
- ) : (
- <AlertTriangle className="w-4 h-4" />
- )}
- {toast.message}
- </div>
- )}
-
  <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200">
  {/* Modal Header */}
  <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">

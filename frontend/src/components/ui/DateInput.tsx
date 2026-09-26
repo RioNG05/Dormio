@@ -10,6 +10,7 @@ export interface DateInputProps
   helperText?: string;
   containerClassName?: string;
   labelClassName?: string;
+  maxDate?: string | "today";
 }
 
 export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
@@ -24,11 +25,23 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       className,
       disabled,
       id,
+      maxDate,
       ...props
     },
     ref
   ) => {
     const inputId = id || (label ? `date-${label.replace(/\s+/g, "-").toLowerCase()}` : undefined);
+
+    const calculatedMax = React.useMemo(() => {
+      if (maxDate === "today") {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+      return maxDate || props.max;
+    }, [maxDate, props.max]);
 
     return (
       <div className={cn("space-y-1.5 w-full", containerClassName)}>
@@ -57,6 +70,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             id={inputId}
             required={required}
             disabled={disabled}
+            max={calculatedMax}
             className={cn(
               "w-full rounded-xl border pl-9 pr-3.5 py-2.5 text-xs font-semibold transition-all outline-none",
               disabled

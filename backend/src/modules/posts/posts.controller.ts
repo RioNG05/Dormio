@@ -418,6 +418,43 @@ export class PostsController {
     return this.postsService.confirmPlatformDeposit(user.id, id, dto);
   }
 
+  @Get('browse/:id/deposit/order-status/:orderCode')
+  @ApiOperation({
+    summary: 'Check status of platform deposit payment',
+    description:
+      'Polls payment status for deposit orderCode to detect when PayOS payment completes.',
+  })
+  @ApiParam({ name: 'id', description: 'Post or Room UUID' })
+  @ApiParam({ name: 'orderCode', description: 'Numeric PayOS Order Code' })
+  @ApiOkResponse({
+    description: 'Deposit order status info',
+    schema: {
+      type: 'object',
+      properties: {
+        orderCode: { type: 'number', example: 12345678901 },
+        status: { type: 'string', example: 'success' },
+        isPaid: { type: 'boolean', example: true },
+        paidAt: { type: 'string', example: '2026-09-25T00:00:00.000Z' },
+      },
+    },
+  })
+  async getDepositOrderStatus(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Param('orderCode') orderCodeStr: string,
+  ): Promise<{
+    orderCode: number;
+    status: string;
+    isPaid: boolean;
+    paidAt?: string;
+  }> {
+    const orderCode = parseInt(orderCodeStr, 10);
+    this.logger.log(
+      `GET /posts/browse/${id}/deposit/order-status/${orderCode} called by user ${user.id}`,
+    );
+    return this.postsService.getDepositOrderStatus(user.id, orderCode);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get post listing details by ID',

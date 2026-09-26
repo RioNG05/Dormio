@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "@/context/LanguageContext";
+import { useToast } from "@/context/ToastContext";
 import { postService, PostQuotaStatus } from "@/services/post.service";
 
 export default function PublicCreatePostPage() {
@@ -46,9 +47,9 @@ export default function PublicCreatePostPage() {
  const [newImageUrl, setNewImageUrl] = useState("");
 
  // Submission & validation state
+ const { toast } = useToast();
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [errorMessage, setErrorMessage] = useState<string | null>(null);
- const [successToast, setSuccessToast] = useState<string | null>(null);
 
  // Unsaved changes modal state
  const [isDirty, setIsDirty] = useState(false);
@@ -145,7 +146,7 @@ export default function PublicCreatePostPage() {
  status,
  });
 
- setSuccessToast(
+ toast.success(
  status === "posted"
  ? t("guestPostsCreateSuccessPublish")
  : t("guestPostsCreateSuccessDraft")
@@ -237,14 +238,6 @@ export default function PublicCreatePostPage() {
  </p>
  </div>
  </div>
-
- {/* Success Toast */}
- {successToast && (
- <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
- <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
- <span className="text-sm font-bold">{successToast}</span>
- </div>
- )}
 
  {/* Main Form */}
  <form onSubmit={(e) => handleSubmit(e, "posted")} className="space-y-6">

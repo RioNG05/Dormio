@@ -129,6 +129,20 @@ export class BillingCronService {
       );
 
       try {
+        // UC-L-06 Part 1 Step 3 / Part 3:
+        // Automatically generate monthly draft invoice for this cycle (idempotent)
+        if (!hasMeteredServices) {
+          await this.invoicesService.generateFlatRateInvoice(
+            contract.id,
+            new Date(),
+          );
+        } else {
+          await this.invoicesService.generateMonthlyDraftInvoice(
+            contract.id,
+            new Date(),
+          );
+        }
+
         await this.notificationsService.createBillingDueNotification({
           senderId: contract.room.boardingHouse.ownerId,
           receiverId: primaryTenant.tenantId,
@@ -136,15 +150,6 @@ export class BillingCronService {
           contractId: contract.id,
           hasMeteredServices,
         });
-
-        // UC-L-06 Part 1 Step 3 / Part 3:
-        // If room has NO metered services, generate flat-rate invoice immediately
-        if (!hasMeteredServices) {
-          await this.invoicesService.generateFlatRateInvoice(
-            contract.id,
-            new Date(),
-          );
-        }
       } catch (err) {
         this.logger.error(
           `[BillingCron] Failed billing_due for contract ${contract.id}: ${(err as Error).message}`,

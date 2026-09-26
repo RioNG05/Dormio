@@ -4,9 +4,10 @@ import { LandlordMeterReadingsController } from './landlord-meter-readings.contr
 import { MeterReadingsService } from './meter-readings.service';
 import { OcrService } from './ocr.service';
 import { PrismaModule } from '../../common/prisma/prisma.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AiModule],
   controllers: [MeterReadingsController, LandlordMeterReadingsController],
   providers: [MeterReadingsService, OcrService],
   exports: [MeterReadingsService, OcrService],

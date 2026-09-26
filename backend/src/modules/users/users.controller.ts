@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto';
+import { UpsertBankAccountDto } from './dto/upsert-bank-account.dto';
 import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -111,5 +112,64 @@ export class UsersController {
       `POST /api/v1/users/identification called by user ${user.id} with CCCD ${dto.identityNumber}`,
     );
     return this.usersService.upsertIdentification(user.id, dto);
+  }
+
+  @Get(['me/bank-account', 'bank-account'])
+  @ApiOperation({
+    summary: 'Get bank account information for authenticated user',
+    description:
+      'Returns whether the user has a saved bank account and its details. ' +
+      'Used by IdentityGuard on the frontend to gate financial actions.',
+  })
+  @ApiOkResponse({
+    description: 'Bank account status and data',
+    schema: {
+      example: {
+        hasBankAccount: true,
+        bankAccount: {
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          bankName: 'TPBank',
+          accountNumber: '0987654321',
+          accountName: 'NGUYEN VAN A',
+        },
+      },
+    },
+  })
+  async getBankAccount(@CurrentUser() user: JwtPayload) {
+    this.logger.log(`GET /api/v1/users/bank-account called by user ${user.id}`);
+    return this.usersService.getBankAccount(user.id);
+  }
+
+  @Post(['me/bank-account', 'bank-account'])
+  @Put(['me/bank-account', 'bank-account'])
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Save or update bank account information for authenticated user',
+    description:
+      'Stores bank account details for VietQR-based refund flows. ' +
+      'Required before any financial action (deposit, subscription) — enforced by IdentityGuard.',
+  })
+  @ApiOkResponse({
+    description: 'Bank account saved successfully',
+    schema: {
+      example: {
+        hasBankAccount: true,
+        bankAccount: {
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          bankName: 'TPBank',
+          accountNumber: '0987654321',
+          accountName: 'NGUYEN VAN A',
+        },
+      },
+    },
+  })
+  async upsertBankAccount(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpsertBankAccountDto,
+  ) {
+    this.logger.log(
+      `POST /api/v1/users/bank-account called by user ${user.id}`,
+    );
+    return this.usersService.upsertBankAccount(user.id, dto);
   }
 }

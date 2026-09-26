@@ -8,6 +8,7 @@ import {
   Request,
   Logger,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -28,13 +29,81 @@ import {
   PaymentExecutionResultDto,
   VietQrWebhookDto,
 } from './dto/confirm-payment.dto';
+import {
+  InvoicePayOsCheckoutResponseDto,
+  InvoicePaymentStatusResponseDto,
+} from './dto/invoice-payos-checkout.dto';
 
 @ApiTags('Payments & VietQR')
 @Controller()
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name);
 
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
+
+  @Post('tenant/payments/payos-checkout/:invoiceId')
+  @ApiBearerAuth('JWT')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Tạo mã thanh toán PayOS VietQR cho hóa đơn (tồn tại 15 phút)',
+    description:
+      'Khởi tạo phiên thanh toán PayOS trung tâm cho hóa đơn phòng trọ, khóa số tiền và cú pháp chuyển khoản.',
+  })
+  @ApiParam({ name: 'invoiceId', description: 'Mã định danh hóa đơn (UUID)' })
+  @ApiOkResponse({
+    description: 'Thông tin thanh toán PayOS VietQR và thời gian tồn tại 15 phút',
+    type: InvoicePayOsCheckoutResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Không tìm thấy hóa đơn',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Không có quyền truy cập hóa đơn này',
+  })
+  async createInvoicePayOsCheckout(
+    @Request() req: any,
+    @Param('invoiceId') invoiceId: string,
+  ): Promise<InvoicePayOsCheckoutResponseDto> {
+    const userId = req.user?.id || req.user?.sub;
+    this.logger.log(
+      `POST /api/v1/tenant/payments/payos-checkout/${invoiceId} by user ${userId}`,
+    );
+    return this.paymentsService.createInvoicePayOsCheckout(userId, invoiceId);
+  }
+
+  @Get('tenant/payments/order-status/:orderCode')
+  @ApiBearerAuth('JWT')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Kiểm tra trạng thái thanh toán hóa đơn theo mã đơn PayOS',
+    description:
+      'Dùng cho cơ chế polling từ client để cập nhật trạng thái thanh toán theo thời gian thực.',
+  })
+  @ApiParam({
+    name: 'orderCode',
+    description: 'Mã số đơn hàng PayOS dạng số nguyên',
+    example: 1727289123456,
+  })
+  @ApiOkResponse({
+    description: 'Trạng thái thanh toán đơn hàng',
+    type: InvoicePaymentStatusResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Không tìm thấy đơn thanh toán',
+  })
+  async getInvoicePaymentStatus(
+    @Request() req: any,
+    @Param('orderCode', ParseIntPipe) orderCode: number,
+  ): Promise<InvoicePaymentStatusResponseDto> {
+    const userId = req.user?.id || req.user?.sub;
+    this.logger.log(
+      `GET /api/v1/tenant/payments/order-status/${orderCode} by user ${userId}`,
+    );
+    return this.paymentsService.getInvoicePaymentStatus(userId, orderCode);
+  }
 
   @Get('tenant/payments/instruction/:invoiceId')
   @ApiBearerAuth('JWT')
@@ -122,5 +191,28 @@ export class PaymentsController {
       `POST /api/v1/payments/webhook/vietqr received ref: ${dto.transactionRef}`,
     );
     return this.paymentsService.handleVietQrWebhook(dto);
+  }
+
+  @Public()
+  @Post('payments/webhook/payos')
+  @ApiOperation({
+    summary: 'Webhook tiếp nhận thông báo thanh toán từ cổng payOS',
+    description:
+      'Xác thực chữ ký checksum payOS, đối soát đơn hàng (Hóa đơn hoặc Gói đăng ký SaaS), và cập nhật trạng thái tự động.',
+  })
+  @ApiOkResponse({
+    description: 'Xử lý webhook payOS thành công',
+    schema: {
+      example: {
+        success: true,
+        message: 'Giao dịch payOS đã được quyết toán thành công.',
+      },
+    },
+  })
+  async handlePayOsWebhook(
+    @Body() body: any,
+  ): Promise<{ success: boolean; message: string }> {
+    this.logger.log('POST /api/v1/payments/webhook/payos received payload');
+    return this.paymentsService.handlePayOsWebhook(body);
   }
 }

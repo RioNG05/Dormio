@@ -70,6 +70,8 @@ Load these skills (read their SKILL.md) when working on:
     - **Logger**: Always add a `Logger` (e.g., `private readonly logger = new Logger(ControllerName.name)`) and log an info message whenever the endpoint is invoked.
     - **Swagger**: Always write complete Swagger documentation for the controller, methods, and DTOs (`@ApiTags`, `@ApiOperation`, `@ApiBearerAuth`, `@ApiOkResponse`, `@ApiResponse`, `@ApiProperty`, etc.).
 12. **Language Convention (English Codebase)**: All source code (variables, functions, classes, interfaces, types, DTOs, enums, DB models/columns), comments, docstrings, logs, git commit messages, and technical documentation MUST be written in **English**. **Vietnamese** is strictly reserved for user-facing UI labels, client-visible messages/toasts, notification contents, and localized business display text.
+13. **Centralized PayOS Payment Gateway**: All monetary payments in the system (tenant monthly invoices, platform deposits, landlord subscription upgrades, post quota purchases) MUST be routed through the platform's central payOS gateway for automated verification, webhook-based reconciliation, and audit tracking.
+14. **Centralized i18n Translations**: Strictly NEVER handle i18n messages directly on UI pages or components using inline ternary operators (e.g., `isEn ? "..." : "..."`, `locale === "en" ? ... : ...`) or hardcoded strings. All localization messages MUST be defined in the `frontend/i8n/` directory (`frontend/i8n/vi.ts` and `frontend/i8n/en.ts`) and accessed via `useTranslations(namespace)` from `@/context/LanguageContext`.
 
 ## Module Breakdown
 

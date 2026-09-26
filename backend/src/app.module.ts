@@ -29,6 +29,8 @@ import { AttendanceModule } from './modules/attendance/attendance.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AssetsModule } from './modules/assets/assets.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { AiModule } from './modules/ai/ai.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { SubscriptionTierGuard } from './common/guards/subscription-tier.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -97,6 +99,8 @@ import { AppService } from './app.service';
     AdminModule,
     AssetsModule,
     UploadModule,
+    SubscriptionsModule,
+    AiModule,
   ],
 
   controllers: [AppController],

@@ -26,6 +26,7 @@ import {
 import { formatVND } from "@/utils";
 import { useTranslations } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import {
   postService,
   type PublicPostListing,
@@ -274,20 +275,10 @@ function RoomsContent() {
   const [quickViewRoom, setQuickViewRoom] = useState<PublicPostListing | null>(null);
 
   // Save & share state
+  const { toast } = useToast();
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [shareModalRoom, setShareModalRoom] = useState<PublicPostListing | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
-
-  // Auto-dismiss toast notification
-  useEffect(() => {
-    if (!toastMessage) return;
-    const timer = setTimeout(() => setToastMessage(null), 3000);
-    return () => clearTimeout(timer);
-  }, [toastMessage]);
 
   // Load saved post IDs for authenticated user
   useEffect(() => {
@@ -540,10 +531,7 @@ function RoomsContent() {
 
   const toggleSave = async (id: string) => {
     if (!isLoggedIn) {
-      setToastMessage({
-        type: "info",
-        text: t("guestRoomsSaveLoginRequired"),
-      });
+      toast.info(t("guestRoomsSaveLoginRequired"));
       setTimeout(() => {
         router.push("/login");
       }, 1500);
@@ -559,16 +547,10 @@ function RoomsContent() {
     try {
       if (isCurrentlySaved) {
         await postService.unsavePost(id);
-        setToastMessage({
-          type: "success",
-          text: t("guestRoomsUnsaveSuccess"),
-        });
+        toast.success(t("guestRoomsUnsaveSuccess"));
       } else {
         await postService.savePost(id);
-        setToastMessage({
-          type: "success",
-          text: t("guestRoomsSaveSuccess"),
-        });
+        toast.success(t("guestRoomsSaveSuccess"));
       }
     } catch (err: any) {
       // Revert optimistic update
@@ -580,18 +562,12 @@ function RoomsContent() {
         err?.message?.includes("expired") ||
         err?.message?.includes("log in");
       if (isAuthError) {
-        setToastMessage({
-          type: "info",
-          text: t("guestRoomsSessionExpired"),
-        });
+        toast.info(t("guestRoomsSessionExpired"));
         setTimeout(() => {
           router.push("/login");
         }, 1500);
       } else {
-        setToastMessage({
-          type: "error",
-          text: err?.message || t("guestRoomsSaveError"),
-        });
+        toast.error(err?.message || t("guestRoomsSaveError"));
       }
     }
   };
@@ -1330,34 +1306,6 @@ function RoomsContent() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-      {/* ─── Toast Feedback Notification ──────────────────────────────────── */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
-          <div
-            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${toastMessage.type === "success"
-              ? "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
-              : toastMessage.type === "error"
-                ? "bg-rose-500 text-white border-rose-400 shadow-rose-950/25"
-                : "bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25"
-              }`}
-          >
-            {toastMessage.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-            ) : toastMessage.type === "error" ? (
-              <AlertCircle className="w-4 h-4 text-white shrink-0" />
-            ) : (
-              <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-            )}
-            <span>{toastMessage.text}</span>
-            <button
-              onClick={() => setToastMessage(null)}
-              className="ml-2 p-1 hover:bg-white/20 rounded-lg text-zinc-300 hover:text-white cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       )}

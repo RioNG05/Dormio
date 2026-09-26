@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import AIChatBot from "@/components/AIChatBot";
 import TierUpgradeModal from "@/components/TierUpgradeModal";
 import { useAuth } from "@/context/AuthContext";
+import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
 import AuthGuard from "@/components/AuthGuard";
@@ -114,7 +115,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: tNav("home"), href: "/tenant", icon: Building },
         { name: tNav("invoices"), href: "/tenant/invoices", icon: Receipt },
         { name: tNav("messages"), href: "/tenant/messages", icon: MessageCircle },
-        { name: tNav("complaints"), href: "/tenant/complaints", icon: MessageSquare },
     ];
 
     const NavContent = () => {
@@ -434,15 +434,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
     );
 
-    const Logo = () => (
-        <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm shrink-0">
-                <Home className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="text-base font-extrabold text-zinc-900 tracking-tight">Dormio</span>
-        </Link>
-    );
-
     /**
     * UserFooter — bottom of sidebar.
     * Clicking the avatar/name row opens an upward popup menu that offers:
@@ -535,7 +526,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </div>
 
                             {/* Profile link */}
-                            <div className="px-2 py-1.5">
+                            <div className="px-2 py-1.5 space-y-0.5">
                                 <Link
                                     href={isTenant ? "/tenant/profile" : "/profile"}
                                     onClick={() => setUserMenuOpen(false)}
@@ -543,6 +534,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 >
                                     <UserCircle className="w-4 h-4 text-zinc-400 shrink-0" />
                                     {tNav("userMenuProfile")}
+                                </Link>
+                                <Link
+                                    href="/send-application"
+                                    onClick={() => setUserMenuOpen(false)}
+                                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                                >
+                                    <FileText className="w-4 h-4 text-amber-500 shrink-0" />
+                                    {tNav("sendApplication")}
                                 </Link>
                             </div>
 
@@ -633,7 +632,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-zinc-200 bg-white z-20">
                     <div className="flex flex-col flex-1 min-h-0">
                         <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-100">
-                            <Logo />
+                            <Logo size="sm" imageClassName="h-7 w-auto" />
                             <NotificationBell align="left" />
                         </div>
 
@@ -651,7 +650,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
                         <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl flex flex-col border-r border-zinc-200">
                             <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-100">
-                                <Logo />
+                                <Logo size="sm" imageClassName="h-7 w-auto" />
                                 <div className="flex items-center gap-1">
                                     <NotificationBell align="left" />
                                     <button

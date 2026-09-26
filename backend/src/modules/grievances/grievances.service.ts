@@ -22,17 +22,21 @@ import {
   GrievancePriorityFilter,
 } from './dto/admin-grievance.dto';
 import { GrievenceStatus, GrievencePriority } from '@prisma';
+import { UploadService } from '../upload/upload.service';
 
 @Injectable()
 export class GrievancesService {
   private readonly logger = new Logger(GrievancesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   /**
-   * Helper to resolve active tenant contract
+   * Helper to resolve active tenant contract (optional)
    */
-  async resolveActiveTenantContract(tenantId: string) {
+  async findActiveTenantContract(tenantId: string) {
     const tenantContract = await this.prisma.tenantContract.findFirst({
       where: {
         tenantId,
@@ -53,13 +57,7 @@ export class GrievancesService {
       },
     });
 
-    if (!tenantContract || !tenantContract.contract) {
-      throw new NotFoundException(
-        'Không tìm thấy hợp đồng thuê phòng đang có hiệu lực của bạn.',
-      );
-    }
-
-    return tenantContract.contract;
+    return tenantContract?.contract || null;
   }
 
   /**
@@ -74,12 +72,13 @@ export class GrievancesService {
 
     return {
       id: g.id,
+      type: g.type || 'complaint',
       title: g.title,
       description: g.description,
       priority: g.priority,
       status: g.status,
-      boardingHouseName: g.boardingHouse?.name || 'Nhà trọ Dormio',
-      roomNumber: g.room?.roomNumber || '-',
+      boardingHouseName: g.boardingHouse?.name || null,
+      roomNumber: g.room?.roomNumber || null,
       resolutionNote: g.resolutionNote || null,
       resolvedAt: g.resolvedAt ? g.resolvedAt.toISOString() : null,
       resolvedByName: g.resolvedByUser?.username || null,
@@ -90,21 +89,49 @@ export class GrievancesService {
   }
 
   /**
-   * UC-T-07: Submit a new grievance / complaint
+   * UC-T-07: Submit a new grievance / complaint / inquiry / feedback
    */
   async createGrievance(
     tenantId: string,
     dto: CreateGrievanceDto,
   ): Promise<GrievanceDetailResponseDto> {
-    this.logger.log(`Tenant ${tenantId} creating grievance: "${dto.title}"`);
-    const contract = await this.resolveActiveTenantContract(tenantId);
+    this.logger.log(`User ${tenantId} creating grievance (${dto.type}): "${dto.title}"`);
+    const contract = await this.findActiveTenantContract(tenantId);
+
+    const boardingHouseId = contract?.room?.boardingHouseId || null;
+    const roomId = contract?.roomId || null;
+
+    // Ensure all evidence images are uploaded to Cloudinary with folder /dormio/application-images
+    const resolvedImageUrls: string[] = [];
+    if (dto.imageUrls && dto.imageUrls.length > 0) {
+      for (const rawImage of dto.imageUrls) {
+        try {
+          const cloudinaryUrl = await this.uploadService.ensureCloudinaryUrl(
+            rawImage,
+            'dormio/application-images',
+          );
+          if (cloudinaryUrl) {
+            resolvedImageUrls.push(cloudinaryUrl);
+          }
+        } catch (uploadErr) {
+          this.logger.error(`Failed to upload application image to Cloudinary: ${uploadErr}`);
+          // If upload fails, still retain if it's already an HTTP URL, otherwise rethrow or continue
+          if (rawImage.startsWith('http://') || rawImage.startsWith('https://')) {
+            resolvedImageUrls.push(rawImage);
+          } else {
+            throw uploadErr;
+          }
+        }
+      }
+    }
 
     const result = await this.prisma.$transaction(async (tx) => {
       const grievance = await tx.grievance.create({
         data: {
           tenantId,
-          boardingHouseId: contract.room.boardingHouseId,
-          roomId: contract.roomId,
+          type: dto.type || 'complaint',
+          boardingHouseId,
+          roomId,
           title: dto.title.trim(),
           description: dto.description.trim(),
           priority: dto.priority || 'medium',
@@ -112,9 +139,9 @@ export class GrievancesService {
         },
       });
 
-      if (dto.imageUrls && dto.imageUrls.length > 0) {
+      if (resolvedImageUrls.length > 0) {
         await tx.grievanceImage.createMany({
-          data: dto.imageUrls.map((url) => ({
+          data: resolvedImageUrls.map((url) => ({
             grievanceId: grievance.id,
             url,
           })),
@@ -127,13 +154,14 @@ export class GrievancesService {
           action: 'create',
           entityType: 'GRIEVANCE',
           entityId: grievance.id,
-          boardingHouseId: contract.room.boardingHouseId,
+          boardingHouseId,
           userId: tenantId,
           ipAddress: '127.0.0.1',
           newValue: {
+            type: dto.type || 'complaint',
             title: dto.title,
             priority: dto.priority || 'medium',
-            imageCount: dto.imageUrls?.length || 0,
+            imageCount: resolvedImageUrls.length,
           },
         },
       });
@@ -152,7 +180,7 @@ export class GrievancesService {
       return fullGrievance;
     });
 
-    this.logger.log(`Grievance ${result?.id} created successfully for tenant ${tenantId}`);
+    this.logger.log(`Grievance ${result?.id} created successfully for user ${tenantId}`);
 
     return {
       success: true,
@@ -239,10 +267,11 @@ export class GrievancesService {
     const landlordName =
       g.boardingHouse?.owner?.userIdentification?.fullName ||
       g.boardingHouse?.owner?.username ||
-      'Chủ nhà';
+      null;
 
     return {
       id: g.id,
+      type: g.type || 'complaint',
       title: g.title,
       description: g.description,
       priority: g.priority,
@@ -251,12 +280,12 @@ export class GrievancesService {
       tenantName,
       tenantPhone: g.tenant?.phoneNumber || '',
       tenantEmail: g.tenant?.email || '',
-      boardingHouseId: g.boardingHouseId,
-      boardingHouseName: g.boardingHouse?.name || 'Nhà trọ Dormio',
-      roomId: g.roomId,
-      roomNumber: g.room?.roomNumber || '-',
+      boardingHouseId: g.boardingHouseId || null,
+      boardingHouseName: g.boardingHouse?.name || null,
+      roomId: g.roomId || null,
+      roomNumber: g.room?.roomNumber || null,
       landlordName,
-      landlordPhone: g.boardingHouse?.owner?.phoneNumber || '',
+      landlordPhone: g.boardingHouse?.owner?.phoneNumber || null,
       resolutionNote: g.resolutionNote || null,
       resolvedAt: g.resolvedAt ? g.resolvedAt.toISOString() : null,
       resolvedByName: g.resolvedByUser?.username || null,
@@ -276,7 +305,7 @@ export class GrievancesService {
     query: AdminGrievanceQueryDto,
   ): Promise<AdminGrievanceListResponseDto> {
     this.logger.log(
-      `Admin fetching grievances queue: status=${query.status}, priority=${query.priority}, page=${query.page}`,
+      `Admin fetching grievances queue: type=${query.type}, status=${query.status}, priority=${query.priority}, page=${query.page}`,
     );
 
     const page = query.page || 1;
@@ -284,6 +313,10 @@ export class GrievancesService {
     const skip = (page - 1) * limit;
 
     const where: any = {};
+
+    if (query.type && query.type !== ('all' as any)) {
+      where.type = query.type;
+    }
 
     if (query.status && query.status !== GrievanceStatusFilter.ALL) {
       where.status = query.status as GrievenceStatus;

@@ -199,3 +199,4 @@ export const useAuthStore = create<AuthState>()(
 - [ ] Active boarding house from Zustand store, passed as `x-boarding-house-id` header
 - [ ] `export const metadata` set on every page
 - [ ] TailwindCSS v4 classes, no inline `style` unless animating dynamic values
+- [ ] Centralized i18n translations: all user-visible strings must be defined in `frontend/i8n/` (`vi.ts`, `en.ts`) and accessed via `useTranslations()` — strictly NO inline ternary operators or hardcoded text on pages/components.

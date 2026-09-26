@@ -18,6 +18,8 @@ import {
     LoaderCircle,
     AlertTriangle,
     Info,
+    CreditCard,
+    QrCode,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
@@ -39,10 +41,11 @@ import {
     type SelectedMapAddress,
 } from "@/components/landlord/MapAddressPicker";
 import { CoverPhotoUpload } from "@/components/landlord/CoverPhotoUpload";
+import { userService } from "@/services/user.service";
 
 // ─── TYPES & CONSTANTS ────────────────────────────────────────────────────────
 
-type WizardStep = 1 | 2 | 3;
+type WizardStep = 1 | 2 | 3 | 4;
 
 interface ServiceItem extends SetupServicePayload {
     id: string;
@@ -53,6 +56,17 @@ interface RoomTypeItem extends SetupRoomTypePayload {
 }
 
 const MAX_FREE_TIER_ROOMS = 10;
+
+const POPULAR_BANKS = [
+    "MB Bank",
+    "Vietcombank",
+    "Techcombank",
+    "VPBank",
+    "ACB",
+    "BIDV",
+    "VietinBank",
+    "TPBank",
+];
 
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -138,6 +152,13 @@ export default function SetupWizardPage() {
         serviceIndices: [0, 1, 2], // default apply initial services
     });
 
+    // ─── STEP 4 STATE: BANK ACCOUNT (PAYOUT / VIETQR) ────────────────────────────
+    const [bankInfo, setBankInfo] = useState({
+        bankName: "",
+        accountNumber: "",
+        accountName: "",
+    });
+
     const nameFormatPresets = useMemo(
         () => [
             { label: "P{floor}0{index} (P101, P102...)", value: "P{floor}0{index}" },
@@ -150,6 +171,29 @@ export default function SetupWizardPage() {
         ],
         [t]
     );
+
+    // Fetch existing bank account on mount to prefill Step 4
+    useEffect(() => {
+        let isMounted = true;
+        userService
+            .getBankAccount()
+            .then((res) => {
+                if (isMounted && res.bankAccount) {
+                    setBankInfo({
+                        bankName: res.bankAccount.bankName || "",
+                        accountNumber: res.bankAccount.accountNumber || "",
+                        accountName: res.bankAccount.accountName || "",
+                    });
+                }
+            })
+            .catch(() => {
+                // Silently ignore if user hasn't added bank account yet
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     // Fetch Vietnam provinces on mount
     useEffect(() => {
@@ -268,9 +312,12 @@ export default function SetupWizardPage() {
             info.houseNumber.trim() !== "" ||
             info.ward.trim() !== "" ||
             Boolean(thumbnailFile) ||
+            bankInfo.bankName.trim() !== "" ||
+            bankInfo.accountNumber.trim() !== "" ||
+            bankInfo.accountName.trim() !== "" ||
             step > 1
         );
-    }, [info, thumbnailFile, step]);
+    }, [info, thumbnailFile, bankInfo, step]);
 
     const updateInfo = (field: keyof typeof info, value: string) => {
         setInfo((prev) => {
@@ -368,6 +415,17 @@ export default function SetupWizardPage() {
         return !hasInvalidService;
     }, [roomTypes, services]);
 
+    // ─── STEP 4 VALIDATION ───────────────────────────────────────────────────────
+    const isStep4Valid = useMemo(() => {
+        const cleanAcc = bankInfo.accountNumber.trim().replace(/\s/g, "");
+        return Boolean(
+            bankInfo.bankName.trim() &&
+            cleanAcc.length >= 6 &&
+            cleanAcc.length <= 25 &&
+            bankInfo.accountName.trim()
+        );
+    }, [bankInfo]);
+
     // ─── STEP 3 PREVIEW & QUOTA CALCULATION ──────────────────────────────────────
     const totalRoomsToCreate = useMemo(() => {
         const floors = Math.max(1, roomsConfig.floorCount);
@@ -416,6 +474,12 @@ export default function SetupWizardPage() {
                     .replace("{total}", String(totalRoomsToCreate))
                     .replace("{max}", String(MAX_FREE_TIER_ROOMS))
             );
+            return;
+        }
+
+        if (!isStep4Valid) {
+            setErrorMessage(t("landlordSetupBankErrorRequired"));
+            setStep(4);
             return;
         }
 
@@ -475,12 +539,28 @@ export default function SetupWizardPage() {
                 roomTypeIndex: safeRoomTypeIndex,
                 serviceIndices: safeServiceIndices,
             },
+            bankAccount: {
+                bankName: bankInfo.bankName.trim(),
+                accountNumber: bankInfo.accountNumber.trim().replace(/\s/g, ""),
+                accountName: bankInfo.accountName.trim().toUpperCase(),
+            },
         };
 
         setIsSubmitting(true);
         try {
             const result = await setupBoardingHouse(payload);
             const newHouse = result.boardingHouse;
+
+            // Also ensure bank account is upserted to user profile cache
+            await userService
+                .upsertBankAccount({
+                    bankName: bankInfo.bankName.trim(),
+                    accountNumber: bankInfo.accountNumber.trim().replace(/\s/g, ""),
+                    accountName: bankInfo.accountName.trim().toUpperCase(),
+                })
+                .catch(() => {
+                    // Silently ignore if already saved by setupBoardingHouse
+                });
 
             // Update Auth context with newly created property and promote role
             if (newHouse?.id) {
@@ -556,7 +636,7 @@ export default function SetupWizardPage() {
                 </div>
 
                 {/* Wizard Stepper Bar */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 pt-2">
                     <StepperItem
                         stepNumber={1}
                         currentStep={step}
@@ -586,6 +666,17 @@ export default function SetupWizardPage() {
                         icon={<Sparkles className="w-4 h-4" />}
                         onClick={() => {
                             if (isStep1Valid && isStep2Valid) setStep(3);
+                        }}
+                    />
+                    <StepperItem
+                        stepNumber={4}
+                        currentStep={step}
+                        stepLabel={t("landlordSetupStepNumber")}
+                        title={t("landlordSetupStep4Title")}
+                        desc={t("landlordSetupStep4Desc")}
+                        icon={<CreditCard className="w-4 h-4" />}
+                        onClick={() => {
+                            if (isStep1Valid && isStep2Valid && !isQuotaExceeded && totalRoomsToCreate >= 1) setStep(4);
                         }}
                     />
                 </div>
@@ -1313,6 +1404,160 @@ export default function SetupWizardPage() {
                         <button
                             type="button"
                             disabled={isSubmitting || isQuotaExceeded || totalRoomsToCreate < 1}
+                            onClick={() => setStep(4)}
+                            className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-md hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                            {t("landlordSetupNextToStep4")}
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </section>
+            )}
+
+            {/* ─── STEP 4: BANK ACCOUNT INFORMATION (PAYOUT / VIETQR) ──────────────── */}
+            {step === 4 && (
+                <section className="space-y-6 animate-in fade-in duration-300">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        {/* Left Column: Bank Account Input Form */}
+                        <div className="lg:col-span-7 rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+                            <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
+                                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold">
+                                    <CreditCard className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-black text-zinc-900">{t("landlordSetupSection4Title")}</h2>
+                                    <p className="text-xs text-zinc-500 font-medium">
+                                        {t("landlordSetupSection4Desc")}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <Field label={t("landlordSetupBankNameLabel")} required>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={bankInfo.bankName}
+                                        onChange={(e) =>
+                                            setBankInfo((prev) => ({ ...prev, bankName: e.target.value }))
+                                        }
+                                        placeholder={t("landlordSetupBankNamePlaceholder")}
+                                        className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
+                                    />
+                                    <div className="mt-2 space-y-1.5">
+                                        <span className="text-[11px] font-bold text-zinc-400">
+                                            {t("landlordSetupBankQuickSelectLabel")}
+                                        </span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {POPULAR_BANKS.map((bName) => (
+                                                <button
+                                                    key={bName}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setBankInfo((prev) => ({ ...prev, bankName: bName }))
+                                                    }
+                                                    className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${
+                                                        bankInfo.bankName === bName
+                                                            ? "bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] font-bold"
+                                                            : "bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100"
+                                                    }`}
+                                                >
+                                                    {bName}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </Field>
+
+                                <Field label={t("landlordSetupBankAccNumLabel")} required>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={bankInfo.accountNumber}
+                                        onChange={(e) =>
+                                            setBankInfo((prev) => ({
+                                                ...prev,
+                                                accountNumber: e.target.value.replace(/[^0-9]/g, ""),
+                                            }))
+                                        }
+                                        placeholder={t("landlordSetupBankAccNumPlaceholder")}
+                                        className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC] font-mono"
+                                    />
+                                </Field>
+
+                                <Field label={t("landlordSetupBankAccNameLabel")} required>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={bankInfo.accountName}
+                                        onChange={(e) =>
+                                            setBankInfo((prev) => ({
+                                                ...prev,
+                                                accountName: e.target.value.toUpperCase(),
+                                            }))
+                                        }
+                                        placeholder={t("landlordSetupBankAccNamePlaceholder")}
+                                        className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC] uppercase font-bold"
+                                    />
+                                </Field>
+
+                                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-xs text-zinc-600 space-y-1">
+                                    <div className="flex items-center gap-1.5 font-bold text-zinc-800">
+                                        <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                                        <span>{t("landlordSetupBankStepNote")}</span>
+                                    </div>
+                                    <p className="text-[11px] text-zinc-500 leading-relaxed">
+                                        {t("landlordSetupBankAutoNotice")}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column: Live VietQR Card Preview */}
+                        <div className="lg:col-span-5 space-y-4">
+                            <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xs space-y-4">
+                                <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
+                                    <CreditCard className="w-4 h-4 text-[#2AC1BC]" />
+                                    <h3 className="text-sm font-black text-zinc-900">
+                                        {t("landlordSetupBankCardPreviewTitle")}
+                                    </h3>
+                                </div>
+
+                                <div className="p-6 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 text-white rounded-3xl border border-zinc-800 space-y-4 text-center shadow-xl relative overflow-hidden w-full">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#2AC1BC]/10 rounded-full blur-xl pointer-events-none" />
+                                    <QrCode className="w-16 h-16 text-[#2AC1BC] mx-auto relative z-10 animate-pulse" />
+                                    <div className="relative z-10 space-y-1">
+                                        <h4 className="text-sm font-black text-white">
+                                            {bankInfo.bankName || "MB Bank / Vietcombank"}
+                                        </h4>
+                                        <p className="text-lg font-black text-[#2AC1BC] font-mono tracking-widest">
+                                            {bankInfo.accountNumber || "0000000000"}
+                                        </p>
+                                        <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">
+                                            {bankInfo.accountName || "NGUYEN VAN A"}
+                                        </p>
+                                    </div>
+                                    <span className="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-full border border-emerald-500/30 relative z-10 whitespace-nowrap">
+                                        {t("landlordSetupBankAutoNotice")}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Step 4 Navigation / Final Submit */}
+                    <div className="flex items-center justify-between pt-2">
+                        <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => setStep(3)}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                        >
+                            <ChevronLeft className="w-4 h-4" /> {t("landlordSetupBackToStep3")}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isSubmitting || !isStep4Valid}
                             onClick={handleSubmit}
                             className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-md hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >

@@ -541,6 +541,39 @@ export const postService = {
  },
 
  /**
+ * Check status of platform deposit payment by orderCode (for polling)
+ */
+ async getDepositOrderStatus(
+ targetId: string,
+ orderCode: number
+ ): Promise<{
+ orderCode: number;
+ status: string;
+ isPaid: boolean;
+ paidAt?: string;
+ }> {
+ const res = await api.get<{
+ success: boolean;
+ data: {
+ orderCode: number;
+ status: string;
+ isPaid: boolean;
+ paidAt?: string;
+ };
+ } | {
+ orderCode: number;
+ status: string;
+ isPaid: boolean;
+ paidAt?: string;
+ }>(`/v1/posts/browse/${targetId}/deposit/order-status/${orderCode}`);
+
+ if (res && typeof res === "object" && "data" in res) {
+ return (res as any).data;
+ }
+ return res as any;
+ },
+
+ /**
  * Generate context-aware AI rental post draft
  */
  async generateAiDraft(payload: CreateAiPostDraftPayload): Promise<AiPostDraftResponse> {
@@ -621,6 +654,12 @@ export interface PlatformDepositInstruction {
  transferContent: string;
  status: string;
  message: string;
+ orderCode?: number;
+ paymentLinkId?: string;
+ checkoutUrl?: string;
+ bin?: string;
+ expiresIn?: number;
+ isReused?: boolean;
 }
 
 export interface ConfirmPlatformDepositResponse {

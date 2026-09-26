@@ -100,6 +100,24 @@ export interface PaymentHistoryResponse {
 }
 
 export const tenantInvoiceService = {
+  /**
+   * Fetch a single invoice by id for tenant
+   */
+  async getTenantInvoiceById(id: string): Promise<TenantInvoice | null> {
+    try {
+      const res = await api.get<{ success?: boolean; data?: TenantInvoice } | TenantInvoice>(
+        `/v1/tenant/invoices/${id}`,
+        { silent: true },
+      );
+      if (!res) return null;
+      if (typeof res === "object" && "data" in res && (res as any).data) {
+        return (res as any).data;
+      }
+      return res as TenantInvoice;
+    } catch {
+      return null;
+    }
+  },
  /**
  * Fetch all invoices for current tenant's active room
  */

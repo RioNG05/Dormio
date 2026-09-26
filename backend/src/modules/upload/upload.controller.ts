@@ -7,6 +7,7 @@ import {
   UploadedFile,
   BadRequestException,
   Logger,
+  VERSION_NEUTRAL,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,11 +27,11 @@ import { UploadImageResponseDto } from './dto/upload-image-response.dto';
 @ApiTags('Media & Uploads')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('upload')
+@Controller({ path: 'upload', version: ['1', VERSION_NEUTRAL] })
 export class UploadController {
   private readonly logger = new Logger(UploadController.name);
 
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(private readonly uploadService: UploadService) { }
 
   @Post('image')
   @ApiOperation({

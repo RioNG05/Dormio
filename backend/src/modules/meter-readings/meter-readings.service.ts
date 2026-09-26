@@ -432,18 +432,45 @@ export class MeterReadingsService {
       dueDate.setMonth(dueDate.getMonth() + 1);
     }
 
-    // 6. DB Transaction: Create Invoice + InvoiceItems, Link Readings, Write AuditLog
+    // Check if an existing draft/unpaid invoice already exists for this cycle
+    const targetMonth = dueDate.getMonth();
+    const targetYear = dueDate.getFullYear();
+    const startOfMonth = new Date(targetYear, targetMonth, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
+
+    const existingInvoice = await this.prisma.invoice.findFirst({
+      where: {
+        contractId: contract.id,
+        status: 'unpaid',
+        dueDate: { gte: startOfMonth, lte: endOfMonth },
+      },
+    });
+
+    // 6. DB Transaction: Create or Update Invoice + InvoiceItems, Link Readings, Write AuditLog
     const result = await this.prisma.$transaction(async (tx) => {
-      // Create Invoice
-      const invoice = await tx.invoice.create({
-        data: {
-          roomId,
-          contractId: contract.id,
-          totalAmount: totalAmountNum,
-          status: 'unpaid',
-          dueDate,
-        },
-      });
+      let invoice;
+      if (existingInvoice) {
+        invoice = await tx.invoice.update({
+          where: { id: existingInvoice.id },
+          data: {
+            totalAmount: totalAmountNum,
+            dueDate,
+          },
+        });
+        await tx.invoiceItem.deleteMany({
+          where: { invoiceId: invoice.id },
+        });
+      } else {
+        invoice = await tx.invoice.create({
+          data: {
+            roomId,
+            contractId: contract.id,
+            totalAmount: totalAmountNum,
+            status: 'unpaid',
+            dueDate,
+          },
+        });
+      }
 
       // Create Invoice Items
       const createdItems: InvoiceItemResponseDto[] = [];

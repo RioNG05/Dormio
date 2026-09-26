@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { Building2, CheckCircle2, TrendingUp, Zap, Sparkles, ShieldCheck, Star } from "lucide-react";
 import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import { formatCurrency } from "@/utils";
@@ -21,14 +22,7 @@ export default function AuthLayout({
         
         {/* Header Brand Logo */}
         <div className="flex items-center justify-between pb-6">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-xl bg-[#2AC1BC] flex items-center justify-center text-white font-black text-lg shadow-md shadow-[#2AC1BC]/20">
-              D
-            </div>
-            <span className="text-2xl font-black tracking-tight text-zinc-900">
-              Dormio<span className="text-[#FF6B35]">.</span>
-            </span>
-          </Link>
+          <Logo size="lg" />
 
           <Link href="/" className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors">
             {t("authLayoutBackHome")}

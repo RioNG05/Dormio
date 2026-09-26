@@ -6,12 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import {
  Search, Command, X, MapPin, Building, ArrowRight, Menu,
  Building2, UserCheck, Sparkles, CheckCircle2, LogOut, ShieldCheck, Heart, ChevronDown,
- PlusCircle, BarChart3, Clock
+ PlusCircle, BarChart3, Clock, FileText
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
+import Logo from "@/components/Logo";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function PublicLayout({
@@ -148,15 +149,8 @@ export default function PublicLayout({
  <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md">
  <div className="mx-auto flex h-16 md:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
- {/* Logo */}
- <Link href="/" className="flex items-center gap-2 group">
- <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#2AC1BC] flex items-center justify-center text-white font-black text-base shadow-md shadow-[#2AC1BC]/20">
- D
- </div>
- <span className="text-xl md:text-2xl font-black tracking-tight text-zinc-900">
- Dormio<span className="text-[#FF6B35]">.</span>
- </span>
- </Link>
+          {/* Logo */}
+          <Logo size="md" />
 
  {/* Desktop Navigation Links */}
  <nav className="hidden lg:flex items-center gap-6">
@@ -239,6 +233,16 @@ export default function PublicLayout({
  >
  <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
  <span>{tNav("myProfile")}</span>
+ </Link>
+
+ {/* Gửi đơn */}
+ <Link
+ href="/send-application"
+ onClick={() => setIsUserMenuOpen(false)}
+ className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+ >
+ <FileText className="w-4 h-4 text-amber-500" />
+ <span>{tNav("sendApplication")}</span>
  </Link>
 
  {/* 2. Phòng trọ đã thuê / Quản lý trọ */}
@@ -381,6 +385,19 @@ export default function PublicLayout({
  <div className="flex items-center gap-2.5">
  <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
  <span>{tNav("myProfile")}</span>
+ </div>
+ <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
+ </Link>
+
+ {/* Gửi đơn */}
+ <Link
+ href="/send-application"
+ onClick={() => setIsMobileMenuOpen(false)}
+ className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+ >
+ <div className="flex items-center gap-2.5">
+ <FileText className="w-4 h-4 text-amber-500" />
+ <span>{tNav("sendApplication")}</span>
  </div>
  <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
  </Link>
@@ -642,12 +659,7 @@ export default function PublicLayout({
  <footer className="border-t border-zinc-200 bg-zinc-900 text-white py-12 px-4 sm:px-6 lg:px-8">
  <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-8">
  <div className="space-y-3">
- <div className="flex items-center gap-2">
- <div className="w-7 h-7 rounded-lg bg-[#2AC1BC] flex items-center justify-center font-black text-sm text-white">
- D
- </div>
- <span className="text-xl font-black text-white">Dormio.</span>
- </div>
+ <Logo size="md" priority={false} />
  <p className="text-xs text-zinc-400 leading-relaxed font-medium">
  {tFooter("desc")}
  </p>

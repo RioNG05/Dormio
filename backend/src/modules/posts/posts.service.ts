@@ -6,7 +6,9 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { PayOsService } from '../payments/payos.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
@@ -53,6 +55,10 @@ import {
   PlatformDepositInstructionDto,
 } from './dto/create-platform-deposit.dto';
 
+import { VisionService } from '../ai/vision.service';
+import { AiService } from '../ai/ai.service';
+import { Optional } from '@nestjs/common';
+
 export const BASE_DAILY_FREE_POST_QUOTA = 3;
 
 export interface QuotaAllocation {
@@ -64,7 +70,13 @@ export interface QuotaAllocation {
 export class PostsService {
   private readonly logger = new Logger(PostsService.name);
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly payOsService: PayOsService,
+    private readonly configService: ConfigService,
+    @Optional() private readonly visionService?: VisionService,
+    @Optional() private readonly aiService?: AiService,
+  ) {}
 
   /**
    * Check if user is a landlord by checking ownership of at least one boarding house.
@@ -824,10 +836,10 @@ export class PostsService {
   /**
    * UC-PU-02: Get a single public post detail by ID (no auth required)
    *
-   * Returns full PublicPostResponseDto. Throws NotFoundException if not found or not posted.
+   * Returns full PublicPostResponseDto. Supports lookup by Post ID or Room ID.
    */
   async getPublicPostById(postId: string): Promise<PublicPostResponseDto> {
-    const post = await this.prisma.post.findUnique({
+    let post = await this.prisma.post.findUnique({
       where: { id: postId, status: PostStatus.posted },
       include: {
         postImages: true,
@@ -842,7 +854,6 @@ export class PostsService {
             id: true,
             username: true,
             avatarUrl: true,
-            // IMPORTANT: never select phoneNumber/email in public response (UC-PU-02 rule)
           },
         },
         _count: {
@@ -855,12 +866,101 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`Public listing with ID ${postId} was not found or is not available`);
+      post = await this.prisma.post.findFirst({
+        where: { roomId: postId, status: PostStatus.posted },
+        include: {
+          postImages: true,
+          room: {
+            include: {
+              roomType: true,
+              boardingHouse: true,
+            },
+          },
+          postedByUser: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+          _count: {
+            select: {
+              postReaches: true,
+              savedPosts: true,
+            },
+          },
+        },
+      });
     }
 
-    this.logger.log(`Public post detail fetched: ${postId}`);
+    if (!post) {
+      const room = await this.prisma.room.findUnique({
+        where: { id: postId },
+        include: {
+          roomType: true,
+          boardingHouse: {
+            include: {
+              owner: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!room) {
+        throw new NotFoundException(`Public listing or room with ID ${postId} was not found or is not available`);
+      }
+
+      const bh = room.boardingHouse;
+      const address: PublicAddressDto | null = bh
+        ? {
+            province: bh.province,
+            district: bh.district,
+            ward: bh.ward,
+            street: bh.street,
+            houseNumber: bh.houseNumber,
+          }
+        : null;
+
+      return {
+        id: room.id,
+        title: `Phòng ${room.roomNumber} · ${bh.name}`,
+        content: bh.description || `Thông tin phòng trọ ${room.roomNumber} tại ${bh.name}`,
+        depositAmount: 0,
+        status: PostStatus.posted,
+        createdAt: room.createdAt,
+        images: room.image_url ? [{ id: 'room-img', url: room.image_url }] : [],
+        room: {
+          id: room.id,
+          roomNumber: room.roomNumber,
+          floor: room.floor,
+          area: room.area ? Number(room.area) : undefined,
+          roomTypeName: room.roomType?.name,
+          boardingHouseName: bh.name,
+          boardingHouseId: room.boardingHouseId,
+        },
+        address,
+        poster: bh.owner
+          ? {
+              id: bh.owner.id,
+              username: bh.owner.username,
+              avatarUrl: bh.owner.avatarUrl,
+            }
+          : null,
+        viewsCount: 0,
+        savedCount: 0,
+      };
+    }
+
+    this.logger.log(`Public post detail fetched: ${post.id}`);
     return this.mapToPublicResponseDto(post);
   }
+
 
   /**
    * UC-PU-01: Browse & Filter Listings (public, no auth required)
@@ -1177,11 +1277,11 @@ export class PostsService {
    */
   async createPlatformDeposit(
     userId: string,
-    postId: string,
+    targetId: string,
     dto: InitiatePlatformDepositDto,
   ): Promise<PlatformDepositInstructionDto> {
     this.logger.log(
-      `UC-PU-04: Initiate platform deposit on post ${postId} by user ${userId}`,
+      `UC-PU-04: Initiate platform deposit on target ${targetId} by user ${userId}`,
     );
 
     // 1. Identity Verification Gate (UC-PU-04 Step 1)
@@ -1202,9 +1302,9 @@ export class PostsService {
       });
     }
 
-    // 2. Load post with room + boarding house
-    const post = await this.prisma.post.findUnique({
-      where: { id: postId },
+    // 2. Load post or room
+    let post = await this.prisma.post.findUnique({
+      where: { id: targetId },
       include: {
         room: {
           include: {
@@ -1215,45 +1315,171 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`Post with ID ${postId} was not found`);
+      post = await this.prisma.post.findFirst({
+        where: { roomId: targetId, status: PostStatus.posted },
+        include: {
+          room: {
+            include: {
+              boardingHouse: true,
+            },
+          },
+        },
+      });
     }
 
-    if (post.status !== PostStatus.posted) {
-      throw new BadRequestException(
-        'Tin đăng này hiện không nhận đặt cọc trực tuyến (đã tạm ẩn hoặc chưa đăng).',
-      );
+    let roomId: string;
+    let boardingHouseId: string;
+    let roomNumber: string;
+    let defaultDeposit: number;
+    let resolvedPostId: string | null = null;
+
+    if (post && post.room) {
+      if (post.status !== PostStatus.posted) {
+        throw new BadRequestException(
+          'Tin đăng này hiện không nhận đặt cọc trực tuyến (đã tạm ẩn hoặc chưa đăng).',
+        );
+      }
+      resolvedPostId = post.id;
+      roomId = post.room.id;
+      boardingHouseId = post.room.boardingHouseId;
+      roomNumber = post.room.roomNumber;
+      defaultDeposit = Number(post.depositAmount);
+    } else {
+      // Fallback: check room directly
+      const directRoom = await this.prisma.room.findUnique({
+        where: { id: targetId },
+        include: { boardingHouse: true },
+      });
+      if (!directRoom) {
+        throw new NotFoundException(
+          `Không tìm thấy thông tin phòng hoặc tin đăng với ID ${targetId}.`,
+        );
+      }
+      roomId = directRoom.id;
+      boardingHouseId = directRoom.boardingHouseId;
+      roomNumber = directRoom.roomNumber;
+      defaultDeposit = 0;
     }
 
-    // Guard: post must have a linked room
-    if (!post.roomId || !post.room) {
-      throw new BadRequestException(
-        'Tin đăng này chưa liên kết với phòng cụ thể nên không hỗ trợ đặt cọc trực tuyến. Vui lòng liên hệ trực tiếp chủ trọ.',
-      );
-    }
+    const now = new Date();
+    const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000);
 
-    // Validate room is available
-    if (post.room.status !== RoomStatus.available) {
-      throw new BadRequestException(
-        'Phòng trọ này hiện không còn khả dụng để đặt cọc (đang thuê hoặc đã cọc).',
-      );
-    }
-
-    // Guard: no active platform deposit already pending or paid for this post or room
-    const existingActiveDeposit = await this.prisma.deposit.findFirst({
+    // 3. Reusable Pending Session Check (< 15 mins) for current user
+    const existingUserPending = await this.prisma.deposit.findFirst({
       where: {
-        OR: [{ postId }, { roomId: post.roomId }],
+        roomId,
+        status: DepositStatus.pending,
+        createdAt: { gte: fifteenMinsAgo },
+        payment: {
+          payerId: userId,
+          status: PaymentStatus.pending,
+        },
+      },
+      include: {
+        payment: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (
+      existingUserPending &&
+      existingUserPending.payment &&
+      existingUserPending.payment.orderCode &&
+      existingUserPending.payment.qrCodeUrl
+    ) {
+      const elapsedMs =
+        now.getTime() - existingUserPending.createdAt.getTime();
+      const remainingSecs = Math.max(
+        30,
+        Math.floor((15 * 60 * 1000 - elapsedMs) / 1000),
+      );
+
+      this.logger.log(
+        `Reusing existing deposit payment session (OrderCode: ${existingUserPending.payment.orderCode}) for user ${userId}`,
+      );
+
+      let bin = '970422';
+      let accountNumber = '0987654321';
+      let accountName = 'DORMIO ESCROW VIETNAM';
+      let checkoutUrl = existingUserPending.payment.qrCodeUrl.startsWith('http')
+        ? existingUserPending.payment.qrCodeUrl
+        : '';
+
+      try {
+        const linkInfo = await this.payOsService.getPaymentLinkInformation(
+          Number(existingUserPending.payment.orderCode),
+        );
+        if (linkInfo) {
+          bin = linkInfo.bin || bin;
+          accountNumber = linkInfo.accountNumber || accountNumber;
+          accountName = linkInfo.accountName || accountName;
+          checkoutUrl = linkInfo.checkoutUrl || checkoutUrl;
+        }
+      } catch (err: any) {
+        this.logger.warn(
+          `Could not fetch PayOS link info for order ${existingUserPending.payment.orderCode}: ${err.message}`,
+        );
+      }
+
+      return {
+        depositId: existingUserPending.id,
+        paymentId: existingUserPending.payment.id,
+        postId: existingUserPending.postId || resolvedPostId || targetId,
+        roomId,
+        amount: Number(existingUserPending.amount),
+        transactionRef: existingUserPending.payment.transactionRef || '',
+        qrCodeUrl:
+          existingUserPending.payment.qrCodeUrl.startsWith('http') ||
+          existingUserPending.payment.qrCodeUrl.startsWith('data:image')
+            ? existingUserPending.payment.qrCodeUrl
+            : `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(existingUserPending.payment.qrCodeUrl)}`,
+        bankCode: bin,
+        accountNumber,
+        accountName,
+        transferContent:
+          existingUserPending.payment.transactionRef ||
+          `COC P${roomNumber.slice(0, 10)} ${Number(existingUserPending.payment.orderCode) % 10000}`,
+        status: 'pending',
+        message: 'Đã khôi phục mã QR thanh toán đặt cọc đang chờ xử lý.',
+        orderCode: Number(existingUserPending.payment.orderCode),
+        paymentLinkId:
+          existingUserPending.payment.paymentLinkId ||
+          `link-${existingUserPending.payment.orderCode}`,
+        checkoutUrl,
+        bin,
+        expiresIn: remainingSecs,
+        isReused: true,
+      };
+    }
+
+    // 4. Validate Room Availability
+    const currentRoom = await this.prisma.room.findUnique({
+      where: { id: roomId },
+    });
+    if (!currentRoom || currentRoom.status !== RoomStatus.available) {
+      throw new BadRequestException(
+        'Phòng trọ này hiện không còn khả dụng để đặt cọc (đang thuê hoặc đã có người cọc).',
+      );
+    }
+
+    // Guard: no other active deposit on this room
+    const existingOtherDeposit = await this.prisma.deposit.findFirst({
+      where: {
+        roomId,
         status: { in: [DepositStatus.pending, DepositStatus.paid] },
       },
     });
-    if (existingActiveDeposit) {
+    if (existingOtherDeposit) {
       throw new BadRequestException(
         'Phòng này hiện đã có người đặt cọc giữ chỗ đang được xử lý. Vui lòng chọn phòng khác.',
       );
     }
 
-    // Determine deposit amount (default to Post.depositAmount)
+    // 5. Determine deposit amount
     const rawAmount =
-      dto.amount !== undefined ? Number(dto.amount) : Number(post.depositAmount);
+      dto.amount !== undefined && dto.amount > 0
+        ? Number(dto.amount)
+        : defaultDeposit;
     if (isNaN(rawAmount) || rawAmount <= 0) {
       throw new BadRequestException('Số tiền đặt cọc giữ chỗ không hợp lệ.');
     }
@@ -1266,29 +1492,51 @@ export class PostsService {
       'Khách thuê';
     const tenantPhone = dto.tenantPhone?.trim() || user.phoneNumber;
 
-    // Serialize tenant info and optional note into note field
     const notePayload = JSON.stringify({
       tenantName,
       tenantPhone,
       note: dto.note?.trim() ?? null,
     });
 
-    const transactionRef = `TXN-DEP-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
-    const bankCode = '970422'; // MBBank partner
-    const accountNumber = '0987654321';
-    const accountName = 'DORMIO ESCROW VIETNAM';
-    const transferContent = transactionRef;
-    const qrCodeUrl = `https://api.vietqr.io/image/${bankCode}-${accountNumber}-compact2.png?amount=${rawAmount}&addInfo=${encodeURIComponent(
-      transferContent,
-    )}`;
+    // 6. Generate unique numeric orderCode
+    const orderCode = Number(
+      `${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`,
+    );
+    const sanitizedRoom = roomNumber.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8);
+    const description = `COC P${sanitizedRoom} ${orderCode % 10000}`.slice(0, 25);
+    const appUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const cancelUrl = `${appUrl}/rooms/${targetId}/deposit?canceled=true`;
+    const returnUrl = `${appUrl}/rooms/${targetId}/deposit?success=true&orderCode=${orderCode}`;
 
-    // Atomic creation of Deposit (pending) + Payment (charge, pending)
+    // 7. Create PayOS Payment Link
+    const linkResult = await this.payOsService.createPaymentLink({
+      orderCode,
+      amount: rawAmount,
+      description,
+      cancelUrl,
+      returnUrl,
+      items: [
+        {
+          name: `Dat coc giu cho phong ${roomNumber}`,
+          quantity: 1,
+          price: rawAmount,
+        },
+      ],
+      buyerName: tenantName,
+      buyerPhone: tenantPhone,
+      expiredAt: Math.floor(now.getTime() / 1000) + 15 * 60,
+    });
+
+    const transactionRef = `TXN-DEP-${orderCode}-${Date.now().toString().slice(-4)}`;
+
+    // 8. Atomic creation of Deposit (pending) + Payment (pending)
     const result = await this.prisma.$transaction(async (tx) => {
       const dep = await tx.deposit.create({
         data: {
-          roomId: post.roomId!,
-          boardingHouseId: post.room!.boardingHouseId,
-          postId: post.id,
+          roomId,
+          boardingHouseId,
+          postId: resolvedPostId,
           contractId: null,
           type: DepositType.platform,
           amount: depositAmount,
@@ -1309,8 +1557,10 @@ export class PostsService {
           method: PaymentMethod.banking,
           transactionRef,
           receiptNumber: `REC-DEP-${Date.now().toString().slice(-6)}`,
-          paidAt: new Date(),
-          qrCodeUrl,
+          paidAt: null,
+          qrCodeUrl: linkResult.qrCode,
+          orderCode: BigInt(orderCode),
+          paymentLinkId: linkResult.paymentLinkId,
         },
       });
 
@@ -1318,23 +1568,103 @@ export class PostsService {
     });
 
     this.logger.log(
-      `UC-PU-04: Created pending deposit ${result.dep.id} and payment ${result.payment.id} for post ${postId}`,
+      `UC-PU-04: Created pending deposit ${result.dep.id} and payment ${result.payment.id} for target ${targetId}`,
     );
 
     return {
       depositId: result.dep.id,
       paymentId: result.payment.id,
-      postId: post.id,
-      roomId: post.roomId,
+      postId: resolvedPostId || targetId,
+      roomId,
       amount: rawAmount,
       transactionRef,
-      qrCodeUrl,
-      bankCode,
-      accountNumber,
-      accountName,
-      transferContent,
+      qrCodeUrl:
+        linkResult.qrCode.startsWith('http') ||
+        linkResult.qrCode.startsWith('data:image')
+          ? linkResult.qrCode
+          : `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(linkResult.qrCode)}`,
+      bankCode: linkResult.bin,
+      accountNumber: linkResult.accountNumber,
+      accountName: linkResult.accountName,
+      transferContent: linkResult.description,
       status: 'pending',
-      message: 'Lệnh đặt cọc đã được tạo. Vui lòng quét mã VietQR để hoàn tất chuyển khoản.',
+      message: 'Lệnh đặt cọc đã được tạo. Vui lòng quét mã VietQR PayOS để hoàn tất chuyển khoản.',
+      orderCode,
+      paymentLinkId: linkResult.paymentLinkId,
+      checkoutUrl: linkResult.checkoutUrl,
+      bin: linkResult.bin,
+      expiresIn: 900,
+      isReused: false,
+    };
+  }
+
+  /**
+   * Poll deposit payment status by orderCode
+   */
+  async getDepositOrderStatus(
+    userId: string,
+    orderCode: number,
+  ): Promise<{
+    orderCode: number;
+    status: string;
+    isPaid: boolean;
+    paidAt?: string;
+  }> {
+    const payment = await this.prisma.payment.findFirst({
+      where: {
+        orderCode: BigInt(orderCode),
+        payerId: userId,
+      },
+      include: {
+        deposit: true,
+      },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Không tìm thấy giao dịch đặt cọc.');
+    }
+
+    // Double check PayOS if still pending in DB
+    if (payment.status === PaymentStatus.pending && this.payOsService.hasValidConfig()) {
+      try {
+        const linkInfo = await this.payOsService.getPaymentLinkInformation(orderCode);
+        if (linkInfo && linkInfo.status === 'PAID') {
+          const paidAtDate = new Date();
+          await this.prisma.$transaction(async (tx) => {
+            await tx.payment.update({
+              where: { id: payment.id },
+              data: { status: PaymentStatus.success, paidAt: paidAtDate },
+            });
+            if (payment.depositId) {
+              await tx.deposit.update({
+                where: { id: payment.depositId },
+                data: { status: DepositStatus.paid },
+              });
+              if (payment.deposit) {
+                await tx.room.update({
+                  where: { id: payment.deposit.roomId },
+                  data: { status: RoomStatus.deposited },
+                });
+              }
+            }
+          });
+          return {
+            orderCode,
+            status: 'success',
+            isPaid: true,
+            paidAt: paidAtDate.toISOString(),
+          };
+        }
+      } catch (err: any) {
+        this.logger.warn(`Could not verify PayOS status for order ${orderCode}: ${err.message}`);
+      }
+    }
+
+    return {
+      orderCode,
+      status: payment.status,
+      isPaid: payment.status === PaymentStatus.success,
+      paidAt: payment.paidAt ? payment.paidAt.toISOString() : undefined,
     };
   }
 
@@ -1962,6 +2292,30 @@ export class PostsService {
       imageUrls.push(house.thumbnail);
     }
 
+    // Call Gemini Vision to analyze room photos if available
+    let visionDescription = '';
+    if (this.visionService && imageUrls.length > 0) {
+      try {
+        const photoAnalysis = await this.visionService.analyzeRoomPhotos(imageUrls);
+        if (photoAnalysis?.features && photoAnalysis.features.length > 0) {
+          for (const feat of photoAnalysis.features) {
+            if (!highlights.includes(feat)) {
+              highlights.push(feat);
+            }
+          }
+        }
+        if (photoAnalysis?.description) {
+          visionDescription = `\n📸 ĐẶC ĐIỂM KHÔNG GIAN THỰC TẾ (QUA ẢNH):\n${photoAnalysis.description}\n`;
+        }
+      } catch (visErr) {
+        this.logger.warn(`Photo analysis failed for room ${room.id}: ${visErr}`);
+      }
+    }
+
+    const finalContent = visionDescription
+      ? content.replace('✨ TỔNG QUAN PHÒNG TRỌ:', `✨ TỔNG QUAN PHÒNG TRỌ:${visionDescription}`)
+      : content;
+
     // Persist AiConversation and AiMessage per UC-L-12 spec
     let conversation = await this.prisma.aiConversation.findFirst({
       where: {
@@ -1988,7 +2342,7 @@ export class PostsService {
           aiConversationId: conversation.id,
           role: 'user',
           content: userPrompt,
-          model: 'dormio-gpt-plus',
+          model: 'gemini-3.5-flash-lite',
         },
       });
 
@@ -1996,8 +2350,8 @@ export class PostsService {
         data: {
           aiConversationId: conversation.id,
           role: 'assistant',
-          content: content,
-          model: 'dormio-gpt-plus',
+          content: finalContent,
+          model: 'gemini-3.5-flash-lite',
           tokenUsage: 520,
         },
       });
@@ -2008,7 +2362,7 @@ export class PostsService {
     return {
       conversationId: conversation.id,
       title,
-      content,
+      content: finalContent,
       depositAmount,
       highlights,
       imageUrls,

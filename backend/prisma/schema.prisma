@@ -66,6 +66,7 @@ enum SubscriptionStatus {
 
 enum BillingCycle {
   monthly
+  quarterly
   yearly
 }
 
@@ -164,6 +165,12 @@ enum GrievenceStatus {
   rejected
 }
 
+enum GrievanceType {
+  complaint
+  inquiry
+  feedback
+}
+
 enum AssignmentStatus {
   active
   inactive
@@ -235,6 +242,7 @@ model User {
   boardingHouses        BoardingHouse[]
   tenantContracts       TenantContract[]
   userIdentification    UserIdentification?
+  bankAccount           BankAccount?
   userSubscriptions     UserSubscription[]
   deposits              Deposit[]
   posts                 Post[]
@@ -280,6 +288,19 @@ model UserIdentification {
   updatedAt              DateTime? @updatedAt @map("updated_at")
 
   @@map("user_identifications")
+}
+
+model BankAccount {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @unique @map("user_id") @db.Uuid
+  user           User      @relation(fields: [userId], references: [id])
+  bankName       String    @map("bank_name") @db.VarChar(255)
+  accountNumber  String    @map("account_number") @db.VarChar(50)
+  accountName    String    @map("account_name") @db.VarChar(255)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  @@map("bank_accounts")
 }
 
 model BoardingHouse {
@@ -503,6 +524,7 @@ model SubscriptionPlan {
   planName       SubscriptionPackage @unique @map("plan_name")
   dailyPostQuote Int                 @map("daily_post_quote")
   priceMonthly   Decimal             @map("price_monthly")
+  priceQuarterly Decimal?            @map("price_quarterly")
   priceYearly    Decimal             @map("price_yearly")
   maxRoom        Int                 @map("max_room")
   description    String?
@@ -679,7 +701,9 @@ model Payment {
   status          PaymentStatus
   transactionRef  String?           @map("transaction_ref")
   receiptNumber   String?           @map("receipt_number") @db.VarChar(255)
-  paidAt          DateTime          @map("paid_at")
+  paidAt          DateTime?         @map("paid_at")
+  orderCode       BigInt?           @unique @map("order_code")
+  paymentLinkId   String?           @map("payment_link_id")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime?         @updatedAt @map("updated_at")
 
@@ -801,10 +825,11 @@ model Grievance {
   id              String            @id @default(uuid()) @db.Uuid
   tenantId        String            @map("tenant_id") @db.Uuid
   tenant          User              @relation("GrievanceSender", fields: [tenantId], references: [id])
-  boardingHouseId String            @map("boarding_house_id") @db.Uuid
-  boardingHouse   BoardingHouse     @relation(fields: [boardingHouseId], references: [id])
-  roomId          String            @map("room_id") @db.Uuid
-  room            Room              @relation(fields: [roomId], references: [id])
+  boardingHouseId String?           @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse?    @relation(fields: [boardingHouseId], references: [id])
+  roomId          String?           @map("room_id") @db.Uuid
+  room            Room?             @relation(fields: [roomId], references: [id])
+  type            GrievanceType     @default(complaint) @map("type")
   title           String
   description     String
   priority        GrievencePriority @default(medium)
@@ -818,6 +843,9 @@ model Grievance {
 
   images GrievanceImage[]
 
+  @@index([type])
+  @@index([status])
+  @@index([tenantId])
   @@map("grievances")
 }
 

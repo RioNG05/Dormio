@@ -194,6 +194,24 @@ export class BoardingHousesService {
         data: { role: UserRole.landlord },
       });
 
+      // Step 9 — Upsert bank account if provided
+      if (dto.bankAccount) {
+        await tx.bankAccount.upsert({
+          where: { userId },
+          create: {
+            userId,
+            bankName: dto.bankAccount.bankName.trim(),
+            accountNumber: dto.bankAccount.accountNumber.trim(),
+            accountName: dto.bankAccount.accountName.trim().toUpperCase(),
+          },
+          update: {
+            bankName: dto.bankAccount.bankName.trim(),
+            accountNumber: dto.bankAccount.accountNumber.trim(),
+            accountName: dto.bankAccount.accountName.trim().toUpperCase(),
+          },
+        });
+      }
+
       return {
         boardingHouse: {
           ...boardingHouse,
@@ -564,7 +582,7 @@ export class BoardingHousesService {
 
     const maintenanceRequests = grievancesRaw.map((g) => ({
       id: g.id,
-      room: `P.${g.room.roomNumber}`,
+      room: g.room ? `P.${g.room.roomNumber}` : 'Chung',
       issue: g.title,
       priority: g.priority,
       reporter: g.tenant?.username || g.tenant?.phoneNumber || 'Người thuê',

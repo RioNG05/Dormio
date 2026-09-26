@@ -16,10 +16,28 @@ export enum GrievancePriorityEnum {
   high = 'high',
 }
 
+export enum GrievanceTypeEnum {
+  complaint = 'complaint',
+  inquiry = 'inquiry',
+  feedback = 'feedback',
+}
+
 export class CreateGrievanceDto {
   @ApiProperty({
+    enum: GrievanceTypeEnum,
+    default: GrievanceTypeEnum.complaint,
+    example: GrievanceTypeEnum.complaint,
+    description: 'Loại đơn: complaint (Khiếu nại), inquiry (Thắc mắc), feedback (Góp ý)',
+  })
+  @IsNotEmpty({ message: 'Loại đơn không được để trống' })
+  @IsEnum(GrievanceTypeEnum, {
+    message: 'Loại đơn phải là complaint, inquiry hoặc feedback',
+  })
+  type: GrievanceTypeEnum;
+
+  @ApiProperty({
     example: 'Chủ trọ tự ý tăng tiền điện sai thỏa thuận hợp đồng',
-    description: 'Tiêu đề khiếu nại / tố cáo',
+    description: 'Tiêu đề khiếu nại / tố cáo / thắc mắc / góp ý',
   })
   @IsNotEmpty({ message: 'Tiêu đề không được để trống' })
   @IsString({ message: 'Tiêu đề phải là chuỗi ký tự' })

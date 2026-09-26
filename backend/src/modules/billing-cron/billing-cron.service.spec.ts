@@ -54,6 +54,7 @@ const mockNotificationsService = {
 
 const mockInvoicesService = {
   generateFlatRateInvoice: jest.fn().mockResolvedValue({ id: 'inv-flat-1' }),
+  generateMonthlyDraftInvoice: jest.fn().mockResolvedValue({ id: 'inv-draft-1' }),
   flipOverdueInvoices: jest.fn().mockResolvedValue({ count: 0 }),
 };
 
@@ -150,7 +151,7 @@ describe('BillingCronService', () => {
   // ─── processBillingDue ─────────────────────────────────────────────────────
 
   describe('processBillingDue', () => {
-    it('should send billing_due with hasMeteredServices=true when room has active metered service', async () => {
+    it('should send billing_due with hasMeteredServices=true and generate monthly draft invoice', async () => {
       const contract = buildContract({ id: 'c-1', hasMeteredServices: true, tenantId: 't-1' });
       mockPrisma.contract.findMany.mockResolvedValue([contract]);
 
@@ -158,6 +159,10 @@ describe('BillingCronService', () => {
 
       expect(mockNotificationsService.createBillingDueNotification).toHaveBeenCalledWith(
         expect.objectContaining({ hasMeteredServices: true }),
+      );
+      expect(mockInvoicesService.generateMonthlyDraftInvoice).toHaveBeenCalledWith(
+        'c-1',
+        expect.any(Date),
       );
     });
 
