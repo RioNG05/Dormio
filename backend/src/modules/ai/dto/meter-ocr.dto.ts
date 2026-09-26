@@ -22,8 +22,17 @@ export class ExtractMeterReadingDto {
 }
 
 export class MeterOcrResponseDto {
-  @ApiProperty({ description: 'Extracted numeric meter reading value', example: 1250.5 })
-  readingValue: number;
+  @ApiProperty({ description: 'Trạng thái ảnh có hợp lệ và đọc được số hay không', example: true })
+  isValid: boolean;
+
+  @ApiProperty({ description: 'Mã lỗi nếu ảnh sai', example: null, required: false, nullable: true })
+  errorCode?: string | null;
+
+  @ApiProperty({ description: 'Thông báo lỗi chi tiết từ AI nếu ảnh không hợp lệ', example: null, required: false, nullable: true })
+  errorMessage?: string | null;
+
+  @ApiProperty({ description: 'Chỉ số đo được từ công tơ', example: 1250.5, nullable: true })
+  readingValue: number | null;
 
   @ApiProperty({ description: 'Raw detected string of digits', example: '012505' })
   rawDigits: string;

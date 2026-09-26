@@ -36,11 +36,14 @@ export class VisionService {
 
     // 1. Data URI format (data:image/jpeg;base64,....)
     if (trimmed.startsWith('data:')) {
-      const match = trimmed.match(/^data:([^;]+);base64,(.+)$/s);
-      if (match) {
+      const commaIndex = trimmed.indexOf(',');
+      if (commaIndex !== -1) {
+        const header = trimmed.slice(0, commaIndex);
+        const base64Data = trimmed.slice(commaIndex + 1).trim();
+        const mimeMatch = header.match(/^data:([^;]+)/);
         return {
-          mimeType: match[1] || 'image/jpeg',
-          base64Data: match[2],
+          mimeType: mimeMatch ? mimeMatch[1] : 'image/jpeg',
+          base64Data,
         };
       }
     }
@@ -99,31 +102,54 @@ export class VisionService {
       serviceType.toLowerCase().includes('nước') ||
       serviceType.toLowerCase().includes('water');
 
-    const prompt = `Bạn là trợ lý thị giác AI chuyên nhận diện số đồng hồ điện và đồng hồ nước tại Việt Nam (UC-T-03).
-Dịch vụ cần đọc: "${serviceType}".
+    const prompt = `Bạn là chuyên gia thị giác AI phân tích ảnh đồng hồ/công tơ điện và nước tại Việt Nam (UC-T-03).
+Dịch vụ cần nhận diện chỉ số: "${serviceType}".
 
-HƯỚNG DẪN ĐỌC CHỈ SỐ:
-1. Đồng hồ điện cơ (Emic, Gelex, Vinakip...):
-   - Đọc các ô số từ trái sang phải.
-   - Chú ý ô số cuối cùng bên phải: Nếu ô số này có màu đỏ, viền đỏ hoặc có dấu phẩy ngăn cách, đó là hàng thập phân (0.1 kWh).
-   - Hãy tính chính xác giá trị số (ví dụ: các ô đen là 1250, ô đỏ là 5 -> giá trị là 1250.5 hoặc 1250 tùy chuẩn, thông thường là 1250.5).
-2. Đồng hồ điện tử (LCD hiển thị):
-   - Đọc dãy số lớn nhất hiển thị kèm đơn vị kWh. Bỏ qua các chỉ số phụ như điện áp V hay dòng điện A.
-3. Đồng hồ nước:
-   - Các dãy số màu đen biểu thị mét khối (m³). Các kim tròn màu đỏ biểu thị lít (hàng thập phân 0.1, 0.01 m³).
-   - Đọc số mét khối làm giá trị chính.
-4. Trường hợp hình ảnh bị mờ, lóa đèn flash, bị che khuất một phần hoặc không rõ ràng:
-   - Hãy đưa ra con số ước tính tốt nhất có thể, nhưng gán "confidence" < 0.6 và "isAnomalyWarning": true kèm giải thích trong "notes".
+NHIỆM VỤ QUAN TRỌNG:
+Bước 1: KIỂM TRA TÍNH HỢP LỆ CỦA ẢNH (BẮT BUỘC):
+1.1. Ảnh KHÔNG PHẢI công tơ/đồng hồ:
+- Nếu ảnh tải lên không phải là đồng hồ điện hoặc đồng hồ nước (ví dụ: ảnh người, ảnh phong cảnh, giấy tờ, hóa đơn, màn hình không liên quan, đồ vật khác, ảnh selfie...):
+  -> "isValid": false
+  -> "errorCode": "NOT_A_METER"
+  -> "errorMessage": "Ảnh tải lên không phải là công tơ điện hoặc đồng hồ nước. Vui lòng chụp rõ mặt đồng hồ công tơ."
+  -> "readingValue": null
 
-BẮT BUỘC TRẢ VỀ JSON theo đúng định dạng sau (không chứa markdown khác ngoài JSON):
+1.2. Ảnh LÀ công tơ nhưng SAI LOẠI DỊCH VỤ:
+- Dịch vụ yêu cầu nhận diện là "${serviceType}" (thuộc nhóm ${isElectricity ? 'ĐIỆN' : isWater ? 'NƯỚC' : 'Điện/Nước'}).
+- Nếu ảnh tải lên lại là ${isElectricity ? 'đồng hồ NƯỚC' : isWater ? 'công tơ ĐIỆN' : 'loại khác'}:
+  -> "isValid": false
+  -> "errorCode": "WRONG_METER_TYPE"
+  -> "errorMessage": "Ảnh tải lên là ${isElectricity ? 'đồng hồ nước' : 'công tơ điện'}, không khớp với dịch vụ ${serviceType}. Vui lòng tải đúng ảnh."
+  -> "readingValue": null
+
+1.3. Ảnh công tơ ĐÚNG LOẠI nhưng KHÔNG THỂ ĐỌC ĐƯỢC CHỈ SỐ:
+- Ảnh quá mờ, quá tối, bị lóa đèn flash, góc chụp bị che khuất hoàn toàn dãy số hiển thị:
+  -> "isValid": false
+  -> "errorCode": "UNREADABLE_IMAGE"
+  -> "errorMessage": "Ảnh bị mờ hoặc lóa sáng, không thể nhận diện được dãy số chỉ số. Vui lòng chụp lại rõ nét hơn."
+  -> "readingValue": null
+
+Bước 2: NẾU ẢNH HỢP LỆ VÀ ĐỌC ĐƯỢC CHỈ SỐ:
+- "isValid": true
+- "errorCode": null
+- "errorMessage": null
+- Quy tắc đọc số:
+  1. Đồng hồ điện cơ: đọc các ô số từ trái sang phải; ô đỏ/viền đỏ cuối cùng bên phải là hàng thập phân (0.1 kWh).
+  2. Đồng hồ điện tử (LCD): đọc dãy số lớn nhất hiển thị kèm đơn vị kWh, bỏ qua các chỉ số phụ (V, A, Hz).
+  3. Đồng hồ nước: dãy số màu đen biểu thị mét khối (m³). Các kim tròn màu đỏ biểu thị lít. Đọc số mét khối làm giá trị chính.
+
+BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG CÓ BẤT KỲ VĂN BẢN NÀO KHÁC):
 {
-  "readingValue": <number: số thực hoặc số nguyên của chỉ số, ví dụ 1250 hoặc 1250.5>,
-  "rawDigits": "<string: chuỗi số thô nhìn thấy trên mặt đồng hồ, ví dụ '012505'>",
-  "meterType": "${isElectricity ? 'electricity' : isWater ? 'water' : 'electricity'}",
+  "isValid": <boolean: true nếu là ảnh công tơ đúng loại và đọc được số; false nếu không phải công tơ, sai loại, hoặc mờ không đọc được>,
+  "errorCode": <string | null: "NOT_A_METER" | "WRONG_METER_TYPE" | "UNREADABLE_IMAGE" | null>,
+  "errorMessage": <string | null: thông báo lỗi bằng tiếng Việt rõ ràng hoặc null>,
+  "readingValue": <number | null: số đọc được nếu isValid=true, hoặc null nếu isValid=false>,
+  "rawDigits": "<string: chuỗi số thô nhìn thấy trên mặt đồng hồ hoặc ''>",
+  "meterType": "${isElectricity ? 'electricity' : isWater ? 'water' : 'unknown'}",
   "unit": "${isWater ? 'm3' : 'kWh'}",
   "confidence": <number: từ 0.0 đến 1.0 biểu thị độ tin cậy>,
-  "isAnomalyWarning": <boolean: true nếu ảnh mờ/lóa/nghi ngờ sai lệch, false nếu rõ ràng>,
-  "notes": "<string: ghi chú ngắn gọn về đặc điểm công tơ, ví dụ: 'Công tơ cơ 1 pha, ô số đỏ hàng thập phân là 5'>"
+  "isAnomalyWarning": <boolean: true nếu nghi ngờ sai lệch, false nếu rõ ràng>,
+  "notes": "<string: ghi chú ngắn gọn về đặc điểm công tơ hoặc lý do không hợp lệ>"
 }`;
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
@@ -162,25 +188,76 @@ BẮT BUỘC TRẢ VỀ JSON theo đúng định dạng sau (không chứa markd
     }
 
     const data = await response.json();
-    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    this.logger.debug(`Gemini Vision response received: ${JSON.stringify(data).slice(0, 300)}...`);
 
-    if (!rawJson) {
+    const candidate = data.candidates?.[0];
+    if (!candidate) {
+      this.logger.error(`Gemini Vision returned no candidates: ${JSON.stringify(data)}`);
+      throw new Error('Gemini Vision did not return any candidates');
+    }
+
+    if (candidate.finishReason === 'SAFETY') {
+      this.logger.warn(`Gemini Vision image blocked by safety filter: ${JSON.stringify(candidate.safetyRatings)}`);
+      throw new Error('Hình ảnh bị bộ lọc an toàn của Google chặn. Vui lòng chụp lại ảnh rõ nét, không bị lóa.');
+    }
+
+    // Extract text from parts (handling possible thought / reasoning parts in newer Gemini models)
+    const parts = candidate.content?.parts || [];
+    let rawText = '';
+    for (const part of parts) {
+      if (part.text && !part.thought) {
+        rawText += part.text;
+      }
+    }
+    if (!rawText && parts[0]?.text) {
+      rawText = parts[0].text;
+    }
+
+    if (!rawText) {
+      this.logger.error(`Gemini Vision response parts did not contain text content: ${JSON.stringify(data)}`);
       throw new Error('Gemini Vision did not return candidate text content');
     }
 
+    // Clean potential Markdown wrapping (```json ... ```)
+    let cleanedJson = rawText.trim();
+    if (cleanedJson.startsWith('```')) {
+      cleanedJson = cleanedJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    }
+    const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanedJson = jsonMatch[0];
+    }
+
     try {
-      const parsed = JSON.parse(rawJson);
+      const parsed = JSON.parse(cleanedJson);
+      const isValid = Boolean(parsed.isValid);
+      const errorCode = parsed.errorCode || (!isValid ? 'UNKNOWN' : null);
+      const errorMessage =
+        parsed.errorMessage ||
+        (!isValid ? 'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể nhận diện được chỉ số' : null);
+
+      let readingValue: number | null = null;
+      if (isValid && parsed.readingValue !== null && parsed.readingValue !== undefined) {
+        readingValue =
+          typeof parsed.readingValue === 'number'
+            ? parsed.readingValue
+            : parseFloat(parsed.readingValue) || null;
+      }
+
       return {
-        readingValue: typeof parsed.readingValue === 'number' ? parsed.readingValue : parseFloat(parsed.readingValue) || 0,
+        isValid,
+        errorCode,
+        errorMessage,
+        readingValue,
         rawDigits: String(parsed.rawDigits || ''),
-        meterType: parsed.meterType || (isWater ? 'water' : 'electricity'),
+        meterType: parsed.meterType || (isWater ? 'water' : isElectricity ? 'electricity' : 'unknown'),
         unit: parsed.unit || (isWater ? 'm3' : 'kWh'),
-        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.85,
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : (isValid ? 0.85 : 0),
         isAnomalyWarning: Boolean(parsed.isAnomalyWarning),
         notes: parsed.notes || '',
       };
     } catch (parseErr) {
-      this.logger.error(`Failed to parse Gemini JSON output: ${rawJson}`);
+      this.logger.error(`Failed to parse Gemini JSON output: ${cleanedJson}`);
       throw new Error('Invalid JSON format returned from AI model');
     }
   }
@@ -258,9 +335,28 @@ BẮT BUỘC TRẢ VỀ JSON:
     }
 
     const data = await response.json();
-    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const candidate = data.candidates?.[0];
+    const parts = candidate?.content?.parts || [];
+    let rawText = '';
+    for (const part of parts) {
+      if (part.text && !part.thought) {
+        rawText += part.text;
+      }
+    }
+    if (!rawText && parts[0]?.text) {
+      rawText = parts[0].text;
+    }
 
-    return JSON.parse(rawJson) as IdCardOcrResult;
+    let cleanedJson = rawText.trim();
+    if (cleanedJson.startsWith('```')) {
+      cleanedJson = cleanedJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    }
+    const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanedJson = jsonMatch[0];
+    }
+
+    return JSON.parse(cleanedJson) as IdCardOcrResult;
   }
 
   /**

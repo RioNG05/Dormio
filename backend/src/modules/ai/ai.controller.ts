@@ -6,6 +6,7 @@ import {
   HttpCode,
   Logger,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,9 +50,11 @@ export class AiController {
     this.logger.log(`POST /api/v1/ai/vision/meter-reading called for serviceType: ${dto.serviceType || 'general'}`);
     const data = await this.visionService.extractMeterReading(dto.imageUrl, dto.serviceType);
     return {
-      success: true,
+      success: data.isValid,
       data,
-      message: 'Nhận diện chỉ số đồng hồ thành công',
+      message: data.isValid
+        ? 'Nhận diện chỉ số đồng hồ thành công'
+        : (data.errorMessage || 'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể đọc được chỉ số'),
     };
   }
 

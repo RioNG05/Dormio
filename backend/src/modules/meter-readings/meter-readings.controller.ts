@@ -35,7 +35,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 export class MeterReadingsController {
   private readonly logger = new Logger(MeterReadingsController.name);
 
-  constructor(private readonly meterReadingsService: MeterReadingsService) {}
+  constructor(private readonly meterReadingsService: MeterReadingsService) { }
 
   // ─── GET /api/v1/tenant/meter-readings/active-services ──────────────────────
 
