@@ -25,10 +25,10 @@ import {
   GrievanceDetailResponseDto,
 } from './dto/grievance-response.dto';
 
-@ApiTags('Tenant Grievances & Complaints')
+@ApiTags('Tenant & User Grievances / Applications')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
-@Controller('tenant/grievances')
+@Controller(['tenant/grievances', 'grievances'])
 export class GrievancesController {
   private readonly logger = new Logger(GrievancesController.name);
 
@@ -36,9 +36,9 @@ export class GrievancesController {
 
   @Post()
   @ApiOperation({
-    summary: 'Gửi đơn khiếu nại / tố cáo lên Ban Quản Trị hệ thống (UC-T-07)',
+    summary: 'Gửi đơn khiếu nại / thắc mắc / góp ý lên Ban Quản Trị hệ thống (UC-T-07)',
     description:
-      'Khách thuê gửi đơn khiếu nại (chủ trọ vi phạm, tự ý tăng giá, lừa đảo, dịch vụ kém) kèm bằng chứng ảnh.',
+      'Người dùng gửi đơn khiếu nại, thắc mắc tính năng hoặc đóng góp ý kiến kèm bằng chứng ảnh (nếu có).',
   })
   @ApiOkResponse({
     description: 'Đơn khiếu nại đã được tiếp nhận thành công',

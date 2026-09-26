@@ -582,7 +582,7 @@ export class BoardingHousesService {
 
     const maintenanceRequests = grievancesRaw.map((g) => ({
       id: g.id,
-      room: `P.${g.room.roomNumber}`,
+      room: g.room ? `P.${g.room.roomNumber}` : 'Chung',
       issue: g.title,
       priority: g.priority,
       reporter: g.tenant?.username || g.tenant?.phoneNumber || 'Người thuê',

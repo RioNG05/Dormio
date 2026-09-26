@@ -27,7 +27,23 @@ export enum GrievancePriorityFilter {
   HIGH = 'high',
 }
 
+export enum GrievanceTypeFilter {
+  ALL = 'all',
+  COMPLAINT = 'complaint',
+  INQUIRY = 'inquiry',
+  FEEDBACK = 'feedback',
+}
+
 export class AdminGrievanceQueryDto {
+  @ApiPropertyOptional({
+    description: 'Filter by grievance type',
+    enum: GrievanceTypeFilter,
+    default: GrievanceTypeFilter.ALL,
+  })
+  @IsOptional()
+  @IsEnum(GrievanceTypeFilter)
+  type?: GrievanceTypeFilter = GrievanceTypeFilter.ALL;
+
   @ApiPropertyOptional({
     description: 'Filter by grievance status',
     enum: GrievanceStatusFilter,
@@ -116,6 +132,9 @@ export class AdminGrievanceItemDto {
   @ApiProperty({ example: 'Mô tả chi tiết khiếu nại của khách thuê...' })
   description: string;
 
+  @ApiProperty({ enum: ['complaint', 'inquiry', 'feedback'], example: 'complaint' })
+  type: 'complaint' | 'inquiry' | 'feedback';
+
   @ApiProperty({ enum: ['low', 'medium', 'high'], example: 'high' })
   priority: 'low' | 'medium' | 'high';
 
@@ -134,23 +153,23 @@ export class AdminGrievanceItemDto {
   @ApiProperty({ example: 'dung.tran@gmail.com' })
   tenantEmail: string;
 
-  @ApiProperty({ example: 'house-1' })
-  boardingHouseId: string;
+  @ApiProperty({ example: 'house-1', nullable: true })
+  boardingHouseId: string | null;
 
-  @ApiProperty({ example: 'Dormio Sunrise Q7' })
-  boardingHouseName: string;
+  @ApiProperty({ example: 'Dormio Sunrise Q7', nullable: true })
+  boardingHouseName: string | null;
 
-  @ApiProperty({ example: 'room-1' })
-  roomId: string;
+  @ApiProperty({ example: 'room-1', nullable: true })
+  roomId: string | null;
 
-  @ApiProperty({ example: '101' })
-  roomNumber: string;
+  @ApiProperty({ example: '101', nullable: true })
+  roomNumber: string | null;
 
-  @ApiProperty({ example: 'Nguyễn Quang Huy' })
-  landlordName: string;
+  @ApiProperty({ example: 'Nguyễn Quang Huy', nullable: true })
+  landlordName: string | null;
 
-  @ApiProperty({ example: '0344265925' })
-  landlordPhone: string;
+  @ApiProperty({ example: '0344265925', nullable: true })
+  landlordPhone: string | null;
 
   @ApiProperty({ example: 'Đã hòa giải thành công.', nullable: true })
   resolutionNote: string | null;

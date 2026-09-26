@@ -58,9 +58,10 @@ export class CloudinaryService {
     }
 
     try {
-      this.logger.log(`Uploading image to Cloudinary folder: ${folder}...`);
+      const cleanFolder = (folder || 'dormio/uploads').replace(/^\/+/, '');
+      this.logger.log(`Uploading image to Cloudinary folder: ${cleanFolder}...`);
       const result: UploadApiResponse = await cloudinary.uploader.upload(imageDataOrUrl, {
-        folder,
+        folder: cleanFolder,
         resource_type: 'image',
       });
 

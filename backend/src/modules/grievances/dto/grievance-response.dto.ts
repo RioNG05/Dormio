@@ -22,6 +22,13 @@ export class GrievanceDto {
   id: string;
 
   @ApiProperty({
+    enum: ['complaint', 'inquiry', 'feedback'],
+    example: 'complaint',
+    description: 'Loại đơn: complaint (khiếu nại), inquiry (thắc mắc), feedback (góp ý)',
+  })
+  type: 'complaint' | 'inquiry' | 'feedback';
+
+  @ApiProperty({
     example: 'Chủ trọ tự ý tăng tiền điện sai thỏa thuận hợp đồng',
     description: 'Tiêu đề khiếu nại',
   })
@@ -49,12 +56,13 @@ export class GrievanceDto {
 
   @ApiProperty({
     example: 'Nhà trọ Dormio Tân Bình',
+    nullable: true,
     description: 'Tên nhà trọ xảy ra sự việc',
   })
-  boardingHouseName: string;
+  boardingHouseName: string | null;
 
-  @ApiProperty({ example: '101', description: 'Số phòng' })
-  roomNumber: string;
+  @ApiProperty({ example: '101', nullable: true, description: 'Số phòng' })
+  roomNumber: string | null;
 
   @ApiProperty({
     example: 'Đã cảnh cáo chủ trọ và yêu cầu hoàn trả số tiền chênh lệch.',

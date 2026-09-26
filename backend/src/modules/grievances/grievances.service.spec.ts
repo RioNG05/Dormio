@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { GrievancesService } from './grievances.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { GrievancePriorityEnum } from './dto/create-grievance.dto';
+import {
+  GrievancePriorityEnum,
+  GrievanceTypeEnum,
+} from './dto/create-grievance.dto';
+import { UploadService } from '../upload/upload.service';
 
 describe('GrievancesService', () => {
   let service: GrievancesService;
@@ -86,6 +90,11 @@ describe('GrievancesService', () => {
     $transaction: jest.fn((callback) => callback(mockPrisma)),
   };
 
+  const mockUploadService = {
+    ensureCloudinaryUrl: jest.fn((url: string) => Promise.resolve(url)),
+    uploadImage: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -95,6 +104,10 @@ describe('GrievancesService', () => {
         {
           provide: PrismaService,
           useValue: mockPrisma,
+        },
+        {
+          provide: UploadService,
+          useValue: mockUploadService,
         },
       ],
     }).compile();
@@ -107,18 +120,29 @@ describe('GrievancesService', () => {
   });
 
   describe('createGrievance', () => {
-    it('should throw NotFoundException if no active contract is found', async () => {
+    it('should create grievance without active contract successfully (e.g. inquiry/feedback)', async () => {
       mockPrisma.tenantContract.findFirst.mockResolvedValue(null);
+      mockPrisma.grievance.create.mockResolvedValue({ id: 'grievance-uuid-1' });
+      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' });
+      mockPrisma.grievance.findUnique.mockResolvedValue({
+        ...mockGrievance,
+        boardingHouse: null,
+        room: null,
+      });
 
-      await expect(
-        service.createGrievance(mockTenantId, {
-          title: 'Khiếu nại test',
-          description: 'Nội dung chi tiết khiếu nại test',
-        }),
-      ).rejects.toThrow(NotFoundException);
+      const result = await service.createGrievance(mockTenantId, {
+        type: GrievanceTypeEnum.inquiry,
+        title: 'Thắc mắc tính năng hệ thống',
+        description: 'Làm thế nào để thanh toán tiền phòng qua PayOS?',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data.id).toBe('grievance-uuid-1');
+      expect(result.data.boardingHouseName).toBeNull();
+      expect(result.data.roomNumber).toBeNull();
     });
 
-    it('should create grievance and images successfully', async () => {
+    it('should create grievance and images successfully with active contract', async () => {
       mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract);
       mockPrisma.grievance.create.mockResolvedValue({ id: 'grievance-uuid-1' });
       mockPrisma.grievanceImage.createMany.mockResolvedValue({ count: 1 });
@@ -126,6 +150,7 @@ describe('GrievancesService', () => {
       mockPrisma.grievance.findUnique.mockResolvedValue(mockGrievance);
 
       const result = await service.createGrievance(mockTenantId, {
+        type: GrievanceTypeEnum.complaint,
         title: 'Chủ trọ tự ý tăng tiền điện',
         description: 'Chủ trọ thu 5000đ/kWh thay vì 3500đ theo hợp đồng.',
         priority: GrievancePriorityEnum.high,
