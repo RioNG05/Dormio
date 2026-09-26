@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
  Search, Command, X, MapPin, Building, ArrowRight, Menu,
  Building2, UserCheck, Sparkles, CheckCircle2, LogOut, ShieldCheck, Heart, ChevronDown,
- PlusCircle, BarChart3, Clock
+ PlusCircle, BarChart3, Clock, FileText
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/AuthContext";
@@ -235,6 +235,16 @@ export default function PublicLayout({
  <span>{tNav("myProfile")}</span>
  </Link>
 
+ {/* Gửi đơn */}
+ <Link
+ href="/send-application"
+ onClick={() => setIsUserMenuOpen(false)}
+ className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+ >
+ <FileText className="w-4 h-4 text-amber-500" />
+ <span>{tNav("sendApplication")}</span>
+ </Link>
+
  {/* 2. Phòng trọ đã thuê / Quản lý trọ */}
  <Link
  href={user.role === "landlord" ? "/landlord/rooms" : user.role === "employee" ? "/staff" : "/tenant"}
@@ -375,6 +385,19 @@ export default function PublicLayout({
  <div className="flex items-center gap-2.5">
  <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
  <span>{tNav("myProfile")}</span>
+ </div>
+ <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
+ </Link>
+
+ {/* Gửi đơn */}
+ <Link
+ href="/send-application"
+ onClick={() => setIsMobileMenuOpen(false)}
+ className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+ >
+ <div className="flex items-center gap-2.5">
+ <FileText className="w-4 h-4 text-amber-500" />
+ <span>{tNav("sendApplication")}</span>
  </div>
  <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
  </Link>

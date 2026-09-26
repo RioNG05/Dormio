@@ -115,7 +115,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: tNav("home"), href: "/tenant", icon: Building },
         { name: tNav("invoices"), href: "/tenant/invoices", icon: Receipt },
         { name: tNav("messages"), href: "/tenant/messages", icon: MessageCircle },
-        { name: tNav("complaints"), href: "/tenant/complaints", icon: MessageSquare },
     ];
 
     const NavContent = () => {
@@ -527,7 +526,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </div>
 
                             {/* Profile link */}
-                            <div className="px-2 py-1.5">
+                            <div className="px-2 py-1.5 space-y-0.5">
                                 <Link
                                     href={isTenant ? "/tenant/profile" : "/profile"}
                                     onClick={() => setUserMenuOpen(false)}
@@ -535,6 +534,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 >
                                     <UserCircle className="w-4 h-4 text-zinc-400 shrink-0" />
                                     {tNav("userMenuProfile")}
+                                </Link>
+                                <Link
+                                    href="/send-application"
+                                    onClick={() => setUserMenuOpen(false)}
+                                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                                >
+                                    <FileText className="w-4 h-4 text-amber-500 shrink-0" />
+                                    {tNav("sendApplication")}
                                 </Link>
                             </div>
 

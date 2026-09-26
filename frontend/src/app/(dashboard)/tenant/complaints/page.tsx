@@ -193,6 +193,7 @@ export default function TenantAdminComplaintsPage() {
 
     try {
       const newGrievance = await grievanceService.createGrievance({
+        type: "complaint",
         title: title.trim(),
         description: description.trim(),
         priority,

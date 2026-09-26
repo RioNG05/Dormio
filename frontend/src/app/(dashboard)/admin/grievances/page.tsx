@@ -11,13 +11,14 @@ import { grievanceService, GrievanceQueueCounts } from "@/services/grievance.ser
 
 interface GrievanceItem {
   id: string;
+  type?: "complaint" | "inquiry" | "feedback";
   tenantId?: string;
   tenantName: string;
   tenantPhone: string;
   tenantEmail: string;
-  boardingHouseId?: string;
+  boardingHouseId?: string | null;
   houseName: string;
-  roomId?: string;
+  roomId?: string | null;
   roomNumber: string;
   landlordName: string;
   landlordPhone: string;
@@ -254,16 +255,17 @@ export default function AdminGrievancesPage() {
       if (res && res.items && res.items.length > 0) {
         const mapped: GrievanceItem[] = res.items.map((item) => ({
           id: item.id,
+          type: item.type,
           tenantId: item.tenantId,
           tenantName: item.tenantName,
           tenantPhone: item.tenantPhone,
           tenantEmail: item.tenantEmail,
           boardingHouseId: item.boardingHouseId,
-          houseName: item.boardingHouseName,
+          houseName: item.boardingHouseName || (isEn ? "General Platform" : "Hệ thống chung"),
           roomId: item.roomId,
-          roomNumber: item.roomNumber,
-          landlordName: item.landlordName,
-          landlordPhone: item.landlordPhone,
+          roomNumber: item.roomNumber || "-",
+          landlordName: item.landlordName || "-",
+          landlordPhone: item.landlordPhone || "-",
           category: "deposit",
           categoryLabel: isEn ? "Grievance / Dispute" : "Khiếu nại / Tranh chấp",
           priority: item.priority === "high" ? "urgent" : item.priority,

@@ -1,5 +1,6 @@
 import { api } from './api';
 
+export type GrievanceType = 'complaint' | 'inquiry' | 'feedback';
 export type GrievancePriority = 'low' | 'medium' | 'high';
 export type GrievanceStatus = 'pending' | 'in_progress' | 'resolved' | 'rejected';
 
@@ -11,12 +12,13 @@ export interface GrievanceImage {
 
 export interface Grievance {
  id: string;
+ type: GrievanceType;
  title: string;
  description: string;
  priority: GrievancePriority;
  status: GrievanceStatus;
- boardingHouseName: string;
- roomNumber: string;
+ boardingHouseName: string | null;
+ roomNumber: string | null;
  resolutionNote: string | null;
  resolvedAt: string | null;
  resolvedByName: string | null;
@@ -26,6 +28,7 @@ export interface Grievance {
 }
 
 export interface CreateGrievancePayload {
+ type: GrievanceType;
  title: string;
  description: string;
  priority?: GrievancePriority;
@@ -36,6 +39,7 @@ export interface CreateGrievancePayload {
 
 export interface AdminGrievanceItem {
  id: string;
+ type: GrievanceType;
  title: string;
  description: string;
  priority: GrievancePriority;
@@ -44,12 +48,12 @@ export interface AdminGrievanceItem {
  tenantName: string;
  tenantPhone: string;
  tenantEmail: string;
- boardingHouseId: string;
- boardingHouseName: string;
- roomId: string;
- roomNumber: string;
- landlordName: string;
- landlordPhone: string;
+ boardingHouseId: string | null;
+ boardingHouseName: string | null;
+ roomId: string | null;
+ roomNumber: string | null;
+ landlordName: string | null;
+ landlordPhone: string | null;
  resolutionNote: string | null;
  resolvedAt: string | null;
  resolvedByName: string | null;
@@ -77,6 +81,7 @@ export interface AdminGrievanceListResponse {
 }
 
 export interface AdminGrievanceQuery {
+ type?: string;
  status?: string;
  priority?: string;
  search?: string;
@@ -141,6 +146,7 @@ export const grievanceService = {
  query?: AdminGrievanceQuery,
  ): Promise<AdminGrievanceListResponse> {
  const params: Record<string, string> = {};
+ if (query?.type) params.type = query.type;
  if (query?.status) params.status = query.status;
  if (query?.priority) params.priority = query.priority;
  if (query?.search) params.search = query.search;
