@@ -99,15 +99,85 @@ async function main() {
   const password88 = await bcrypt.hash('88888888', 10);
   const passwordCommon = await bcrypt.hash('Secret@123', 10);
 
-  // 1.1 Admin User (Requirement: ngquanghuy.work@gmail.com, 0344265925, 88888888, admin)
+  // 1.1 Admin Users (6 System Administrators)
   const adminUser = await prisma.user.create({
     data: {
       username: 'Nguyễn Quang Huy',
       email: 'ngquanghuy.work@gmail.com',
-      phoneNumber: '0344265925',
+      phoneNumber: '0353563279',
       hashedPassword: password88,
       bio: 'Quản trị viên hệ thống & Chủ đầu tư chuỗi nhà trọ Dormio',
+      avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+      role: UserRole.admin,
+      status: UserStatus.active,
+      mustChangePassword: false,
+    },
+  });
+
+  const adminLinh = await prisma.user.create({
+    data: {
+      username: 'Nguyễn Thảo Linh',
+      email: 'nguyenthaolinhml@gmail.com',
+      phoneNumber: '0836160161',
+      hashedPassword: password88,
+      bio: 'Quản trị viên hệ thống Dormio',
+      avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
+      role: UserRole.admin,
+      status: UserStatus.active,
+      mustChangePassword: false,
+    },
+  });
+
+  const adminBao = await prisma.user.create({
+    data: {
+      username: 'Đồng Ngọc Gia Bảo',
+      email: 'baodnghe181000@fpt.edu.vn',
+      phoneNumber: '0925502116',
+      hashedPassword: password88,
+      bio: 'Quản trị viên hệ thống Dormio',
+      avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80',
+      role: UserRole.admin,
+      status: UserStatus.active,
+      mustChangePassword: false,
+    },
+  });
+
+  const adminVanAnh = await prisma.user.create({
+    data: {
+      username: 'Phạm Vân Anh',
+      email: 'shinanhh@gmail.com',
+      phoneNumber: '0967013046',
+      hashedPassword: password88,
+      bio: 'Quản trị viên hệ thống Dormio',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      role: UserRole.admin,
+      status: UserStatus.active,
+      mustChangePassword: false,
+    },
+  });
+
+  const adminCamTu = await prisma.user.create({
+    data: {
+      username: 'Nguyễn Thị Cẩm Tú',
+      email: 'nguyenthicamtu.alicia@gmail.com',
+      phoneNumber: '0364599095',
+      hashedPassword: password88,
+      bio: 'Quản trị viên hệ thống Dormio',
+      avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+      role: UserRole.admin,
+      status: UserStatus.active,
+      mustChangePassword: false,
+    },
+  });
+
+  const adminDat = await prisma.user.create({
+    data: {
+      username: 'Mai Tiến Đạt',
+      email: 'maidat217@gmail.com',
+      phoneNumber: '0877719305',
+      hashedPassword: password88,
+      bio: 'Quản trị viên hệ thống Dormio',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
       role: UserRole.admin,
       status: UserStatus.active,
       mustChangePassword: false,
@@ -213,6 +283,101 @@ async function main() {
       issueDate: new Date('2021-05-10'),
       expiryDate: new Date('2035-08-15'),
       personalIdentification: adminUser.id,
+      note: 'CCCD gắn chip',
+      cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    },
+  });
+
+  await prisma.userIdentification.create({
+    data: {
+      userId: adminLinh.id,
+      identityNumber: '001201000001',
+      fullName: 'NGUYỄN THẢO LINH',
+      dateOfBirth: new Date('2000-01-01'),
+      gender: Gender.female,
+      nationnality: 'Việt Nam',
+      placeOfOrigin: { province: 'Hà Nội', district: 'Cầu Giấy' },
+      placeOfResidence: { province: 'TP.HCM', district: 'Quận 1', address: '123 Nguyễn Huệ' },
+      issueDate: new Date('2021-05-10'),
+      expiryDate: new Date('2035-08-15'),
+      personalIdentification: adminLinh.id,
+      note: 'CCCD gắn chip',
+      cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    },
+  });
+
+  await prisma.userIdentification.create({
+    data: {
+      userId: adminBao.id,
+      identityNumber: '001201000002',
+      fullName: 'ĐỒNG NGỌC GIA BẢO',
+      dateOfBirth: new Date('2000-01-01'),
+      gender: Gender.male,
+      nationnality: 'Việt Nam',
+      placeOfOrigin: { province: 'Hà Nội', district: 'Cầu Giấy' },
+      placeOfResidence: { province: 'TP.HCM', district: 'Quận 1', address: '123 Nguyễn Huệ' },
+      issueDate: new Date('2021-05-10'),
+      expiryDate: new Date('2035-08-15'),
+      personalIdentification: adminBao.id,
+      note: 'CCCD gắn chip',
+      cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    },
+  });
+
+  await prisma.userIdentification.create({
+    data: {
+      userId: adminVanAnh.id,
+      identityNumber: '001201000003',
+      fullName: 'PHẠM VÂN ANH',
+      dateOfBirth: new Date('2000-01-01'),
+      gender: Gender.female,
+      nationnality: 'Việt Nam',
+      placeOfOrigin: { province: 'Hà Nội', district: 'Cầu Giấy' },
+      placeOfResidence: { province: 'TP.HCM', district: 'Quận 1', address: '123 Nguyễn Huệ' },
+      issueDate: new Date('2021-05-10'),
+      expiryDate: new Date('2035-08-15'),
+      personalIdentification: adminVanAnh.id,
+      note: 'CCCD gắn chip',
+      cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    },
+  });
+
+  await prisma.userIdentification.create({
+    data: {
+      userId: adminCamTu.id,
+      identityNumber: '001201000004',
+      fullName: 'NGUYỄN THỊ CẨM TÚ',
+      dateOfBirth: new Date('2000-01-01'),
+      gender: Gender.female,
+      nationnality: 'Việt Nam',
+      placeOfOrigin: { province: 'Hà Nội', district: 'Cầu Giấy' },
+      placeOfResidence: { province: 'TP.HCM', district: 'Quận 1', address: '123 Nguyễn Huệ' },
+      issueDate: new Date('2021-05-10'),
+      expiryDate: new Date('2035-08-15'),
+      personalIdentification: adminCamTu.id,
+      note: 'CCCD gắn chip',
+      cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+    },
+  });
+
+  await prisma.userIdentification.create({
+    data: {
+      userId: adminDat.id,
+      identityNumber: '001201000005',
+      fullName: 'MAI TIẾN ĐẠT',
+      dateOfBirth: new Date('2000-01-01'),
+      gender: Gender.male,
+      nationnality: 'Việt Nam',
+      placeOfOrigin: { province: 'Hà Nội', district: 'Cầu Giấy' },
+      placeOfResidence: { province: 'TP.HCM', district: 'Quận 1', address: '123 Nguyễn Huệ' },
+      issueDate: new Date('2021-05-10'),
+      expiryDate: new Date('2035-08-15'),
+      personalIdentification: adminDat.id,
       note: 'CCCD gắn chip',
       cardFrontUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
       cardBackUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
@@ -1593,11 +1758,13 @@ async function main() {
 
   console.log('✅ Database seeding completed successfully!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔑 ADMIN CREDENTIALS:');
-  console.log('   Email:     ngquanghuy.work@gmail.com');
-  console.log('   Phone:     0344265925');
-  console.log('   Password:  88888888');
-  console.log('   Role:      admin');
+  console.log('🔑 ADMIN CREDENTIALS (Password: 88888888 for all):');
+  console.log('   1. Nguyễn Quang Huy    | Phone: 0353563279 | Email: ngquanghuy.work@gmail.com');
+  console.log('   2. Nguyễn Thảo Linh    | Phone: 0836160161 | Email: nguyenthaolinhml@gmail.com');
+  console.log('   3. Đồng Ngọc Gia Bảo   | Phone: 0925502116 | Email: baodnghe181000@fpt.edu.vn');
+  console.log('   4. Phạm Vân Anh        | Phone: 0967013046 | Email: shinanhh@gmail.com');
+  console.log('   5. Nguyễn Thị Cẩm Tú   | Phone: 0364599095 | Email: nguyenthicamtu.alicia@gmail.com');
+  console.log('   6. Mai Tiến Đạt        | Phone: 0877719305 | Email: maidat217@gmail.com');
   console.log('   Properties: 2 Boarding Houses (40 rooms total: 20 common, 20 duplex)');
   console.log('────────────────────────────────────────────────────────────────');
   console.log('👷 STAFF CREDENTIALS:');

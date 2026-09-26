@@ -194,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const loginRes = await api.post<any>(
             "/v1/auth/login",
             {
-              identifier: "0344265925",
+              identifier: "0353563279",
               password: "123456789",
             },
             { silent: true }
@@ -223,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const loginRes = await api.post<any>(
               "/v1/auth/login",
               {
-                identifier: "0344265925",
+                identifier: "0353563279",
                 password: "123456789",
               },
               { silent: true }
@@ -294,7 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: savedId || undefined,
         name: savedName || "Nguyễn Quang Huy",
         email: savedEmail || "ngquanghuy.work@gmail.com",
-        phone: savedPhone || "0344265925",
+        phone: savedPhone || "0353563279",
         role: resolvedRole,
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
         houseName: savedHouseName || undefined,
@@ -318,7 +318,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: typeof window !== "undefined" ? localStorage.getItem("dormio_user_id") || undefined : undefined,
           name: typeof window !== "undefined" ? localStorage.getItem("dormio_user_name") || "Nguyễn Quang Huy" : "Nguyễn Quang Huy",
           email: typeof window !== "undefined" ? localStorage.getItem("dormio_user_email") || "ngquanghuy.work@gmail.com" : "ngquanghuy.work@gmail.com",
-          phone: typeof window !== "undefined" ? localStorage.getItem("dormio_user_phone") || "0344265925" : "0344265925",
+          phone: typeof window !== "undefined" ? localStorage.getItem("dormio_user_phone") || "0353563279" : "0353563279",
           role: "landlord",
           avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
         });
@@ -327,7 +327,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("dormio_user_role", "landlord");
           localStorage.setItem("dormio_user_name", "Nguyễn Quang Huy");
           localStorage.setItem("dormio_user_email", "ngquanghuy.work@gmail.com");
-          localStorage.setItem("dormio_user_phone", "0344265925");
+          localStorage.setItem("dormio_user_phone", "0353563279");
         }
         // Hydration complete — dev auto-login resolved
         setIsHydrating(false);
@@ -491,7 +491,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("dormio_house_address");
     } else if (preset === "landlord_active" || preset === "admin") {
       api.post<any>("/v1/auth/login", {
-        identifier: "0344265925",
+        identifier: "0353563279",
         password: "123456789",
       })
         .then((res) => {
