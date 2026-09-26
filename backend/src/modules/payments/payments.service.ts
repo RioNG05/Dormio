@@ -20,7 +20,7 @@ import {
   InvoicePayOsCheckoutResponseDto,
   InvoicePaymentStatusResponseDto,
 } from './dto/invoice-payos-checkout.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma';
 import { QueryLandlordPaymentsDto } from './dto/query-landlord-payments.dto';
 import {
   LandlordPaymentsResponseDto,
