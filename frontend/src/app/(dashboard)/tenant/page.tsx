@@ -122,7 +122,7 @@ export default function TenantOverviewPage() {
           const unpaid = invoices.find(
             (inv) => inv.status === "unpaid" || inv.status === "overdue"
           );
-          setLatestInvoice(unpaid || invoices[0] || null);
+          setLatestInvoice(unpaid || null);
         }
       } catch (err) {
         // Silent catch for dev mode
@@ -354,13 +354,13 @@ export default function TenantOverviewPage() {
               <div className="text-sm sm:text-base font-black text-zinc-900 mt-0.5">
                 {latestInvoice.period} &bull; {formatCurrency(latestInvoice.amount, locale)}
                 <span className="text-xs font-normal text-zinc-500 ml-2">
-                  ({t("dueDate")}: {latestInvoice.dueDate})
+                  ({t("dueDate")}: {formatDateStr(latestInvoice.dueDate)})
                 </span>
               </div>
             </div>
           </div>
 
-          <Link href="/tenant/invoices" className="w-full sm:w-auto">
+          <Link href={`/tenant/invoices/${latestInvoice.id}`} className="w-full sm:w-auto">
             <Button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs cursor-pointer transition-all">
               <span>{t("payNow")}</span>
               <ArrowRight className="w-4 h-4" />

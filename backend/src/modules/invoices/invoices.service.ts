@@ -190,6 +190,22 @@ export class InvoicesService {
   }
 
   /**
+   * UC-T-05: Query single invoice details for tenant
+   */
+  async getTenantInvoiceById(
+    userId: string,
+    invoiceId: string,
+  ): Promise<TenantInvoiceDto> {
+    this.logger.log(`Fetching invoice ${invoiceId} for tenant user ${userId}`);
+    const invoicesList = await this.getTenantInvoices(userId);
+    const invoice = invoicesList.data.find((i) => i.id === invoiceId);
+    if (!invoice) {
+      throw new NotFoundException('Không tìm thấy thông tin hóa đơn.');
+    }
+    return invoice;
+  }
+
+  /**
    * UC-T-05: Query and aggregate utility usage analytics and month-over-month trends
    */
   async getTenantUsageAnalytics(
@@ -1485,6 +1501,201 @@ export class InvoicesService {
             totalAmount,
             contractId: contract.id,
             automatedBy: 'billing_cron',
+            dueDate: dueDate.toISOString(),
+          },
+        },
+      });
+
+      return invoice;
+    });
+  }
+
+  /**
+   * UC-L-06 / UC-T-02:
+   * Automated monthly draft invoice generation on billing day for rooms (including metered services).
+   * Generates a draft invoice (status: 'unpaid') containing base rent + active flat services,
+   * plus any recorded meter readings.
+   * Idempotent: prevents duplicate invoices for the same contract and billing month.
+   */
+  async generateMonthlyDraftInvoice(
+    contractId: string,
+    dueDate: Date,
+  ): Promise<any> {
+    this.logger.log(
+      `[BillingCron] Generating automated monthly draft invoice for contract ${contractId} with dueDate ${dueDate.toISOString()}`,
+    );
+
+    const contract = await this.prisma.contract.findUnique({
+      where: { id: contractId },
+      include: {
+        room: {
+          include: {
+            roomServices: {
+              where: {
+                service: {
+                  status: 'active',
+                },
+              },
+              include: { service: true },
+            },
+            boardingHouse: true,
+          },
+        },
+      },
+    });
+
+    if (!contract || contract.status !== 'active') {
+      return null;
+    }
+
+    // Idempotency: verify if an invoice was already generated for this billing cycle (same month and year)
+    const targetMonth = dueDate.getMonth();
+    const targetYear = dueDate.getFullYear();
+    const startOfMonth = new Date(targetYear, targetMonth, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
+
+    const existingInvoice = await this.prisma.invoice.findFirst({
+      where: {
+        contractId: contract.id,
+        dueDate: { gte: startOfMonth, lte: endOfMonth },
+      },
+      include: {
+        invoiceItems: true,
+      },
+    });
+
+    if (existingInvoice) {
+      this.logger.log(
+        `[BillingCron] Monthly invoice already exists for contract ${contract.id} in cycle ${targetMonth + 1}/${targetYear}`,
+      );
+      return existingInvoice;
+    }
+
+    const rentPriceNum = Number(contract.rentPrice);
+    let totalAmount = rentPriceNum;
+
+    const lineItemsToCreate: Array<{
+      serviceId: string | null;
+      quantity: number;
+      unitPrice: Prisma.Decimal;
+      amount: number;
+    }> = [
+      {
+        serviceId: null,
+        quantity: 1,
+        unitPrice: contract.rentPrice,
+        amount: Math.round(rentPriceNum),
+      },
+    ];
+
+    const flatServices = contract.room.roomServices.filter(
+      (rs) => !rs.service.isMetered,
+    );
+    const meteredServices = contract.room.roomServices.filter(
+      (rs) => rs.service.isMetered,
+    );
+
+    for (const rs of flatServices) {
+      const priceNum = Number(rs.service.price);
+      totalAmount += priceNum;
+      lineItemsToCreate.push({
+        serviceId: rs.serviceId,
+        quantity: 1,
+        unitPrice: rs.service.price,
+        amount: Math.round(priceNum),
+      });
+    }
+
+    // Check if any unbilled readings already exist for metered services
+    const consumedReadingIds: string[] = [];
+    for (const rs of meteredServices) {
+      const unbilledReading = await this.prisma.meterReading.findFirst({
+        where: {
+          roomId: contract.roomId,
+          serviceId: rs.serviceId,
+          invoiceId: null,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (unbilledReading && unbilledReading.readingValue !== null) {
+        const previousReading = await this.prisma.meterReading.findFirst({
+          where: {
+            roomId: contract.roomId,
+            serviceId: rs.serviceId,
+            invoiceId: { not: null },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const currentVal = Number(unbilledReading.readingValue);
+        const prevVal =
+          previousReading && previousReading.readingValue !== null
+            ? Number(previousReading.readingValue)
+            : 0;
+
+        const consumption =
+          currentVal >= prevVal && prevVal > 0
+            ? currentVal - prevVal
+            : currentVal;
+        const unitPriceNum = Number(rs.service.price);
+        const amount = Math.round(consumption * unitPriceNum);
+
+        totalAmount += amount;
+        consumedReadingIds.push(unbilledReading.id);
+
+        lineItemsToCreate.push({
+          serviceId: rs.serviceId,
+          quantity: Math.max(1, Math.round(consumption)),
+          unitPrice: rs.service.price,
+          amount,
+        });
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.create({
+        data: {
+          roomId: contract.roomId,
+          contractId: contract.id,
+          totalAmount: new Prisma.Decimal(totalAmount),
+          status: 'unpaid',
+          dueDate,
+        },
+      });
+
+      for (const item of lineItemsToCreate) {
+        await tx.invoiceItem.create({
+          data: {
+            invoiceId: invoice.id,
+            serviceId: item.serviceId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            amount: item.amount,
+          },
+        });
+      }
+
+      if (consumedReadingIds.length > 0) {
+        await tx.meterReading.updateMany({
+          where: { id: { in: consumedReadingIds } },
+          data: { invoiceId: invoice.id },
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          action: 'create',
+          entityType: 'INVOICE',
+          entityId: invoice.id,
+          boardingHouseId: contract.room.boardingHouseId,
+          userId: contract.room.boardingHouse.ownerId,
+          ipAddress: '127.0.0.1',
+          newValue: {
+            totalAmount,
+            contractId: contract.id,
+            automatedBy: 'billing_cron',
+            isDraft: true,
             dueDate: dueDate.toISOString(),
           },
         },
