@@ -187,56 +187,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadBuildingsFromApi = useCallback(async () => {
     setIsBuildingsLoading(true);
     try {
-      let token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-      if (!token && typeof window !== "undefined") {
-        // Auto-login to obtain token in dev with real seeded landlord account
-        try {
-          const loginRes = await api.post<any>(
-            "/v1/auth/login",
-            {
-              identifier: "0353563279",
-              password: "123456789",
-            },
-            { silent: true }
-          );
-          const data = loginRes?.data || loginRes;
-          if (data?.token && typeof data.token === "string") {
-            token = data.token;
-            localStorage.setItem("auth_token", data.token);
-            if (data.user?.id) localStorage.setItem("dormio_user_id", String(data.user.id));
-            if (data.user?.username) localStorage.setItem("dormio_user_name", data.user.username);
-            if (data.user?.email) localStorage.setItem("dormio_user_email", data.user.email);
-            if (data.user?.phoneNumber) localStorage.setItem("dormio_user_phone", data.user.phoneNumber);
-          }
-        } catch {
-          // Ignore dev login error
-        }
+      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+      if (!token) {
+        setBuildings([]);
+        setActiveBuildingId("");
+        return;
       }
 
       let houses: any[] = [];
       try {
         houses = await getMyBoardingHouses({ silent: true });
       } catch {
-        // If 401 Unauthorized, token might be invalid or stale, retry login once
-        if (typeof window !== "undefined") {
-          try {
-            const loginRes = await api.post<any>(
-              "/v1/auth/login",
-              {
-                identifier: "0353563279",
-                password: "123456789",
-              },
-              { silent: true }
-            );
-            const data = loginRes?.data || loginRes;
-            if (data?.token && typeof data.token === "string") {
-              localStorage.setItem("auth_token", data.token);
-              houses = await getMyBoardingHouses({ silent: true });
-            }
-          } catch {
-            houses = [];
-          }
-        }
+        houses = [];
       }
 
       if (houses && houses.length > 0) {
@@ -274,27 +236,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Read initial session or auto-login default test landlord
+  // Read initial session from localStorage
   useEffect(() => {
-    const savedState = localStorage.getItem("dormio_logged_in");
-    const savedToken = localStorage.getItem("auth_token");
-    const savedRole = localStorage.getItem("dormio_user_role") as "tenant" | "landlord" | "admin" | "poster" | "employee" | null;
-    const savedHouseName = localStorage.getItem("dormio_house_name");
-    const savedHouseAddress = localStorage.getItem("dormio_house_address");
-    const savedBuildingId = localStorage.getItem("dormio_active_building_id");
-    const savedName = localStorage.getItem("dormio_user_name");
-    const savedEmail = localStorage.getItem("dormio_user_email");
-    const savedPhone = localStorage.getItem("dormio_user_phone");
-    const savedId = localStorage.getItem("dormio_user_id");
+    const savedState = typeof window !== "undefined" ? localStorage.getItem("dormio_logged_in") : null;
+    const savedToken = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const savedRole = (typeof window !== "undefined"
+      ? localStorage.getItem("dormio_user_role")
+      : null) as "tenant" | "landlord" | "admin" | "poster" | "employee" | null;
+    const savedHouseName = typeof window !== "undefined" ? localStorage.getItem("dormio_house_name") : null;
+    const savedHouseAddress = typeof window !== "undefined" ? localStorage.getItem("dormio_house_address") : null;
+    const savedBuildingId = typeof window !== "undefined" ? localStorage.getItem("dormio_active_building_id") : null;
+    const savedName = typeof window !== "undefined" ? localStorage.getItem("dormio_user_name") : null;
+    const savedEmail = typeof window !== "undefined" ? localStorage.getItem("dormio_user_email") : null;
+    const savedPhone = typeof window !== "undefined" ? localStorage.getItem("dormio_user_phone") : null;
+    const savedId = typeof window !== "undefined" ? localStorage.getItem("dormio_user_id") : null;
 
-    if (savedState === "true" && (savedToken || savedRole)) {
-      const resolvedRole = savedRole || "landlord";
+    if (savedState === "true" && savedToken) {
+      const resolvedRole = savedRole || "tenant";
       setIsLoggedIn(true);
       setUser({
         id: savedId || undefined,
-        name: savedName || "Nguyễn Quang Huy",
-        email: savedEmail || "ngquanghuy.work@gmail.com",
-        phone: savedPhone || "0353563279",
+        name: savedName || "User",
+        email: savedEmail || "",
+        phone: savedPhone || "",
         role: resolvedRole,
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
         houseName: savedHouseName || undefined,
@@ -307,33 +271,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Hydration complete — user state is resolved from localStorage
       setIsHydrating(false);
-      syncAuthCookies(resolvedRole, savedToken || undefined);
+      syncAuthCookies(resolvedRole, savedToken);
       loadBuildingsFromApi();
       loadCapabilitiesFromApi();
     } else {
-      // In local dev, auto-authenticate default test landlord so real API requests are active
-      loadBuildingsFromApi().then(() => {
-        setIsLoggedIn(true);
-        setUser({
-          id: typeof window !== "undefined" ? localStorage.getItem("dormio_user_id") || undefined : undefined,
-          name: typeof window !== "undefined" ? localStorage.getItem("dormio_user_name") || "Nguyễn Quang Huy" : "Nguyễn Quang Huy",
-          email: typeof window !== "undefined" ? localStorage.getItem("dormio_user_email") || "ngquanghuy.work@gmail.com" : "ngquanghuy.work@gmail.com",
-          phone: typeof window !== "undefined" ? localStorage.getItem("dormio_user_phone") || "0353563279" : "0353563279",
-          role: "landlord",
-          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-        });
-        if (typeof window !== "undefined") {
-          localStorage.setItem("dormio_logged_in", "true");
-          localStorage.setItem("dormio_user_role", "landlord");
-          localStorage.setItem("dormio_user_name", "Nguyễn Quang Huy");
-          localStorage.setItem("dormio_user_email", "ngquanghuy.work@gmail.com");
-          localStorage.setItem("dormio_user_phone", "0353563279");
-        }
-        // Hydration complete — dev auto-login resolved
-        setIsHydrating(false);
-        syncAuthCookies("landlord", null);
-        loadCapabilitiesFromApi();
-      });
+      // User is logged out / unauthenticated guest
+      setIsLoggedIn(false);
+      setUser(null);
+      setBuildings([]);
+      setActiveBuildingId("");
+      setIsBuildingsLoading(false);
+      setIsHydrating(false);
+      syncAuthCookies(null, null, null);
     }
   }, [loadBuildingsFromApi, loadCapabilitiesFromApi]);
 
@@ -427,6 +376,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setIsLoggedIn(false);
     setUser(null);
+    setBuildings([]);
+    setActiveBuildingId("");
+    setIsBuildingsLoading(false);
     setCapabilities(DEFAULT_CAPABILITIES);
     syncAuthCookies(null, null, null);
     localStorage.removeItem("dormio_logged_in");
@@ -439,6 +391,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("dormio_user_name");
     localStorage.removeItem("dormio_user_email");
     localStorage.removeItem("dormio_user_phone");
+    localStorage.removeItem("dormio_user_capabilities");
   };
 
   const toggleLoginDemo = () => {

@@ -91,6 +91,7 @@ async function main() {
   await prisma.room.deleteMany();
   await prisma.roomType.deleteMany();
   await prisma.boardingHouse.deleteMany();
+  await prisma.bankAccount.deleteMany();
   await prisma.userIdentification.deleteMany();
   await prisma.user.deleteMany();
 
