@@ -18,8 +18,17 @@ export async function uploadImageToBackend(
   imageData: string,
   folder: string = "dormio/uploads"
 ): Promise<UploadImageResponse> {
-  return api.post<UploadImageResponse>("/upload/image", {
-    image: imageData,
-    folder,
-  });
+  const res = await api.post<{ success?: boolean; data?: UploadImageResponse } | UploadImageResponse>(
+    "/v1/upload/image",
+    {
+      image: imageData,
+      folder,
+    }
+  );
+  console.log(res)
+
+  if (res && typeof res === "object" && "data" in res && (res as any).data) {
+    return (res as any).data as UploadImageResponse;
+  }
+  return res as UploadImageResponse;
 }

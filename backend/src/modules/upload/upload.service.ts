@@ -44,15 +44,9 @@ export class UploadService {
 
     // If it's a data URL, upload to Cloudinary
     if (trimmed.startsWith('data:image/') || trimmed.startsWith('data:application/')) {
-      try {
-        this.logger.log(`Detected base64 data URL, uploading to Cloudinary (${folder})...`);
-        const result = await this.cloudinaryService.uploadImage(trimmed, folder);
-        return result.secureUrl || result.url;
-      } catch (err) {
-        this.logger.error(`Failed to upload base64 image to Cloudinary: ${err}`);
-        // Return original data URL as fallback so data is not lost
-        return trimmed;
-      }
+      this.logger.log(`Detected base64 data URL, uploading to Cloudinary (${folder})...`);
+      const result = await this.cloudinaryService.uploadImage(trimmed, folder);
+      return result.secureUrl || result.url;
     }
 
     // Already a remote URL or object key
