@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Receipt,
   CheckCircle2,
@@ -53,9 +54,9 @@ import {
   TenantInvoice,
   TenantUsageAnalyticsResponse,
 } from "@/services/tenant-invoice.service";
-import { paymentService } from "@/services/payment.service";
 
 export default function TenantInvoicesPage() {
+  const router = useRouter();
   const t = useTranslations("tenantPortal");
   const { locale } = useLanguage();
 
@@ -84,28 +85,7 @@ export default function TenantInvoicesPage() {
     roomRent: false,
   });
 
-  // Payment modal state
-  const [selectedPayInvoice, setSelectedPayInvoice] = useState<TenantInvoice | null>(null);
-  const [hasCopied, setHasCopied] = useState<string | null>(null);
-  const [isPaying, setIsPaying] = useState(false);
-  const [isPaidSuccess, setIsPaidSuccess] = useState(false);
-
-  // Meter Reading OCR Modal state
-  const [isMeterModalOpen, setIsMeterModalOpen] = useState(false);
-  const [electricPrev] = useState(1250);
-  const [electricCurrent, setElectricCurrent] = useState(1342);
-  const [waterPrev] = useState(85);
-  const [waterCurrent, setWaterCurrent] = useState(93);
-  const [electricImage, setElectricImage] = useState<string | null>(
-    "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400&q=80"
-  );
-  const [waterImage, setWaterImage] = useState<string | null>(
-    "https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=400&q=80"
-  );
-  const [isScanningOCR, setIsScanningOCR] = useState(false);
-  const [ocrSuccessNotice, setOcrSuccessNotice] = useState(false);
-
-  // Image preview modal (for inspection of meter pictures)
+  // Image preview modal (for inspection of past meter pictures)
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // 1. Fetch real invoices & usage analytics from backend
@@ -223,67 +203,6 @@ export default function TenantInvoicesPage() {
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const copyToClipboard = (text: string, key: string) => {
-    if (typeof navigator !== "undefined") {
-      navigator.clipboard.writeText(text);
-      setHasCopied(key);
-      setTimeout(() => setHasCopied(null), 2000);
-    }
-  };
-
-  // Real Payment Confirmation Handler
-  const handleConfirmPaid = async (invoiceId: string) => {
-    setIsPaying(true);
-    try {
-      await paymentService.confirmPayment({
-        invoiceId,
-        method: "banking",
-      });
-
-      setIsPaidSuccess(true);
-      // Optimistically update invoice status
-      setAllInvoices((prev) =>
-        prev.map((inv) =>
-          inv.id === invoiceId
-            ? { ...inv, status: "paid", paidDate: new Date().toISOString() }
-            : inv
-        )
-      );
-
-      setTimeout(() => {
-        setIsPaidSuccess(false);
-        setSelectedPayInvoice(null);
-      }, 1800);
-    } catch (err) {
-      console.warn("Payment API failed, executing fallback:", err);
-      setIsPaidSuccess(true);
-      setAllInvoices((prev) =>
-        prev.map((inv) =>
-          inv.id === invoiceId
-            ? { ...inv, status: "paid", paidDate: new Date().toISOString() }
-            : inv
-        )
-      );
-      setTimeout(() => {
-        setIsPaidSuccess(false);
-        setSelectedPayInvoice(null);
-      }, 1500);
-    } finally {
-      setIsPaying(false);
-    }
-  };
-
-  // OCR Meter Reading Simulation
-  const handleSimulateOCR = () => {
-    setIsScanningOCR(true);
-    setTimeout(() => {
-      setElectricCurrent(1342);
-      setWaterCurrent(93);
-      setIsScanningOCR(false);
-      setOcrSuccessNotice(true);
-      setTimeout(() => setOcrSuccessNotice(false), 3000);
-    }, 1200);
-  };
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 animate-in fade-in duration-300 max-w-7xl mx-auto">
@@ -296,16 +215,6 @@ export default function TenantInvoicesPage() {
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
             {t("invoicesSubtitle")}
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setIsMeterModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-800 text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all"
-          >
-            <Camera className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t("submitMetersBtn")}</span>
-          </Button>
         </div>
       </div>
 
@@ -349,7 +258,11 @@ export default function TenantInvoicesPage() {
           </div>
 
           <Button
-            onClick={() => setSelectedPayInvoice(currentUnpaid)}
+            onClick={() =>
+              router.push(
+                `/tenant/invoices/${currentUnpaid.id}`
+              )
+            }
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs shadow-[#FF6B35]/20 cursor-pointer transition-all"
           >
             <span>{t("payNow")}</span>
@@ -717,7 +630,11 @@ export default function TenantInvoicesPage() {
                 <div className="border-t border-zinc-100 pt-3 flex items-center justify-end">
                   {inv.status !== "paid" ? (
                     <Button
-                      onClick={() => setSelectedPayInvoice(inv)}
+                      onClick={() =>
+                        router.push(
+                          `/tenant/invoices/${inv.id}`
+                        )
+                      }
                       className="w-full py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs shadow-[#FF6B35]/20 cursor-pointer transition-all flex items-center justify-center gap-2"
                     >
                       <CreditCard className="w-4 h-4" />
@@ -791,7 +708,11 @@ export default function TenantInvoicesPage() {
 
                           {inv.status !== "paid" && (
                             <Button
-                              onClick={() => setSelectedPayInvoice(inv)}
+                              onClick={() =>
+                                router.push(
+                                  `/tenant/invoices/${inv.id}`
+                                )
+                              }
                               size="sm"
                               className="px-3 py-1.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold cursor-pointer transition-all"
                             >
@@ -906,394 +827,6 @@ export default function TenantInvoicesPage() {
           </div>
         )}
       </div>
-
-      {/* Modal 1: Dynamic VietQR Payment */}
-      {selectedPayInvoice && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
-          onClick={() => setSelectedPayInvoice(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col border border-zinc-200 my-auto"
-          >
-            {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center shrink-0">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-black text-zinc-900">
-                    {t("vietQrTitle")}
-                  </h3>
-                  <p className="text-[11px] text-zinc-400">
-                    {t("vietQrSubtitle")}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedPayInvoice(null)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Scrollable Body: 2 Columns on Desktop */}
-            <div className="p-4 sm:p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 custom-scrollbar">
-              {/* Left Column: QR Code */}
-              <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80">
-                <div className="w-48 h-48 bg-white p-2.5 rounded-2xl shadow-xs border border-zinc-100 flex items-center justify-center">
-                  <img
-                    src={`https://api.vietqr.io/image/970436-0123456789-qfT2fS.jpg?amount=${selectedPayInvoice.amount}&addInfo=DORMIO%20101%20${selectedPayInvoice.id}&accountName=NGUYEN%20VAN%20RIO`}
-                    alt="VietQR Payment Code"
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg";
-                    }}
-                  />
-                </div>
-                <p className="text-[11px] text-zinc-400 mt-2.5 text-center leading-relaxed">
-                  {t("scanTip")}
-                </p>
-              </div>
-
-              {/* Right Column: Bank Details with 1-Click Copy */}
-              <div className="space-y-2 text-xs flex flex-col justify-center">
-                <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100">
-                  <span className="text-zinc-400 block text-[10px] font-bold uppercase">
-                    {t("bankName")}
-                  </span>
-                  <span className="font-bold text-zinc-800">
-                    Vietcombank (VCB)
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-zinc-400 block text-[10px] font-bold uppercase">
-                      {t("accountNumber")}
-                    </span>
-                    <span className="font-black text-zinc-900 tracking-wider">
-                      0123 456 789
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => copyToClipboard("0123456789", "acc")}
-                    className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer transition-colors"
-                  >
-                    {hasCopied === "acc" ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100">
-                  <span className="text-zinc-400 block text-[10px] font-bold uppercase">
-                    {t("accountHolder")}
-                  </span>
-                  <span className="font-bold text-zinc-900">
-                    NGUYEN VAN RIO
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-zinc-400 block text-[10px] font-bold uppercase">
-                      {t("totalAmount")}
-                    </span>
-                    <span className="font-black text-[#FF6B35] text-sm">
-                      {formatCurrency(selectedPayInvoice.amount, locale)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(
-                        selectedPayInvoice.amount.toString(),
-                        "amount"
-                      )
-                    }
-                    className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer transition-colors"
-                  >
-                    {hasCopied === "amount" ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-zinc-400 block text-[10px] font-bold uppercase">
-                      {t("transferContent")}
-                    </span>
-                    <span className="font-black text-[#2AC1BC] tracking-wider">
-                      DORMIO 101 {selectedPayInvoice.id}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(
-                        `DORMIO 101 ${selectedPayInvoice.id}`,
-                        "content"
-                      )
-                    }
-                    className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer transition-colors"
-                  >
-                    {hasCopied === "content" ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Sticky Action Footer */}
-            <div className="p-4 sm:p-5 border-t border-zinc-100 bg-zinc-50/60 shrink-0">
-              <Button
-                onClick={() => handleConfirmPaid(selectedPayInvoice.id)}
-                disabled={isPaying || isPaidSuccess}
-                className="w-full py-3 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold cursor-pointer transition-all shadow-sm shadow-[#2AC1BC]/20 flex items-center justify-center gap-2"
-              >
-                {isPaidSuccess ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 animate-bounce" />
-                    <span>{t("paymentConfirmedSuccess")}</span>
-                  </>
-                ) : isPaying ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>{t("verifyingWithBank")}</span>
-                  </>
-                ) : (
-                  <span>{t("btnConfirmPaid")}</span>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal 2: Submit Utility Meter Readings via OCR */}
-      {isMeterModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
-          onClick={() => setIsMeterModalOpen(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col border border-zinc-200 my-auto"
-          >
-            <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-zinc-900">
-                    {t("meterModalTitle")}
-                  </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    {t("meterModalSubtitle")}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsMeterModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs text-zinc-700 custom-scrollbar">
-              {ocrSuccessNotice && (
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-emerald-800 font-bold animate-in fade-in">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <span>{t("ocrSuccess")}</span>
-                </div>
-              )}
-
-              {/* Electric Meter Box */}
-              <div className="p-5 rounded-2xl border border-amber-200/80 bg-amber-50/30 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-amber-500" />
-                    <span className="font-black text-zinc-900 text-sm">
-                      {t("electricMeter")}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleSimulateOCR}
-                    disabled={isScanningOCR}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs cursor-pointer transition-colors shadow-2xs"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isScanningOCR ? "animate-spin" : ""}`} />
-                    <span>{isScanningOCR ? t("ocrScanning") : t("rescanOcr")}</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                  {/* Image Preview / Upload */}
-                  <div className="sm:col-span-1">
-                    <div className="relative h-28 rounded-xl overflow-hidden border border-zinc-200 group bg-zinc-100">
-                      {electricImage ? (
-                        <img src={electricImage} alt="Electric Meter" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-zinc-400">
-                          <UploadCloud className="w-6 h-6 mb-1" />
-                          <span className="text-[10px]">{t("uploadPhoto")}</span>
-                        </div>
-                      )}
-                      <label className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer font-bold text-[11px]">
-                        {t("changePhoto")}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                              setElectricImage(URL.createObjectURL(e.target.files[0]));
-                            }
-                          }}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Readings Input */}
-                  <div className="sm:col-span-2 grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-400 block mb-1">
-                        {t("previousReading")}
-                      </label>
-                      <input
-                        type="number"
-                        disabled
-                        value={electricPrev}
-                        className="w-full px-3 py-2 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-500 font-bold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-700 block mb-1">
-                        {t("currentReading")} (kWh)
-                      </label>
-                      <input
-                        type="number"
-                        value={electricCurrent}
-                        onChange={(e) => setElectricCurrent(Number(e.target.value) || 0)}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 font-black text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Water Meter Box */}
-              <div className="p-5 rounded-2xl border border-sky-200/80 bg-sky-50/30 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Droplets className="w-5 h-5 text-sky-500" />
-                    <span className="font-black text-zinc-900 text-sm">
-                      {t("waterMeter")}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleSimulateOCR}
-                    disabled={isScanningOCR}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs cursor-pointer transition-colors shadow-2xs"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isScanningOCR ? "animate-spin" : ""}`} />
-                    <span>{isScanningOCR ? t("ocrScanning") : t("rescanOcr")}</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                  <div className="sm:col-span-1">
-                    <div className="relative h-28 rounded-xl overflow-hidden border border-zinc-200 group bg-zinc-100">
-                      {waterImage ? (
-                        <img src={waterImage} alt="Water Meter" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-zinc-400">
-                          <UploadCloud className="w-6 h-6 mb-1" />
-                          <span className="text-[10px]">{t("uploadPhoto")}</span>
-                        </div>
-                      )}
-                      <label className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer font-bold text-[11px]">
-                        {t("changePhoto")}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                              setWaterImage(URL.createObjectURL(e.target.files[0]));
-                            }
-                          }}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="sm:col-span-2 grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-400 block mb-1">
-                        {t("previousReading")}
-                      </label>
-                      <input
-                        type="number"
-                        disabled
-                        value={waterPrev}
-                        className="w-full px-3 py-2 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-500 font-bold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-700 block mb-1">
-                        {t("currentReading")} (m³)
-                      </label>
-                      <input
-                        type="number"
-                        value={waterCurrent}
-                        onChange={(e) => setWaterCurrent(Number(e.target.value) || 0)}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-sky-300 font-black text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-6 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50/50">
-              <Button
-                variant="ghost"
-                onClick={() => setIsMeterModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 cursor-pointer"
-              >
-                {t("btnClose")}
-              </Button>
-              <Button
-                onClick={() => {
-                  setOcrSuccessNotice(true);
-                  setTimeout(() => {
-                    setOcrSuccessNotice(false);
-                    setIsMeterModalOpen(false);
-                  }, 1200);
-                }}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a8a3] rounded-xl cursor-pointer shadow-sm shadow-[#2AC1BC]/20"
-              >
-                {t("submitReadingsAndPhoto")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal 3: Meter Image Preview */}
       {previewImage && (

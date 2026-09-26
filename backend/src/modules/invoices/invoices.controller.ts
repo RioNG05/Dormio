@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Param,
   UseGuards,
   Request,
   Logger,
@@ -12,10 +13,14 @@ import {
   ApiBearerAuth,
   ApiResponse,
   ApiOkResponse,
+  ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { InvoicesService } from './invoices.service';
-import { TenantInvoicesListResponseDto } from './dto/tenant-invoices-response.dto';
+import {
+  TenantInvoiceDto,
+  TenantInvoicesListResponseDto,
+} from './dto/tenant-invoices-response.dto';
 import { TenantUsageAnalyticsResponseDto } from './dto/usage-analytics-response.dto';
 import { PaymentHistoryResponseDto } from './dto/payment-history-response.dto';
 
@@ -50,6 +55,30 @@ export class InvoicesController {
     const userId = req.user?.id || req.user?.sub;
     this.logger.log(`GET /api/v1/tenant/invoices triggered by user ${userId}`);
     return this.invoicesService.getTenantInvoices(userId);
+  }
+
+  @Get('invoices/:id')
+  @ApiOperation({
+    summary: 'Lấy chi tiết một hóa đơn của khách thuê theo ID (UC-T-05)',
+    description:
+      'Truy vấn chi tiết hóa đơn, các khoản mục dịch vụ, chỉ số công tơ điện nước phục vụ thanh toán.',
+  })
+  @ApiParam({ name: 'id', description: 'Mã định danh hóa đơn (UUID)' })
+  @ApiOkResponse({
+    description: 'Thông tin chi tiết hóa đơn',
+    type: TenantInvoiceDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Không tìm thấy hóa đơn',
+  })
+  async getTenantInvoiceById(
+    @Request() req: any,
+    @Param('id') id: string,
+  ): Promise<TenantInvoiceDto> {
+    const userId = req.user?.id || req.user?.sub;
+    this.logger.log(`GET /api/v1/tenant/invoices/${id} triggered by user ${userId}`);
+    return this.invoicesService.getTenantInvoiceById(userId, id);
   }
 
   @Get('analytics/usage')

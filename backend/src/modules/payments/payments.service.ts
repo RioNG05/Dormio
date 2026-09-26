@@ -4,7 +4,9 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import {
   VietQrPaymentInstructionDto,
@@ -14,6 +16,10 @@ import {
   PaymentExecutionResultDto,
   VietQrWebhookDto,
 } from './dto/confirm-payment.dto';
+import {
+  InvoicePayOsCheckoutResponseDto,
+  InvoicePaymentStatusResponseDto,
+} from './dto/invoice-payos-checkout.dto';
 import { Prisma } from '@prisma/client';
 import { QueryLandlordPaymentsDto } from './dto/query-landlord-payments.dto';
 import {
@@ -38,6 +44,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly payOsService: PayOsService,
+    @Optional() private readonly configService?: ConfigService,
   ) {}
 
   /**
@@ -115,6 +122,349 @@ export class PaymentsService {
       roomNumber,
       boardingHouseName,
       dueDate: invoice.dueDate.toISOString(),
+    };
+  }
+
+  /**
+   * UC-T-04 / Rule #13: Create or reuse 15-minute PayOS checkout session for a Tenant Invoice
+   */
+  async createInvoicePayOsCheckout(
+    userId: string,
+    invoiceId: string,
+  ): Promise<InvoicePayOsCheckoutResponseDto> {
+    this.logger.log(
+      `Creating PayOS checkout session for invoice ${invoiceId} by user ${userId}`,
+    );
+
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        payment: true,
+        contract: {
+          include: {
+            room: {
+              include: {
+                boardingHouse: true,
+              },
+            },
+            tenantContracts: true,
+          },
+        },
+      },
+    });
+
+    if (!invoice || !invoice.contract) {
+      throw new NotFoundException('Không tìm thấy hóa đơn cần thanh toán.');
+    }
+
+    // Verify tenant scoping
+    const isTenantParty = invoice.contract.tenantContracts.some(
+      (tc) => tc.tenantId === userId,
+    );
+    if (!isTenantParty) {
+      throw new ForbiddenException('Bạn không có quyền thanh toán hóa đơn này.');
+    }
+
+    if (invoice.status === 'paid') {
+      throw new BadRequestException('Hóa đơn này đã được thanh toán trước đó.');
+    }
+
+    // Sync any unbilled meter readings submitted for this invoice's room
+    if (invoice.status === 'unpaid') {
+      const unbilledReadings = await this.prisma.meterReading.findMany({
+        where: {
+          roomId: invoice.roomId,
+          invoiceId: null,
+          readingValue: { not: null },
+        },
+        include: { service: true },
+      });
+
+      if (unbilledReadings.length > 0) {
+        const readingsToLink: string[] = [];
+
+        for (const reading of unbilledReadings) {
+          const prevReading = await this.prisma.meterReading.findFirst({
+            where: {
+              roomId: invoice.roomId,
+              serviceId: reading.serviceId,
+              invoiceId: { not: null, notIn: [invoice.id] },
+            },
+            orderBy: { createdAt: 'desc' },
+          });
+
+          const currentVal = Number(reading.readingValue);
+          const prevVal =
+            prevReading && prevReading.readingValue !== null
+              ? Number(prevReading.readingValue)
+              : 0;
+
+          const consumption =
+            currentVal >= prevVal && prevVal > 0
+              ? currentVal - prevVal
+              : currentVal;
+          const unitPriceNum = Number(reading.service.price);
+          const itemAmount = Math.round(consumption * unitPriceNum);
+
+          const existingItem = await this.prisma.invoiceItem.findFirst({
+            where: {
+              invoiceId: invoice.id,
+              serviceId: reading.serviceId,
+            },
+          });
+
+          if (existingItem) {
+            await this.prisma.invoiceItem.update({
+              where: { id: existingItem.id },
+              data: {
+                quantity: Math.max(1, Math.round(consumption)),
+                unitPrice: reading.service.price,
+                amount: itemAmount,
+              },
+            });
+          } else {
+            await this.prisma.invoiceItem.create({
+              data: {
+                invoiceId: invoice.id,
+                serviceId: reading.serviceId,
+                quantity: Math.max(1, Math.round(consumption)),
+                unitPrice: reading.service.price,
+                amount: itemAmount,
+              },
+            });
+          }
+
+          readingsToLink.push(reading.id);
+        }
+
+        if (readingsToLink.length > 0) {
+          await this.prisma.meterReading.updateMany({
+            where: { id: { in: readingsToLink } },
+            data: { invoiceId: invoice.id },
+          });
+        }
+
+        // Recalculate totalAmount from all invoice items
+        const allItems = await this.prisma.invoiceItem.findMany({
+          where: { invoiceId: invoice.id },
+        });
+        const newTotal = allItems.reduce(
+          (sum, it) => sum + Number(it.amount),
+          0,
+        );
+
+        await this.prisma.invoice.update({
+          where: { id: invoice.id },
+          data: { totalAmount: new Prisma.Decimal(newTotal) },
+        });
+
+        invoice.totalAmount = new Prisma.Decimal(newTotal);
+      }
+    }
+
+    const amount = Number(invoice.totalAmount);
+    if (amount <= 0) {
+      throw new BadRequestException('Số tiền thanh toán hóa đơn không hợp lệ.');
+    }
+
+    const now = new Date();
+    const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000);
+
+    // 1. Check for existing reusable pending payment session (< 15 mins) matching the exact amount
+    const existingPendingPayment = await this.prisma.payment.findFirst({
+      where: {
+        invoiceId: invoice.id,
+        status: 'pending',
+        createdAt: { gte: fifteenMinsAgo },
+        orderCode: { not: null },
+        amount: new Prisma.Decimal(amount),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (
+      existingPendingPayment &&
+      existingPendingPayment.orderCode &&
+      existingPendingPayment.qrCodeUrl
+    ) {
+      const elapsedMs = now.getTime() - existingPendingPayment.createdAt.getTime();
+      const remainingSecs = Math.max(30, Math.floor((15 * 60 * 1000 - elapsedMs) / 1000));
+
+      this.logger.log(
+        `Reusing existing pending PayOS payment session (OrderCode: ${existingPendingPayment.orderCode}) for invoice ${invoice.id}`,
+      );
+
+      let bin = this.DEFAULT_BANK_CODE;
+      let accountNumber = this.DEFAULT_ACCOUNT_NUMBER;
+      let accountName = this.DEFAULT_ACCOUNT_NAME;
+      let checkoutUrl = existingPendingPayment.qrCodeUrl;
+
+      try {
+        const linkInfo = await this.payOsService.getPaymentLinkInformation(
+          Number(existingPendingPayment.orderCode),
+        );
+        if (linkInfo) {
+          bin = linkInfo.bin || bin;
+          accountNumber = linkInfo.accountNumber || accountNumber;
+          accountName = linkInfo.accountName || accountName;
+          checkoutUrl = linkInfo.checkoutUrl || checkoutUrl;
+        }
+      } catch (err: any) {
+        this.logger.warn(
+          `Could not fetch PayOS link info for order ${existingPendingPayment.orderCode}: ${err.message}`,
+        );
+      }
+
+      const roomNumber = invoice.contract.room.roomNumber;
+      const period = this.formatPeriod(invoice.dueDate);
+      const syntax = `INV P${roomNumber} ${period}`.substring(0, 25);
+
+      return {
+        orderCode: Number(existingPendingPayment.orderCode),
+        paymentLinkId:
+          existingPendingPayment.paymentLinkId ||
+          `link-${existingPendingPayment.orderCode}`,
+        checkoutUrl,
+        qrCode: existingPendingPayment.qrCodeUrl,
+        accountNumber,
+        accountName,
+        bin,
+        amount: Number(existingPendingPayment.amount),
+        description: syntax,
+        expiresIn: remainingSecs,
+        invoiceId: invoice.id,
+        isReused: true,
+      };
+    }
+
+    // 2. Generate unique numeric order code (8 digits timestamp + 3 random digits)
+    const orderCode = Number(
+      `${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`,
+    );
+
+    const roomNumber = invoice.contract.room.roomNumber;
+    const period = this.formatPeriod(invoice.dueDate);
+    const syntax = `INV P${roomNumber} ${period}`.substring(0, 25); // PayOS max 25 chars
+
+    const appUrl =
+      this.configService?.get<string>('FRONTEND_URL') ||
+      process.env.FRONTEND_URL ||
+      'http://localhost:3000';
+    const cancelUrl = `${appUrl}/tenant/invoices?canceled=true`;
+    const returnUrl = `${appUrl}/tenant/invoices?success=true&orderCode=${orderCode}`;
+
+    // 3. Create PayOS payment link with 15 minutes expiration
+    const expiredAt = Math.floor(now.getTime() / 1000) + 15 * 60;
+    const linkResult = await this.payOsService.createPaymentLink({
+      orderCode,
+      amount,
+      description: syntax,
+      cancelUrl,
+      returnUrl,
+      items: [
+        {
+          name: `Hóa đơn P.${roomNumber} (${period})`,
+          quantity: 1,
+          price: amount,
+        },
+      ],
+      expiredAt,
+    });
+
+    // 4. Save or update Payment record in DB
+    await this.prisma.$transaction(async (tx) => {
+      const oldPayment = await tx.payment.findUnique({
+        where: { invoiceId: invoice.id },
+      });
+
+      if (oldPayment) {
+        await tx.payment.update({
+          where: { id: oldPayment.id },
+          data: {
+            payerId: userId,
+            type: 'charge',
+            amount,
+            method: 'banking',
+            status: 'pending',
+            orderCode: BigInt(orderCode),
+            paymentLinkId: linkResult.paymentLinkId,
+            qrCodeUrl: linkResult.qrCode,
+            paidAt: null,
+            createdAt: now,
+          },
+        });
+      } else {
+        await tx.payment.create({
+          data: {
+            payerId: userId,
+            invoiceId: invoice.id,
+            type: 'charge',
+            amount,
+            method: 'banking',
+            status: 'pending',
+            orderCode: BigInt(orderCode),
+            paymentLinkId: linkResult.paymentLinkId,
+            qrCodeUrl: linkResult.qrCode,
+          },
+        });
+      }
+    });
+
+    return {
+      orderCode,
+      paymentLinkId: linkResult.paymentLinkId,
+      checkoutUrl: linkResult.checkoutUrl,
+      qrCode: linkResult.qrCode,
+      accountNumber: linkResult.accountNumber,
+      accountName: linkResult.accountName,
+      bin: linkResult.bin,
+      amount,
+      description: syntax,
+      expiresIn: 15 * 60,
+      invoiceId: invoice.id,
+      isReused: false,
+    };
+  }
+
+  /**
+   * Check order payment status by orderCode (used for frontend polling)
+   */
+  async getInvoicePaymentStatus(
+    userId: string,
+    orderCode: number,
+  ): Promise<InvoicePaymentStatusResponseDto> {
+    this.logger.log(
+      `Checking invoice payment status for orderCode ${orderCode} by user ${userId}`,
+    );
+
+    const payment = await this.prisma.payment.findFirst({
+      where: { orderCode: BigInt(orderCode) },
+      include: { invoice: true },
+    });
+
+    if (!payment) {
+      throw new NotFoundException(
+        `Không tìm thấy đơn thanh toán có mã ${orderCode}`,
+      );
+    }
+
+    // Verify user is payer or tenant party
+    if (payment.payerId && payment.payerId !== userId) {
+      throw new ForbiddenException(
+        'Bạn không có quyền xem trạng thái đơn thanh toán này.',
+      );
+    }
+
+    const isPaid =
+      payment.status === 'success' ||
+      (payment.invoice !== null && payment.invoice.status === 'paid');
+
+    return {
+      orderCode,
+      status: payment.status,
+      isPaid,
+      invoiceId: payment.invoiceId || undefined,
+      paidAt: payment.paidAt ? payment.paidAt.toISOString() : undefined,
     };
   }
 
