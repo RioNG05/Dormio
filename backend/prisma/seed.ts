@@ -105,7 +105,7 @@ async function main() {
     data: {
       username: 'Nguyễn Quang Huy',
       email: 'ngquanghuy.work@gmail.com',
-      phoneNumber: '0353563279',
+      phoneNumber: '0344265925',
       hashedPassword: password88,
       bio: 'Quản trị viên hệ thống & Chủ đầu tư chuỗi nhà trọ Dormio',
       avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
