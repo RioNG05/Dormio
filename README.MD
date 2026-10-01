@@ -117,22 +117,49 @@ PGADMIN_PORT=5050
 
 #### Tại thư mục `backend/.env`:
 ```env
-PORT=3001
-NODE_ENV=development
+# ─── Database ────────────────────────────────────────────────────────────────
+DATABASE_URL="postgresql://dormio:dormio123@localhost:5432/dormio_db"
 
-DATABASE_URL="postgresql://dormio:dormio123@localhost:5432/dormio_db?schema=public"
-
+# ─── Redis (BullMQ) ──────────────────────────────────────────────────────────
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=redis123
 
-JWT_SECRET=dormio_super_secret_jwt_key_2026
+# ─── App ─────────────────────────────────────────────────────────────────────
+PORT=3001
+NODE_ENV=development
+
+# ─── Auth ────────────────────────────────────────────────────────────────────
+JWT_SECRET=change_this_secret_before_production
 JWT_EXPIRES_IN=7d
 
-FRONTEND_URL=http://localhost:3000
+# ─── Storage ─────────────────────────────────────────────────────────────────
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+# ─── Platform ────────────────────────────────────────────────────────────────
+PLATFORM_DEPOSIT_HOLD_DAYS=7
+
+# ─── PayOS ───────────────────────────────────────────────────────────────────
+PAYOS_CLIENT_ID=
+PAYOS_API_KEY=
+PAYOS_CHECKSUM_KEY=
+
+# ─── AI ──────────────────────────────────────────────────────────────────────
+AI_API_KEY=
+AI_MODEL_IMAGE=
+AI_MODEL_TEXT=
 ```
 
----
+#### Tại thư mục `frontend/.env`:
+```env
+NEXT_PUBLIC_API_URL=http://localhost
+
+NEXT_PUBLIC_API_PORT=3001
+
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=google-maps-api-key
+```
 
 ### 3. Khởi động cơ sở dữ liệu trên Docker
 
