@@ -11,6 +11,11 @@ function getApiBaseUrl(): string {
     return envUrl;
   }
 
+  // If it's a public domain or tunnel URL (e.g. https://xxx.trycloudflare.com, ngrok, etc.)
+  if (envUrl.startsWith("https://") || /^https?:\/\/[^/:]+\.[a-z]{2,}/i.test(envUrl)) {
+    return `${envUrl.replace(/\/$/, "")}/api`;
+  }
+
   // If already has a port specified (e.g. http://localhost:3001)
   if (/(:\d+)/.test(envUrl)) {
     return `${envUrl.replace(/\/$/, "")}/api`;

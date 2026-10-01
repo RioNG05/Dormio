@@ -29,7 +29,7 @@ async function bootstrap() {
   app.enableCors({
     origin: nodeEnv === 'production'
       ? [process.env.FRONTEND_URL ?? '']
-      : '*',
+      : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [

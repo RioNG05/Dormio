@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+
+const fullLogo = '/full-logo.png';
 
 export interface LogoProps {
   /**
@@ -50,7 +51,7 @@ export default function Logo({
       aria-label="Dormio Homepage"
     >
       <Image
-        src="/full-logo.png"
+        src={fullLogo}
         alt="Dormio Logo"
         width={1393}
         height={350}

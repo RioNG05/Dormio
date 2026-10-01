@@ -705,7 +705,7 @@ async function main() {
         dailyPostQuote: 5, // Bonus for plus is 5 (total = 3 + 5 = 8)
         priceMonthly: 199000,
         priceYearly: 1990000,
-        maxRoom: 50,
+        maxRoom: 30,
         description: 'Gói tiêu chuẩn cho chủ trọ từ 10 - 50 phòng',
       },
       {
@@ -713,7 +713,7 @@ async function main() {
         dailyPostQuote: 10, // Bonus for pro is 10 (total = 3 + 10 = 13)
         priceMonthly: 499000,
         priceYearly: 4990000,
-        maxRoom: 200,
+        maxRoom: 999999,
         description: 'Gói chuyên nghiệp không giới hạn tính năng cho hệ thống chuỗi phòng trọ',
       },
     ],

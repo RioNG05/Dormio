@@ -40,10 +40,11 @@ export const userService = {
    * Check identity verification status of authenticated user
    */
   async getIdentification(): Promise<UserIdentificationResponse> {
-    const res = await api.get<UserIdentificationResponse>("/v1/users/identification");
-    const idData = res?.userIdentification ?? res?.identification ?? null;
+    const res = await api.get<any>("/v1/users/identification");
+    const data = res?.data ?? res;
+    const idData = data?.userIdentification ?? data?.identification ?? null;
     return {
-      hasIdentification: res?.hasIdentification ?? !!idData,
+      hasIdentification: data?.hasIdentification ?? !!idData,
       userIdentification: idData,
       identification: idData,
     };
@@ -54,17 +55,19 @@ export const userService = {
    */
   async upsertIdentification(data: Partial<UserIdentification>): Promise<UserIdentification> {
     const res = await api.post<any>("/v1/users/identification", data);
-    return res?.identification ?? res?.userIdentification ?? res;
+    const resData = res?.data ?? res;
+    return resData?.identification ?? resData?.userIdentification ?? resData;
   },
 
   /**
    * Get bank account info for authenticated user
    */
   async getBankAccount(): Promise<BankAccountResponse> {
-    const res = await api.get<BankAccountResponse>("/v1/users/bank-account");
+    const res = await api.get<any>("/v1/users/bank-account");
+    const data = res?.data ?? res;
     return {
-      hasBankAccount: res?.hasBankAccount ?? !!res?.bankAccount,
-      bankAccount: res?.bankAccount ?? null,
+      hasBankAccount: data?.hasBankAccount ?? !!data?.bankAccount,
+      bankAccount: data?.bankAccount ?? null,
     };
   },
 
@@ -72,10 +75,11 @@ export const userService = {
    * Save or update bank account info for authenticated user
    */
   async upsertBankAccount(data: BankAccount): Promise<BankAccountResponse> {
-    const res = await api.post<BankAccountResponse>("/v1/users/bank-account", data);
+    const res = await api.post<any>("/v1/users/bank-account", data);
+    const resData = res?.data ?? res;
     return {
-      hasBankAccount: res?.hasBankAccount ?? !!res?.bankAccount,
-      bankAccount: res?.bankAccount ?? null,
+      hasBankAccount: resData?.hasBankAccount ?? !!resData?.bankAccount,
+      bankAccount: resData?.bankAccount ?? null,
     };
   },
 };

@@ -114,7 +114,7 @@ function PricingCheckoutPageInner({ params }: PageProps) {
   // Auth requirement check: Must be logged in to checkout
   useEffect(() => {
     if (!isHydrating && !isLoggedIn) {
-      router.push(`/login?redirect=/pricing/${planParam}`);
+      router.push(`/login?redirect=/pricing/management-system/${planParam}`);
     }
   }, [isHydrating, isLoggedIn, planParam, router]);
 
@@ -350,7 +350,7 @@ function PricingCheckoutPageInner({ params }: PageProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* ─── CỘT TRÁI: THÔNG TIN GÓI & CHỌN THỜI HẠN ─── */}
+          {/* ─── LEFT: PLAN INFO & BILLING CYCLE ─── */}
           <div className="lg:col-span-6 space-y-6">
             {/* Edge Case Alert: Consecutive Extension Banner */}
             {tierStatus?.hasActiveSameTier && (
@@ -388,7 +388,7 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Cycle Selector Buttons (Tháng / Quý / Năm) */}
+              {/* Cycle Selector Buttons */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2.5">
                   {t("guestPricingCheckoutSelectCycle")}
@@ -409,8 +409,8 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                           }
                         }}
                         className={`relative p-3 sm:p-4 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${isSelected
-                            ? "bg-zinc-900 text-white border-zinc-900 shadow-md ring-2 ring-zinc-900/10"
-                            : "bg-zinc-50/70 hover:bg-zinc-100/80 text-zinc-700 border-zinc-200"
+                          ? "bg-zinc-900 text-white border-zinc-900 shadow-md ring-2 ring-zinc-900/10"
+                          : "bg-zinc-50/70 hover:bg-zinc-100/80 text-zinc-700 border-zinc-200"
                           }`}
                       >
                         {savings && (
@@ -469,15 +469,15 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                 </ul>
               </div>
 
-              {/* Action Button: Đăng ký theo [thời hạn] */}
+              {/* Action Button */}
               <div className="pt-4 border-t border-zinc-100">
                 <Button
                   type="button"
                   disabled={isGeneratingQr || isSuccess}
                   onClick={() => handleGenerateCheckout(selectedCycle)}
                   className={`w-full py-4 px-6 rounded-2xl font-black text-sm tracking-wide flex items-center justify-center gap-2.5 shadow-lg transition-all active:scale-[0.99] h-auto ${isSuccess
-                      ? "bg-emerald-600 text-white cursor-default hover:bg-emerald-600"
-                      : "bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-teal-500/25 cursor-pointer"
+                    ? "bg-emerald-600 text-white cursor-default hover:bg-emerald-600"
+                    : "bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-teal-500/25 cursor-pointer"
                     }`}
                 >
                   {isGeneratingQr ? (
@@ -504,10 +504,10 @@ function PricingCheckoutPageInner({ params }: PageProps) {
             </div>
           </div>
 
-          {/* ─── CỘT PHẢI: KHU VỰC THANH TOÁN (IN-PAGE - KHÔNG MODAL) ─── */}
+          {/* ─── RIGHT: QR PAYMENT AREA ─── */}
           <div className="lg:col-span-6">
             <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-sm p-6 sm:p-8 relative overflow-hidden">
-              {/* TRƯỜNG HỢP 1: ĐÃ THANH TOÁN THÀNH CÔNG */}
+              {/* SUCCESS STATE */}
               {isSuccess ? (
                 <div className="py-8 text-center space-y-6 animate-in zoom-in-95 duration-400">
                   <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
@@ -555,9 +555,8 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                   </div>
                 </div>
               ) : checkoutData ? (
-                /* TRƯỜNG HỢP 2: ĐANG HIỂN THỊ MÃ QR IN-PAGE VỚI COUNTDOWN */
+                /* QR ACTIVE STATE */
                 <div className="space-y-6">
-                  {/* Top Bar with Countdown Timer */}
                   <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900">
                     <div className="flex items-center gap-2 text-xs font-bold">
                       <Clock className="w-4 h-4 text-amber-600" />
@@ -565,17 +564,16 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                     </div>
                     <div
                       className={`text-sm font-black font-mono tracking-wider px-3 py-1 rounded-xl ${isExpired
-                          ? "bg-rose-600 text-white"
-                          : countdown < 120
-                            ? "bg-rose-500 text-white animate-pulse"
-                            : "bg-amber-600 text-white"
+                        ? "bg-rose-600 text-white"
+                        : countdown < 120
+                          ? "bg-rose-500 text-white animate-pulse"
+                          : "bg-amber-600 text-white"
                         }`}
                     >
                       {isExpired ? "00:00" : formatTimer(countdown)}
                     </div>
                   </div>
 
-                  {/* QR Image Frame with Expired Overlay */}
                   <div className="relative mx-auto w-64 h-64 sm:w-72 sm:h-72 p-3 bg-white rounded-2xl border-2 border-zinc-200/80 shadow-inner flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -617,7 +615,6 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                     )}
                   </div>
 
-                  {/* Bank Transfer Details with Copy buttons */}
                   <div className="space-y-2.5 pt-2 text-xs">
                     <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
                       <span className="text-zinc-500">{t("guestPricingCheckoutBank")}</span>
@@ -689,7 +686,6 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                     </div>
                   </div>
 
-                  {/* Realtime Waiting Indicator */}
                   <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200/60 flex items-center justify-center gap-3 text-xs font-semibold text-teal-800">
                     <RefreshCw className="w-4 h-4 text-[#2AC1BC] animate-spin shrink-0" />
                     <span>
@@ -698,7 +694,7 @@ function PricingCheckoutPageInner({ params }: PageProps) {
                   </div>
                 </div>
               ) : (
-                /* TRƯỜNG HỢP 3: CHƯA BẤM TẠO QR - PLACEHOLDER HƯỚNG DẪN */
+                /* PLACEHOLDER STATE */
                 <div className="py-14 px-4 text-center space-y-4 text-zinc-400">
                   <div className="w-16 h-16 rounded-3xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mx-auto">
                     <QrCode className="w-8 h-8" />

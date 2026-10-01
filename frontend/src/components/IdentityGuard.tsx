@@ -143,7 +143,7 @@ function IdentityBlockerScreen({
  * 2. Fetches UserIdentification and BankAccount in parallel
  * 3. If both present → renders children
  * 4. If either missing → shows a blocker screen with a link to /profile?tab=bank
- *    AND shows a toast notification
+ *    AND shows a toast notification (exactly once per path visit)
  *
  * Applied to:
  * - /rooms/[id]/deposit
@@ -164,6 +164,9 @@ export default function IdentityGuard({ children }: { children: React.ReactNode 
 
   // Track which path was already checked to avoid re-running on locale switch
   const [checkedForPath, setCheckedForPath] = useState<string | null>(null);
+
+  // Guard against React StrictMode double-invoking effects → toast fires only once
+  const toastShownRef = React.useRef(false);
 
   const runCheck = useCallback(async () => {
     if (!isLoggedIn) {
@@ -190,10 +193,14 @@ export default function IdentityGuard({ children }: { children: React.ReactNode 
         setStatus("ok");
       } else {
         setStatus("blocked");
-        toast.warning(t("identityGuardToastDesc"), {
-          title: t("identityGuardToastTitle"),
-          duration: 6000,
-        });
+        // Only fire the toast once per path visit (prevents double-toast in StrictMode)
+        if (!toastShownRef.current) {
+          toastShownRef.current = true;
+          toast.warning(t("identityGuardToastDesc"), {
+            title: t("identityGuardToastTitle"),
+            duration: 6000,
+          });
+        }
       }
     } catch {
       // On error, allow through — do not block the user
@@ -208,6 +215,8 @@ export default function IdentityGuard({ children }: { children: React.ReactNode 
     // Only run once per pathname mount (prevent re-check on locale switch)
     if (checkedForPath === pathname) return;
 
+    // Reset the toast guard for the new path
+    toastShownRef.current = false;
     setStatus("checking");
     setCheckedForPath(pathname);
     runCheck();
