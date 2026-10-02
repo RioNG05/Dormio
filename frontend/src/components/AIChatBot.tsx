@@ -3,6 +3,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Send, Bot, User, Loader2 } from "lucide-react";
 import { useLanguage, useTranslations } from "@/context/LanguageContext";
+import { api } from "@/services/api";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Message = {
   id: string;
@@ -57,38 +60,27 @@ export default function AIChatBot() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
+      const response = await api.post<{ reply: string }>("/v1/ai/chat", {
+        messages: [...messages, userMsg].map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      }, {
         headers: {
-          "Content-Type": "application/json",
           "Accept-Language": locale,
         },
-        body: JSON.stringify({
-          locale,
-          messages: [...messages, userMsg].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Chat API Response Error:", errorData);
-        throw new Error(
-          errorData.details?.error?.message ||
-            errorData.message ||
-            t("aiChatServerError")
-        );
-      }
-
-      const data = await response.json();
+      // The api client typically returns { success: true, data: ... } or just the data depending on unwrapping
+      // The backend returns: { success: true, data: { reply: "..." } }
+      // So response might be the raw object or the data property. We will safely handle it:
+      const replyData = (response as any).data ? (response as any).data.reply : (response as any).reply;
 
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), role: "assistant", content: data.reply },
+        { id: Date.now().toString(), role: "assistant", content: replyData },
       ]);
-    } catch (error) {
+    } catch (error: any) {
       setMessages((prev) => [
         ...prev,
         {
@@ -108,7 +100,7 @@ export default function AIChatBot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50 group cursor-pointer"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-[100] group cursor-pointer"
           title={t("aiChatBotTitle")}
           aria-label={t("aiChatBotTitle")}
         >
@@ -119,9 +111,9 @@ export default function AIChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[380px] h-[550px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-zinc-200 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed sm:bottom-6 sm:right-6 bottom-0 right-0 w-full sm:w-[380px] h-[100dvh] sm:h-[550px] bg-white sm:rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden sm:border border-zinc-200 animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
-          <div className="bg-[#2AC1BC] p-4 flex justify-between items-center text-white">
+          <div className="bg-[#2AC1BC] p-4 flex justify-between items-center text-white shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                 <Bot className="w-6 h-6" />
@@ -171,18 +163,15 @@ export default function AIChatBot() {
                     )}
                   </div>
                   <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${
                       msg.role === "user"
-                        ? "bg-[#2AC1BC] text-white rounded-tr-sm"
-                        : "bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm"
+                        ? "bg-[#2AC1BC] text-white rounded-tr-sm prose-invert"
+                        : "bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0"
                     }`}
                   >
-                    {msg.content.split("\n").map((line, i) => (
-                      <React.Fragment key={i}>
-                        {line}
-                        {i !== msg.content.split("\n").length - 1 && <br />}
-                      </React.Fragment>
-                    ))}
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -211,7 +200,7 @@ export default function AIChatBot() {
           </div>
 
           {/* Input */}
-          <div className="p-4 bg-white border-t border-zinc-100">
+          <div className="p-4 bg-white border-t border-zinc-100 shrink-0">
             <form onSubmit={handleSend} className="relative flex items-center">
               <input
                 type="text"

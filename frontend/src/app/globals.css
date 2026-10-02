@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* Tắt chế độ dark mode tự động của Tailwind v4, bắt buộc dùng nền trắng */
 @custom-variant dark (&:where(.dark, .dark *));
