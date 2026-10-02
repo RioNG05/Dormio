@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AiChatDto, AiChatResponseDto } from './dto/ai-chat.dto';
 
-const DORMIO_SYSTEM_INSTRUCTION = `Bạn là Dormio AI Assistant — Trợ lý thông minh của hệ thống quản lý & cho thuê phòng trọ Dormio (Việt Nam).
-Nhiệm vụ của bạn là hỗ trợ:
-1. Người tìm trọ & Khách thuê: Tìm phòng phù hợp, giải đáp quy trình đặt cọc giữ chỗ online an toàn (tiền cọc giữ qua cổng sàn Dormio, chỉ chuyển sang hợp đồng khi nhận phòng), hướng dẫn thanh toán hóa đơn điện nước qua mã VietQR PayOS tự động, gửi yêu cầu phản ánh khiếu nại (Grievance).
-2. Chủ trọ & Quản lý: Hướng dẫn quản lý danh sách phòng, hợp đồng điện tử, chốt chỉ số điện nước tự động bằng AI OCR từ ảnh chụp đồng hồ, lên lịch làm việc và chấm công cho nhân viên, xem báo cáo doanh thu tài chính.
-3. Nguyên tắc trả lời: Thân thiện, lịch sự, chính xác, ngắn gọn, có cấu trúc bullet point rõ ràng, chuẩn tiếng Việt (hoặc tiếng Anh nếu người dùng hỏi bằng tiếng Anh).`;
+const DORMIO_SYSTEM_INSTRUCTION = `Bạn là Dormio AI Assistant — Trợ lý thông minh dành riêng cho Chủ trọ trên hệ thống quản lý phòng trọ Dormio.
+Nhiệm vụ của bạn:
+1. Hướng dẫn Chủ trọ (Landlord) sử dụng các tính năng của hệ thống (Landlord Dashboard).
+2. Nắm rõ toàn bộ tính năng: Quản lý nhà trọ, quản lý phòng, hợp đồng điện tử, chốt chỉ số điện nước tự động bằng AI OCR, quản lý nhân viên, chấm công, hóa đơn VietQR PayOS, xem báo cáo tài chính.
+3. Khi giải đáp, cần hướng dẫn chi tiết các bước thực hiện tính năng và cách điều hướng (truy cập vào đâu trên giao diện).
+4. Trình bày rõ ràng, sử dụng bullet point, ngắn gọn dễ hiểu.
+5. Khi được cung cấp dữ liệu ngữ cảnh (context) về tài khoản của chủ trọ, hãy phân tích để tư vấn dựa trên số lượng nhà trọ, chi tiết từng nhà trọ (số tầng, phòng, khách thuê, công nợ, tài sản) để đưa ra câu trả lời cá nhân hóa.`;
 
 @Injectable()
 export class AiService {
@@ -100,9 +102,77 @@ export class AiService {
       contents.shift();
     }
 
+    let dynamicSystemInstruction = DORMIO_SYSTEM_INSTRUCTION;
+
+    if (userId) {
+      try {
+        const userContext = await this.prisma.user.findUnique({
+          where: { id: userId },
+          include: {
+            boardingHouses: {
+              include: { 
+                rooms: {
+                  include: {
+                    contracts: {
+                      where: { status: 'active' },
+                      include: { tenantContracts: true }
+                    },
+                    invoices: {
+                      where: { status: { in: ['unpaid', 'overdue'] } }
+                    }
+                  }
+                },
+                services: true,
+                assets: true,
+              },
+            },
+            userSubscriptions: {
+              where: { status: 'active' },
+              include: { subscriptionPlan: true },
+            },
+          },
+        });
+
+        if (userContext) {
+          const houseCount = userContext.boardingHouses.length;
+          const activePlan = userContext.userSubscriptions[0]?.subscriptionPlan?.planName || 'Free';
+          
+          let bhContextInfo = '';
+          userContext.boardingHouses.forEach((bh, index) => {
+             const floors = bh.totalFloor || 1;
+             const rooms = bh.rooms.length;
+             const servicesCount = bh.services.length;
+             const assetsCount = bh.assets.length;
+             const assetNames = bh.assets.map(a => a.name).join(', ') || 'Không có';
+             
+             let totalTenants = 0;
+             let totalDebt = 0;
+
+             bh.rooms.forEach(room => {
+                room.contracts.forEach(c => {
+                   totalTenants += c.tenantContracts.length;
+                });
+                room.invoices.forEach(inv => {
+                   totalDebt += Number(inv.totalAmount);
+                });
+             });
+
+             bhContextInfo += `\n- Nhà trọ ${index + 1} (${bh.name}): ${floors} tầng, ${rooms} phòng, ${totalTenants} người thuê, ${servicesCount} dịch vụ, tổng công nợ: ${totalDebt} VNĐ. Tài sản gồm (${assetsCount} món): ${assetNames}.`;
+          });
+
+          dynamicSystemInstruction += `\n\n--- THÔNG TIN NGỮ CẢNH CỦA CHỦ TRỌ ---
+- Gói cước đang sử dụng: ${activePlan}
+- Số lượng nhà trọ đang quản lý: ${houseCount}${bhContextInfo}
+Hãy sử dụng thông tin này để trả lời chủ trọ (Tuyệt đối không nêu thông tin cá nhân khách thuê).`;
+        }
+      } catch (err) {
+        this.logger.error('Lỗi khi lấy context user cho AI: ' + err);
+      }
+    }
+
     const body = {
       systemInstruction: {
-        parts: [{ text: DORMIO_SYSTEM_INSTRUCTION }],
+        parts: [{ text: dynamicSystemInstruction }],
       },
       contents,
       generationConfig: {
