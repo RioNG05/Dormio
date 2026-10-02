@@ -315,7 +315,7 @@ export default function PublicLayout({
 
                         {/* 🔔 Notification Popup & 🌐 Language Switcher */}
                         <div className="flex items-center gap-1 pl-1 border-l border-zinc-200/80">
-                            <NotificationBell align="right" />
+                            {isLoggedIn && <NotificationBell align="right" />}
                             <LanguageSwitcher />
                         </div>
 
@@ -323,7 +323,7 @@ export default function PublicLayout({
 
                     {/* Mobile Controls */}
                     <div className="flex items-center gap-1.5 lg:hidden">
-                        <NotificationBell align="right" />
+                        {isLoggedIn && <NotificationBell align="right" />}
                         <LanguageSwitcher />
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
