@@ -117,6 +117,9 @@ PGADMIN_PORT=5050
 
 #### Tại thư mục `backend/.env`:
 ```env
+# ─── Frontend ────────────────────────────────────────────────────────────────
+FRONTEND_URL=
+
 # ─── Database ────────────────────────────────────────────────────────────────
 DATABASE_URL="postgresql://dormio:dormio123@localhost:5432/dormio_db"
 
