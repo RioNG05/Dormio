@@ -14,14 +14,15 @@ export function proxy(request: NextRequest) {
   const role = request.cookies.get('dormio_user_role')?.value;
   const isLoggedIn = request.cookies.get('dormio_logged_in')?.value === 'true';
 
-  // 0. Protected checkout route /pricing/:plan and /rooms/:id/deposit (requires login)
+  // 0. Protected checkout route /pricing/**/purchase and /rooms/:id/deposit (requires login)
   if (
-    (pathname.startsWith('/pricing/') && pathname !== '/pricing') ||
+    (pathname.startsWith('/pricing/') && pathname.includes('/purchase')) ||
     (pathname.startsWith('/rooms/') && pathname.endsWith('/deposit'))
   ) {
     if (!isLoggedIn) {
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      const redirectTarget = pathname + (request.nextUrl.search || '');
+      loginUrl.searchParams.set('redirect', redirectTarget);
       return NextResponse.redirect(loginUrl);
     }
   }

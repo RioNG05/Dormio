@@ -62,7 +62,15 @@ export default function LoginPage() {
       if (mustChangePassword) {
         router.push("/change-password");
       } else {
-        router.push(redirectPath);
+        const redirectQuery =
+          typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("redirect")
+            : null;
+        const targetUrl =
+          redirectQuery && redirectQuery.startsWith("/")
+            ? redirectQuery
+            : redirectPath;
+        router.push(targetUrl);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t("authLoginErrGeneric");
