@@ -44,7 +44,7 @@ const BANK_NAMES: Record<string, string> = {
 };
 
 // ─── Pack definitions ──────────────────────────────────────────────────────────
-type PackKey = "gold" | "diamond";
+type PackKey = "1" | "10" | "100";
 
 interface TurnPack {
   key: PackKey;
@@ -63,55 +63,45 @@ interface TurnPack {
 
 const TURN_PACKS: TurnPack[] = [
   {
-    key: "gold",
-    name: "Tin VIP Vàng",
-    nameEn: "Gold VIP Listing",
+    key: "1",
+    name: "Theo lượt",
+    nameEn: "Per turn",
+    turns: 1,
+    price: 20000,
+    pricePerTurn: 20000,
+    badge: "MỚI",
+    accentColor: "#F59E0B",
+    iconColor: "#FBBF24",
+    features: [],
+    featuresEn: [],
+    popular: false,
+  },
+  {
+    key: "10",
+    name: "Gói 10 tin",
+    nameEn: "10 turns pack",
     turns: 10,
-    price: 179000,
-    pricePerTurn: 17900,
+    price: 170000,
+    pricePerTurn: 17000,
     badge: "PHỔ BIẾN",
     accentColor: "#F59E0B",
     iconColor: "#FBBF24",
-    features: [
-      "Nhãn nổi bật VIP Vàng ấn tượng",
-      "Tải lên tối đa 15 hình ảnh HD",
-      "Tự động đẩy bài 1 lần / ngày",
-      "Ưu tiên vị trí top đầu tìm kiếm",
-      "Được phép bật tính năng Cọc Escrow",
-    ],
-    featuresEn: [
-      "Impressive Gold VIP badge",
-      "Upload up to 15 HD photos",
-      "Auto bump post 1 time / day",
-      "Top priority in search results",
-      "Allowed to enable Escrow Deposit",
-    ],
+    features: [],
+    featuresEn: [],
     popular: true,
   },
   {
-    key: "diamond",
-    name: "Tin VIP Kim Cương",
-    nameEn: "Diamond VIP Listing",
+    key: "100",
+    name: "Gói 100 tin",
+    nameEn: "100 turns pack",
     turns: 100,
     price: 1690000,
     pricePerTurn: 16900,
     badge: "GIÁ TRỊ NHẤT",
     accentColor: "#2AC1BC",
     iconColor: "#5EEAD4",
-    features: [
-      "Ghim đứng đầu vị trí Top 1 danh mục",
-      "Nhãn Kim Cương phát sáng nổi bật",
-      "Tự động đẩy bài 3 lần / ngày",
-      "Hỗ trợ tối ưu hình ảnh & chuẩn SEO",
-      "Duyệt tin thần tốc trong 5 phút",
-    ],
-    featuresEn: [
-      "Pinned #1 spot in category",
-      "Glowing Diamond VIP badge",
-      "Auto bump post 3 times / day",
-      "Image optimization & SEO support",
-      "Express approval within 5 mins",
-    ],
+    features: [],
+    featuresEn: [],
     popular: false,
   },
 ];
@@ -146,7 +136,7 @@ interface BhrpCheckoutResponse {
 function BuyTurnsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const packParam = (searchParams.get("pack") ?? "gold") as PackKey;
+  const packParam = (searchParams.get("pack") ?? "10") as PackKey;
 
   const { isLoggedIn, isHydrating } = useAuth();
   const { locale } = useLanguage();
@@ -156,7 +146,7 @@ function BuyTurnsPageInner() {
   const isVi = locale === "vi";
 
   const [selectedPack, setSelectedPack] = useState<PackKey>(
-    TURN_PACKS.some((p) => p.key === packParam) ? packParam : "gold"
+    TURN_PACKS.some((p) => p.key === packParam) ? packParam : "10"
   );
   const pack = TURN_PACKS.find((p) => p.key === selectedPack)!;
 

@@ -153,57 +153,47 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
   // BHRP plans: per-turn purchase (not subscription)
   const bhrpPlans = [
     {
-      name: t("guestPricingStdListingName"),
+      name: t("guestPricingBhrpPlan1Name"),
       price: 0,
       turns: 0,
-      description: t("guestPricingStdListingDesc"),
-      features: [
-        t("guestPricingStdF1"),
-        t("guestPricingStdF2"),
-        t("guestPricingStdF3"),
-        t("guestPricingStdF4"),
-      ],
-      notIncluded: [
-        t("guestPricingStdN1"),
-        t("guestPricingStdN2"),
-        t("guestPricingStdN3"),
-      ],
-      cta: t("guestPricingStdCta"),
-      href: "/register",
+      description: t("guestPricingBhrpPlan1Desc"),
+      features: [],
+      notIncluded: [],
+      cta: t("guestPricingBhrpPlan1Cta"),
+      href: "/posts/create",
       popular: false,
     },
     {
-      name: t("guestPricingVipGoldName"),
-      price: 179000,
+      name: t("guestPricingBhrpPlan2Name"),
+      price: 20000,
+      turns: 1,
+      description: t("guestPricingBhrpPlan2Desc"),
+      features: [],
+      notIncluded: [],
+      cta: t("guestPricingBhrpPlan2Cta"),
+      href: "/pricing/rental-platform/purchase?pack=1",
+      popular: false,
+    },
+    {
+      name: t("guestPricingBhrpPlan3Name"),
+      price: 170000,
       turns: 10,
-      description: t("guestPricingVipGoldDesc"),
-      features: [
-        t("guestPricingVipGoldF1"),
-        t("guestPricingVipGoldF2"),
-        t("guestPricingVipGoldF3"),
-        t("guestPricingVipGoldF4"),
-        t("guestPricingVipGoldF5"),
-      ],
-      notIncluded: [t("guestPricingVipGoldN1")],
-      cta: t("guestPricingVipGoldCta"),
-      href: "/pricing/rental-platform/purchase?pack=gold",
+      description: t("guestPricingBhrpPlan3Desc"),
+      features: [],
+      notIncluded: [],
+      cta: t("guestPricingBhrpPlan3Cta"),
+      href: "/pricing/rental-platform/purchase?pack=10",
       popular: true,
     },
     {
-      name: t("guestPricingVipDiamondName"),
+      name: t("guestPricingBhrpPlan4Name"),
       price: 1690000,
       turns: 100,
-      description: t("guestPricingVipDiamondDesc"),
-      features: [
-        t("guestPricingVipDiamondF1"),
-        t("guestPricingVipDiamondF2"),
-        t("guestPricingVipDiamondF3"),
-        t("guestPricingVipDiamondF4"),
-        t("guestPricingVipDiamondF5"),
-      ],
+      description: t("guestPricingBhrpPlan4Desc"),
+      features: [],
       notIncluded: [],
-      cta: t("guestPricingVipDiamondCta"),
-      href: "/pricing/rental-platform/purchase?pack=diamond",
+      cta: t("guestPricingBhrpPlan4Cta"),
+      href: "/pricing/rental-platform/purchase?pack=100",
       popular: false,
     },
   ];
@@ -431,32 +421,34 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                       )}
                     </div>
 
-                    <div className="space-y-3 pt-2">
-                      <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">
-                        {isBhms ? t("guestPricingIncluded") : t("guestPricingBhrpIncluded")}
-                      </span>
-                      {plan.features.map((feat, fIdx) => (
-                        <div key={fIdx} className="flex items-start gap-2 text-xs font-semibold text-zinc-700">
-                          <Check className="w-4 h-4 shrink-0 mt-0.5" style={{ color: accentColor }} />
-                          <span>{feat}</span>
-                        </div>
-                      ))}
-                      {plan.notIncluded.map((feat, nIdx) => (
-                        <div key={nIdx} className="flex items-start gap-2 text-xs font-medium text-zinc-400 opacity-60">
-                          <X className="w-4 h-4 text-zinc-300 shrink-0 mt-0.5" />
-                          <span className="line-through">{feat}</span>
-                        </div>
-                      ))}
-                    </div>
+                    { (plan.features.length > 0 || plan.notIncluded.length > 0) && (
+                      <div className="space-y-3 pt-2">
+                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">
+                          {isBhms ? t("guestPricingIncluded") : t("guestPricingBhrpIncluded")}
+                        </span>
+                        {plan.features.map((feat, fIdx) => (
+                          <div key={fIdx} className="flex items-start gap-2 text-xs font-semibold text-zinc-700">
+                            <Check className="w-4 h-4 shrink-0 mt-0.5" style={{ color: accentColor }} />
+                            <span>{feat}</span>
+                          </div>
+                        ))}
+                        {plan.notIncluded.map((feat, nIdx) => (
+                          <div key={nIdx} className="flex items-start gap-2 text-xs font-medium text-zinc-400 opacity-60">
+                            <X className="w-4 h-4 text-zinc-300 shrink-0 mt-0.5" />
+                            <span className="line-through">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <Link
                     href={
                       isBhms
                         ? idx === 1
-                          ? "/pricing/management-system/plus"
+                          ? "/pricing/management-system/purchase?pack=plus"
                           : idx === 2
-                          ? "/pricing/management-system/pro"
+                          ? "/pricing/management-system/purchase?pack=pro"
                           : "/register/landlord"
                         : (planHref ?? "/register")
                     }

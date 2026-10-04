@@ -69,14 +69,14 @@ function getQrImageUrl(data: SubscriptionCheckoutResponse | null): string {
 }
 
 interface PageProps {
-  params: Promise<{
-    plan: string;
+  searchParams: Promise<{
+    pack?: string;
   }>;
 }
 
-function PricingCheckoutPageInner({ params }: PageProps) {
-  const resolvedParams = use(params);
-  const planParam = resolvedParams.plan?.toLowerCase() as "plus" | "pro";
+function PricingCheckoutPageInner({ searchParams }: PageProps) {
+  const resolvedParams = use(searchParams);
+  const planParam = (resolvedParams.pack || "").toLowerCase() as "plus" | "pro";
   const router = useRouter();
   const { user, isLoggedIn, isHydrating } = useAuth();
   const { locale } = useLanguage();
@@ -114,7 +114,7 @@ function PricingCheckoutPageInner({ params }: PageProps) {
   // Auth requirement check: Must be logged in to checkout
   useEffect(() => {
     if (!isHydrating && !isLoggedIn) {
-      router.push(`/login?redirect=/pricing/management-system/${planParam}`);
+      router.push(`/login?redirect=/pricing/management-system/purchase?pack=${planParam}`);
     }
   }, [isHydrating, isLoggedIn, planParam, router]);
 
@@ -722,10 +722,10 @@ function PricingCheckoutPageInner({ params }: PageProps) {
 }
 
 // ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
-export default function PricingCheckoutPage({ params }: PageProps) {
+export default function PricingCheckoutPage({ searchParams }: PageProps) {
   return (
     <IdentityGuard>
-      <PricingCheckoutPageInner params={params} />
+      <PricingCheckoutPageInner searchParams={searchParams} />
     </IdentityGuard>
   );
 }

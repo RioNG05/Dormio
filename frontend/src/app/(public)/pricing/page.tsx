@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import PricingUI from "./components/PricingUI";
 
 export default function PricingIndexPage() {
-  redirect("/pricing/management-system");
+  return <PricingUI initialTab="bhms" />;
 }
