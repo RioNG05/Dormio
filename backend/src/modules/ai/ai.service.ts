@@ -37,7 +37,7 @@ export class AiService {
   async generateText(prompt: string, systemInstruction?: string): Promise<string> {
     this.logger.log(`Generating text using model: ${this.modelText}`);
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`;
 
     const body: any = {
       contents: [
@@ -79,7 +79,7 @@ export class AiService {
   async chat(dto: AiChatDto, userId?: string): Promise<AiChatResponseDto> {
     this.logger.log(`Chat invoked with ${dto.messages.length} messages. User: ${userId || 'guest'}`);
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`;
 
     // Format messages for Gemini API
     const rawContents = dto.messages.map((m) => ({

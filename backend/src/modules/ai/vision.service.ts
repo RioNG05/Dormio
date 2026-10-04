@@ -152,7 +152,7 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
   "notes": "<string: ghi chú ngắn gọn về đặc điểm công tơ hoặc lý do không hợp lệ>"
 }`;
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
 
     const payload = {
       contents: [
@@ -299,7 +299,7 @@ BẮT BUỘC TRẢ VỀ JSON:
   "notes": "<string: ghi chú nếu ảnh mờ/lóa góc>"
 }`;
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
 
     const payload = {
       contents: [
@@ -405,7 +405,7 @@ Trả về JSON:
       return { features: [], description: '' };
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
