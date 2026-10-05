@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 
 export interface TextInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
-  label?: string;
+  label?: React.ReactNode;
+  labelRight?: React.ReactNode;
   required?: boolean;
   error?: string;
   helperText?: string;
@@ -17,6 +18,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
   (
     {
       label,
+      labelRight,
       required = false,
       error,
       helperText,
@@ -32,22 +34,28 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
     ref
   ) => {
     // Generate fallback unique ID if not provided
-    const inputId = id || (label ? `input-${label.replace(/\s+/g, "-").toLowerCase()}` : undefined);
+    const reactGeneratedId = React.useId();
+    const inputId = id || reactGeneratedId;
 
     return (
       <div className={cn("space-y-1.5 w-full", containerClassName)}>
-        {label && (
-          <label
-            htmlFor={inputId}
-            className={cn(
-              "block text-xs font-bold text-zinc-700 select-none",
-              disabled && "text-zinc-400 cursor-not-allowed",
-              labelClassName
+        {(label || labelRight) && (
+          <div className="flex items-center justify-between gap-2">
+            {label && (
+              <label
+                htmlFor={inputId}
+                className={cn(
+                  "block text-xs font-bold text-zinc-700 select-none",
+                  disabled && "text-zinc-400 cursor-not-allowed",
+                  labelClassName
+                )}
+              >
+                <span>{label}</span>
+                {required && <span className="text-rose-500 font-bold ml-1">*</span>}
+              </label>
             )}
-          >
-            <span>{label}</span>
-            {required && <span className="text-rose-500 font-bold ml-1">*</span>}
-          </label>
+            {labelRight && <div className="shrink-0">{labelRight}</div>}
+          </div>
         )}
 
         <div className="relative flex items-center">

@@ -5,3 +5,4 @@ export * from "./NumberInput";
 export * from "./SelectInput";
 export * from "./TextareaInput";
 export * from "./Toast";
+export * from "./Checkbox";
