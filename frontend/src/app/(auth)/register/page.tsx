@@ -144,20 +144,7 @@ export default function RegisterPage() {
       {/* Main Registration Form reusing Base Components */}
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* 1. Full Name (Optional) */}
-        <TextInput
-          label={t("authRegisterFullNameLabel")}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
-          type="text"
-          required={false}
-          placeholder={t("authRegisterFullNamePlaceholder")}
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          leftIcon={<User className="w-4 h-4 text-zinc-400" />}
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
-        />
-
-        {/* 2. Phone Number (Required) */}
+        {/* 1. Phone Number (Required) */}
         <TextInput
           label={t("authLoginPhoneLabel")}
           labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
@@ -167,6 +154,19 @@ export default function RegisterPage() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
+          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+        />
+
+        {/* 2. Full Name (Optional) */}
+        <TextInput
+          label={t("authRegisterFullNameLabel")}
+          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          type="text"
+          required={false}
+          placeholder={t("authRegisterFullNamePlaceholder")}
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          leftIcon={<User className="w-4 h-4 text-zinc-400" />}
           className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
         />
 
