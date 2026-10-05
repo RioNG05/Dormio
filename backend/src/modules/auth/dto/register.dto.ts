@@ -33,8 +33,8 @@ export class RegisterDto {
   @MinLength(8, { message: 'password must be at least 8 characters' })
   password: string;
 
-  @ApiProperty({ example: 'Nguyễn Văn A' })
+  @ApiPropertyOptional({ example: 'Nguyễn Văn A', description: 'User full name (optional)' })
   @IsString()
-  @IsNotEmpty()
-  fullName: string;
+  @IsOptional()
+  fullName?: string;
 }

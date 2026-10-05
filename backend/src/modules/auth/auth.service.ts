@@ -26,18 +26,20 @@ export class AuthService {
   // ─── Register ──────────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto) {
+    const phoneNumber = dto.phoneNumber.trim();
     // Check phone uniqueness
     const existingByPhone = await this.prisma.user.findUnique({
-      where: { phoneNumber: dto.phoneNumber },
+      where: { phoneNumber },
     });
     if (existingByPhone) {
       throw new ConflictException('phone_number_already_exists');
     }
 
+    const email = dto.email?.trim() || null;
     // Check email uniqueness if provided
-    if (dto.email) {
+    if (email) {
       const existingByEmail = await this.prisma.user.findUnique({
-        where: { email: dto.email },
+        where: { email },
       });
       if (existingByEmail) {
         throw new ConflictException('email_already_exists');
@@ -48,10 +50,10 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        phoneNumber: dto.phoneNumber,
-        email: dto.email,
+        phoneNumber,
+        email,
         hashedPassword,
-        username: dto.fullName,
+        username: dto.fullName?.trim() || null,
         role: UserRole.leasing_agent, // Self-registered users start as leasing agents.
         mustChangePassword: false, // Self-registered users choose their own password
       },

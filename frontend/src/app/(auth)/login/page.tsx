@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Phone, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Loader2
+  Phone, Mail, Lock, Eye, EyeOff, ArrowRight
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from "@/context/LanguageContext";
 import { api } from "@/services/api";
 import { getHighestRoleRedirect } from "@/utils";
+import { TextInput, Button, Checkbox } from "@/components/ui";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -18,6 +19,7 @@ export default function LoginPage() {
 
   const [method, setMethod] = useState<"phone" | "email">("phone");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Form states
   const [accountIdentifier, setAccountIdentifier] = useState("");
@@ -102,94 +104,102 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => { setMethod("phone"); setAccountIdentifier(""); setError(null); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
-            }`}
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            method === "phone" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
+          }`}
         >
           <Phone className="w-3.5 h-3.5" /> {t("authLoginMethodPhone")}
         </button>
         <button
           type="button"
           onClick={() => { setMethod("email"); setAccountIdentifier(""); setError(null); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
-            }`}
+          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            method === "email" ? "bg-white text-[#2AC1BC] shadow-xs" : "text-zinc-500 hover:text-zinc-800"
+          }`}
         >
           <Mail className="w-3.5 h-3.5" /> {t("authLoginMethodEmail")}
         </button>
       </div>
 
-      {/* Login Form */}
+      {/* Login Form reusing Base Components */}
       <form onSubmit={handleSubmit} className="space-y-4">
 
         {/* Phone or Email input */}
-        <div className="space-y-1">
-          <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">
-            {method === "phone" ? t("authLoginPhoneLabel") : t("authLoginEmailLabel")}
-          </label>
-          <div className="relative">
-            {method === "phone" ? (
-              <Phone className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <TextInput
+          label={method === "phone" ? t("authLoginPhoneLabel") : t("authLoginEmailLabel")}
+          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          type={method === "phone" ? "tel" : "email"}
+          required
+          placeholder={method === "phone" ? t("authLoginPhonePlaceholder") : t("authLoginEmailPlaceholder")}
+          value={accountIdentifier}
+          onChange={(e) => setAccountIdentifier(e.target.value)}
+          leftIcon={
+            method === "phone" ? (
+              <Phone className="w-4 h-4 text-zinc-400" />
             ) : (
-              <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            )}
-            <input
-              type={method === "phone" ? "tel" : "email"}
-              required
-              placeholder={method === "phone" ? "0987 654 321" : "nguyenvana@gmail.com"}
-              value={accountIdentifier}
-              onChange={(e) => setAccountIdentifier(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-            />
-          </div>
-        </div>
+              <Mail className="w-4 h-4 text-zinc-400" />
+            )
+          }
+          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+        />
 
         {/* Password Field & Forgot Link */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">{t("authLoginPasswordLabel")}</label>
+        <TextInput
+          label={t("authLoginPasswordLabel")}
+          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelRight={
             <Link href="/forgot-password" className="text-xs font-extrabold text-[#2AC1BC] hover:underline">
               {t("authForgotPassword")}
             </Link>
-          </div>
-
-          <div className="relative">
-            <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type={showPassword ? "text" : "password"}
-              required
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-            />
+          }
+          type={showPassword ? "text" : "password"}
+          required
+          placeholder={t("authLoginPassPlaceholder")}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
+          rightIcon={
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 cursor-pointer"
+              className="text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors p-1"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
-          </div>
+          }
+          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+        />
+
+        {/* Remember me Checkbox */}
+        <div className="flex items-center justify-between pt-0.5">
+          <Checkbox
+            size="sm"
+            id="remember-me"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            label={<span className="text-xs font-medium text-zinc-600">{t("authRememberMe")}</span>}
+          />
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600 animate-in fade-in">
             {error}
           </div>
         )}
 
-        {/* Submit Button */}
-        <button
+        {/* Submit Button reusing Base Button */}
+        <Button
           type="submit"
-          disabled={isLoading}
-          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
+          variant="primary"
+          size="lg"
+          isLoading={isLoading}
+          rightIcon={<ArrowRight className="w-4 h-4" />}
+          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
         >
-          {isLoading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> {t("authLoginLoading")}</>
-          ) : (
-            <><span>{t("authLoginSubmitBtn")}</span><ArrowRight className="w-4 h-4" /></>
-          )}
-        </button>
+          {t("authLoginSubmitBtn")}
+        </Button>
 
       </form>
 
