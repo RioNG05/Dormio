@@ -3,11 +3,10 @@
 import React, { useState, useRef, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Send, Paperclip, Smile, ImageIcon, Phone, Circle, Search, Info,
-  Building2, User, FileText, CheckCheck, Clock, Sparkles, ChevronRight,
-  MapPin, MessageSquare, ShieldCheck, DollarSign, CalendarDays, ExternalLink,
-  Plus, X, Filter, Check, Eye, AlertCircle, Bell, ArrowRight, Smartphone,
-  DoorOpen, FileImage, File, ArrowLeft, Loader2, Download
+  Send, Paperclip, Smile, ImageIcon, Phone, Search, Info,
+  Building2, User, FileText, CheckCheck, Sparkles, ChevronRight,
+  MessageSquare, ShieldCheck, ExternalLink, Plus, X, Eye,
+  AlertCircle, ArrowRight, DoorOpen, FileImage, File, ArrowLeft, Loader2, Download
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +14,6 @@ import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import {
   ConversationItem,
   MessageItem,
-  MessageAttachment,
   ContactItem,
   getConversations,
   getOrCreateConversation,
@@ -25,6 +23,7 @@ import {
   getContacts,
   initMessagesSocket,
 } from "@/services/message.service";
+import { TextInput, Button } from "@/components/ui";
 
 const AVATAR_COLORS = [
   "bg-teal-600",
@@ -84,7 +83,6 @@ function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("landlord");
-  const { currentLocale } = useLanguage();
 
   const urlConversationId = searchParams.get("conversationId") || searchParams.get("id") || "";
   const urlRoom = searchParams.get("room") || searchParams.get("search") || "";
@@ -147,12 +145,15 @@ function MessagesContent() {
   }, [contacts]);
 
   // Preset Smart Quick Replies
-  const quickReplies = [
-    t("landlordMessagesQuick1"),
-    t("landlordMessagesQuick2"),
-    t("landlordMessagesQuick3"),
-    t("landlordMessagesQuick4"),
-  ];
+  const quickReplies = useMemo(
+    () => [
+      t("landlordMessagesQuick1"),
+      t("landlordMessagesQuick2"),
+      t("landlordMessagesQuick3"),
+      t("landlordMessagesQuick4"),
+    ],
+    [t]
+  );
 
   // 1. Mount & load initial conversations & contacts
   useEffect(() => {
@@ -275,7 +276,6 @@ function MessagesContent() {
         }
       });
 
-
     // Mark as read on open
     if (activeChat.unreadCount > 0) {
       markAsRead(activeChat.id).catch(() => { });
@@ -393,7 +393,7 @@ function MessagesContent() {
                   })
                   .catch(console.error);
               } else if (urlType === "upgrade" || urlDepId) {
-                const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "2.500.000 ₫";
+                const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
                 const autoMsgContent = t("landlordMessagesAutoDepositNotice")
                   .replace("{room}", roomLabel)
                   .replace("{tenant}", match.participant.fullName)
@@ -620,7 +620,7 @@ function MessagesContent() {
   if (!isMounted) return null;
 
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100vh-4.5rem)] bg-white border-y border-zinc-200/80 overflow-hidden flex">
+    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-screen bg-white border-y border-zinc-200/80 overflow-hidden flex">
       {/* PANE 1: Left Conversation List */}
       <div
         className={`w-full lg:w-96 border-r border-zinc-200/80 flex-col bg-zinc-50/50 shrink-0 ${mobileShowChat ? "hidden lg:flex" : "flex"
@@ -629,28 +629,29 @@ function MessagesContent() {
         {/* Top Search & Filter Tabs */}
         <div className="p-3.5 border-b border-zinc-200/80 space-y-3 bg-white">
           <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-              <input
-                type="text"
-                placeholder={t("landlordMessagesSearchPlaceholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-              />
-            </div>
-            <button
+            <TextInput
+              placeholder={t("landlordMessagesSearchPlaceholder")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              className="py-2 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
+              containerClassName="flex-1"
+            />
+            <Button
+              size="icon"
+              variant="primary"
               onClick={() => setShowNewChatModal(true)}
-              className="p-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
               title={t("landlordMessagesTooltipNewChat")}
+              className="h-9 w-9 rounded-xl shrink-0"
             >
               <Plus className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Filter Tabs */}
           <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px] font-extrabold">
             <button
+              type="button"
               onClick={() => setActiveTab("all")}
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "all"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
@@ -661,43 +662,59 @@ function MessagesContent() {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("unread")}
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "unread"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              {t("landlordMessagesUnread").replace("{count}", String(conversations.filter((c) => c.unreadCount > 0).length))}
+              {t("landlordMessagesUnread").replace(
+                "{count}",
+                String(conversations.filter((c) => c.unreadCount > 0).length)
+              )}
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("read")}
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "read"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              {t("landlordMessagesRead").replace("{count}", String(conversations.filter((c) => c.unreadCount === 0).length))}
+              {t("landlordMessagesRead").replace(
+                "{count}",
+                String(conversations.filter((c) => c.unreadCount === 0).length)
+              )}
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("tenant")}
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "tenant"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              {t("landlordMessagesTenant").replace("{count}", String(conversations.filter((c) => c.participant.role === "tenant").length))}
+              {t("landlordMessagesTenant").replace(
+                "{count}",
+                String(conversations.filter((c) => c.participant.role === "tenant").length)
+              )}
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("lead")}
               className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "lead"
                   ? "bg-[#2AC1BC] text-white shadow-2xs"
                   : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
                 }`}
             >
-              {t("landlordMessagesTabNewGuests").replace("{count}", String(conversations.filter((c) => c.participant.role !== "tenant").length))}
+              {t("landlordMessagesTabNewGuests").replace(
+                "{count}",
+                String(conversations.filter((c) => c.participant.role !== "tenant").length)
+              )}
             </button>
           </div>
         </div>
@@ -714,12 +731,15 @@ function MessagesContent() {
               <MessageSquare className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
               <p>{t("landlordMessagesEmptyConversations")}</p>
               {contacts.length > 0 && (
-                <button
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => setShowNewChatModal(true)}
-                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] hover:text-white text-[#2AC1BC] font-extrabold rounded-xl text-xs transition-all cursor-pointer"
+                  leftIcon={<Plus className="w-3.5 h-3.5" />}
+                  className="mt-2 border-[#2AC1BC]/30 text-[#2AC1BC] hover:bg-[#2AC1BC] hover:text-white"
                 >
-                  <Plus className="w-3.5 h-3.5" /> {t("landlordMessagesBtnStartChat")}
-                </button>
+                  {t("landlordMessagesBtnStartChat")}
+                </Button>
               )}
             </div>
           ) : (
@@ -733,7 +753,6 @@ function MessagesContent() {
                 <div
                   key={`conv-${chat.id}-${chatIdx}`}
                   onClick={() => handleSelectConversation(chat)}
-
                   className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${isSelected
                       ? "bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]"
                       : "hover:bg-zinc-100/80"
@@ -814,6 +833,7 @@ function MessagesContent() {
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {/* Mobile Back Button */}
                 <button
+                  type="button"
                   onClick={() => {
                     activeChatRef.current = null;
                     setActiveChat(null);
@@ -870,17 +890,21 @@ function MessagesContent() {
                   </a>
                 )}
                 {activeChat.participant.roomName && (
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => {
                       const roomNo = activeChat.participant.roomName?.replace("Phòng ", "") || "";
                       router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`);
                     }}
-                    className="hidden md:flex items-center gap-1 px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                    leftIcon={<FileText className="w-3.5 h-3.5" />}
+                    className="hidden md:inline-flex rounded-xl font-bold hover:bg-[#2AC1BC] hover:text-white"
                   >
-                    <FileText className="w-3.5 h-3.5" /> {t("landlordMessagesBtnContract")}
-                  </button>
+                    {t("landlordMessagesBtnContract")}
+                  </Button>
                 )}
                 <button
+                  type="button"
                   onClick={() => setShowRightDrawer(!showRightDrawer)}
                   className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${showRightDrawer
                       ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
@@ -976,7 +1000,6 @@ function MessagesContent() {
                                       : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200"
                                     }`}
                                 >
-
                                   <File className="w-4 h-4 shrink-0" />
                                   <span className="truncate flex-1">
                                     {att.url.split("/").pop() || t("landlordMessagesDefaultAttachment")}
@@ -1003,7 +1026,6 @@ function MessagesContent() {
                           </span>
                         )}
                       </div>
-
                     </div>
                   );
                 })
@@ -1013,12 +1035,14 @@ function MessagesContent() {
 
             {/* Preset Smart Quick Reply Chips */}
             <div className="px-4 py-2 bg-zinc-100/80 border-t border-zinc-200/80 flex items-center gap-2 overflow-x-auto custom-scrollbar">
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider shrink-0">
-                Nhanh:
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-[#2AC1BC]" />
+                {t("landlordMessagesQuickRepliesTitle")}:
               </span>
               {quickReplies.map((reply, idx) => (
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => handleSendMessage(reply)}
                   disabled={isSending}
                   className="px-2.5 py-1 text-xs font-bold bg-white hover:bg-[#2AC1BC] hover:text-white text-zinc-700 border border-zinc-200 rounded-xl transition-all shrink-0 cursor-pointer shadow-2xs disabled:opacity-50"
@@ -1061,7 +1085,7 @@ function MessagesContent() {
               </div>
             )}
 
-            {/* Message Input Bar */}
+            {/* Message Input Bar reusing Base Components */}
             <div className="p-3 sm:p-4 bg-white border-t border-zinc-200/80">
               <form
                 onSubmit={(e) => {
@@ -1102,36 +1126,37 @@ function MessagesContent() {
                   <ImageIcon className="w-4.5 h-4.5" />
                 </button>
 
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder={t("landlordMessagesComposePlaceholder").replace("{name}", activeChat.participant.roomName || activeChat.participant.fullName)}
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    disabled={isSending}
-                    className="w-full pl-4 pr-10 py-2.5 text-xs sm:text-sm font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
-                  >
-                    <Smile className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSending || (!inputMessage.trim() && pendingAttachments.length === 0)}
-                  className="px-4 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-                >
-                  {isSending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>{t("landlordMessagesSendBtn")}</span> <Send className="w-3.5 h-3.5" />
-                    </>
+                <TextInput
+                  placeholder={t("landlordMessagesComposePlaceholder").replace(
+                    "{name}",
+                    activeChat.participant.roomName || activeChat.participant.fullName
                   )}
-                </button>
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  disabled={isSending}
+                  className="py-2.5 text-xs sm:text-sm font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
+                  containerClassName="flex-1"
+                  rightIcon={
+                    <button
+                      type="button"
+                      className="p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
+                    >
+                      <Smile className="w-4 h-4" />
+                    </button>
+                  }
+                />
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  disabled={isSending || (!inputMessage.trim() && pendingAttachments.length === 0)}
+                  isLoading={isSending}
+                  rightIcon={<Send className="w-3.5 h-3.5" />}
+                  className="px-4 py-2.5 rounded-xl shrink-0"
+                >
+                  {t("landlordMessagesSendBtn")}
+                </Button>
               </form>
             </div>
           </>
@@ -1161,6 +1186,7 @@ function MessagesContent() {
               <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesDrawerTitle")}
             </h3>
             <button
+              type="button"
               onClick={() => setShowRightDrawer(false)}
               className="p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
             >
@@ -1217,6 +1243,7 @@ function MessagesContent() {
             {activeChat.participant.roomName && (
               <div className="space-y-2 pt-1">
                 <button
+                  type="button"
                   onClick={() => {
                     const roomNo = activeChat.participant.roomName?.replace("Phòng ", "") || "";
                     router.push(`/landlord/rooms?search=${encodeURIComponent(roomNo)}`);
@@ -1230,6 +1257,7 @@ function MessagesContent() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => {
                     const roomNo = activeChat.participant.roomName?.replace("Phòng ", "") || "";
                     router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`);
@@ -1287,7 +1315,6 @@ function MessagesContent() {
                           key={`drawer-file-${file.id || file.url}-${fileIdx}`}
                           className="p-2 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center justify-between gap-2"
                         >
-
                           <div className="flex items-center gap-2 min-w-0">
                             <File className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                             <div className="min-w-0">
@@ -1338,6 +1365,7 @@ function MessagesContent() {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={handleCloseNewChatModal}
                 className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
@@ -1346,16 +1374,13 @@ function MessagesContent() {
             </div>
 
             <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="text"
-                  placeholder={t("landlordMessagesNewModalSearch")}
-                  value={newChatSearch}
-                  onChange={(e) => setNewChatSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                />
-              </div>
+              <TextInput
+                placeholder={t("landlordMessagesNewModalSearch")}
+                value={newChatSearch}
+                onChange={(e) => setNewChatSearch(e.target.value)}
+                leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+                className="py-2 text-xs font-semibold bg-white border-zinc-200 rounded-xl"
+              />
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 divide-y divide-zinc-50">
@@ -1379,7 +1404,6 @@ function MessagesContent() {
                     onClick={() => handleSelectContactToChat(contact)}
                     className="p-3 hover:bg-zinc-50 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group"
                   >
-
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-10 h-10 rounded-2xl ${getAvatarBg(
@@ -1433,22 +1457,26 @@ function MessagesContent() {
               {t("landlordMessagesConfirmCloseDesc")}
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setShowCloseModalConfirm(false)}
-                className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                className="rounded-xl font-bold"
               >
                 {t("landlordMessagesConfirmCloseKeep")}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => {
                   setShowCloseModalConfirm(false);
                   setShowNewChatModal(false);
                   setNewChatSearch("");
                 }}
-                className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                className="rounded-xl font-bold"
               >
                 {t("landlordMessagesConfirmCloseDiscard")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1464,6 +1492,7 @@ function MessagesContent() {
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
             <button
+              type="button"
               onClick={() => setPreviewImage(null)}
               className="absolute -top-10 right-0 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
             >
