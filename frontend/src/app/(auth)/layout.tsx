@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import Logo from '@/components/Logo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { Building2, CheckCircle2, Star } from 'lucide-react'
@@ -13,6 +14,8 @@ import { Button } from '@/components/ui/Button'
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('auth')
   const { currentLocale } = useLanguage()
+  const pathname = usePathname()
+  const isLegalPage = ['/terms', '/privacy', '/policy'].some(path => pathname?.startsWith(path))
 
   return (
     <div className="flex h-screen max-h-screen overflow-hidden bg-white">
@@ -22,18 +25,32 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="flex items-center justify-between pb-4 border-b border-zinc-100 shrink-0">
           <Logo size="lg" />
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <Link href="/">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] px-2.5 py-1.5 rounded-xl h-auto"
-              >
-                {t('authLayoutBackHome')}
-              </Button>
-            </Link>
+            {isLegalPage && (
+              <>
+                <Link href="/register">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs font-bold text-zinc-700 hover:bg-zinc-50 border-zinc-200 px-3 py-1.5 rounded-xl h-auto"
+                  >
+                    {t('authLegalBackToRegister')}
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    className="text-xs font-bold px-3.5 py-1.5 rounded-xl h-auto shadow-xs"
+                  >
+                    {t('authLoginBtn')}
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

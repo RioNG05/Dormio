@@ -1,13 +1,10 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
-import Link from 'next/link'
+import React, { useState } from 'react'
 import {
   Scale,
   ShieldCheck,
   Printer,
-  Search,
-  ArrowLeft,
   Lock,
   FileText,
   CreditCard,
@@ -21,7 +18,6 @@ import {
 } from 'lucide-react'
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
-import { TextInput } from '@/components/ui/TextInput'
 import { Form } from '@/components/ui/Form'
 import { useTranslations } from '@/context/LanguageContext'
 
@@ -135,20 +131,8 @@ const PRIVACY_SECTIONS: LegalSection[] = [
 export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
   const t = useTranslations('auth')
   const [activeTab, setActiveTab] = useState<'terms' | 'privacy'>(initialTab)
-  const [searchQuery, setSearchQuery] = useState('')
 
   const currentSections = activeTab === 'terms' ? TERMS_SECTIONS : PRIVACY_SECTIONS
-
-  const filteredSections = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return currentSections
-
-    return currentSections.filter(sec => {
-      const title = t(sec.titleKey).toLowerCase()
-      const content = t(sec.contentKey).toLowerCase()
-      return title.includes(q) || content.includes(q)
-    })
-  }, [currentSections, searchQuery, t])
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
@@ -157,32 +141,11 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-300">
+    <div className="flex flex-col h-full space-y-4 animate-in fade-in duration-300">
       {/* Top Header Card */}
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Text
-            as="span"
-            variant="caption"
-            size="3xs"
-            weight="black"
-            className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t('authLegalDecree13Badge')}
-          </Text>
-          <Text variant="caption" color="subtle" size="xs">
-            {t('authLegalLastUpdated')}
-          </Text>
-        </div>
-
-        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
-          {activeTab === 'terms' ? t('authLegalTabTerms') : t('authLegalTabPrivacy')}
-        </Text>
-
-        <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
-          {t('authLegalSubtitle')}
-        </Text>
-      </div>
+      <Text variant="caption" color="subtle" size="xs">
+        {t('authLegalLastUpdated')}
+      </Text>
 
       {/* Tab Switcher using Button components */}
       <div className="flex p-1 bg-zinc-100/90 rounded-2xl border border-zinc-200/70 gap-1">
@@ -191,9 +154,8 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
           variant={activeTab === 'terms' ? 'primary' : 'ghost'}
           size="sm"
           onClick={() => setActiveTab('terms')}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${
-            activeTab === 'terms' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
-          }`}
+          className={`flex-1 rounded-xl text-xs font-extrabold ${activeTab === 'terms' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
+            }`}
           leftIcon={<Scale className="w-3.5 h-3.5" />}
         >
           {t('authLegalTabTerms')}
@@ -203,148 +165,80 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
           variant={activeTab === 'privacy' ? 'primary' : 'ghost'}
           size="sm"
           onClick={() => setActiveTab('privacy')}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${
-            activeTab === 'privacy' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
-          }`}
+          className={`flex-1 rounded-xl text-xs font-extrabold ${activeTab === 'privacy' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
+            }`}
           leftIcon={<ShieldCheck className="w-3.5 h-3.5" />}
         >
           {t('authLegalTabPrivacy')}
         </Button>
       </div>
 
-      {/* Search & Actions Bar */}
-      <Form onSubmit={e => e.preventDefault()} className="flex items-center gap-2">
-        <TextInput
-          placeholder={t('authLegalSearchPlaceholder')}
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
-          className="rounded-xl py-2 text-xs border-zinc-200 focus:border-[#2AC1BC]"
-          containerClassName="flex-1"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handlePrint}
-          leftIcon={<Printer className="w-3.5 h-3.5 text-zinc-500" />}
-          className="rounded-xl text-xs font-bold border-zinc-200 text-zinc-700 hover:bg-zinc-50 shrink-0"
-        >
-          {t('authLegalPrint')}
-        </Button>
-      </Form>
-
       {/* Dedicated Scrollable Sections Container: Only policy info scrolls, page layout stays fixed */}
-      <div className="border border-zinc-200/80 rounded-2xl p-2.5 sm:p-3.5 bg-zinc-50/50 space-y-3 max-h-[46vh] sm:max-h-[50vh] lg:max-h-[52vh] overflow-y-auto custom-scrollbar">
-        {filteredSections.length === 0 ? (
-          <div className="p-8 text-center bg-white rounded-xl border border-zinc-200/80 space-y-2">
-            <Search className="w-8 h-8 text-zinc-300 mx-auto" />
-            <Text variant="body" size="sm" weight="bold" color="secondary">
-              Không tìm thấy nội dung phù hợp với từ khóa
-            </Text>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchQuery('')}
-              className="text-xs text-[#2AC1BC]"
+      <div className="flex-10 border border-zinc-200/80 rounded-2xl p-2.5 sm:p-3.5 bg-zinc-50/50 space-y-3 overflow-y-auto custom-scrollbar">
+        {currentSections.map(sec => {
+          const Icon = sec.icon
+          return (
+            <div
+              key={sec.id}
+              className="p-3.5 sm:p-4 rounded-xl bg-white border border-zinc-200/80 shadow-2xs hover:border-[#2AC1BC]/40 transition-all space-y-1.5"
             >
-              Xóa bộ lọc tìm kiếm
-            </Button>
-          </div>
-        ) : (
-          <>
-            {filteredSections.map(sec => {
-              const Icon = sec.icon
-              return (
-                <div
-                  key={sec.id}
-                  className="p-3.5 sm:p-4 rounded-xl bg-white border border-zinc-200/80 shadow-2xs hover:border-[#2AC1BC]/40 transition-all space-y-1.5"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <Text as="h3" variant="heading" size="sm" className="text-zinc-900">
-                      {t(sec.titleKey)}
-                    </Text>
-                  </div>
-                  <Text
-                    variant="body"
-                    size="xs"
-                    color="secondary"
-                    className="leading-relaxed pl-8.5 text-zinc-600 font-normal"
-                  >
-                    {t(sec.contentKey)}
-                  </Text>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
+                  <Icon className="w-3.5 h-3.5" />
                 </div>
-              )
-            })}
-
-            {/* Dedicated DPO Card at bottom of Privacy Policy scrollable list */}
-            {activeTab === 'privacy' && (
-              <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-white border border-emerald-500/20 space-y-2.5 mt-2">
-                <div className="flex items-center gap-2 text-emerald-800">
-                  <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
-                  <Text as="h4" variant="heading" size="sm">
-                    {t('authPrivacySec7Title')}
-                  </Text>
-                </div>
-                <Form.Grid cols={2} gap="sm" className="text-zinc-600">
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    <Text as="span" variant="body" size="xs" color="secondary">
-                      Hotline DPO: 0344 265 925 (24/7)
-                    </Text>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    <Text as="span" variant="body" size="xs" color="secondary">
-                      Email: privacy@dormio.vn
-                    </Text>
-                  </div>
-                  <div className="flex items-start gap-2 col-span-full">
-                    <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
-                    <Text as="span" variant="body" size="xs" color="secondary">
-                      Đại học FPT Hà Nội, Khu CNC Hòa Lạc, Thạch Thất, Hà Nội
-                    </Text>
-                  </div>
-                </Form.Grid>
+                <Text as="h3" variant="heading" size="sm" className="text-zinc-900">
+                  {t(sec.titleKey)}
+                </Text>
               </div>
-            )}
-          </>
+              <Text
+                variant="body"
+                size="xs"
+                color="secondary"
+                className="leading-relaxed pl-8.5 text-zinc-600 font-normal"
+              >
+                {t(sec.contentKey)}
+              </Text>
+            </div>
+          )
+        })}
+
+        {/* Dedicated Card at bottom of Privacy Policy scrollable list */}
+        {activeTab === 'privacy' && (
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-white border border-emerald-500/20 space-y-2.5 mt-2">
+            <div className="flex items-center gap-2 text-emerald-800">
+              <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
+              <Text as="h4" variant="heading" size="sm">
+                {t('authPrivacySec7Title')}
+              </Text>
+            </div>
+            <Form.Grid cols={2} gap="sm" className="text-zinc-600">
+              <div className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <Text as="span" variant="body" size="xs" color="secondary">
+                  Hotline: 0344 265 925 (24/7)
+                </Text>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <Text as="span" variant="body" size="xs" color="secondary">
+                  Email: contact@dormio.site
+                </Text>
+              </div>
+              <div className="flex items-start gap-2 col-span-full">
+                <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                <Text as="span" variant="body" size="xs" color="secondary">
+                  Hoà Lạc, Thạch Thất, Hà Nội
+                </Text>
+              </div>
+            </Form.Grid>
+          </div>
         )}
       </div>
 
       {/* Legal Footer Note */}
-      <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/70 text-center space-y-2 shrink-0">
-        <Text variant="caption" size="2xs" color="subtle" className="leading-relaxed block">
-          {t('authLegalAcceptFooter')}
-        </Text>
-        <Form.Actions align="center" stackedOnMobile={false} className="gap-2.5 pt-0.5">
-          <Link href="/register">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
-              className="text-xs font-bold rounded-xl"
-            >
-              {t('authLegalBackToRegister')}
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              className="text-xs font-bold rounded-xl"
-            >
-              {t('authLoginBtn')}
-            </Button>
-          </Link>
-        </Form.Actions>
-      </div>
+      <Text variant="caption" size="2xs" color="subtle" className="leading-relaxed block">
+        {t('authLegalAcceptFooter')}
+      </Text>
     </div>
   )
 }
