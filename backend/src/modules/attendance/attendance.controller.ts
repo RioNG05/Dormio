@@ -8,7 +8,7 @@ import {
   Query,
   Req,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiBody,
@@ -16,21 +16,18 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
-} from '@nestjs/swagger';
-import type { Request } from 'express';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
-import {
-  AttendanceListResponseDto,
-  AttendanceRecordDto,
-} from './dto/attendance-response.dto';
-import { OverrideAttendanceDto } from './dto/override-attendance.dto';
-import { QueryAttendanceDto } from './dto/query-attendance.dto';
-import { AttendanceService } from './attendance.service';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { SubscriptionPackage } from '@prisma';
+} from '@nestjs/swagger'
+import type { Request } from 'express'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
+import { AttendanceListResponseDto, AttendanceRecordDto } from './dto/attendance-response.dto'
+import { OverrideAttendanceDto } from './dto/override-attendance.dto'
+import { QueryAttendanceDto } from './dto/query-attendance.dto'
+import { AttendanceService } from './attendance.service'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
 
 @ApiTags('Landlord - Attendance Management (UC-L-22)')
 @ApiBearerAuth()
@@ -43,7 +40,7 @@ import { SubscriptionPackage } from '@prisma';
 @RequireTier(SubscriptionPackage.pro)
 @Controller('landlord/attendance')
 export class AttendanceController {
-  private readonly logger = new Logger(AttendanceController.name);
+  private readonly logger = new Logger(AttendanceController.name)
 
   constructor(private readonly attendanceService: AttendanceService) {}
 
@@ -63,8 +60,8 @@ export class AttendanceController {
   ): Promise<AttendanceListResponseDto> {
     this.logger.log(
       `GET /v1/landlord/attendance house=${boardingHouseId} query=${JSON.stringify(query)}`,
-    );
-    return this.attendanceService.getAttendance(boardingHouseId, query);
+    )
+    return this.attendanceService.getAttendance(boardingHouseId, query)
   }
 
   @Patch('override')
@@ -86,17 +83,10 @@ export class AttendanceController {
   ): Promise<AttendanceRecordDto> {
     this.logger.log(
       `PATCH /v1/landlord/attendance/override house=${boardingHouseId} schedule=${dto.workScheduleId} user=${user.id} status=${dto.status}`,
-    );
+    )
     const ipAddress =
-      (req.headers['x-forwarded-for'] as string) ||
-      req.socket.remoteAddress ||
-      '127.0.0.1';
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1'
 
-    return this.attendanceService.overrideAttendance(
-      boardingHouseId,
-      user.id,
-      dto,
-      ipAddress,
-    );
+    return this.attendanceService.overrideAttendance(boardingHouseId, user.id, dto, ipAddress)
   }
 }

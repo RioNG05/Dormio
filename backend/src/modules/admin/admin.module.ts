@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../common/prisma/prisma.module';
-import { AdminAnalyticsController } from './admin-analytics.controller';
-import { AdminAnalyticsService } from './admin-analytics.service';
-import { AdminHousesController } from './admin-houses.controller';
-import { AdminHousesService } from './admin-houses.service';
+import { Module } from '@nestjs/common'
+import { PrismaModule } from '../../common/prisma/prisma.module'
+import { AdminAnalyticsController } from './admin-analytics.controller'
+import { AdminAnalyticsService } from './admin-analytics.service'
+import { AdminHousesController } from './admin-houses.controller'
+import { AdminHousesService } from './admin-houses.service'
 
 @Module({
   imports: [PrismaModule],
@@ -12,4 +12,3 @@ import { AdminHousesService } from './admin-houses.service';
   exports: [AdminAnalyticsService, AdminHousesService],
 })
 export class AdminModule {}
-

@@ -11,7 +11,7 @@ import {
   HttpCode,
   Logger,
   ParseUUIDPipe,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -19,27 +19,27 @@ import {
   ApiCreatedResponse,
   ApiBearerAuth,
   ApiResponse,
-} from '@nestjs/swagger';
-import { MessagesService } from './messages.service';
-import { MessagesGateway } from './messages.gateway';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { GetOrCreateConversationDto } from './dto/get-or-create-conversation.dto';
-import { QueryMessagesDto } from './dto/query-messages.dto';
+} from '@nestjs/swagger'
+import { MessagesService } from './messages.service'
+import { MessagesGateway } from './messages.gateway'
+import { CreateMessageDto } from './dto/create-message.dto'
+import { GetOrCreateConversationDto } from './dto/get-or-create-conversation.dto'
+import { QueryMessagesDto } from './dto/query-messages.dto'
 import {
   ConversationResponseDto,
   MessageResponseDto,
   ContactDto,
-} from './dto/conversation-response.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+} from './dto/conversation-response.dto'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Messages')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('messages')
 export class MessagesController {
-  private readonly logger = new Logger(MessagesController.name);
+  private readonly logger = new Logger(MessagesController.name)
 
   constructor(
     private readonly messagesService: MessagesService,
@@ -58,11 +58,9 @@ export class MessagesController {
     description: 'List of conversations',
     type: [ConversationResponseDto],
   })
-  async getConversations(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<ConversationResponseDto[]> {
-    this.logger.log(`GET /messages/conversations called by user ${user.id}`);
-    return this.messagesService.getUserConversations(user.id);
+  async getConversations(@CurrentUser() user: JwtPayload): Promise<ConversationResponseDto[]> {
+    this.logger.log(`GET /messages/conversations called by user ${user.id}`)
+    return this.messagesService.getUserConversations(user.id)
   }
 
   // ─── GET /api/v1/messages/contacts ─────────────────────────────────────────
@@ -70,18 +68,16 @@ export class MessagesController {
   @Get('contacts')
   @ApiOperation({
     summary: 'List Contacts for Messaging Directory',
-    description:
-      'Returns active tenant contacts for landlords, or landlord contacts for tenants.',
+    description: 'Returns active tenant contacts for landlords, or landlord contacts for tenants.',
   })
   @ApiOkResponse({
     description: 'List of contacts',
     type: [ContactDto],
   })
   async getContacts(@CurrentUser() user: JwtPayload): Promise<ContactDto[]> {
-    this.logger.log(`GET /messages/contacts called by user ${user.id}`);
-    return this.messagesService.getContacts(user.id);
+    this.logger.log(`GET /messages/contacts called by user ${user.id}`)
+    return this.messagesService.getContacts(user.id)
   }
-
 
   // ─── POST /api/v1/messages/conversations ───────────────────────────────────
 
@@ -107,19 +103,19 @@ export class MessagesController {
   ): Promise<ConversationResponseDto> {
     this.logger.log(
       `POST /messages/conversations called by user ${user.id} targeting participant ${dto.participantId}`,
-    );
+    )
 
     const conv = await this.messagesService.getOrCreateConversation(
       user.id,
       dto.participantId,
       dto.initialMessage,
-    );
+    )
 
     if (dto.initialMessage && conv.lastMessage) {
-      this.messagesGateway.broadcastNewMessage(conv.id, conv.lastMessage);
+      this.messagesGateway.broadcastNewMessage(conv.id, conv.lastMessage)
     }
 
-    return conv;
+    return conv
   }
 
   // ─── GET /api/v1/messages/conversations/:id/messages ───────────────────────
@@ -141,9 +137,9 @@ export class MessagesController {
   ): Promise<MessageResponseDto[]> {
     this.logger.log(
       `GET /messages/conversations/${conversationId}/messages called by user ${user.id}`,
-    );
+    )
 
-    return this.messagesService.getConversationMessages(conversationId, user.id, query);
+    return this.messagesService.getConversationMessages(conversationId, user.id, query)
   }
 
   // ─── POST /api/v1/messages/conversations/:id/messages ──────────────────────
@@ -166,14 +162,14 @@ export class MessagesController {
   ): Promise<MessageResponseDto> {
     this.logger.log(
       `POST /messages/conversations/${conversationId}/messages called by user ${user.id}`,
-    );
+    )
 
-    const message = await this.messagesService.sendMessage(conversationId, user.id, dto);
+    const message = await this.messagesService.sendMessage(conversationId, user.id, dto)
 
     // Broadcast via WebSocket room
-    this.messagesGateway.broadcastNewMessage(conversationId, message);
+    this.messagesGateway.broadcastNewMessage(conversationId, message)
 
-    return message;
+    return message
   }
 
   // ─── PATCH /api/v1/messages/conversations/:id/read ─────────────────────────
@@ -193,11 +189,11 @@ export class MessagesController {
   ): Promise<{ success: boolean; count: number }> {
     this.logger.log(
       `PATCH /messages/conversations/${conversationId}/read called by user ${user.id}`,
-    );
+    )
 
-    const result = await this.messagesService.markConversationAsRead(conversationId, user.id);
-    this.messagesGateway.broadcastMessagesRead(conversationId, user.id);
+    const result = await this.messagesService.markConversationAsRead(conversationId, user.id)
+    this.messagesGateway.broadcastMessagesRead(conversationId, user.id)
 
-    return result;
+    return result
   }
 }

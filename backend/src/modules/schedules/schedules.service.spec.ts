@@ -1,18 +1,18 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { SchedulesService } from './schedules.service';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { SchedulesService } from './schedules.service'
 
 describe('SchedulesService (UC-L-21)', () => {
-  let service: SchedulesService;
-  let prisma: any;
+  let service: SchedulesService
+  let prisma: any
 
-  const mockBoardingHouseId = '11111111-1111-1111-1111-111111111111';
-  const mockUserId = '22222222-2222-2222-2222-222222222222';
-  const mockEmployeeId = '33333333-3333-3333-3333-333333333333';
-  const mockShiftId = '44444444-4444-4444-4444-444444444444';
-  const mockScheduleId = '55555555-5555-5555-5555-555555555555';
-  const mockPatternId = '66666666-6666-6666-6666-666666666666';
+  const mockBoardingHouseId = '11111111-1111-1111-1111-111111111111'
+  const mockUserId = '22222222-2222-2222-2222-222222222222'
+  const mockEmployeeId = '33333333-3333-3333-3333-333333333333'
+  const mockShiftId = '44444444-4444-4444-4444-444444444444'
+  const mockScheduleId = '55555555-5555-5555-5555-555555555555'
+  const mockPatternId = '66666666-6666-6666-6666-666666666666'
 
   beforeEach(async () => {
     prisma = {
@@ -43,23 +43,20 @@ describe('SchedulesService (UC-L-21)', () => {
         findMany: jest.fn(),
         findFirst: jest.fn(),
       },
-      $transaction: jest.fn(async (cbOrArr) => {
+      $transaction: jest.fn(async cbOrArr => {
         if (typeof cbOrArr === 'function') {
-          return cbOrArr(prisma);
+          return cbOrArr(prisma)
         }
-        return Promise.all(cbOrArr);
+        return Promise.all(cbOrArr)
       }),
-    };
+    }
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        SchedulesService,
-        { provide: PrismaService, useValue: prisma },
-      ],
-    }).compile();
+      providers: [SchedulesService, { provide: PrismaService, useValue: prisma }],
+    }).compile()
 
-    service = module.get<SchedulesService>(SchedulesService);
-  });
+    service = module.get<SchedulesService>(SchedulesService)
+  })
 
   describe('getShifts', () => {
     it('should return existing shifts if already present', async () => {
@@ -72,15 +69,15 @@ describe('SchedulesService (UC-L-21)', () => {
           endTime: new Date('1970-01-01T14:00:00Z'),
           createdAt: new Date(),
         },
-      ]);
+      ])
 
-      const result = await service.getShifts(mockBoardingHouseId);
+      const result = await service.getShifts(mockBoardingHouseId)
 
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('Ca sáng');
-      expect(result[0].startTime).toBe('06:00');
-      expect(result[0].endTime).toBe('14:00');
-    });
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Ca sáng')
+      expect(result[0].startTime).toBe('06:00')
+      expect(result[0].endTime).toBe('14:00')
+    })
 
     it('should seed default shifts if none exist yet', async () => {
       prisma.shift.findMany
@@ -94,18 +91,18 @@ describe('SchedulesService (UC-L-21)', () => {
             endTime: new Date('1970-01-01T14:00:00Z'),
             createdAt: new Date(),
           },
-        ]);
+        ])
 
-      const result = await service.getShifts(mockBoardingHouseId);
+      const result = await service.getShifts(mockBoardingHouseId)
 
-      expect(prisma.$transaction).toHaveBeenCalled();
-      expect(result).toHaveLength(1);
-    });
-  });
+      expect(prisma.$transaction).toHaveBeenCalled()
+      expect(result).toHaveLength(1)
+    })
+  })
 
   describe('createShift', () => {
     it('should throw ConflictException if shift name already exists', async () => {
-      prisma.shift.findFirst.mockResolvedValueOnce({ id: mockShiftId, name: 'Ca sáng' });
+      prisma.shift.findFirst.mockResolvedValueOnce({ id: mockShiftId, name: 'Ca sáng' })
 
       await expect(
         service.createShift(mockBoardingHouseId, {
@@ -113,11 +110,11 @@ describe('SchedulesService (UC-L-21)', () => {
           startTime: '06:00',
           endTime: '14:00',
         }),
-      ).rejects.toThrow(ConflictException);
-    });
+      ).rejects.toThrow(ConflictException)
+    })
 
     it('should create new shift successfully', async () => {
-      prisma.shift.findFirst.mockResolvedValueOnce(null);
+      prisma.shift.findFirst.mockResolvedValueOnce(null)
       prisma.shift.create.mockResolvedValueOnce({
         id: mockShiftId,
         boardingHouseId: mockBoardingHouseId,
@@ -125,23 +122,23 @@ describe('SchedulesService (UC-L-21)', () => {
         startTime: new Date('1970-01-01T20:00:00Z'),
         endTime: new Date('1970-01-01T04:00:00Z'),
         createdAt: new Date(),
-      });
+      })
 
       const result = await service.createShift(mockBoardingHouseId, {
         name: 'Ca tối muộn',
         startTime: '20:00',
         endTime: '04:00',
-      });
+      })
 
-      expect(result.id).toBe(mockShiftId);
-      expect(result.startTime).toBe('20:00');
-      expect(result.endTime).toBe('04:00');
-    });
-  });
+      expect(result.id).toBe(mockShiftId)
+      expect(result.startTime).toBe('20:00')
+      expect(result.endTime).toBe('04:00')
+    })
+  })
 
   describe('createRecurringSchedule (Materialization)', () => {
     it('should throw NotFoundException if shift not found', async () => {
-      prisma.shift.findFirst.mockResolvedValueOnce(null);
+      prisma.shift.findFirst.mockResolvedValueOnce(null)
 
       await expect(
         service.createRecurringSchedule(mockBoardingHouseId, mockUserId, {
@@ -151,8 +148,8 @@ describe('SchedulesService (UC-L-21)', () => {
           startDate: '2026-09-14',
           endDate: '2026-09-20',
         }),
-      ).rejects.toThrow(NotFoundException);
-    });
+      ).rejects.toThrow(NotFoundException)
+    })
 
     it('should throw BadRequestException if employee is not assigned to property', async () => {
       prisma.shift.findFirst.mockResolvedValueOnce({
@@ -160,8 +157,8 @@ describe('SchedulesService (UC-L-21)', () => {
         boardingHouseId: mockBoardingHouseId,
         startTime: new Date('1970-01-01T06:00:00Z'),
         endTime: new Date('1970-01-01T14:00:00Z'),
-      });
-      prisma.employeeAssignment.findMany.mockResolvedValueOnce([]); // No active assignment
+      })
+      prisma.employeeAssignment.findMany.mockResolvedValueOnce([]) // No active assignment
 
       await expect(
         service.createRecurringSchedule(mockBoardingHouseId, mockUserId, {
@@ -171,8 +168,8 @@ describe('SchedulesService (UC-L-21)', () => {
           startDate: '2026-09-14',
           endDate: '2026-09-20',
         }),
-      ).rejects.toThrow(BadRequestException);
-    });
+      ).rejects.toThrow(BadRequestException)
+    })
 
     it('should materialize individual WorkSchedule rows for matching days of week', async () => {
       prisma.shift.findFirst.mockResolvedValueOnce({
@@ -180,40 +177,36 @@ describe('SchedulesService (UC-L-21)', () => {
         boardingHouseId: mockBoardingHouseId,
         startTime: new Date('1970-01-01T06:00:00Z'),
         endTime: new Date('1970-01-01T14:00:00Z'),
-      });
+      })
       prisma.employeeAssignment.findMany.mockResolvedValueOnce([
         { employeeId: mockEmployeeId, status: 'active' },
-      ]);
+      ])
       prisma.recurrencePattern.create.mockResolvedValueOnce({
         id: mockPatternId,
         employeeId: mockEmployeeId,
-      });
-      prisma.workSchedule.findFirst.mockResolvedValue(null);
-      prisma.workSchedule.create.mockResolvedValue({ id: mockScheduleId });
+      })
+      prisma.workSchedule.findFirst.mockResolvedValue(null)
+      prisma.workSchedule.create.mockResolvedValue({ id: mockScheduleId })
 
       // 2026-09-14 is Monday (Thứ 2 = 1)
       // 2026-09-16 is Wednesday (Thứ 4 = 3)
       // 2026-09-18 is Friday (Thứ 6 = 5)
       // 2026-09-20 is Sunday (Chủ Nhật = 0)
       // DaysOfWeek "2,4,6" will match Mon (14), Wed (16), Fri (18) -> 3 rows
-      const result = await service.createRecurringSchedule(
-        mockBoardingHouseId,
-        mockUserId,
-        {
-          employeeIds: [mockEmployeeId],
-          shiftId: mockShiftId,
-          daysOfWeek: '2,4,6',
-          startDate: '2026-09-14',
-          endDate: '2026-09-20',
-        },
-      );
+      const result = await service.createRecurringSchedule(mockBoardingHouseId, mockUserId, {
+        employeeIds: [mockEmployeeId],
+        shiftId: mockShiftId,
+        daysOfWeek: '2,4,6',
+        startDate: '2026-09-14',
+        endDate: '2026-09-20',
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.patternsCreated).toBe(1);
-      expect(result.schedulesMaterialized).toBe(3);
-      expect(prisma.workSchedule.create).toHaveBeenCalledTimes(3);
-    });
-  });
+      expect(result.success).toBe(true)
+      expect(result.patternsCreated).toBe(1)
+      expect(result.schedulesMaterialized).toBe(3)
+      expect(prisma.workSchedule.create).toHaveBeenCalledTimes(3)
+    })
+  })
 
   describe('createAdhocSchedule', () => {
     it('should create single WorkSchedule with recurrenceId = null', async () => {
@@ -222,11 +215,11 @@ describe('SchedulesService (UC-L-21)', () => {
         name: 'Ca sáng',
         startTime: new Date('1970-01-01T06:00:00Z'),
         endTime: new Date('1970-01-01T14:00:00Z'),
-      });
+      })
       prisma.employeeAssignment.findFirst.mockResolvedValueOnce({
         employeeId: mockEmployeeId,
         position: { name: 'Bảo vệ' },
-      });
+      })
       prisma.workSchedule.create.mockResolvedValueOnce({
         id: mockScheduleId,
         boardingHouseId: mockBoardingHouseId,
@@ -244,21 +237,21 @@ describe('SchedulesService (UC-L-21)', () => {
         employee: {
           user: { fullName: 'Nguyễn Văn A', phoneNumber: '0912345678', avatarUrl: null },
         },
-      });
+      })
 
       const result = await service.createAdhocSchedule(mockBoardingHouseId, {
         employeeId: mockEmployeeId,
         shiftId: mockShiftId,
         workDate: '2026-09-16',
         note: 'Đột xuất',
-      });
+      })
 
-      expect(result.id).toBe(mockScheduleId);
-      expect(result.recurrenceId).toBeNull();
-      expect(result.isRecurring).toBe(false);
-      expect(result.workDate).toBe('2026-09-16');
-    });
-  });
+      expect(result.id).toBe(mockScheduleId)
+      expect(result.recurrenceId).toBeNull()
+      expect(result.isRecurring).toBe(false)
+      expect(result.workDate).toBe('2026-09-16')
+    })
+  })
 
   describe('updateSchedule (Single occurrence)', () => {
     it('should update single occurrence and retain recurrenceId', async () => {
@@ -275,7 +268,7 @@ describe('SchedulesService (UC-L-21)', () => {
           employeeAssignments: [{ position: { name: 'Bảo vệ' } }],
         },
         attendances: [],
-      });
+      })
 
       prisma.workSchedule.update.mockResolvedValueOnce({
         id: mockScheduleId,
@@ -296,17 +289,17 @@ describe('SchedulesService (UC-L-21)', () => {
           employeeAssignments: [{ position: { name: 'Bảo vệ' } }],
         },
         attendances: [],
-      });
+      })
 
       const result = await service.updateSchedule(mockBoardingHouseId, mockScheduleId, {
         workDate: '2026-09-17',
-      });
+      })
 
-      expect(result.recurrenceId).toBe(mockPatternId);
-      expect(result.isRecurring).toBe(true);
-      expect(result.workDate).toBe('2026-09-17');
-    });
-  });
+      expect(result.recurrenceId).toBe(mockPatternId)
+      expect(result.isRecurring).toBe(true)
+      expect(result.workDate).toBe('2026-09-17')
+    })
+  })
 
   describe('updateRecurrence (Forward pattern)', () => {
     it('should update all future WorkSchedule occurrences forward', async () => {
@@ -314,14 +307,14 @@ describe('SchedulesService (UC-L-21)', () => {
         id: mockPatternId,
         boardingHouseId: mockBoardingHouseId,
         shiftId: mockShiftId,
-      });
-      prisma.workSchedule.updateMany.mockResolvedValueOnce({ count: 8 });
+      })
+      prisma.workSchedule.updateMany.mockResolvedValueOnce({ count: 8 })
 
       const result = await service.updateRecurrence(mockBoardingHouseId, mockPatternId, {
         status: 'canceled',
-      });
+      })
 
-      expect(result.updatedCount).toBe(8);
+      expect(result.updatedCount).toBe(8)
       expect(prisma.workSchedule.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -329,23 +322,23 @@ describe('SchedulesService (UC-L-21)', () => {
             boardingHouseId: mockBoardingHouseId,
           }),
         }),
-      );
-    });
-  });
+      )
+    })
+  })
 
   describe('getStaffBoardingHouses (UC-S-01)', () => {
     it('should throw NotFoundException if employee not found', async () => {
-      prisma.employee.findUnique.mockResolvedValueOnce(null);
+      prisma.employee.findUnique.mockResolvedValueOnce(null)
       await expect(service.getStaffBoardingHouses(mockUserId)).rejects.toThrow(
         'Không tìm thấy thông tin nhân viên.',
-      );
-    });
+      )
+    })
 
     it('should return active assigned boarding houses for staff', async () => {
       prisma.employee.findUnique.mockResolvedValueOnce({
         id: mockEmployeeId,
         userId: mockUserId,
-      });
+      })
       prisma.employeeAssignment.findMany.mockResolvedValueOnce([
         {
           employeeId: mockEmployeeId,
@@ -357,28 +350,28 @@ describe('SchedulesService (UC-L-21)', () => {
             address: 'Thạch Thất, Hà Nội',
           },
         },
-      ]);
+      ])
 
-      const result = await service.getStaffBoardingHouses(mockUserId);
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe(mockBoardingHouseId);
-      expect(result[0].name).toBe('KTX HOLA (Khu A)');
-    });
-  });
+      const result = await service.getStaffBoardingHouses(mockUserId)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe(mockBoardingHouseId)
+      expect(result[0].name).toBe('KTX HOLA (Khu A)')
+    })
+  })
 
   describe('getStaffSchedules (UC-S-01)', () => {
     it('should throw NotFoundException if employee profile is missing', async () => {
-      prisma.employee.findUnique.mockResolvedValueOnce(null);
-      await expect(
-        service.getStaffSchedules(mockUserId, {}),
-      ).rejects.toThrow('Không tìm thấy thông tin nhân viên.');
-    });
+      prisma.employee.findUnique.mockResolvedValueOnce(null)
+      await expect(service.getStaffSchedules(mockUserId, {})).rejects.toThrow(
+        'Không tìm thấy thông tin nhân viên.',
+      )
+    })
 
     it('should return mapped schedules with shift, coworker, and duties info', async () => {
       prisma.employee.findUnique.mockResolvedValueOnce({
         id: mockEmployeeId,
         userId: mockUserId,
-      });
+      })
 
       prisma.employeeAssignment.findMany.mockResolvedValueOnce([
         {
@@ -395,7 +388,7 @@ describe('SchedulesService (UC-L-21)', () => {
             name: 'KTX HOLA (Khu A)',
           },
         },
-      ]);
+      ])
 
       prisma.workSchedule.findMany
         // 1st call: user schedules
@@ -440,21 +433,21 @@ describe('SchedulesService (UC-L-21)', () => {
               ],
             },
           },
-        ]);
+        ])
 
       const result = await service.getStaffSchedules(mockUserId, {
         startDate: '2026-09-14',
         endDate: '2026-09-20',
-      });
+      })
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe(mockScheduleId);
-      expect(result[0].boardingHouseName).toBe('KTX HOLA (Khu A)');
-      expect(result[0].shift.name).toBe('Ca Sáng (07:00 - 15:00)');
-      expect(result[0].coWorkers).toHaveLength(1);
-      expect(result[0].coWorkers[0].name).toBe('Trần Văn Bình');
-      expect(result[0].duties).toHaveLength(2);
-      expect(result[0].duties[0].title).toBe('Kiểm tra an ninh');
-    });
-  });
-});
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe(mockScheduleId)
+      expect(result[0].boardingHouseName).toBe('KTX HOLA (Khu A)')
+      expect(result[0].shift.name).toBe('Ca Sáng (07:00 - 15:00)')
+      expect(result[0].coWorkers).toHaveLength(1)
+      expect(result[0].coWorkers[0].name).toBe('Trần Văn Bình')
+      expect(result[0].duties).toHaveLength(2)
+      expect(result[0].duties[0].title).toBe('Kiểm tra an ninh')
+    })
+  })
+})

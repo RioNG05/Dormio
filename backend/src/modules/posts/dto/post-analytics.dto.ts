@@ -1,91 +1,91 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PostStatus } from '@prisma';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { PostStatus } from '@prisma'
 
 export class DailyReachPointDto {
   @ApiProperty({ description: 'Date in YYYY-MM-DD format', example: '2026-08-30' })
-  date: string;
+  date: string
 
   @ApiProperty({ description: 'Total views on this date', example: 15 })
-  views: number;
+  views: number
 
   @ApiProperty({ description: 'Number of unique users who viewed on this date', example: 12 })
-  uniqueViewers: number;
+  uniqueViewers: number
 }
 
 export class TopPostAnalyticsDto {
   @ApiProperty({ description: 'Post ID' })
-  id: string;
+  id: string
 
   @ApiProperty({ description: 'Post title' })
-  title: string;
+  title: string
 
   @ApiProperty({ enum: PostStatus, description: 'Post status' })
-  status: PostStatus;
+  status: PostStatus
 
   @ApiProperty({ description: 'Deposit amount in VND' })
-  depositAmount: number;
+  depositAmount: number
 
   @ApiPropertyOptional({ description: 'Room number if linked' })
-  roomNumber?: string | null;
+  roomNumber?: string | null
 
   @ApiPropertyOptional({ description: 'Boarding house name' })
-  boardingHouseName?: string | null;
+  boardingHouseName?: string | null
 
   @ApiPropertyOptional({ description: 'First image URL as thumbnail' })
-  thumbnailUrl?: string | null;
+  thumbnailUrl?: string | null
 
   @ApiProperty({ description: 'Total reach/views count' })
-  viewsCount: number;
+  viewsCount: number
 
   @ApiProperty({ description: 'Total bookmarks/saved count' })
-  savedCount: number;
+  savedCount: number
 
   @ApiProperty({ description: 'Creation date' })
-  createdAt: Date;
+  createdAt: Date
 }
 
 export class PosterAnalyticsOverviewDto {
   @ApiProperty({ description: 'Total posts ever created by the poster' })
-  totalPosts: number;
+  totalPosts: number
 
   @ApiProperty({ description: 'Currently active published posts' })
-  activePosts: number;
+  activePosts: number
 
   @ApiProperty({ description: 'Total views across all listings' })
-  totalViews: number;
+  totalViews: number
 
   @ApiProperty({ description: 'Total bookmarks across all listings' })
-  totalSaved: number;
+  totalSaved: number
 
   @ApiProperty({ description: 'Average views per active post' })
-  averageViewsPerPost: number;
+  averageViewsPerPost: number
 
   @ApiProperty({
     type: [DailyReachPointDto],
     description: 'Day-by-day views trend aggregate for the selected time window',
   })
-  dailyTrends: DailyReachPointDto[];
+  dailyTrends: DailyReachPointDto[]
 
   @ApiProperty({
     type: [TopPostAnalyticsDto],
     description: 'Listings sorted by views count',
   })
-  topPosts: TopPostAnalyticsDto[];
+  topPosts: TopPostAnalyticsDto[]
 }
 
 export class SinglePostAnalyticsDto {
   @ApiProperty({ description: 'Post details' })
-  post: TopPostAnalyticsDto;
+  post: TopPostAnalyticsDto
 
   @ApiProperty({ description: 'Total views for this post' })
-  totalViews: number;
+  totalViews: number
 
   @ApiProperty({ description: 'Total unique viewers for this post' })
-  totalUniqueViewers: number;
+  totalUniqueViewers: number
 
   @ApiProperty({
     type: [DailyReachPointDto],
     description: 'Day-by-day views trend for this specific post',
   })
-  dailyTrends: DailyReachPointDto[];
+  dailyTrends: DailyReachPointDto[]
 }

@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { ContractsService } from './contracts.service';
-import { TenantContractsController } from './tenant-contracts.controller';
-import { LandlordContractsController } from './landlord-contracts.controller';
-import { NotificationsModule } from '../notifications/notifications.module';
-import { AuthModule } from '../auth/auth.module';
-import { UploadModule } from '../upload/upload.module';
+import { Module } from '@nestjs/common'
+import { ContractsService } from './contracts.service'
+import { TenantContractsController } from './tenant-contracts.controller'
+import { LandlordContractsController } from './landlord-contracts.controller'
+import { NotificationsModule } from '../notifications/notifications.module'
+import { AuthModule } from '../auth/auth.module'
+import { UploadModule } from '../upload/upload.module'
 
 /**
  * ContractsModule
@@ -17,4 +17,3 @@ import { UploadModule } from '../upload/upload.module';
   exports: [ContractsService],
 })
 export class ContractsModule {}
-

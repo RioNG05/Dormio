@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
+import { Type } from 'class-transformer'
 
 export enum RevenuePeriod {
   MONTH = 'month',
@@ -16,7 +16,7 @@ export class RevenueQueryDto {
   })
   @IsOptional()
   @IsEnum(RevenuePeriod)
-  period?: RevenuePeriod = RevenuePeriod.MONTH;
+  period?: RevenuePeriod = RevenuePeriod.MONTH
 
   @ApiPropertyOptional({
     description: 'Calendar year for reporting (e.g., 2026)',
@@ -28,7 +28,7 @@ export class RevenueQueryDto {
   @IsInt()
   @Min(2020)
   @Max(2100)
-  year?: number = new Date().getFullYear();
+  year?: number = new Date().getFullYear()
 
   @ApiPropertyOptional({
     description: 'Optional custom start date ISO string',
@@ -36,7 +36,7 @@ export class RevenueQueryDto {
   })
   @IsOptional()
   @IsString()
-  startDate?: string;
+  startDate?: string
 
   @ApiPropertyOptional({
     description: 'Optional custom end date ISO string',
@@ -44,97 +44,97 @@ export class RevenueQueryDto {
   })
   @IsOptional()
   @IsString()
-  endDate?: string;
+  endDate?: string
 }
 
 export class SubscriptionByPlanDto {
   @ApiProperty({ example: 45000000 })
-  plus: number;
+  plus: number
 
   @ApiProperty({ example: 67500000 })
-  pro: number;
+  pro: number
 }
 
 export class SubscriptionByCycleDto {
   @ApiProperty({ example: 32500000 })
-  monthly: number;
+  monthly: number
 
   @ApiProperty({ example: 80000000 })
-  yearly: number;
+  yearly: number
 }
 
 export class SubscriptionRevenueSummaryDto {
   @ApiProperty({ example: 112500000 })
-  total: number;
+  total: number
 
   @ApiProperty({ example: 72.8 })
-  percentage: number;
+  percentage: number
 
   @ApiProperty({ type: SubscriptionByPlanDto })
-  byPlan: SubscriptionByPlanDto;
+  byPlan: SubscriptionByPlanDto
 
   @ApiProperty({ type: SubscriptionByCycleDto })
-  byCycle: SubscriptionByCycleDto;
+  byCycle: SubscriptionByCycleDto
 }
 
 export class PostPurchaseRevenueSummaryDto {
   @ApiProperty({ example: 42000000 })
-  total: number;
+  total: number
 
   @ApiProperty({ example: 27.2 })
-  percentage: number;
+  percentage: number
 
   @ApiProperty({ example: 4200 })
-  totalCreditsSold: number;
+  totalCreditsSold: number
 
   @ApiProperty({ example: 140 })
-  totalTransactions: number;
+  totalTransactions: number
 
   @ApiProperty({ example: 300000 })
-  averageOrderValue: number;
+  averageOrderValue: number
 }
 
 export class RevenueSummaryDto {
   @ApiProperty({ example: 154500000 })
-  totalRevenue: number;
+  totalRevenue: number
 
   @ApiProperty({ example: 128000000 })
-  previousPeriodRevenue: number;
+  previousPeriodRevenue: number
 
   @ApiProperty({ example: 20.7 })
-  revenueGrowthRate: number;
+  revenueGrowthRate: number
 
   @ApiProperty({ type: SubscriptionRevenueSummaryDto })
-  subscriptionRevenue: SubscriptionRevenueSummaryDto;
+  subscriptionRevenue: SubscriptionRevenueSummaryDto
 
   @ApiProperty({ type: PostPurchaseRevenueSummaryDto })
-  postPurchaseRevenue: PostPurchaseRevenueSummaryDto;
+  postPurchaseRevenue: PostPurchaseRevenueSummaryDto
 }
 
 export class RevenueTimelineItemDto {
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  bucket: string;
+  bucket: string
 
   @ApiProperty({ example: 'Jan 2026' })
-  label: string;
+  label: string
 
   @ApiProperty({ example: 12500000 })
-  totalRevenue: number;
+  totalRevenue: number
 
   @ApiProperty({ example: 3500000 })
-  subscriptionPlus: number;
+  subscriptionPlus: number
 
   @ApiProperty({ example: 5500000 })
-  subscriptionPro: number;
+  subscriptionPro: number
 
   @ApiProperty({ example: 3500000 })
-  postPurchase: number;
+  postPurchase: number
 }
 
 export class RevenueResponseDto {
   @ApiProperty({ type: RevenueSummaryDto })
-  summary: RevenueSummaryDto;
+  summary: RevenueSummaryDto
 
   @ApiProperty({ type: [RevenueTimelineItemDto] })
-  timeline: RevenueTimelineItemDto[];
+  timeline: RevenueTimelineItemDto[]
 }

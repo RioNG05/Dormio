@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   ArrayMaxSize,
   IsArray,
@@ -13,9 +13,9 @@ import {
   MaxLength,
   Min,
   ValidateNested,
-} from 'class-validator';
+} from 'class-validator'
 
-const MONEY_PATTERN = /^(?:0|[1-9]\d{0,9})(?:\.\d{1,2})?$/;
+const MONEY_PATTERN = /^(?:0|[1-9]\d{0,9})(?:\.\d{1,2})?$/
 
 export class CreateInitialServiceDto {
   @ApiProperty({ example: 'Electricity', description: 'Service name' })
@@ -23,14 +23,14 @@ export class CreateInitialServiceDto {
   @IsNotEmpty()
   @Matches(/\S/, { message: 'name must not be blank' })
   @MaxLength(255)
-  name: string;
+  name: string
 
   @ApiProperty({ example: 'kWh', description: 'Billing unit' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'unit must not be blank' })
   @MaxLength(255)
-  unit: string;
+  unit: string
 
   @ApiProperty({
     example: '3500.00',
@@ -40,7 +40,7 @@ export class CreateInitialServiceDto {
   @Matches(MONEY_PATTERN, {
     message: 'price must be a non-negative decimal with up to two decimal places',
   })
-  price: string;
+  price: string
 
   @ApiPropertyOptional({
     example: true,
@@ -50,7 +50,7 @@ export class CreateInitialServiceDto {
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
-  isMetered?: boolean;
+  isMetered?: boolean
 }
 
 export class CreateInitialRoomTypeDto {
@@ -59,7 +59,7 @@ export class CreateInitialRoomTypeDto {
   @IsNotEmpty()
   @Matches(/\S/, { message: 'name must not be blank' })
   @MaxLength(255)
-  name: string;
+  name: string
 
   @ApiPropertyOptional({
     example: 'Private kitchen and bathroom',
@@ -68,7 +68,7 @@ export class CreateInitialRoomTypeDto {
   @IsOptional()
   @IsString()
   @MaxLength(2000)
-  description?: string;
+  description?: string
 }
 
 export class CreateBoardingHouseDto {
@@ -77,87 +77,96 @@ export class CreateBoardingHouseDto {
   @IsNotEmpty()
   @Matches(/\S/, { message: 'name must not be blank' })
   @MaxLength(255)
-  name: string;
+  name: string
 
   @ApiProperty({ example: 'Vietnam', description: 'Country' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'country must not be blank' })
   @MaxLength(255)
-  country: string;
+  country: string
 
   @ApiProperty({ example: 'Ho Chi Minh City', description: 'Province or municipality' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'province must not be blank' })
   @MaxLength(255)
-  province: string;
+  province: string
 
   @ApiProperty({ example: 'Thu Duc City', description: 'City' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'city must not be blank' })
   @MaxLength(255)
-  city: string;
+  city: string
 
   @ApiProperty({ example: 'Linh Trung Ward', description: 'Ward' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'ward must not be blank' })
   @MaxLength(255)
-  ward: string;
+  ward: string
 
   @ApiProperty({ example: 'Thu Duc District', description: 'District' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'district must not be blank' })
   @MaxLength(255)
-  district: string;
+  district: string
 
   @ApiProperty({ example: 'Vo Van Ngan Street', description: 'Street' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'street must not be blank' })
   @MaxLength(255)
-  street: string;
+  street: string
 
   @ApiProperty({ example: '1', description: 'House number' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'houseNumber must not be blank' })
   @MaxLength(255)
-  houseNumber: string;
+  houseNumber: string
 
-  @ApiPropertyOptional({ example: 'Near the university campus', description: 'Property description' })
+  @ApiPropertyOptional({
+    example: 'Near the university campus',
+    description: 'Property description',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(5000)
-  description?: string;
+  description?: string
 
   @ApiPropertyOptional({ example: 5, minimum: 1, description: 'Total number of floors' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  totalFloor?: number;
+  totalFloor?: number
 
   @ApiProperty({ example: '2020-01-01', format: 'date', description: 'Property construction date' })
   @IsDateString()
-  builtAt: string;
+  builtAt: string
 
-  @ApiPropertyOptional({ type: [CreateInitialServiceDto], description: 'Initial services for this property' })
+  @ApiPropertyOptional({
+    type: [CreateInitialServiceDto],
+    description: 'Initial services for this property',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(100)
   @ValidateNested({ each: true })
   @Type(() => CreateInitialServiceDto)
-  services?: CreateInitialServiceDto[];
+  services?: CreateInitialServiceDto[]
 
-  @ApiPropertyOptional({ type: [CreateInitialRoomTypeDto], description: 'Initial room types for this property' })
+  @ApiPropertyOptional({
+    type: [CreateInitialRoomTypeDto],
+    description: 'Initial room types for this property',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(100)
   @ValidateNested({ each: true })
   @Type(() => CreateInitialRoomTypeDto)
-  roomTypes?: CreateInitialRoomTypeDto[];
+  roomTypes?: CreateInitialRoomTypeDto[]
 }

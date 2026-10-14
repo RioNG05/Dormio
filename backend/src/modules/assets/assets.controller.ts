@@ -13,29 +13,26 @@ import {
   HttpCode,
   Logger,
   ParseUUIDPipe,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
   ApiCreatedResponse,
   ApiResponse,
-} from '@nestjs/swagger';
-import { AssetsService } from './assets.service';
-import { CreateAssetDto } from './dto/create-asset.dto';
-import { UpdateAssetDto } from './dto/update-asset.dto';
-import { QueryAssetsDto } from './dto/query-assets.dto';
-import {
-  AssetsListResponseDto,
-  AssetItemDto,
-} from './dto/asset-response.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
-import { SubscriptionPackage } from '@prisma';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+} from '@nestjs/swagger'
+import { AssetsService } from './assets.service'
+import { CreateAssetDto } from './dto/create-asset.dto'
+import { UpdateAssetDto } from './dto/update-asset.dto'
+import { QueryAssetsDto } from './dto/query-assets.dto'
+import { AssetsListResponseDto, AssetItemDto } from './dto/asset-response.dto'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger'
+import { SubscriptionPackage } from '@prisma'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Landlord Assets')
 @ApiAuth()
@@ -44,7 +41,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 @RequireTier(SubscriptionPackage.plus)
 @Controller('landlord/assets')
 export class AssetsController {
-  private readonly logger = new Logger(AssetsController.name);
+  private readonly logger = new Logger(AssetsController.name)
 
   constructor(private readonly assetsService: AssetsService) {}
 
@@ -77,13 +74,9 @@ export class AssetsController {
   ): Promise<{ success: boolean; data: AssetItemDto }> {
     this.logger.log(
       `POST /landlord/assets called by user ${user?.id} for house ${boardingHouseId} (name="${dto.name}", location="${dto.location}")`,
-    );
-    const data = await this.assetsService.createAsset(
-      user.id,
-      boardingHouseId,
-      dto,
-    );
-    return { success: true, data };
+    )
+    const data = await this.assetsService.createAsset(user.id, boardingHouseId, dto)
+    return { success: true, data }
   }
 
   // ─── GET /api/v1/landlord/assets ──────────────────────────────────────────
@@ -111,8 +104,8 @@ export class AssetsController {
   ): Promise<AssetsListResponseDto> {
     this.logger.log(
       `GET /landlord/assets called by user ${user?.id} for house ${boardingHouseId} (page=${query.page}, category=${query.category}, condition=${query.condition})`,
-    );
-    return this.assetsService.getAssets(boardingHouseId, query);
+    )
+    return this.assetsService.getAssets(boardingHouseId, query)
   }
 
   // ─── GET /api/v1/landlord/assets/:id ──────────────────────────────────────
@@ -144,9 +137,9 @@ export class AssetsController {
   ): Promise<{ success: boolean; data: AssetItemDto }> {
     this.logger.log(
       `GET /landlord/assets/${id} called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.assetsService.getAssetDetail(boardingHouseId, id);
-    return { success: true, data };
+    )
+    const data = await this.assetsService.getAssetDetail(boardingHouseId, id)
+    return { success: true, data }
   }
 
   // ─── PATCH /api/v1/landlord/assets/:id ────────────────────────────────────
@@ -183,14 +176,9 @@ export class AssetsController {
   ): Promise<{ success: boolean; data: AssetItemDto }> {
     this.logger.log(
       `PATCH /landlord/assets/${id} called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.assetsService.updateAsset(
-      boardingHouseId,
-      id,
-      dto,
-      user.id,
-    );
-    return { success: true, data };
+    )
+    const data = await this.assetsService.updateAsset(boardingHouseId, id, dto, user.id)
+    return { success: true, data }
   }
 
   // ─── DELETE /api/v1/landlord/assets/:id ───────────────────────────────────
@@ -228,7 +216,7 @@ export class AssetsController {
   ): Promise<{ success: boolean; message: string }> {
     this.logger.log(
       `DELETE /landlord/assets/${id} called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    return this.assetsService.deleteAsset(boardingHouseId, id, user.id);
+    )
+    return this.assetsService.deleteAsset(boardingHouseId, id, user.id)
   }
 }

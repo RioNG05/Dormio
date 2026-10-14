@@ -8,7 +8,7 @@ import {
   Logger,
   HttpStatus,
   HttpCode,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -16,21 +16,21 @@ import {
   ApiResponse,
   ApiOkResponse,
   ApiCreatedResponse,
-} from '@nestjs/swagger';
-import { UsersService } from './users.service';
-import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto';
-import { UpsertBankAccountDto } from './dto/upsert-bank-account.dto';
-import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+} from '@nestjs/swagger'
+import { UsersService } from './users.service'
+import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto'
+import { UpsertBankAccountDto } from './dto/upsert-bank-account.dto'
+import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Users & Identification')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
-  private readonly logger = new Logger(UsersController.name);
+  private readonly logger = new Logger(UsersController.name)
 
   constructor(private readonly usersService: UsersService) {}
 
@@ -48,10 +48,8 @@ export class UsersController {
     type: UserCapabilitiesResponseDto,
   })
   async getCapabilities(@CurrentUser() user: JwtPayload) {
-    this.logger.log(
-      `GET /api/v1/users/me/capabilities called by user ${user.id}`,
-    );
-    return this.usersService.getCapabilities(user.id);
+    this.logger.log(`GET /api/v1/users/me/capabilities called by user ${user.id}`)
+    return this.usersService.getCapabilities(user.id)
   }
 
   @Get(['identification', 'me/identification'])
@@ -75,8 +73,8 @@ export class UsersController {
     },
   })
   async getIdentification(@CurrentUser() user: JwtPayload) {
-    this.logger.log(`GET /api/v1/users/identification called by user ${user.id}`);
-    return this.usersService.getIdentification(user.id);
+    this.logger.log(`GET /api/v1/users/identification called by user ${user.id}`)
+    return this.usersService.getIdentification(user.id)
   }
 
   @Post(['identification', 'me/identification'])
@@ -110,8 +108,8 @@ export class UsersController {
   ) {
     this.logger.log(
       `POST /api/v1/users/identification called by user ${user.id} with CCCD ${dto.identityNumber}`,
-    );
-    return this.usersService.upsertIdentification(user.id, dto);
+    )
+    return this.usersService.upsertIdentification(user.id, dto)
   }
 
   @Get(['me/bank-account', 'bank-account'])
@@ -136,8 +134,8 @@ export class UsersController {
     },
   })
   async getBankAccount(@CurrentUser() user: JwtPayload) {
-    this.logger.log(`GET /api/v1/users/bank-account called by user ${user.id}`);
-    return this.usersService.getBankAccount(user.id);
+    this.logger.log(`GET /api/v1/users/bank-account called by user ${user.id}`)
+    return this.usersService.getBankAccount(user.id)
   }
 
   @Post(['me/bank-account', 'bank-account'])
@@ -163,13 +161,8 @@ export class UsersController {
       },
     },
   })
-  async upsertBankAccount(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: UpsertBankAccountDto,
-  ) {
-    this.logger.log(
-      `POST /api/v1/users/bank-account called by user ${user.id}`,
-    );
-    return this.usersService.upsertBankAccount(user.id, dto);
+  async upsertBankAccount(@CurrentUser() user: JwtPayload, @Body() dto: UpsertBankAccountDto) {
+    this.logger.log(`POST /api/v1/users/bank-account called by user ${user.id}`)
+    return this.usersService.upsertBankAccount(user.id, dto)
   }
 }

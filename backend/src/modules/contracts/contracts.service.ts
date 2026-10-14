@@ -3,22 +3,19 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-} from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { AuthService } from '../auth/auth.service';
-import { UploadService } from '../upload/upload.service';
-import { TenancyDetailsDto } from './dto/tenancy-details.dto';
-import { CreateContractPlatformDto } from './dto/create-contract-platform.dto';
-import { CreateContractDirectDto } from './dto/create-contract-direct.dto';
-import { QueryContractsDto } from './dto/query-contracts.dto';
-import { ExportContractResponseDto } from './dto/export-contract-response.dto';
-import {
-  ContractTemplateRenderer,
-  ContractTemplateData,
-} from './contract-template.renderer';
-import { Prisma } from '@prisma';
-import { randomUUID } from 'crypto';
+} from '@nestjs/common'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
+import { AuthService } from '../auth/auth.service'
+import { UploadService } from '../upload/upload.service'
+import { TenancyDetailsDto } from './dto/tenancy-details.dto'
+import { CreateContractPlatformDto } from './dto/create-contract-platform.dto'
+import { CreateContractDirectDto } from './dto/create-contract-direct.dto'
+import { QueryContractsDto } from './dto/query-contracts.dto'
+import { ExportContractResponseDto } from './dto/export-contract-response.dto'
+import { ContractTemplateRenderer, ContractTemplateData } from './contract-template.renderer'
+import { Prisma } from '@prisma'
+import { randomUUID } from 'crypto'
 
 /**
  * ContractsService
@@ -50,10 +47,10 @@ export class ContractsService {
     const room = await this.prisma.room.findFirst({
       where: { id: roomId, boardingHouseId },
       include: { roomType: true },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc nhà trọ này.');
+      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc nhà trọ này.')
     }
 
     const deposit = await this.prisma.deposit.findFirst({
@@ -100,16 +97,13 @@ export class ContractsService {
           },
         },
       },
-    });
+    })
 
     if (!deposit) {
-      return null;
+      return null
     }
 
-    const tenant =
-      deposit.payment?.payer ||
-      deposit.post?.postedByUser ||
-      deposit.recordedByUser;
+    const tenant = deposit.payment?.payer || deposit.post?.postedByUser || deposit.recordedByUser
 
     return {
       depositId: deposit.id,
@@ -139,7 +133,7 @@ export class ContractsService {
             userIdentification: (tenant as any).userIdentification || null,
           }
         : null,
-    };
+    }
   }
 
   // ─── UC-L-04: Flow B Helper — Search Tenant By Phone ────────────────────────
@@ -154,10 +148,10 @@ export class ContractsService {
       include: {
         userIdentification: true,
       },
-    });
+    })
 
     if (!user) {
-      return { exists: false, user: null };
+      return { exists: false, user: null }
     }
 
     return {
@@ -170,7 +164,7 @@ export class ContractsService {
         hasIdentification: !!user.userIdentification,
         identification: user.userIdentification,
       },
-    };
+    }
   }
 
   // ─── UC-L-04: Flow A — Create Contract From Platform Deposit ────────────────
@@ -194,10 +188,10 @@ export class ContractsService {
   ) {
     const room = await this.prisma.room.findFirst({
       where: { id: dto.roomId, boardingHouseId },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.');
+      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.')
     }
 
     // Guard: deposit must exist, type=platform, contractId=null, status=paid
@@ -212,34 +206,29 @@ export class ContractsService {
         payment: true,
         post: true,
       },
-    });
+    })
 
     if (!deposit) {
       throw new BadRequestException(
         'Phòng không có tiền đặt cọc giữ chỗ nền tảng nào đang chờ lập hợp đồng.',
-      );
+      )
     }
 
     if (deposit.status !== 'paid') {
       throw new BadRequestException(
         `Không thể lập hợp đồng từ khoản cọc có trạng thái: ${deposit.status}. Khoản cọc phải có trạng thái 'paid'.`,
-      );
+      )
     }
 
     // Resolve tenant ID from payment payer or post
-    const tenantId =
-      deposit.payment?.payerId ||
-      deposit.post?.postedBy ||
-      deposit.recordedBy;
+    const tenantId = deposit.payment?.payerId || deposit.post?.postedBy || deposit.recordedBy
 
     if (!tenantId) {
-      throw new BadRequestException(
-        'Không xác định được danh tính khách thuê đã đặt cọc.',
-      );
+      throw new BadRequestException('Không xác định được danh tính khách thuê đã đặt cọc.')
     }
 
     // Execute in atomic transaction
-    const contract = await this.prisma.$transaction(async (tx) => {
+    const contract = await this.prisma.$transaction(async tx => {
       // 1. Create Contract in draft status
       const newContract = await tx.contract.create({
         data: {
@@ -251,7 +240,7 @@ export class ContractsService {
           note: dto.note || '',
           status: 'draft',
         },
-      });
+      })
 
       // 2. Create TenantContract
       await tx.tenantContract.create({
@@ -260,7 +249,7 @@ export class ContractsService {
           tenantId,
           isPrimary: true,
         },
-      });
+      })
 
       // 3. Update existing Deposit (Rule 8: never insert a new one)
       await tx.deposit.update({
@@ -268,7 +257,7 @@ export class ContractsService {
         data: {
           contractId: newContract.id,
         },
-      });
+      })
 
       // 4. Update Post if linked: resultedContractId and status='hidden'
       if (deposit.postId) {
@@ -278,7 +267,7 @@ export class ContractsService {
             resultedContractId: newContract.id,
             status: 'hidden',
           },
-        });
+        })
       }
 
       // 5. Update Room status = 'deposited'
@@ -287,7 +276,7 @@ export class ContractsService {
         data: {
           status: 'deposited',
         },
-      });
+      })
 
       // 6. AuditLog inside same transaction (Rule 4)
       await tx.auditLog.create({
@@ -307,7 +296,7 @@ export class ContractsService {
             flow: 'platform',
           },
         },
-      });
+      })
 
       await tx.auditLog.create({
         data: {
@@ -320,10 +309,10 @@ export class ContractsService {
           oldValue: { contractId: null },
           newValue: { contractId: newContract.id },
         },
-      });
+      })
 
-      return newContract;
-    });
+      return newContract
+    })
 
     // Outside transaction: notify tenant awaiting confirmation (UC-AUTH-04)
     try {
@@ -332,12 +321,12 @@ export class ContractsService {
         receiverId: tenantId,
         boardingHouseId,
         contractId: contract.id,
-      });
+      })
     } catch {
       // Async dispatch failures do not block contract draft creation
     }
 
-    return contract;
+    return contract
   }
 
   // ─── UC-L-04: Flow B — Create Direct Contract ───────────────────────────────
@@ -363,10 +352,10 @@ export class ContractsService {
   ) {
     const room = await this.prisma.room.findFirst({
       where: { id: dto.roomId, boardingHouseId },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.');
+      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.')
     }
 
     // Routing check: if room has unconverted platform deposit, landlord should use Flow A
@@ -377,42 +366,42 @@ export class ContractsService {
         contractId: null,
         status: 'paid',
       },
-    });
+    })
 
     if (pendingPlatformDeposit) {
       throw new ConflictException(
         'Phòng này đang có khoản đặt cọc nền tảng chưa lập hợp đồng. Vui lòng sử dụng tính năng lập hợp đồng từ cọc nền tảng (Flow A).',
-      );
+      )
     }
 
     // 1. Resolve or create tenant user via shared findOrCreateByPhone
     const tenantUser = await this.authService.findOrCreateByPhone(
       dto.tenantPhoneNumber,
       dto.tenantFullName,
-    );
+    )
 
     // If tenant provided an email and user currently lacks one, update it
     if (dto.tenantEmail && !tenantUser.email) {
       await this.prisma.user.update({
         where: { id: tenantUser.id },
         data: { email: dto.tenantEmail },
-      });
+      })
     }
 
     // 2. Identity verification: check or create UserIdentification
     const existingId = await this.prisma.userIdentification.findUnique({
       where: { userId: tenantUser.id },
-    });
+    })
 
     if (!existingId && dto.identification) {
       const cardFrontUrl = await this.uploadService.ensureCloudinaryUrl(
         dto.identification.cardFrontUrl,
         'dormio/identifications',
-      );
+      )
       const cardBackUrl = await this.uploadService.ensureCloudinaryUrl(
         dto.identification.cardBackUrl,
         'dormio/identifications',
-      );
+      )
 
       await this.prisma.userIdentification.create({
         data: {
@@ -435,11 +424,11 @@ export class ContractsService {
           cardFrontUrl: cardFrontUrl || '',
           cardBackUrl: cardBackUrl || '',
         },
-      });
+      })
     }
 
     // 3. Execute in atomic transaction
-    const contract = await this.prisma.$transaction(async (tx) => {
+    const contract = await this.prisma.$transaction(async tx => {
       // Create Contract in active status
       const newContract = await tx.contract.create({
         data: {
@@ -451,7 +440,7 @@ export class ContractsService {
           note: dto.note || '',
           status: 'active',
         },
-      });
+      })
 
       // Create TenantContract
       await tx.tenantContract.create({
@@ -460,7 +449,7 @@ export class ContractsService {
           tenantId: tenantUser.id,
           isPrimary: true,
         },
-      });
+      })
 
       // Create manual Deposit record (type: 'contract')
       const deposit = await tx.deposit.create({
@@ -475,7 +464,7 @@ export class ContractsService {
           recordedBy: landlordId,
           note: dto.note || null,
         },
-      });
+      })
 
       // Update Room status = 'occupied'
       await tx.room.update({
@@ -483,7 +472,7 @@ export class ContractsService {
         data: {
           status: 'occupied',
         },
-      });
+      })
 
       // Generate printable ContractDocument entry
       await tx.contractDocument.create({
@@ -491,7 +480,7 @@ export class ContractsService {
           contractId: newContract.id,
           url: `contracts/${newContract.id}/contract_${newContract.id}.pdf`,
         },
-      });
+      })
 
       // AuditLog inside same transaction (Rule 4)
       await tx.auditLog.create({
@@ -511,7 +500,7 @@ export class ContractsService {
             flow: 'direct',
           },
         },
-      });
+      })
 
       await tx.auditLog.create({
         data: {
@@ -528,10 +517,10 @@ export class ContractsService {
             recordedManually: true,
           },
         },
-      });
+      })
 
-      return newContract;
-    });
+      return newContract
+    })
 
     // 4. Outside transaction: trigger UC-T-01 onboarding notification
     try {
@@ -540,12 +529,12 @@ export class ContractsService {
         receiverId: tenantUser.id,
         boardingHouseId,
         contractId: contract.id,
-      });
+      })
     } catch {
       // Async dispatch failures do not roll back the created contract
     }
 
-    return contract;
+    return contract
   }
 
   // ─── Landlord: List Contracts with Pagination and Search ────────────────────
@@ -553,26 +542,23 @@ export class ContractsService {
   /**
    * Retrieves paginated contracts for a boarding house.
    */
-  async getLandlordContracts(
-    boardingHouseId: string,
-    query: QueryContractsDto,
-  ) {
-    const page = query.page || 1;
-    const limit = query.limit || 10;
-    const skip = (page - 1) * limit;
+  async getLandlordContracts(boardingHouseId: string, query: QueryContractsDto) {
+    const page = query.page || 1
+    const limit = query.limit || 10
+    const skip = (page - 1) * limit
 
     const where: any = {
       room: {
         boardingHouseId,
       },
-    };
+    }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status
     }
 
     if (query.search) {
-      const search = query.search.trim();
+      const search = query.search.trim()
       where.OR = [
         { room: { roomNumber: { contains: search, mode: 'insensitive' } } },
         {
@@ -587,7 +573,7 @@ export class ContractsService {
             },
           },
         },
-      ];
+      ]
     }
 
     const [total, contracts] = await Promise.all([
@@ -620,17 +606,16 @@ export class ContractsService {
           contractDocuments: true,
         },
       }),
-    ]);
+    ])
 
     return {
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit),
-      data: contracts.map((c) => {
+      data: contracts.map(c => {
         const primaryTenant =
-          c.tenantContracts.find((tc) => tc.isPrimary)?.tenant ||
-          c.tenantContracts[0]?.tenant;
+          c.tenantContracts.find(tc => tc.isPrimary)?.tenant || c.tenantContracts[0]?.tenant
 
         return {
           id: c.id,
@@ -659,15 +644,13 @@ export class ContractsService {
                 userIdentification: primaryTenant.userIdentification,
               }
             : null,
-          tenantContracts: c.tenantContracts.map((tc) => ({
+          tenantContracts: c.tenantContracts.map(tc => ({
             id: tc.id,
             isPrimary: tc.isPrimary,
             tenant: {
               id: tc.tenant.id,
               fullName:
-                tc.tenant.userIdentification?.fullName ||
-                tc.tenant.username ||
-                'Khách thuê',
+                tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Khách thuê',
               phoneNumber: tc.tenant.phoneNumber,
               email: tc.tenant.email,
               userIdentification: tc.tenant.userIdentification,
@@ -675,9 +658,9 @@ export class ContractsService {
           })),
           documentsCount: c.contractDocuments.length,
           createdAt: c.createdAt,
-        };
+        }
       }),
-    };
+    }
   }
 
   // ─── Landlord: Get Contract Detail By ID ────────────────────────────────────
@@ -724,15 +707,15 @@ export class ContractsService {
           take: 5,
         },
       },
-    });
+    })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.');
+      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
     }
 
     const primaryTenant =
-      contract.tenantContracts.find((tc) => tc.isPrimary)?.tenant ||
-      contract.tenantContracts[0]?.tenant;
+      contract.tenantContracts.find(tc => tc.isPrimary)?.tenant ||
+      contract.tenantContracts[0]?.tenant
 
     return {
       id: contract.id,
@@ -748,7 +731,7 @@ export class ContractsService {
         floor: contract.room.floor,
         area: contract.room.area ? Number(contract.room.area) : null,
         roomTypeName: contract.room.roomType?.name,
-        services: contract.room.roomServices.map((rs) => ({
+        services: contract.room.roomServices.map(rs => ({
           name: rs.service.name,
           price: Number(rs.service.price),
           unit: rs.service.unit,
@@ -758,23 +741,18 @@ export class ContractsService {
         ? {
             id: primaryTenant.id,
             fullName:
-              primaryTenant.userIdentification?.fullName ||
-              primaryTenant.username ||
-              'Khách thuê',
+              primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê',
             phoneNumber: primaryTenant.phoneNumber,
             email: primaryTenant.email,
             userIdentification: primaryTenant.userIdentification,
           }
         : null,
-      tenantContracts: contract.tenantContracts.map((tc) => ({
+      tenantContracts: contract.tenantContracts.map(tc => ({
         id: tc.id,
         isPrimary: tc.isPrimary,
         tenant: {
           id: tc.tenant.id,
-          fullName:
-            tc.tenant.userIdentification?.fullName ||
-            tc.tenant.username ||
-            'Khách thuê',
+          fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Khách thuê',
           phoneNumber: tc.tenant.phoneNumber,
           email: tc.tenant.email,
           userIdentification: tc.tenant.userIdentification,
@@ -789,19 +767,19 @@ export class ContractsService {
             recordedManually: contract.deposit.recordedManually,
           }
         : null,
-      documents: contract.contractDocuments.map((d) => ({
+      documents: contract.contractDocuments.map(d => ({
         id: d.id,
         url: d.url,
         createdAt: d.createdAt,
       })),
-      recentInvoices: contract.invoices.map((inv) => ({
+      recentInvoices: contract.invoices.map(inv => ({
         id: inv.id,
         totalAmount: Number(inv.totalAmount),
         status: inv.status,
         dueDate: inv.dueDate,
       })),
       createdAt: contract.createdAt,
-    };
+    }
   }
 
   // ─── UC-T-06: View Tenancy Details ──────────────────────────────────────────
@@ -865,15 +843,15 @@ export class ContractsService {
       orderBy: {
         createdAt: 'desc',
       },
-    });
+    })
 
     if (!tenantContract || !tenantContract.contract) {
-      return null;
+      return null
     }
 
-    const { contract } = tenantContract;
-    const { room } = contract;
-    const { boardingHouse } = room;
+    const { contract } = tenantContract
+    const { room } = contract
+    const { boardingHouse } = room
 
     // Fetch broadcast announcements for this boarding house (receiverId IS NULL)
     const announcements = await this.prisma.notification.findMany({
@@ -885,15 +863,13 @@ export class ContractsService {
         createdAt: 'desc',
       },
       take: 50,
-    });
+    })
 
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
 
-    const formattedAddress = this.formatAddress(boardingHouse);
+    const formattedAddress = this.formatAddress(boardingHouse)
     const landlordName =
-      boardingHouse.owner.userIdentification?.fullName ||
-      boardingHouse.owner.username ||
-      'Chủ nhà';
+      boardingHouse.owner.userIdentification?.fullName || boardingHouse.owner.username || 'Chủ nhà'
 
     return {
       contract: {
@@ -906,7 +882,7 @@ export class ContractsService {
           ? Number(contract.deposit.amount)
           : Number(contract.rentPrice),
         note: contract.note || undefined,
-        documents: contract.contractDocuments.map((doc) => ({
+        documents: contract.contractDocuments.map(doc => ({
           id: doc.id,
           url: doc.url,
           createdAt: doc.createdAt,
@@ -930,26 +906,26 @@ export class ContractsService {
           email: boardingHouse.owner.email || undefined,
         },
       },
-      services: room.roomServices.map((rs) => ({
+      services: room.roomServices.map(rs => ({
         id: rs.service.id,
         name: rs.service.name,
         price: Number(rs.service.price),
         unit: rs.service.unit,
         isMetered: rs.service.isMetered,
       })),
-      announcements: announcements.map((item) => {
-        let title = item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content;
-        let content = item.content;
+      announcements: announcements.map(item => {
+        let title = item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content
+        let content = item.content
 
         try {
           if (item.content.trim().startsWith('{')) {
-            const parsed = JSON.parse(item.content);
-            if (parsed.title) title = parsed.title;
-            if (parsed.content) content = parsed.content;
+            const parsed = JSON.parse(item.content)
+            if (parsed.title) title = parsed.title
+            if (parsed.content) content = parsed.content
           } else if (item.content.includes('\n')) {
-            const lines = item.content.split('\n');
-            title = lines[0]?.trim() || title;
-            content = lines.slice(1).join('\n').trim() || content;
+            const lines = item.content.split('\n')
+            title = lines[0]?.trim() || title
+            content = lines.slice(1).join('\n').trim() || content
           }
         } catch {
           // Fallback to raw content
@@ -961,9 +937,9 @@ export class ContractsService {
           content,
           createdAt: item.createdAt,
           isNew: item.createdAt >= threeDaysAgo,
-        };
+        }
       }),
-    };
+    }
   }
 
   // ─── UC-T-01 Call-site ───────────────────────────────────────────────────────
@@ -977,12 +953,12 @@ export class ContractsService {
    * @param params sender/receiver/boardingHouse/contract context
    */
   async notifyContractCreated(params: {
-    senderId: string;
-    receiverId: string;
-    boardingHouseId: string;
-    contractId: string;
+    senderId: string
+    receiverId: string
+    boardingHouseId: string
+    contractId: string
   }): Promise<void> {
-    await this.notificationsService.createOnboardingNotification(params);
+    await this.notificationsService.createOnboardingNotification(params)
   }
 
   // ─── UC-L-15: Export Contracts ─────────────────────────────────────────────
@@ -1033,34 +1009,30 @@ export class ContractsService {
         deposit: true,
         contractDocuments: true,
       },
-    });
+    })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.');
+      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
     }
 
     const primaryTenantContract =
-      contract.tenantContracts.find((tc) => tc.isPrimary) ||
-      contract.tenantContracts[0];
+      contract.tenantContracts.find(tc => tc.isPrimary) || contract.tenantContracts[0]
 
     if (!primaryTenantContract) {
-      throw new BadRequestException('Hợp đồng chưa có thông tin đại diện người thuê.');
+      throw new BadRequestException('Hợp đồng chưa có thông tin đại diện người thuê.')
     }
 
-    const primaryTenant = primaryTenantContract.tenant;
+    const primaryTenant = primaryTenantContract.tenant
     const coTenants = contract.tenantContracts
-      .filter((tc) => tc.id !== primaryTenantContract.id)
-      .map((tc) => ({
+      .filter(tc => tc.id !== primaryTenantContract.id)
+      .map(tc => ({
         id: tc.tenant.id,
-        fullName:
-          tc.tenant.userIdentification?.fullName ||
-          tc.tenant.username ||
-          'Người ở cùng',
+        fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Người ở cùng',
         phoneNumber: tc.tenant.phoneNumber,
-      }));
+      }))
 
-    const bh = contract.room.boardingHouse;
-    const formattedAddress = this.formatAddress(bh);
+    const bh = contract.room.boardingHouse
+    const formattedAddress = this.formatAddress(bh)
 
     return {
       contract: {
@@ -1080,9 +1052,7 @@ export class ContractsService {
         address: formattedAddress,
         owner: {
           id: bh.owner.id,
-          fullName:
-            bh.owner.username ||
-            'Chủ nhà trọ',
+          fullName: bh.owner.username || 'Chủ nhà trọ',
           phoneNumber: bh.owner.phoneNumber || '',
           email: bh.owner.email,
         },
@@ -1094,7 +1064,7 @@ export class ContractsService {
         area: contract.room.area ? Number(contract.room.area) : null,
         maxOccupants: contract.room.maxOccupants,
         roomTypeName: contract.room.roomType?.name,
-        services: contract.room.roomServices.map((rs) => ({
+        services: contract.room.roomServices.map(rs => ({
           name: rs.service.name,
           price: Number(rs.service.price),
           unit: rs.service.unit,
@@ -1104,9 +1074,7 @@ export class ContractsService {
       primaryTenant: {
         id: primaryTenant.id,
         fullName:
-          primaryTenant.userIdentification?.fullName ||
-          primaryTenant.username ||
-          'Khách thuê',
+          primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê',
         phoneNumber: primaryTenant.phoneNumber,
         email: primaryTenant.email,
         identification: primaryTenant.userIdentification
@@ -1139,7 +1107,7 @@ export class ContractsService {
             paidAt: contract.deposit.createdAt,
           }
         : null,
-    };
+    }
   }
 
   /**
@@ -1157,17 +1125,14 @@ export class ContractsService {
     autoPrint: boolean = false,
     includeToolbar: boolean = true,
   ): Promise<string> {
-    const templateData = await this.getContractTemplateData(
-      boardingHouseId,
-      contractId,
-    );
+    const templateData = await this.getContractTemplateData(boardingHouseId, contractId)
     return ContractTemplateRenderer.render({
       ...templateData,
       options: {
         autoPrint,
         includeToolbar,
       },
-    });
+    })
   }
 
   /**
@@ -1184,10 +1149,7 @@ export class ContractsService {
     contractId: string,
     landlordId: string,
   ): Promise<ExportContractResponseDto> {
-    const templateData = await this.getContractTemplateData(
-      boardingHouseId,
-      contractId,
-    );
+    const templateData = await this.getContractTemplateData(boardingHouseId, contractId)
 
     const renderedHtml = ContractTemplateRenderer.render({
       ...templateData,
@@ -1195,17 +1157,17 @@ export class ContractsService {
         autoPrint: false,
         includeToolbar: true,
       },
-    });
+    })
 
-    const docStoragePath = `contracts/${contractId}/export_${Date.now()}.html`;
+    const docStoragePath = `contracts/${contractId}/export_${Date.now()}.html`
 
-    const [document] = await this.prisma.$transaction(async (tx) => {
+    const [document] = await this.prisma.$transaction(async tx => {
       const doc = await tx.contractDocument.create({
         data: {
           contractId,
           url: docStoragePath,
         },
-      });
+      })
 
       await tx.auditLog.create({
         data: {
@@ -1221,10 +1183,10 @@ export class ContractsService {
             exportedAt: doc.createdAt,
           },
         },
-      });
+      })
 
-      return [doc];
-    });
+      return [doc]
+    })
 
     return {
       documentId: document.id,
@@ -1234,7 +1196,7 @@ export class ContractsService {
       printUrl: `/api/v1/landlord/contracts/${contractId}/print?autoPrint=true`,
       createdAt: document.createdAt,
       html: renderedHtml,
-    };
+    }
   }
 
   /**
@@ -1243,10 +1205,7 @@ export class ContractsService {
    * @param boardingHouseId Active Boarding House context
    * @param contractId Contract UUID
    */
-  async getContractDocuments(
-    boardingHouseId: string,
-    contractId: string,
-  ) {
+  async getContractDocuments(boardingHouseId: string, contractId: string) {
     const contract = await this.prisma.contract.findFirst({
       where: {
         id: contractId,
@@ -1257,25 +1216,25 @@ export class ContractsService {
       select: {
         id: true,
       },
-    });
+    })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.');
+      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
     }
 
     const docs = await this.prisma.contractDocument.findMany({
       where: { contractId },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
-    return docs.map((d) => ({
+    return docs.map(d => ({
       id: d.id,
       contractId: d.contractId,
       url: d.url,
       downloadUrl: `/api/v1/landlord/contracts/${contractId}/documents/${d.id}/download`,
       printUrl: `/api/v1/landlord/contracts/${contractId}/print?autoPrint=true`,
       createdAt: d.createdAt,
-    }));
+    }))
   }
 
   /**
@@ -1290,20 +1249,17 @@ export class ContractsService {
     contractId: string,
     documentId: string,
   ): Promise<{ filename: string; html: string }> {
-    const templateData = await this.getContractTemplateData(
-      boardingHouseId,
-      contractId,
-    );
+    const templateData = await this.getContractTemplateData(boardingHouseId, contractId)
 
     const doc = await this.prisma.contractDocument.findFirst({
       where: {
         id: documentId,
         contractId,
       },
-    });
+    })
 
     if (!doc) {
-      throw new NotFoundException('Tài liệu hợp đồng không tồn tại.');
+      throw new NotFoundException('Tài liệu hợp đồng không tồn tại.')
     }
 
     const renderedHtml = ContractTemplateRenderer.render({
@@ -1312,35 +1268,34 @@ export class ContractsService {
         autoPrint: false,
         includeToolbar: false,
       },
-    });
+    })
 
-    const roomNumber = templateData.room.roomNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const filename = `Hop-dong-phong-${roomNumber}-${contractId.substring(0, 8)}.html`;
+    const roomNumber = templateData.room.roomNumber.replace(/[^a-zA-Z0-9_-]/g, '_')
+    const filename = `Hop-dong-phong-${roomNumber}-${contractId.substring(0, 8)}.html`
 
     return {
       filename,
       html: renderedHtml,
-    };
+    }
   }
 
   // ─── Helper methods ─────────────────────────────────────────────────────────
 
   private formatAddress(bh: {
-    houseNumber?: string | null;
-    street?: string | null;
-    ward?: string | null;
-    district?: string | null;
-    city?: string | null;
-    province?: string | null;
+    houseNumber?: string | null
+    street?: string | null
+    ward?: string | null
+    district?: string | null
+    city?: string | null
+    province?: string | null
   }): string {
     const parts = [
       bh.houseNumber ? `${bh.houseNumber} ${bh.street || ''}`.trim() : bh.street,
       bh.ward,
       bh.district,
       bh.city || bh.province,
-    ].filter(Boolean);
+    ].filter(Boolean)
 
-    return parts.join(', ');
+    return parts.join(', ')
   }
 }
-

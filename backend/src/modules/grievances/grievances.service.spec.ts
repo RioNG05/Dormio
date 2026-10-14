@@ -1,20 +1,17 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { GrievancesService } from './grievances.service';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import {
-  GrievancePriorityEnum,
-  GrievanceTypeEnum,
-} from './dto/create-grievance.dto';
-import { UploadService } from '../upload/upload.service';
+import { Test, TestingModule } from '@nestjs/testing'
+import { NotFoundException } from '@nestjs/common'
+import { GrievancesService } from './grievances.service'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { GrievancePriorityEnum, GrievanceTypeEnum } from './dto/create-grievance.dto'
+import { UploadService } from '../upload/upload.service'
 
 describe('GrievancesService', () => {
-  let service: GrievancesService;
+  let service: GrievancesService
 
-  const mockTenantId = 'user-tenant-uuid-1';
-  const mockContractId = 'contract-uuid-1';
-  const mockRoomId = 'room-uuid-1';
-  const mockBoardingHouseId = 'bh-uuid-1';
+  const mockTenantId = 'user-tenant-uuid-1'
+  const mockContractId = 'contract-uuid-1'
+  const mockRoomId = 'room-uuid-1'
+  const mockBoardingHouseId = 'bh-uuid-1'
 
   const mockContract = {
     id: mockContractId,
@@ -29,7 +26,7 @@ describe('GrievancesService', () => {
         name: 'Dormio Tân Bình',
       },
     },
-  };
+  }
 
   const mockTenantContract = {
     id: 'tc-uuid-1',
@@ -37,7 +34,7 @@ describe('GrievancesService', () => {
     contractId: mockContractId,
     isPrimary: true,
     contract: mockContract,
-  };
+  }
 
   const mockGrievance = {
     id: 'grievance-uuid-1',
@@ -69,7 +66,7 @@ describe('GrievancesService', () => {
       },
     ],
     resolvedByUser: null,
-  };
+  }
 
   const mockPrisma = {
     tenantContract: {
@@ -87,16 +84,16 @@ describe('GrievancesService', () => {
     auditLog: {
       create: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrisma)),
-  };
+    $transaction: jest.fn(callback => callback(mockPrisma)),
+  }
 
   const mockUploadService = {
     ensureCloudinaryUrl: jest.fn((url: string) => Promise.resolve(url)),
     uploadImage: jest.fn(),
-  };
+  }
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -110,44 +107,44 @@ describe('GrievancesService', () => {
           useValue: mockUploadService,
         },
       ],
-    }).compile();
+    }).compile()
 
-    service = module.get<GrievancesService>(GrievancesService);
-  });
+    service = module.get<GrievancesService>(GrievancesService)
+  })
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+    expect(service).toBeDefined()
+  })
 
   describe('createGrievance', () => {
     it('should create grievance without active contract successfully (e.g. inquiry/feedback)', async () => {
-      mockPrisma.tenantContract.findFirst.mockResolvedValue(null);
-      mockPrisma.grievance.create.mockResolvedValue({ id: 'grievance-uuid-1' });
-      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' });
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(null)
+      mockPrisma.grievance.create.mockResolvedValue({ id: 'grievance-uuid-1' })
+      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' })
       mockPrisma.grievance.findUnique.mockResolvedValue({
         ...mockGrievance,
         boardingHouse: null,
         room: null,
-      });
+      })
 
       const result = await service.createGrievance(mockTenantId, {
         type: GrievanceTypeEnum.inquiry,
         title: 'Thắc mắc tính năng hệ thống',
         description: 'Làm thế nào để thanh toán tiền phòng qua PayOS?',
-      });
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.data.id).toBe('grievance-uuid-1');
-      expect(result.data.boardingHouseName).toBeNull();
-      expect(result.data.roomNumber).toBeNull();
-    });
+      expect(result.success).toBe(true)
+      expect(result.data.id).toBe('grievance-uuid-1')
+      expect(result.data.boardingHouseName).toBeNull()
+      expect(result.data.roomNumber).toBeNull()
+    })
 
     it('should create grievance and images successfully with active contract', async () => {
-      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract);
-      mockPrisma.grievance.create.mockResolvedValue({ id: 'grievance-uuid-1' });
-      mockPrisma.grievanceImage.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' });
-      mockPrisma.grievance.findUnique.mockResolvedValue(mockGrievance);
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract)
+      mockPrisma.grievance.create.mockResolvedValue({ id: 'grievance-uuid-1' })
+      mockPrisma.grievanceImage.createMany.mockResolvedValue({ count: 1 })
+      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' })
+      mockPrisma.grievance.findUnique.mockResolvedValue(mockGrievance)
 
       const result = await service.createGrievance(mockTenantId, {
         type: GrievanceTypeEnum.complaint,
@@ -155,49 +152,46 @@ describe('GrievancesService', () => {
         description: 'Chủ trọ thu 5000đ/kWh thay vì 3500đ theo hợp đồng.',
         priority: GrievancePriorityEnum.high,
         imageUrls: ['https://images.com/evidence1.jpg'],
-      });
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.data.id).toBe('grievance-uuid-1');
-      expect(result.data.title).toBe('Chủ trọ tự ý tăng tiền điện');
-      expect(result.data.priority).toBe('high');
-      expect(result.data.status).toBe('pending');
-      expect(result.data.roomNumber).toBe('101');
-      expect(result.data.images).toHaveLength(1);
-    });
-  });
+      expect(result.success).toBe(true)
+      expect(result.data.id).toBe('grievance-uuid-1')
+      expect(result.data.title).toBe('Chủ trọ tự ý tăng tiền điện')
+      expect(result.data.priority).toBe('high')
+      expect(result.data.status).toBe('pending')
+      expect(result.data.roomNumber).toBe('101')
+      expect(result.data.images).toHaveLength(1)
+    })
+  })
 
   describe('getTenantGrievances', () => {
     it('should return list of tenant grievances', async () => {
-      mockPrisma.grievance.findMany.mockResolvedValue([mockGrievance]);
+      mockPrisma.grievance.findMany.mockResolvedValue([mockGrievance])
 
-      const result = await service.getTenantGrievances(mockTenantId);
+      const result = await service.getTenantGrievances(mockTenantId)
 
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0].id).toBe('grievance-uuid-1');
-    });
-  });
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(1)
+      expect(result.data[0].id).toBe('grievance-uuid-1')
+    })
+  })
 
   describe('getTenantGrievanceById', () => {
     it('should return grievance detail when found and owned by tenant', async () => {
-      mockPrisma.grievance.findFirst.mockResolvedValue(mockGrievance);
+      mockPrisma.grievance.findFirst.mockResolvedValue(mockGrievance)
 
-      const result = await service.getTenantGrievanceById(
-        mockTenantId,
-        'grievance-uuid-1',
-      );
+      const result = await service.getTenantGrievanceById(mockTenantId, 'grievance-uuid-1')
 
-      expect(result.success).toBe(true);
-      expect(result.data.id).toBe('grievance-uuid-1');
-    });
+      expect(result.success).toBe(true)
+      expect(result.data.id).toBe('grievance-uuid-1')
+    })
 
     it('should throw NotFoundException when grievance is not found', async () => {
-      mockPrisma.grievance.findFirst.mockResolvedValue(null);
+      mockPrisma.grievance.findFirst.mockResolvedValue(null)
 
-      await expect(
-        service.getTenantGrievanceById(mockTenantId, 'non-existent-id'),
-      ).rejects.toThrow(NotFoundException);
-    });
-  });
-});
+      await expect(service.getTenantGrievanceById(mockTenantId, 'non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      )
+    })
+  })
+})

@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsEnum, IsNotEmpty } from 'class-validator'
 
 export enum CheckoutPlanTier {
   PLUS = 'plus',
@@ -20,7 +20,7 @@ export class CheckoutSubscriptionDto {
   })
   @IsNotEmpty({ message: 'planName cannot be empty' })
   @IsEnum(CheckoutPlanTier, { message: 'planName must be plus or pro' })
-  planName: CheckoutPlanTier;
+  planName: CheckoutPlanTier
 
   @ApiProperty({
     enum: CheckoutBillingCycle,
@@ -29,5 +29,5 @@ export class CheckoutSubscriptionDto {
   })
   @IsNotEmpty({ message: 'billingCycle cannot be empty' })
   @IsEnum(CheckoutBillingCycle, { message: 'billingCycle must be monthly, quarterly, or yearly' })
-  billingCycle: CheckoutBillingCycle;
+  billingCycle: CheckoutBillingCycle
 }

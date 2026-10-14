@@ -1,5 +1,5 @@
-import PricingUI from "./components/PricingUI";
+import PricingUI from './components/PricingUI'
 
 export default function PricingIndexPage() {
-  return <PricingUI initialTab="bhms" />;
+  return <PricingUI initialTab="bhms" />
 }

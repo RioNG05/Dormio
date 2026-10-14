@@ -1,15 +1,16 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class AdminHousesFilterDto {
   @ApiPropertyOptional({
-    description: 'Search string matching boarding house name or address (street, ward, district, city, province)',
+    description:
+      'Search string matching boarding house name or address (street, ward, district, city, province)',
     example: 'Dormio',
   })
   @IsOptional()
   @IsString()
-  propertyQuery?: string;
+  propertyQuery?: string
 
   @ApiPropertyOptional({
     description: 'Search string matching landlord contact name, phone number, or email',
@@ -17,7 +18,7 @@ export class AdminHousesFilterDto {
   })
   @IsOptional()
   @IsString()
-  landlordQuery?: string;
+  landlordQuery?: string
 
   @ApiPropertyOptional({
     description: 'Minimum total number of rooms in the boarding house',
@@ -27,7 +28,7 @@ export class AdminHousesFilterDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
-  minRooms?: number;
+  minRooms?: number
 
   @ApiPropertyOptional({
     description: 'Maximum total number of rooms in the boarding house',
@@ -37,7 +38,7 @@ export class AdminHousesFilterDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
-  maxRooms?: number;
+  maxRooms?: number
 
   @ApiPropertyOptional({
     description: 'Minimum occupancy rate percentage (0 - 100)',
@@ -48,7 +49,7 @@ export class AdminHousesFilterDto {
   @IsInt()
   @Min(0)
   @Max(100)
-  minOccupancy?: number;
+  minOccupancy?: number
 
   @ApiPropertyOptional({
     description: 'Maximum occupancy rate percentage (0 - 100)',
@@ -59,15 +60,16 @@ export class AdminHousesFilterDto {
   @IsInt()
   @Min(0)
   @Max(100)
-  maxOccupancy?: number;
+  maxOccupancy?: number
 
   @ApiPropertyOptional({
-    description: 'Filter by one or multiple moderation statuses (comma-separated: active, locked, reported)',
+    description:
+      'Filter by one or multiple moderation statuses (comma-separated: active, locked, reported)',
     example: 'active,reported',
   })
   @IsOptional()
   @IsString()
-  status?: string;
+  status?: string
 
   @ApiPropertyOptional({
     description: 'Current page number',
@@ -78,7 +80,7 @@ export class AdminHousesFilterDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
@@ -90,7 +92,7 @@ export class AdminHousesFilterDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 10;
+  limit?: number = 10
 }
 
 export class LockHouseDto {
@@ -99,5 +101,5 @@ export class LockHouseDto {
     example: 'Fire safety violation and unresolved complaints',
   })
   @IsString()
-  reason: string;
+  reason: string
 }

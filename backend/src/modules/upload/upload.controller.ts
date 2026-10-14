@@ -8,7 +8,7 @@ import {
   BadRequestException,
   Logger,
   VERSION_NEUTRAL,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -17,26 +17,27 @@ import {
   ApiBody,
   ApiOkResponse,
   ApiResponse,
-} from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { UploadService } from './upload.service';
-import { UploadImageDto } from './dto/upload-image.dto';
-import { UploadImageResponseDto } from './dto/upload-image-response.dto';
+} from '@nestjs/swagger'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { UploadService } from './upload.service'
+import { UploadImageDto } from './dto/upload-image.dto'
+import { UploadImageResponseDto } from './dto/upload-image-response.dto'
 
 @ApiTags('Media & Uploads')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller({ path: 'upload', version: ['1', VERSION_NEUTRAL] })
 export class UploadController {
-  private readonly logger = new Logger(UploadController.name);
+  private readonly logger = new Logger(UploadController.name)
 
-  constructor(private readonly uploadService: UploadService) { }
+  constructor(private readonly uploadService: UploadService) {}
 
   @Post('image')
   @ApiOperation({
     summary: 'Upload image to Cloudinary via Base64/Data URI',
-    description: 'Accepts a base64 data URI string or remote image URL and uploads to Cloudinary storage on the server side.',
+    description:
+      'Accepts a base64 data URI string or remote image URL and uploads to Cloudinary storage on the server side.',
   })
   @ApiOkResponse({
     type: UploadImageResponseDto,
@@ -45,25 +46,26 @@ export class UploadController {
   @ApiResponse({ status: 400, description: 'Invalid image data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async uploadImage(@Body() dto: UploadImageDto): Promise<UploadImageResponseDto> {
-    this.logger.log(`Invoked uploadImage with target folder: ${dto.folder ?? 'default'}`);
+    this.logger.log(`Invoked uploadImage with target folder: ${dto.folder ?? 'default'}`)
 
     if (!dto.image) {
-      throw new BadRequestException('Image data is required');
+      throw new BadRequestException('Image data is required')
     }
 
-    const result = await this.uploadService.uploadImage(dto);
+    const result = await this.uploadService.uploadImage(dto)
     return {
       url: result.secureUrl || result.url,
       publicId: result.publicId,
       format: result.format,
       bytes: result.bytes,
-    };
+    }
   }
 
   @Post('file')
   @ApiOperation({
     summary: 'Upload image file directly via multipart/form-data',
-    description: 'Uploads an image file (JPEG, PNG, WEBP) directly to Cloudinary storage via server-side stream.',
+    description:
+      'Uploads an image file (JPEG, PNG, WEBP) directly to Cloudinary storage via server-side stream.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -94,27 +96,29 @@ export class UploadController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('folder') folder?: string,
   ): Promise<UploadImageResponseDto> {
-    this.logger.log(`Invoked uploadFile with filename: ${file?.originalname}, size: ${file?.size} bytes`);
+    this.logger.log(
+      `Invoked uploadFile with filename: ${file?.originalname}, size: ${file?.size} bytes`,
+    )
 
     if (!file) {
-      throw new BadRequestException('Image file is required');
+      throw new BadRequestException('Image file is required')
     }
 
     if (!file.mimetype.startsWith('image/')) {
-      throw new BadRequestException('Uploaded file must be an image');
+      throw new BadRequestException('Uploaded file must be an image')
     }
 
     const result = await this.uploadService.uploadFileBuffer(
       file.buffer,
       folder || 'dormio/uploads',
       file.originalname,
-    );
+    )
 
     return {
       url: result.secureUrl || result.url,
       publicId: result.publicId,
       format: result.format,
       bytes: result.bytes,
-    };
+    }
   }
 }

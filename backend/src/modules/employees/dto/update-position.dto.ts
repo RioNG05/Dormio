@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class UpdatePositionDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class UpdatePositionDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  name?: string;
+  name?: string
 
   @ApiPropertyOptional({
     description: 'Free-text duty description / responsibilities list shown to staff in UC-S-01',
@@ -17,5 +17,5 @@ export class UpdatePositionDto {
   })
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string
 }

@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { NotificationsController } from './notifications.controller';
-import { LandlordNotificationsController } from './landlord-notifications.controller';
-import { AdminNotificationsController } from './admin-notifications.controller';
-import { NotificationsService, NOTIFICATION_QUEUE } from './notifications.service';
-import { NotificationProcessor } from './notifications.processor';
+import { Module } from '@nestjs/common'
+import { BullModule } from '@nestjs/bullmq'
+import { NotificationsController } from './notifications.controller'
+import { LandlordNotificationsController } from './landlord-notifications.controller'
+import { AdminNotificationsController } from './admin-notifications.controller'
+import { NotificationsService, NOTIFICATION_QUEUE } from './notifications.service'
+import { NotificationProcessor } from './notifications.processor'
 
-import { AuthModule } from '../auth/auth.module';
+import { AuthModule } from '../auth/auth.module'
 
 @Module({
   imports: [

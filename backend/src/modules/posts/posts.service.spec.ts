@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PostsService } from './posts.service';
-import { PrismaService } from '../../common/prisma/prisma.service';
+import { Test, TestingModule } from '@nestjs/testing'
+import { PostsService } from './posts.service'
+import { PrismaService } from '../../common/prisma/prisma.service'
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
   UnauthorizedException,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   PostStatus,
   SourceType,
@@ -14,10 +14,10 @@ import {
   SubscriptionPackage,
   SubscriptionStatus,
   UserRole,
-} from '@prisma';
+} from '@prisma'
 
 describe('PostsService', () => {
-  let service: PostsService;
+  let service: PostsService
 
   const mockPrisma = {
     boardingHouse: {
@@ -78,41 +78,38 @@ describe('PostsService', () => {
       findFirst: jest.fn(),
     },
     $transaction: jest.fn(),
-  };
+  }
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PostsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
-    }).compile();
+      providers: [PostsService, { provide: PrismaService, useValue: mockPrisma }],
+    }).compile()
 
-    service = module.get<PostsService>(PostsService);
-    mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-uuid-1' });
-  });
+    service = module.get<PostsService>(PostsService)
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-uuid-1' })
+  })
 
   describe('checkQuota', () => {
-    const userId = 'test-user-id';
+    const userId = 'test-user-id'
 
     it('should grant free_quote to leasing agent (base quota = 3) without subscription lookup', async () => {
       // 2 free posts used today, base quota = 3
-      mockPrisma.post.count.mockResolvedValue(2);
+      mockPrisma.post.count.mockResolvedValue(2)
 
-      const allocation = await service.checkQuota(userId, false);
+      const allocation = await service.checkQuota(userId, false)
 
       expect(allocation).toEqual({
         sourceType: SourceType.free_quote,
         postPurchaseId: null,
-      });
-      expect(mockPrisma.userSubscription.findFirst).not.toHaveBeenCalled();
-    });
+      })
+      expect(mockPrisma.userSubscription.findFirst).not.toHaveBeenCalled()
+    })
 
     it('should grant free_quote to landlord with plus subscription (3 base + 5 bonus = 8 quota)', async () => {
       // 5 free posts used today, landlord with plus (bonus=5)
-      mockPrisma.post.count.mockResolvedValue(5);
+      mockPrisma.post.count.mockResolvedValue(5)
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         userId,
         planName: SubscriptionPackage.plus,
@@ -121,19 +118,19 @@ describe('PostsService', () => {
           planName: SubscriptionPackage.plus,
           dailyPostQuote: 5,
         },
-      });
+      })
 
-      const allocation = await service.checkQuota(userId, true);
+      const allocation = await service.checkQuota(userId, true)
 
       expect(allocation).toEqual({
         sourceType: SourceType.free_quote,
         postPurchaseId: null,
-      });
-    });
+      })
+    })
 
     it('should fallback to purchased post credits (FIFO) when free quota is exhausted', async () => {
       // 3 free posts used today for leasing agent (base quota is 3)
-      mockPrisma.post.count.mockResolvedValue(3);
+      mockPrisma.post.count.mockResolvedValue(3)
 
       // 2 paid packages: first package fully used (5/5), second package available (2/5)
       mockPrisma.postPurchase.findMany.mockResolvedValue([
@@ -153,18 +150,18 @@ describe('PostsService', () => {
           activatedAt: new Date('2026-08-10'),
           _count: { posts: 2 },
         },
-      ]);
+      ])
 
-      const allocation = await service.checkQuota(userId, false);
+      const allocation = await service.checkQuota(userId, false)
 
       expect(allocation).toEqual({
         sourceType: SourceType.purchased,
         postPurchaseId: 'pp-package-2',
-      });
-    });
+      })
+    })
 
     it('should throw ForbiddenException if both free quota and purchased credits are exhausted', async () => {
-      mockPrisma.post.count.mockResolvedValue(3);
+      mockPrisma.post.count.mockResolvedValue(3)
 
       mockPrisma.postPurchase.findMany.mockResolvedValue([
         {
@@ -175,17 +172,15 @@ describe('PostsService', () => {
           activatedAt: new Date('2026-08-01'),
           _count: { posts: 3 },
         },
-      ]);
+      ])
 
-      await expect(service.checkQuota(userId, false)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-  });
+      await expect(service.checkQuota(userId, false)).rejects.toThrow(ForbiddenException)
+    })
+  })
 
   describe('createPost', () => {
-    const landlordId = 'landlord-1';
-    const leasingAgentId = 'agent-1';
+    const landlordId = 'landlord-1'
+    const leasingAgentId = 'agent-1'
 
     const createDto = {
       title: 'Premium studio room in district 1',
@@ -193,52 +188,46 @@ describe('PostsService', () => {
       depositAmount: 3500000,
       roomId: 'room-1',
       imageUrls: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
-    };
+    }
 
     it('should reject leasing agent with BadRequestException if roomId is provided', async () => {
-      mockPrisma.boardingHouse.count.mockResolvedValue(0); // Not a landlord
+      mockPrisma.boardingHouse.count.mockResolvedValue(0) // Not a landlord
 
-      await expect(
-        service.createPost(leasingAgentId, createDto),
-      ).rejects.toThrow(
+      await expect(service.createPost(leasingAgentId, createDto)).rejects.toThrow(
         'Leasing agents can only publish general listings and cannot link to specific rooms',
-      );
-    });
+      )
+    })
 
     it('should throw NotFoundException if landlord links roomId that does not exist', async () => {
-      mockPrisma.boardingHouse.count.mockResolvedValue(1); // Is a landlord
-      mockPrisma.room.findUnique.mockResolvedValue(null);
+      mockPrisma.boardingHouse.count.mockResolvedValue(1) // Is a landlord
+      mockPrisma.room.findUnique.mockResolvedValue(null)
 
-      await expect(service.createPost(landlordId, createDto)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
+      await expect(service.createPost(landlordId, createDto)).rejects.toThrow(NotFoundException)
+    })
 
     it('should throw ForbiddenException if room belongs to another landlord', async () => {
-      mockPrisma.boardingHouse.count.mockResolvedValue(1); // Is a landlord
+      mockPrisma.boardingHouse.count.mockResolvedValue(1) // Is a landlord
       mockPrisma.room.findUnique.mockResolvedValue({
         id: 'room-1',
         boardingHouse: {
           ownerId: 'different-landlord-id',
         },
-      });
+      })
 
-      await expect(service.createPost(landlordId, createDto)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
+      await expect(service.createPost(landlordId, createDto)).rejects.toThrow(ForbiddenException)
+    })
 
     it('should successfully create post and post images inside transaction for landlord', async () => {
-      mockPrisma.boardingHouse.count.mockResolvedValue(1);
-      mockPrisma.post.count.mockResolvedValue(0);
-      mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
+      mockPrisma.boardingHouse.count.mockResolvedValue(1)
+      mockPrisma.post.count.mockResolvedValue(0)
+      mockPrisma.userSubscription.findFirst.mockResolvedValue(null)
 
       mockPrisma.room.findUnique.mockResolvedValue({
         id: 'room-1',
         boardingHouse: {
           ownerId: landlordId,
         },
-      });
+      })
 
       const createdPostMock = {
         id: 'post-100',
@@ -251,9 +240,9 @@ describe('PostsService', () => {
         sourceType: SourceType.free_quote,
         postPurchaseId: null,
         createdAt: new Date(),
-      };
+      }
 
-      mockPrisma.$transaction.mockImplementation(async (cb) => {
+      mockPrisma.$transaction.mockImplementation(async cb => {
         const tx = {
           post: {
             create: jest.fn().mockResolvedValue(createdPostMock),
@@ -261,9 +250,9 @@ describe('PostsService', () => {
           postImage: {
             createMany: jest.fn().mockResolvedValue({ count: 2 }),
           },
-        };
-        return cb(tx);
-      });
+        }
+        return cb(tx)
+      })
 
       mockPrisma.post.findUnique.mockResolvedValue({
         ...createdPostMock,
@@ -280,26 +269,26 @@ describe('PostsService', () => {
           boardingHouse: { name: 'Dormio House 1', id: 'bh-1' },
         },
         _count: { postReaches: 0 },
-      });
+      })
 
-      const result = await service.createPost(landlordId, createDto);
+      const result = await service.createPost(landlordId, createDto)
 
-      expect(result.id).toEqual('post-100');
-      expect(result.title).toEqual(createDto.title);
-      expect(result.sourceType).toEqual(SourceType.free_quote);
-      expect(result.images).toHaveLength(2);
-    });
+      expect(result.id).toEqual('post-100')
+      expect(result.title).toEqual(createDto.title)
+      expect(result.sourceType).toEqual(SourceType.free_quote)
+      expect(result.images).toHaveLength(2)
+    })
 
     it('should successfully create general listing for leasing agent without roomId', async () => {
-      mockPrisma.boardingHouse.count.mockResolvedValue(0);
-      mockPrisma.post.count.mockResolvedValue(0);
+      mockPrisma.boardingHouse.count.mockResolvedValue(0)
+      mockPrisma.post.count.mockResolvedValue(0)
 
       const agentDto = {
         title: 'General listing by leasing agent',
         content: 'Convenient location, modern amenities...',
         depositAmount: 2000000,
         imageUrls: [],
-      };
+      }
 
       const createdPostMock = {
         id: 'post-200',
@@ -312,9 +301,9 @@ describe('PostsService', () => {
         sourceType: SourceType.free_quote,
         postPurchaseId: null,
         createdAt: new Date(),
-      };
+      }
 
-      mockPrisma.$transaction.mockImplementation(async (cb) => {
+      mockPrisma.$transaction.mockImplementation(async cb => {
         const tx = {
           post: {
             create: jest.fn().mockResolvedValue(createdPostMock),
@@ -322,39 +311,39 @@ describe('PostsService', () => {
           postImage: {
             createMany: jest.fn().mockResolvedValue({ count: 0 }),
           },
-        };
-        return cb(tx);
-      });
+        }
+        return cb(tx)
+      })
 
       mockPrisma.post.findUnique.mockResolvedValue({
         ...createdPostMock,
         postImages: [],
         room: null,
         _count: { postReaches: 0 },
-      });
+      })
 
-      const result = await service.createPost(leasingAgentId, agentDto);
+      const result = await service.createPost(leasingAgentId, agentDto)
 
-      expect(result.id).toEqual('post-200');
-      expect(result.roomId).toBeNull();
-      expect(result.sourceType).toEqual(SourceType.free_quote);
-    });
-  });
+      expect(result.id).toEqual('post-200')
+      expect(result.roomId).toBeNull()
+      expect(result.sourceType).toEqual(SourceType.free_quote)
+    })
+  })
 
   describe('updatePostStatus', () => {
-    const userId = 'user-1';
-    const postId = 'post-1';
+    const userId = 'user-1'
+    const postId = 'post-1'
 
     it('should throw ForbiddenException when non-author attempts to update status', async () => {
       mockPrisma.post.findUnique.mockResolvedValue({
         id: postId,
         postedBy: 'other-user',
-      });
+      })
 
-      await expect(
-        service.updatePostStatus(userId, postId, PostStatus.hidden),
-      ).rejects.toThrow(ForbiddenException);
-    });
+      await expect(service.updatePostStatus(userId, postId, PostStatus.hidden)).rejects.toThrow(
+        ForbiddenException,
+      )
+    })
 
     it('should update status when author requests it', async () => {
       mockPrisma.post.findUnique
@@ -372,29 +361,25 @@ describe('PostsService', () => {
           depositAmount: 3000000,
           createdAt: new Date(),
           _count: { postReaches: 5 },
-        });
+        })
 
       mockPrisma.post.update.mockResolvedValue({
         id: postId,
         status: PostStatus.hidden,
-      });
+      })
 
-      const result = await service.updatePostStatus(
-        userId,
-        postId,
-        PostStatus.hidden,
-      );
+      const result = await service.updatePostStatus(userId, postId, PostStatus.hidden)
 
-      expect(result.status).toEqual(PostStatus.hidden);
+      expect(result.status).toEqual(PostStatus.hidden)
       expect(mockPrisma.post.update).toHaveBeenCalledWith({
         where: { id: postId },
         data: { status: PostStatus.hidden },
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe('getPosterAnalyticsOverview', () => {
-    const userId = 'poster-1';
+    const userId = 'poster-1'
 
     it('should aggregate post counts, views, bookmarks and generate daily trend points', async () => {
       const mockPosts = [
@@ -418,42 +403,42 @@ describe('PostsService', () => {
           _count: { postReaches: 5, savedPosts: 1 },
           createdAt: new Date(),
         },
-      ];
+      ]
 
-      mockPrisma.post.findMany.mockResolvedValue(mockPosts);
+      mockPrisma.post.findMany.mockResolvedValue(mockPosts)
 
-      const today = new Date();
+      const today = new Date()
       mockPrisma.postReach.findMany.mockResolvedValue([
         { viewedAt: today, viewedBy: 'user-a' },
         { viewedAt: today, viewedBy: 'user-b' },
-      ]);
+      ])
 
-      const result = await service.getPosterAnalyticsOverview(userId, 7);
+      const result = await service.getPosterAnalyticsOverview(userId, 7)
 
-      expect(result.totalPosts).toEqual(2);
-      expect(result.activePosts).toEqual(2);
-      expect(result.totalViews).toEqual(15);
-      expect(result.totalSaved).toEqual(4);
-      expect(result.averageViewsPerPost).toEqual(7.5);
-      expect(result.dailyTrends).toHaveLength(7);
-      expect(result.topPosts[0].id).toEqual('post-1');
-    });
-  });
+      expect(result.totalPosts).toEqual(2)
+      expect(result.activePosts).toEqual(2)
+      expect(result.totalViews).toEqual(15)
+      expect(result.totalSaved).toEqual(4)
+      expect(result.averageViewsPerPost).toEqual(7.5)
+      expect(result.dailyTrends).toHaveLength(7)
+      expect(result.topPosts[0].id).toEqual('post-1')
+    })
+  })
 
   describe('getSinglePostAnalytics', () => {
-    const userId = 'poster-1';
-    const postId = 'post-1';
+    const userId = 'poster-1'
+    const postId = 'post-1'
 
     it('should throw ForbiddenException if user is not post author', async () => {
       mockPrisma.post.findUnique.mockResolvedValue({
         id: postId,
         postedBy: 'other-user',
-      });
+      })
 
-      await expect(
-        service.getSinglePostAnalytics(userId, postId, 7),
-      ).rejects.toThrow(ForbiddenException);
-    });
+      await expect(service.getSinglePostAnalytics(userId, postId, 7)).rejects.toThrow(
+        ForbiddenException,
+      )
+    })
 
     it('should return single post drill-down with daily trends and unique viewers', async () => {
       mockPrisma.post.findUnique.mockResolvedValue({
@@ -466,93 +451,90 @@ describe('PostsService', () => {
         postImages: [{ id: 'img-1', url: 'https://example.com/1.jpg' }],
         _count: { postReaches: 8, savedPosts: 2 },
         createdAt: new Date(),
-      });
+      })
 
-      const today = new Date();
+      const today = new Date()
       mockPrisma.postReach.findMany.mockResolvedValue([
         { viewedAt: today, viewedBy: 'user-a' },
         { viewedAt: today, viewedBy: 'user-a' }, // duplicate viewer
         { viewedAt: today, viewedBy: 'user-b' },
-      ]);
+      ])
 
-      const result = await service.getSinglePostAnalytics(userId, postId, 7);
+      const result = await service.getSinglePostAnalytics(userId, postId, 7)
 
-      expect(result.post.id).toEqual(postId);
-      expect(result.totalViews).toEqual(8);
-      expect(result.totalUniqueViewers).toEqual(2);
-      expect(result.dailyTrends).toHaveLength(7);
-    });
-  });
+      expect(result.post.id).toEqual(postId)
+      expect(result.totalViews).toEqual(8)
+      expect(result.totalUniqueViewers).toEqual(2)
+      expect(result.dailyTrends).toHaveLength(7)
+    })
+  })
 
   describe('UC-PU-03: Save / Bookmark Listings', () => {
-    const userId = 'user-uuid-1';
-    const postId = 'post-uuid-1';
+    const userId = 'user-uuid-1'
+    const postId = 'post-uuid-1'
 
     it('should save a post if not already saved', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
-      mockPrisma.savedPost.findFirst.mockResolvedValue(null);
-      mockPrisma.savedPost.create.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId });
-      mockPrisma.savedPost.count.mockResolvedValue(1);
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId })
+      mockPrisma.savedPost.findFirst.mockResolvedValue(null)
+      mockPrisma.savedPost.create.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId })
+      mockPrisma.savedPost.count.mockResolvedValue(1)
 
-      const result = await service.savePost(userId, postId);
+      const result = await service.savePost(userId, postId)
 
-      expect(result).toEqual({ saved: true, savedCount: 1 });
+      expect(result).toEqual({ saved: true, savedCount: 1 })
       expect(mockPrisma.savedPost.create).toHaveBeenCalledWith({
         data: { postId, savedBy: userId },
-      });
-    });
+      })
+    })
 
     it('should unsave a post if bookmarked', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
-      mockPrisma.savedPost.deleteMany.mockResolvedValue({ count: 1 });
-      mockPrisma.savedPost.count.mockResolvedValue(0);
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId })
+      mockPrisma.savedPost.deleteMany.mockResolvedValue({ count: 1 })
+      mockPrisma.savedPost.count.mockResolvedValue(0)
 
-      const result = await service.unsavePost(userId, postId);
+      const result = await service.unsavePost(userId, postId)
 
-      expect(result).toEqual({ saved: false, savedCount: 0 });
+      expect(result).toEqual({ saved: false, savedCount: 0 })
       expect(mockPrisma.savedPost.deleteMany).toHaveBeenCalledWith({
         where: { postId, savedBy: userId },
-      });
-    });
+      })
+    })
 
     it('should toggle save from unsaved to saved', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
-      mockPrisma.savedPost.findFirst.mockResolvedValue(null);
-      mockPrisma.savedPost.create.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId });
-      mockPrisma.savedPost.count.mockResolvedValue(5);
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId })
+      mockPrisma.savedPost.findFirst.mockResolvedValue(null)
+      mockPrisma.savedPost.create.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId })
+      mockPrisma.savedPost.count.mockResolvedValue(5)
 
-      const result = await service.toggleSavePost(userId, postId);
+      const result = await service.toggleSavePost(userId, postId)
 
-      expect(result).toEqual({ saved: true, savedCount: 5 });
-      expect(mockPrisma.savedPost.create).toHaveBeenCalled();
-    });
+      expect(result).toEqual({ saved: true, savedCount: 5 })
+      expect(mockPrisma.savedPost.create).toHaveBeenCalled()
+    })
 
     it('should toggle save from saved to unsaved', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
-      mockPrisma.savedPost.findFirst.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId });
-      mockPrisma.savedPost.deleteMany.mockResolvedValue({ count: 1 });
-      mockPrisma.savedPost.count.mockResolvedValue(4);
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId })
+      mockPrisma.savedPost.findFirst.mockResolvedValue({ id: 'saved-1', postId, savedBy: userId })
+      mockPrisma.savedPost.deleteMany.mockResolvedValue({ count: 1 })
+      mockPrisma.savedPost.count.mockResolvedValue(4)
 
-      const result = await service.toggleSavePost(userId, postId);
+      const result = await service.toggleSavePost(userId, postId)
 
-      expect(result).toEqual({ saved: false, savedCount: 4 });
-      expect(mockPrisma.savedPost.deleteMany).toHaveBeenCalled();
-    });
+      expect(result).toEqual({ saved: false, savedCount: 4 })
+      expect(mockPrisma.savedPost.deleteMany).toHaveBeenCalled()
+    })
 
     it('should return all saved post IDs for user', async () => {
-      mockPrisma.savedPost.findMany.mockResolvedValue([
-        { postId: 'post-1' },
-        { postId: 'post-2' },
-      ]);
+      mockPrisma.savedPost.findMany.mockResolvedValue([{ postId: 'post-1' }, { postId: 'post-2' }])
 
-      const result = await service.getSavedPostIds(userId);
+      const result = await service.getSavedPostIds(userId)
 
-      expect(result).toEqual(['post-1', 'post-2']);
+      expect(result).toEqual(['post-1', 'post-2'])
       expect(mockPrisma.savedPost.findMany).toHaveBeenCalledWith({
         where: { savedBy: userId },
         select: { postId: true },
-      });
-    });
+      })
+    })
 
     it('should return full saved posts for user', async () => {
       const mockPost = {
@@ -584,7 +566,7 @@ describe('PostsService', () => {
           avatarUrl: null,
         },
         _count: { postReaches: 12, savedPosts: 4 },
-      };
+      }
 
       mockPrisma.savedPost.findMany.mockResolvedValue([
         {
@@ -594,52 +576,48 @@ describe('PostsService', () => {
           createdAt: new Date(),
           post: mockPost,
         },
-      ]);
+      ])
 
-      const result = await service.getSavedPosts(userId);
+      const result = await service.getSavedPosts(userId)
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('post-1');
-      expect(result[0].title).toBe('Room 101');
-      expect(result[0].room?.roomNumber).toBe('101');
-      expect(result[0].room?.boardingHouseName).toBe('House A');
-      expect(result[0].address?.province).toBe('Hanoi');
-      expect(result[0].viewsCount).toBe(12);
-      expect(result[0].savedCount).toBe(4);
-    });
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('post-1')
+      expect(result[0].title).toBe('Room 101')
+      expect(result[0].room?.roomNumber).toBe('101')
+      expect(result[0].room?.boardingHouseName).toBe('House A')
+      expect(result[0].address?.province).toBe('Hanoi')
+      expect(result[0].viewsCount).toBe(12)
+      expect(result[0].savedCount).toBe(4)
+    })
 
     it('should check if a post is saved', async () => {
-      mockPrisma.savedPost.count.mockResolvedValue(1);
+      mockPrisma.savedPost.count.mockResolvedValue(1)
 
-      const result = await service.isPostSaved(userId, postId);
+      const result = await service.isPostSaved(userId, postId)
 
-      expect(result).toBe(true);
+      expect(result).toBe(true)
       expect(mockPrisma.savedPost.count).toHaveBeenCalledWith({
         where: { postId, savedBy: userId },
-      });
-    });
+      })
+    })
 
     it('should throw NotFoundException if post does not exist', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(null);
+      mockPrisma.post.findUnique.mockResolvedValue(null)
 
-      await expect(service.savePost(userId, postId)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
+      await expect(service.savePost(userId, postId)).rejects.toThrow(NotFoundException)
+    })
 
     it('should throw UnauthorizedException if user does not exist in DB', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue({ id: postId });
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.post.findUnique.mockResolvedValue({ id: postId })
+      mockPrisma.user.findUnique.mockResolvedValue(null)
 
-      await expect(service.savePost(userId, postId)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
-  });
+      await expect(service.savePost(userId, postId)).rejects.toThrow(UnauthorizedException)
+    })
+  })
 
   describe('UC-PU-02: View Poster Profile', () => {
-    const posterId = 'poster-123';
-    const viewerId = 'viewer-456';
+    const posterId = 'poster-123'
+    const viewerId = 'viewer-456'
     const mockPoster = {
       id: posterId,
       username: 'Landlord Rio',
@@ -649,46 +627,44 @@ describe('PostsService', () => {
       createdAt: new Date('2026-01-01'),
       phoneNumber: '0901234567',
       email: 'rio@dormio.vn',
-    };
+    }
 
     it('should throw NotFoundException if poster does not exist', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findUnique.mockResolvedValue(null)
 
-      await expect(service.getPosterProfile(posterId, null)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
+      await expect(service.getPosterProfile(posterId, null)).rejects.toThrow(NotFoundException)
+    })
 
     it('should return public profile without phone/email for unauthenticated viewer', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
-      mockPrisma.post.count.mockResolvedValue(3);
-      mockPrisma.post.findMany.mockResolvedValue([]);
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster)
+      mockPrisma.post.count.mockResolvedValue(3)
+      mockPrisma.post.findMany.mockResolvedValue([])
 
-      const result = await service.getPosterProfile(posterId, null);
+      const result = await service.getPosterProfile(posterId, null)
 
-      expect(result.id).toBe(posterId);
-      expect(result.username).toBe('Landlord Rio');
-      expect(result.avatarUrl).toBe('https://example.com/avatar.jpg');
-      expect(result.bio).toBe('Trusted landlord in Hanoi');
-      expect(result.postCount).toBe(3);
-      expect(result.phoneNumber).toBeUndefined();
-      expect(result.email).toBeUndefined();
-      expect(result.hasActiveConversation).toBe(false);
-      expect(mockPrisma.conversation.findFirst).not.toHaveBeenCalled();
-    });
+      expect(result.id).toBe(posterId)
+      expect(result.username).toBe('Landlord Rio')
+      expect(result.avatarUrl).toBe('https://example.com/avatar.jpg')
+      expect(result.bio).toBe('Trusted landlord in Hanoi')
+      expect(result.postCount).toBe(3)
+      expect(result.phoneNumber).toBeUndefined()
+      expect(result.email).toBeUndefined()
+      expect(result.hasActiveConversation).toBe(false)
+      expect(mockPrisma.conversation.findFirst).not.toHaveBeenCalled()
+    })
 
     it('should withhold phone/email for authenticated viewer without active conversation', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
-      mockPrisma.conversation.findFirst.mockResolvedValue(null);
-      mockPrisma.post.count.mockResolvedValue(2);
-      mockPrisma.post.findMany.mockResolvedValue([]);
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster)
+      mockPrisma.conversation.findFirst.mockResolvedValue(null)
+      mockPrisma.post.count.mockResolvedValue(2)
+      mockPrisma.post.findMany.mockResolvedValue([])
 
-      const result = await service.getPosterProfile(posterId, viewerId);
+      const result = await service.getPosterProfile(posterId, viewerId)
 
-      expect(result.id).toBe(posterId);
-      expect(result.phoneNumber).toBeUndefined();
-      expect(result.email).toBeUndefined();
-      expect(result.hasActiveConversation).toBe(false);
+      expect(result.id).toBe(posterId)
+      expect(result.phoneNumber).toBeUndefined()
+      expect(result.email).toBeUndefined()
+      expect(result.hasActiveConversation).toBe(false)
       expect(mockPrisma.conversation.findFirst).toHaveBeenCalledWith({
         where: {
           deletedAt: null,
@@ -697,42 +673,42 @@ describe('PostsService', () => {
             { user1Id: posterId, user2Id: viewerId },
           ],
         },
-      });
-    });
+      })
+    })
 
     it('should expose phone/email for authenticated viewer with active conversation', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
-      mockPrisma.conversation.findFirst.mockResolvedValue({ id: 'conv-1' });
-      mockPrisma.post.count.mockResolvedValue(2);
-      mockPrisma.post.findMany.mockResolvedValue([]);
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster)
+      mockPrisma.conversation.findFirst.mockResolvedValue({ id: 'conv-1' })
+      mockPrisma.post.count.mockResolvedValue(2)
+      mockPrisma.post.findMany.mockResolvedValue([])
 
-      const result = await service.getPosterProfile(posterId, viewerId);
+      const result = await service.getPosterProfile(posterId, viewerId)
 
-      expect(result.id).toBe(posterId);
-      expect(result.phoneNumber).toBe('0901234567');
-      expect(result.email).toBe('rio@dormio.vn');
-      expect(result.hasActiveConversation).toBe(true);
-    });
+      expect(result.id).toBe(posterId)
+      expect(result.phoneNumber).toBe('0901234567')
+      expect(result.email).toBe('rio@dormio.vn')
+      expect(result.hasActiveConversation).toBe(true)
+    })
 
     it('should expose phone/email when poster views their own profile', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockPoster);
-      mockPrisma.post.count.mockResolvedValue(2);
-      mockPrisma.post.findMany.mockResolvedValue([]);
+      mockPrisma.user.findUnique.mockResolvedValue(mockPoster)
+      mockPrisma.post.count.mockResolvedValue(2)
+      mockPrisma.post.findMany.mockResolvedValue([])
 
-      const result = await service.getPosterProfile(posterId, posterId);
+      const result = await service.getPosterProfile(posterId, posterId)
 
-      expect(result.id).toBe(posterId);
-      expect(result.phoneNumber).toBe('0901234567');
-      expect(result.email).toBe('rio@dormio.vn');
-      expect(mockPrisma.conversation.findFirst).not.toHaveBeenCalled();
-    });
-  });
+      expect(result.id).toBe(posterId)
+      expect(result.phoneNumber).toBe('0901234567')
+      expect(result.email).toBe('rio@dormio.vn')
+      expect(mockPrisma.conversation.findFirst).not.toHaveBeenCalled()
+    })
+  })
 
   describe('UC-PU-04: Direct Online Deposit', () => {
-    const userId = 'tenant-user-1';
-    const postId = 'post-123';
-    const roomId = 'room-123';
-    const boardingHouseId = 'house-123';
+    const userId = 'tenant-user-1'
+    const postId = 'post-123'
+    const roomId = 'room-123'
+    const boardingHouseId = 'house-123'
 
     const mockUserWithId = {
       id: userId,
@@ -743,7 +719,7 @@ describe('PostsService', () => {
         fullName: 'Nguyễn Văn A',
         identityNumber: '001202012345',
       },
-    };
+    }
 
     const mockPost = {
       id: postId,
@@ -761,98 +737,98 @@ describe('PostsService', () => {
           name: 'Dormio House',
         },
       },
-    };
+    }
 
     describe('createPlatformDeposit', () => {
       it('should throw ForbiddenException if user has no userIdentification (Identity Gate)', async () => {
         mockPrisma.user.findUnique.mockResolvedValue({
           id: userId,
           userIdentification: null,
-        });
+        })
 
-        await expect(
-          service.createPlatformDeposit(userId, postId, {}),
-        ).rejects.toThrow(ForbiddenException);
-      });
+        await expect(service.createPlatformDeposit(userId, postId, {})).rejects.toThrow(
+          ForbiddenException,
+        )
+      })
 
       it('should throw BadRequestException if post has no linked room', async () => {
-        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId)
         mockPrisma.post.findUnique.mockResolvedValue({
           ...mockPost,
           roomId: null,
           room: null,
-        });
+        })
 
-        await expect(
-          service.createPlatformDeposit(userId, postId, {}),
-        ).rejects.toThrow(BadRequestException);
-      });
+        await expect(service.createPlatformDeposit(userId, postId, {})).rejects.toThrow(
+          BadRequestException,
+        )
+      })
 
       it('should throw BadRequestException if room is not available', async () => {
-        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId)
         mockPrisma.post.findUnique.mockResolvedValue({
           ...mockPost,
           room: {
             ...mockPost.room,
             status: 'occupied',
           },
-        });
+        })
 
-        await expect(
-          service.createPlatformDeposit(userId, postId, {}),
-        ).rejects.toThrow(BadRequestException);
-      });
+        await expect(service.createPlatformDeposit(userId, postId, {})).rejects.toThrow(
+          BadRequestException,
+        )
+      })
 
       it('should successfully create pending Deposit and Payment with VietQR instruction', async () => {
-        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
-        mockPrisma.post.findUnique.mockResolvedValue(mockPost);
-        mockPrisma.deposit.findFirst.mockResolvedValue(null);
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId)
+        mockPrisma.post.findUnique.mockResolvedValue(mockPost)
+        mockPrisma.deposit.findFirst.mockResolvedValue(null)
 
-        const mockDep = { id: 'dep-1' };
-        const mockPay = { id: 'pay-1' };
+        const mockDep = { id: 'dep-1' }
+        const mockPay = { id: 'pay-1' }
         mockPrisma.$transaction.mockImplementation(async (cb: any) => {
           return cb({
             deposit: { create: jest.fn().mockResolvedValue(mockDep) },
             payment: { create: jest.fn().mockResolvedValue(mockPay) },
-          });
-        });
+          })
+        })
 
         const result = await service.createPlatformDeposit(userId, postId, {
           amount: 3500000,
-        });
+        })
 
-        expect(result.depositId).toBe('dep-1');
-        expect(result.paymentId).toBe('pay-1');
-        expect(result.amount).toBe(3500000);
-        expect(result.status).toBe('pending');
-        expect(result.qrCodeUrl).toContain('vietqr.io');
-      });
-    });
+        expect(result.depositId).toBe('dep-1')
+        expect(result.paymentId).toBe('pay-1')
+        expect(result.amount).toBe(3500000)
+        expect(result.status).toBe('pending')
+        expect(result.qrCodeUrl).toContain('vietqr.io')
+      })
+    })
 
     describe('confirmPlatformDeposit', () => {
       it('should throw NotFoundException if deposit not found', async () => {
-        mockPrisma.deposit.findFirst.mockResolvedValue(null);
+        mockPrisma.deposit.findFirst.mockResolvedValue(null)
 
         await expect(
           service.confirmPlatformDeposit(userId, postId, { depositId: 'non-existent' }),
-        ).rejects.toThrow(NotFoundException);
-      });
+        ).rejects.toThrow(NotFoundException)
+      })
 
       it('should return idempotently if deposit is already paid', async () => {
         mockPrisma.deposit.findFirst.mockResolvedValue({
           id: 'dep-1',
           postId,
           status: 'paid',
-        });
+        })
 
         const result = await service.confirmPlatformDeposit(userId, postId, {
           depositId: 'dep-1',
-        });
+        })
 
-        expect(result.success).toBe(true);
-        expect(result.status).toBe('paid');
-        expect(mockPrisma.$transaction).not.toHaveBeenCalled();
-      });
+        expect(result.success).toBe(true)
+        expect(result.status).toBe('paid')
+        expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+      })
 
       it('should mark payment success, deposit paid, room deposited, and notify landlord', async () => {
         const mockDeposit = {
@@ -865,14 +841,14 @@ describe('PostsService', () => {
           payment: { id: 'pay-1', transactionRef: 'TXN-123' },
           room: { roomNumber: '101', boardingHouse: { name: 'Dormio House' } },
           post: { postedBy: 'landlord-1' },
-        };
-        mockPrisma.deposit.findFirst.mockResolvedValue(mockDeposit);
-        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId);
+        }
+        mockPrisma.deposit.findFirst.mockResolvedValue(mockDeposit)
+        mockPrisma.user.findUnique.mockResolvedValue(mockUserWithId)
 
-        const txPaymentUpdate = jest.fn();
-        const txDepositUpdate = jest.fn();
-        const txRoomUpdate = jest.fn();
-        const txAuditLogCreate = jest.fn();
+        const txPaymentUpdate = jest.fn()
+        const txDepositUpdate = jest.fn()
+        const txRoomUpdate = jest.fn()
+        const txAuditLogCreate = jest.fn()
 
         mockPrisma.$transaction.mockImplementation(async (cb: any) => {
           return cb({
@@ -880,34 +856,34 @@ describe('PostsService', () => {
             deposit: { update: txDepositUpdate },
             room: { update: txRoomUpdate },
             auditLog: { create: txAuditLogCreate },
-          });
-        });
+          })
+        })
 
         const result = await service.confirmPlatformDeposit(userId, postId, {
           depositId: 'dep-1',
-        });
+        })
 
-        expect(result.success).toBe(true);
-        expect(result.status).toBe('paid');
+        expect(result.success).toBe(true)
+        expect(result.status).toBe('paid')
         expect(txPaymentUpdate).toHaveBeenCalledWith(
           expect.objectContaining({
             where: { id: 'pay-1' },
             data: expect.objectContaining({ status: 'success' }),
           }),
-        );
+        )
         expect(txDepositUpdate).toHaveBeenCalledWith(
           expect.objectContaining({
             where: { id: 'dep-1' },
             data: expect.objectContaining({ status: 'paid' }),
           }),
-        );
+        )
         expect(txRoomUpdate).toHaveBeenCalledWith(
           expect.objectContaining({
             where: { id: roomId },
             data: expect.objectContaining({ status: 'deposited' }),
           }),
-        );
-        expect(txAuditLogCreate).toHaveBeenCalledTimes(2);
+        )
+        expect(txAuditLogCreate).toHaveBeenCalledTimes(2)
         expect(mockPrisma.notification.create).toHaveBeenCalledWith(
           expect.objectContaining({
             data: expect.objectContaining({
@@ -915,16 +891,16 @@ describe('PostsService', () => {
               type: 'deposit_received',
             }),
           }),
-        );
-      });
-    });
-  });
+        )
+      })
+    })
+  })
 
   describe('updatePost', () => {
-    const postId = 'post-100';
-    const authorId = 'author-user-1';
-    const otherUserId = 'other-user-2';
-    const adminId = 'admin-user-1';
+    const postId = 'post-100'
+    const authorId = 'author-user-1'
+    const otherUserId = 'other-user-2'
+    const adminId = 'admin-user-1'
 
     const mockPost = {
       id: postId,
@@ -934,117 +910,117 @@ describe('PostsService', () => {
       postedBy: authorId,
       status: 'posted',
       deletedAt: new Date('2099-12-31'),
-    };
+    }
 
     it('should throw NotFoundException if post does not exist', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(null);
+      mockPrisma.post.findUnique.mockResolvedValue(null)
 
       await expect(
         service.updatePost(authorId, postId, { title: 'New' }, UserRole.landlord),
-      ).rejects.toThrow(NotFoundException);
-    });
+      ).rejects.toThrow(NotFoundException)
+    })
 
     it('should throw ForbiddenException if caller is neither author nor admin', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost)
 
       await expect(
         service.updatePost(otherUserId, postId, { title: 'New' }, UserRole.landlord),
-      ).rejects.toThrow(ForbiddenException);
-    });
+      ).rejects.toThrow(ForbiddenException)
+    })
 
     it('should allow author to update their own post', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost)
       mockPrisma.$transaction.mockImplementation(async (cb: any) => {
         return cb({
           post: { update: jest.fn().mockResolvedValue(mockPost) },
           postImage: { deleteMany: jest.fn(), createMany: jest.fn() },
-        });
-      });
+        })
+      })
       jest.spyOn(service, 'getPostById').mockResolvedValue({
         id: postId,
         title: 'Updated by Author',
-      } as any);
+      } as any)
 
       const res = await service.updatePost(
         authorId,
         postId,
         { title: 'Updated by Author' },
         UserRole.landlord,
-      );
+      )
 
-      expect(res.title).toBe('Updated by Author');
-    });
+      expect(res.title).toBe('Updated by Author')
+    })
 
     it('should allow admin to update any post', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost)
       mockPrisma.$transaction.mockImplementation(async (cb: any) => {
         return cb({
           post: { update: jest.fn().mockResolvedValue(mockPost) },
           postImage: { deleteMany: jest.fn(), createMany: jest.fn() },
-        });
-      });
+        })
+      })
       jest.spyOn(service, 'getPostById').mockResolvedValue({
         id: postId,
         title: 'Updated by Admin',
-      } as any);
+      } as any)
 
       const res = await service.updatePost(
         adminId,
         postId,
         { title: 'Updated by Admin' },
         UserRole.admin,
-      );
+      )
 
-      expect(res.title).toBe('Updated by Admin');
-    });
-  });
+      expect(res.title).toBe('Updated by Admin')
+    })
+  })
 
   describe('deletePost (with reason & notification)', () => {
-    const postId = 'post-200';
-    const authorId = 'author-user-2';
-    const adminId = 'admin-user-9';
+    const postId = 'post-200'
+    const authorId = 'author-user-2'
+    const adminId = 'admin-user-9'
     const mockPost = {
       id: postId,
       title: 'Listing Title',
       postedBy: authorId,
       room: { boardingHouseId: 'house-1' },
       deletedAt: new Date('2099-12-31'),
-    };
+    }
 
     it('should throw NotFoundException if post not found', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(null);
+      mockPrisma.post.findUnique.mockResolvedValue(null)
 
-      await expect(
-        service.deletePost(authorId, postId, UserRole.landlord),
-      ).rejects.toThrow(NotFoundException);
-    });
+      await expect(service.deletePost(authorId, postId, UserRole.landlord)).rejects.toThrow(
+        NotFoundException,
+      )
+    })
 
     it('should allow author to delete own post without notifying author', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
-      mockPrisma.post.update.mockResolvedValue({ ...mockPost, status: 'hidden' });
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost)
+      mockPrisma.post.update.mockResolvedValue({ ...mockPost, status: 'hidden' })
 
-      const res = await service.deletePost(authorId, postId, UserRole.landlord);
+      const res = await service.deletePost(authorId, postId, UserRole.landlord)
 
-      expect(res.success).toBe(true);
+      expect(res.success).toBe(true)
       expect(mockPrisma.post.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: postId },
           data: expect.objectContaining({ status: 'hidden' }),
         }),
-      );
+      )
       // Author deleting their own post doesn't notify author
-      expect(mockPrisma.notification.create).not.toHaveBeenCalled();
-    });
+      expect(mockPrisma.notification.create).not.toHaveBeenCalled()
+    })
 
     it('should allow admin to delete post with reason and automatically notify author', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue(mockPost);
-      mockPrisma.post.update.mockResolvedValue({ ...mockPost, status: 'hidden' });
-      mockPrisma.notification.create.mockResolvedValue({ id: 'notif-1' });
+      mockPrisma.post.findUnique.mockResolvedValue(mockPost)
+      mockPrisma.post.update.mockResolvedValue({ ...mockPost, status: 'hidden' })
+      mockPrisma.notification.create.mockResolvedValue({ id: 'notif-1' })
 
-      const reason = 'Nội dung vi phạm chính sách cộng đồng';
-      const res = await service.deletePost(adminId, postId, UserRole.admin, reason);
+      const reason = 'Nội dung vi phạm chính sách cộng đồng'
+      const res = await service.deletePost(adminId, postId, UserRole.admin, reason)
 
-      expect(res.success).toBe(true);
+      expect(res.success).toBe(true)
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -1055,8 +1031,7 @@ describe('PostsService', () => {
             content: expect.stringContaining(reason),
           }),
         }),
-      );
-    });
-  });
-});
-
+      )
+    })
+  })
+})

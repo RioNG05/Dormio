@@ -1,165 +1,165 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AssignmentStatus, UserRole } from '@prisma';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { AssignmentStatus, UserRole } from '@prisma'
 
 export class JobPositionDto {
   @ApiProperty({ example: 'c6f9e8a0-2f3b-4e1a-9f5e-7a8b9c0d1e2f' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'Quản lý tòa nhà' })
-  name: string;
+  name: string
 
   @ApiPropertyOptional({ example: 'Quản lý vận hành và khách thuê', nullable: true })
-  description?: string | null;
+  description?: string | null
 
   @ApiPropertyOptional({ example: 3 })
-  staffCount?: number;
+  staffCount?: number
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt: Date
 }
 
 export class StaffItemDto {
   @ApiProperty({ example: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
-  assignmentId: string;
+  assignmentId: string
 
   @ApiProperty({ example: 'e1e2e3e4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
-  employeeId: string;
+  employeeId: string
 
   @ApiProperty({ example: 'u1u2u3u4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
-  userId: string;
+  userId: string
 
   @ApiProperty({ example: 'Nguyễn Văn Bảo' })
-  fullName: string;
+  fullName: string
 
   @ApiProperty({ example: '0901234567' })
-  phoneNumber: string;
+  phoneNumber: string
 
   @ApiPropertyOptional({ example: 'bao.nguyen@dormio.vn', nullable: true })
-  email?: string | null;
+  email?: string | null
 
   @ApiPropertyOptional({ example: 'https://res.cloudinary.com/...', nullable: true })
-  avatarUrl?: string | null;
+  avatarUrl?: string | null
 
   @ApiProperty({ example: 'c6f9e8a0-2f3b-4e1a-9f5e-7a8b9c0d1e2f' })
-  positionId: string;
+  positionId: string
 
   @ApiProperty({ example: 'Quản lý tòa nhà' })
-  positionName: string;
+  positionName: string
 
   @ApiPropertyOptional({ example: 'Quản lý và giám sát cơ sở vật chất', nullable: true })
-  positionDescription?: string | null;
+  positionDescription?: string | null
 
   @ApiProperty({ enum: AssignmentStatus, example: AssignmentStatus.active })
-  status: AssignmentStatus;
+  status: AssignmentStatus
 
   @ApiProperty()
-  joinedAt: Date;
+  joinedAt: Date
 
   @ApiPropertyOptional({ nullable: true })
-  leftAt?: Date | null;
+  leftAt?: Date | null
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt: Date
 
   @ApiProperty({ enum: UserRole, example: UserRole.employee })
-  userRole: UserRole;
+  userRole: UserRole
 
   @ApiProperty({ example: false })
-  mustChangePassword: boolean;
+  mustChangePassword: boolean
 }
 
 export class StaffSummaryDto {
   @ApiProperty({ example: 4 })
-  totalStaff: number;
+  totalStaff: number
 
   @ApiProperty({ example: 3 })
-  activeStaff: number;
+  activeStaff: number
 
   @ApiProperty({ example: 1 })
-  inactiveStaff: number;
+  inactiveStaff: number
 
   @ApiProperty({ example: 3 })
-  positionsCount: number;
+  positionsCount: number
 }
 
 export class PaginationMetaDto {
   @ApiProperty({ example: 1 })
-  page: number;
+  page: number
 
   @ApiProperty({ example: 10 })
-  limit: number;
+  limit: number
 
   @ApiProperty({ example: 15 })
-  total: number;
+  total: number
 
   @ApiProperty({ example: 2 })
-  totalPages: number;
+  totalPages: number
 }
 
 export class StaffListResponseDto {
   @ApiProperty({ example: true })
-  success: boolean;
+  success: boolean
 
   @ApiProperty({ type: [StaffItemDto] })
-  data: StaffItemDto[];
+  data: StaffItemDto[]
 
   @ApiProperty({ type: StaffSummaryDto })
-  summary: StaffSummaryDto;
+  summary: StaffSummaryDto
 
   @ApiProperty({ type: PaginationMetaDto })
-  meta: PaginationMetaDto;
+  meta: PaginationMetaDto
 }
 
 export class SearchUserItemDto {
   @ApiProperty({ example: 'u1u2u3u4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'Nguyễn Văn Bảo' })
-  fullName: string;
+  fullName: string
 
   @ApiProperty({ example: '0901234567' })
-  phoneNumber: string;
+  phoneNumber: string
 
   @ApiPropertyOptional({ example: 'bao.nguyen@dormio.vn', nullable: true })
-  email?: string | null;
+  email?: string | null
 
   @ApiPropertyOptional({ nullable: true })
-  avatarUrl?: string | null;
+  avatarUrl?: string | null
 
   @ApiProperty({ enum: UserRole, example: UserRole.leasing_agent })
-  role: UserRole;
+  role: UserRole
 
   @ApiPropertyOptional({ example: false })
-  isAlreadyStaffAtThisHouse?: boolean;
+  isAlreadyStaffAtThisHouse?: boolean
 }
 
 export class SearchUserResponseDto {
   @ApiProperty({ example: true })
-  success: boolean;
+  success: boolean
 
   @ApiProperty({ example: true })
-  found: boolean;
+  found: boolean
 
   @ApiPropertyOptional({ type: SearchUserItemDto, nullable: true })
-  user?: SearchUserItemDto | null;
+  user?: SearchUserItemDto | null
 }
 
 export class OnboardStaffResponseDto {
   @ApiProperty({ example: true })
-  success: boolean;
+  success: boolean
 
   @ApiProperty({ type: StaffItemDto })
-  data: StaffItemDto;
+  data: StaffItemDto
 
   @ApiProperty({ example: false })
-  isNewUser: boolean;
+  isNewUser: boolean
 
   @ApiPropertyOptional({
     example: 'A8xK29qZ',
     description: 'Generated temporary password if a new account was created',
   })
-  generatedPassword?: string;
+  generatedPassword?: string
 
   @ApiProperty({ example: 'Thêm nhân viên thành công' })
-  message: string;
+  message: string
 }

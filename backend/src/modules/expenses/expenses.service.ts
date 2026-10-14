@@ -1,23 +1,18 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { CreateExpenseDto } from './dto/create-expense.dto';
-import { UpdateExpenseDto } from './dto/update-expense.dto';
-import { QueryExpensesDto } from './dto/query-expenses.dto';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Prisma } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { CreateExpenseDto } from './dto/create-expense.dto'
+import { UpdateExpenseDto } from './dto/update-expense.dto'
+import { QueryExpensesDto } from './dto/query-expenses.dto'
 import {
   ExpenseItemDto,
   ExpensesListResponseDto,
   ExpensesSummaryDto,
-} from './dto/expense-response.dto';
+} from './dto/expense-response.dto'
 
 @Injectable()
 export class ExpensesService {
-  private readonly logger = new Logger(ExpensesService.name);
+  private readonly logger = new Logger(ExpensesService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -25,31 +20,29 @@ export class ExpensesService {
    * Generates a readable tracking code for an expense (e.g. CP-202608-01)
    */
   private generateExpenseCode(id: string, date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const suffix = id.slice(-4).toUpperCase();
-    return `CP-${year}${month}-${suffix}`;
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const suffix = id.slice(-4).toUpperCase()
+    return `CP-${year}${month}-${suffix}`
   }
 
   /**
    * Helper to map Prisma expense entity to DTO
    */
   private mapToExpenseDto(expense: {
-    id: string;
-    boardingHouseId: string;
-    roomId: string | null;
-    name: string;
-    description: string | null;
-    category: string;
-    status: 'pending' | 'paid' | 'canceled';
-    amount: Prisma.Decimal;
-    createdAt: Date;
-    paidAt: Date;
-    room?: { id: string; roomNumber: string } | null;
+    id: string
+    boardingHouseId: string
+    roomId: string | null
+    name: string
+    description: string | null
+    category: string
+    status: 'pending' | 'paid' | 'canceled'
+    amount: Prisma.Decimal
+    createdAt: Date
+    paidAt: Date
+    room?: { id: string; roomNumber: string } | null
   }): ExpenseItemDto {
-    const roomName = expense.room
-      ? `Phòng ${expense.room.roomNumber}`
-      : 'Toàn tòa nhà';
+    const roomName = expense.room ? `Phòng ${expense.room.roomNumber}` : 'Toàn tòa nhà'
 
     return {
       id: expense.id,
@@ -65,7 +58,7 @@ export class ExpensesService {
       roomId: expense.roomId,
       roomName,
       roomNumber: expense.room?.roomNumber ?? null,
-    };
+    }
   }
 
   /**
@@ -78,7 +71,7 @@ export class ExpensesService {
   ): Promise<ExpenseItemDto> {
     this.logger.log(
       `Landlord ${landlordId} creating expense "${dto.name}" for house ${boardingHouseId} (amount=${dto.amount})`,
-    );
+    )
 
     // If room is specified, verify it belongs to this boarding house
     if (dto.roomId) {
@@ -87,9 +80,9 @@ export class ExpensesService {
           id: dto.roomId,
           boardingHouseId,
         },
-      });
+      })
       if (!room) {
-        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.');
+        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.')
       }
     }
 
@@ -109,9 +102,9 @@ export class ExpensesService {
           select: { id: true, roomNumber: true },
         },
       },
-    });
+    })
 
-    return this.mapToExpenseDto(expense);
+    return this.mapToExpenseDto(expense)
   }
 
   /**
@@ -124,58 +117,58 @@ export class ExpensesService {
   ): Promise<ExpensesListResponseDto> {
     this.logger.log(
       `Landlord ${landlordId} querying expenses for house ${boardingHouseId} (category=${query.category}, status=${query.status}, page=${query.page})`,
-    );
+    )
 
-    const page = Math.max(1, query.page || 1);
-    const limit = Math.max(1, query.limit || 6);
-    const skip = (page - 1) * limit;
+    const page = Math.max(1, query.page || 1)
+    const limit = Math.max(1, query.limit || 6)
+    const skip = (page - 1) * limit
 
     // 1. Base house scope filter
     const baseWhere: Prisma.ExpenseWhereInput = {
       boardingHouseId,
-    };
+    }
 
     // 2. Category filter
-    let categoryWhere: Prisma.ExpenseWhereInput = {};
+    let categoryWhere: Prisma.ExpenseWhereInput = {}
     if (query.category && query.category !== 'all') {
-      categoryWhere = { category: query.category };
+      categoryWhere = { category: query.category }
     }
 
     // 3. Status filter
-    let statusWhere: Prisma.ExpenseWhereInput = {};
+    let statusWhere: Prisma.ExpenseWhereInput = {}
     if (query.status && query.status !== 'all') {
-      statusWhere = { status: query.status };
+      statusWhere = { status: query.status }
     }
 
     // 4. Room filter
-    let roomWhere: Prisma.ExpenseWhereInput = {};
+    let roomWhere: Prisma.ExpenseWhereInput = {}
     if (query.roomId && query.roomId !== 'all') {
       if (query.roomId === 'property_wide') {
-        roomWhere = { roomId: null };
+        roomWhere = { roomId: null }
       } else {
-        roomWhere = { roomId: query.roomId };
+        roomWhere = { roomId: query.roomId }
       }
     }
 
     // 5. Date filter (by month and year)
-    let dateWhere: Prisma.ExpenseWhereInput = {};
-    const selectedYear = query.year && query.year !== 'all' ? Number(query.year) : null;
-    const selectedMonth = query.month && query.month !== 'all' ? Number(query.month) : null;
+    let dateWhere: Prisma.ExpenseWhereInput = {}
+    const selectedYear = query.year && query.year !== 'all' ? Number(query.year) : null
+    const selectedMonth = query.month && query.month !== 'all' ? Number(query.month) : null
 
     if (selectedYear && selectedMonth) {
-      const start = new Date(selectedYear, selectedMonth - 1, 1);
-      const end = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999);
-      dateWhere = { paidAt: { gte: start, lte: end } };
+      const start = new Date(selectedYear, selectedMonth - 1, 1)
+      const end = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999)
+      dateWhere = { paidAt: { gte: start, lte: end } }
     } else if (selectedYear) {
-      const start = new Date(selectedYear, 0, 1);
-      const end = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
-      dateWhere = { paidAt: { gte: start, lte: end } };
+      const start = new Date(selectedYear, 0, 1)
+      const end = new Date(selectedYear, 11, 31, 23, 59, 59, 999)
+      dateWhere = { paidAt: { gte: start, lte: end } }
     }
 
     // 6. Search filter
-    let searchWhere: Prisma.ExpenseWhereInput = {};
+    let searchWhere: Prisma.ExpenseWhereInput = {}
     if (query.search && query.search.trim()) {
-      const term = query.search.trim();
+      const term = query.search.trim()
       searchWhere = {
         OR: [
           { name: { contains: term, mode: 'insensitive' } },
@@ -183,7 +176,7 @@ export class ExpensesService {
           { category: { contains: term, mode: 'insensitive' } },
           { room: { roomNumber: { contains: term, mode: 'insensitive' } } },
         ],
-      };
+      }
     }
 
     const where: Prisma.ExpenseWhereInput = {
@@ -193,13 +186,13 @@ export class ExpensesService {
       ...roomWhere,
       ...dateWhere,
       ...searchWhere,
-    };
+    }
 
     // 7. Calculate Summary Metrics across period (unpaginated, matching house & date filter)
     const periodWhere: Prisma.ExpenseWhereInput = {
       ...baseWhere,
       ...dateWhere,
-    };
+    }
 
     const periodExpenses = await this.prisma.expense.findMany({
       where: periodWhere,
@@ -208,27 +201,27 @@ export class ExpensesService {
         amount: true,
         status: true,
       },
-    });
+    })
 
-    let totalAmount = 0;
-    let paidAmount = 0;
-    let pendingAmount = 0;
-    let canceledAmount = 0;
-    let paidCount = 0;
-    let pendingCount = 0;
+    let totalAmount = 0
+    let paidAmount = 0
+    let pendingAmount = 0
+    let canceledAmount = 0
+    let paidCount = 0
+    let pendingCount = 0
 
     for (const exp of periodExpenses) {
-      const amt = Number(exp.amount);
-      totalAmount += amt;
+      const amt = Number(exp.amount)
+      totalAmount += amt
 
       if (exp.status === 'paid') {
-        paidAmount += amt;
-        paidCount++;
+        paidAmount += amt
+        paidCount++
       } else if (exp.status === 'pending') {
-        pendingAmount += amt;
-        pendingCount++;
+        pendingAmount += amt
+        pendingCount++
       } else if (exp.status === 'canceled') {
-        canceledAmount += amt;
+        canceledAmount += amt
       }
     }
 
@@ -240,19 +233,19 @@ export class ExpensesService {
       totalCount: periodExpenses.length,
       paidCount,
       pendingCount,
-    };
+    }
 
     // 8. Sorting
     let orderBy: Prisma.ExpenseOrderByWithRelationInput[] = [
       { paidAt: 'desc' },
       { createdAt: 'desc' },
-    ];
+    ]
     if (query.sortBy === 'date_asc') {
-      orderBy = [{ paidAt: 'asc' }, { createdAt: 'asc' }];
+      orderBy = [{ paidAt: 'asc' }, { createdAt: 'asc' }]
     } else if (query.sortBy === 'amount_desc') {
-      orderBy = [{ amount: 'desc' }, { paidAt: 'desc' }];
+      orderBy = [{ amount: 'desc' }, { paidAt: 'desc' }]
     } else if (query.sortBy === 'amount_asc') {
-      orderBy = [{ amount: 'asc' }, { paidAt: 'desc' }];
+      orderBy = [{ amount: 'asc' }, { paidAt: 'desc' }]
     }
 
     // 9. Query paginated records
@@ -269,13 +262,13 @@ export class ExpensesService {
         skip,
         take: limit,
       }),
-    ]);
+    ])
 
-    const totalPages = Math.ceil(total / limit) || 1;
+    const totalPages = Math.ceil(total / limit) || 1
 
     return {
       success: true,
-      data: expenses.map((e) => this.mapToExpenseDto(e)),
+      data: expenses.map(e => this.mapToExpenseDto(e)),
       meta: {
         total,
         page,
@@ -283,16 +276,13 @@ export class ExpensesService {
         totalPages,
       },
       summary,
-    };
+    }
   }
 
   /**
    * UC-L-17: Get single expense detail
    */
-  async getExpenseDetail(
-    boardingHouseId: string,
-    id: string,
-  ): Promise<ExpenseItemDto> {
+  async getExpenseDetail(boardingHouseId: string, id: string): Promise<ExpenseItemDto> {
     const expense = await this.prisma.expense.findFirst({
       where: {
         id,
@@ -303,13 +293,13 @@ export class ExpensesService {
           select: { id: true, roomNumber: true },
         },
       },
-    });
+    })
 
     if (!expense) {
-      throw new NotFoundException('Không tìm thấy khoản chi phí này.');
+      throw new NotFoundException('Không tìm thấy khoản chi phí này.')
     }
 
-    return this.mapToExpenseDto(expense);
+    return this.mapToExpenseDto(expense)
   }
 
   /**
@@ -321,19 +311,17 @@ export class ExpensesService {
     dto: UpdateExpenseDto,
     landlordId: string,
   ): Promise<ExpenseItemDto> {
-    this.logger.log(
-      `Landlord ${landlordId} updating expense ${id} for house ${boardingHouseId}`,
-    );
+    this.logger.log(`Landlord ${landlordId} updating expense ${id} for house ${boardingHouseId}`)
 
     const existing = await this.prisma.expense.findFirst({
       where: {
         id,
         boardingHouseId,
       },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy khoản chi phí cần cập nhật.');
+      throw new NotFoundException('Không tìm thấy khoản chi phí cần cập nhật.')
     }
 
     // If updating roomId, verify room belongs to boarding house
@@ -343,9 +331,9 @@ export class ExpensesService {
           id: dto.roomId,
           boardingHouseId,
         },
-      });
+      })
       if (!room) {
-        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.');
+        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.')
       }
     }
 
@@ -353,8 +341,7 @@ export class ExpensesService {
       where: { id },
       data: {
         name: dto.name !== undefined ? dto.name.trim() : undefined,
-        description:
-          dto.description !== undefined ? dto.description.trim() || null : undefined,
+        description: dto.description !== undefined ? dto.description.trim() || null : undefined,
         category: dto.category !== undefined ? dto.category.trim() : undefined,
         amount: dto.amount !== undefined ? new Prisma.Decimal(dto.amount) : undefined,
         status: dto.status !== undefined ? dto.status : undefined,
@@ -366,9 +353,9 @@ export class ExpensesService {
           select: { id: true, roomNumber: true },
         },
       },
-    });
+    })
 
-    return this.mapToExpenseDto(updated);
+    return this.mapToExpenseDto(updated)
   }
 
   /**
@@ -379,28 +366,26 @@ export class ExpensesService {
     id: string,
     landlordId: string,
   ): Promise<{ success: boolean; message: string }> {
-    this.logger.log(
-      `Landlord ${landlordId} deleting expense ${id} for house ${boardingHouseId}`,
-    );
+    this.logger.log(`Landlord ${landlordId} deleting expense ${id} for house ${boardingHouseId}`)
 
     const existing = await this.prisma.expense.findFirst({
       where: {
         id,
         boardingHouseId,
       },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy khoản chi phí cần xóa.');
+      throw new NotFoundException('Không tìm thấy khoản chi phí cần xóa.')
     }
 
     await this.prisma.expense.delete({
       where: { id },
-    });
+    })
 
     return {
       success: true,
       message: 'Đã xóa khoản chi phí thành công.',
-    };
+    }
   }
 }

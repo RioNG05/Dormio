@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class ExtractMeterReadingDto {
   @ApiProperty({
@@ -8,7 +8,7 @@ export class ExtractMeterReadingDto {
   })
   @IsString()
   @IsNotEmpty()
-  imageUrl: string;
+  imageUrl: string
 
   @ApiProperty({
     description: 'Type of utility service context (electricity, water, general)',
@@ -18,37 +18,54 @@ export class ExtractMeterReadingDto {
   })
   @IsString()
   @IsOptional()
-  serviceType?: string;
+  serviceType?: string
 }
 
 export class MeterOcrResponseDto {
   @ApiProperty({ description: 'Trạng thái ảnh có hợp lệ và đọc được số hay không', example: true })
-  isValid: boolean;
+  isValid: boolean
 
-  @ApiProperty({ description: 'Mã lỗi nếu ảnh sai', example: null, required: false, nullable: true })
-  errorCode?: string | null;
+  @ApiProperty({
+    description: 'Mã lỗi nếu ảnh sai',
+    example: null,
+    required: false,
+    nullable: true,
+  })
+  errorCode?: string | null
 
-  @ApiProperty({ description: 'Thông báo lỗi chi tiết từ AI nếu ảnh không hợp lệ', example: null, required: false, nullable: true })
-  errorMessage?: string | null;
+  @ApiProperty({
+    description: 'Thông báo lỗi chi tiết từ AI nếu ảnh không hợp lệ',
+    example: null,
+    required: false,
+    nullable: true,
+  })
+  errorMessage?: string | null
 
   @ApiProperty({ description: 'Chỉ số đo được từ công tơ', example: 1250.5, nullable: true })
-  readingValue: number | null;
+  readingValue: number | null
 
   @ApiProperty({ description: 'Raw detected string of digits', example: '012505' })
-  rawDigits: string;
+  rawDigits: string
 
-  @ApiProperty({ description: 'Identified meter type', example: 'electricity', enum: ['electricity', 'water', 'unknown'] })
-  meterType: 'electricity' | 'water' | 'unknown';
+  @ApiProperty({
+    description: 'Identified meter type',
+    example: 'electricity',
+    enum: ['electricity', 'water', 'unknown'],
+  })
+  meterType: 'electricity' | 'water' | 'unknown'
 
   @ApiProperty({ description: 'Measurement unit', example: 'kWh', enum: ['kWh', 'm3'] })
-  unit: 'kWh' | 'm3';
+  unit: 'kWh' | 'm3'
 
   @ApiProperty({ description: 'Confidence score between 0.0 and 1.0', example: 0.95 })
-  confidence: number;
+  confidence: number
 
   @ApiProperty({ description: 'Whether the reading seems abnormal or blurry', example: false })
-  isAnomalyWarning: boolean;
+  isAnomalyWarning: boolean
 
-  @ApiProperty({ description: 'Optional operational notes from the AI vision model', example: 'Exclusion of red decimal drum' })
-  notes?: string;
+  @ApiProperty({
+    description: 'Optional operational notes from the AI vision model',
+    example: 'Exclusion of red decimal drum',
+  })
+  notes?: string
 }

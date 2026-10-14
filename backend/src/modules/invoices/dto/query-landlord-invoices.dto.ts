@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class QueryLandlordInvoicesDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class QueryLandlordInvoicesDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by invoice payment status',
@@ -18,7 +18,7 @@ export class QueryLandlordInvoicesDto {
   })
   @IsOptional()
   @IsIn(['all', 'paid', 'unpaid', 'overdue'])
-  status?: 'all' | 'paid' | 'unpaid' | 'overdue' = 'all';
+  status?: 'all' | 'paid' | 'unpaid' | 'overdue' = 'all'
 
   @ApiPropertyOptional({
     description: 'Filter by month (01-12 or "all")',
@@ -27,7 +27,7 @@ export class QueryLandlordInvoicesDto {
   })
   @IsOptional()
   @IsString()
-  month?: string = 'all';
+  month?: string = 'all'
 
   @ApiPropertyOptional({
     description: 'Filter by year (e.g. 2026 or "all")',
@@ -36,7 +36,7 @@ export class QueryLandlordInvoicesDto {
   })
   @IsOptional()
   @IsString()
-  year?: string = 'all';
+  year?: string = 'all'
 
   @ApiPropertyOptional({
     description: 'Page number (default: 1)',
@@ -47,7 +47,7 @@ export class QueryLandlordInvoicesDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page (default: 10 for table, 6 for grid)',
@@ -59,5 +59,5 @@ export class QueryLandlordInvoicesDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 10;
+  limit?: number = 10
 }

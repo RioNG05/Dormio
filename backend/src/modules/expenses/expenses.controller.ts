@@ -13,7 +13,7 @@ import {
   HttpCode,
   Logger,
   ParseUUIDPipe,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -22,21 +22,18 @@ import {
   ApiBearerAuth,
   ApiHeader,
   ApiResponse,
-} from '@nestjs/swagger';
-import { ExpensesService } from './expenses.service';
-import { CreateExpenseDto } from './dto/create-expense.dto';
-import { UpdateExpenseDto } from './dto/update-expense.dto';
-import { QueryExpensesDto } from './dto/query-expenses.dto';
-import {
-  ExpensesListResponseDto,
-  ExpenseItemDto,
-} from './dto/expense-response.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { SubscriptionPackage } from '@prisma';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+} from '@nestjs/swagger'
+import { ExpensesService } from './expenses.service'
+import { CreateExpenseDto } from './dto/create-expense.dto'
+import { UpdateExpenseDto } from './dto/update-expense.dto'
+import { QueryExpensesDto } from './dto/query-expenses.dto'
+import { ExpensesListResponseDto, ExpenseItemDto } from './dto/expense-response.dto'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Landlord Expenses')
 @ApiBearerAuth()
@@ -44,7 +41,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 @RequireTier(SubscriptionPackage.plus)
 @Controller('landlord/expenses')
 export class ExpensesController {
-  private readonly logger = new Logger(ExpensesController.name);
+  private readonly logger = new Logger(ExpensesController.name)
 
   constructor(private readonly expensesService: ExpensesService) {}
 
@@ -78,13 +75,9 @@ export class ExpensesController {
   ): Promise<{ success: boolean; data: ExpenseItemDto }> {
     this.logger.log(
       `POST /landlord/expenses called by user ${user?.id} for house ${boardingHouseId} (name="${dto.name}", amount=${dto.amount})`,
-    );
-    const data = await this.expensesService.createExpense(
-      user.id,
-      boardingHouseId,
-      dto,
-    );
-    return { success: true, data };
+    )
+    const data = await this.expensesService.createExpense(user.id, boardingHouseId, dto)
+    return { success: true, data }
   }
 
   // ─── GET /api/v1/landlord/expenses ──────────────────────────────────────────
@@ -117,12 +110,8 @@ export class ExpensesController {
   ): Promise<ExpensesListResponseDto> {
     this.logger.log(
       `GET /landlord/expenses called by user ${user?.id} for house ${boardingHouseId} (page=${query.page}, category=${query.category}, status=${query.status})`,
-    );
-    return this.expensesService.getExpenses(
-      boardingHouseId,
-      query,
-      user.id,
-    );
+    )
+    return this.expensesService.getExpenses(boardingHouseId, query, user.id)
   }
 
   // ─── GET /api/v1/landlord/expenses/:id ──────────────────────────────────────
@@ -154,12 +143,9 @@ export class ExpensesController {
   ): Promise<{ success: boolean; data: ExpenseItemDto }> {
     this.logger.log(
       `GET /landlord/expenses/${id} called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.expensesService.getExpenseDetail(
-      boardingHouseId,
-      id,
-    );
-    return { success: true, data };
+    )
+    const data = await this.expensesService.getExpenseDetail(boardingHouseId, id)
+    return { success: true, data }
   }
 
   // ─── PATCH /api/v1/landlord/expenses/:id ────────────────────────────────────
@@ -192,14 +178,9 @@ export class ExpensesController {
   ): Promise<{ success: boolean; data: ExpenseItemDto }> {
     this.logger.log(
       `PATCH /landlord/expenses/${id} called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.expensesService.updateExpense(
-      boardingHouseId,
-      id,
-      dto,
-      user.id,
-    );
-    return { success: true, data };
+    )
+    const data = await this.expensesService.updateExpense(boardingHouseId, id, dto, user.id)
+    return { success: true, data }
   }
 
   // ─── DELETE /api/v1/landlord/expenses/:id ───────────────────────────────────
@@ -230,11 +211,7 @@ export class ExpensesController {
   ): Promise<{ success: boolean; message: string }> {
     this.logger.log(
       `DELETE /landlord/expenses/${id} called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    return this.expensesService.deleteExpense(
-      boardingHouseId,
-      id,
-      user.id,
-    );
+    )
+    return this.expensesService.deleteExpense(boardingHouseId, id, user.id)
   }
 }

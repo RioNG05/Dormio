@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsUUID,
   IsNotEmpty,
@@ -8,7 +8,7 @@ import {
   Max,
   IsOptional,
   IsString,
-} from 'class-validator';
+} from 'class-validator'
 
 /**
  * DTO for creating a contract from a paid platform deposit (Flow A)
@@ -20,7 +20,7 @@ export class CreateContractPlatformDto {
   })
   @IsUUID('4')
   @IsNotEmpty()
-  roomId: string;
+  roomId: string
 
   @ApiProperty({
     description: 'Contract start date (ISO 8601 string)',
@@ -28,7 +28,7 @@ export class CreateContractPlatformDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  startDate: string;
+  startDate: string
 
   @ApiProperty({
     description: 'Contract end date (ISO 8601 string)',
@@ -36,7 +36,7 @@ export class CreateContractPlatformDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  endDate: string;
+  endDate: string
 
   @ApiProperty({
     description: 'Monthly rent price in VND (DECIMAL(12,2))',
@@ -45,7 +45,7 @@ export class CreateContractPlatformDto {
   })
   @IsNumber()
   @Min(0)
-  rentPrice: number;
+  rentPrice: number
 
   @ApiProperty({
     description: 'Day of the month when rent is due (1 to 31)',
@@ -56,7 +56,7 @@ export class CreateContractPlatformDto {
   @IsNumber()
   @Min(1)
   @Max(31)
-  monthlyPaymentDate: number;
+  monthlyPaymentDate: number
 
   @ApiPropertyOptional({
     description: 'Billing cycle interval in months (e.g. 1, 3, 6, 12). Default is 1.',
@@ -66,7 +66,7 @@ export class CreateContractPlatformDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  rentPaymentCycle?: number;
+  rentPaymentCycle?: number
 
   @ApiPropertyOptional({
     description: 'Additional notes or contract terms',
@@ -74,5 +74,5 @@ export class CreateContractPlatformDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsNumber, Min } from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class RefundDepositDto {
   @ApiPropertyOptional({
@@ -12,7 +12,7 @@ export class RefundDepositDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  deductedAmount?: number = 0;
+  deductedAmount?: number = 0
 
   @ApiPropertyOptional({
     description: 'Reason for deducting part or all of deposit',
@@ -20,7 +20,7 @@ export class RefundDepositDto {
   })
   @IsOptional()
   @IsString()
-  deductionReason?: string;
+  deductionReason?: string
 
   @ApiPropertyOptional({
     description: 'Additional note on refund',
@@ -28,5 +28,5 @@ export class RefundDepositDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

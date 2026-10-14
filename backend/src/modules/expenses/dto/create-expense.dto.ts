@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsString,
   IsNotEmpty,
@@ -9,8 +9,8 @@ import {
   IsIn,
   IsISO8601,
   MaxLength,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class CreateExpenseDto {
   @ApiProperty({
@@ -20,7 +20,7 @@ export class CreateExpenseDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  name: string;
+  name: string
 
   @ApiProperty({
     description: 'Expense category',
@@ -35,7 +35,7 @@ export class CreateExpenseDto {
   })
   @IsString()
   @IsNotEmpty()
-  category: string;
+  category: string
 
   @ApiProperty({
     description: 'Expense amount in VND',
@@ -45,14 +45,14 @@ export class CreateExpenseDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount: number
 
   @ApiProperty({
     description: 'Date when the expense was paid or scheduled to be paid (ISO string)',
     example: '2026-08-15T00:00:00.000Z',
   })
   @IsISO8601()
-  paidAt: string;
+  paidAt: string
 
   @ApiPropertyOptional({
     description: 'Payment status of the expense',
@@ -61,7 +61,7 @@ export class CreateExpenseDto {
   })
   @IsOptional()
   @IsIn(['pending', 'paid', 'canceled'])
-  status?: 'pending' | 'paid' | 'canceled' = 'paid';
+  status?: 'pending' | 'paid' | 'canceled' = 'paid'
 
   @ApiPropertyOptional({
     description: 'Room UUID if expense is tied to a specific room, or null for property-wide',
@@ -70,7 +70,7 @@ export class CreateExpenseDto {
   })
   @IsOptional()
   @IsUUID('4')
-  roomId?: string;
+  roomId?: string
 
   @ApiPropertyOptional({
     description: 'Detailed description or notes about the expense',
@@ -78,5 +78,5 @@ export class CreateExpenseDto {
   })
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string
 }

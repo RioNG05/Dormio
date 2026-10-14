@@ -1,19 +1,31 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter, redirect } from "next/navigation";
-import { FEATURE_FLAGS } from "@/config/features";
-import Link from "next/link";
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useParams, useRouter, redirect } from 'next/navigation'
+import { FEATURE_FLAGS } from '@/config/features'
+import Link from 'next/link'
 import {
-  ArrowLeft, ShieldCheck, Loader2, AlertCircle,
-  UserCheck, QrCode, CheckCircle2, Copy, Check, Info,
-  AlertTriangle, MessageSquare, CreditCard, ArrowRight,
-  Clock, RefreshCw,
-} from "lucide-react";
-import { formatCurrency } from "@/utils";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+  ArrowLeft,
+  ShieldCheck,
+  Loader2,
+  AlertCircle,
+  UserCheck,
+  QrCode,
+  CheckCircle2,
+  Copy,
+  Check,
+  Info,
+  AlertTriangle,
+  MessageSquare,
+  CreditCard,
+  ArrowRight,
+  Clock,
+  RefreshCw,
+} from 'lucide-react'
+import { formatCurrency } from '@/utils'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import {
   Button,
   TextInput,
@@ -21,15 +33,16 @@ import {
   NumberInput,
   SelectInput,
   TextareaInput,
-} from "@/components/ui";
-import { ImageUpload } from "@/components/ImageUpload";
-import { postService,
+} from '@/components/ui'
+import { ImageUpload } from '@/components/ImageUpload'
+import {
+  postService,
   type PublicPostListing,
   type PlatformDepositInstruction,
-} from "@/services/post.service";
-import { userService, type UserIdentification } from "@/services/user.service";
-import { getOrCreateConversation } from "@/services/message.service";
-import IdentityGuard from "@/components/IdentityGuard";
+} from '@/services/post.service'
+import { userService, type UserIdentification } from '@/services/user.service'
+import { getOrCreateConversation } from '@/services/message.service'
+import IdentityGuard from '@/components/IdentityGuard'
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function SkeletonDeposit() {
@@ -42,354 +55,366 @@ function SkeletonDeposit() {
         <div className="h-64 bg-zinc-200 rounded-3xl" />
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
 export default function DepositPage() {
   if (!FEATURE_FLAGS.ENABLE_BHRP) {
-    redirect("/");
+    redirect('/')
   }
   return (
     <IdentityGuard>
       <DepositPageInner />
     </IdentityGuard>
-  );
+  )
 }
 
 // ─── Step types ───────────────────────────────────────────────────────────────
-const STEPS = ["identity_gate", "confirm_amount", "qr_payment", "success"] as const;
+const STEPS = ['identity_gate', 'confirm_amount', 'qr_payment', 'success'] as const
 type DepositStep =
-  | "loading"
-  | "login_required"
-  | "check_identity"
-  | "identity_gate"
-  | "confirm_amount"
-  | "qr_payment"
-  | "success";
+  | 'loading'
+  | 'login_required'
+  | 'check_identity'
+  | 'identity_gate'
+  | 'confirm_amount'
+  | 'qr_payment'
+  | 'success'
 
 // ─── Phone validation ─────────────────────────────────────────────────────────
-const PHONE_REGEX = /^(03|05|07|08|09)[0-9]{8}$/;
-const isPhoneValid = (p: string) => PHONE_REGEX.test(p.replace(/\s/g, ""));
+const PHONE_REGEX = /^(03|05|07|08|09)[0-9]{8}$/
+const isPhoneValid = (p: string) => PHONE_REGEX.test(p.replace(/\s/g, ''))
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 function DepositPageInner() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const { currentLocale } = useLanguage();
-  const { isLoggedIn, user } = useAuth();
-  const tGuest = useTranslations("guest");
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const { currentLocale } = useLanguage()
+  const { isLoggedIn, user } = useAuth()
+  const tGuest = useTranslations('guest')
 
   // Keep a stable ref for tGuest so effects do NOT re-run on language change
-  const tGuestRef = useRef(tGuest);
-  tGuestRef.current = tGuest;
+  const tGuestRef = useRef(tGuest)
+  tGuestRef.current = tGuest
 
-  const [post, setPost] = useState<PublicPostListing | null>(null);
-  const [isLoadingPost, setIsLoadingPost] = useState(true);
-  const [hasPostError, setHasPostError] = useState(false);
+  const [post, setPost] = useState<PublicPostListing | null>(null)
+  const [isLoadingPost, setIsLoadingPost] = useState(true)
+  const [hasPostError, setHasPostError] = useState(false)
 
-  const [depositStep, setDepositStep] = useState<DepositStep>("loading");
-  const [verifiedIdData, setVerifiedIdData] = useState<UserIdentification | null>(null);
+  const [depositStep, setDepositStep] = useState<DepositStep>('loading')
+  const [verifiedIdData, setVerifiedIdData] = useState<UserIdentification | null>(null)
 
   // Identity Form State
-  const [idNumber, setIdNumber] = useState("");
-  const [idFullName, setIdFullName] = useState("");
-  const [idDob, setIdDob] = useState("");
-  const [idGender, setIdGender] = useState<"male" | "female">("male");
-  const [idNationality, setIdNationality] = useState("Việt Nam");
-  const [idPlaceOfOrigin, setIdPlaceOfOrigin] = useState("");
-  const [idPlaceOfResidence, setIdPlaceOfResidence] = useState("");
-  const [idIssueDate, setIdIssueDate] = useState("");
-  const [idExpiryDate, setIdExpiryDate] = useState("");
-  const [idCardFrontUrl, setIdCardFrontUrl] = useState("");
-  const [idCardBackUrl, setIdCardBackUrl] = useState("");
-  const [isSavingIdentity, setIsSavingIdentity] = useState(false);
-  const [identityError, setIdentityError] = useState("");
+  const [idNumber, setIdNumber] = useState('')
+  const [idFullName, setIdFullName] = useState('')
+  const [idDob, setIdDob] = useState('')
+  const [idGender, setIdGender] = useState<'male' | 'female'>('male')
+  const [idNationality, setIdNationality] = useState('Việt Nam')
+  const [idPlaceOfOrigin, setIdPlaceOfOrigin] = useState('')
+  const [idPlaceOfResidence, setIdPlaceOfResidence] = useState('')
+  const [idIssueDate, setIdIssueDate] = useState('')
+  const [idExpiryDate, setIdExpiryDate] = useState('')
+  const [idCardFrontUrl, setIdCardFrontUrl] = useState('')
+  const [idCardBackUrl, setIdCardBackUrl] = useState('')
+  const [isSavingIdentity, setIsSavingIdentity] = useState(false)
+  const [identityError, setIdentityError] = useState('')
 
   // Deposit Form State
-  const [depositAmountInput, setDepositAmountInput] = useState<number>(0);
-  const [depositNote, setDepositNote] = useState("");
-  const [tenantName, setTenantName] = useState("");
-  const [tenantPhone, setTenantPhone] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-  const [depositInstruction, setDepositInstruction] = useState<PlatformDepositInstruction | null>(null);
-  const [isSubmittingDeposit, setIsSubmittingDeposit] = useState(false);
-  const [depositErrorMsg, setDepositErrorMsg] = useState("");
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [depositAmountInput, setDepositAmountInput] = useState<number>(0)
+  const [depositNote, setDepositNote] = useState('')
+  const [tenantName, setTenantName] = useState('')
+  const [tenantPhone, setTenantPhone] = useState('')
+  const [phoneError, setPhoneError] = useState('')
+  const [depositInstruction, setDepositInstruction] = useState<PlatformDepositInstruction | null>(
+    null,
+  )
+  const [isSubmittingDeposit, setIsSubmittingDeposit] = useState(false)
+  const [depositErrorMsg, setDepositErrorMsg] = useState('')
+  const [copiedField, setCopiedField] = useState<string | null>(null)
 
   // PayOS Polling & Countdown Timer States
-  const [countdown, setCountdown] = useState<number>(0);
-  const [isExpired, setIsExpired] = useState(false);
-  const isPollingRef = useRef(false);
+  const [countdown, setCountdown] = useState<number>(0)
+  const [isExpired, setIsExpired] = useState(false)
+  const isPollingRef = useRef(false)
 
   // Prevent re-initialization on language switch
-  const hasInitializedRef = useRef(false);
+  const hasInitializedRef = useRef(false)
 
   // Rule 10: Discard confirmation modal
-  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false)
 
-  const { toast } = useToast();
+  const { toast } = useToast()
 
   // ─── 1. Load post (Depends ONLY on id, NEVER on language) ───────────────────
   useEffect(() => {
-    if (!id) return;
-    let isCancelled = false;
+    if (!id) return
+    let isCancelled = false
 
-    setIsLoadingPost(true);
-    setHasPostError(false);
+    setIsLoadingPost(true)
+    setHasPostError(false)
 
     postService
       .getPublicPostById(id)
-      .then((data) => {
+      .then(data => {
         if (!isCancelled) {
-          setPost(data);
+          setPost(data)
         }
       })
       .catch(() => {
         if (!isCancelled) {
-          setHasPostError(true);
+          setHasPostError(true)
         }
       })
       .finally(() => {
         if (!isCancelled) {
-          setIsLoadingPost(false);
+          setIsLoadingPost(false)
         }
-      });
+      })
 
     return () => {
-      isCancelled = true;
-    };
-  }, [id]);
+      isCancelled = true
+    }
+  }, [id])
 
-  const [isCheckingIdentity, setIsCheckingIdentity] = useState(true);
+  const [isCheckingIdentity, setIsCheckingIdentity] = useState(true)
   const [identityCheckResult, setIdentityCheckResult] = useState<{
-    checked: boolean;
-    hasId: boolean;
-    idData: UserIdentification | null;
-  }>({ checked: false, hasId: false, idData: null });
+    checked: boolean
+    hasId: boolean
+    idData: UserIdentification | null
+  }>({ checked: false, hasId: false, idData: null })
 
   // Auto-advance from check_identity to confirm_amount if verified
   useEffect(() => {
-    if (depositStep === "check_identity" && identityCheckResult.checked && identityCheckResult.hasId) {
+    if (
+      depositStep === 'check_identity' &&
+      identityCheckResult.checked &&
+      identityCheckResult.hasId
+    ) {
       const timer = setTimeout(() => {
-        setDepositStep("confirm_amount");
-      }, 1800);
-      return () => clearTimeout(timer);
+        setDepositStep('confirm_amount')
+      }, 1800)
+      return () => clearTimeout(timer)
     }
-  }, [depositStep, identityCheckResult.checked, identityCheckResult.hasId]);
+  }, [depositStep, identityCheckResult.checked, identityCheckResult.hasId])
 
   // ─── 2. Init deposit flow (Runs ONCE per post load) ─────────────────────────
   const initDepositFlow = useCallback(
     async (loadedPost: PublicPostListing) => {
       if (!isLoggedIn) {
-        setDepositStep("login_required");
-        return;
+        setDepositStep('login_required')
+        return
       }
 
       // If already initialized for this session, DO NOT wipe user's input!
-      if (hasInitializedRef.current) return;
-      hasInitializedRef.current = true;
+      if (hasInitializedRef.current) return
+      hasInitializedRef.current = true
 
-      setDepositStep("check_identity");
-      setIsCheckingIdentity(true);
+      setDepositStep('check_identity')
+      setIsCheckingIdentity(true)
       try {
-        const idRes = await userService.getIdentification();
-        const idData = idRes?.userIdentification || idRes?.identification;
+        const idRes = await userService.getIdentification()
+        const idData = idRes?.userIdentification || idRes?.identification
         if (idRes?.hasIdentification && idData) {
-          setVerifiedIdData(idData);
-          setTenantName(idData.fullName || user?.name || (user as any)?.username || "");
-          setTenantPhone(user?.phone || (user as any)?.phoneNumber || "");
-          setDepositAmountInput(Number(loadedPost.depositAmount ?? 0));
-          setIdentityCheckResult({ checked: true, hasId: true, idData });
+          setVerifiedIdData(idData)
+          setTenantName(idData.fullName || user?.name || (user as any)?.username || '')
+          setTenantPhone(user?.phone || (user as any)?.phoneNumber || '')
+          setDepositAmountInput(Number(loadedPost.depositAmount ?? 0))
+          setIdentityCheckResult({ checked: true, hasId: true, idData })
         } else {
-          const fallbackName = user?.name || (user as any)?.username || "";
-          setIdFullName(fallbackName);
-          setTenantName(fallbackName);
-          setTenantPhone(user?.phone || (user as any)?.phoneNumber || "");
-          setDepositAmountInput(Number(loadedPost.depositAmount ?? 0));
-          setIdentityCheckResult({ checked: true, hasId: false, idData: null });
+          const fallbackName = user?.name || (user as any)?.username || ''
+          setIdFullName(fallbackName)
+          setTenantName(fallbackName)
+          setTenantPhone(user?.phone || (user as any)?.phoneNumber || '')
+          setDepositAmountInput(Number(loadedPost.depositAmount ?? 0))
+          setIdentityCheckResult({ checked: true, hasId: false, idData: null })
         }
       } catch {
-        setDepositAmountInput(Number(loadedPost.depositAmount ?? 0));
-        setIdentityCheckResult({ checked: true, hasId: false, idData: null });
+        setDepositAmountInput(Number(loadedPost.depositAmount ?? 0))
+        setIdentityCheckResult({ checked: true, hasId: false, idData: null })
       } finally {
-        setIsCheckingIdentity(false);
+        setIsCheckingIdentity(false)
       }
     },
-    [isLoggedIn, user]
-  );
+    [isLoggedIn, user],
+  )
 
   useEffect(() => {
     if (post && !isLoadingPost) {
       if (!post.room) {
-        router.replace(`/rooms/${id}`);
-        return;
+        router.replace(`/rooms/${id}`)
+        return
       }
-      if (post.room.status === "deposited" || post.room.status === "occupied") {
-        router.replace(`/rooms/${id}`);
-        return;
+      if (post.room.status === 'deposited' || post.room.status === 'occupied') {
+        router.replace(`/rooms/${id}`)
+        return
       }
-      initDepositFlow(post);
+      initDepositFlow(post)
     }
-  }, [post?.id, isLoadingPost, id, router, initDepositFlow]);
+  }, [post?.id, isLoadingPost, id, router, initDepositFlow])
 
   // ─── 3. Countdown Timer ────────────────────────────────────────────────────
   useEffect(() => {
-    if (depositStep !== "qr_payment" || !depositInstruction?.orderCode) return;
+    if (depositStep !== 'qr_payment' || !depositInstruction?.orderCode) return
     if (countdown <= 0) {
-      setIsExpired(true);
-      return;
+      setIsExpired(true)
+      return
     }
 
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
-          setIsExpired(true);
-          return 0;
+          setIsExpired(true)
+          return 0
         }
-        return prev - 1;
-      });
-    }, 1000);
+        return prev - 1
+      })
+    }, 1000)
 
-    return () => clearInterval(timer);
-  }, [depositStep, depositInstruction?.orderCode, countdown]);
+    return () => clearInterval(timer)
+  }, [depositStep, depositInstruction?.orderCode, countdown])
 
   const formatTimer = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  };
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
 
   // ─── 4. Automated PayOS Polling Loop (Every 3 seconds) ──────────────────────
   useEffect(() => {
-    const orderCode = depositInstruction?.orderCode;
-    if (depositStep !== "qr_payment" || !orderCode || isExpired) return;
+    const orderCode = depositInstruction?.orderCode
+    if (depositStep !== 'qr_payment' || !orderCode || isExpired) return
 
     const checkOrderStatus = async () => {
-      if (isPollingRef.current) return;
-      isPollingRef.current = true;
+      if (isPollingRef.current) return
+      isPollingRef.current = true
       try {
-        const statusRes = await postService.getDepositOrderStatus(id, orderCode);
-        if (statusRes.isPaid || statusRes.status === "PAID" || statusRes.status === "paid") {
-          setDepositStep("success");
-          toast.success(tGuestRef.current("guestDepositSuccessToast"));
+        const statusRes = await postService.getDepositOrderStatus(id, orderCode)
+        if (statusRes.isPaid || statusRes.status === 'PAID' || statusRes.status === 'paid') {
+          setDepositStep('success')
+          toast.success(tGuestRef.current('guestDepositSuccessToast'))
         }
       } catch {
         // Silent polling failure
       } finally {
-        isPollingRef.current = false;
+        isPollingRef.current = false
       }
-    };
+    }
 
-    const interval = setInterval(checkOrderStatus, 3000);
-    return () => clearInterval(interval);
-  }, [depositStep, depositInstruction?.orderCode, isExpired, id]);
+    const interval = setInterval(checkOrderStatus, 3000)
+    return () => clearInterval(interval)
+  }, [depositStep, depositInstruction?.orderCode, isExpired, id])
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
   const handleCopy = (text: string, fieldKey: string) => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(text);
-      setCopiedField(fieldKey);
-      setTimeout(() => setCopiedField(null), 2000);
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(text)
+      setCopiedField(fieldKey)
+      setTimeout(() => setCopiedField(null), 2000)
     }
-  };
+  }
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setTenantPhone(val);
-    if (phoneError && val.length < 3) setPhoneError("");
-  };
+    const val = e.target.value
+    setTenantPhone(val)
+    if (phoneError && val.length < 3) setPhoneError('')
+  }
 
   const handlePhoneBlur = () => {
-    if (!tenantPhone) return;
+    if (!tenantPhone) return
     if (!isPhoneValid(tenantPhone)) {
-      setPhoneError(tGuestRef.current("guestDepositIdPhoneError"));
+      setPhoneError(tGuestRef.current('guestDepositIdPhoneError'))
     } else {
-      setPhoneError("");
+      setPhoneError('')
     }
-  };
+  }
 
   const handleSaveIdentity = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (!/^[0-9]{12}$/.test(idNumber.trim())) {
-      setIdentityError(tGuestRef.current("guestDepositIdCccdError"));
-      return;
+      setIdentityError(tGuestRef.current('guestDepositIdCccdError'))
+      return
     }
     if (!idFullName.trim()) {
-      setIdentityError(tGuestRef.current("guestDepositIdNameError"));
-      return;
+      setIdentityError(tGuestRef.current('guestDepositIdNameError'))
+      return
     }
     if (!idDob) {
-      setIdentityError(tGuestRef.current("guestDepositIdDobError"));
-      return;
+      setIdentityError(tGuestRef.current('guestDepositIdDobError'))
+      return
     }
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split('T')[0]
     if (idDob > today) {
-      setIdentityError(tGuestRef.current("guestDepositIdDobFutureError"));
-      return;
+      setIdentityError(tGuestRef.current('guestDepositIdDobFutureError'))
+      return
     }
-    setIdentityError("");
-    setIsSavingIdentity(true);
+    setIdentityError('')
+    setIsSavingIdentity(true)
     try {
       const saved = await userService.upsertIdentification({
         identityNumber: idNumber.trim(),
         fullName: idFullName.trim(),
         dateOfBirth: idDob,
         gender: idGender,
-        nationality: idNationality.trim() || "Việt Nam",
+        nationality: idNationality.trim() || 'Việt Nam',
         placeOfOrigin: idPlaceOfOrigin.trim() || undefined,
         placeOfResidence: idPlaceOfResidence.trim() || undefined,
         issueDate: idIssueDate || undefined,
         expiryDate: idExpiryDate || undefined,
         cardFrontUrl: idCardFrontUrl.trim() || undefined,
         cardBackUrl: idCardBackUrl.trim() || undefined,
-      });
-      setVerifiedIdData(saved);
-      setTenantName(saved.fullName || idFullName || user?.name || (user as any)?.username || "");
-      setTenantPhone(user?.phone || (user as any)?.phoneNumber || "");
-      setDepositStep("confirm_amount");
-      toast.success(tGuestRef.current("guestDepositIdentityPassedBadge"));
+      })
+      setVerifiedIdData(saved)
+      setTenantName(saved.fullName || idFullName || user?.name || (user as any)?.username || '')
+      setTenantPhone(user?.phone || (user as any)?.phoneNumber || '')
+      setDepositStep('confirm_amount')
+      toast.success(tGuestRef.current('guestDepositIdentityPassedBadge'))
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || tGuestRef.current("guestRoomDetailSaveError");
-      setIdentityError(typeof msg === "string" ? msg : JSON.stringify(msg));
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        tGuestRef.current('guestRoomDetailSaveError')
+      setIdentityError(typeof msg === 'string' ? msg : JSON.stringify(msg))
     } finally {
-      setIsSavingIdentity(false);
+      setIsSavingIdentity(false)
     }
-  };
+  }
 
   const handleInitiateDeposit = async () => {
-    if (!post || isSubmittingDeposit) return;
+    if (!post || isSubmittingDeposit) return
     if (tenantPhone && !isPhoneValid(tenantPhone)) {
-      setPhoneError(tGuestRef.current("guestDepositIdPhoneError"));
-      return;
+      setPhoneError(tGuestRef.current('guestDepositIdPhoneError'))
+      return
     }
-    setIsSubmittingDeposit(true);
-    setDepositErrorMsg("");
-    setIsExpired(false);
+    setIsSubmittingDeposit(true)
+    setDepositErrorMsg('')
+    setIsExpired(false)
     try {
       const instruction = await postService.initiatePlatformDeposit(id, {
         amount: depositAmountInput > 0 ? depositAmountInput : Number(post.depositAmount ?? 0),
-        tenantName: (tenantName || "").trim(),
-        tenantPhone: (tenantPhone || "").trim(),
-        note: (depositNote || "").trim() || undefined,
-      });
-      setDepositInstruction(instruction);
-      setCountdown(instruction.expiresIn || 900);
-      setDepositStep("qr_payment");
+        tenantName: (tenantName || '').trim(),
+        tenantPhone: (tenantPhone || '').trim(),
+        note: (depositNote || '').trim() || undefined,
+      })
+      setDepositInstruction(instruction)
+      setCountdown(instruction.expiresIn || 900)
+      setDepositStep('qr_payment')
       if (instruction.isReused) {
-        toast.info(tGuestRef.current("guestDepositResumeSession"));
+        toast.info(tGuestRef.current('guestDepositResumeSession'))
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || tGuestRef.current("guestPricingCheckoutGenerateQrError");
-      setDepositErrorMsg(typeof msg === "string" ? msg : JSON.stringify(msg));
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        tGuestRef.current('guestPricingCheckoutGenerateQrError')
+      setDepositErrorMsg(typeof msg === 'string' ? msg : JSON.stringify(msg))
     } finally {
-      setIsSubmittingDeposit(false);
+      setIsSubmittingDeposit(false)
     }
-  };
+  }
 
   const hasUnsavedChanges = () => {
-    if (depositStep === "success" || depositStep === "check_identity") return false;
-    if (depositStep === "identity_gate") {
+    if (depositStep === 'success' || depositStep === 'check_identity') return false
+    if (depositStep === 'identity_gate') {
       return !!(
         idNumber ||
         idFullName ||
@@ -398,91 +423,93 @@ function DepositPageInner() {
         idPlaceOfResidence ||
         idCardFrontUrl ||
         idCardBackUrl
-      );
+      )
     }
-    if (depositStep === "confirm_amount") {
-      return !!(depositNote || ((tenantName || "").trim() && tenantName !== verifiedIdData?.fullName));
+    if (depositStep === 'confirm_amount') {
+      return !!(
+        depositNote ||
+        ((tenantName || '').trim() && tenantName !== verifiedIdData?.fullName)
+      )
     }
-    if (depositStep === "qr_payment") return true;
-    return false;
-  };
+    if (depositStep === 'qr_payment') return true
+    return false
+  }
 
   const handleBack = () => {
-    if (depositStep === "success") {
-      router.push(`/rooms/${id}`);
-      return;
+    if (depositStep === 'success') {
+      router.push(`/rooms/${id}`)
+      return
     }
-    if (depositStep === "identity_gate" && verifiedIdData) {
-      setDepositStep("confirm_amount");
-      return;
+    if (depositStep === 'identity_gate' && verifiedIdData) {
+      setDepositStep('confirm_amount')
+      return
     }
     if (hasUnsavedChanges()) {
-      setIsDiscardConfirmOpen(true);
+      setIsDiscardConfirmOpen(true)
     } else {
-      router.push(`/rooms/${id}`);
+      router.push(`/rooms/${id}`)
     }
-  };
+  }
 
   const handleStartChat = async () => {
-    if (!post?.poster) return;
+    if (!post?.poster) return
     try {
       const conv = await getOrCreateConversation(
         post.poster.id,
-        `Xin chào, tôi vừa đặt cọc giữ chỗ phòng "${post.title}". Mong được liên hệ sớm ạ!`
-      );
-      router.push(conv?.id ? `/messages?conversationId=${conv.id}` : "/messages");
+        `Xin chào, tôi vừa đặt cọc giữ chỗ phòng "${post.title}". Mong được liên hệ sớm ạ!`,
+      )
+      router.push(conv?.id ? `/messages?conversationId=${conv.id}` : '/messages')
     } catch {
-      toast.error(tGuestRef.current("guestRoomDetailSaveError"));
+      toast.error(tGuestRef.current('guestRoomDetailSaveError'))
     }
-  };
+  }
 
   // ─── Derived ──────────────────────────────────────────────────────────────
-  const depositAmount = Number(post?.depositAmount ?? 0);
-  const isIdentityPassed = !!verifiedIdData;
+  const depositAmount = Number(post?.depositAmount ?? 0)
+  const isIdentityPassed = !!verifiedIdData
   const activeStepIndex =
-    depositStep === "check_identity"
-      ? (identityCheckResult.hasId ? 1 : 0)
-      : STEPS.indexOf(depositStep as typeof STEPS[number]);
+    depositStep === 'check_identity'
+      ? identityCheckResult.hasId
+        ? 1
+        : 0
+      : STEPS.indexOf(depositStep as (typeof STEPS)[number])
 
   const genderOptions = [
-    { value: "male", label: tGuest("guestDepositGenderMale") },
-    { value: "female", label: tGuest("guestDepositGenderFemale") },
-  ];
+    { value: 'male', label: tGuest('guestDepositGenderMale') },
+    { value: 'female', label: tGuest('guestDepositGenderFemale') },
+  ]
 
   // ─── Render guards ─────────────────────────────────────────────────────────
-  if (isLoadingPost) return <SkeletonDeposit />;
+  if (isLoadingPost) return <SkeletonDeposit />
 
   if (hasPostError || !post) {
     return (
       <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center gap-4 p-8">
         <AlertCircle className="w-10 h-10 text-zinc-400" />
-        <p className="text-zinc-600 font-semibold text-sm">
-          {tGuest("guestRoomsErrorFetch")}
-        </p>
+        <p className="text-zinc-600 font-semibold text-sm">{tGuest('guestRoomsErrorFetch')}</p>
         <Link href={`/rooms/${id}`}>
           <Button
             variant="primary"
             size="sm"
             className="bg-[#2AC1BC] hover:bg-[#23a9a4] text-white rounded-xl shadow-md"
           >
-            {tGuest("guestRoomDetailBackToList")}
+            {tGuest('guestRoomDetailBackToList')}
           </Button>
         </Link>
       </div>
-    );
+    )
   }
 
-  const stepLabels: Record<typeof STEPS[number], string> = {
-    identity_gate: tGuest("guestDepositStepIdentity"),
-    confirm_amount: tGuest("guestDepositStepConfirm"),
-    qr_payment: tGuest("guestDepositStepPayment"),
-    success: tGuest("guestDepositStepSuccess"),
-  };
+  const stepLabels: Record<(typeof STEPS)[number], string> = {
+    identity_gate: tGuest('guestDepositStepIdentity'),
+    confirm_amount: tGuest('guestDepositStepConfirm'),
+    qr_payment: tGuest('guestDepositStepPayment'),
+    success: tGuest('guestDepositStepSuccess'),
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 animate-in fade-in duration-500 pb-20">
       <div className="mx-auto max-w-lg px-4 py-6 sm:px-6 w-full space-y-5">
-
         {/* Top Navigation */}
         <div className="flex items-center justify-between">
           <button
@@ -490,10 +517,10 @@ function DepositPageInner() {
             className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-[#2AC1BC] transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4" />
-            {tGuest("guestRoomDetailBackToList")}
+            {tGuest('guestRoomDetailBackToList')}
           </button>
           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-            {tGuest("guestDepositEscrowBadge")}
+            {tGuest('guestDepositEscrowBadge')}
           </span>
         </div>
 
@@ -514,12 +541,16 @@ function DepositPageInner() {
             <p className="text-xs font-extrabold text-zinc-900 line-clamp-1">{post.title}</p>
             {post.room && (
               <p className="text-[11px] text-zinc-500 font-semibold mt-0.5">
-                {tGuest("guestDepositRoomPrefix")} {post.room.roomNumber} · {post.room.boardingHouseName}
+                {tGuest('guestDepositRoomPrefix')} {post.room.roomNumber} ·{' '}
+                {post.room.boardingHouseName}
               </p>
             )}
             <p className="text-sm font-black text-rose-500 mt-1">
               {formatCurrency(depositAmount, currentLocale)}
-              <span className="text-xs text-zinc-400 font-normal"> {tGuest("guestRoomDetailMonth")}</span>
+              <span className="text-xs text-zinc-400 font-normal">
+                {' '}
+                {tGuest('guestRoomDetailMonth')}
+              </span>
             </p>
           </div>
         </div>
@@ -530,36 +561,39 @@ function DepositPageInner() {
             {STEPS.map((s, i) => {
               const done =
                 i < activeStepIndex ||
-                (s === "identity_gate" && isIdentityPassed && depositStep !== "identity_gate");
-              const active = i === activeStepIndex && !done;
+                (s === 'identity_gate' && isIdentityPassed && depositStep !== 'identity_gate')
+              const active = i === activeStepIndex && !done
               return (
                 <React.Fragment key={s}>
                   <div className="flex flex-col items-center gap-1">
                     <span
-                      className={`w-6 h-6 rounded-full text-[10px] font-black inline-flex items-center justify-center transition-colors ${done
-                          ? "bg-[#2AC1BC] text-white"
+                      className={`w-6 h-6 rounded-full text-[10px] font-black inline-flex items-center justify-center transition-colors ${
+                        done
+                          ? 'bg-[#2AC1BC] text-white'
                           : active
-                            ? "bg-zinc-900 text-white"
-                            : "bg-zinc-200 text-zinc-400"
-                        }`}
+                            ? 'bg-zinc-900 text-white'
+                            : 'bg-zinc-200 text-zinc-400'
+                      }`}
                     >
                       {done ? <Check className="w-3 h-3" /> : i + 1}
                     </span>
                     <span
-                      className={`text-[9px] font-bold text-center leading-tight w-14 ${i <= activeStepIndex || done ? "text-zinc-700" : "text-zinc-300"
-                        }`}
+                      className={`text-[9px] font-bold text-center leading-tight w-14 ${
+                        i <= activeStepIndex || done ? 'text-zinc-700' : 'text-zinc-300'
+                      }`}
                     >
                       {stepLabels[s]}
                     </span>
                   </div>
                   {i < STEPS.length - 1 && (
                     <div
-                      className={`h-px flex-1 mb-4 mx-1 transition-colors ${i < activeStepIndex || done ? "bg-[#2AC1BC]" : "bg-zinc-200"
-                        }`}
+                      className={`h-px flex-1 mb-4 mx-1 transition-colors ${
+                        i < activeStepIndex || done ? 'bg-[#2AC1BC]' : 'bg-zinc-200'
+                      }`}
                     />
                   )}
                 </React.Fragment>
-              );
+              )
             })}
           </div>
         )}
@@ -572,21 +606,27 @@ function DepositPageInner() {
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <h1 className="text-sm font-black text-zinc-900">{tGuest("guestRoomDetailModalTitle")}</h1>
+              <h1 className="text-sm font-black text-zinc-900">
+                {tGuest('guestRoomDetailModalTitle')}
+              </h1>
               <span className="text-[10px] font-bold text-[#2AC1BC] uppercase tracking-wider block">
-                {tGuest("guestDepositEscrowBadge")}
+                {tGuest('guestDepositEscrowBadge')}
               </span>
             </div>
           </div>
 
           {/* Check Identity Step */}
-          {depositStep === "check_identity" && (
+          {depositStep === 'check_identity' && (
             <div className="space-y-4">
               {isCheckingIdentity ? (
                 <div className="py-12 text-center space-y-3">
                   <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC] mx-auto" />
-                  <p className="text-xs font-bold text-zinc-700">{tGuest("guestDepositCheckingIdentity")}</p>
-                  <p className="text-[11px] text-zinc-400">{tGuest("guestDepositCheckingIdentitySub")}</p>
+                  <p className="text-xs font-bold text-zinc-700">
+                    {tGuest('guestDepositCheckingIdentity')}
+                  </p>
+                  <p className="text-[11px] text-zinc-400">
+                    {tGuest('guestDepositCheckingIdentitySub')}
+                  </p>
                 </div>
               ) : identityCheckResult.hasId && identityCheckResult.idData ? (
                 /* User already has valid citizen identification */
@@ -598,71 +638,78 @@ function DepositPageInner() {
                   <div className="space-y-1">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-black rounded-full mb-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>{tGuest("guestDepositIdentityPassedBadge")}</span>
+                      <span>{tGuest('guestDepositIdentityPassedBadge')}</span>
                     </div>
                     <h2 className="text-base font-black text-zinc-900">
-                      {tGuest("guestDepositIdentityPassedTitle")}
+                      {tGuest('guestDepositIdentityPassedTitle')}
                     </h2>
                     <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
-                      {tGuest("guestDepositIdentityPassedDesc")}
+                      {tGuest('guestDepositIdentityPassedDesc')}
                     </p>
                   </div>
 
                   <div className="bg-zinc-50 rounded-2xl border border-zinc-200/80 p-4 text-xs text-left space-y-2.5">
                     <div className="flex justify-between items-center pb-2 border-b border-zinc-200/80">
-                      <span className="text-zinc-500 font-bold">{tGuest("guestDepositTenantFullName")}</span>
+                      <span className="text-zinc-500 font-bold">
+                        {tGuest('guestDepositTenantFullName')}
+                      </span>
                       <span className="font-extrabold text-zinc-900 uppercase">
                         {identityCheckResult.idData.fullName}
                       </span>
                     </div>
                     <div className="flex justify-between items-center pb-2 border-b border-zinc-200/80">
-                      <span className="text-zinc-500 font-bold">{tGuest("guestDepositIdCardNumber")}</span>
+                      <span className="text-zinc-500 font-bold">
+                        {tGuest('guestDepositIdCardNumber')}
+                      </span>
                       <span className="font-mono font-black text-emerald-700">
                         •••• •••• {identityCheckResult.idData.identityNumber.slice(-4)}
                       </span>
                     </div>
                     {identityCheckResult.idData.dateOfBirth && (
                       <div className="flex justify-between items-center pb-2 border-b border-zinc-200/80">
-                        <span className="text-zinc-500 font-bold">{tGuest("guestDepositDob")}</span>
+                        <span className="text-zinc-500 font-bold">{tGuest('guestDepositDob')}</span>
                         <span className="font-semibold text-zinc-700">
                           {new Date(identityCheckResult.idData.dateOfBirth).toLocaleDateString(
-                            currentLocale === "en" ? "en-US" : "vi-VN"
+                            currentLocale === 'en' ? 'en-US' : 'vi-VN',
                           )}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center">
-                      <span className="text-zinc-500 font-bold">{tGuest("guestDepositEscrowStandard")}</span>
+                      <span className="text-zinc-500 font-bold">
+                        {tGuest('guestDepositEscrowStandard')}
+                      </span>
                       <span className="font-black text-emerald-600 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> {tGuest("guestDepositEscrowPassed")}
+                        <CheckCircle2 className="w-3.5 h-3.5" />{' '}
+                        {tGuest('guestDepositEscrowPassed')}
                       </span>
                     </div>
                   </div>
 
                   <div className="pt-2 space-y-2">
                     <Button
-                      onClick={() => setDepositStep("confirm_amount")}
+                      onClick={() => setDepositStep('confirm_amount')}
                       className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-[#2AC1BC]/25 flex items-center justify-center gap-2"
                     >
-                      <span>{tGuest("guestDepositIdentityPassedBtn")}</span>
+                      <span>{tGuest('guestDepositIdentityPassedBtn')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                     <button
                       onClick={() => {
                         if (identityCheckResult.idData) {
-                          setIdNumber(identityCheckResult.idData.identityNumber || "");
-                          setIdFullName(identityCheckResult.idData.fullName || "");
+                          setIdNumber(identityCheckResult.idData.identityNumber || '')
+                          setIdFullName(identityCheckResult.idData.fullName || '')
                           if (identityCheckResult.idData.dateOfBirth) {
-                            setIdDob(identityCheckResult.idData.dateOfBirth.slice(0, 10));
+                            setIdDob(identityCheckResult.idData.dateOfBirth.slice(0, 10))
                           }
-                          setIdGender(identityCheckResult.idData.gender || "male");
-                          setIdNationality(identityCheckResult.idData.nationality || "Việt Nam");
+                          setIdGender(identityCheckResult.idData.gender || 'male')
+                          setIdNationality(identityCheckResult.idData.nationality || 'Việt Nam')
                         }
-                        setDepositStep("identity_gate");
+                        setDepositStep('identity_gate')
                       }}
                       className="text-[11px] text-zinc-400 hover:text-zinc-700 font-semibold underline block mx-auto cursor-pointer"
                     >
-                      {tGuest("guestDepositIdentityViewOrUpdate")}
+                      {tGuest('guestDepositIdentityViewOrUpdate')}
                     </button>
                   </div>
                 </div>
@@ -675,34 +722,34 @@ function DepositPageInner() {
 
                   <div className="space-y-1">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 text-[11px] font-black rounded-full mb-1">
-                      <span>{tGuest("guestDepositIdentityMissingBadge")}</span>
+                      <span>{tGuest('guestDepositIdentityMissingBadge')}</span>
                     </div>
                     <h2 className="text-base font-black text-zinc-900">
-                      {tGuest("guestDepositIdentityMissingTitle")}
+                      {tGuest('guestDepositIdentityMissingTitle')}
                     </h2>
                     <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
-                      {tGuest("guestDepositIdentityMissingDesc")}
+                      {tGuest('guestDepositIdentityMissingDesc')}
                     </p>
                   </div>
 
                   <div className="bg-amber-50/60 rounded-2xl border border-amber-200 p-4 text-xs text-left space-y-1.5 text-amber-900">
                     <div className="font-extrabold flex items-center gap-1.5 text-amber-800">
                       <Info className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>{tGuest("guestDepositIdentityBenefitsTitle")}</span>
+                      <span>{tGuest('guestDepositIdentityBenefitsTitle')}</span>
                     </div>
                     <ul className="list-disc list-inside space-y-1 text-[11px] text-amber-700">
-                      <li>{tGuest("guestDepositIdentityBenefit1")}</li>
-                      <li>{tGuest("guestDepositIdentityBenefit2")}</li>
-                      <li>{tGuest("guestDepositIdentityBenefit3")}</li>
+                      <li>{tGuest('guestDepositIdentityBenefit1')}</li>
+                      <li>{tGuest('guestDepositIdentityBenefit2')}</li>
+                      <li>{tGuest('guestDepositIdentityBenefit3')}</li>
                     </ul>
                   </div>
 
                   <div className="pt-2">
                     <Button
-                      onClick={() => setDepositStep("identity_gate")}
+                      onClick={() => setDepositStep('identity_gate')}
                       className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-[#2AC1BC]/25 flex items-center justify-center gap-2"
                     >
-                      <span>{tGuest("guestDepositIdentityMissingBtn")}</span>
+                      <span>{tGuest('guestDepositIdentityMissingBtn')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -712,15 +759,15 @@ function DepositPageInner() {
           )}
 
           {/* Identity Gate Form (Reusing Base Components + ImageUpload) */}
-          {depositStep === "identity_gate" && (
+          {depositStep === 'identity_gate' && (
             <form onSubmit={handleSaveIdentity} className="space-y-4">
               <div className="p-4 bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-2xl border border-zinc-800 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-[#2AC1BC] font-extrabold text-xs">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>{tGuest("guestDepositIdentityGateTitle")}</span>
+                  <span>{tGuest('guestDepositIdentityGateTitle')}</span>
                 </div>
                 <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
-                  {tGuest("guestDepositIdentityGateDesc")}
+                  {tGuest('guestDepositIdentityGateDesc')}
                 </p>
               </div>
 
@@ -733,84 +780,84 @@ function DepositPageInner() {
 
               <div className="space-y-3">
                 <TextInput
-                  label={tGuest("guestDepositIdNumberLabel")}
+                  label={tGuest('guestDepositIdNumberLabel')}
                   required
                   maxLength={12}
                   inputMode="numeric"
                   placeholder="001202012345 (12 số)"
                   value={idNumber}
-                  onChange={(e) => setIdNumber(e.target.value.replace(/\D/g, ""))}
+                  onChange={e => setIdNumber(e.target.value.replace(/\D/g, ''))}
                   className="font-mono font-bold"
                 />
 
                 <TextInput
-                  label={tGuest("guestDepositFullNameLabel")}
+                  label={tGuest('guestDepositFullNameLabel')}
                   required
                   placeholder="NGUYEN VAN A"
                   value={idFullName}
-                  onChange={(e) => setIdFullName(e.target.value)}
+                  onChange={e => setIdFullName(e.target.value)}
                   className="font-bold uppercase"
                 />
 
                 <div className="grid grid-cols-2 gap-3">
                   <DateInput
-                    label={tGuest("guestDepositDobLabel")}
+                    label={tGuest('guestDepositDobLabel')}
                     required
                     maxDate="today"
                     value={idDob}
-                    onChange={(e) => setIdDob(e.target.value)}
+                    onChange={e => setIdDob(e.target.value)}
                   />
 
                   <SelectInput
-                    label={tGuest("guestDepositGenderLabel")}
+                    label={tGuest('guestDepositGenderLabel')}
                     required
                     value={idGender}
-                    onChange={(e) => setIdGender(e.target.value as "male" | "female")}
+                    onChange={e => setIdGender(e.target.value as 'male' | 'female')}
                     options={genderOptions}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <TextInput
-                    label={tGuest("guestDepositNationalityLabel")}
+                    label={tGuest('guestDepositNationalityLabel')}
                     value={idNationality}
-                    onChange={(e) => setIdNationality(e.target.value)}
+                    onChange={e => setIdNationality(e.target.value)}
                   />
 
                   <TextInput
-                    label={tGuest("guestDepositPlaceOfOriginLabel")}
+                    label={tGuest('guestDepositPlaceOfOriginLabel')}
                     placeholder="Hà Nội / Nam Định..."
                     value={idPlaceOfOrigin}
-                    onChange={(e) => setIdPlaceOfOrigin(e.target.value)}
+                    onChange={e => setIdPlaceOfOrigin(e.target.value)}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <TextInput
-                    label={tGuest("guestDepositPlaceOfResidenceLabel")}
+                    label={tGuest('guestDepositPlaceOfResidenceLabel')}
                     placeholder="Nơi thường trú..."
                     value={idPlaceOfResidence}
-                    onChange={(e) => setIdPlaceOfResidence(e.target.value)}
+                    onChange={e => setIdPlaceOfResidence(e.target.value)}
                   />
 
                   <DateInput
-                    label={tGuest("guestDepositIssueDateLabel")}
+                    label={tGuest('guestDepositIssueDateLabel')}
                     maxDate="today"
                     value={idIssueDate}
-                    onChange={(e) => setIdIssueDate(e.target.value)}
+                    onChange={e => setIdIssueDate(e.target.value)}
                   />
                 </div>
 
                 <DateInput
-                  label={tGuest("guestDepositExpiryDateLabel")}
+                  label={tGuest('guestDepositExpiryDateLabel')}
                   value={idExpiryDate}
-                  onChange={(e) => setIdExpiryDate(e.target.value)}
+                  onChange={e => setIdExpiryDate(e.target.value)}
                 />
 
                 {/* Standalone ImageUpload Component for CCCD Front & Back */}
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <ImageUpload
-                    label={tGuest("guestDepositCardFrontLabel")}
+                    label={tGuest('guestDepositCardFrontLabel')}
                     value={idCardFrontUrl}
                     onChange={setIdCardFrontUrl}
                     folder="dormio/identifications"
@@ -818,7 +865,7 @@ function DepositPageInner() {
                   />
 
                   <ImageUpload
-                    label={tGuest("guestDepositCardBackLabel")}
+                    label={tGuest('guestDepositCardBackLabel')}
                     value={idCardBackUrl}
                     onChange={setIdCardBackUrl}
                     folder="dormio/identifications"
@@ -830,27 +877,24 @@ function DepositPageInner() {
               <Button
                 type="submit"
                 disabled={
-                  isSavingIdentity ||
-                  idNumber.length !== 12 ||
-                  !idFullName.trim() ||
-                  !idDob
+                  isSavingIdentity || idNumber.length !== 12 || !idFullName.trim() || !idDob
                 }
                 className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 mt-2"
               >
                 {isSavingIdentity ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{tGuest("guestDepositSavingIdentity")}</span>
+                    <span>{tGuest('guestDepositSavingIdentity')}</span>
                   </>
                 ) : (
-                  <span>{tGuest("guestDepositSaveIdBtn")} →</span>
+                  <span>{tGuest('guestDepositSaveIdBtn')} →</span>
                 )}
               </Button>
             </form>
           )}
 
           {/* Confirm Amount Step (Reusing Base Components) */}
-          {depositStep === "confirm_amount" && (
+          {depositStep === 'confirm_amount' && (
             <div className="space-y-4">
               <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2.5 text-emerald-800">
@@ -860,7 +904,8 @@ function DepositPageInner() {
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-black text-emerald-950">
-                        {tGuest("guestDepositVerifiedNotice")} {verifiedIdData?.fullName || tenantName}
+                        {tGuest('guestDepositVerifiedNotice')}{' '}
+                        {verifiedIdData?.fullName || tenantName}
                       </span>
                     </div>
                     {verifiedIdData?.identityNumber && (
@@ -871,24 +916,26 @@ function DepositPageInner() {
                   </div>
                 </div>
                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-black text-[10px]">
-                  {tGuest("guestDepositIdentityPassedBadge")}
+                  {tGuest('guestDepositIdentityPassedBadge')}
                 </span>
               </div>
 
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1.5">
                 <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">
-                  {tGuest("guestRoomDetailSelectedRoomLabel")}
+                  {tGuest('guestRoomDetailSelectedRoomLabel')}
                 </span>
                 <h2 className="font-extrabold text-xs text-zinc-900 line-clamp-1">{post.title}</h2>
                 <div className="flex items-center gap-4 text-xs font-semibold text-zinc-600">
                   {post.room?.roomNumber && (
                     <span>
-                      {tGuest("guestDepositRoomPrefix")}: <strong className="text-zinc-900">{post.room.roomNumber}</strong>
+                      {tGuest('guestDepositRoomPrefix')}:{' '}
+                      <strong className="text-zinc-900">{post.room.roomNumber}</strong>
                     </span>
                   )}
                   {post.room?.boardingHouseName && (
                     <span>
-                      {tGuest("guestDepositBoardingHousePrefix")}: <strong className="text-zinc-900">{post.room.boardingHouseName}</strong>
+                      {tGuest('guestDepositBoardingHousePrefix')}:{' '}
+                      <strong className="text-zinc-900">{post.room.boardingHouseName}</strong>
                     </span>
                   )}
                 </div>
@@ -896,31 +943,31 @@ function DepositPageInner() {
 
               <div className="space-y-3">
                 <NumberInput
-                  label={tGuest("guestDepositAmountLabel")}
+                  label={tGuest('guestDepositAmountLabel')}
                   required
                   min={100000}
                   step={50000}
                   value={depositAmountInput || Number(post.depositAmount ?? 0)}
-                  onChange={(e) => setDepositAmountInput(Number(e.target.value))}
+                  onChange={e => setDepositAmountInput(Number(e.target.value))}
                   suffixText="VND"
-                  helperText={`${tGuest("guestRoomDetailLandlordDepositLabel")} ${formatCurrency(
+                  helperText={`${tGuest('guestRoomDetailLandlordDepositLabel')} ${formatCurrency(
                     Number(post.depositAmount ?? 0),
-                    currentLocale
+                    currentLocale,
                   )}`}
                   className="font-mono font-black text-rose-600 text-sm"
                 />
 
                 <TextInput
-                  label={tGuest("guestRoomDetailTenantNameLabel")}
-                  placeholder={tGuest("guestRoomDetailTenantNamePlaceholder")}
+                  label={tGuest('guestRoomDetailTenantNameLabel')}
+                  placeholder={tGuest('guestRoomDetailTenantNamePlaceholder')}
                   value={tenantName}
-                  onChange={(e) => setTenantName(e.target.value)}
+                  onChange={e => setTenantName(e.target.value)}
                   className="font-bold"
                 />
 
                 <TextInput
-                  label={tGuest("guestRoomDetailTenantPhoneLabel")}
-                  placeholder={tGuest("guestRoomDetailTenantPhonePlaceholder")}
+                  label={tGuest('guestRoomDetailTenantPhoneLabel')}
+                  placeholder={tGuest('guestRoomDetailTenantPhonePlaceholder')}
                   value={tenantPhone}
                   onChange={handlePhoneChange}
                   onBlur={handlePhoneBlur}
@@ -929,10 +976,10 @@ function DepositPageInner() {
                 />
 
                 <TextareaInput
-                  label={tGuest("guestDepositNoteLabel")}
-                  placeholder={tGuest("guestDepositNotePlaceholder")}
+                  label={tGuest('guestDepositNoteLabel')}
+                  placeholder={tGuest('guestDepositNotePlaceholder')}
                   value={depositNote}
-                  onChange={(e) => setDepositNote(e.target.value)}
+                  onChange={e => setDepositNote(e.target.value)}
                   rows={2}
                   className="resize-none text-xs"
                 />
@@ -940,10 +987,10 @@ function DepositPageInner() {
 
               <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-3.5 rounded-2xl text-white space-y-1.5 border border-zinc-800">
                 <span className="text-[10px] font-black text-[#2AC1BC] uppercase block">
-                  {tGuest("guestDepositEscrowNoticeTitle")}
+                  {tGuest('guestDepositEscrowNoticeTitle')}
                 </span>
                 <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
-                  {tGuest("guestRoomDetailEscrowModalDesc")}
+                  {tGuest('guestRoomDetailEscrowModalDesc')}
                 </p>
               </div>
 
@@ -958,7 +1005,7 @@ function DepositPageInner() {
                 onClick={handleInitiateDeposit}
                 disabled={
                   isSubmittingDeposit ||
-                  !(tenantName || "").trim() ||
+                  !(tenantName || '').trim() ||
                   !tenantPhone ||
                   !!phoneError ||
                   !isPhoneValid(tenantPhone)
@@ -968,12 +1015,12 @@ function DepositPageInner() {
                 {isSubmittingDeposit ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{tGuest("guestDepositCreatingOrder")}</span>
+                    <span>{tGuest('guestDepositCreatingOrder')}</span>
                   </>
                 ) : (
                   <>
                     <QrCode className="w-4 h-4" />
-                    <span>{tGuest("guestRoomDetailConfirmQrBtn")}</span>
+                    <span>{tGuest('guestRoomDetailConfirmQrBtn')}</span>
                   </>
                 )}
               </Button>
@@ -981,22 +1028,24 @@ function DepositPageInner() {
           )}
 
           {/* QR Payment Step */}
-          {depositStep === "qr_payment" && depositInstruction && (
+          {depositStep === 'qr_payment' && depositInstruction && (
             <div className="space-y-4 text-center">
-
               {/* Countdown Timer Banner */}
               <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80">
                 <div className="flex items-center gap-2">
-                  <Clock className={`w-4 h-4 ${countdown < 120 ? "text-rose-500 animate-pulse" : "text-[#2AC1BC]"}`} />
+                  <Clock
+                    className={`w-4 h-4 ${countdown < 120 ? 'text-rose-500 animate-pulse' : 'text-[#2AC1BC]'}`}
+                  />
                   <span className="text-xs font-bold text-zinc-600">
-                    {tGuest("guestDepositQrCountdown")}
+                    {tGuest('guestDepositQrCountdown')}
                   </span>
                 </div>
                 <span
-                  className={`font-mono font-black text-sm px-2.5 py-1 rounded-lg ${countdown < 120
-                      ? "bg-rose-100 text-rose-700 animate-pulse"
-                      : "bg-zinc-900 text-white"
-                    }`}
+                  className={`font-mono font-black text-sm px-2.5 py-1 rounded-lg ${
+                    countdown < 120
+                      ? 'bg-rose-100 text-rose-700 animate-pulse'
+                      : 'bg-zinc-900 text-white'
+                  }`}
                 >
                   {formatTimer(countdown)}
                 </span>
@@ -1008,18 +1057,18 @@ function DepositPageInner() {
                   src={depositInstruction.qrCodeUrl}
                   alt="PayOS VietQR Payment Code"
                   className={`w-56 h-auto mx-auto rounded-2xl border border-zinc-100 shadow-sm transition-all duration-300 ${
-                    isExpired ? "blur-md grayscale opacity-40" : ""
+                    isExpired ? 'blur-md grayscale opacity-40' : ''
                   }`}
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    const bin = depositInstruction?.bin || depositInstruction?.bankCode || "970422";
-                    const acc = depositInstruction?.accountNumber;
+                  onError={e => {
+                    const target = e.currentTarget
+                    const bin = depositInstruction?.bin || depositInstruction?.bankCode || '970422'
+                    const acc = depositInstruction?.accountNumber
                     if (acc) {
                       const fallbackUrl = `https://api.vietqr.io/image/${bin}-${acc}-compact2.png?amount=${depositInstruction.amount}&addInfo=${encodeURIComponent(
-                        depositInstruction.transferContent || ""
-                      )}&accountName=${encodeURIComponent(depositInstruction.accountName || "")}`;
+                        depositInstruction.transferContent || '',
+                      )}&accountName=${encodeURIComponent(depositInstruction.accountName || '')}`
                       if (target.src !== fallbackUrl) {
-                        target.src = fallbackUrl;
+                        target.src = fallbackUrl
                       }
                     }
                   }}
@@ -1030,8 +1079,10 @@ function DepositPageInner() {
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4 bg-zinc-900/80 rounded-3xl text-white space-y-3 animate-in fade-in duration-300">
                     <AlertTriangle className="w-8 h-8 text-amber-400" />
                     <div className="space-y-0.5">
-                      <p className="text-xs font-black">{tGuest("guestDepositQrExpired")}</p>
-                      <p className="text-[10px] text-zinc-300">{tGuest("guestDepositQrExpiredDesc")}</p>
+                      <p className="text-xs font-black">{tGuest('guestDepositQrExpired')}</p>
+                      <p className="text-[10px] text-zinc-300">
+                        {tGuest('guestDepositQrExpiredDesc')}
+                      </p>
                     </div>
                     <Button
                       onClick={handleInitiateDeposit}
@@ -1039,14 +1090,16 @@ function DepositPageInner() {
                       size="sm"
                       className="bg-[#2AC1BC] hover:bg-[#23a9a4] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5"
                     >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isSubmittingDeposit ? "animate-spin" : ""}`} />
-                      <span>{tGuest("guestDepositGenerateNewQr")}</span>
+                      <RefreshCw
+                        className={`w-3.5 h-3.5 ${isSubmittingDeposit ? 'animate-spin' : ''}`}
+                      />
+                      <span>{tGuest('guestDepositGenerateNewQr')}</span>
                     </Button>
                   </div>
                 )}
 
                 <span className="text-[10px] text-zinc-500 font-semibold mt-2 block">
-                  {tGuest("guestDepositScanNotice")}
+                  {tGuest('guestDepositScanNotice')}
                 </span>
               </div>
 
@@ -1054,29 +1107,29 @@ function DepositPageInner() {
               <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-200 text-xs text-left space-y-2.5">
                 {[
                   {
-                    label: tGuest("guestDepositBankPartnerLabel"),
-                    value: `MBBank (${depositInstruction.bankCode || "970422"})`,
+                    label: tGuest('guestDepositBankPartnerLabel'),
+                    value: `MBBank (${depositInstruction.bankCode || '970422'})`,
                     copyKey: null,
                   },
                   {
-                    label: tGuest("guestDepositAccountNumLabel"),
+                    label: tGuest('guestDepositAccountNumLabel'),
                     value: depositInstruction.accountNumber,
-                    copyKey: "accountNumber",
+                    copyKey: 'accountNumber',
                   },
                   {
-                    label: tGuest("guestDepositAccountNameLabel"),
+                    label: tGuest('guestDepositAccountNameLabel'),
                     value: depositInstruction.accountName,
                     copyKey: null,
                   },
                   {
-                    label: tGuest("guestRoomDetailTransferAmountLabel"),
+                    label: tGuest('guestRoomDetailTransferAmountLabel'),
                     value: formatCurrency(depositInstruction.amount, currentLocale),
-                    copyKey: "amount",
+                    copyKey: 'amount',
                   },
                   {
-                    label: tGuest("guestRoomDetailTransferContentLabel"),
+                    label: tGuest('guestRoomDetailTransferContentLabel'),
                     value: depositInstruction.transferContent,
-                    copyKey: "transferContent",
+                    copyKey: 'transferContent',
                   },
                 ].map(({ label, value, copyKey }) => (
                   <div
@@ -1086,8 +1139,9 @@ function DepositPageInner() {
                     <span className="text-zinc-500 font-bold shrink-0">{label}</span>
                     <div className="flex items-center gap-2 ml-2">
                       <span
-                        className={`font-mono font-black text-zinc-900 ${copyKey === "amount" ? "text-rose-600 text-base" : ""
-                          }`}
+                        className={`font-mono font-black text-zinc-900 ${
+                          copyKey === 'amount' ? 'text-rose-600 text-base' : ''
+                        }`}
                       >
                         {value}
                       </span>
@@ -1095,14 +1149,14 @@ function DepositPageInner() {
                         <button
                           onClick={() =>
                             handleCopy(
-                              copyKey === "amount"
+                              copyKey === 'amount'
                                 ? depositInstruction.amount.toString()
                                 : (depositInstruction as any)[copyKey],
-                              copyKey
+                              copyKey,
                             )
                           }
                           className="p-1 hover:bg-zinc-200 rounded-lg text-zinc-600 transition-colors cursor-pointer shrink-0"
-                          title={tGuest("guestRoomDetailCopy")}
+                          title={tGuest('guestRoomDetailCopy')}
                         >
                           {copiedField === copyKey ? (
                             <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -1122,10 +1176,10 @@ function DepositPageInner() {
                   <div className="w-3 h-3 rounded-full bg-[#2AC1BC] animate-ping" />
                   <div>
                     <p className="text-xs font-bold text-zinc-800">
-                      {tGuest("guestDepositWaitingTransfer")}
+                      {tGuest('guestDepositWaitingTransfer')}
                     </p>
                     <p className="text-[10px] text-zinc-500 font-medium">
-                      {tGuest("guestDepositInstantReconcile")}
+                      {tGuest('guestDepositInstantReconcile')}
                     </p>
                   </div>
                 </div>
@@ -1134,7 +1188,7 @@ function DepositPageInner() {
 
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[11px] text-amber-800 font-semibold text-left flex items-start gap-2">
                 <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <span>{tGuest("guestDepositTransferNotice")}</span>
+                <span>{tGuest('guestDepositTransferNotice')}</span>
               </div>
 
               {depositErrorMsg && (
@@ -1147,35 +1201,41 @@ function DepositPageInner() {
           )}
 
           {/* Success Step */}
-          {depositStep === "success" && (
+          {depositStep === 'success' && (
             <div className="text-center space-y-4 py-2 animate-in zoom-in-95 duration-400">
               <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto border-2 border-[#2AC1BC]/20">
                 <CheckCircle2 className="w-9 h-9" />
               </div>
               <div className="space-y-1">
                 <h2 className="text-base font-black text-zinc-900">
-                  {tGuest("guestRoomDetailSuccessTitle")}
+                  {tGuest('guestRoomDetailSuccessTitle')}
                 </h2>
                 <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
-                  {tGuest("guestDepositSuccessDesc")}
+                  {tGuest('guestDepositSuccessDesc')}
                 </p>
               </div>
 
               <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 text-xs text-left space-y-2">
                 <div className="flex justify-between items-center pb-1.5 border-b border-zinc-200">
-                  <span className="text-zinc-500 font-bold">{tGuest("guestDepositDepositIdLabel")}</span>
+                  <span className="text-zinc-500 font-bold">
+                    {tGuest('guestDepositDepositIdLabel')}
+                  </span>
                   <span className="font-mono font-bold text-zinc-800 text-[11px]">
-                    {depositInstruction?.depositId ?? "DEP-" + post.id.slice(0, 8)}
+                    {depositInstruction?.depositId ?? 'DEP-' + post.id.slice(0, 8)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-1.5 border-b border-zinc-200">
-                  <span className="text-zinc-500 font-bold">{tGuest("guestDepositRoomNumberLabel")}</span>
+                  <span className="text-zinc-500 font-bold">
+                    {tGuest('guestDepositRoomNumberLabel')}
+                  </span>
                   <span className="font-extrabold text-zinc-800">
                     {post.room?.roomNumber || post.title}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-bold">{tGuest("guestDepositAmountDeposited")}</span>
+                  <span className="text-zinc-500 font-bold">
+                    {tGuest('guestDepositAmountDeposited')}
+                  </span>
                   <span className="font-black text-rose-600 text-sm">
                     {formatCurrency(depositInstruction?.amount ?? depositAmount, currentLocale)}
                   </span>
@@ -1189,7 +1249,7 @@ function DepositPageInner() {
                     className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    <span>{tGuest("guestDepositChatWithLandlord")}</span>
+                    <span>{tGuest('guestDepositChatWithLandlord')}</span>
                   </Button>
                 )}
                 <Button
@@ -1197,7 +1257,7 @@ function DepositPageInner() {
                   onClick={() => router.push(`/rooms/${id}`)}
                   className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-extrabold text-xs rounded-xl transition-all"
                 >
-                  {tGuest("guestRoomDetailBackToList")}
+                  {tGuest('guestRoomDetailBackToList')}
                 </Button>
               </div>
             </div>
@@ -1208,8 +1268,8 @@ function DepositPageInner() {
       {/* Rule 10: Discard Confirmation Modal */}
       {isDiscardConfirmOpen && (
         <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsDiscardConfirmOpen(false);
+          onClick={e => {
+            if (e.target === e.currentTarget) setIsDiscardConfirmOpen(false)
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
@@ -1219,10 +1279,10 @@ function DepositPageInner() {
             </div>
             <div className="space-y-1">
               <h3 className="text-sm font-black text-zinc-900">
-                {tGuest("guestDepositDiscardConfirmTitle")}
+                {tGuest('guestDepositDiscardConfirmTitle')}
               </h3>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                {tGuest("guestDepositDiscardConfirmDesc")}
+                {tGuest('guestDepositDiscardConfirmDesc')}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">
@@ -1231,22 +1291,22 @@ function DepositPageInner() {
                 onClick={() => setIsDiscardConfirmOpen(false)}
                 className="py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold text-xs rounded-xl"
               >
-                {tGuest("guestDepositContinueEditing")}
+                {tGuest('guestDepositContinueEditing')}
               </Button>
               <Button
                 variant="danger"
                 onClick={() => {
-                  setIsDiscardConfirmOpen(false);
-                  router.push(`/rooms/${id}`);
+                  setIsDiscardConfirmOpen(false)
+                  router.push(`/rooms/${id}`)
                 }}
                 className="py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md"
               >
-                {tGuest("guestDepositDiscardAndClose")}
+                {tGuest('guestDepositDiscardAndClose')}
               </Button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,48 +1,43 @@
-"use client";
+'use client'
 
-import React from "react";
-import Link from "next/link";
-import Logo from "@/components/Logo";
-import { Building2, CheckCircle2, TrendingUp, Zap, Sparkles, ShieldCheck, Star } from "lucide-react";
-import { useLanguage, useTranslations } from "@/context/LanguageContext";
-import { formatCurrency } from "@/utils";
+import React from 'react'
+import Link from 'next/link'
+import Logo from '@/components/Logo'
+import { Building2, CheckCircle2, TrendingUp, Zap, Sparkles, ShieldCheck, Star } from 'lucide-react'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { formatCurrency } from '@/utils'
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const t = useTranslations("auth");
-  const { currentLocale } = useLanguage();
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = useTranslations('auth')
+  const { currentLocale } = useLanguage()
 
   return (
     <div className="flex min-h-screen bg-white">
       {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding) */}
       <div className="flex flex-1 flex-col justify-between px-4 py-8 sm:px-8 lg:px-14 xl:px-16 bg-white z-10 max-w-xl mx-auto w-full lg:max-w-2xl">
-        
         {/* Header Brand Logo */}
         <div className="flex items-center justify-between pb-6">
           <Logo size="lg" />
 
-          <Link href="/" className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors">
-            {t("authLayoutBackHome")}
+          <Link
+            href="/"
+            className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
+          >
+            {t('authLayoutBackHome')}
           </Link>
         </div>
 
         {/* Dynamic Form Content */}
-        <div className="py-4">
-          {children}
-        </div>
+        <div className="py-4">{children}</div>
 
         {/* Footer Legal Note */}
         <div className="pt-6 border-t border-zinc-100 text-center sm:text-left text-[11px] text-zinc-400 font-medium">
-          {t("authLayoutFooterLegal", { year: new Date().getFullYear() })}
+          {t('authLayoutFooterLegal', { year: new Date().getFullYear() })}
         </div>
       </div>
 
       {/* Cột Phải: Visual Interactive Dashboard Mockup Showcase (Hidden on Mobile) */}
       <div className="hidden lg:flex flex-1 bg-[#090d12] relative flex-col items-center justify-center p-12 overflow-hidden border-l border-zinc-800">
-        
         {/* Ambient Glowing Orbs */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#2AC1BC]/15 rounded-full blur-[130px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF6B35]/15 rounded-full blur-[130px] pointer-events-none" />
@@ -50,10 +45,8 @@ export default function AuthLayout({
 
         {/* Showcase Glassmorphism Container */}
         <div className="relative max-w-lg w-full space-y-6">
-          
           {/* Main Dashboard Room Card */}
           <div className="bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800 p-7 rounded-3xl shadow-2xl space-y-6 text-white relative">
-            
             {/* Room Status Header */}
             <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80">
               <div className="flex items-center gap-3">
@@ -61,33 +54,53 @@ export default function AuthLayout({
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-white">{t("authLayoutShowcaseRoomTitle")}</h3>
-                  <p className="text-[11px] text-zinc-400 font-medium">{t("authLayoutShowcaseRoomAddress")}</p>
+                  <h3 className="font-extrabold text-sm text-white">
+                    {t('authLayoutShowcaseRoomTitle')}
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 font-medium">
+                    {t('authLayoutShowcaseRoomAddress')}
+                  </p>
                 </div>
               </div>
               <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-full border border-emerald-500/30">
-                {t("authLayoutShowcaseStatusActive")}
+                {t('authLayoutShowcaseStatusActive')}
               </span>
             </div>
 
             {/* 3 Metric Stat Boxes */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">{t("authLayoutShowcaseMetricRent")}</span>
-                <div className="text-base font-black text-white">{formatCurrency(4500000, currentLocale)}</div>
-                <span className="text-[9px] text-emerald-400 font-extrabold block">{t("authLayoutShowcaseMetricCollected")}</span>
+                <span className="text-[10px] text-zinc-400 font-bold block">
+                  {t('authLayoutShowcaseMetricRent')}
+                </span>
+                <div className="text-base font-black text-white">
+                  {formatCurrency(4500000, currentLocale)}
+                </div>
+                <span className="text-[9px] text-emerald-400 font-extrabold block">
+                  {t('authLayoutShowcaseMetricCollected')}
+                </span>
               </div>
 
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">{t("authLayoutShowcaseMetricUtilities")}</span>
-                <div className="text-base font-black text-white">{formatCurrency(680000, currentLocale)}</div>
-                <span className="text-[9px] text-[#2AC1BC] font-extrabold block">{t("authLayoutShowcaseMetricAutoOcr")}</span>
+                <span className="text-[10px] text-zinc-400 font-bold block">
+                  {t('authLayoutShowcaseMetricUtilities')}
+                </span>
+                <div className="text-base font-black text-white">
+                  {formatCurrency(680000, currentLocale)}
+                </div>
+                <span className="text-[9px] text-[#2AC1BC] font-extrabold block">
+                  {t('authLayoutShowcaseMetricAutoOcr')}
+                </span>
               </div>
 
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">{t("authLayoutShowcaseMetricOccupancy")}</span>
+                <span className="text-[10px] text-zinc-400 font-bold block">
+                  {t('authLayoutShowcaseMetricOccupancy')}
+                </span>
                 <div className="text-base font-black text-white">98.5%</div>
-                <span className="text-[9px] text-[#FF6B35] font-extrabold block">{t("authLayoutShowcaseMetricOccupancyGrowth")}</span>
+                <span className="text-[9px] text-[#FF6B35] font-extrabold block">
+                  {t('authLayoutShowcaseMetricOccupancyGrowth')}
+                </span>
               </div>
             </div>
 
@@ -98,12 +111,16 @@ export default function AuthLayout({
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-white">{t("authLayoutShowcaseVietQrTitle")}</h4>
-                  <p className="text-[10px] text-zinc-400 font-medium">{t("authLayoutShowcaseVietQrDesc")}</p>
+                  <h4 className="text-xs font-black text-white">
+                    {t('authLayoutShowcaseVietQrTitle')}
+                  </h4>
+                  <p className="text-[10px] text-zinc-400 font-medium">
+                    {t('authLayoutShowcaseVietQrDesc')}
+                  </p>
                 </div>
               </div>
               <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-lg shrink-0">
-                {t("authLayoutShowcaseVietQrSuccess")}
+                {t('authLayoutShowcaseVietQrSuccess')}
               </span>
             </div>
 
@@ -113,24 +130,25 @@ export default function AuthLayout({
                 NQ
               </div>
               <div className="space-y-0.5">
-                <h5 className="text-xs font-extrabold text-white">{t("authLayoutTestimonialAuthor")}</h5>
-                <p className="text-[10px] text-zinc-400 font-medium">{t("authLayoutTestimonialRole")}</p>
+                <h5 className="text-xs font-extrabold text-white">
+                  {t('authLayoutTestimonialAuthor')}
+                </h5>
+                <p className="text-[10px] text-zinc-400 font-medium">
+                  {t('authLayoutTestimonialRole')}
+                </p>
                 <div className="flex items-center gap-1 text-[10px] text-amber-400 font-black pt-0.5">
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
-                  <span className="text-zinc-300 ml-1">{t("authLayoutTestimonialQuote")}</span>
+                  <span className="text-zinc-300 ml-1">{t('authLayoutTestimonialQuote')}</span>
                 </div>
               </div>
             </div>
-
           </div>
-
         </div>
-
       </div>
     </div>
-  );
+  )
 }

@@ -1,12 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsDateString,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Matches,
-  MaxLength,
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsDateString, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator'
 
 export class OnboardStaffDto {
   @ApiProperty({
@@ -18,7 +11,7 @@ export class OnboardStaffDto {
   @Matches(/^(0|\+84)[3|5|7|8|9][0-9]{8}$|^[0-9]{9,15}$/, {
     message: 'Số điện thoại không hợp lệ',
   })
-  phoneNumber: string;
+  phoneNumber: string
 
   @ApiPropertyOptional({
     description: 'Full name of staff member (required if creating a new user)',
@@ -27,7 +20,7 @@ export class OnboardStaffDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  fullName?: string;
+  fullName?: string
 
   @ApiPropertyOptional({
     description: 'ID of an existing job position for this property',
@@ -35,7 +28,7 @@ export class OnboardStaffDto {
   })
   @IsOptional()
   @IsString()
-  positionId?: string;
+  positionId?: string
 
   @ApiPropertyOptional({
     description: 'Inline creation of a new job position name if positionId is not supplied',
@@ -44,7 +37,7 @@ export class OnboardStaffDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  newPositionName?: string;
+  newPositionName?: string
 
   @ApiPropertyOptional({
     description: 'Duties and responsibilities description for inline position creation',
@@ -52,7 +45,7 @@ export class OnboardStaffDto {
   })
   @IsOptional()
   @IsString()
-  newPositionDescription?: string;
+  newPositionDescription?: string
 
   @ApiPropertyOptional({
     description: 'Employment start date in ISO format (defaults to current timestamp)',
@@ -60,7 +53,7 @@ export class OnboardStaffDto {
   })
   @IsOptional()
   @IsDateString()
-  joinedAt?: string;
+  joinedAt?: string
 
   @ApiPropertyOptional({
     description: 'Optional note or assignment details',
@@ -68,5 +61,5 @@ export class OnboardStaffDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

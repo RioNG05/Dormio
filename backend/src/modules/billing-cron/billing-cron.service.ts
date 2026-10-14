@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { InvoicesService } from '../invoices/invoices.service';
-import { DepositsService } from '../deposits/deposits.service';
+import { Injectable, Logger } from '@nestjs/common'
+import { Cron, CronExpression } from '@nestjs/schedule'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
+import { InvoicesService } from '../invoices/invoices.service'
+import { DepositsService } from '../deposits/deposits.service'
 
 /**
  * BillingCronService — UC-L-06 Part 1 / UC-T-02 / UC-PU-04 Step 7
@@ -25,7 +25,7 @@ import { DepositsService } from '../deposits/deposits.service';
  */
 @Injectable()
 export class BillingCronService {
-  private readonly logger = new Logger(BillingCronService.name);
+  private readonly logger = new Logger(BillingCronService.name)
 
   constructor(
     private readonly prisma: PrismaService,
@@ -38,26 +38,24 @@ export class BillingCronService {
 
   @Cron(CronExpression.EVERY_DAY_AT_6AM)
   async runDailyBillingCron(): Promise<void> {
-    const today = new Date();
-    const dayToday = today.getDate(); // 1-31
+    const today = new Date()
+    const dayToday = today.getDate() // 1-31
 
     // Day-of-month 5 days from now (handles month-boundary wraparound)
-    const fiveDaysLater = new Date(today);
-    fiveDaysLater.setDate(today.getDate() + 5);
-    const dayReminder = fiveDaysLater.getDate(); // 1-31
+    const fiveDaysLater = new Date(today)
+    fiveDaysLater.setDate(today.getDate() + 5)
+    const dayReminder = fiveDaysLater.getDate() // 1-31
 
-    this.logger.log(
-      `[BillingCron] Running — today=${dayToday}, reminderDay=${dayReminder}`,
-    );
+    this.logger.log(`[BillingCron] Running — today=${dayToday}, reminderDay=${dayReminder}`)
 
     await Promise.all([
       this.processBillingReminders(dayReminder),
       this.processBillingDue(dayToday),
       this.invoicesService.flipOverdueInvoices(),
       this.depositsService.processAutoRefundPlatformDeposits(),
-    ]);
+    ])
 
-    this.logger.log('[BillingCron] Completed');
+    this.logger.log('[BillingCron] Completed')
   }
 
   // ─── Internal: billing_reminder batch ────────────────────────────────────────
@@ -69,18 +67,18 @@ export class BillingCronService {
    * @param targetDay - the day-of-month that is 5 days from today
    */
   async processBillingReminders(targetDay: number): Promise<void> {
-    const contracts = await this.fetchActiveContractsForDay(targetDay);
+    const contracts = await this.fetchActiveContractsForDay(targetDay)
     this.logger.log(
       `[BillingCron] billing_reminder: ${contracts.length} contract(s) for day ${targetDay}`,
-    );
+    )
 
     for (const contract of contracts) {
-      const primaryTenant = this.getPrimaryTenant(contract);
+      const primaryTenant = this.getPrimaryTenant(contract)
       if (!primaryTenant) {
         this.logger.warn(
           `[BillingCron] No primary tenant found for contract ${contract.id} — skipping`,
-        );
-        continue;
+        )
+        continue
       }
 
       try {
@@ -89,12 +87,12 @@ export class BillingCronService {
           receiverId: primaryTenant.tenantId,
           boardingHouseId: contract.room.boardingHouseId,
           contractId: contract.id,
-        });
+        })
       } catch (err) {
         // Log and continue — a single failure must not block the rest of the batch
         this.logger.error(
           `[BillingCron] Failed billing_reminder for contract ${contract.id}: ${(err as Error).message}`,
-        );
+        )
       }
     }
   }
@@ -109,38 +107,32 @@ export class BillingCronService {
    * @param targetDay - today's day-of-month
    */
   async processBillingDue(targetDay: number): Promise<void> {
-    const contracts = await this.fetchActiveContractsForDay(targetDay);
+    const contracts = await this.fetchActiveContractsForDay(targetDay)
     this.logger.log(
       `[BillingCron] billing_due: ${contracts.length} contract(s) for day ${targetDay}`,
-    );
+    )
 
     for (const contract of contracts) {
-      const primaryTenant = this.getPrimaryTenant(contract);
+      const primaryTenant = this.getPrimaryTenant(contract)
       if (!primaryTenant) {
         this.logger.warn(
           `[BillingCron] No primary tenant found for contract ${contract.id} — skipping`,
-        );
-        continue;
+        )
+        continue
       }
 
       // Check if the room has any active metered services
       const hasMeteredServices = contract.room.roomServices.some(
-        (rs) => rs.service.isMetered && rs.service.status === 'active',
-      );
+        rs => rs.service.isMetered && rs.service.status === 'active',
+      )
 
       try {
         // UC-L-06 Part 1 Step 3 / Part 3:
         // Automatically generate monthly draft invoice for this cycle (idempotent)
         if (!hasMeteredServices) {
-          await this.invoicesService.generateFlatRateInvoice(
-            contract.id,
-            new Date(),
-          );
+          await this.invoicesService.generateFlatRateInvoice(contract.id, new Date())
         } else {
-          await this.invoicesService.generateMonthlyDraftInvoice(
-            contract.id,
-            new Date(),
-          );
+          await this.invoicesService.generateMonthlyDraftInvoice(contract.id, new Date())
         }
 
         await this.notificationsService.createBillingDueNotification({
@@ -149,11 +141,11 @@ export class BillingCronService {
           boardingHouseId: contract.room.boardingHouseId,
           contractId: contract.id,
           hasMeteredServices,
-        });
+        })
       } catch (err) {
         this.logger.error(
           `[BillingCron] Failed billing_due for contract ${contract.id}: ${(err as Error).message}`,
-        );
+        )
       }
     }
   }
@@ -200,7 +192,7 @@ export class BillingCronService {
           },
         },
       },
-    });
+    })
   }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────
@@ -208,10 +200,6 @@ export class BillingCronService {
   private getPrimaryTenant(
     contract: Awaited<ReturnType<typeof this.fetchActiveContractsForDay>>[number],
   ) {
-    return (
-      contract.tenantContracts.find((tc) => tc.isPrimary) ??
-      contract.tenantContracts[0] ??
-      null
-    );
+    return contract.tenantContracts.find(tc => tc.isPrimary) ?? contract.tenantContracts[0] ?? null
   }
 }

@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Gauge,
   Zap,
@@ -16,83 +16,82 @@ import {
   Sparkles,
   Info,
   Calendar,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   meterReadingService,
   ActiveMeteredServicesResponse,
   ConfirmReadingsResponse,
-} from "@/services/meter-reading.service";
-import Link from "next/link";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { formatCurrency } from "@/utils";
+} from '@/services/meter-reading.service'
+import Link from 'next/link'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { formatCurrency } from '@/utils'
 
 export default function TenantMeterReadingsPage() {
-  const t = useTranslations("tenantPortal");
-  const { locale } = useLanguage();
+  const t = useTranslations('tenantPortal')
+  const { locale } = useLanguage()
 
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<ActiveMeteredServicesResponse | null>(null);
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<ActiveMeteredServicesResponse | null>(null)
   const [readingsState, setReadingsState] = useState<
     Record<
       string,
       {
-        readingValue: number | null;
-        imageUrl: string | null;
-        isScanning: boolean;
-        isSaved: boolean;
-        isEditing: boolean;
-        draftValue: string;
+        readingValue: number | null
+        imageUrl: string | null
+        isScanning: boolean
+        isSaved: boolean
+        isEditing: boolean
+        draftValue: string
       }
     >
-  >({});
+  >({})
 
   // Confirmation modal & Invoice result state
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [generatedInvoice, setGeneratedInvoice] =
-    useState<ConfirmReadingsResponse | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [generatedInvoice, setGeneratedInvoice] = useState<ConfirmReadingsResponse | null>(null)
 
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     async function loadData() {
       try {
-        const res = await meterReadingService.getActiveMeteredServices();
-        if (!isMounted) return;
-        setData(res);
+        const res = await meterReadingService.getActiveMeteredServices()
+        if (!isMounted) return
+        setData(res)
 
         // Initialize local state from response
-        const stateMap: typeof readingsState = {};
-        res.meteredServices.forEach((s) => {
-          const val = s.currentReading?.readingValue ?? null;
+        const stateMap: typeof readingsState = {}
+        res.meteredServices.forEach(s => {
+          const val = s.currentReading?.readingValue ?? null
           stateMap[s.serviceId] = {
             readingValue: val,
             imageUrl: s.currentReading?.imageUrl ?? null,
             isScanning: false,
             isSaved: val !== null,
             isEditing: false,
-            draftValue: val !== null ? String(val) : "",
-          };
-        });
-        setReadingsState(stateMap);
+            draftValue: val !== null ? String(val) : '',
+          }
+        })
+        setReadingsState(stateMap)
       } catch (err: unknown) {
-        console.warn("API load error, loading demo preview state:", err);
-        if (!isMounted) return;
+        console.warn('API load error, loading demo preview state:', err)
+        if (!isMounted) return
         // Fallback demo state for tenant if local testing
         const mockData: ActiveMeteredServicesResponse = {
-          roomId: "room-demo",
-          roomNumber: "P.302",
-          contractId: "contract-demo",
+          roomId: 'room-demo',
+          roomNumber: 'P.302',
+          contractId: 'contract-demo',
           monthlyPaymentDate: 5,
           meteredServices: [
             {
-              serviceId: "srv-elec-demo",
-              serviceName: t("tenantServiceElectricity"),
+              serviceId: 'srv-elec-demo',
+              serviceName: t('tenantServiceElectricity'),
               unitPrice: 3500,
-              unit: "kWh",
+              unit: 'kWh',
               currentReading: null,
               previousReading: {
                 readingValue: 1420,
@@ -102,10 +101,10 @@ export default function TenantMeterReadingsPage() {
               isCompleted: false,
             },
             {
-              serviceId: "srv-water-demo",
-              serviceName: t("tenantServiceWater"),
+              serviceId: 'srv-water-demo',
+              serviceName: t('tenantServiceWater'),
               unitPrice: 25000,
-              unit: "m³",
+              unit: 'm³',
               currentReading: null,
               previousReading: {
                 readingValue: 68,
@@ -118,88 +117,85 @@ export default function TenantMeterReadingsPage() {
           totalMeteredServices: 2,
           completedMeteredServices: 0,
           isAllCompleted: false,
-        };
-        setData(mockData);
+        }
+        setData(mockData)
         setReadingsState({
-          "srv-elec-demo": {
+          'srv-elec-demo': {
             readingValue: null,
             imageUrl: null,
             isScanning: false,
             isSaved: false,
             isEditing: false,
-            draftValue: "",
+            draftValue: '',
           },
-          "srv-water-demo": {
+          'srv-water-demo': {
             readingValue: null,
             imageUrl: null,
             isScanning: false,
             isSaved: false,
             isEditing: false,
-            draftValue: "",
+            draftValue: '',
           },
-        });
+        })
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setLoading(false)
         }
       }
     }
 
-    loadData();
+    loadData()
 
     return () => {
-      isMounted = false;
-    };
-  }, []);
+      isMounted = false
+    }
+  }, [])
 
   // Helper to compress camera / gallery photos before uploading
   const compressImageFile = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (readerEvent) => {
-        const image = new window.Image();
+    return new Promise(resolve => {
+      const reader = new FileReader()
+      reader.onload = readerEvent => {
+        const image = new window.Image()
         image.onload = () => {
-          const maxDim = 1280;
-          let { width, height } = image;
+          const maxDim = 1280
+          let { width, height } = image
           if (width > maxDim || height > maxDim) {
             if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
+              height = Math.round((height * maxDim) / width)
+              width = maxDim
             } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+              width = Math.round((width * maxDim) / height)
+              height = maxDim
             }
           }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
+          const canvas = document.createElement('canvas')
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
           if (ctx) {
-            ctx.drawImage(image, 0, 0, width, height);
-            resolve(canvas.toDataURL("image/jpeg", 0.82));
+            ctx.drawImage(image, 0, 0, width, height)
+            resolve(canvas.toDataURL('image/jpeg', 0.82))
           } else {
-            resolve(readerEvent.target?.result as string);
+            resolve(readerEvent.target?.result as string)
           }
-        };
-        image.onerror = () => resolve(readerEvent.target?.result as string);
-        image.src = readerEvent.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+        }
+        image.onerror = () => resolve(readerEvent.target?.result as string)
+        image.src = readerEvent.target?.result as string
+      }
+      reader.readAsDataURL(file)
+    })
+  }
 
   // Handle Photo Selection & OCR Upload
-  const handlePhotoUpload = async (
-    serviceId: string,
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handlePhotoUpload = async (serviceId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
     // Compress photo to clean lightweight JPEG
-    const base64Url = await compressImageFile(file);
+    const base64Url = await compressImageFile(file)
 
-    setReadingsState((prev) => ({
+    setReadingsState(prev => ({
       ...prev,
       [serviceId]: {
         ...prev[serviceId],
@@ -207,78 +203,73 @@ export default function TenantMeterReadingsPage() {
         isScanning: true,
         isEditing: false,
       },
-    }));
+    }))
 
     try {
       // Call backend upload & OCR extraction endpoint
       const res = await meterReadingService.uploadMeterReading({
         serviceId,
         imageUrl: base64Url,
-      });
+      })
 
-        setReadingsState((prev) => ({
+      setReadingsState(prev => ({
+        ...prev,
+        [serviceId]: {
+          readingValue: res.readingValue,
+          imageUrl: base64Url,
+          isScanning: false,
+          isSaved: true,
+          isEditing: false,
+          draftValue: String(res.readingValue),
+        },
+      }))
+    } catch (err: unknown) {
+      console.warn('OCR upload API error, simulating local scan:', err)
+      // Fallback simulation for offline UI demo
+      setTimeout(() => {
+        const isWater = serviceId.includes('water')
+        const simulatedVal = isWater ? 74 : 1515
+        setReadingsState(prev => ({
           ...prev,
           [serviceId]: {
-            readingValue: res.readingValue,
+            readingValue: simulatedVal,
             imageUrl: base64Url,
             isScanning: false,
             isSaved: true,
             isEditing: false,
-            draftValue: String(res.readingValue),
+            draftValue: String(simulatedVal),
           },
-        }));
-      } catch (err: unknown) {
-        console.warn("OCR upload API error, simulating local scan:", err);
-        // Fallback simulation for offline UI demo
-        setTimeout(() => {
-          const isWater = serviceId.includes("water");
-          const simulatedVal = isWater ? 74 : 1515;
-          setReadingsState((prev) => ({
-            ...prev,
-            [serviceId]: {
-              readingValue: simulatedVal,
-              imageUrl: base64Url,
-              isScanning: false,
-              isSaved: true,
-              isEditing: false,
-              draftValue: String(simulatedVal),
-            },
-          }));
-        }, 1200);
-      }
-    };
+        }))
+      }, 1200)
+    }
+  }
 
   // Handle manual correction save
   const handleSaveCorrection = async (serviceId: string) => {
-    const currentState = readingsState[serviceId];
-    if (!currentState) return;
+    const currentState = readingsState[serviceId]
+    if (!currentState) return
 
-    const parsed = parseFloat(currentState.draftValue);
+    const parsed = parseFloat(currentState.draftValue)
     if (isNaN(parsed) || parsed < 0) {
-      alert(t("invalidNumberError"));
-      return;
+      alert(t('invalidNumberError'))
+      return
     }
 
     try {
-      const serviceItem = data?.meteredServices.find(
-        (s) => s.serviceId === serviceId,
-      );
-      const existingReadingId = serviceItem?.currentReading?.id;
+      const serviceItem = data?.meteredServices.find(s => s.serviceId === serviceId)
+      const existingReadingId = serviceItem?.currentReading?.id
 
       if (existingReadingId) {
-        await meterReadingService.updateMeterReading(
-          existingReadingId,
-          parsed,
-        );
+        await meterReadingService.updateMeterReading(existingReadingId, parsed)
       } else if (currentState.imageUrl) {
         await meterReadingService.uploadMeterReading({
           serviceId,
           imageUrl: currentState.imageUrl,
           readingValue: parsed,
-        });
+        })
       }
 
-      setReadingsState((prev) => ({
+      setReadingsState(prev => ({
         ...prev,
         [serviceId]: {
           ...prev[serviceId],
@@ -286,10 +277,10 @@ export default function TenantMeterReadingsPage() {
           isSaved: true,
           isEditing: false,
         },
-      }));
+      }))
     } catch (err) {
-      console.warn("Error updating reading, applying locally:", err);
-      setReadingsState((prev) => ({
+      console.warn('Error updating reading, applying locally:', err)
+      setReadingsState(prev => ({
         ...prev,
         [serviceId]: {
           ...prev[serviceId],
@@ -297,59 +288,56 @@ export default function TenantMeterReadingsPage() {
           isSaved: true,
           isEditing: false,
         },
-      }));
+      }))
     }
-  };
+  }
 
   // Compute completion status
-  const servicesList = data?.meteredServices || [];
+  const servicesList = data?.meteredServices || []
   const completedCount = servicesList.filter(
-    (s) =>
+    s =>
       readingsState[s.serviceId]?.readingValue !== null &&
       readingsState[s.serviceId]?.readingValue !== undefined,
-  ).length;
-  const isReadyToConfirm =
-    servicesList.length > 0 && completedCount === servicesList.length;
+  ).length
+  const isReadyToConfirm = servicesList.length > 0 && completedCount === servicesList.length
 
   // Handle Confirm & Generate Invoice
   const handleConfirmSubmit = async () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const invoiceRes =
-        await meterReadingService.confirmAndGenerateInvoice();
-      setGeneratedInvoice(invoiceRes);
-      setShowConfirmModal(false);
+      const invoiceRes = await meterReadingService.confirmAndGenerateInvoice()
+      setGeneratedInvoice(invoiceRes)
+      setShowConfirmModal(false)
     } catch (err: unknown) {
-      console.warn("Confirm API failed, generating fallback preview:", err);
+      console.warn('Confirm API failed, generating fallback preview:', err)
       // Demo preview if offline
-      const items = servicesList.map((s) => {
-        const current = readingsState[s.serviceId]?.readingValue || 0;
-        const prev = s.previousReading?.readingValue || 0;
-        const consumption = Math.max(0, current - prev) || current;
+      const items = servicesList.map(s => {
+        const current = readingsState[s.serviceId]?.readingValue || 0
+        const prev = s.previousReading?.readingValue || 0
+        const consumption = Math.max(0, current - prev) || current
         return {
           id: `item-${s.serviceId}`,
           title: `${s.serviceName} (${consumption} ${s.unit})`,
           quantity: consumption,
           unitPrice: s.unitPrice,
           amount: consumption * s.unitPrice,
-        };
-      });
+        }
+      })
 
-      const rentAmount = 3500000;
-      const total =
-        rentAmount + items.reduce((sum, item) => sum + item.amount, 0);
+      const rentAmount = 3500000
+      const total = rentAmount + items.reduce((sum, item) => sum + item.amount, 0)
 
       setGeneratedInvoice({
         invoiceId: `INV-${Date.now().toString().slice(-6)}`,
-        status: "unpaid",
+        status: 'unpaid',
         totalAmount: total,
         dueDate: new Date(Date.now() + 5 * 86400000).toISOString(),
-        roomId: data?.roomId || "r1",
-        contractId: data?.contractId || "c1",
+        roomId: data?.roomId || 'r1',
+        contractId: data?.contractId || 'c1',
         items: [
           {
-            id: "rent-1",
-            title: t("roomRent"),
+            id: 'rent-1',
+            title: t('roomRent'),
             quantity: 1,
             unitPrice: rentAmount,
             amount: rentAmount,
@@ -357,33 +345,31 @@ export default function TenantMeterReadingsPage() {
           ...items,
         ],
         vietQrPayload: `00020101021238580010A0000007270126000697042201121234567890520400005303704540${total}5802VN62170813DORMIO_INV`,
-      });
-      setShowConfirmModal(false);
+      })
+      setShowConfirmModal(false)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const getServiceIcon = (name: string) => {
-    const lower = name.toLowerCase();
-    if (lower.includes("điện") || lower.includes("electric")) {
-      return <Zap className="w-5 h-5 text-amber-500" />;
+    const lower = name.toLowerCase()
+    if (lower.includes('điện') || lower.includes('electric')) {
+      return <Zap className="w-5 h-5 text-amber-500" />
     }
-    if (lower.includes("nước") || lower.includes("water")) {
-      return <Droplets className="w-5 h-5 text-sky-500" />;
+    if (lower.includes('nước') || lower.includes('water')) {
+      return <Droplets className="w-5 h-5 text-sky-500" />
     }
-    return <Gauge className="w-5 h-5 text-teal-600" />;
-  };
+    return <Gauge className="w-5 h-5 text-teal-600" />
+  }
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm font-medium text-slate-500">
-          {t("loadingMeterServices")}
-        </p>
+        <p className="text-sm font-medium text-slate-500">{t('loadingMeterServices')}</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -394,14 +380,12 @@ export default function TenantMeterReadingsPage() {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-teal-100 text-xs font-semibold uppercase tracking-wider mb-2">
               <Gauge className="w-3.5 h-3.5" />
-              {t("currentBillingCycleBadge")}
+              {t('currentBillingCycleBadge')}
             </div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {t("meterReadingsTitle", { room: data?.roomNumber || t("roomNumber") })}
+              {t('meterReadingsTitle', { room: data?.roomNumber || t('roomNumber') })}
             </h1>
-            <p className="text-teal-100 text-sm mt-1 max-w-xl">
-              {t("meterReadingsDesc")}
-            </p>
+            <p className="text-teal-100 text-sm mt-1 max-w-xl">{t('meterReadingsDesc')}</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 flex items-center gap-4 self-start md:self-auto">
@@ -409,11 +393,9 @@ export default function TenantMeterReadingsPage() {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <div className="text-xs text-teal-100 font-medium">
-                {t("meterClosingDeadline")}
-              </div>
+              <div className="text-xs text-teal-100 font-medium">{t('meterClosingDeadline')}</div>
               <div className="text-lg font-bold">
-                {t("monthlyClosingDate", { day: data?.monthlyPaymentDate || 5 })}
+                {t('monthlyClosingDate', { day: data?.monthlyPaymentDate || 5 })}
               </div>
             </div>
           </div>
@@ -429,21 +411,17 @@ export default function TenantMeterReadingsPage() {
           <div className="flex items-center gap-2">
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                isReadyToConfirm
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-teal-100 text-teal-700"
+                isReadyToConfirm ? 'bg-emerald-100 text-emerald-700' : 'bg-teal-100 text-teal-700'
               }`}
             >
               {completedCount}/{servicesList.length}
             </div>
             <div>
-              <h3 className="font-semibold text-slate-800 text-sm">
-                {t("meterInputProgress")}
-              </h3>
+              <h3 className="font-semibold text-slate-800 text-sm">{t('meterInputProgress')}</h3>
               <p className="text-xs text-slate-500">
                 {isReadyToConfirm
-                  ? t("allMetersReady")
-                  : t("metersRemainingCount", {
+                  ? t('allMetersReady')
+                  : t('metersRemainingCount', {
                       count: servicesList.length - completedCount,
                     })}
               </p>
@@ -454,19 +432,19 @@ export default function TenantMeterReadingsPage() {
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
                 isReadyToConfirm
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "bg-amber-50 text-amber-700 border border-amber-200"
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-amber-50 text-amber-700 border border-amber-200'
               }`}
             >
               {isReadyToConfirm ? (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  {t("completedStatus")}
+                  {t('completedStatus')}
                 </>
               ) : (
                 <>
                   <Clock className="w-3.5 h-3.5" />
-                  {t("pendingInputStatus")}
+                  {t('pendingInputStatus')}
                 </>
               )}
             </span>
@@ -477,15 +455,11 @@ export default function TenantMeterReadingsPage() {
         <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
-              isReadyToConfirm
-                ? "bg-emerald-500"
-                : "bg-gradient-to-r from-teal-500 to-cyan-500"
+              isReadyToConfirm ? 'bg-emerald-500' : 'bg-gradient-to-r from-teal-500 to-cyan-500'
             }`}
             style={{
               width: `${
-                servicesList.length > 0
-                  ? (completedCount / servicesList.length) * 100
-                  : 0
+                servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
               }%`,
             }}
           ></div>
@@ -499,38 +473,32 @@ export default function TenantMeterReadingsPage() {
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
               <Check className="w-6 h-6" />
             </div>
-            <h3 className="font-semibold text-slate-800">
-              {t("noMeteredServicesTitle")}
-            </h3>
-            <p className="text-sm text-slate-500 max-w-md mx-auto">
-              {t("noMeteredServicesDesc")}
-            </p>
+            <h3 className="font-semibold text-slate-800">{t('noMeteredServicesTitle')}</h3>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">{t('noMeteredServicesDesc')}</p>
           </div>
         ) : (
-          servicesList.map((service) => {
+          servicesList.map(service => {
             const state = readingsState[service.serviceId] || {
               readingValue: null,
               imageUrl: null,
               isScanning: false,
               isSaved: false,
               isEditing: false,
-              draftValue: "",
-            };
+              draftValue: '',
+            }
 
-            const prevVal = service.previousReading?.readingValue ?? 0;
-            const currentVal = state.readingValue ?? null;
-            const consumption =
-              currentVal !== null ? Math.max(0, currentVal - prevVal) : null;
-            const estimatedCost =
-              consumption !== null ? consumption * service.unitPrice : null;
+            const prevVal = service.previousReading?.readingValue ?? 0
+            const currentVal = state.readingValue ?? null
+            const consumption = currentVal !== null ? Math.max(0, currentVal - prevVal) : null
+            const estimatedCost = consumption !== null ? consumption * service.unitPrice : null
 
             return (
               <div
                 key={service.serviceId}
                 className={`bg-white border rounded-2xl p-5 md:p-6 transition-all shadow-sm ${
                   state.readingValue !== null
-                    ? "border-emerald-200 ring-1 ring-emerald-100"
-                    : "border-slate-200 hover:border-teal-300"
+                    ? 'border-emerald-200 ring-1 ring-emerald-100'
+                    : 'border-slate-200 hover:border-teal-300'
                 }`}
               >
                 {/* Service Header */}
@@ -540,26 +508,23 @@ export default function TenantMeterReadingsPage() {
                       {getServiceIcon(service.serviceName)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-base">
-                        {service.serviceName}
-                      </h3>
+                      <h3 className="font-bold text-slate-900 text-base">{service.serviceName}</h3>
                       <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
                         <span>
-                          {t("unitPriceLabel")}{" "}
+                          {t('unitPriceLabel')}{' '}
                           <strong className="text-slate-700">
-                            {formatCurrency(service.unitPrice, locale)} /{" "}
-                            {service.unit}
+                            {formatCurrency(service.unitPrice, locale)} / {service.unit}
                           </strong>
                         </span>
                         {service.previousReading && (
                           <>
                             <span>•</span>
                             <span>
-                              {t("previousCycleLabel")}{" "}
+                              {t('previousCycleLabel')}{' '}
                               <strong className="text-slate-700">
                                 {service.previousReading.readingValue.toLocaleString(
-                                  locale === "en" ? "en-US" : "vi-VN",
-                                )}{" "}
+                                  locale === 'en' ? 'en-US' : 'vi-VN',
+                                )}{' '}
                                 {service.unit}
                               </strong>
                             </span>
@@ -574,15 +539,17 @@ export default function TenantMeterReadingsPage() {
                     {state.readingValue !== null ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        {t("readingRecorded", {
-                          value: state.readingValue.toLocaleString(locale === "en" ? "en-US" : "vi-VN"),
+                        {t('readingRecorded', {
+                          value: state.readingValue.toLocaleString(
+                            locale === 'en' ? 'en-US' : 'vi-VN',
+                          ),
                           unit: service.unit,
                         })}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
                         <Clock className="w-3.5 h-3.5" />
-                        {t("noReadingYet")}
+                        {t('noReadingYet')}
                       </span>
                     )}
                   </div>
@@ -596,13 +563,11 @@ export default function TenantMeterReadingsPage() {
                       type="file"
                       accept="image/*"
                       capture="environment"
-                      ref={(el) => {
-                        fileInputRefs.current[service.serviceId] = el;
+                      ref={el => {
+                        fileInputRefs.current[service.serviceId] = el
                       }}
                       className="hidden"
-                      onChange={(e) =>
-                        handlePhotoUpload(service.serviceId, e)
-                      }
+                      onChange={e => handlePhotoUpload(service.serviceId, e)}
                     />
 
                     {state.imageUrl ? (
@@ -610,7 +575,7 @@ export default function TenantMeterReadingsPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={state.imageUrl}
-                          alt={t("meterImageAlt", { name: service.serviceName })}
+                          alt={t('meterImageAlt', { name: service.serviceName })}
                           className="w-full h-full object-cover"
                         />
 
@@ -621,7 +586,7 @@ export default function TenantMeterReadingsPage() {
                               <Sparkles className="w-8 h-8 text-teal-300 animate-spin" />
                             </div>
                             <span className="text-xs font-semibold tracking-wide animate-pulse">
-                              {t("ocrScanning")}
+                              {t('ocrScanning')}
                             </span>
                           </div>
                         )}
@@ -629,33 +594,27 @@ export default function TenantMeterReadingsPage() {
                         {/* Retake Photo Overlay */}
                         {!state.isScanning && (
                           <button
-                            onClick={() =>
-                              fileInputRefs.current[
-                                service.serviceId
-                              ]?.click()
-                            }
+                            onClick={() => fileInputRefs.current[service.serviceId]?.click()}
                             className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-md transition-all opacity-90 hover:opacity-100 shadow"
                           >
                             <Camera className="w-3.5 h-3.5" />
-                            {t("retakePhoto")}
+                            {t('retakePhoto')}
                           </button>
                         )}
                       </div>
                     ) : (
                       <button
-                        onClick={() =>
-                          fileInputRefs.current[service.serviceId]?.click()
-                        }
+                        onClick={() => fileInputRefs.current[service.serviceId]?.click()}
                         className="w-full aspect-video md:aspect-[4/3] rounded-xl border-2 border-dashed border-slate-300 hover:border-teal-500 bg-slate-50/50 hover:bg-teal-50/30 transition-all flex flex-col items-center justify-center p-4 text-center group cursor-pointer"
                       >
                         <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
                           <Camera className="w-6 h-6" />
                         </div>
                         <span className="text-sm font-semibold text-slate-700 group-hover:text-teal-700">
-                          {t("takeMeterPhoto", { name: service.serviceName })}
+                          {t('takeMeterPhoto', { name: service.serviceName })}
                         </span>
                         <span className="text-xs text-slate-400 mt-0.5">
-                          {t("cameraOrFileSupport")}
+                          {t('cameraOrFileSupport')}
                         </span>
                       </button>
                     )}
@@ -667,13 +626,13 @@ export default function TenantMeterReadingsPage() {
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-                          {t("meterReadingLabelWithUnit", { unit: service.unit })}
+                          {t('meterReadingLabelWithUnit', { unit: service.unit })}
                         </label>
 
                         {state.readingValue !== null && !state.isEditing && (
                           <button
                             onClick={() =>
-                              setReadingsState((prev) => ({
+                              setReadingsState(prev => ({
                                 ...prev,
                                 [service.serviceId]: {
                                   ...prev[service.serviceId],
@@ -683,7 +642,7 @@ export default function TenantMeterReadingsPage() {
                             }
                             className="text-xs text-teal-600 hover:text-teal-700 font-semibold hover:underline"
                           >
-                            {t("manualEditBtn")}
+                            {t('manualEditBtn')}
                           </button>
                         )}
                       </div>
@@ -694,10 +653,10 @@ export default function TenantMeterReadingsPage() {
                             <input
                               type="number"
                               step="any"
-                              placeholder={t("enterMeterReadingPlaceholder")}
+                              placeholder={t('enterMeterReadingPlaceholder')}
                               value={state.draftValue}
-                              onChange={(e) =>
-                                setReadingsState((prev) => ({
+                              onChange={e =>
+                                setReadingsState(prev => ({
                                   ...prev,
                                   [service.serviceId]: {
                                     ...prev[service.serviceId],
@@ -713,26 +672,26 @@ export default function TenantMeterReadingsPage() {
                           </div>
 
                           <Button
-                            onClick={() =>
-                              handleSaveCorrection(service.serviceId)
-                            }
+                            onClick={() => handleSaveCorrection(service.serviceId)}
                             className="bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm px-4 py-2.5 h-auto rounded-lg"
                           >
-                            {t("btnSaveReading")}
+                            {t('btnSaveReading')}
                           </Button>
                         </div>
                       ) : (
                         <div className="flex items-baseline justify-between bg-white border border-emerald-200 rounded-lg px-4 py-3">
                           <div>
                             <span className="text-2xl font-black text-slate-900 tracking-tight">
-                              {state.readingValue.toLocaleString(locale === "en" ? "en-US" : "vi-VN")}
+                              {state.readingValue.toLocaleString(
+                                locale === 'en' ? 'en-US' : 'vi-VN',
+                              )}
                             </span>
                             <span className="text-xs font-semibold text-slate-500 ml-1.5">
                               {service.unit}
                             </span>
                           </div>
                           <span className="text-xs text-emerald-700 bg-emerald-50 font-medium px-2 py-0.5 rounded">
-                            {t("validReadingBadge")}
+                            {t('validReadingBadge')}
                           </span>
                         </div>
                       )}
@@ -741,18 +700,16 @@ export default function TenantMeterReadingsPage() {
                       {consumption !== null && (
                         <div className="pt-2 border-t border-slate-200/60 grid grid-cols-2 gap-2 text-xs">
                           <div>
-                            <span className="text-slate-500">{t("consumptionLabel")}</span>
+                            <span className="text-slate-500">{t('consumptionLabel')}</span>
                             <div className="font-bold text-slate-800 text-sm mt-0.5">
-                              {consumption.toLocaleString(locale === "en" ? "en-US" : "vi-VN")}{" "}
+                              {consumption.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')}{' '}
                               {service.unit}
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-slate-500">
-                              {t("estimatedCostLabel")}
-                            </span>
+                            <span className="text-slate-500">{t('estimatedCostLabel')}</span>
                             <div className="font-bold text-teal-700 text-sm mt-0.5">
-                              {estimatedCost !== null ? formatCurrency(estimatedCost, locale) : "-"}
+                              {estimatedCost !== null ? formatCurrency(estimatedCost, locale) : '-'}
                             </div>
                           </div>
                         </div>
@@ -761,7 +718,7 @@ export default function TenantMeterReadingsPage() {
                   </div>
                 </div>
               </div>
-            );
+            )
           })
         )}
       </div>
@@ -771,9 +728,7 @@ export default function TenantMeterReadingsPage() {
         <div className="sticky bottom-4 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Info className="w-4 h-4 text-teal-600 shrink-0" />
-            <span>
-              {t("confirmWarningNotice")}
-            </span>
+            <span>{t('confirmWarningNotice')}</span>
           </div>
 
           <Button
@@ -781,11 +736,11 @@ export default function TenantMeterReadingsPage() {
             disabled={!isReadyToConfirm}
             className={`w-full sm:w-auto px-6 py-3 h-auto font-semibold rounded-xl transition-all shadow ${
               isReadyToConfirm
-                ? "bg-teal-600 hover:bg-teal-700 text-white hover:shadow-teal-500/20"
-                : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                ? 'bg-teal-600 hover:bg-teal-700 text-white hover:shadow-teal-500/20'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
-            {t("confirmAndViewInvoiceBtn")}
+            {t('confirmAndViewInvoiceBtn')}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -800,9 +755,7 @@ export default function TenantMeterReadingsPage() {
                 <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
                   <FileCheck className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  {t("confirmMeterModalTitle")}
-                </h3>
+                <h3 className="text-lg font-bold text-slate-900">{t('confirmMeterModalTitle')}</h3>
               </div>
               <button
                 onClick={() => setShowConfirmModal(false)}
@@ -813,7 +766,7 @@ export default function TenantMeterReadingsPage() {
             </div>
 
             <p className="text-sm text-slate-600">
-              {t("confirmMeterModalDesc", { room: data?.roomNumber || "" })}
+              {t('confirmMeterModalDesc', { room: data?.roomNumber || '' })}
             </p>
 
             {/* Summary Table */}
@@ -821,28 +774,24 @@ export default function TenantMeterReadingsPage() {
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-100/80 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-200">
                   <tr>
-                    <th className="px-3.5 py-2.5">{t("tableHeaderService")}</th>
-                    <th className="px-3 py-2.5 text-center">{t("tableHeaderOldReading")}</th>
-                    <th className="px-3 py-2.5 text-center">{t("tableHeaderNewReading")}</th>
-                    <th className="px-3.5 py-2.5 text-right">{t("tableHeaderConsumption")}</th>
+                    <th className="px-3.5 py-2.5">{t('tableHeaderService')}</th>
+                    <th className="px-3 py-2.5 text-center">{t('tableHeaderOldReading')}</th>
+                    <th className="px-3 py-2.5 text-center">{t('tableHeaderNewReading')}</th>
+                    <th className="px-3.5 py-2.5 text-right">{t('tableHeaderConsumption')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {servicesList.map((service) => {
-                    const current =
-                      readingsState[service.serviceId]?.readingValue ?? 0;
-                    const prev =
-                      service.previousReading?.readingValue ?? 0;
-                    const diff = Math.max(0, current - prev) || current;
+                  {servicesList.map(service => {
+                    const current = readingsState[service.serviceId]?.readingValue ?? 0
+                    const prev = service.previousReading?.readingValue ?? 0
+                    const diff = Math.max(0, current - prev) || current
 
                     return (
                       <tr key={service.serviceId}>
                         <td className="px-3.5 py-2.5 font-medium text-slate-800">
                           {service.serviceName}
                         </td>
-                        <td className="px-3 py-2.5 text-center text-slate-500">
-                          {prev}
-                        </td>
+                        <td className="px-3 py-2.5 text-center text-slate-500">{prev}</td>
                         <td className="px-3 py-2.5 text-center font-bold text-teal-700">
                           {current}
                         </td>
@@ -850,7 +799,7 @@ export default function TenantMeterReadingsPage() {
                           {diff} {service.unit}
                         </td>
                       </tr>
-                    );
+                    )
                   })}
                 </tbody>
               </table>
@@ -864,7 +813,7 @@ export default function TenantMeterReadingsPage() {
                 disabled={isSubmitting}
                 className="border-slate-300 text-slate-700 hover:bg-slate-100"
               >
-                {t("btnContinueEditing")}
+                {t('btnContinueEditing')}
               </Button>
 
               <Button
@@ -875,12 +824,12 @@ export default function TenantMeterReadingsPage() {
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>{t("generatingInvoice")}</span>
+                    <span>{t('generatingInvoice')}</span>
                   </div>
                 ) : (
                   <>
                     <Check className="w-4 h-4 mr-1.5" />
-                    {t("btnConfirmAndGenerate")}
+                    {t('btnConfirmAndGenerate')}
                   </>
                 )}
               </Button>
@@ -898,24 +847,26 @@ export default function TenantMeterReadingsPage() {
                 <Receipt className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-bold text-slate-900">
-                {t("invoiceGeneratedSuccessTitle")}
+                {t('invoiceGeneratedSuccessTitle')}
               </h3>
               <p className="text-xs text-slate-500">
-                {t("invoiceGeneratedSuccessDesc", { id: generatedInvoice.invoiceId })}
+                {t('invoiceGeneratedSuccessDesc', { id: generatedInvoice.invoiceId })}
               </p>
             </div>
 
             {/* Total Amount Box */}
             <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-4 text-center">
               <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">
-                {t("totalAmountDue")}
+                {t('totalAmountDue')}
               </span>
               <div className="text-3xl font-black text-teal-800 mt-1">
                 {formatCurrency(generatedInvoice.totalAmount, locale)}
               </div>
               <span className="text-xs text-slate-500 mt-1 block">
-                {t("invoiceDueDateLabel", {
-                  date: new Date(generatedInvoice.dueDate).toLocaleDateString(locale === "en" ? "en-US" : "vi-VN"),
+                {t('invoiceDueDateLabel', {
+                  date: new Date(generatedInvoice.dueDate).toLocaleDateString(
+                    locale === 'en' ? 'en-US' : 'vi-VN',
+                  ),
                 })}
               </span>
             </div>
@@ -923,17 +874,15 @@ export default function TenantMeterReadingsPage() {
             {/* Invoice Line Items */}
             <div className="border border-slate-200 rounded-xl overflow-hidden">
               <div className="bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                {t("invoiceLineItemsTitle")}
+                {t('invoiceLineItemsTitle')}
               </div>
               <div className="divide-y divide-slate-100">
-                {generatedInvoice.items.map((item) => (
+                {generatedInvoice.items.map(item => (
                   <div
                     key={item.id}
                     className="px-4 py-2.5 flex items-center justify-between text-xs"
                   >
-                    <span className="text-slate-700 font-medium">
-                      {item.title}
-                    </span>
+                    <span className="text-slate-700 font-medium">{item.title}</span>
                     <span className="font-bold text-slate-900">
                       {formatCurrency(item.amount, locale)}
                     </span>
@@ -948,19 +897,19 @@ export default function TenantMeterReadingsPage() {
                 href="/tenant/invoices"
                 className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-xs text-center transition-all"
               >
-                {t("viewInvoicesListBtn")}
+                {t('viewInvoicesListBtn')}
               </Link>
 
               <Link
                 href="/tenant/invoices"
                 className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs text-center transition-all shadow"
               >
-                {t("payNowVietQrBtn")}
+                {t('payNowVietQrBtn')}
               </Link>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

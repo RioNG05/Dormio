@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import {
   Search,
   MapPin,
@@ -21,99 +21,100 @@ import {
   Users,
   BarChart3,
   CheckCircle2,
-} from "lucide-react";
-import { formatVND } from "@/utils";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { FEATURE_FLAGS } from "@/config/features";
-import { postService, type PublicPostListing } from "@/services/post.service";
+} from 'lucide-react'
+import { formatVND } from '@/utils'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { FEATURE_FLAGS } from '@/config/features'
+import { postService, type PublicPostListing } from '@/services/post.service'
 
 // Helper: build address string from structured fields
 function buildAddressString(listing: PublicPostListing): string {
-  const addr = listing.address;
-  if (!addr) return listing.room?.boardingHouseName ?? "";
-  const parts = [addr.houseNumber, addr.street, addr.ward, addr.district, addr.province].filter(Boolean);
-  return parts.join(", ");
+  const addr = listing.address
+  if (!addr) return listing.room?.boardingHouseName ?? ''
+  const parts = [addr.houseNumber, addr.street, addr.ward, addr.district, addr.province].filter(
+    Boolean,
+  )
+  return parts.join(', ')
 }
 
 export default function HomePage() {
-  const t = useTranslations("guest");
-  const { locale } = useLanguage();
-  const router = useRouter();
+  const t = useTranslations('guest')
+  const { locale } = useLanguage()
+  const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState<"phong" | "studio" | "nguyencan">("phong");
-  const [processTab, setProcessTab] = useState<"tenant" | "landlord">("landlord");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [priceFilter, setPriceFilter] = useState("");
-  const [selectedCityFilter, setSelectedCityFilter] = useState<"all" | "hcm" | "hanoi">("all");
+  const [activeTab, setActiveTab] = useState<'phong' | 'studio' | 'nguyencan'>('phong')
+  const [processTab, setProcessTab] = useState<'tenant' | 'landlord'>('landlord')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [priceFilter, setPriceFilter] = useState('')
+  const [selectedCityFilter, setSelectedCityFilter] = useState<'all' | 'hcm' | 'hanoi'>('all')
 
   const handleSearch = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!FEATURE_FLAGS.ENABLE_BHRP) return;
-    const params = new URLSearchParams();
-    const trimmed = searchQuery.trim();
+    if (e) e.preventDefault()
+    if (!FEATURE_FLAGS.ENABLE_BHRP) return
+    const params = new URLSearchParams()
+    const trimmed = searchQuery.trim()
     if (trimmed) {
-      params.set("search", trimmed);
+      params.set('search', trimmed)
     }
     if (activeTab) {
-      params.set("type", activeTab);
+      params.set('type', activeTab)
     }
-    if (priceFilter === "under3") {
-      params.set("maxPrice", "3000000");
-    } else if (priceFilter === "3to5") {
-      params.set("minPrice", "3000000");
-      params.set("maxPrice", "5000000");
-    } else if (priceFilter === "above5") {
-      params.set("minPrice", "5000000");
+    if (priceFilter === 'under3') {
+      params.set('maxPrice', '3000000')
+    } else if (priceFilter === '3to5') {
+      params.set('minPrice', '3000000')
+      params.set('maxPrice', '5000000')
+    } else if (priceFilter === 'above5') {
+      params.set('minPrice', '5000000')
     }
-    const query = params.toString();
-    router.push(query ? `/rooms?${query}` : "/rooms");
-  };
+    const query = params.toString()
+    router.push(query ? `/rooms?${query}` : '/rooms')
+  }
 
-  const [featuredRooms, setFeaturedRooms] = useState<PublicPostListing[]>([]);
-  const [isLoadingFeatured, setIsLoadingFeatured] = useState(FEATURE_FLAGS.ENABLE_BHRP);
+  const [featuredRooms, setFeaturedRooms] = useState<PublicPostListing[]>([])
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(FEATURE_FLAGS.ENABLE_BHRP)
 
   // Fetch real featured rooms from backend API if BHRP is enabled
   useEffect(() => {
     if (!FEATURE_FLAGS.ENABLE_BHRP) {
-      setIsLoadingFeatured(false);
-      return;
+      setIsLoadingFeatured(false)
+      return
     }
 
-    let isMounted = true;
-    setIsLoadingFeatured(true);
+    let isMounted = true
+    setIsLoadingFeatured(true)
 
-    const params: { province?: string; limit: number } = { limit: 6 };
-    if (selectedCityFilter === "hcm") {
-      params.province = "Hồ Chí Minh";
-    } else if (selectedCityFilter === "hanoi") {
-      params.province = "Hà Nội";
+    const params: { province?: string; limit: number } = { limit: 6 }
+    if (selectedCityFilter === 'hcm') {
+      params.province = 'Hồ Chí Minh'
+    } else if (selectedCityFilter === 'hanoi') {
+      params.province = 'Hà Nội'
     }
 
     postService
       .browsePosts(params)
-      .then((res) => {
+      .then(res => {
         if (isMounted) {
-          setFeaturedRooms(res.data || []);
+          setFeaturedRooms(res.data || [])
         }
       })
-      .catch((err) => {
-        console.error("Failed to load featured rooms:", err);
-        if (isMounted) setFeaturedRooms([]);
+      .catch(err => {
+        console.error('Failed to load featured rooms:', err)
+        if (isMounted) setFeaturedRooms([])
       })
       .finally(() => {
-        if (isMounted) setIsLoadingFeatured(false);
-      });
+        if (isMounted) setIsLoadingFeatured(false)
+      })
 
     return () => {
-      isMounted = false;
-    };
-  }, [selectedCityFilter]);
+      isMounted = false
+    }
+  }, [selectedCityFilter])
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* High-End Professional Hero Section (Fit Screen Height & Seamless Section Transition Divider) */}
       <section className="relative min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center overflow-hidden border-b border-zinc-800">
-
         {/* Dark Radial Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
 
@@ -122,27 +123,28 @@ export default function HomePage() {
         <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-[#FF6B35]/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-
           {/* Glowing Glassmorphism Pill Badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 sm:mb-6 shadow-[0_0_25px_rgba(42,193,188,0.25)] backdrop-blur-xl transition-transform hover:scale-105">
             <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t("guestHomeBadge")}</span>
+            <span>{t('guestHomeBadge')}</span>
           </div>
 
           {/* Headline with Single Continuous Gradient from Teal to Orange on 'dễ dàng, tiện lợi' */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.18] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">{t("guestHomeTitleLine1")}</span> <br />
+            <span className="inline-block whitespace-nowrap">{t('guestHomeTitleLine1')}</span>{' '}
+            <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              {t("guestHomeTitleLine2")}
-            </span> <br />
+              {t('guestHomeTitleLine2')}
+            </span>{' '}
+            <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              {t("guestHomeTitleLine3")}
+              {t('guestHomeTitleLine3')}
             </span>
           </h1>
 
           {/* Sub-headline */}
           <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl mx-auto leading-relaxed mt-4 sm:mt-5 font-medium tracking-wide text-balance">
-            {t("guestHomeSubtitle")}
+            {t('guestHomeSubtitle')}
           </p>
 
           {/* Hero Content / Actions */}
@@ -152,49 +154,57 @@ export default function HomePage() {
               {/* Category Tabs */}
               <div className="flex items-center justify-center sm:justify-start gap-2 mb-3.5 border-b border-zinc-100 pb-3">
                 <button
-                  onClick={() => setActiveTab("phong")}
-                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "phong"
-                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                    : "text-zinc-500 font-bold hover:text-zinc-900"
-                    }`}
+                  onClick={() => setActiveTab('phong')}
+                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
+                    activeTab === 'phong'
+                      ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105'
+                      : 'text-zinc-500 font-bold hover:text-zinc-900'
+                  }`}
                 >
-                  {t("guestHomeTabRent")}
+                  {t('guestHomeTabRent')}
                 </button>
                 <button
-                  onClick={() => setActiveTab("studio")}
-                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "studio"
-                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                    : "text-zinc-500 font-bold hover:text-zinc-900"
-                    }`}
+                  onClick={() => setActiveTab('studio')}
+                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
+                    activeTab === 'studio'
+                      ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105'
+                      : 'text-zinc-500 font-bold hover:text-zinc-900'
+                  }`}
                 >
-                  {t("guestHomeTabStudio")}
+                  {t('guestHomeTabStudio')}
                 </button>
                 <button
-                  onClick={() => setActiveTab("nguyencan")}
-                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "nguyencan"
-                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                    : "text-zinc-500 font-bold hover:text-zinc-900"
-                    }`}
+                  onClick={() => setActiveTab('nguyencan')}
+                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
+                    activeTab === 'nguyencan'
+                      ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105'
+                      : 'text-zinc-500 font-bold hover:text-zinc-900'
+                  }`}
                 >
-                  {t("guestHomeTabWhole")}
+                  {t('guestHomeTabWhole')}
                 </button>
               </div>
 
               {/* Inputs Row */}
-              <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end">
+              <form
+                onSubmit={handleSearch}
+                className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end"
+              >
                 <div className="sm:col-span-5 space-y-1">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">{t("guestHomeKeywordLabel")}</label>
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
+                    {t('guestHomeKeywordLabel')}
+                  </label>
                   <div className="relative">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
                       type="text"
-                      placeholder={t("guestHomeKeywordPlaceholder")}
+                      placeholder={t('guestHomeKeywordPlaceholder')}
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleSearch();
+                      onChange={e => setSearchQuery(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleSearch()
                         }
                       }}
                       className="w-full pl-9 pr-3 h-11 text-xs font-semibold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
@@ -203,30 +213,34 @@ export default function HomePage() {
                 </div>
 
                 <div className="sm:col-span-4 space-y-1">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">{t("guestHomePriceLabel")}</label>
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
+                    {t('guestHomePriceLabel')}
+                  </label>
                   <div className="relative">
                     <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <select
                       value={priceFilter}
-                      onChange={(e) => setPriceFilter(e.target.value)}
+                      onChange={e => setPriceFilter(e.target.value)}
                       className="w-full pl-9 pr-8 h-11 text-xs font-bold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all cursor-pointer"
                     >
-                      <option value="">{t("guestHomeAllPrices")}</option>
-                      <option value="under3">{t("guestHomeUnder3m")}</option>
-                      <option value="3to5">{t("guestHomeFrom3to5m")}</option>
-                      <option value="above5">{t("guestHomeAbove5m")}</option>
+                      <option value="">{t('guestHomeAllPrices')}</option>
+                      <option value="under3">{t('guestHomeUnder3m')}</option>
+                      <option value="3to5">{t('guestHomeFrom3to5m')}</option>
+                      <option value="above5">{t('guestHomeAbove5m')}</option>
                     </select>
                     <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
                   </div>
                 </div>
 
                 <div className="sm:col-span-3 space-y-1">
-                  <span className="text-[10px] font-black text-transparent select-none uppercase tracking-wider block hidden sm:block">&nbsp;</span>
+                  <span className="text-[10px] font-black text-transparent select-none uppercase tracking-wider block hidden sm:block">
+                    &nbsp;
+                  </span>
                   <button
                     type="submit"
                     className="w-full h-11 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#FF6B35]/25 flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                   >
-                    <Search className="w-3.5 h-3.5" /> {t("guestHomeSearchNow")}
+                    <Search className="w-3.5 h-3.5" /> {t('guestHomeSearchNow')}
                   </button>
                 </div>
               </form>
@@ -237,12 +251,12 @@ export default function HomePage() {
                 <Link href="/register" className="w-full sm:w-auto">
                   <button className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] text-white font-extrabold text-sm rounded-full shadow-lg shadow-[#2AC1BC]/25 hover:shadow-[#2AC1BC]/40 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
                     <Sparkles className="w-4 h-4" />
-                    {t("guestHomeTrialBtn")}
+                    {t('guestHomeTrialBtn')}
                   </button>
                 </Link>
                 <Link href="/pricing" className="w-full sm:w-auto">
                   <button className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white font-extrabold text-sm rounded-full border border-white/20 hover:border-white/40 backdrop-blur-md hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
-                    {t("guestFeaturesViewPricingBtn")}
+                    {t('guestFeaturesViewPricingBtn')}
                     <ArrowRight className="w-4 h-4 text-[#2AC1BC]" />
                   </button>
                 </Link>
@@ -252,15 +266,15 @@ export default function HomePage() {
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-zinc-300 font-semibold">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t("guestHomeBadgeFreeTrial")}</span>
+                  <span>{t('guestHomeBadgeFreeTrial')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t("guestHomeBadgeNoCard")}</span>
+                  <span>{t('guestHomeBadgeNoCard')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t("guestHomeBadgeSupport")}</span>
+                  <span>{t('guestHomeBadgeSupport')}</span>
                 </div>
               </div>
             </div>
@@ -271,7 +285,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
               <Link href="#features">
                 <button className="px-7 py-3 bg-zinc-900/80 hover:bg-[#FF6B35] text-white font-black text-xs sm:text-sm rounded-full border border-zinc-700/80 hover:border-[#FF6B35] backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300 cursor-pointer">
-                  {t("guestHomeExploreBtn")}
+                  {t('guestHomeExploreBtn')}
                 </button>
               </Link>
             </div>
@@ -280,58 +294,62 @@ export default function HomePage() {
           {/* Social Proof Stars */}
           <div className="flex items-center justify-center gap-2 mt-5 sm:mt-6 text-xs text-zinc-400 font-medium">
             <div className="flex text-amber-400 text-sm tracking-widest">★★★★★</div>
-            <span className="text-zinc-300">
-              {t("guestHomeTrustedBy")}
-            </span>
+            <span className="text-zinc-300">{t('guestHomeTrustedBy')}</span>
           </div>
         </div>
       </section>
 
       {/* Process 3 Steps Section based on exact user reference image */}
-      <section id="features" className="py-20 bg-zinc-50/50 border-b border-zinc-100 animate-in fade-in duration-500">
+      <section
+        id="features"
+        className="py-20 bg-zinc-50/50 border-b border-zinc-100 animate-in fade-in duration-500"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-
           {/* Top Pill Badge */}
           <div className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-extrabold tracking-wider uppercase mb-3 border border-[#2AC1BC]/20">
-            {t("guestHomeProcessBadge")}
+            {t('guestHomeProcessBadge')}
           </div>
 
           {/* Main Headline */}
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-zinc-900 leading-snug">
-            <span className="block sm:inline">{t("guestHomeProcessTitle1")} </span>
-            <span className="block sm:inline">{t("guestHomeProcessTitle2")}</span>
+            <span className="block sm:inline">{t('guestHomeProcessTitle1')} </span>
+            <span className="block sm:inline">{t('guestHomeProcessTitle2')}</span>
           </h2>
           <p className="text-xs sm:text-sm text-zinc-500 font-medium max-w-xl mx-auto mt-2 mb-8 leading-relaxed">
-            {t("guestHomeProcessSubtitle")}
+            {t('guestHomeProcessSubtitle')}
           </p>
 
           {/* Interactive Role Switcher Pill Tabs (only when BHRP enabled) */}
           {FEATURE_FLAGS.ENABLE_BHRP && (
             <div className="inline-flex items-center p-1 sm:p-1.5 bg-white border border-zinc-200/80 rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
               <button
-                onClick={() => setProcessTab("tenant")}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "tenant"
-                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
-                  : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                onClick={() => setProcessTab('tenant')}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  processTab === 'tenant'
+                    ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25'
+                    : 'text-zinc-500 hover:text-zinc-900'
+                }`}
               >
-                {t("guestHomeForTenant")}
+                {t('guestHomeForTenant')}
               </button>
               <button
-                onClick={() => setProcessTab("landlord")}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "landlord"
-                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
-                  : "text-zinc-500 hover:text-zinc-900"
-                  }`}
+                onClick={() => setProcessTab('landlord')}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  processTab === 'landlord'
+                    ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25'
+                    : 'text-zinc-500 hover:text-zinc-900'
+                }`}
               >
-                {t("guestHomeForLandlord")}
+                {t('guestHomeForLandlord')}
               </button>
             </div>
           )}
 
           {/* 3 Step Cards Grid */}
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left ${!FEATURE_FLAGS.ENABLE_BHRP ? "mt-10" : ""}`}>
-            {processTab === "tenant" && FEATURE_FLAGS.ENABLE_BHRP ? (
+          <div
+            className={`grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left ${!FEATURE_FLAGS.ENABLE_BHRP ? 'mt-10' : ''}`}
+          >
+            {processTab === 'tenant' && FEATURE_FLAGS.ENABLE_BHRP ? (
               <>
                 {/* Step 01 */}
                 <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
@@ -339,9 +357,11 @@ export default function HomePage() {
                     01
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">{t("guestHomeTenantStep1Title")}</h3>
+                    <h3 className="text-lg font-extrabold text-zinc-900">
+                      {t('guestHomeTenantStep1Title')}
+                    </h3>
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t("guestHomeTenantStep1Desc")}
+                      {t('guestHomeTenantStep1Desc')}
                     </p>
                   </div>
                 </div>
@@ -352,9 +372,11 @@ export default function HomePage() {
                     02
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">{t("guestHomeTenantStep2Title")}</h3>
+                    <h3 className="text-lg font-extrabold text-zinc-900">
+                      {t('guestHomeTenantStep2Title')}
+                    </h3>
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t("guestHomeTenantStep2Desc")}
+                      {t('guestHomeTenantStep2Desc')}
                     </p>
                   </div>
                 </div>
@@ -365,9 +387,11 @@ export default function HomePage() {
                     03
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">{t("guestHomeTenantStep3Title")}</h3>
+                    <h3 className="text-lg font-extrabold text-zinc-900">
+                      {t('guestHomeTenantStep3Title')}
+                    </h3>
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t("guestHomeTenantStep3Desc")}
+                      {t('guestHomeTenantStep3Desc')}
                     </p>
                   </div>
                 </div>
@@ -380,9 +404,11 @@ export default function HomePage() {
                     01
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">{t("guestHomeLandlordStep1Title")}</h3>
+                    <h3 className="text-lg font-extrabold text-zinc-900">
+                      {t('guestHomeLandlordStep1Title')}
+                    </h3>
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t("guestHomeLandlordStep1Desc")}
+                      {t('guestHomeLandlordStep1Desc')}
                     </p>
                   </div>
                 </div>
@@ -393,9 +419,11 @@ export default function HomePage() {
                     02
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">{t("guestHomeLandlordStep2Title")}</h3>
+                    <h3 className="text-lg font-extrabold text-zinc-900">
+                      {t('guestHomeLandlordStep2Title')}
+                    </h3>
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t("guestHomeLandlordStep2Desc")}
+                      {t('guestHomeLandlordStep2Desc')}
                     </p>
                   </div>
                 </div>
@@ -406,9 +434,11 @@ export default function HomePage() {
                     03
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">{t("guestHomeLandlordStep3Title")}</h3>
+                    <h3 className="text-lg font-extrabold text-zinc-900">
+                      {t('guestHomeLandlordStep3Title')}
+                    </h3>
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t("guestHomeLandlordStep3Desc")}
+                      {t('guestHomeLandlordStep3Desc')}
                     </p>
                   </div>
                 </div>
@@ -423,10 +453,10 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
           <div>
             <h2 className="text-3xl font-black tracking-tight text-zinc-900">
-              {t("guestHomeFeaturedRoomsTitle")}
+              {t('guestHomeFeaturedRoomsTitle')}
             </h2>
             <p className="text-xs text-zinc-500 mt-1 font-semibold">
-              {t("guestHomeFeaturedRoomsSub")}
+              {t('guestHomeFeaturedRoomsSub')}
             </p>
           </div>
         </div>
@@ -436,8 +466,11 @@ export default function HomePage() {
             {/* Room Grid / Loading Skeleton / Empty State */}
             {isLoadingFeatured ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="rounded-3xl bg-white shadow-sm border border-zinc-200 overflow-hidden animate-pulse">
+                {[1, 2, 3].map(n => (
+                  <div
+                    key={n}
+                    className="rounded-3xl bg-white shadow-sm border border-zinc-200 overflow-hidden animate-pulse"
+                  >
                     <div className="aspect-video w-full bg-zinc-200" />
                     <div className="p-6 space-y-3">
                       <div className="h-5 bg-zinc-200 rounded w-3/4" />
@@ -463,9 +496,11 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredRooms.map((room) => {
-                  const image = room.images?.[0]?.url || "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
-                  const address = buildAddressString(room);
+                {featuredRooms.map(room => {
+                  const image =
+                    room.images?.[0]?.url ||
+                    'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80'
+                  const address = buildAddressString(room)
                   return (
                     <div
                       key={room.id}
@@ -478,7 +513,8 @@ export default function HomePage() {
                           className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white shadow-sm flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestHomeVerified")}
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
+                          {t('guestHomeVerified')}
                         </div>
                         {room.room?.roomTypeName && (
                           <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-zinc-700 shadow-sm">
@@ -493,7 +529,7 @@ export default function HomePage() {
                         </h3>
                         <div className="flex items-center text-xs text-zinc-500 font-semibold gap-1.5">
                           <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                          <span className="truncate">{address || "Việt Nam"}</span>
+                          <span className="truncate">{address || 'Việt Nam'}</span>
                         </div>
 
                         <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
@@ -501,17 +537,19 @@ export default function HomePage() {
                             <span className="text-lg font-black text-rose-600">
                               {formatVND(room.depositAmount)}
                             </span>
-                            <span className="text-xs text-zinc-400 font-normal">{t("guestHomeMonth")}</span>
+                            <span className="text-xs text-zinc-400 font-normal">
+                              {t('guestHomeMonth')}
+                            </span>
                           </div>
                           <Link href={`/rooms/${room.id}`}>
                             <button className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                              {t("guestHomeViewDetail")} <ArrowRight className="w-3.5 h-3.5" />
+                              {t('guestHomeViewDetail')} <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                           </Link>
                         </div>
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -520,7 +558,8 @@ export default function HomePage() {
               <div className="mt-12 text-center">
                 <Link href="/rooms">
                   <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
-                    Khám phá thêm phòng trọ trên sàn <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    Khám phá thêm phòng trọ trên sàn{' '}
+                    <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
                   </button>
                 </Link>
               </div>
@@ -537,10 +576,10 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-3">
                   <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                    {t("guestHomeBhmsFeature1Title")}
+                    {t('guestHomeBhmsFeature1Title')}
                   </h3>
                   <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t("guestHomeBhmsFeature1Desc")}
+                    {t('guestHomeBhmsFeature1Desc')}
                   </p>
                 </div>
               </div>
@@ -552,10 +591,10 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-3">
                   <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#FF6B35] transition-colors">
-                    {t("guestHomeBhmsFeature2Title")}
+                    {t('guestHomeBhmsFeature2Title')}
                   </h3>
                   <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t("guestHomeBhmsFeature2Desc")}
+                    {t('guestHomeBhmsFeature2Desc')}
                   </p>
                 </div>
               </div>
@@ -567,10 +606,10 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-3">
                   <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                    {t("guestHomeBhmsFeature3Title")}
+                    {t('guestHomeBhmsFeature3Title')}
                   </h3>
                   <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t("guestHomeBhmsFeature3Desc")}
+                    {t('guestHomeBhmsFeature3Desc')}
                   </p>
                 </div>
               </div>
@@ -582,10 +621,10 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-3">
                   <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#FF6B35] transition-colors">
-                    {t("guestHomeBhmsFeature4Title")}
+                    {t('guestHomeBhmsFeature4Title')}
                   </h3>
                   <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t("guestHomeBhmsFeature4Desc")}
+                    {t('guestHomeBhmsFeature4Desc')}
                   </p>
                 </div>
               </div>
@@ -594,7 +633,7 @@ export default function HomePage() {
             <div className="text-center pt-4">
               <Link href="/pricing">
                 <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs sm:text-sm rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
-                  {t("guestHomeBhmsViewDetails")} <ArrowRight className="w-4 h-4 text-[#2AC1BC]" />
+                  {t('guestHomeBhmsViewDetails')} <ArrowRight className="w-4 h-4 text-[#2AC1BC]" />
                 </button>
               </Link>
             </div>
@@ -606,38 +645,43 @@ export default function HomePage() {
       <section className="py-20 bg-zinc-50 border-y border-zinc-200/80">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 space-y-2">
-            <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block">{t("guestHomeReviewsBadge")}</span>
+            <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block">
+              {t('guestHomeReviewsBadge')}
+            </span>
             <h2 className="text-3xl font-black tracking-tight text-zinc-900">
-              {t("guestHomeReviewsTitle")}
+              {t('guestHomeReviewsTitle')}
             </h2>
             <p className="text-xs sm:text-sm text-zinc-500 font-semibold max-w-xl mx-auto">
-              {t("guestHomeReviewsSub")}
+              {t('guestHomeReviewsSub')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                name: t("guestHomeReview1Name"),
-                role: t("guestHomeReview1Role"),
-                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-                text: t("guestHomeReview1Text"),
+                name: t('guestHomeReview1Name'),
+                role: t('guestHomeReview1Role'),
+                avatar:
+                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+                text: t('guestHomeReview1Text'),
                 rating: 5,
               },
               {
-                name: t("guestHomeReview2Name"),
-                role: t("guestHomeReview2Role"),
-                avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80",
-                text: t("guestHomeReview2Text"),
+                name: t('guestHomeReview2Name'),
+                role: t('guestHomeReview2Role'),
+                avatar:
+                  'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80',
+                text: t('guestHomeReview2Text'),
                 rating: 5,
               },
               {
-                name: t("guestHomeReview3Name"),
-                role: t("guestHomeReview3Role"),
-                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-                text: t("guestHomeReview3Text"),
+                name: t('guestHomeReview3Name'),
+                role: t('guestHomeReview3Role'),
+                avatar:
+                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+                text: t('guestHomeReview3Text'),
                 rating: 5,
-              }
+              },
             ].map((review, idx) => (
               <div
                 key={idx}
@@ -645,7 +689,7 @@ export default function HomePage() {
               >
                 <div className="space-y-4">
                   <div className="flex text-amber-400 text-sm tracking-widest">
-                    {"★".repeat(review.rating)}
+                    {'★'.repeat(review.rating)}
                   </div>
                   <p className="text-xs text-zinc-600 font-semibold leading-relaxed italic">
                     "{review.text}"
@@ -653,10 +697,16 @@ export default function HomePage() {
                 </div>
 
                 <div className="pt-4 border-t border-zinc-100 flex items-center gap-3">
-                  <img src={review.avatar} alt={review.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  <img
+                    src={review.avatar}
+                    alt={review.name}
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                  />
                   <div>
                     <h4 className="font-extrabold text-xs text-zinc-900">{review.name}</h4>
-                    <span className="text-[11px] font-bold text-[#2AC1BC] block">{review.role}</span>
+                    <span className="text-[11px] font-bold text-[#2AC1BC] block">
+                      {review.role}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -670,26 +720,24 @@ export default function HomePage() {
         <div className="px-8 py-14 md:px-16 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-2 text-center lg:text-left">
             <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
-              {t("guestHomeCtaTitle")}
+              {t('guestHomeCtaTitle')}
             </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm font-semibold">
-              {t("guestHomeCtaSub")}
-            </p>
+            <p className="text-zinc-400 text-xs sm:text-sm font-semibold">{t('guestHomeCtaSub')}</p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
             <Link href="/register">
               <button className="px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] text-white rounded-xl text-xs font-bold shadow-lg shadow-[#2AC1BC]/20 transition-all cursor-pointer">
-                {t("guestHomeCtaTrialBtn")}
+                {t('guestHomeCtaTrialBtn')}
               </button>
             </Link>
             <Link href="/contact">
               <button className="px-8 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                {t("guestHomeCtaConsultBtn")}
+                {t('guestHomeCtaConsultBtn')}
               </button>
             </Link>
           </div>
         </div>
       </section>
     </div>
-  );
+  )
 }

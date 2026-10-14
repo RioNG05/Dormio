@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsUUID, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsUUID, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class GetOrCreateConversationDto {
   @ApiProperty({
@@ -8,13 +8,14 @@ export class GetOrCreateConversationDto {
   })
   @IsUUID('4', { message: 'Mã người tham gia phải là UUID hợp lệ' })
   @IsNotEmpty({ message: 'Mã người tham gia không được để trống' })
-  participantId: string;
+  participantId: string
 
   @ApiPropertyOptional({
-    description: 'Optional initial message to send immediately after creating/opening the conversation',
+    description:
+      'Optional initial message to send immediately after creating/opening the conversation',
     example: 'Chào bạn, mình liên hệ về phòng 102',
   })
   @IsOptional()
   @IsString()
-  initialMessage?: string;
+  initialMessage?: string
 }

@@ -8,71 +8,71 @@
 
 export interface ContractTemplateData {
   contract: {
-    id: string;
-    startDate: Date;
-    endDate: Date;
-    rentPrice: number;
-    monthlyPaymentDate: number;
-    rentPaymentCycle?: number | null;
-    status: string;
-    note?: string | null;
-    createdAt: Date;
-  };
+    id: string
+    startDate: Date
+    endDate: Date
+    rentPrice: number
+    monthlyPaymentDate: number
+    rentPaymentCycle?: number | null
+    status: string
+    note?: string | null
+    createdAt: Date
+  }
   boardingHouse: {
-    id: string;
-    name: string;
-    address: string;
+    id: string
+    name: string
+    address: string
     owner: {
-      id: string;
-      fullName: string;
-      phoneNumber: string;
-      email?: string | null;
-    };
-  };
+      id: string
+      fullName: string
+      phoneNumber: string
+      email?: string | null
+    }
+  }
   room: {
-    id: string;
-    roomNumber: string;
-    floor: number;
-    area?: number | null;
-    maxOccupants?: number | null;
-    roomTypeName?: string | null;
+    id: string
+    roomNumber: string
+    floor: number
+    area?: number | null
+    maxOccupants?: number | null
+    roomTypeName?: string | null
     services: Array<{
-      name: string;
-      price: number;
-      unit: string;
-      isMetered: boolean;
-    }>;
-  };
+      name: string
+      price: number
+      unit: string
+      isMetered: boolean
+    }>
+  }
   primaryTenant: {
-    id: string;
-    fullName: string;
-    phoneNumber: string;
-    email?: string | null;
+    id: string
+    fullName: string
+    phoneNumber: string
+    email?: string | null
     identification?: {
-      identityNumber: string;
-      dateOfBirth?: string | Date | null;
-      gender?: string | null;
-      placeOfOrigin?: string | null;
-      placeOfResidence?: string | null;
-      issueDate?: string | Date | null;
-      issuePlace?: string | null;
-    } | null;
-  };
+      identityNumber: string
+      dateOfBirth?: string | Date | null
+      gender?: string | null
+      placeOfOrigin?: string | null
+      placeOfResidence?: string | null
+      issueDate?: string | Date | null
+      issuePlace?: string | null
+    } | null
+  }
   coTenants?: Array<{
-    id: string;
-    fullName: string;
-    phoneNumber?: string | null;
-  }>;
+    id: string
+    fullName: string
+    phoneNumber?: string | null
+  }>
   deposit?: {
-    amount: number;
-    status: string;
-    type: string;
-    paidAt?: Date | null;
-  } | null;
+    amount: number
+    status: string
+    type: string
+    paidAt?: Date | null
+  } | null
   options?: {
-    autoPrint?: boolean;
-    includeToolbar?: boolean;
-  };
+    autoPrint?: boolean
+    includeToolbar?: boolean
+  }
 }
 
 export class ContractTemplateRenderer {
@@ -80,72 +80,72 @@ export class ContractTemplateRenderer {
    * Formats currency in VND
    */
   private static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ'
   }
 
   /**
    * Formats Date to dd/mm/yyyy
    */
   private static formatDate(date: Date | string | null | undefined): string {
-    if (!date) return '—';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '—';
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
+    if (!date) return '—'
+    const d = new Date(date)
+    if (isNaN(d.getTime())) return '—'
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const year = d.getFullYear()
+    return `${day}/${month}/${year}`
   }
 
   /**
    * Converts amount into Vietnamese spoken words
    */
   private static numberToVietnameseWords(num: number): string {
-    if (num === 0) return 'Không đồng';
-    const units = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ'];
-    const digits = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+    if (num === 0) return 'Không đồng'
+    const units = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ']
+    const digits = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín']
 
     const readThreeDigits = (n: number, showZeroHundred: boolean): string => {
-      let str = '';
-      const hundreds = Math.floor(n / 100);
-      const tens = Math.floor((n % 100) / 10);
-      const ones = n % 10;
+      let str = ''
+      const hundreds = Math.floor(n / 100)
+      const tens = Math.floor((n % 100) / 10)
+      const ones = n % 10
 
       if (hundreds > 0 || showZeroHundred) {
-        str += digits[hundreds] + ' trăm ';
+        str += digits[hundreds] + ' trăm '
       }
       if (tens > 1) {
-        str += digits[tens] + ' mươi ';
-        if (ones === 1) str += 'mốt ';
-        else if (ones === 5) str += 'lăm ';
-        else if (ones > 0) str += digits[ones] + ' ';
+        str += digits[tens] + ' mươi '
+        if (ones === 1) str += 'mốt '
+        else if (ones === 5) str += 'lăm '
+        else if (ones > 0) str += digits[ones] + ' '
       } else if (tens === 1) {
-        str += 'mười ';
-        if (ones === 5) str += 'lăm ';
-        else if (ones > 0) str += digits[ones] + ' ';
+        str += 'mười '
+        if (ones === 5) str += 'lăm '
+        else if (ones > 0) str += digits[ones] + ' '
       } else if (tens === 0 && ones > 0) {
-        if (hundreds > 0 || showZeroHundred) str += 'lẻ ';
-        str += digits[ones] + ' ';
+        if (hundreds > 0 || showZeroHundred) str += 'lẻ '
+        str += digits[ones] + ' '
       }
-      return str.trim();
-    };
+      return str.trim()
+    }
 
-    let n = Math.floor(Math.abs(num));
-    const groups: number[] = [];
+    let n = Math.floor(Math.abs(num))
+    const groups: number[] = []
     while (n > 0) {
-      groups.push(n % 1000);
-      n = Math.floor(n / 1000);
+      groups.push(n % 1000)
+      n = Math.floor(n / 1000)
     }
 
-    let result = '';
+    let result = ''
     for (let i = groups.length - 1; i >= 0; i--) {
-      const g = groups[i];
+      const g = groups[i]
       if (g > 0) {
-        const showZero = i < groups.length - 1 && groups.length > 1;
-        result += readThreeDigits(g, showZero) + ' ' + units[i] + ' ';
+        const showZero = i < groups.length - 1 && groups.length > 1
+        result += readThreeDigits(g, showZero) + ' ' + units[i] + ' '
       }
     }
-    const clean = result.trim() + ' đồng';
-    return clean.charAt(0).toUpperCase() + clean.slice(1);
+    const clean = result.trim() + ' đồng'
+    return clean.charAt(0).toUpperCase() + clean.slice(1)
   }
 
   /**
@@ -160,30 +160,30 @@ export class ContractTemplateRenderer {
       coTenants = [],
       deposit,
       options = {},
-    } = data;
+    } = data
 
-    const autoPrint = options.autoPrint ?? false;
-    const includeToolbar = options.includeToolbar ?? true;
+    const autoPrint = options.autoPrint ?? false
+    const includeToolbar = options.includeToolbar ?? true
 
-    const today = new Date();
-    const createdDate = contract.createdAt ? new Date(contract.createdAt) : today;
-    const day = createdDate.getDate();
-    const month = createdDate.getMonth() + 1;
-    const year = createdDate.getFullYear();
+    const today = new Date()
+    const createdDate = contract.createdAt ? new Date(contract.createdAt) : today
+    const day = createdDate.getDate()
+    const month = createdDate.getMonth() + 1
+    const year = createdDate.getFullYear()
 
-    const rentPriceVnd = this.formatCurrency(contract.rentPrice);
-    const rentPriceWords = this.numberToVietnameseWords(contract.rentPrice);
+    const rentPriceVnd = this.formatCurrency(contract.rentPrice)
+    const rentPriceWords = this.numberToVietnameseWords(contract.rentPrice)
 
-    const depositAmount = deposit ? deposit.amount : contract.rentPrice;
-    const depositVnd = this.formatCurrency(depositAmount);
-    const depositWords = this.numberToVietnameseWords(depositAmount);
+    const depositAmount = deposit ? deposit.amount : contract.rentPrice
+    const depositVnd = this.formatCurrency(depositAmount)
+    const depositWords = this.numberToVietnameseWords(depositAmount)
 
-    const iden = primaryTenant.identification;
-    const idNumber = iden?.identityNumber || 'Chưa cung cấp';
-    const idIssueDate = iden?.issueDate ? this.formatDate(iden.issueDate) : 'Chưa cập nhật';
-    const idIssuePlace = iden?.issuePlace || iden?.placeOfResidence || 'Cục CS QLHC về TTXH';
-    const placeOfOrigin = iden?.placeOfOrigin || 'Chưa cập nhật';
-    const placeOfResidence = iden?.placeOfResidence || 'Chưa cập nhật';
+    const iden = primaryTenant.identification
+    const idNumber = iden?.identityNumber || 'Chưa cung cấp'
+    const idIssueDate = iden?.issueDate ? this.formatDate(iden.issueDate) : 'Chưa cập nhật'
+    const idIssuePlace = iden?.issuePlace || iden?.placeOfResidence || 'Cục CS QLHC về TTXH'
+    const placeOfOrigin = iden?.placeOfOrigin || 'Chưa cập nhật'
+    const placeOfResidence = iden?.placeOfResidence || 'Chưa cập nhật'
 
     const servicesHtml =
       room.services.length > 0
@@ -206,7 +206,7 @@ export class ContractTemplateRenderer {
               Không có dịch vụ phụ thu riêng (đã bao gồm trong giá phòng hoặc thỏa thuận riêng).
             </td>
           </tr>
-        `;
+        `
 
     const coTenantsHtml =
       coTenants.length > 0
@@ -216,14 +216,13 @@ export class ContractTemplateRenderer {
             <ul style="margin: 4px 0 6px 18px; padding: 0;">
               ${coTenants
                 .map(
-                  (m) =>
-                    `<li>${m.fullName}${m.phoneNumber ? ` - SĐT: ${m.phoneNumber}` : ''}</li>`,
+                  m => `<li>${m.fullName}${m.phoneNumber ? ` - SĐT: ${m.phoneNumber}` : ''}</li>`,
                 )
                 .join('')}
             </ul>
           </div>
         `
-        : '';
+        : ''
 
     return `<!DOCTYPE html>
 <html lang="vi">
@@ -664,6 +663,6 @@ export class ContractTemplateRenderer {
     }
   </script>
 </body>
-</html>`;
+</html>`
   }
 }

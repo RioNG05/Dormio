@@ -13,7 +13,7 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiBody,
@@ -25,21 +25,21 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { CreateServiceDto } from './dto/create-service.dto';
-import { QueryServicesDto } from './dto/query-services.dto';
+} from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { CreateServiceDto } from './dto/create-service.dto'
+import { QueryServicesDto } from './dto/query-services.dto'
 import {
   ServiceItemDto,
   ServiceRoomsResponseDto,
   ServicesListResponseDto,
-} from './dto/service-response.dto';
-import { UpdateServiceDto } from './dto/update-service.dto';
-import { ServicesService } from './services.service';
-import { SubscriptionPackage } from '@prisma';
+} from './dto/service-response.dto'
+import { UpdateServiceDto } from './dto/update-service.dto'
+import { ServicesService } from './services.service'
+import { SubscriptionPackage } from '@prisma'
 
 @ApiTags('Landlord - Services')
 @ApiBearerAuth()
@@ -51,7 +51,7 @@ import { SubscriptionPackage } from '@prisma';
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 @Controller('landlord/services')
 export class ServicesController {
-  private readonly logger = new Logger(ServicesController.name);
+  private readonly logger = new Logger(ServicesController.name)
 
   constructor(private readonly servicesService: ServicesService) {}
 
@@ -69,8 +69,8 @@ export class ServicesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Query() query: QueryServicesDto,
   ): Promise<ServicesListResponseDto> {
-    this.logger.log(`Invoking GET /landlord/services for house ${boardingHouseId}`);
-    return this.servicesService.getServices(boardingHouseId, query);
+    this.logger.log(`Invoking GET /landlord/services for house ${boardingHouseId}`)
+    return this.servicesService.getServices(boardingHouseId, query)
   }
 
   @Post()
@@ -95,8 +95,10 @@ export class ServicesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Body() dto: CreateServiceDto,
   ): Promise<ServiceItemDto> {
-    this.logger.log(`Invoking POST /landlord/services for house ${boardingHouseId} by landlord ${landlordId}`);
-    return this.servicesService.createService(landlordId, boardingHouseId, dto);
+    this.logger.log(
+      `Invoking POST /landlord/services for house ${boardingHouseId} by landlord ${landlordId}`,
+    )
+    return this.servicesService.createService(landlordId, boardingHouseId, dto)
   }
 
   @Get(':id')
@@ -110,15 +112,16 @@ export class ServicesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) serviceId: string,
   ): Promise<ServiceItemDto> {
-    this.logger.log(`Invoking GET /landlord/services/${serviceId} for house ${boardingHouseId}`);
-    return this.servicesService.getServiceDetail(boardingHouseId, serviceId);
+    this.logger.log(`Invoking GET /landlord/services/${serviceId} for house ${boardingHouseId}`)
+    return this.servicesService.getServiceDetail(boardingHouseId, serviceId)
   }
 
   @Patch(':id')
   @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'UC-L-18: Update a service',
-    description: 'Updates an existing service configuration and attached room assignments. Requires Plus subscription tier or higher.',
+    description:
+      'Updates an existing service configuration and attached room assignments. Requires Plus subscription tier or higher.',
   })
   @ApiParam({ name: 'id', description: 'Service UUID' })
   @ApiBody({ type: UpdateServiceDto })
@@ -132,8 +135,8 @@ export class ServicesController {
     @Param('id', ParseUUIDPipe) serviceId: string,
     @Body() dto: UpdateServiceDto,
   ): Promise<ServiceItemDto> {
-    this.logger.log(`Invoking PATCH /landlord/services/${serviceId} for house ${boardingHouseId}`);
-    return this.servicesService.updateService(boardingHouseId, serviceId, dto);
+    this.logger.log(`Invoking PATCH /landlord/services/${serviceId} for house ${boardingHouseId}`)
+    return this.servicesService.updateService(boardingHouseId, serviceId, dto)
   }
 
   @Delete(':id')
@@ -161,8 +164,8 @@ export class ServicesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) serviceId: string,
   ): Promise<{ success: boolean; message: string }> {
-    this.logger.log(`Invoking DELETE /landlord/services/${serviceId} for house ${boardingHouseId}`);
-    return this.servicesService.deleteService(boardingHouseId, serviceId);
+    this.logger.log(`Invoking DELETE /landlord/services/${serviceId} for house ${boardingHouseId}`)
+    return this.servicesService.deleteService(boardingHouseId, serviceId)
   }
 
   @Get(':id/rooms')
@@ -176,7 +179,9 @@ export class ServicesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) serviceId: string,
   ): Promise<ServiceRoomsResponseDto> {
-    this.logger.log(`Invoking GET /landlord/services/${serviceId}/rooms for house ${boardingHouseId}`);
-    return this.servicesService.getServiceRooms(boardingHouseId, serviceId);
+    this.logger.log(
+      `Invoking GET /landlord/services/${serviceId}/rooms for house ${boardingHouseId}`,
+    )
+    return this.servicesService.getServiceRooms(boardingHouseId, serviceId)
   }
 }

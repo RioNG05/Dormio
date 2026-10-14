@@ -1,19 +1,19 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { AssignmentStatus, AuditLogAction, UserRole } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { EmployeesService } from './employees.service';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
+import { AssignmentStatus, AuditLogAction, UserRole } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { EmployeesService } from './employees.service'
 
 describe('EmployeesService', () => {
-  let service: EmployeesService;
-  let mockPrisma: any;
+  let service: EmployeesService
+  let mockPrisma: any
 
-  const mockBoardingHouseId = 'house-uuid-1111';
-  const mockUserId = 'user-uuid-2222';
-  const mockLandlordId = 'landlord-uuid-3333';
-  const mockPositionId = 'pos-uuid-4444';
-  const mockAssignmentId = 'assign-uuid-5555';
-  const mockEmployeeId = 'emp-uuid-6666';
+  const mockBoardingHouseId = 'house-uuid-1111'
+  const mockUserId = 'user-uuid-2222'
+  const mockLandlordId = 'landlord-uuid-3333'
+  const mockPositionId = 'pos-uuid-4444'
+  const mockAssignmentId = 'assign-uuid-5555'
+  const mockEmployeeId = 'emp-uuid-6666'
 
   beforeEach(async () => {
     mockPrisma = {
@@ -49,29 +49,26 @@ describe('EmployeesService', () => {
       workSchedule: {
         updateMany: jest.fn(),
       },
-      $transaction: jest.fn((callback) => callback(mockPrisma)),
-    };
+      $transaction: jest.fn(callback => callback(mockPrisma)),
+    }
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        EmployeesService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
-    }).compile();
+      providers: [EmployeesService, { provide: PrismaService, useValue: mockPrisma }],
+    }).compile()
 
-    service = module.get<EmployeesService>(EmployeesService);
-  });
+    service = module.get<EmployeesService>(EmployeesService)
+  })
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+    expect(service).toBeDefined()
+  })
 
   describe('searchUser', () => {
     it('should return found: false when query is empty', async () => {
-      const res = await service.searchUser('', mockBoardingHouseId);
-      expect(res.found).toBe(false);
-      expect(res.user).toBeNull();
-    });
+      const res = await service.searchUser('', mockBoardingHouseId)
+      expect(res.found).toBe(false)
+      expect(res.user).toBeNull()
+    })
 
     it('should return user info and isAlreadyStaffAtThisHouse: false when user exists', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({
@@ -85,13 +82,13 @@ describe('EmployeesService', () => {
           id: mockEmployeeId,
           employeeAssignments: [],
         },
-      });
+      })
 
-      const res = await service.searchUser('0901234567', mockBoardingHouseId);
-      expect(res.found).toBe(true);
-      expect(res.user?.fullName).toBe('Nguyễn Văn Bảo');
-      expect(res.user?.isAlreadyStaffAtThisHouse).toBe(false);
-    });
+      const res = await service.searchUser('0901234567', mockBoardingHouseId)
+      expect(res.found).toBe(true)
+      expect(res.user?.fullName).toBe('Nguyễn Văn Bảo')
+      expect(res.user?.isAlreadyStaffAtThisHouse).toBe(false)
+    })
 
     it('should mark isAlreadyStaffAtThisHouse: true if user has active assignment here', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({
@@ -105,13 +102,13 @@ describe('EmployeesService', () => {
           id: mockEmployeeId,
           employeeAssignments: [{ id: mockAssignmentId }],
         },
-      });
+      })
 
-      const res = await service.searchUser('0901234567', mockBoardingHouseId);
-      expect(res.found).toBe(true);
-      expect(res.user?.isAlreadyStaffAtThisHouse).toBe(true);
-    });
-  });
+      const res = await service.searchUser('0901234567', mockBoardingHouseId)
+      expect(res.found).toBe(true)
+      expect(res.user?.isAlreadyStaffAtThisHouse).toBe(true)
+    })
+  })
 
   describe('getJobPositions', () => {
     it('should seed default positions when none exist', async () => {
@@ -125,15 +122,15 @@ describe('EmployeesService', () => {
             createdAt: new Date(),
             _count: { employeeAssignments: 1 },
           },
-        ]);
+        ])
 
-      mockPrisma.jobPosition.createMany.mockResolvedValue({ count: 4 });
+      mockPrisma.jobPosition.createMany.mockResolvedValue({ count: 4 })
 
-      const positions = await service.getJobPositions(mockBoardingHouseId);
-      expect(mockPrisma.jobPosition.createMany).toHaveBeenCalled();
-      expect(positions).toHaveLength(1);
-      expect(positions[0].name).toBe('Quản lý tòa nhà');
-    });
+      const positions = await service.getJobPositions(mockBoardingHouseId)
+      expect(mockPrisma.jobPosition.createMany).toHaveBeenCalled()
+      expect(positions).toHaveLength(1)
+      expect(positions[0].name).toBe('Quản lý tòa nhà')
+    })
 
     it('should return existing positions without seeding if already present', async () => {
       mockPrisma.jobPosition.findMany.mockResolvedValue([
@@ -144,50 +141,50 @@ describe('EmployeesService', () => {
           createdAt: new Date(),
           _count: { employeeAssignments: 2 },
         },
-      ]);
+      ])
 
-      const positions = await service.getJobPositions(mockBoardingHouseId);
-      expect(mockPrisma.jobPosition.createMany).not.toHaveBeenCalled();
-      expect(positions).toHaveLength(1);
-      expect(positions[0].name).toBe('Bảo vệ');
-    });
-  });
+      const positions = await service.getJobPositions(mockBoardingHouseId)
+      expect(mockPrisma.jobPosition.createMany).not.toHaveBeenCalled()
+      expect(positions).toHaveLength(1)
+      expect(positions[0].name).toBe('Bảo vệ')
+    })
+  })
 
   describe('createJobPosition', () => {
     it('should throw ConflictException if position name already exists', async () => {
-      mockPrisma.jobPosition.findFirst.mockResolvedValue({ id: 'existing-id' });
+      mockPrisma.jobPosition.findFirst.mockResolvedValue({ id: 'existing-id' })
 
       await expect(
         service.createJobPosition(mockBoardingHouseId, { name: 'Bảo vệ' }),
-      ).rejects.toThrow(ConflictException);
-    });
+      ).rejects.toThrow(ConflictException)
+    })
 
     it('should create position successfully', async () => {
-      mockPrisma.jobPosition.findFirst.mockResolvedValue(null);
+      mockPrisma.jobPosition.findFirst.mockResolvedValue(null)
       mockPrisma.jobPosition.create.mockResolvedValue({
         id: 'new-id',
         name: 'Kỹ thuật viên',
         description: 'Bảo trì',
         createdAt: new Date(),
-      });
+      })
 
       const res = await service.createJobPosition(mockBoardingHouseId, {
         name: 'Kỹ thuật viên',
         description: 'Bảo trì',
-      });
+      })
 
-      expect(res.name).toBe('Kỹ thuật viên');
-      expect(mockPrisma.jobPosition.create).toHaveBeenCalled();
-    });
-  });
+      expect(res.name).toBe('Kỹ thuật viên')
+      expect(mockPrisma.jobPosition.create).toHaveBeenCalled()
+    })
+  })
 
   describe('onboardStaff (UC-L-19)', () => {
     beforeEach(() => {
       mockPrisma.jobPosition.findFirst.mockResolvedValue({
         id: mockPositionId,
         name: 'Bảo vệ',
-      });
-    });
+      })
+    })
 
     it('should throw ConflictException if user already has an active assignment', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
@@ -195,23 +192,23 @@ describe('EmployeesService', () => {
         phoneNumber: '0901234567',
         role: UserRole.employee,
         employee: { id: mockEmployeeId },
-      });
+      })
 
       mockPrisma.employeeAssignment.findFirst.mockResolvedValue({
         id: 'existing-assignment',
         status: AssignmentStatus.active,
-      });
+      })
 
       await expect(
         service.onboardStaff(mockBoardingHouseId, mockLandlordId, {
           phoneNumber: '0901234567',
           positionId: mockPositionId,
         }),
-      ).rejects.toThrow(ConflictException);
-    });
+      ).rejects.toThrow(ConflictException)
+    })
 
     it('should create new User with random password, Employee, Assignment, and AuditLog when user is not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findUnique.mockResolvedValue(null)
       mockPrisma.user.create.mockResolvedValue({
         id: mockUserId,
         phoneNumber: '0988776655',
@@ -219,11 +216,11 @@ describe('EmployeesService', () => {
         role: UserRole.leasing_agent,
         mustChangePassword: true,
         employee: null,
-      });
+      })
       mockPrisma.employee.create.mockResolvedValue({
         id: mockEmployeeId,
         userId: mockUserId,
-      });
+      })
       mockPrisma.employeeAssignment.create.mockResolvedValue({
         id: mockAssignmentId,
         employeeId: mockEmployeeId,
@@ -245,31 +242,27 @@ describe('EmployeesService', () => {
             mustChangePassword: true,
           },
         },
-      });
+      })
 
-      const res = await service.onboardStaff(
-        mockBoardingHouseId,
-        mockLandlordId,
-        {
-          phoneNumber: '0988776655',
-          fullName: 'Trần Văn Cường',
-          positionId: mockPositionId,
-        },
-      );
+      const res = await service.onboardStaff(mockBoardingHouseId, mockLandlordId, {
+        phoneNumber: '0988776655',
+        fullName: 'Trần Văn Cường',
+        positionId: mockPositionId,
+      })
 
-      expect(res.success).toBe(true);
-      expect(res.isNewUser).toBe(true);
-      expect(res.generatedPassword).toBeDefined();
-      expect(typeof res.generatedPassword).toBe('string');
-      expect(mockPrisma.user.create).toHaveBeenCalled();
+      expect(res.success).toBe(true)
+      expect(res.isNewUser).toBe(true)
+      expect(res.generatedPassword).toBeDefined()
+      expect(typeof res.generatedPassword).toBe('string')
+      expect(mockPrisma.user.create).toHaveBeenCalled()
       expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: AuditLogAction.create,
           entityType: 'EMPLOYEE_ASSIGNMENT',
           userId: mockLandlordId,
         }),
-      });
-    });
+      })
+    })
 
     it('should onboard existing user, bump role to employee, and write AuditLog', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
@@ -278,8 +271,8 @@ describe('EmployeesService', () => {
         username: 'Nguyễn Văn Bảo',
         role: UserRole.leasing_agent,
         employee: { id: mockEmployeeId },
-      });
-      mockPrisma.employeeAssignment.findFirst.mockResolvedValue(null);
+      })
+      mockPrisma.employeeAssignment.findFirst.mockResolvedValue(null)
       mockPrisma.employeeAssignment.create.mockResolvedValue({
         id: mockAssignmentId,
         employeeId: mockEmployeeId,
@@ -301,41 +294,34 @@ describe('EmployeesService', () => {
             mustChangePassword: false,
           },
         },
-      });
+      })
 
-      const res = await service.onboardStaff(
-        mockBoardingHouseId,
-        mockLandlordId,
-        {
-          phoneNumber: '0901234567',
-          positionId: mockPositionId,
-        },
-      );
+      const res = await service.onboardStaff(mockBoardingHouseId, mockLandlordId, {
+        phoneNumber: '0901234567',
+        positionId: mockPositionId,
+      })
 
-      expect(res.success).toBe(true);
-      expect(res.isNewUser).toBe(false);
-      expect(res.generatedPassword).toBeUndefined();
+      expect(res.success).toBe(true)
+      expect(res.isNewUser).toBe(false)
+      expect(res.generatedPassword).toBeUndefined()
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: mockUserId },
         data: { role: UserRole.employee },
-      });
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
-    });
-  });
+      })
+      expect(mockPrisma.auditLog.create).toHaveBeenCalled()
+    })
+  })
 
   describe('updateStaffStatus (UC-L-20)', () => {
     it('should throw NotFoundException when assignment not found', async () => {
-      mockPrisma.employeeAssignment.findFirst.mockResolvedValue(null);
+      mockPrisma.employeeAssignment.findFirst.mockResolvedValue(null)
 
       await expect(
-        service.updateStaffStatus(
-          mockBoardingHouseId,
-          'non-existent',
-          mockLandlordId,
-          { status: AssignmentStatus.inactive },
-        ),
-      ).rejects.toThrow(NotFoundException);
-    });
+        service.updateStaffStatus(mockBoardingHouseId, 'non-existent', mockLandlordId, {
+          status: AssignmentStatus.inactive,
+        }),
+      ).rejects.toThrow(NotFoundException)
+    })
 
     it('should set leftAt and cancel future schedules when status is changed to inactive', async () => {
       mockPrisma.employeeAssignment.findFirst.mockResolvedValue({
@@ -344,7 +330,7 @@ describe('EmployeesService', () => {
         positionId: mockPositionId,
         boardingHouseId: mockBoardingHouseId,
         status: AssignmentStatus.active,
-      });
+      })
 
       mockPrisma.employeeAssignment.update.mockResolvedValue({
         id: mockAssignmentId,
@@ -367,33 +353,33 @@ describe('EmployeesService', () => {
             mustChangePassword: false,
           },
         },
-      });
+      })
 
       const res = await service.updateStaffStatus(
         mockBoardingHouseId,
         mockAssignmentId,
         mockLandlordId,
         { status: AssignmentStatus.inactive },
-      );
+      )
 
-      expect(res.status).toBe(AssignmentStatus.inactive);
-      expect(mockPrisma.workSchedule.updateMany).toHaveBeenCalled();
+      expect(res.status).toBe(AssignmentStatus.inactive)
+      expect(mockPrisma.workSchedule.updateMany).toHaveBeenCalled()
       expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: AuditLogAction.update,
           entityType: 'EMPLOYEE_ASSIGNMENT',
         }),
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe('getStaffDetail', () => {
     it('should throw NotFoundException if staff not found', async () => {
-      mockPrisma.employeeAssignment.findFirst.mockResolvedValue(null);
-      await expect(
-        service.getStaffDetail(mockBoardingHouseId, 'missing-id'),
-      ).rejects.toThrow(NotFoundException);
-    });
+      mockPrisma.employeeAssignment.findFirst.mockResolvedValue(null)
+      await expect(service.getStaffDetail(mockBoardingHouseId, 'missing-id')).rejects.toThrow(
+        NotFoundException,
+      )
+    })
 
     it('should return staff details when found', async () => {
       mockPrisma.employeeAssignment.findFirst.mockResolvedValue({
@@ -417,26 +403,26 @@ describe('EmployeesService', () => {
             mustChangePassword: false,
           },
         },
-      });
+      })
 
-      const res = await service.getStaffDetail(mockBoardingHouseId, mockAssignmentId);
-      expect(res.fullName).toBe('Nguyễn Văn Bảo');
-      expect(res.positionName).toBe('Bảo vệ');
-    });
-  });
+      const res = await service.getStaffDetail(mockBoardingHouseId, mockAssignmentId)
+      expect(res.fullName).toBe('Nguyễn Văn Bảo')
+      expect(res.positionName).toBe('Bảo vệ')
+    })
+  })
 
   describe('assignRole (UC-L-20 Step 3)', () => {
     it('should re-assign existing job position and create AuditLog', async () => {
-      const newPosId = 'pos-new-555';
+      const newPosId = 'pos-new-555'
       mockPrisma.employeeAssignment.findFirst.mockResolvedValue({
         id: mockAssignmentId,
         positionId: mockPositionId,
         position: { id: mockPositionId, name: 'Bảo vệ' },
-      });
+      })
       mockPrisma.jobPosition.findFirst.mockResolvedValue({
         id: newPosId,
         name: 'Quản lý tòa nhà',
-      });
+      })
       mockPrisma.employeeAssignment.update.mockResolvedValue({
         id: mockAssignmentId,
         employeeId: mockEmployeeId,
@@ -458,31 +444,28 @@ describe('EmployeesService', () => {
             mustChangePassword: false,
           },
         },
-      });
+      })
 
-      const res = await service.assignRole(
-        mockBoardingHouseId,
-        mockAssignmentId,
-        mockLandlordId,
-        { positionId: newPosId },
-      );
+      const res = await service.assignRole(mockBoardingHouseId, mockAssignmentId, mockLandlordId, {
+        positionId: newPosId,
+      })
 
-      expect(res.positionName).toBe('Quản lý tòa nhà');
-      expect(mockPrisma.employeeAssignment.update).toHaveBeenCalled();
+      expect(res.positionName).toBe('Quản lý tòa nhà')
+      expect(mockPrisma.employeeAssignment.update).toHaveBeenCalled()
       expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: AuditLogAction.update,
           entityType: 'EMPLOYEE_ASSIGNMENT',
         }),
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe('updateJobPosition & deleteJobPosition', () => {
     it('should update job position name and description', async () => {
       mockPrisma.jobPosition.findFirst
         .mockResolvedValueOnce({ id: mockPositionId, name: 'Bảo vệ' }) // existing
-        .mockResolvedValueOnce(null); // duplicate check
+        .mockResolvedValueOnce(null) // duplicate check
 
       mockPrisma.jobPosition.update.mockResolvedValue({
         id: mockPositionId,
@@ -490,40 +473,39 @@ describe('EmployeesService', () => {
         description: 'Phụ trách an ninh',
         createdAt: new Date(),
         _count: { employeeAssignments: 1 },
-      });
+      })
 
-      const res = await service.updateJobPosition(
-        mockBoardingHouseId,
-        mockPositionId,
-        { name: 'Trưởng ban Bảo vệ', description: 'Phụ trách an ninh' },
-      );
+      const res = await service.updateJobPosition(mockBoardingHouseId, mockPositionId, {
+        name: 'Trưởng ban Bảo vệ',
+        description: 'Phụ trách an ninh',
+      })
 
-      expect(res.name).toBe('Trưởng ban Bảo vệ');
-    });
+      expect(res.name).toBe('Trưởng ban Bảo vệ')
+    })
 
     it('should throw BadRequestException when deleting a position with active staff', async () => {
       mockPrisma.jobPosition.findFirst.mockResolvedValue({
         id: mockPositionId,
         name: 'Bảo vệ',
         _count: { employeeAssignments: 2 },
-      });
+      })
 
-      await expect(
-        service.deleteJobPosition(mockBoardingHouseId, mockPositionId),
-      ).rejects.toThrow(BadRequestException);
-    });
+      await expect(service.deleteJobPosition(mockBoardingHouseId, mockPositionId)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
 
     it('should delete position when no staff are assigned', async () => {
       mockPrisma.jobPosition.findFirst.mockResolvedValue({
         id: mockPositionId,
         name: 'Tạp vụ ca đêm',
         _count: { employeeAssignments: 0 },
-      });
-      mockPrisma.jobPosition.delete.mockResolvedValue({ id: mockPositionId });
+      })
+      mockPrisma.jobPosition.delete.mockResolvedValue({ id: mockPositionId })
 
-      const res = await service.deleteJobPosition(mockBoardingHouseId, mockPositionId);
-      expect(res.success).toBe(true);
-      expect(mockPrisma.jobPosition.delete).toHaveBeenCalled();
-    });
-  });
-});
+      const res = await service.deleteJobPosition(mockBoardingHouseId, mockPositionId)
+      expect(res.success).toBe(true)
+      expect(mockPrisma.jobPosition.delete).toHaveBeenCalled()
+    })
+  })
+})

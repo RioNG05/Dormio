@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Matches } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, Matches } from 'class-validator'
 
 export class QueryStaffMonthlyDto {
   @ApiPropertyOptional({
@@ -11,6 +11,5 @@ export class QueryStaffMonthlyDto {
   @Matches(/^\d{4}-\d{2}$/, {
     message: 'month must be formatted as YYYY-MM (e.g. 2026-09)',
   })
-  month?: string;
+  month?: string
 }
-

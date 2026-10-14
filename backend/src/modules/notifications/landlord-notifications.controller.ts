@@ -12,7 +12,7 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -21,21 +21,21 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
-} from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
-import { JwtPayload } from '../auth/types/jwt-payload.type';
-import { AnnouncementQueryDto } from './dto/announcement-query.dto';
-import { BroadcastAnnouncementDto } from './dto/broadcast-announcement.dto';
+} from '@nestjs/swagger'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger'
+import { JwtPayload } from '../auth/types/jwt-payload.type'
+import { AnnouncementQueryDto } from './dto/announcement-query.dto'
+import { BroadcastAnnouncementDto } from './dto/broadcast-announcement.dto'
 import {
   LandlordAnnouncementItemDto,
   LandlordAnnouncementsResponseDto,
-} from './dto/landlord-announcement-response.dto';
-import { NotificationsService } from './notifications.service';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { SubscriptionPackage } from '@prisma';
+} from './dto/landlord-announcement-response.dto'
+import { NotificationsService } from './notifications.service'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
 
 @ApiTags('Landlord Notifications')
 @ApiAuth()
@@ -44,7 +44,7 @@ import { SubscriptionPackage } from '@prisma';
 @RequireTier(SubscriptionPackage.plus)
 @Controller('landlord/notifications')
 export class LandlordNotificationsController {
-  private readonly logger = new Logger(LandlordNotificationsController.name);
+  private readonly logger = new Logger(LandlordNotificationsController.name)
 
   constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -65,7 +65,8 @@ export class LandlordNotificationsController {
     type: LandlordAnnouncementItemDto,
   })
   @ApiForbiddenResponse({
-    description: 'Forbidden - Landlord does not own this boarding house or requires Plus subscription tier or higher',
+    description:
+      'Forbidden - Landlord does not own this boarding house or requires Plus subscription tier or higher',
   })
   async broadcast(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -74,15 +75,15 @@ export class LandlordNotificationsController {
   ): Promise<{ success: boolean; data: LandlordAnnouncementItemDto }> {
     this.logger.log(
       `POST /api/v1/landlord/notifications/broadcast invoked by landlord ${user.id} for house ${boardingHouseId}`,
-    );
+    )
 
     const data = await this.notificationsService.broadcastAnnouncement(
       boardingHouseId,
       user.id,
       dto,
-    );
+    )
 
-    return { success: true, data };
+    return { success: true, data }
   }
 
   // ─── GET /api/v1/landlord/notifications/announcements ─────────────────────
@@ -101,7 +102,8 @@ export class LandlordNotificationsController {
     type: LandlordAnnouncementsResponseDto,
   })
   @ApiForbiddenResponse({
-    description: 'Forbidden - Landlord does not own this boarding house or requires Plus subscription tier or higher',
+    description:
+      'Forbidden - Landlord does not own this boarding house or requires Plus subscription tier or higher',
   })
   async getAnnouncements(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -110,12 +112,9 @@ export class LandlordNotificationsController {
   ): Promise<LandlordAnnouncementsResponseDto> {
     this.logger.log(
       `GET /api/v1/landlord/notifications/announcements invoked by landlord ${user.id} for house ${boardingHouseId}`,
-    );
+    )
 
-    return this.notificationsService.getBoardingHouseAnnouncements(
-      boardingHouseId,
-      query,
-    );
+    return this.notificationsService.getBoardingHouseAnnouncements(boardingHouseId, query)
   }
 
   // ─── DELETE /api/v1/landlord/notifications/:id ────────────────────────────
@@ -133,7 +132,8 @@ export class LandlordNotificationsController {
   @ApiNoContentResponse({ description: 'Announcement deleted successfully' })
   @ApiNotFoundResponse({ description: 'Announcement not found' })
   @ApiForbiddenResponse({
-    description: 'Forbidden - Announcement does not belong to this boarding house or requires Plus subscription tier or higher',
+    description:
+      'Forbidden - Announcement does not belong to this boarding house or requires Plus subscription tier or higher',
   })
   async deleteAnnouncement(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -142,8 +142,8 @@ export class LandlordNotificationsController {
   ): Promise<void> {
     this.logger.log(
       `DELETE /api/v1/landlord/notifications/${id} invoked by landlord ${user.id} for house ${boardingHouseId}`,
-    );
+    )
 
-    await this.notificationsService.deleteAnnouncement(boardingHouseId, id);
+    await this.notificationsService.deleteAnnouncement(boardingHouseId, id)
   }
 }

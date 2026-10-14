@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
-import { Prisma } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { PostsService } from './posts.service';
-import { AiPostTone } from './dto/create-ai-post-draft.dto';
+import { Test, TestingModule } from '@nestjs/testing'
+import { NotFoundException, ForbiddenException } from '@nestjs/common'
+import { Prisma } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { PostsService } from './posts.service'
+import { AiPostTone } from './dto/create-ai-post-draft.dto'
 
 describe('PostsService - AI Rental Post Suggestions (UC-L-12)', () => {
-  let service: PostsService;
+  let service: PostsService
 
   const mockPrisma: any = {
     room: {
@@ -23,35 +23,32 @@ describe('PostsService - AI Rental Post Suggestions (UC-L-12)', () => {
     boardingHouse: {
       count: jest.fn(),
     },
-  };
+  }
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PostsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
-    }).compile();
+      providers: [PostsService, { provide: PrismaService, useValue: mockPrisma }],
+    }).compile()
 
-    service = module.get<PostsService>(PostsService);
-  });
+    service = module.get<PostsService>(PostsService)
+  })
 
   describe('generateAiPostDraft', () => {
     const mockDto = {
       roomId: 'room-1',
       tone: AiPostTone.PROFESSIONAL,
       customNotes: 'Miễn phí wifi tháng đầu',
-    };
+    }
 
     it('throws NotFoundException if room is not found', async () => {
-      mockPrisma.room.findUnique.mockResolvedValue(null);
+      mockPrisma.room.findUnique.mockResolvedValue(null)
 
       await expect(service.generateAiPostDraft('user-1', mockDto)).rejects.toThrow(
         NotFoundException,
-      );
-    });
+      )
+    })
 
     it('throws ForbiddenException if room belongs to another landlord', async () => {
       mockPrisma.room.findUnique.mockResolvedValue({
@@ -60,12 +57,12 @@ describe('PostsService - AI Rental Post Suggestions (UC-L-12)', () => {
           id: 'bh-1',
           ownerId: 'different-owner',
         },
-      });
+      })
 
       await expect(service.generateAiPostDraft('user-1', mockDto)).rejects.toThrow(
         ForbiddenException,
-      );
-    });
+      )
+    })
 
     it('successfully generates AI rental post draft and records AiConversation and AiMessages', async () => {
       mockPrisma.room.findUnique.mockResolvedValue({
@@ -101,24 +98,24 @@ describe('PostsService - AI Rental Post Suggestions (UC-L-12)', () => {
             rentPrice: new Prisma.Decimal('4000000.00'),
           },
         ],
-      });
+      })
 
-      mockPrisma.aiConversation.findFirst.mockResolvedValue(null);
-      mockPrisma.aiConversation.create.mockResolvedValue({ id: 'conv-123' });
-      mockPrisma.aiMessage.create.mockResolvedValue({ id: 'msg-1' });
+      mockPrisma.aiConversation.findFirst.mockResolvedValue(null)
+      mockPrisma.aiConversation.create.mockResolvedValue({ id: 'conv-123' })
+      mockPrisma.aiMessage.create.mockResolvedValue({ id: 'msg-1' })
 
-      const result = await service.generateAiPostDraft('user-1', mockDto);
+      const result = await service.generateAiPostDraft('user-1', mockDto)
 
-      expect(result).toBeDefined();
-      expect(result.conversationId).toBe('conv-123');
-      expect(result.title).toContain('P.202');
-      expect(result.title).toContain('Sunrise Residence');
-      expect(result.content).toContain('TỔNG QUAN PHÒNG TRỌ');
-      expect(result.content).toContain('TIỆN NGHI & NỘI THẤT');
-      expect(result.content).toContain('BIỂU PHÍ DỊCH VỤ');
-      expect(result.depositAmount).toBe(4000000);
-      expect(result.highlights).toContain('Miễn phí wifi tháng đầu');
-      expect(result.imageUrls).toContain('https://example.com/room-202.jpg');
+      expect(result).toBeDefined()
+      expect(result.conversationId).toBe('conv-123')
+      expect(result.title).toContain('P.202')
+      expect(result.title).toContain('Sunrise Residence')
+      expect(result.content).toContain('TỔNG QUAN PHÒNG TRỌ')
+      expect(result.content).toContain('TIỆN NGHI & NỘI THẤT')
+      expect(result.content).toContain('BIỂU PHÍ DỊCH VỤ')
+      expect(result.depositAmount).toBe(4000000)
+      expect(result.highlights).toContain('Miễn phí wifi tháng đầu')
+      expect(result.imageUrls).toContain('https://example.com/room-202.jpg')
 
       // Verify conversation and message creation
       expect(mockPrisma.aiConversation.create).toHaveBeenCalledWith({
@@ -126,10 +123,10 @@ describe('PostsService - AI Rental Post Suggestions (UC-L-12)', () => {
           userId: 'user-1',
           boardingHouseId: 'bh-1',
         },
-      });
-      expect(mockPrisma.aiMessage.create).toHaveBeenCalledTimes(2);
-    });
-  });
+      })
+      expect(mockPrisma.aiMessage.create).toHaveBeenCalledTimes(2)
+    })
+  })
 
   describe('getUnlistedVacantRooms', () => {
     it('returns vacant rooms that do not have an active listing', async () => {
@@ -156,15 +153,15 @@ describe('PostsService - AI Rental Post Suggestions (UC-L-12)', () => {
           },
           contracts: [],
         },
-      ]);
+      ])
 
-      const result = await service.getUnlistedVacantRooms('user-1');
+      const result = await service.getUnlistedVacantRooms('user-1')
 
-      expect(result).toHaveLength(1);
-      expect(result[0].roomId).toBe('room-101');
-      expect(result[0].roomNumber).toBe('101');
-      expect(result[0].boardingHouseName).toBe('Nhà trọ Cầu Giấy');
-      expect(result[0].vacantDays).toBeGreaterThanOrEqual(5);
-    });
-  });
-});
+      expect(result).toHaveLength(1)
+      expect(result[0].roomId).toBe('room-101')
+      expect(result[0].roomNumber).toBe('101')
+      expect(result[0].boardingHouseName).toBe('Nhà trọ Cầu Giấy')
+      expect(result[0].vacantDays).toBeGreaterThanOrEqual(5)
+    })
+  })
+})

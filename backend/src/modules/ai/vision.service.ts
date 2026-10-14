@@ -1,26 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { MeterOcrResult } from './interfaces/meter-ocr-result.interface';
-import { IdCardOcrResult } from './interfaces/id-card-ocr-result.interface';
+import { Injectable, Logger } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { MeterOcrResult } from './interfaces/meter-ocr-result.interface'
+import { IdCardOcrResult } from './interfaces/id-card-ocr-result.interface'
 
 @Injectable()
 export class VisionService {
-  private readonly logger = new Logger(VisionService.name);
-  private readonly apiKey: string;
-  private readonly model: string;
+  private readonly logger = new Logger(VisionService.name)
+  private readonly apiKey: string
+  private readonly model: string
 
   constructor(private readonly configService: ConfigService) {
-    this.apiKey =
-      this.configService.get<string>('ai.apiKey') ||
-      process.env.AI_API_KEY ||
-      '';
+    this.apiKey = this.configService.get<string>('ai.apiKey') || process.env.AI_API_KEY || ''
     this.model =
       this.configService.get<string>('ai.modelImage') ||
       process.env.AI_MODEL_IMAGE ||
-      'gemini-3.5-flash-lite';
+      'gemini-3.5-flash-lite'
 
     if (!this.apiKey) {
-      this.logger.warn('AI_API_KEY is not defined in environment or configuration!');
+      this.logger.warn('AI_API_KEY is not defined in environment or configuration!')
     }
   }
 
@@ -29,22 +26,22 @@ export class VisionService {
    */
   async resolveImageSource(imageInput: string): Promise<{ base64Data: string; mimeType: string }> {
     if (!imageInput || typeof imageInput !== 'string') {
-      throw new Error('Image source must be a non-empty string');
+      throw new Error('Image source must be a non-empty string')
     }
 
-    const trimmed = imageInput.trim();
+    const trimmed = imageInput.trim()
 
     // 1. Data URI format (data:image/jpeg;base64,....)
     if (trimmed.startsWith('data:')) {
-      const commaIndex = trimmed.indexOf(',');
+      const commaIndex = trimmed.indexOf(',')
       if (commaIndex !== -1) {
-        const header = trimmed.slice(0, commaIndex);
-        const base64Data = trimmed.slice(commaIndex + 1).trim();
-        const mimeMatch = header.match(/^data:([^;]+)/);
+        const header = trimmed.slice(0, commaIndex)
+        const base64Data = trimmed.slice(commaIndex + 1).trim()
+        const mimeMatch = header.match(/^data:([^;]+)/)
         return {
           mimeType: mimeMatch ? mimeMatch[1] : 'image/jpeg',
           base64Data,
-        };
+        }
       }
     }
 
@@ -55,24 +52,26 @@ export class VisionService {
           headers: {
             'User-Agent': 'Dormio-AI-Vision/1.0',
           },
-        });
+        })
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch image from URL: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch image from URL: ${response.status} ${response.statusText}`,
+          )
         }
 
-        const contentType = response.headers.get('content-type') || 'image/jpeg';
-        const mimeType = contentType.split(';')[0].trim();
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        const contentType = response.headers.get('content-type') || 'image/jpeg'
+        const mimeType = contentType.split(';')[0].trim()
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
 
         return {
           mimeType: mimeType || 'image/jpeg',
           base64Data: buffer.toString('base64'),
-        };
+        }
       } catch (err: any) {
-        this.logger.error(`Error downloading image from ${trimmed.slice(0, 80)}: ${err.message}`);
-        throw err;
+        this.logger.error(`Error downloading image from ${trimmed.slice(0, 80)}: ${err.message}`)
+        throw err
       }
     }
 
@@ -80,7 +79,7 @@ export class VisionService {
     return {
       mimeType: 'image/jpeg',
       base64Data: trimmed,
-    };
+    }
   }
 
   /**
@@ -91,16 +90,14 @@ export class VisionService {
     imageInput: string,
     serviceType: string = 'general',
   ): Promise<MeterOcrResult> {
-    this.logger.log(`Extracting meter reading using ${this.model} for serviceType: ${serviceType}`);
+    this.logger.log(`Extracting meter reading using ${this.model} for serviceType: ${serviceType}`)
 
-    const { base64Data, mimeType } = await this.resolveImageSource(imageInput);
+    const { base64Data, mimeType } = await this.resolveImageSource(imageInput)
 
     const isElectricity =
-      serviceType.toLowerCase().includes('điện') ||
-      serviceType.toLowerCase().includes('elec');
+      serviceType.toLowerCase().includes('điện') || serviceType.toLowerCase().includes('elec')
     const isWater =
-      serviceType.toLowerCase().includes('nước') ||
-      serviceType.toLowerCase().includes('water');
+      serviceType.toLowerCase().includes('nước') || serviceType.toLowerCase().includes('water')
 
     const prompt = `Bạn là chuyên gia thị giác AI phân tích ảnh đồng hồ/công tơ điện và nước tại Việt Nam (UC-T-03).
 Dịch vụ cần nhận diện chỉ số: "${serviceType}".
@@ -150,9 +147,9 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
   "confidence": <number: từ 0.0 đến 1.0 biểu thị độ tin cậy>,
   "isAnomalyWarning": <boolean: true nếu nghi ngờ sai lệch, false nếu rõ ràng>,
   "notes": "<string: ghi chú ngắn gọn về đặc điểm công tơ hoặc lý do không hợp lệ>"
-}`;
+}`
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
 
     const payload = {
       contents: [
@@ -173,75 +170,86 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
         temperature: 0.1,
         responseMimeType: 'application/json',
       },
-    };
+    }
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    });
+    })
 
     if (!response.ok) {
-      const errText = await response.text();
-      this.logger.error(`Gemini Vision API error (${response.status}): ${errText}`);
-      throw new Error(`Gemini Vision request failed with status ${response.status}`);
+      const errText = await response.text()
+      this.logger.error(`Gemini Vision API error (${response.status}): ${errText}`)
+      throw new Error(`Gemini Vision request failed with status ${response.status}`)
     }
 
-    const data = await response.json();
-    this.logger.debug(`Gemini Vision response received: ${JSON.stringify(data).slice(0, 300)}...`);
+    const data = await response.json()
+    this.logger.debug(`Gemini Vision response received: ${JSON.stringify(data).slice(0, 300)}...`)
 
-    const candidate = data.candidates?.[0];
+    const candidate = data.candidates?.[0]
     if (!candidate) {
-      this.logger.error(`Gemini Vision returned no candidates: ${JSON.stringify(data)}`);
-      throw new Error('Gemini Vision did not return any candidates');
+      this.logger.error(`Gemini Vision returned no candidates: ${JSON.stringify(data)}`)
+      throw new Error('Gemini Vision did not return any candidates')
     }
 
     if (candidate.finishReason === 'SAFETY') {
-      this.logger.warn(`Gemini Vision image blocked by safety filter: ${JSON.stringify(candidate.safetyRatings)}`);
-      throw new Error('Hình ảnh bị bộ lọc an toàn của Google chặn. Vui lòng chụp lại ảnh rõ nét, không bị lóa.');
+      this.logger.warn(
+        `Gemini Vision image blocked by safety filter: ${JSON.stringify(candidate.safetyRatings)}`,
+      )
+      throw new Error(
+        'Hình ảnh bị bộ lọc an toàn của Google chặn. Vui lòng chụp lại ảnh rõ nét, không bị lóa.',
+      )
     }
 
     // Extract text from parts (handling possible thought / reasoning parts in newer Gemini models)
-    const parts = candidate.content?.parts || [];
-    let rawText = '';
+    const parts = candidate.content?.parts || []
+    let rawText = ''
     for (const part of parts) {
       if (part.text && !part.thought) {
-        rawText += part.text;
+        rawText += part.text
       }
     }
     if (!rawText && parts[0]?.text) {
-      rawText = parts[0].text;
+      rawText = parts[0].text
     }
 
     if (!rawText) {
-      this.logger.error(`Gemini Vision response parts did not contain text content: ${JSON.stringify(data)}`);
-      throw new Error('Gemini Vision did not return candidate text content');
+      this.logger.error(
+        `Gemini Vision response parts did not contain text content: ${JSON.stringify(data)}`,
+      )
+      throw new Error('Gemini Vision did not return candidate text content')
     }
 
     // Clean potential Markdown wrapping (```json ... ```)
-    let cleanedJson = rawText.trim();
+    let cleanedJson = rawText.trim()
     if (cleanedJson.startsWith('```')) {
-      cleanedJson = cleanedJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      cleanedJson = cleanedJson
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim()
     }
-    const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/);
+    const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      cleanedJson = jsonMatch[0];
+      cleanedJson = jsonMatch[0]
     }
 
     try {
-      const parsed = JSON.parse(cleanedJson);
-      const isValid = Boolean(parsed.isValid);
-      const errorCode = parsed.errorCode || (!isValid ? 'UNKNOWN' : null);
+      const parsed = JSON.parse(cleanedJson)
+      const isValid = Boolean(parsed.isValid)
+      const errorCode = parsed.errorCode || (!isValid ? 'UNKNOWN' : null)
       const errorMessage =
         parsed.errorMessage ||
-        (!isValid ? 'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể nhận diện được chỉ số' : null);
+        (!isValid
+          ? 'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể nhận diện được chỉ số'
+          : null)
 
-      let readingValue: number | null = null;
+      let readingValue: number | null = null
       if (isValid && parsed.readingValue !== null && parsed.readingValue !== undefined) {
         readingValue =
           typeof parsed.readingValue === 'number'
             ? parsed.readingValue
-            : parseFloat(parsed.readingValue) || null;
+            : parseFloat(parsed.readingValue) || null
       }
 
       return {
@@ -250,15 +258,16 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
         errorMessage,
         readingValue,
         rawDigits: String(parsed.rawDigits || ''),
-        meterType: parsed.meterType || (isWater ? 'water' : isElectricity ? 'electricity' : 'unknown'),
+        meterType:
+          parsed.meterType || (isWater ? 'water' : isElectricity ? 'electricity' : 'unknown'),
         unit: parsed.unit || (isWater ? 'm3' : 'kWh'),
-        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : (isValid ? 0.85 : 0),
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : isValid ? 0.85 : 0,
         isAnomalyWarning: Boolean(parsed.isAnomalyWarning),
         notes: parsed.notes || '',
-      };
+      }
     } catch (parseErr) {
-      this.logger.error(`Failed to parse Gemini JSON output: ${cleanedJson}`);
-      throw new Error('Invalid JSON format returned from AI model');
+      this.logger.error(`Failed to parse Gemini JSON output: ${cleanedJson}`)
+      throw new Error('Invalid JSON format returned from AI model')
     }
   }
 
@@ -269,9 +278,9 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
     imageInput: string,
     side: 'front' | 'back' = 'front',
   ): Promise<IdCardOcrResult> {
-    this.logger.log(`Extracting CCCD information (${side}) using ${this.model}`);
+    this.logger.log(`Extracting CCCD information (${side}) using ${this.model}`)
 
-    const { base64Data, mimeType } = await this.resolveImageSource(imageInput);
+    const { base64Data, mimeType } = await this.resolveImageSource(imageInput)
 
     const prompt = `Bạn là trợ lý AI chuyên bóc tách thông tin Căn Cước Công Dân (CCCD gắn chip / mã vạch) Việt Nam.
 Mặt ảnh: ${side === 'front' ? 'MẶT TRƯỚC' : 'MẶT SAU'}.
@@ -297,9 +306,9 @@ BẮT BUỘC TRẢ VỀ JSON:
   "expiryDate": "<string>",
   "confidence": <number: từ 0.0 đến 1.0>,
   "notes": "<string: ghi chú nếu ảnh mờ/lóa góc>"
-}`;
+}`
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
 
     const payload = {
       contents: [
@@ -320,43 +329,46 @@ BẮT BUỘC TRẢ VỀ JSON:
         temperature: 0.1,
         responseMimeType: 'application/json',
       },
-    };
+    }
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    });
+    })
 
     if (!response.ok) {
-      const errText = await response.text();
-      this.logger.error(`Gemini ID Card Vision error (${response.status}): ${errText}`);
-      throw new Error(`Gemini ID Card Vision request failed: ${response.status}`);
+      const errText = await response.text()
+      this.logger.error(`Gemini ID Card Vision error (${response.status}): ${errText}`)
+      throw new Error(`Gemini ID Card Vision request failed: ${response.status}`)
     }
 
-    const data = await response.json();
-    const candidate = data.candidates?.[0];
-    const parts = candidate?.content?.parts || [];
-    let rawText = '';
+    const data = await response.json()
+    const candidate = data.candidates?.[0]
+    const parts = candidate?.content?.parts || []
+    let rawText = ''
     for (const part of parts) {
       if (part.text && !part.thought) {
-        rawText += part.text;
+        rawText += part.text
       }
     }
     if (!rawText && parts[0]?.text) {
-      rawText = parts[0].text;
+      rawText = parts[0].text
     }
 
-    let cleanedJson = rawText.trim();
+    let cleanedJson = rawText.trim()
     if (cleanedJson.startsWith('```')) {
-      cleanedJson = cleanedJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      cleanedJson = cleanedJson
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim()
     }
-    const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/);
+    const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      cleanedJson = jsonMatch[0];
+      cleanedJson = jsonMatch[0]
     }
 
-    return JSON.parse(cleanedJson) as IdCardOcrResult;
+    return JSON.parse(cleanedJson) as IdCardOcrResult
   }
 
   /**
@@ -366,10 +378,10 @@ BẮT BUỘC TRẢ VỀ JSON:
     imageUrls: string[],
   ): Promise<{ features: string[]; description: string }> {
     if (!imageUrls || imageUrls.length === 0) {
-      return { features: [], description: '' };
+      return { features: [], description: '' }
     }
 
-    this.logger.log(`Analyzing ${imageUrls.length} room photos using ${this.model}`);
+    this.logger.log(`Analyzing ${imageUrls.length} room photos using ${this.model}`)
 
     const parts: any[] = [
       {
@@ -384,28 +396,28 @@ Trả về JSON:
   "description": "<đoạn mô tả ngắn về không gian>"
 }`,
       },
-    ];
+    ]
 
     for (const url of imageUrls.slice(0, 3)) {
       try {
-        const { base64Data, mimeType } = await this.resolveImageSource(url);
+        const { base64Data, mimeType } = await this.resolveImageSource(url)
         parts.push({
           inlineData: {
             mimeType,
             data: base64Data,
           },
-        });
+        })
       } catch (err) {
-        this.logger.warn(`Could not load image ${url} for room analysis: ${err}`);
+        this.logger.warn(`Could not load image ${url} for room analysis: ${err}`)
       }
     }
 
     // If no images could be resolved, return empty
     if (parts.length === 1) {
-      return { features: [], description: '' };
+      return { features: [], description: '' }
     }
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -417,19 +429,19 @@ Trả về JSON:
           responseMimeType: 'application/json',
         },
       }),
-    });
+    })
 
     if (!response.ok) {
-      this.logger.warn(`Room photo analysis failed: ${response.status}`);
-      return { features: [], description: '' };
+      this.logger.warn(`Room photo analysis failed: ${response.status}`)
+      return { features: [], description: '' }
     }
 
-    const data = await response.json();
-    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const data = await response.json()
+    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text
     try {
-      return JSON.parse(rawJson);
+      return JSON.parse(rawJson)
     } catch {
-      return { features: [], description: '' };
+      return { features: [], description: '' }
     }
   }
 }

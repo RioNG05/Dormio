@@ -18,10 +18,7 @@ export default () => ({
   },
 
   platform: {
-    depositHoldDays: parseInt(
-      process.env.PLATFORM_DEPOSIT_HOLD_DAYS ?? '7',
-      10,
-    ),
+    depositHoldDays: parseInt(process.env.PLATFORM_DEPOSIT_HOLD_DAYS ?? '7', 10),
   },
 
   cloudinary: {
@@ -35,4 +32,4 @@ export default () => ({
     modelImage: process.env.AI_MODEL_IMAGE ?? 'gemini-3.5-flash-lite',
     modelText: process.env.AI_MODEL_TEXT ?? 'gemini-3.5-flash-lite',
   },
-});
+})

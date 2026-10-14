@@ -8,7 +8,7 @@ import {
   Request,
   Logger,
   HttpStatus,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -17,22 +17,22 @@ import {
   ApiOkResponse,
   ApiParam,
   ApiHeader,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { PaymentsService } from './payments.service';
-import { QueryLandlordPaymentsDto } from './dto/query-landlord-payments.dto';
+} from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { PaymentsService } from './payments.service'
+import { QueryLandlordPaymentsDto } from './dto/query-landlord-payments.dto'
 import {
   LandlordPaymentsResponseDto,
   LandlordPaymentItemDto,
-} from './dto/landlord-payments-response.dto';
+} from './dto/landlord-payments-response.dto'
 
 @ApiTags('Landlord Payments & Revenue')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 @Controller('landlord/payments')
 export class LandlordPaymentsController {
-  private readonly logger = new Logger(LandlordPaymentsController.name);
+  private readonly logger = new Logger(LandlordPaymentsController.name)
 
   constructor(private readonly paymentsService: PaymentsService) {}
 
@@ -60,16 +60,12 @@ export class LandlordPaymentsController {
     @Headers('X-Boarding-House-Id') boardingHouseId: string,
     @Query() query: QueryLandlordPaymentsDto,
   ): Promise<LandlordPaymentsResponseDto> {
-    const landlordId = req.user?.id || req.user?.sub;
+    const landlordId = req.user?.id || req.user?.sub
     this.logger.log(
       `GET /api/v1/landlord/payments for house ${boardingHouseId} by landlord ${landlordId}`,
-    );
+    )
 
-    return this.paymentsService.getLandlordPayments(
-      boardingHouseId,
-      query,
-      landlordId,
-    );
+    return this.paymentsService.getLandlordPayments(boardingHouseId, query, landlordId)
   }
 
   @Get(':id')
@@ -97,15 +93,11 @@ export class LandlordPaymentsController {
     @Headers('X-Boarding-House-Id') boardingHouseId: string,
     @Param('id') paymentId: string,
   ): Promise<LandlordPaymentItemDto> {
-    const landlordId = req.user?.id || req.user?.sub;
+    const landlordId = req.user?.id || req.user?.sub
     this.logger.log(
       `GET /api/v1/landlord/payments/${paymentId} for house ${boardingHouseId} by landlord ${landlordId}`,
-    );
+    )
 
-    return this.paymentsService.getLandlordPaymentDetail(
-      boardingHouseId,
-      paymentId,
-      landlordId,
-    );
+    return this.paymentsService.getLandlordPaymentDetail(boardingHouseId, paymentId, landlordId)
   }
 }

@@ -1,5 +1,5 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { JwtPayload } from '../../modules/auth/types/jwt-payload.type';
+import { createParamDecorator, ExecutionContext } from '@nestjs/common'
+import { JwtPayload } from '../../modules/auth/types/jwt-payload.type'
 
 /**
  * Extract the current authenticated user from the request.
@@ -10,7 +10,7 @@ import { JwtPayload } from '../../modules/auth/types/jwt-payload.type';
  */
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): JwtPayload => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user as JwtPayload;
+    const request = ctx.switchToHttp().getRequest()
+    return request.user as JwtPayload
   },
-);
+)

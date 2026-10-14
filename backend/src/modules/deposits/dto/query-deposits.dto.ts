@@ -1,7 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsEnum, IsInt, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-import { DepositStatus, DepositType } from '@prisma';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsEnum, IsInt, Min } from 'class-validator'
+import { Type } from 'class-transformer'
+import { DepositStatus, DepositType } from '@prisma'
 
 export class QueryDepositsDto {
   @ApiPropertyOptional({
@@ -13,7 +13,7 @@ export class QueryDepositsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Number of items per page (default: 10)',
@@ -24,7 +24,7 @@ export class QueryDepositsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit?: number = 10
 
   @ApiPropertyOptional({
     description: 'Search by room number, tenant name, phone number, or deposit ID',
@@ -32,7 +32,7 @@ export class QueryDepositsDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by deposit status',
@@ -41,7 +41,7 @@ export class QueryDepositsDto {
   })
   @IsOptional()
   @IsEnum(DepositStatus)
-  status?: DepositStatus;
+  status?: DepositStatus
 
   @ApiPropertyOptional({
     description: 'Filter by deposit type (contract | platform)',
@@ -50,14 +50,15 @@ export class QueryDepositsDto {
   })
   @IsOptional()
   @IsEnum(DepositType)
-  type?: DepositType;
+  type?: DepositType
 
   @ApiPropertyOptional({
-    description: 'Filter by deposit category: "hold" (cọc giữ chỗ, contractId is null) or "contract" (cọc hợp đồng, contractId is not null)',
+    description:
+      'Filter by deposit category: "hold" (cọc giữ chỗ, contractId is null) or "contract" (cọc hợp đồng, contractId is not null)',
     enum: ['hold', 'contract'],
     example: 'hold',
   })
   @IsOptional()
   @IsString()
-  depositCategory?: 'hold' | 'contract';
+  depositCategory?: 'hold' | 'contract'
 }

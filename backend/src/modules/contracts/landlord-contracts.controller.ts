@@ -12,8 +12,8 @@ import {
   Logger,
   ParseUUIDPipe,
   Res,
-} from '@nestjs/common';
-import type { Response } from 'express';
+} from '@nestjs/common'
+import type { Response } from 'express'
 import {
   ApiTags,
   ApiOperation,
@@ -23,23 +23,23 @@ import {
   ApiHeader,
   ApiResponse,
   ApiProduces,
-} from '@nestjs/swagger';
-import { ContractsService } from './contracts.service';
-import { CreateContractPlatformDto } from './dto/create-contract-platform.dto';
-import { CreateContractDirectDto } from './dto/create-contract-direct.dto';
-import { QueryContractsDto } from './dto/query-contracts.dto';
-import { ExportContractResponseDto } from './dto/export-contract-response.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+} from '@nestjs/swagger'
+import { ContractsService } from './contracts.service'
+import { CreateContractPlatformDto } from './dto/create-contract-platform.dto'
+import { CreateContractDirectDto } from './dto/create-contract-direct.dto'
+import { QueryContractsDto } from './dto/query-contracts.dto'
+import { ExportContractResponseDto } from './dto/export-contract-response.dto'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Landlord Contracts')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('landlord/contracts')
 export class LandlordContractsController {
-  private readonly logger = new Logger(LandlordContractsController.name);
+  private readonly logger = new Logger(LandlordContractsController.name)
 
   constructor(private readonly contractsService: ContractsService) {}
 
@@ -68,12 +68,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `GET /landlord/contracts/rooms/${roomId}/pending-deposit called by landlord ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.contractsService.getPendingPlatformDeposit(
-      boardingHouseId,
-      roomId,
-    );
-    return { success: true, data };
+    )
+    const data = await this.contractsService.getPendingPlatformDeposit(boardingHouseId, roomId)
+    return { success: true, data }
   }
 
   // ─── GET /api/v1/landlord/contracts/tenants/search ──────────────────────────
@@ -94,9 +91,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `GET /landlord/contracts/tenants/search?phoneNumber=${phoneNumber} called by landlord ${user?.id}`,
-    );
-    const data = await this.contractsService.searchTenantByPhone(phoneNumber);
-    return { success: true, data };
+    )
+    const data = await this.contractsService.searchTenantByPhone(phoneNumber)
+    return { success: true, data }
   }
 
   // ─── POST /api/v1/landlord/contracts/platform ───────────────────────────────
@@ -128,13 +125,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `POST /landlord/contracts/platform called by landlord ${user?.id} for room ${dto.roomId} in house ${boardingHouseId}`,
-    );
-    const data = await this.contractsService.createPlatformContract(
-      user.id,
-      boardingHouseId,
-      dto,
-    );
-    return { success: true, data };
+    )
+    const data = await this.contractsService.createPlatformContract(user.id, boardingHouseId, dto)
+    return { success: true, data }
   }
 
   // ─── POST /api/v1/landlord/contracts/direct ─────────────────────────────────
@@ -166,13 +159,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `POST /landlord/contracts/direct called by landlord ${user?.id} for room ${dto.roomId} in house ${boardingHouseId}`,
-    );
-    const data = await this.contractsService.createDirectContract(
-      user.id,
-      boardingHouseId,
-      dto,
-    );
-    return { success: true, data };
+    )
+    const data = await this.contractsService.createDirectContract(user.id, boardingHouseId, dto)
+    return { success: true, data }
   }
 
   // ─── GET /api/v1/landlord/contracts ─────────────────────────────────────────
@@ -200,12 +189,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `GET /landlord/contracts called by landlord ${user?.id} for house ${boardingHouseId} (page=${query.page}, search=${query.search || ''})`,
-    );
-    const result = await this.contractsService.getLandlordContracts(
-      boardingHouseId,
-      query,
-    );
-    return { success: true, ...result };
+    )
+    const result = await this.contractsService.getLandlordContracts(boardingHouseId, query)
+    return { success: true, ...result }
   }
 
   // ─── GET /api/v1/landlord/contracts/:id ─────────────────────────────────────
@@ -233,12 +219,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `GET /landlord/contracts/${id} called by landlord ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.contractsService.getContractById(
-      boardingHouseId,
-      id,
-    );
-    return { success: true, data };
+    )
+    const data = await this.contractsService.getContractById(boardingHouseId, id)
+    return { success: true, data }
   }
 
   // ─── POST /api/v1/landlord/contracts/:id/export ────────────────────────────
@@ -267,13 +250,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `POST /landlord/contracts/${id}/export called by landlord ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.contractsService.exportContract(
-      boardingHouseId,
-      id,
-      user.id,
-    );
-    return { success: true, data };
+    )
+    const data = await this.contractsService.exportContract(boardingHouseId, id, user.id)
+    return { success: true, data }
   }
 
   // ─── GET /api/v1/landlord/contracts/:id/print ──────────────────────────────
@@ -304,16 +283,16 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `GET /landlord/contracts/${id}/print (autoPrint=${autoPrint}) called by landlord ${user?.id} for house ${boardingHouseId}`,
-    );
-    const isAutoPrint = autoPrint === 'true' || autoPrint === '1';
+    )
+    const isAutoPrint = autoPrint === 'true' || autoPrint === '1'
     const html = await this.contractsService.getContractPrintHtml(
       boardingHouseId,
       id,
       isAutoPrint,
       true,
-    );
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(html);
+    )
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    return res.send(html)
   }
 
   // ─── GET /api/v1/landlord/contracts/:id/documents ──────────────────────────
@@ -340,12 +319,9 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `GET /landlord/contracts/${id}/documents called by landlord ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.contractsService.getContractDocuments(
-      boardingHouseId,
-      id,
-    );
-    return { success: true, data };
+    )
+    const data = await this.contractsService.getContractDocuments(boardingHouseId, id)
+    return { success: true, data }
   }
 
   // ─── GET /api/v1/landlord/contracts/:id/documents/:documentId/download ─────
@@ -375,16 +351,15 @@ export class LandlordContractsController {
   ) {
     this.logger.log(
       `GET /landlord/contracts/${id}/documents/${documentId}/download called by landlord ${user?.id} for house ${boardingHouseId}`,
-    );
-    const { filename, html } =
-      await this.contractsService.getContractDocumentDownload(
-        boardingHouseId,
-        id,
-        documentId,
-      );
+    )
+    const { filename, html } = await this.contractsService.getContractDocumentDownload(
+      boardingHouseId,
+      id,
+      documentId,
+    )
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    return res.send(html);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    return res.send(html)
   }
 }

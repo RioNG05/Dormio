@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import {
   MessageSquare,
   AlertTriangle,
@@ -25,284 +25,281 @@ import {
   Sparkles,
   ChevronRight,
   ChevronLeft,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import {
-  grievanceService,
-  Grievance,
-  GrievancePriority,
-} from "@/services/grievance.service";
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { grievanceService, Grievance, GrievancePriority } from '@/services/grievance.service'
 
 export default function TenantAdminComplaintsPage() {
-  const t = useTranslations("tenantPortal");
-  const { locale } = useLanguage();
+  const t = useTranslations('tenantPortal')
+  const { locale } = useLanguage()
 
-  const [loading, setLoading] = useState(true);
-  const [complaints, setComplaints] = useState<Grievance[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedGrievance, setSelectedGrievance] = useState<Grievance | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true)
+  const [complaints, setComplaints] = useState<Grievance[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedGrievance, setSelectedGrievance] = useState<Grievance | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   // View Mode: Grid (default, Rule #9) vs Table
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
   // Filter and search state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = viewMode === "grid" ? 6 : 10;
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = viewMode === 'grid' ? 6 : 10
 
   // Create form state
-  const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState<GrievancePriority>("medium");
-  const [category, setCategory] = useState<string>("catDeposit");
-  const [description, setDescription] = useState("");
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [title, setTitle] = useState('')
+  const [priority, setPriority] = useState<GrievancePriority>('medium')
+  const [category, setCategory] = useState<string>('catDeposit')
+  const [description, setDescription] = useState('')
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [formError, setFormError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Check if form has unsaved modifications (Rule #10)
   const isFormDirty =
-    title.trim() !== "" ||
-    description.trim() !== "" ||
+    title.trim() !== '' ||
+    description.trim() !== '' ||
     uploadedImages.length > 0 ||
-    priority !== "medium";
+    priority !== 'medium'
 
   // 1. Fetch real grievances from backend
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     async function loadData() {
       try {
-        const data = await grievanceService.getTenantGrievances();
-        if (!isMounted) return;
-        setComplaints(data || []);
+        const data = await grievanceService.getTenantGrievances()
+        if (!isMounted) return
+        setComplaints(data || [])
       } catch (err: unknown) {
-        console.warn("Could not load complaints from backend:", err);
-        if (!isMounted) return;
-        setComplaints([]);
+        console.warn('Could not load complaints from backend:', err)
+        if (!isMounted) return
+        setComplaints([])
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setLoading(false)
         }
       }
     }
 
-    loadData();
+    loadData()
 
     return () => {
-      isMounted = false;
-    };
-  }, []);
+      isMounted = false
+    }
+  }, [])
 
   const resetForm = () => {
-    setTitle("");
-    setPriority("medium");
-    setCategory("catDeposit");
-    setDescription("");
-    setUploadedImages([]);
-    setFormError(null);
-    setShowExitConfirm(false);
-  };
+    setTitle('')
+    setPriority('medium')
+    setCategory('catDeposit')
+    setDescription('')
+    setUploadedImages([])
+    setFormError(null)
+    setShowExitConfirm(false)
+  }
 
   const handleCloseModal = () => {
     if (isFormDirty) {
-      setShowExitConfirm(true);
+      setShowExitConfirm(true)
     } else {
-      setIsModalOpen(false);
-      resetForm();
+      setIsModalOpen(false)
+      resetForm()
     }
-  };
+  }
 
   const compressImageFile = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (readerEvent) => {
-        const image = new window.Image();
+    return new Promise(resolve => {
+      const reader = new FileReader()
+      reader.onload = readerEvent => {
+        const image = new window.Image()
         image.onload = () => {
-          const maxDim = 1280;
-          let { width, height } = image;
+          const maxDim = 1280
+          let { width, height } = image
           if (width > maxDim || height > maxDim) {
             if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
+              height = Math.round((height * maxDim) / width)
+              width = maxDim
             } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+              width = Math.round((width * maxDim) / height)
+              height = maxDim
             }
           }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
+          const canvas = document.createElement('canvas')
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
           if (ctx) {
-            ctx.drawImage(image, 0, 0, width, height);
-            resolve(canvas.toDataURL("image/jpeg", 0.82));
+            ctx.drawImage(image, 0, 0, width, height)
+            resolve(canvas.toDataURL('image/jpeg', 0.82))
           } else {
-            resolve(readerEvent.target?.result as string);
+            resolve(readerEvent.target?.result as string)
           }
-        };
-        image.onerror = () => resolve(readerEvent.target?.result as string);
-        image.src = readerEvent.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+        }
+        image.onerror = () => resolve(readerEvent.target?.result as string)
+        image.src = readerEvent.target?.result as string
+      }
+      reader.readAsDataURL(file)
+    })
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
     if (uploadedImages.length + files.length > 5) {
-      setFormError(t("tenantMaxEvidenceImagesError"));
-      return;
+      setFormError(t('tenantMaxEvidenceImagesError'))
+      return
     }
 
-    const compressedList: string[] = [];
+    const compressedList: string[] = []
     for (let i = 0; i < files.length; i++) {
-      const base64 = await compressImageFile(files[i]);
-      compressedList.push(base64);
+      const base64 = await compressImageFile(files[i])
+      compressedList.push(base64)
     }
 
-    setUploadedImages((prev) => [...prev, ...compressedList].slice(0, 5));
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+    setUploadedImages(prev => [...prev, ...compressedList].slice(0, 5))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const removeUploadedImage = (index: number) => {
-    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
-  };
+    setUploadedImages(prev => prev.filter((_, i) => i !== index))
+  }
 
   // Submit new grievance (real backend API with optimistic demo fallback)
   const handleSubmitGrievance = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (!title.trim()) {
-      setFormError(t("tenantTitleRequiredError"));
-      return;
+      setFormError(t('tenantTitleRequiredError'))
+      return
     }
     if (description.trim().length < 10) {
-      setFormError(t("tenantDescMinLengthError"));
-      return;
+      setFormError(t('tenantDescMinLengthError'))
+      return
     }
 
-    setIsSubmitting(true);
-    setFormError(null);
+    setIsSubmitting(true)
+    setFormError(null)
 
     try {
       const newGrievance = await grievanceService.createGrievance({
-        type: "complaint",
+        type: 'complaint',
         title: title.trim(),
         description: description.trim(),
         priority,
         imageUrls: uploadedImages,
-      });
+      })
 
-      setComplaints((prev) => [newGrievance, ...prev]);
-      setIsModalOpen(false);
-      resetForm();
+      setComplaints(prev => [newGrievance, ...prev])
+      setIsModalOpen(false)
+      resetForm()
     } catch (err: unknown) {
-      console.error("API create error:", err);
-      const errorMsg = err instanceof Error ? err.message : t("tenantSubmitFailedError");
-      setFormError(errorMsg);
+      console.error('API create error:', err)
+      const errorMsg = err instanceof Error ? err.message : t('tenantSubmitFailedError')
+      setFormError(errorMsg)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Filtering & Pagination
   const filteredComplaints = useMemo(() => {
-    return complaints.filter((item) => {
+    return complaints.filter(item => {
       const matchSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.id.toLowerCase().includes(searchQuery.toLowerCase());
+        item.id.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const statusStr = String(item.status);
+      const statusStr = String(item.status)
       const matchStatus =
-        statusFilter === "all" ||
-        (statusFilter === "resolved" && (statusStr === "resolved" || statusStr === "closed")) ||
-        (statusFilter === "in_progress" && (statusStr === "in_progress" || statusStr === "investigating")) ||
-        (statusFilter === "pending" && statusStr === "pending");
+        statusFilter === 'all' ||
+        (statusFilter === 'resolved' && (statusStr === 'resolved' || statusStr === 'closed')) ||
+        (statusFilter === 'in_progress' &&
+          (statusStr === 'in_progress' || statusStr === 'investigating')) ||
+        (statusFilter === 'pending' && statusStr === 'pending')
 
-      return matchSearch && matchStatus;
-    });
-  }, [complaints, searchQuery, statusFilter]);
+      return matchSearch && matchStatus
+    })
+  }, [complaints, searchQuery, statusFilter])
 
-  const totalPages = Math.max(1, Math.ceil(filteredComplaints.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(filteredComplaints.length / itemsPerPage))
   const paginatedComplaints = filteredComplaints.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    currentPage * itemsPerPage,
+  )
 
   const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return "-";
+    if (!dateStr) return '-'
     try {
-      const d = new Date(dateStr);
-      return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).format(d);
+      const d = new Date(dateStr)
+      return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(d)
     } catch {
-      return dateStr;
+      return dateStr
     }
-  };
+  }
 
   const getPriorityBadge = (p: string) => {
     switch (p) {
-      case "urgent":
-      case "high":
+      case 'urgent':
+      case 'high':
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black uppercase flex items-center gap-1">
             <AlertTriangle className="w-3 h-3 text-rose-600" />
-            <span>{t("tenantPriorityUrgent")}</span>
+            <span>{t('tenantPriorityUrgent')}</span>
           </span>
-        );
-      case "medium":
+        )
+      case 'medium':
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black uppercase">
-            {t("tenantPriorityNormal")}
+            {t('tenantPriorityNormal')}
           </span>
-        );
+        )
       default:
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-[10px] font-black uppercase">
-            {t("tenantPriorityLow")}
+            {t('tenantPriorityLow')}
           </span>
-        );
+        )
     }
-  };
+  }
 
   const getStatusBadge = (s: string) => {
     switch (s) {
-      case "resolved":
-      case "closed":
+      case 'resolved':
+      case 'closed':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span>{t("tenantStatusResponded")}</span>
+            <span>{t('tenantStatusResponded')}</span>
           </span>
-        );
-      case "in_progress":
-      case "investigating":
+        )
+      case 'in_progress':
+      case 'investigating':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
             <Clock className="w-3 h-3 text-blue-600 animate-spin" />
-            <span>{t("tenantStatusProcessing")}</span>
+            <span>{t('tenantStatusProcessing')}</span>
           </span>
-        );
+        )
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span>{t("tenantStatusUnresponded")}</span>
+            <span>{t('tenantStatusUnresponded')}</span>
           </span>
-        );
+        )
     }
-  };
+  }
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 animate-in fade-in duration-300 max-w-7xl mx-auto px-1 sm:px-0">
@@ -311,25 +308,25 @@ export default function TenantAdminComplaintsPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/70 text-[#2AC1BC] text-[11px] font-bold mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{t("tenantEscrowProtectedBadge")}</span>
+            <span>{t('tenantEscrowProtectedBadge')}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t("tenantComplaintsTitle")}
+            {t('tenantComplaintsTitle')}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1 leading-relaxed max-w-3xl">
-            {t("tenantComplaintsSubtitle")}
+            {t('tenantComplaintsSubtitle')}
           </p>
         </div>
 
         <Button
           onClick={() => {
-            resetForm();
-            setIsModalOpen(true);
+            resetForm()
+            setIsModalOpen(true)
           }}
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#2AC1BC] to-[#20a8a3] hover:from-[#20a8a3] hover:to-[#1a938f] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#2AC1BC]/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>{t("tenantBtnNewComplaint")}</span>
+          <span>{t('tenantBtnNewComplaint')}</span>
         </Button>
       </div>
 
@@ -341,21 +338,19 @@ export default function TenantAdminComplaintsPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto p-1 bg-zinc-100/80 rounded-2xl">
             <button
               onClick={() => {
-                setStatusFilter("all");
-                setCurrentPage(1);
+                setStatusFilter('all')
+                setCurrentPage(1)
               }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
-                statusFilter === "all"
-                  ? "bg-white text-zinc-900 shadow-xs"
-                  : "text-zinc-600 hover:text-zinc-900"
+                statusFilter === 'all'
+                  ? 'bg-white text-zinc-900 shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
-              <span>{t("tenantTabAllIssues")}</span>
+              <span>{t('tenantTabAllIssues')}</span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  statusFilter === "all"
-                    ? "bg-zinc-900 text-white"
-                    : "bg-zinc-200 text-zinc-700"
+                  statusFilter === 'all' ? 'bg-zinc-900 text-white' : 'bg-zinc-200 text-zinc-700'
                 }`}
               >
                 {complaints.length}
@@ -363,52 +358,56 @@ export default function TenantAdminComplaintsPage() {
             </button>
             <button
               onClick={() => {
-                setStatusFilter("pending");
-                setCurrentPage(1);
+                setStatusFilter('pending')
+                setCurrentPage(1)
               }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
-                statusFilter === "pending"
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : "text-zinc-600 hover:text-zinc-900"
+                statusFilter === 'pending'
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
-                <span>{t("tenantStatusUnresponded")}</span>
+                <span>{t('tenantStatusUnresponded')}</span>
               </div>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  statusFilter === "pending"
-                    ? "bg-amber-600 text-white"
-                    : "bg-amber-100 text-amber-800"
+                  statusFilter === 'pending'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-amber-100 text-amber-800'
                 }`}
               >
-                {complaints.filter((c) => c.status === "pending").length}
+                {complaints.filter(c => c.status === 'pending').length}
               </span>
             </button>
             <button
               onClick={() => {
-                setStatusFilter("resolved");
-                setCurrentPage(1);
+                setStatusFilter('resolved')
+                setCurrentPage(1)
               }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
-                statusFilter === "resolved"
-                  ? "bg-[#2AC1BC] text-white shadow-xs"
-                  : "text-zinc-600 hover:text-zinc-900"
+                statusFilter === 'resolved'
+                  ? 'bg-[#2AC1BC] text-white shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
               <div className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{t("tenantStatusResponded")}</span>
+                <span>{t('tenantStatusResponded')}</span>
               </div>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  statusFilter === "resolved"
-                    ? "bg-[#20a8a3] text-white"
-                    : "bg-emerald-100 text-emerald-800"
+                  statusFilter === 'resolved'
+                    ? 'bg-[#20a8a3] text-white'
+                    : 'bg-emerald-100 text-emerald-800'
                 }`}
               >
-                {complaints.filter((c) => c.status === "resolved" || (c.status as string) === "closed").length}
+                {
+                  complaints.filter(
+                    c => c.status === 'resolved' || (c.status as string) === 'closed',
+                  ).length
+                }
               </span>
             </button>
           </div>
@@ -417,24 +416,24 @@ export default function TenantAdminComplaintsPage() {
             {/* View Mode Toggle: Grid vs Table (Rule #9) */}
             <div className="flex items-center gap-1 p-1 bg-white border border-zinc-200 rounded-xl shrink-0">
               <button
-                onClick={() => setViewMode("grid")}
+                onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === "grid"
-                    ? "bg-zinc-900 text-white shadow-xs"
-                    : "text-zinc-500 hover:text-zinc-900"
+                  viewMode === 'grid'
+                    ? 'bg-zinc-900 text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-zinc-900'
                 }`}
-                title={t("tenantGridView")}
+                title={t('tenantGridView')}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setViewMode("table")}
+                onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === "table"
-                    ? "bg-zinc-900 text-white shadow-xs"
-                    : "text-zinc-500 hover:text-zinc-900"
+                  viewMode === 'table'
+                    ? 'bg-zinc-900 text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-zinc-900'
                 }`}
-                title={t("tenantTableView")}
+                title={t('tenantTableView')}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -445,11 +444,11 @@ export default function TenantAdminComplaintsPage() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
+                onChange={e => {
+                  setSearchQuery(e.target.value)
+                  setCurrentPage(1)
                 }}
-                placeholder={t("tenantSearchGrievancePlaceholder")}
+                placeholder={t('tenantSearchGrievancePlaceholder')}
                 className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
               />
             </div>
@@ -457,15 +456,15 @@ export default function TenantAdminComplaintsPage() {
         </div>
 
         {/* Content: Grid or Table */}
-        {viewMode === "grid" ? (
+        {viewMode === 'grid' ? (
           /* Grid View (Rule #9 Default) */
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {paginatedComplaints.length === 0 ? (
               <div className="col-span-full py-12 text-center text-zinc-400 text-xs">
-                {t("tenantNoGrievancesFound")}
+                {t('tenantNoGrievancesFound')}
               </div>
             ) : (
-              paginatedComplaints.map((item) => (
+              paginatedComplaints.map(item => (
                 <div
                   key={item.id}
                   onClick={() => setSelectedGrievance(item)}
@@ -478,7 +477,7 @@ export default function TenantAdminComplaintsPage() {
                           {item.id}
                         </span>
                         <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-orange-50 text-[#FF6B35] border border-orange-200/80">
-                          {t("tenantBqtDormioBadge")}
+                          {t('tenantBqtDormioBadge')}
                         </span>
                       </div>
                       {getPriorityBadge(item.priority)}
@@ -498,7 +497,7 @@ export default function TenantAdminComplaintsPage() {
                     <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100 text-[11px] text-emerald-800 space-y-1">
                       <div className="font-black flex items-center gap-1 text-emerald-700">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>{t("tenantResolutionResponseFromAdmin")}</span>
+                        <span>{t('tenantResolutionResponseFromAdmin')}</span>
                       </div>
                       <p className="line-clamp-2 font-medium leading-relaxed">
                         {item.resolutionNote}
@@ -507,9 +506,7 @@ export default function TenantAdminComplaintsPage() {
                   )}
 
                   <div className="border-t border-zinc-100 pt-3 flex items-center justify-between text-[11px]">
-                    <span className="text-zinc-400 font-medium">
-                      {formatDate(item.createdAt)}
-                    </span>
+                    <span className="text-zinc-400 font-medium">{formatDate(item.createdAt)}</span>
                     {getStatusBadge(item.status)}
                   </div>
                 </div>
@@ -522,43 +519,37 @@ export default function TenantAdminComplaintsPage() {
             <table className="w-full text-xs text-left">
               <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 uppercase font-black text-[10px] tracking-wider">
                 <tr>
-                  <th className="px-6 py-4">{t("tenantColGrievanceId")}</th>
-                  <th className="px-6 py-4">{t("tenantColGrievanceTitle")}</th>
-                  <th className="px-6 py-4">{t("tenantColGrievancePriority")}</th>
-                  <th className="px-6 py-4">{t("tenantColGrievanceDate")}</th>
-                  <th className="px-6 py-4">{t("tenantColGrievanceStatus")}</th>
-                  <th className="px-6 py-4 text-right">{t("tenantColGrievanceAction")}</th>
+                  <th className="px-6 py-4">{t('tenantColGrievanceId')}</th>
+                  <th className="px-6 py-4">{t('tenantColGrievanceTitle')}</th>
+                  <th className="px-6 py-4">{t('tenantColGrievancePriority')}</th>
+                  <th className="px-6 py-4">{t('tenantColGrievanceDate')}</th>
+                  <th className="px-6 py-4">{t('tenantColGrievanceStatus')}</th>
+                  <th className="px-6 py-4 text-right">{t('tenantColGrievanceAction')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
                 {paginatedComplaints.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-zinc-400">
-                      {t("tenantNoGrievances")}
+                      {t('tenantNoGrievances')}
                     </td>
                   </tr>
                 ) : (
-                  paginatedComplaints.map((item) => (
+                  paginatedComplaints.map(item => (
                     <tr
                       key={item.id}
                       onClick={() => setSelectedGrievance(item)}
                       className="hover:bg-zinc-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="px-6 py-4 font-mono font-bold text-zinc-500">
-                        {item.id}
-                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-zinc-500">{item.id}</td>
                       <td className="px-6 py-4 font-bold text-zinc-900 max-w-xs truncate">
                         {item.title}
                       </td>
-                      <td className="px-6 py-4">
-                        {getPriorityBadge(item.priority)}
-                      </td>
+                      <td className="px-6 py-4">{getPriorityBadge(item.priority)}</td>
                       <td className="px-6 py-4 text-zinc-600 font-medium">
                         {formatDate(item.createdAt)}
                       </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(item.status)}
-                      </td>
+                      <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
                       <td className="px-6 py-4 text-right">
                         <button className="p-1 text-zinc-400 hover:text-zinc-700">
                           <Eye className="w-4 h-4" />
@@ -575,7 +566,7 @@ export default function TenantAdminComplaintsPage() {
         {/* Standard Pagination Bar (Rule #9) */}
         <div className="p-4 sm:p-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-50/50">
           <div className="text-xs font-medium text-zinc-500">
-            {t("tenantShowingGrievancesRange", {
+            {t('tenantShowingGrievancesRange', {
               from: (currentPage - 1) * itemsPerPage + 1,
               to: Math.min(currentPage * itemsPerPage, filteredComplaints.length),
               total: filteredComplaints.length,
@@ -586,7 +577,7 @@ export default function TenantAdminComplaintsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
             >
@@ -599,8 +590,8 @@ export default function TenantAdminComplaintsPage() {
                 onClick={() => setCurrentPage(i + 1)}
                 className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   currentPage === i + 1
-                    ? "bg-[#2AC1BC] text-white shadow-xs"
-                    : "text-zinc-600 hover:bg-zinc-100"
+                    ? 'bg-[#2AC1BC] text-white shadow-xs'
+                    : 'text-zinc-600 hover:bg-zinc-100'
                 }`}
               >
                 {i + 1}
@@ -610,7 +601,7 @@ export default function TenantAdminComplaintsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
             >
@@ -627,7 +618,7 @@ export default function TenantAdminComplaintsPage() {
           onClick={handleCloseModal}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-hidden flex flex-col border border-zinc-200 my-auto"
           >
             <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
@@ -637,11 +628,9 @@ export default function TenantAdminComplaintsPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-zinc-900">
-                    {t("tenantCreateGrievanceModalTitle")}
+                    {t('tenantCreateGrievanceModalTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-400">
-                    {t("tenantCreateGrievanceModalSubtitle")}
-                  </p>
+                  <p className="text-xs text-zinc-400">{t('tenantCreateGrievanceModalSubtitle')}</p>
                 </div>
               </div>
               <button
@@ -652,7 +641,10 @@ export default function TenantAdminComplaintsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitGrievance} className="p-6 overflow-y-auto space-y-4 text-xs">
+            <form
+              onSubmit={handleSubmitGrievance}
+              className="p-6 overflow-y-auto space-y-4 text-xs"
+            >
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -662,23 +654,29 @@ export default function TenantAdminComplaintsPage() {
 
               {/* Priority Selection */}
               <div>
-                <label className="font-bold text-zinc-700 block mb-1.5">{t("tenantFieldSeverityLabel")}</label>
+                <label className="font-bold text-zinc-700 block mb-1.5">
+                  {t('tenantFieldSeverityLabel')}
+                </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { key: "low", label: t("tenantPriorityLowDesc"), color: "border-zinc-200" },
-                    { key: "medium", label: t("tenantPriorityNormalDesc"), color: "border-amber-200" },
-                    { key: "high", label: t("tenantPriorityUrgentDesc"), color: "border-rose-300" },
-                  ].map((p) => (
+                    { key: 'low', label: t('tenantPriorityLowDesc'), color: 'border-zinc-200' },
+                    {
+                      key: 'medium',
+                      label: t('tenantPriorityNormalDesc'),
+                      color: 'border-amber-200',
+                    },
+                    { key: 'high', label: t('tenantPriorityUrgentDesc'), color: 'border-rose-300' },
+                  ].map(p => (
                     <button
                       key={p.key}
                       type="button"
                       onClick={() => setPriority(p.key as GrievancePriority)}
                       className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                         priority === p.key
-                          ? p.key === "high"
-                            ? "bg-rose-50 border-rose-500 text-rose-700 shadow-xs"
-                            : "bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] shadow-xs"
-                          : "bg-white text-zinc-600 hover:bg-zinc-50"
+                          ? p.key === 'high'
+                            ? 'bg-rose-50 border-rose-500 text-rose-700 shadow-xs'
+                            : 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] shadow-xs'
+                          : 'bg-white text-zinc-600 hover:bg-zinc-50'
                       }`}
                     >
                       {p.label}
@@ -690,13 +688,13 @@ export default function TenantAdminComplaintsPage() {
               {/* Title */}
               <div>
                 <label className="font-bold text-zinc-700 block mb-1.5">
-                  {t("tenantFieldTitleLabel")} <span className="text-rose-500">*</span>
+                  {t('tenantFieldTitleLabel')} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder={t("tenantFieldTitlePlaceholder")}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder={t('tenantFieldTitlePlaceholder')}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs"
                 />
               </div>
@@ -704,13 +702,13 @@ export default function TenantAdminComplaintsPage() {
               {/* Description */}
               <div>
                 <label className="font-bold text-zinc-700 block mb-1.5">
-                  {t("tenantFieldDescLabel")} <span className="text-rose-500">*</span>
+                  {t('tenantFieldDescLabel')} <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   rows={4}
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t("tenantFieldDescPlaceholder")}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder={t('tenantFieldDescPlaceholder')}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs leading-relaxed"
                 />
               </div>
@@ -718,13 +716,16 @@ export default function TenantAdminComplaintsPage() {
               {/* Image attachments */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-bold text-zinc-700">{t("tenantFieldPhotosLabel")}</label>
+                  <label className="font-bold text-zinc-700">{t('tenantFieldPhotosLabel')}</label>
                   <span className="text-zinc-400">{uploadedImages.length}/5</span>
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {uploadedImages.map((img, idx) => (
-                    <div key={idx} className="relative h-20 rounded-xl overflow-hidden border border-zinc-200 group">
+                    <div
+                      key={idx}
+                      className="relative h-20 rounded-xl overflow-hidden border border-zinc-200 group"
+                    >
                       <img src={img} alt="Evidence" className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -743,7 +744,7 @@ export default function TenantAdminComplaintsPage() {
                       className="h-20 rounded-xl border border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#2AC1BC] transition-colors cursor-pointer"
                     >
                       <UploadCloud className="w-5 h-5 mb-1" />
-                      <span className="text-[10px] font-bold">{t("tenantAddPhotoBtn")}</span>
+                      <span className="text-[10px] font-bold">{t('tenantAddPhotoBtn')}</span>
                     </button>
                   )}
                 </div>
@@ -764,14 +765,14 @@ export default function TenantAdminComplaintsPage() {
                   onClick={handleCloseModal}
                   className="px-4 py-2 text-xs font-bold text-zinc-600"
                 >
-                  {t("tenantBtnCancel")}
+                  {t('tenantBtnCancel')}
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#20a8a3] rounded-xl cursor-pointer shadow-sm shadow-[#2AC1BC]/25"
                 >
-                  {isSubmitting ? t("tenantSubmitting") : t("tenantBtnSubmitOfficial")}
+                  {isSubmitting ? t('tenantSubmitting') : t('tenantBtnSubmitOfficial')}
                 </Button>
               </div>
             </form>
@@ -786,7 +787,7 @@ export default function TenantAdminComplaintsPage() {
           onClick={() => setSelectedGrievance(null)}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-hidden flex flex-col border border-zinc-200 my-auto"
           >
             <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
@@ -810,23 +811,38 @@ export default function TenantAdminComplaintsPage() {
                   {selectedGrievance.title}
                 </h3>
                 <div className="text-[11px] text-zinc-400 mt-1 flex items-center gap-2">
-                  <span>{t("tenantSubmittedDateLabel", { date: formatDate(selectedGrievance.createdAt) })}</span>
+                  <span>
+                    {t('tenantSubmittedDateLabel', {
+                      date: formatDate(selectedGrievance.createdAt),
+                    })}
+                  </span>
                   <span>&bull;</span>
-                  <span>{t("tenantRoomGrievanceBadge", { room: selectedGrievance.roomNumber || "101", house: selectedGrievance.boardingHouseName || "Dormio" })}</span>
+                  <span>
+                    {t('tenantRoomGrievanceBadge', {
+                      room: selectedGrievance.roomNumber || '101',
+                      house: selectedGrievance.boardingHouseName || 'Dormio',
+                    })}
+                  </span>
                 </div>
               </div>
 
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">{t("tenantComplaintContentTitle")}</span>
-                <p className="text-zinc-700 font-medium whitespace-pre-wrap">{selectedGrievance.description}</p>
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                  {t('tenantComplaintContentTitle')}
+                </span>
+                <p className="text-zinc-700 font-medium whitespace-pre-wrap">
+                  {selectedGrievance.description}
+                </p>
               </div>
 
               {/* Evidence Images */}
               {selectedGrievance.images && selectedGrievance.images.length > 0 && (
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-2">{t("tenantEvidencePhotosTitle")}</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-2">
+                    {t('tenantEvidencePhotosTitle')}
+                  </span>
                   <div className="flex flex-wrap gap-2">
-                    {selectedGrievance.images.map((img) => (
+                    {selectedGrievance.images.map(img => (
                       <div
                         key={img.id}
                         onClick={() => setPreviewImage(img.url)}
@@ -845,7 +861,11 @@ export default function TenantAdminComplaintsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-black text-emerald-900 text-xs">
                       <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      <span>{t("tenantOfficialResponseFromAdmin", { name: selectedGrievance.resolvedByName || t("tenantDefaultAdminName") })}</span>
+                      <span>
+                        {t('tenantOfficialResponseFromAdmin', {
+                          name: selectedGrievance.resolvedByName || t('tenantDefaultAdminName'),
+                        })}
+                      </span>
                     </div>
                     {selectedGrievance.resolvedAt && (
                       <span className="text-[10px] text-emerald-600 font-semibold">
@@ -860,7 +880,7 @@ export default function TenantAdminComplaintsPage() {
               ) : (
                 <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 font-medium flex items-center gap-2.5">
                   <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>{t("tenantPendingVerificationNotice")}</span>
+                  <span>{t('tenantPendingVerificationNotice')}</span>
                 </div>
               )}
             </div>
@@ -870,7 +890,7 @@ export default function TenantAdminComplaintsPage() {
                 onClick={() => setSelectedGrievance(null)}
                 className="px-5 py-2 text-xs font-bold bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl"
               >
-                {t("tenantBtnClose")}
+                {t('tenantBtnClose')}
               </Button>
             </div>
           </div>
@@ -884,17 +904,17 @@ export default function TenantAdminComplaintsPage() {
           onClick={() => setShowExitConfirm(false)}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-zinc-200"
           >
             <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-sm font-black text-zinc-900">{t("tenantConfirmCloseFormTitle")}</h3>
-              <p className="text-xs text-zinc-500">
-                {t("tenantConfirmCloseFormDesc")}
-              </p>
+              <h3 className="text-sm font-black text-zinc-900">
+                {t('tenantConfirmCloseFormTitle')}
+              </h3>
+              <p className="text-xs text-zinc-500">{t('tenantConfirmCloseFormDesc')}</p>
             </div>
             <div className="flex items-center gap-2 pt-2">
               <Button
@@ -902,17 +922,17 @@ export default function TenantAdminComplaintsPage() {
                 onClick={() => setShowExitConfirm(false)}
                 className="flex-1 py-2 text-xs font-bold text-zinc-700"
               >
-                {t("tenantBtnKeepEditing")}
+                {t('tenantBtnKeepEditing')}
               </Button>
               <Button
                 onClick={() => {
-                  setShowExitConfirm(false);
-                  setIsModalOpen(false);
-                  resetForm();
+                  setShowExitConfirm(false)
+                  setIsModalOpen(false)
+                  resetForm()
                 }}
                 className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
               >
-                {t("tenantBtnDiscardAndClose")}
+                {t('tenantBtnDiscardAndClose')}
               </Button>
             </div>
           </div>
@@ -926,12 +946,17 @@ export default function TenantAdminComplaintsPage() {
           onClick={() => setPreviewImage(null)}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl p-4 max-w-xl w-full space-y-3"
           >
             <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-xs font-bold text-zinc-700">{t("tenantEvidencePhotoTitle")}</span>
-              <button onClick={() => setPreviewImage(null)} className="p-1 hover:bg-zinc-100 rounded-full">
+              <span className="text-xs font-bold text-zinc-700">
+                {t('tenantEvidencePhotoTitle')}
+              </span>
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="p-1 hover:bg-zinc-100 rounded-full"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -942,5 +967,5 @@ export default function TenantAdminComplaintsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

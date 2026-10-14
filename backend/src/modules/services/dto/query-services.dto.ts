@@ -1,15 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
-import { ServiceStatus } from '@prisma';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
+import { ServiceStatus } from '@prisma'
 
 export class QueryServicesDto {
   @ApiPropertyOptional({
@@ -18,7 +10,7 @@ export class QueryServicesDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by whether service is metered',
@@ -27,7 +19,7 @@ export class QueryServicesDto {
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
-  isMetered?: boolean;
+  isMetered?: boolean
 
   @ApiPropertyOptional({
     description: 'Filter by service status',
@@ -36,7 +28,7 @@ export class QueryServicesDto {
   })
   @IsOptional()
   @IsEnum(ServiceStatus)
-  status?: ServiceStatus;
+  status?: ServiceStatus
 
   @ApiPropertyOptional({
     description: 'Filter by auto-applied services',
@@ -45,7 +37,7 @@ export class QueryServicesDto {
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
-  autoApplied?: boolean;
+  autoApplied?: boolean
 
   @ApiPropertyOptional({
     description: 'Sort by field',
@@ -54,7 +46,7 @@ export class QueryServicesDto {
   })
   @IsOptional()
   @IsString()
-  sortBy?: 'createdAt' | 'name' | 'price' = 'createdAt';
+  sortBy?: 'createdAt' | 'name' | 'price' = 'createdAt'
 
   @ApiPropertyOptional({
     description: 'Sort direction',
@@ -63,7 +55,7 @@ export class QueryServicesDto {
   })
   @IsOptional()
   @IsString()
-  sortOrder?: 'asc' | 'desc' = 'desc';
+  sortOrder?: 'asc' | 'desc' = 'desc'
 
   @ApiPropertyOptional({
     description: 'Page number',
@@ -74,7 +66,7 @@ export class QueryServicesDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page',
@@ -87,5 +79,5 @@ export class QueryServicesDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 10;
+  limit?: number = 10
 }

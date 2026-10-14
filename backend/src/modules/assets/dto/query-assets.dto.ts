@@ -1,15 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsOptional,
-  IsString,
-  IsEnum,
-  IsInt,
-  Min,
-  Max,
-  IsIn,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { AssetCondition } from '@prisma';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsEnum, IsInt, Min, Max, IsIn } from 'class-validator'
+import { Type } from 'class-transformer'
+import { AssetCondition } from '@prisma'
 
 export class QueryAssetsDto {
   @ApiPropertyOptional({
@@ -18,7 +10,7 @@ export class QueryAssetsDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by asset category',
@@ -26,7 +18,7 @@ export class QueryAssetsDto {
   })
   @IsOptional()
   @IsString()
-  category?: string;
+  category?: string
 
   @ApiPropertyOptional({
     description: 'Filter by asset condition',
@@ -34,7 +26,7 @@ export class QueryAssetsDto {
   })
   @IsOptional()
   @IsEnum(AssetCondition)
-  condition?: AssetCondition;
+  condition?: AssetCondition
 
   @ApiPropertyOptional({
     description:
@@ -43,7 +35,7 @@ export class QueryAssetsDto {
   })
   @IsOptional()
   @IsString()
-  roomId?: string;
+  roomId?: string
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',
@@ -54,7 +46,7 @@ export class QueryAssetsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
@@ -67,7 +59,7 @@ export class QueryAssetsDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 10;
+  limit?: number = 10
 
   @ApiPropertyOptional({
     description: 'Field to sort results by',
@@ -76,7 +68,7 @@ export class QueryAssetsDto {
   })
   @IsOptional()
   @IsIn(['createdAt', 'name', 'purchasePrice', 'condition', 'quantity'])
-  sortBy?: string = 'createdAt';
+  sortBy?: string = 'createdAt'
 
   @ApiPropertyOptional({
     description: 'Sort direction',
@@ -85,5 +77,5 @@ export class QueryAssetsDto {
   })
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc' = 'desc';
+  sortOrder?: 'asc' | 'desc' = 'desc'
 }

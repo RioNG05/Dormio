@@ -17,5 +17,4 @@ export const FEATURE_FLAGS = {
    * Set to true to re-enable public room search, listings, booking, and post packs.
    */
   ENABLE_BHRP: false,
-};
-
+}

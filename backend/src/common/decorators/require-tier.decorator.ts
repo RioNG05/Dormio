@@ -1,7 +1,7 @@
-import { SetMetadata } from '@nestjs/common';
-import { SubscriptionPackage } from '@prisma';
+import { SetMetadata } from '@nestjs/common'
+import { SubscriptionPackage } from '@prisma'
 
-export const REQUIRE_TIER_KEY = 'required_tier';
+export const REQUIRE_TIER_KEY = 'required_tier'
 
 /**
  * Restrict route access to users with a minimum subscription tier.
@@ -14,5 +14,4 @@ export const REQUIRE_TIER_KEY = 'required_tier';
  * @Get('expenses')
  * async getExpenses() {}
  */
-export const RequireTier = (tier: SubscriptionPackage) =>
-  SetMetadata(REQUIRE_TIER_KEY, tier);
+export const RequireTier = (tier: SubscriptionPackage) => SetMetadata(REQUIRE_TIER_KEY, tier)

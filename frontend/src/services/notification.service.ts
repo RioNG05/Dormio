@@ -1,9 +1,9 @@
-import { api } from './api';
+import { api } from './api'
 
 export interface InAppNotification {
-  id: string;
-  title?: string;
-  content: string;
+  id: string
+  title?: string
+  content: string
   type:
     | 'billing_due'
     | 'billing_reminder'
@@ -15,11 +15,11 @@ export interface InAppNotification {
     | 'broadcast'
     | 'happy_new_year'
     | 'system_greeting'
-    | string;
-  isRead: boolean;
-  createdAt: string;
-  boardingHouseId?: string | null;
-  targetUrl?: string | null;
+    | string
+  isRead: boolean
+  createdAt: string
+  boardingHouseId?: string | null
+  targetUrl?: string | null
 }
 
 export function resolveNotificationTarget(
@@ -27,10 +27,10 @@ export function resolveNotificationTarget(
   userRole?: string | null,
 ): string | null {
   if (notification.targetUrl) {
-    return notification.targetUrl;
+    return notification.targetUrl
   }
 
-  const type = notification.type.toLowerCase();
+  const type = notification.type.toLowerCase()
 
   // Broadcast / holiday greetings: no redirection
   if (
@@ -43,7 +43,7 @@ export function resolveNotificationTarget(
     type.includes('tet') ||
     type.includes('broadcast')
   ) {
-    return null;
+    return null
   }
 
   // Rental billing / payment due notifications
@@ -55,37 +55,38 @@ export function resolveNotificationTarget(
     type.includes('invoice') ||
     type.includes('payment')
   ) {
-    if (userRole === 'landlord') return '/landlord/invoices';
-    return '/tenant/invoices';
+    if (userRole === 'landlord') return '/landlord/invoices'
+    return '/tenant/invoices'
   }
 
   // Contract notifications
   if (type === 'contract_created' || type === 'contract_expiring' || type.includes('contract')) {
-    if (userRole === 'landlord') return '/landlord/contracts';
-    return '/tenant/contracts';
+    if (userRole === 'landlord') return '/landlord/contracts'
+    return '/tenant/contracts'
   }
 
   // Meter readings
   if (type === 'meter_reading' || type.includes('meter')) {
-    if (userRole === 'landlord') return '/landlord/meter-readings';
-    return '/tenant/meter-readings';
+    if (userRole === 'landlord') return '/landlord/meter-readings'
+    return '/tenant/meter-readings'
   }
 
   // Grievances / maintenance
   if (type === 'grievance' || type === 'grievance_resolved' || type.includes('support')) {
-    if (userRole === 'admin') return '/admin/boarding-houses';
-    if (userRole === 'landlord') return '/landlord/maintenance';
-    return '/tenant/support';
+    if (userRole === 'admin') return '/admin/boarding-houses'
+    if (userRole === 'landlord') return '/landlord/maintenance'
+    return '/tenant/support'
   }
 
-  return null;
+  return null
 }
 
 const DEFAULT_MOCK_NOTIFICATIONS: InAppNotification[] = [
   {
     id: 'mock-noti-1',
     title: 'Đến hạn thanh toán tiền trọ',
-    content: 'Hóa đơn tiền phòng tháng 09/2026 đã đến hạn. Vui lòng thanh toán trước ngày 15/09/2026.',
+    content:
+      'Hóa đơn tiền phòng tháng 09/2026 đã đến hạn. Vui lòng thanh toán trước ngày 15/09/2026.',
     type: 'rental_payment',
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
@@ -94,7 +95,8 @@ const DEFAULT_MOCK_NOTIFICATIONS: InAppNotification[] = [
   {
     id: 'mock-noti-2',
     title: 'Chúc mừng năm mới từ Dormio Team',
-    content: 'Dormio kính chúc Quý khách hàng và cư dân một năm mới An Khang Thịnh Vượng, Vạn Sự Như Ý!',
+    content:
+      'Dormio kính chúc Quý khách hàng và cư dân một năm mới An Khang Thịnh Vượng, Vạn Sự Như Ý!',
     type: 'happy_new_year',
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
@@ -118,31 +120,31 @@ const DEFAULT_MOCK_NOTIFICATIONS: InAppNotification[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
     targetUrl: '/tenant/meter-readings',
   },
-];
+]
 
 export const notificationService = {
   async getMyNotifications(): Promise<InAppNotification[]> {
     try {
-      const response = await api.get<any>('/v1/notifications', { silent: true });
+      const response = await api.get<any>('/v1/notifications', { silent: true })
       const list = Array.isArray(response)
         ? response
         : Array.isArray(response?.data)
-        ? response.data
-        : null;
+          ? response.data
+          : null
 
       if (list !== null) {
-        return list;
+        return list
       }
-      return DEFAULT_MOCK_NOTIFICATIONS;
+      return DEFAULT_MOCK_NOTIFICATIONS
     } catch {
-      return DEFAULT_MOCK_NOTIFICATIONS;
+      return DEFAULT_MOCK_NOTIFICATIONS
     }
   },
 
   async markAsRead(id: string): Promise<void> {
     try {
-      if (id.startsWith('mock-')) return;
-      await api.patch(`/v1/notifications/${id}/read`, {}, { silent: true });
+      if (id.startsWith('mock-')) return
+      await api.patch(`/v1/notifications/${id}/read`, {}, { silent: true })
     } catch {
       // Graceful fallback
     }
@@ -150,9 +152,9 @@ export const notificationService = {
 
   async markAllAsRead(): Promise<void> {
     try {
-      await api.patch('/v1/notifications/read-all', {}, { silent: true });
+      await api.patch('/v1/notifications/read-all', {}, { silent: true })
     } catch {
       // Graceful fallback
     }
   },
-};
+}

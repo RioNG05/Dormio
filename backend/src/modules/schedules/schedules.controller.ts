@@ -11,7 +11,7 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiBody,
@@ -23,27 +23,27 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
-} from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
-import { CreateAdhocScheduleDto } from './dto/create-adhoc-schedule.dto';
-import { CreateRecurringScheduleDto } from './dto/create-recurring-schedule.dto';
-import { CreateShiftDto } from './dto/create-shift.dto';
-import { QuerySchedulesDto } from './dto/query-schedules.dto';
+} from '@nestjs/swagger'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
+import { CreateAdhocScheduleDto } from './dto/create-adhoc-schedule.dto'
+import { CreateRecurringScheduleDto } from './dto/create-recurring-schedule.dto'
+import { CreateShiftDto } from './dto/create-shift.dto'
+import { QuerySchedulesDto } from './dto/query-schedules.dto'
 import {
   CreateRecurringResponseDto,
   SchedulesListResponseDto,
   WorkScheduleItemDto,
-} from './dto/schedule-response.dto';
-import { ShiftItemDto } from './dto/shift-response.dto';
-import { UpdateRecurrenceDto } from './dto/update-recurrence.dto';
-import { UpdateScheduleDto } from './dto/update-schedule.dto';
-import { UpdateShiftDto } from './dto/update-shift.dto';
-import { SchedulesService } from './schedules.service';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { SubscriptionPackage } from '@prisma';
+} from './dto/schedule-response.dto'
+import { ShiftItemDto } from './dto/shift-response.dto'
+import { UpdateRecurrenceDto } from './dto/update-recurrence.dto'
+import { UpdateScheduleDto } from './dto/update-schedule.dto'
+import { UpdateShiftDto } from './dto/update-shift.dto'
+import { SchedulesService } from './schedules.service'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
 
 @ApiTags('Landlord - Shift Scheduling (UC-L-21)')
 @ApiBearerAuth()
@@ -56,7 +56,7 @@ import { SubscriptionPackage } from '@prisma';
 @RequireTier(SubscriptionPackage.pro)
 @Controller('landlord')
 export class SchedulesController {
-  private readonly logger = new Logger(SchedulesController.name);
+  private readonly logger = new Logger(SchedulesController.name)
 
   constructor(private readonly schedulesService: SchedulesService) {}
 
@@ -77,8 +77,8 @@ export class SchedulesController {
   async getShifts(
     @Headers('x-boarding-house-id') boardingHouseId: string,
   ): Promise<ShiftItemDto[]> {
-    this.logger.log(`GET /v1/landlord/shifts house=${boardingHouseId}`);
-    return this.schedulesService.getShifts(boardingHouseId);
+    this.logger.log(`GET /v1/landlord/shifts house=${boardingHouseId}`)
+    return this.schedulesService.getShifts(boardingHouseId)
   }
 
   @Post('shifts')
@@ -95,10 +95,8 @@ export class SchedulesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Body() dto: CreateShiftDto,
   ): Promise<ShiftItemDto> {
-    this.logger.log(
-      `POST /v1/landlord/shifts house=${boardingHouseId} name="${dto.name}"`,
-    );
-    return this.schedulesService.createShift(boardingHouseId, dto);
+    this.logger.log(`POST /v1/landlord/shifts house=${boardingHouseId} name="${dto.name}"`)
+    return this.schedulesService.createShift(boardingHouseId, dto)
   }
 
   @Patch('shifts/:id')
@@ -117,10 +115,8 @@ export class SchedulesController {
     @Param('id', ParseUUIDPipe) shiftId: string,
     @Body() dto: UpdateShiftDto,
   ): Promise<ShiftItemDto> {
-    this.logger.log(
-      `PATCH /v1/landlord/shifts/${shiftId} house=${boardingHouseId}`,
-    );
-    return this.schedulesService.updateShift(boardingHouseId, shiftId, dto);
+    this.logger.log(`PATCH /v1/landlord/shifts/${shiftId} house=${boardingHouseId}`)
+    return this.schedulesService.updateShift(boardingHouseId, shiftId, dto)
   }
 
   @Delete('shifts/:id')
@@ -135,11 +131,9 @@ export class SchedulesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) shiftId: string,
   ): Promise<{ success: boolean; message: string }> {
-    this.logger.log(
-      `DELETE /v1/landlord/shifts/${shiftId} house=${boardingHouseId}`,
-    );
-    await this.schedulesService.deleteShift(boardingHouseId, shiftId);
-    return { success: true, message: 'Đã xóa ca làm việc thành công' };
+    this.logger.log(`DELETE /v1/landlord/shifts/${shiftId} house=${boardingHouseId}`)
+    await this.schedulesService.deleteShift(boardingHouseId, shiftId)
+    return { success: true, message: 'Đã xóa ca làm việc thành công' }
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -162,8 +156,8 @@ export class SchedulesController {
   ): Promise<SchedulesListResponseDto> {
     this.logger.log(
       `GET /v1/landlord/schedules house=${boardingHouseId} query=${JSON.stringify(query)}`,
-    );
-    return this.schedulesService.getSchedules(boardingHouseId, query);
+    )
+    return this.schedulesService.getSchedules(boardingHouseId, query)
   }
 
   @Post('schedules/recurring')
@@ -184,12 +178,8 @@ export class SchedulesController {
   ): Promise<CreateRecurringResponseDto> {
     this.logger.log(
       `POST /v1/landlord/schedules/recurring house=${boardingHouseId} user=${user.id}`,
-    );
-    return this.schedulesService.createRecurringSchedule(
-      boardingHouseId,
-      user.id,
-      dto,
-    );
+    )
+    return this.schedulesService.createRecurringSchedule(boardingHouseId, user.id, dto)
   }
 
   @Post('schedules/adhoc')
@@ -209,8 +199,8 @@ export class SchedulesController {
   ): Promise<WorkScheduleItemDto> {
     this.logger.log(
       `POST /v1/landlord/schedules/adhoc house=${boardingHouseId} employee=${dto.employeeId}`,
-    );
-    return this.schedulesService.createAdhocSchedule(boardingHouseId, dto);
+    )
+    return this.schedulesService.createAdhocSchedule(boardingHouseId, dto)
   }
 
   @Patch('schedules/:id')
@@ -230,14 +220,8 @@ export class SchedulesController {
     @Param('id', ParseUUIDPipe) scheduleId: string,
     @Body() dto: UpdateScheduleDto,
   ): Promise<WorkScheduleItemDto> {
-    this.logger.log(
-      `PATCH /v1/landlord/schedules/${scheduleId} house=${boardingHouseId}`,
-    );
-    return this.schedulesService.updateSchedule(
-      boardingHouseId,
-      scheduleId,
-      dto,
-    );
+    this.logger.log(`PATCH /v1/landlord/schedules/${scheduleId} house=${boardingHouseId}`)
+    return this.schedulesService.updateSchedule(boardingHouseId, scheduleId, dto)
   }
 
   @Patch('schedules/recurrence/:recurrenceId')
@@ -258,12 +242,8 @@ export class SchedulesController {
   ): Promise<{ updatedCount: number; message: string }> {
     this.logger.log(
       `PATCH /v1/landlord/schedules/recurrence/${recurrenceId} house=${boardingHouseId}`,
-    );
-    return this.schedulesService.updateRecurrence(
-      boardingHouseId,
-      recurrenceId,
-      dto,
-    );
+    )
+    return this.schedulesService.updateRecurrence(boardingHouseId, recurrenceId, dto)
   }
 
   @Delete('schedules/:id')
@@ -287,11 +267,7 @@ export class SchedulesController {
   ): Promise<{ deletedCount: number; message: string }> {
     this.logger.log(
       `DELETE /v1/landlord/schedules/${scheduleId} house=${boardingHouseId} mode=${mode || 'single'}`,
-    );
-    return this.schedulesService.deleteSchedule(
-      boardingHouseId,
-      scheduleId,
-      mode || 'single',
-    );
+    )
+    return this.schedulesService.deleteSchedule(boardingHouseId, scheduleId, mode || 'single')
   }
 }

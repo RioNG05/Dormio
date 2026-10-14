@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
   IsEnum,
   IsInt,
@@ -10,8 +10,8 @@ import {
   Matches,
   MaxLength,
   Min,
-} from 'class-validator';
-import { RoomStatus } from '@prisma';
+} from 'class-validator'
+import { RoomStatus } from '@prisma'
 
 export class UpdateRoomDto {
   @ApiPropertyOptional({ example: 'P101', description: 'Room number or code' })
@@ -19,38 +19,38 @@ export class UpdateRoomDto {
   @IsString()
   @Matches(/\S/, { message: 'roomNumber must not be blank' })
   @MaxLength(50)
-  roomNumber?: string;
+  roomNumber?: string
 
   @ApiPropertyOptional({ example: 1, description: 'Floor level' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  floor?: number;
+  floor?: number
 
   @ApiPropertyOptional({ example: 25.5, description: 'Floor area in m²' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0.1)
-  area?: number;
+  area?: number
 
   @ApiPropertyOptional({ example: 2, description: 'Maximum occupants' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  maxOccupants?: number;
+  maxOccupants?: number
 
   @ApiPropertyOptional({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' })
   @IsOptional()
   @IsUUID('all', { message: 'roomTypeId must be a valid UUID' })
-  roomTypeId?: string;
+  roomTypeId?: string
 
   @ApiPropertyOptional({ enum: RoomStatus, example: RoomStatus.available })
   @IsOptional()
   @IsEnum(RoomStatus)
-  status?: RoomStatus;
+  status?: RoomStatus
 
   @ApiPropertyOptional({
     example: 'https://res.cloudinary.com/demo/image/upload/room101.jpg',
@@ -58,7 +58,7 @@ export class UpdateRoomDto {
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string
 
   @ApiPropertyOptional({
     type: [String],
@@ -68,5 +68,5 @@ export class UpdateRoomDto {
   })
   @IsOptional()
   @IsUUID('all', { each: true, message: 'Each serviceId must be a valid UUID' })
-  serviceIds?: string[];
+  serviceIds?: string[]
 }

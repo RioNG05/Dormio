@@ -152,23 +152,23 @@ export enum AttendanceStatus {
 }
 
 export class Decimal {
-  private val: number;
+  private val: number
   constructor(value: number | string) {
-    this.val = Number(value);
+    this.val = Number(value)
   }
   toNumber(): number {
-    return this.val;
+    return this.val
   }
   toString(): string {
-    return String(this.val);
+    return String(this.val)
   }
 }
 
 export const Prisma = {
   Decimal,
-};
+}
 
 // Minimal PrismaClient stub — never instantiated in unit tests
 export class PrismaClient {}
 
-export default {};
+export default {}

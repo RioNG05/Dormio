@@ -1,11 +1,11 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiHeader,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
-} from '@nestjs/swagger';
-import { ApiErrorResponse } from './api-response.dto';
+} from '@nestjs/swagger'
+import { ApiErrorResponse } from './api-response.dto'
 
 /**
  * Applies JWT bearer auth + standard 401/403 responses.
@@ -26,7 +26,7 @@ export function ApiAuth() {
       description: 'Insufficient role permissions',
       type: ApiErrorResponse,
     }),
-  );
+  )
 }
 
 /**
@@ -54,5 +54,5 @@ export function ApiBoardingHouseHeader() {
         example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
       },
     }),
-  );
+  )
 }

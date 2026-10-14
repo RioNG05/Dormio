@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsArray,
   IsEnum,
@@ -9,9 +9,9 @@ import {
   IsUUID,
   Min,
   MinLength,
-} from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-import { PostStatus } from '@prisma';
+} from 'class-validator'
+import { Transform, Type } from 'class-transformer'
+import { PostStatus } from '@prisma'
 
 export class CreatePostDto {
   @ApiPropertyOptional({
@@ -21,7 +21,7 @@ export class CreatePostDto {
   @IsOptional()
   @Transform(({ value }) => (typeof value === 'string' && !value.trim() ? undefined : value))
   @IsUUID('all', { message: 'Invalid room ID UUID format' })
-  roomId?: string;
+  roomId?: string
 
   @ApiProperty({
     description: 'Post listing title',
@@ -30,16 +30,17 @@ export class CreatePostDto {
   @IsString({ message: 'Title must be a string' })
   @IsNotEmpty({ message: 'Title cannot be empty' })
   @MinLength(5, { message: 'Title must be at least 5 characters long' })
-  title: string;
+  title: string
 
   @ApiProperty({
     description: 'Detailed post listing description/content',
-    example: 'Newly built studio apartment with air conditioning, private washing machine, 24/7 security...',
+    example:
+      'Newly built studio apartment with air conditioning, private washing machine, 24/7 security...',
   })
   @IsString({ message: 'Content must be a string' })
   @IsNotEmpty({ message: 'Content cannot be empty' })
   @MinLength(10, { message: 'Content must be at least 10 characters long' })
-  content: string;
+  content: string
 
   @ApiProperty({
     description: 'Required deposit amount in VND',
@@ -48,7 +49,7 @@ export class CreatePostDto {
   @Type(() => Number)
   @IsNumber({}, { message: 'Deposit amount must be a number' })
   @Min(0, { message: 'Deposit amount cannot be less than 0' })
-  depositAmount: number;
+  depositAmount: number
 
   @ApiPropertyOptional({
     description: 'List of image URLs for the rental listing',
@@ -58,7 +59,7 @@ export class CreatePostDto {
   @IsOptional()
   @IsArray({ message: 'imageUrls must be an array' })
   @IsString({ each: true, message: 'Each image URL must be a valid string' })
-  imageUrls?: string[];
+  imageUrls?: string[]
 
   @ApiPropertyOptional({
     description: 'Initial post status (draft or posted). Defaults to posted',
@@ -67,5 +68,5 @@ export class CreatePostDto {
   })
   @IsOptional()
   @IsEnum(PostStatus, { message: 'Invalid post status (allowed: draft, posted, hidden, locked)' })
-  status?: PostStatus;
+  status?: PostStatus
 }

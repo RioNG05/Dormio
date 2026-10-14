@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsEnum,
   IsInt,
@@ -8,9 +8,9 @@ import {
   Min,
   MinLength,
   IsBoolean,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { GrievanceImageDto } from './grievance-response.dto';
+} from 'class-validator'
+import { Type } from 'class-transformer'
+import { GrievanceImageDto } from './grievance-response.dto'
 
 export enum GrievanceStatusFilter {
   ALL = 'all',
@@ -42,7 +42,7 @@ export class AdminGrievanceQueryDto {
   })
   @IsOptional()
   @IsEnum(GrievanceTypeFilter)
-  type?: GrievanceTypeFilter = GrievanceTypeFilter.ALL;
+  type?: GrievanceTypeFilter = GrievanceTypeFilter.ALL
 
   @ApiPropertyOptional({
     description: 'Filter by grievance status',
@@ -51,7 +51,7 @@ export class AdminGrievanceQueryDto {
   })
   @IsOptional()
   @IsEnum(GrievanceStatusFilter)
-  status?: GrievanceStatusFilter = GrievanceStatusFilter.ALL;
+  status?: GrievanceStatusFilter = GrievanceStatusFilter.ALL
 
   @ApiPropertyOptional({
     description: 'Filter by priority level',
@@ -60,14 +60,15 @@ export class AdminGrievanceQueryDto {
   })
   @IsOptional()
   @IsEnum(GrievancePriorityFilter)
-  priority?: GrievancePriorityFilter = GrievancePriorityFilter.ALL;
+  priority?: GrievancePriorityFilter = GrievancePriorityFilter.ALL
 
   @ApiPropertyOptional({
-    description: 'Search by keyword (title, description, tenant name, phone, house name, room number)',
+    description:
+      'Search by keyword (title, description, tenant name, phone, house name, room number)',
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Page number (1-indexed)',
@@ -78,7 +79,7 @@ export class AdminGrievanceQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Page size limit',
@@ -89,18 +90,20 @@ export class AdminGrievanceQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit?: number = 10
 }
 
 export class ResolveGrievanceDto {
   @ApiProperty({
-    example: 'Đã hòa giải giữa hai bên. Chủ trọ đồng ý hoàn lại 100% tiền cọc 2.000.000đ cho khách thuê.',
-    description: 'Written explanation / resolution note visible to the tenant and recorded in audit log',
+    example:
+      'Đã hòa giải giữa hai bên. Chủ trọ đồng ý hoàn lại 100% tiền cọc 2.000.000đ cho khách thuê.',
+    description:
+      'Written explanation / resolution note visible to the tenant and recorded in audit log',
   })
   @IsNotEmpty({ message: 'Resolution note is required' })
   @IsString()
   @MinLength(5, { message: 'Resolution note must be at least 5 characters' })
-  resolutionNote: string;
+  resolutionNote: string
 
   @ApiPropertyOptional({
     example: false,
@@ -108,124 +111,125 @@ export class ResolveGrievanceDto {
   })
   @IsOptional()
   @IsBoolean()
-  escalateLockLandlord?: boolean;
+  escalateLockLandlord?: boolean
 }
 
 export class RejectGrievanceDto {
   @ApiProperty({
-    example: 'Từ chối giải quyết: Giao dịch diễn ra hoàn toàn ngoài nền tảng và không có hợp đồng thuê phòng trên Dormio.',
+    example:
+      'Từ chối giải quyết: Giao dịch diễn ra hoàn toàn ngoài nền tảng và không có hợp đồng thuê phòng trên Dormio.',
     description: 'Written explanation / rejection note visible to the tenant',
   })
   @IsNotEmpty({ message: 'Rejection reason is required' })
   @IsString()
   @MinLength(5, { message: 'Rejection reason must be at least 5 characters' })
-  resolutionNote: string;
+  resolutionNote: string
 }
 
 export class AdminGrievanceItemDto {
   @ApiProperty({ example: 'grievance-uuid-1' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'Chủ trọ tự ý giữ tiền cọc' })
-  title: string;
+  title: string
 
   @ApiProperty({ example: 'Mô tả chi tiết khiếu nại của khách thuê...' })
-  description: string;
+  description: string
 
   @ApiProperty({ enum: ['complaint', 'inquiry', 'feedback'], example: 'complaint' })
-  type: 'complaint' | 'inquiry' | 'feedback';
+  type: 'complaint' | 'inquiry' | 'feedback'
 
   @ApiProperty({ enum: ['low', 'medium', 'high'], example: 'high' })
-  priority: 'low' | 'medium' | 'high';
+  priority: 'low' | 'medium' | 'high'
 
   @ApiProperty({ enum: ['pending', 'in_progress', 'resolved', 'rejected'], example: 'pending' })
-  status: 'pending' | 'in_progress' | 'resolved' | 'rejected';
+  status: 'pending' | 'in_progress' | 'resolved' | 'rejected'
 
   @ApiProperty({ example: 'user-tenant-1' })
-  tenantId: string;
+  tenantId: string
 
   @ApiProperty({ example: 'Trần Thị Thuỳ Dung' })
-  tenantName: string;
+  tenantName: string
 
   @ApiProperty({ example: '0912345678' })
-  tenantPhone: string;
+  tenantPhone: string
 
   @ApiProperty({ example: 'dung.tran@gmail.com' })
-  tenantEmail: string;
+  tenantEmail: string
 
   @ApiProperty({ example: 'house-1', nullable: true })
-  boardingHouseId: string | null;
+  boardingHouseId: string | null
 
   @ApiProperty({ example: 'Dormio Sunrise Q7', nullable: true })
-  boardingHouseName: string | null;
+  boardingHouseName: string | null
 
   @ApiProperty({ example: 'room-1', nullable: true })
-  roomId: string | null;
+  roomId: string | null
 
   @ApiProperty({ example: '101', nullable: true })
-  roomNumber: string | null;
+  roomNumber: string | null
 
   @ApiProperty({ example: 'Nguyễn Quang Huy', nullable: true })
-  landlordName: string | null;
+  landlordName: string | null
 
   @ApiProperty({ example: '0344265925', nullable: true })
-  landlordPhone: string | null;
+  landlordPhone: string | null
 
   @ApiProperty({ example: 'Đã hòa giải thành công.', nullable: true })
-  resolutionNote: string | null;
+  resolutionNote: string | null
 
   @ApiProperty({ example: '2026-09-08T10:00:00.000Z', nullable: true })
-  resolvedAt: string | null;
+  resolvedAt: string | null
 
   @ApiProperty({ example: 'Admin Quản Trị', nullable: true })
-  resolvedByName: string | null;
+  resolvedByName: string | null
 
   @ApiProperty({ type: [GrievanceImageDto] })
-  images: GrievanceImageDto[];
+  images: GrievanceImageDto[]
 
   @ApiProperty({ example: '2026-09-08T09:15:00.000Z' })
-  createdAt: string;
+  createdAt: string
 
   @ApiProperty({ example: '2026-09-08T09:15:00.000Z' })
-  updatedAt: string;
+  updatedAt: string
 }
 
 export class GrievanceQueueCountsDto {
   @ApiProperty({ example: 5 })
-  pending: number;
+  pending: number
 
   @ApiProperty({ example: 2 })
-  inProgress: number;
+  inProgress: number
 
   @ApiProperty({ example: 18 })
-  resolved: number;
+  resolved: number
 
   @ApiProperty({ example: 4 })
-  rejected: number;
+  rejected: number
 
   @ApiProperty({ example: 3 })
-  urgent: number;
+  urgent: number
 }
 
 export class AdminGrievanceListResponseDto {
   @ApiProperty({ example: true })
-  success: boolean;
+  success: boolean
 
   @ApiProperty({ type: [AdminGrievanceItemDto] })
-  items: AdminGrievanceItemDto[];
+  items: AdminGrievanceItemDto[]
 
   @ApiProperty({ example: 29 })
-  total: number;
+  total: number
 
   @ApiProperty({ example: 1 })
-  page: number;
+  page: number
 
   @ApiProperty({ example: 10 })
-  limit: number;
+  limit: number
 
   @ApiProperty({ example: 3 })
-  totalPages: number;
+  totalPages: number
 
   @ApiProperty({ type: GrievanceQueueCountsDto })
-  counts: GrievanceQueueCountsDto;
+  counts: GrievanceQueueCountsDto
 }

@@ -12,7 +12,7 @@ import {
   Query,
   Req,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiBody,
@@ -24,28 +24,28 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
-} from '@nestjs/swagger';
-import type { Request } from 'express';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
-import { AssignRoleDto } from './dto/assign-role.dto';
-import { CreatePositionDto } from './dto/create-position.dto';
-import { OnboardStaffDto } from './dto/onboard-staff.dto';
-import { QueryStaffDto } from './dto/query-staff.dto';
+} from '@nestjs/swagger'
+import type { Request } from 'express'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
+import { AssignRoleDto } from './dto/assign-role.dto'
+import { CreatePositionDto } from './dto/create-position.dto'
+import { OnboardStaffDto } from './dto/onboard-staff.dto'
+import { QueryStaffDto } from './dto/query-staff.dto'
 import {
   JobPositionDto,
   OnboardStaffResponseDto,
   SearchUserResponseDto,
   StaffItemDto,
   StaffListResponseDto,
-} from './dto/staff-response.dto';
-import { UpdatePositionDto } from './dto/update-position.dto';
-import { UpdateStaffStatusDto } from './dto/update-staff-status.dto';
-import { EmployeesService } from './employees.service';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { SubscriptionPackage } from '@prisma';
+} from './dto/staff-response.dto'
+import { UpdatePositionDto } from './dto/update-position.dto'
+import { UpdateStaffStatusDto } from './dto/update-staff-status.dto'
+import { EmployeesService } from './employees.service'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
 
 @ApiTags('Landlord - Staff Management (UC-L-19, UC-L-20)')
 @ApiBearerAuth()
@@ -58,7 +58,7 @@ import { SubscriptionPackage } from '@prisma';
 @RequireTier(SubscriptionPackage.pro)
 @Controller('landlord/staff')
 export class EmployeesController {
-  private readonly logger = new Logger(EmployeesController.name);
+  private readonly logger = new Logger(EmployeesController.name)
 
   constructor(private readonly employeesService: EmployeesService) {}
 
@@ -82,10 +82,8 @@ export class EmployeesController {
     @Query('q') q: string,
     @Headers('x-boarding-house-id') boardingHouseId: string,
   ): Promise<SearchUserResponseDto> {
-    this.logger.log(
-      `searchUser query="${q}" boardingHouseId=${boardingHouseId}`,
-    );
-    return this.employeesService.searchUser(q, boardingHouseId);
+    this.logger.log(`searchUser query="${q}" boardingHouseId=${boardingHouseId}`)
+    return this.employeesService.searchUser(q, boardingHouseId)
   }
 
   @Get('positions')
@@ -101,15 +99,14 @@ export class EmployeesController {
   async getPositions(
     @Headers('x-boarding-house-id') boardingHouseId: string,
   ): Promise<JobPositionDto[]> {
-    this.logger.log(`getPositions boardingHouseId=${boardingHouseId}`);
-    return this.employeesService.getJobPositions(boardingHouseId);
+    this.logger.log(`getPositions boardingHouseId=${boardingHouseId}`)
+    return this.employeesService.getJobPositions(boardingHouseId)
   }
 
   @Post('positions')
   @ApiOperation({
     summary: 'UC-L-20: Create a custom job position',
-    description:
-      'Creates a new job role with free-text duty description for this boarding house.',
+    description: 'Creates a new job role with free-text duty description for this boarding house.',
   })
   @ApiBody({ type: CreatePositionDto })
   @ApiCreatedResponse({
@@ -121,10 +118,8 @@ export class EmployeesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Body() dto: CreatePositionDto,
   ): Promise<JobPositionDto> {
-    this.logger.log(
-      `createPosition name="${dto.name}" boardingHouseId=${boardingHouseId}`,
-    );
-    return this.employeesService.createJobPosition(boardingHouseId, dto);
+    this.logger.log(`createPosition name="${dto.name}" boardingHouseId=${boardingHouseId}`)
+    return this.employeesService.createJobPosition(boardingHouseId, dto)
   }
 
   @Get()
@@ -143,8 +138,8 @@ export class EmployeesController {
   ): Promise<StaffListResponseDto> {
     this.logger.log(
       `getStaffList boardingHouseId=${boardingHouseId} page=${query.page} limit=${query.limit} search="${query.search || ''}"`,
-    );
-    return this.employeesService.getStaffList(boardingHouseId, query);
+    )
+    return this.employeesService.getStaffList(boardingHouseId, query)
   }
 
   @Post('onboard')
@@ -156,8 +151,7 @@ export class EmployeesController {
   @ApiBody({ type: OnboardStaffDto })
   @ApiCreatedResponse({
     type: OnboardStaffResponseDto,
-    description:
-      'Staff member successfully onboarded. Returns generated password if new account.',
+    description: 'Staff member successfully onboarded. Returns generated password if new account.',
   })
   @ApiResponse({ status: 400, description: 'Bad Request / validation error' })
   @ApiResponse({
@@ -171,20 +165,13 @@ export class EmployeesController {
     @Req() req: Request,
   ): Promise<OnboardStaffResponseDto> {
     const ipAddress =
-      (req.headers['x-forwarded-for'] as string) ||
-      req.socket.remoteAddress ||
-      '127.0.0.1';
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1'
 
     this.logger.log(
       `onboardStaff phone=${dto.phoneNumber} by landlord=${user.id} house=${boardingHouseId}`,
-    );
+    )
 
-    return this.employeesService.onboardStaff(
-      boardingHouseId,
-      user.id,
-      dto,
-      ipAddress,
-    );
+    return this.employeesService.onboardStaff(boardingHouseId, user.id, dto, ipAddress)
   }
 
   @Patch(':id/status')
@@ -212,13 +199,11 @@ export class EmployeesController {
     @Req() req: Request,
   ): Promise<StaffItemDto> {
     const ipAddress =
-      (req.headers['x-forwarded-for'] as string) ||
-      req.socket.remoteAddress ||
-      '127.0.0.1';
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1'
 
     this.logger.log(
       `updateStaffStatus assignment=${assignmentId} newStatus=${dto.status} by landlord=${user.id}`,
-    );
+    )
 
     return this.employeesService.updateStaffStatus(
       boardingHouseId,
@@ -226,7 +211,7 @@ export class EmployeesController {
       user.id,
       dto,
       ipAddress,
-    );
+    )
   }
 
   @Get(':id')
@@ -249,10 +234,8 @@ export class EmployeesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) assignmentId: string,
   ): Promise<StaffItemDto> {
-    this.logger.log(
-      `getStaffDetail assignment=${assignmentId} house=${boardingHouseId}`,
-    );
-    return this.employeesService.getStaffDetail(boardingHouseId, assignmentId);
+    this.logger.log(`getStaffDetail assignment=${assignmentId} house=${boardingHouseId}`)
+    return this.employeesService.getStaffDetail(boardingHouseId, assignmentId)
   }
 
   @Patch(':id/role')
@@ -280,21 +263,13 @@ export class EmployeesController {
     @Req() req: Request,
   ): Promise<StaffItemDto> {
     const ipAddress =
-      (req.headers['x-forwarded-for'] as string) ||
-      req.socket.remoteAddress ||
-      '127.0.0.1';
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1'
 
     this.logger.log(
       `assignRole assignment=${assignmentId} position=${dto.positionId || dto.newPositionName} by landlord=${user.id}`,
-    );
+    )
 
-    return this.employeesService.assignRole(
-      boardingHouseId,
-      assignmentId,
-      user.id,
-      dto,
-      ipAddress,
-    );
+    return this.employeesService.assignRole(boardingHouseId, assignmentId, user.id, dto, ipAddress)
   }
 
   @Patch('positions/:id')
@@ -320,14 +295,8 @@ export class EmployeesController {
     @Param('id', ParseUUIDPipe) positionId: string,
     @Body() dto: UpdatePositionDto,
   ): Promise<JobPositionDto> {
-    this.logger.log(
-      `updateJobPosition position=${positionId} house=${boardingHouseId}`,
-    );
-    return this.employeesService.updateJobPosition(
-      boardingHouseId,
-      positionId,
-      dto,
-    );
+    this.logger.log(`updateJobPosition position=${positionId} house=${boardingHouseId}`)
+    return this.employeesService.updateJobPosition(boardingHouseId, positionId, dto)
   }
 
   @Delete('positions/:id')
@@ -350,9 +319,7 @@ export class EmployeesController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) positionId: string,
   ): Promise<{ success: boolean; message: string }> {
-    this.logger.log(
-      `deleteJobPosition position=${positionId} house=${boardingHouseId}`,
-    );
-    return this.employeesService.deleteJobPosition(boardingHouseId, positionId);
+    this.logger.log(`deleteJobPosition position=${positionId} house=${boardingHouseId}`)
+    return this.employeesService.deleteJobPosition(boardingHouseId, positionId)
   }
 }

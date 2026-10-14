@@ -1,15 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Min,
-  MinLength,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { PostStatus } from '@prisma';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator'
+import { Type } from 'class-transformer'
+import { PostStatus } from '@prisma'
 
 export class UpdatePostDto {
   @ApiPropertyOptional({
@@ -19,7 +11,7 @@ export class UpdatePostDto {
   @IsOptional()
   @IsString({ message: 'Title must be a string' })
   @MinLength(5, { message: 'Title must be at least 5 characters long' })
-  title?: string;
+  title?: string
 
   @ApiPropertyOptional({
     description: 'Updated post listing description / markdown content',
@@ -28,7 +20,7 @@ export class UpdatePostDto {
   @IsOptional()
   @IsString({ message: 'Content must be a string' })
   @MinLength(10, { message: 'Content must be at least 10 characters long' })
-  content?: string;
+  content?: string
 
   @ApiPropertyOptional({
     description: 'Updated required deposit amount in VND',
@@ -38,7 +30,7 @@ export class UpdatePostDto {
   @Type(() => Number)
   @IsNumber({}, { message: 'Deposit amount must be a number' })
   @Min(0, { message: 'Deposit amount cannot be less than 0' })
-  depositAmount?: number;
+  depositAmount?: number
 
   @ApiPropertyOptional({
     description: 'List of image URLs for the rental listing',
@@ -48,7 +40,7 @@ export class UpdatePostDto {
   @IsOptional()
   @IsArray({ message: 'imageUrls must be an array' })
   @IsString({ each: true, message: 'Each image URL must be a valid string' })
-  imageUrls?: string[];
+  imageUrls?: string[]
 
   @ApiPropertyOptional({
     description: 'Listing status (draft, posted, hidden, locked)',
@@ -56,5 +48,5 @@ export class UpdatePostDto {
   })
   @IsOptional()
   @IsEnum(PostStatus, { message: 'Invalid post status (allowed: draft, posted, hidden, locked)' })
-  status?: PostStatus;
+  status?: PostStatus
 }

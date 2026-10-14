@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   IsArray,
@@ -13,7 +13,7 @@ import {
   Max,
   MaxLength,
   Min,
-} from 'class-validator';
+} from 'class-validator'
 
 export class BulkGenerateRoomsDto {
   @ApiProperty({
@@ -26,7 +26,7 @@ export class BulkGenerateRoomsDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  floorCount: number;
+  floorCount: number
 
   @ApiProperty({
     example: 4,
@@ -38,7 +38,7 @@ export class BulkGenerateRoomsDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  roomsPerFloor: number;
+  roomsPerFloor: number
 
   @ApiProperty({
     example: 'P{floor}0{index}',
@@ -49,7 +49,7 @@ export class BulkGenerateRoomsDto {
   @IsNotEmpty()
   @Matches(/\S/, { message: 'nameFormat must not be blank' })
   @MaxLength(50)
-  nameFormat: string;
+  nameFormat: string
 
   @ApiPropertyOptional({
     example: 25.5,
@@ -60,7 +60,7 @@ export class BulkGenerateRoomsDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0.1)
-  area?: number;
+  area?: number
 
   @ApiPropertyOptional({
     example: 2,
@@ -71,7 +71,7 @@ export class BulkGenerateRoomsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  maxOccupants?: number;
+  maxOccupants?: number
 
   @ApiProperty({
     example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
@@ -79,7 +79,7 @@ export class BulkGenerateRoomsDto {
   })
   @IsUUID('all', { message: 'roomTypeId must be a valid UUID' })
   @IsNotEmpty()
-  roomTypeId: string;
+  roomTypeId: string
 
   @ApiPropertyOptional({
     example: ['b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'],
@@ -90,5 +90,5 @@ export class BulkGenerateRoomsDto {
   @IsArray()
   @ArrayMaxSize(100)
   @IsUUID('all', { each: true, message: 'Each serviceId must be a valid UUID' })
-  serviceIds?: string[];
+  serviceIds?: string[]
 }

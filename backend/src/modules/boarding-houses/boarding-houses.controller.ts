@@ -1,38 +1,45 @@
-import { Body, Controller, Get, Logger, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
 import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
-} from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Public } from '../../common/decorators/public.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { ApiAuth } from '../../common/swagger';
-import { JwtPayload } from '../auth/types/jwt-payload.type';
-import { BoardingHousesService } from './boarding-houses.service';
-import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
-import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto';
-import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto';
-import { MultiPropertyOverviewResponseDto } from './dto/multi-property-overview-response.dto';
-import { AiStrategyResponseDto } from './dto/ai-strategy-response.dto';
+} from '@nestjs/swagger'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { Public } from '../../common/decorators/public.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { ApiAuth } from '../../common/swagger'
+import { JwtPayload } from '../auth/types/jwt-payload.type'
+import { BoardingHousesService } from './boarding-houses.service'
+import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto'
+import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto'
+import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto'
+import { MultiPropertyOverviewResponseDto } from './dto/multi-property-overview-response.dto'
+import { AiStrategyResponseDto } from './dto/ai-strategy-response.dto'
 import {
   BoardingHouseListResponseDto,
   BoardingHouseResponseDto,
   CreateBoardingHouseResponseDto,
   SetupBoardingHouseResponseDto,
-} from './dto/boarding-house-response.dto';
+} from './dto/boarding-house-response.dto'
 
 @ApiTags('Boarding Houses')
 @Controller('boarding-houses')
 export class BoardingHousesController {
-  private readonly logger = new Logger(BoardingHousesController.name);
+  private readonly logger = new Logger(BoardingHousesController.name)
 
-  constructor(
-    private readonly boardingHousesService: BoardingHousesService,
-  ) { }
+  constructor(private readonly boardingHousesService: BoardingHousesService) {}
 
   @Post('setup')
   @ApiAuth()
@@ -52,8 +59,8 @@ export class BoardingHousesController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: SetupBoardingHouseDto,
   ): Promise<SetupBoardingHouseResponseDto> {
-    this.logger.log(`POST /boarding-houses/setup called by user ${user.id}`);
-    return this.boardingHousesService.setupBoardingHouse(user.id, dto);
+    this.logger.log(`POST /boarding-houses/setup called by user ${user.id}`)
+    return this.boardingHousesService.setupBoardingHouse(user.id, dto)
   }
 
   @Get('multi-property/overview')
@@ -71,8 +78,8 @@ export class BoardingHousesController {
   async getMultiPropertyOverview(
     @CurrentUser() user: JwtPayload,
   ): Promise<MultiPropertyOverviewResponseDto> {
-    this.logger.log(`GET /boarding-houses/multi-property/overview called by user ${user.id}`);
-    return this.boardingHousesService.getMultiPropertyOverview(user.id);
+    this.logger.log(`GET /boarding-houses/multi-property/overview called by user ${user.id}`)
+    return this.boardingHousesService.getMultiPropertyOverview(user.id)
   }
 
   @Post('multi-property/ai-strategy')
@@ -90,8 +97,8 @@ export class BoardingHousesController {
   async generateMultiPropertyAiStrategy(
     @CurrentUser() user: JwtPayload,
   ): Promise<AiStrategyResponseDto> {
-    this.logger.log(`POST /boarding-houses/multi-property/ai-strategy called by user ${user.id}`);
-    return this.boardingHousesService.generateMultiPropertyAiStrategy(user.id);
+    this.logger.log(`POST /boarding-houses/multi-property/ai-strategy called by user ${user.id}`)
+    return this.boardingHousesService.generateMultiPropertyAiStrategy(user.id)
   }
 
   @Get(':id/details')
@@ -104,11 +111,9 @@ export class BoardingHousesController {
   @ApiOkResponse({
     description: 'Boarding house full details retrieved successfully',
   })
-  async getBoardingHouseDetails(
-    @Param('id') id: string,
-  ) {
-    this.logger.log(`GET /boarding-houses/${id}/details called`);
-    return this.boardingHousesService.getBoardingHouseDetails(id);
+  async getBoardingHouseDetails(@Param('id') id: string) {
+    this.logger.log(`GET /boarding-houses/${id}/details called`)
+    return this.boardingHousesService.getBoardingHouseDetails(id)
   }
 
   @Get(':id/overview')
@@ -127,8 +132,8 @@ export class BoardingHousesController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) boardingHouseId: string,
   ): Promise<BoardingHouseOverviewResponseDto> {
-    this.logger.log(`GET /boarding-houses/${boardingHouseId}/overview called by user ${user.id}`);
-    return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId);
+    this.logger.log(`GET /boarding-houses/${boardingHouseId}/overview called by user ${user.id}`)
+    return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId)
   }
 
   @Get(':id/analytics')
@@ -147,8 +152,8 @@ export class BoardingHousesController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) boardingHouseId: string,
   ): Promise<BoardingHouseOverviewResponseDto> {
-    this.logger.log(`GET /boarding-houses/${boardingHouseId}/analytics called by user ${user.id}`);
-    return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId);
+    this.logger.log(`GET /boarding-houses/${boardingHouseId}/analytics called by user ${user.id}`)
+    return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId)
   }
 
   @Get()
@@ -163,11 +168,9 @@ export class BoardingHousesController {
     description: 'Properties listed successfully',
     type: BoardingHouseListResponseDto,
   })
-  async listMyProperties(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<BoardingHouseListResponseDto> {
-    this.logger.log(`GET /boarding-houses called by user ${user.id}`);
-    return this.boardingHousesService.listMyProperties(user.id);
+  async listMyProperties(@CurrentUser() user: JwtPayload): Promise<BoardingHouseListResponseDto> {
+    this.logger.log(`GET /boarding-houses called by user ${user.id}`)
+    return this.boardingHousesService.listMyProperties(user.id)
   }
 
   @Post()
@@ -186,7 +189,7 @@ export class BoardingHousesController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateBoardingHouseDto,
   ): Promise<BoardingHouseResponseDto> {
-    this.logger.log(`POST /boarding-houses called by user ${user.id}`);
-    return this.boardingHousesService.createInitialProfile(user.id, dto);
+    this.logger.log(`POST /boarding-houses called by user ${user.id}`)
+    return this.boardingHousesService.createInitialProfile(user.id, dto)
   }
 }

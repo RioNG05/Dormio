@@ -1,48 +1,48 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import Image from "next/image";
+import Link from 'next/link'
+import Image from 'next/image'
 
-const fullLogo = '/full-logo.png';
+const fullLogo = '/full-logo.png'
 
 export interface LogoProps {
   /**
    * Target destination URL when clicked. Defaults to root homepage ("/")
    */
-  href?: string;
+  href?: string
   /**
    * Additional classes for the wrapping Link element
    */
-  className?: string;
+  className?: string
   /**
    * Additional classes for the logo Image element
    */
-  imageClassName?: string;
+  imageClassName?: string
   /**
    * Preset sizing variant
    * - sm: h-7
    * - md: h-8 md:h-9 (default)
    * - lg: h-9 md:h-10
    */
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg'
   /**
    * Whether to prioritize image loading (defaults to true for above-the-fold logos)
    */
-  priority?: boolean;
+  priority?: boolean
 }
 
 export default function Logo({
-  href = "/",
-  className = "",
-  imageClassName = "",
-  size = "md",
+  href = '/',
+  className = '',
+  imageClassName = '',
+  size = 'md',
   priority = true,
 }: LogoProps) {
   const sizeClasses = {
-    sm: "h-7 w-auto",
-    md: "h-8 md:h-9 w-auto",
-    lg: "h-9 md:h-10 w-auto",
-  };
+    sm: 'h-7 w-auto',
+    md: 'h-8 md:h-9 w-auto',
+    lg: 'h-9 md:h-10 w-auto',
+  }
 
   return (
     <Link
@@ -59,7 +59,7 @@ export default function Logo({
         className={`object-contain block ${imageClassName || sizeClasses[size]}`}
       />
     </Link>
-  );
+  )
 }
 
-export { Logo };
+export { Logo }

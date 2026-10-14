@@ -1,33 +1,17 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  Logger,
-  HttpStatus,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiResponse,
-  ApiOkResponse,
-} from '@nestjs/swagger';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { UserRole } from '@prisma';
-import { AdminAnalyticsService } from './admin-analytics.service';
+import { Controller, Get, Query, UseGuards, Logger, HttpStatus } from '@nestjs/common'
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiOkResponse } from '@nestjs/swagger'
+import { RolesGuard } from '../../common/guards/roles.guard'
+import { Roles } from '../../common/decorators/roles.decorator'
+import { UserRole } from '@prisma'
+import { AdminAnalyticsService } from './admin-analytics.service'
 import {
   AdminAnalyticsQueryDto,
   UserAnalyticsResponseDto,
   PropertyAnalyticsResponseDto,
   ListingAnalyticsResponseDto,
   AdminOverviewResponseDto,
-} from './dto/admin-analytics.dto';
-import {
-  RevenueQueryDto,
-  RevenueResponseDto,
-} from './dto/revenue-analytics.dto';
+} from './dto/admin-analytics.dto'
+import { RevenueQueryDto, RevenueResponseDto } from './dto/revenue-analytics.dto'
 
 @ApiTags('Admin Analytics & Revenue Dashboard')
 @ApiBearerAuth('JWT')
@@ -35,7 +19,7 @@ import {
 @Roles(UserRole.admin)
 @Controller('admin/analytics')
 export class AdminAnalyticsController {
-  private readonly logger = new Logger(AdminAnalyticsController.name);
+  private readonly logger = new Logger(AdminAnalyticsController.name)
 
   constructor(private readonly analyticsService: AdminAnalyticsService) {}
 
@@ -58,8 +42,8 @@ export class AdminAnalyticsController {
   ): Promise<UserAnalyticsResponseDto> {
     this.logger.log(
       `GET /admin/analytics/users called with period=${query.period || 'month'}, year=${query.year || new Date().getFullYear()}`,
-    );
-    return this.analyticsService.getUserAnalytics(query);
+    )
+    return this.analyticsService.getUserAnalytics(query)
   }
 
   @Get('properties')
@@ -81,8 +65,8 @@ export class AdminAnalyticsController {
   ): Promise<PropertyAnalyticsResponseDto> {
     this.logger.log(
       `GET /admin/analytics/properties called with period=${query.period || 'month'}, year=${query.year || new Date().getFullYear()}`,
-    );
-    return this.analyticsService.getPropertyAnalytics(query);
+    )
+    return this.analyticsService.getPropertyAnalytics(query)
   }
 
   @Get('listings')
@@ -104,8 +88,8 @@ export class AdminAnalyticsController {
   ): Promise<ListingAnalyticsResponseDto> {
     this.logger.log(
       `GET /admin/analytics/listings called with period=${query.period || 'month'}, year=${query.year || new Date().getFullYear()}`,
-    );
-    return this.analyticsService.getListingAnalytics(query);
+    )
+    return this.analyticsService.getListingAnalytics(query)
   }
 
   @Get('revenue')
@@ -122,13 +106,11 @@ export class AdminAnalyticsController {
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden. Requires Admin role',
   })
-  async getRevenueAnalytics(
-    @Query() query: RevenueQueryDto,
-  ): Promise<RevenueResponseDto> {
+  async getRevenueAnalytics(@Query() query: RevenueQueryDto): Promise<RevenueResponseDto> {
     this.logger.log(
       `GET /admin/analytics/revenue called with period=${query.period || 'month'}, year=${query.year || new Date().getFullYear()}`,
-    );
-    return this.analyticsService.getRevenueAnalytics(query);
+    )
+    return this.analyticsService.getRevenueAnalytics(query)
   }
 
   @Get('overview')
@@ -146,7 +128,7 @@ export class AdminAnalyticsController {
     description: 'Forbidden. Requires Admin role',
   })
   async getAdminOverview(): Promise<AdminOverviewResponseDto> {
-    this.logger.log('GET /admin/analytics/overview called');
-    return this.analyticsService.getAdminOverview();
+    this.logger.log('GET /admin/analytics/overview called')
+    return this.analyticsService.getAdminOverview()
   }
 }

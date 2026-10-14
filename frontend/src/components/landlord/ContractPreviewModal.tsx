@@ -1,70 +1,67 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from 'react'
 import {
- Printer,
- Download,
- X,
- Loader2,
- FileText,
- CheckCircle2,
- AlertTriangle,
- FileDown,
-} from "lucide-react";
-import {
- getContractPrintHtml,
- exportContract,
-} from "@/services/contract.service";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { useToast } from "@/context/ToastContext";
+  Printer,
+  Download,
+  X,
+  Loader2,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  FileDown,
+} from 'lucide-react'
+import { getContractPrintHtml, exportContract } from '@/services/contract.service'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 
 interface ContractPreviewModalProps {
- isOpen: boolean;
- onClose: () => void;
- buildingId: string;
- contractId: string;
- roomNumber: string;
- tenantName?: string;
- onExportSuccess?: () => void;
+  isOpen: boolean
+  onClose: () => void
+  buildingId: string
+  contractId: string
+  roomNumber: string
+  tenantName?: string
+  onExportSuccess?: () => void
 }
 
 export default function ContractPreviewModal({
- isOpen,
- onClose,
- buildingId,
- contractId,
- roomNumber,
- tenantName,
- onExportSuccess,
+  isOpen,
+  onClose,
+  buildingId,
+  contractId,
+  roomNumber,
+  tenantName,
+  onExportSuccess,
 }: ContractPreviewModalProps) {
- const t = useTranslations("landlord");
- const { locale } = useLanguage();
- const isEn = locale === "en";
+  const t = useTranslations('landlord')
+  const { locale } = useLanguage()
+  const isEn = locale === 'en'
 
- const [htmlContent, setHtmlContent] = useState<string>("");
- const [isLoading, setIsLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
- const [isExporting, setIsExporting] = useState(false);
- const { toast } = useToast();
+  const [htmlContent, setHtmlContent] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const { toast } = useToast()
 
- const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
- const showToast = (message: string, type: "success" | "error") => {
-   if (type === "success") {
-     toast.success(message);
-   } else {
-     toast.error(message);
-   }
- };
+  const showToast = (message: string, type: 'success' | 'error') => {
+    if (type === 'success') {
+      toast.success(message)
+    } else {
+      toast.error(message)
+    }
+  }
 
- function generateFallbackContractHtml(cid: string, rNum: string, tName?: string): string {
- const today = new Date();
- const day = today.getDate();
- const month = today.getMonth() + 1;
- const year = today.getFullYear();
+  function generateFallbackContractHtml(cid: string, rNum: string, tName?: string): string {
+    const today = new Date()
+    const day = today.getDate()
+    const month = today.getMonth() + 1
+    const year = today.getFullYear()
 
- if (isEn) {
- return `<!DOCTYPE html>
+    if (isEn) {
+      return `<!DOCTYPE html>
 <html lang="en">
 <head>
  <meta charset="UTF-8">
@@ -94,18 +91,18 @@ export default function ContractPreviewModal({
  <p class="code">Contract ID: <strong>${cid}</strong></p>
  <p>Today, on ${day}/${month}/${year}, both parties mutually agree to enter into this tenancy agreement with the following provisions:</p>
  <div class="section">I. SUBJECT OF AGREEMENT</div>
- <p>The Landlord agrees to lease to Tenant: <strong>${tName || "Tenant"}</strong> Room Number <strong>${rNum}</strong>.</p>
+ <p>The Landlord agrees to lease to Tenant: <strong>${tName || 'Tenant'}</strong> Room Number <strong>${rNum}</strong>.</p>
  <div class="section">II. GENERAL TERMS</div>
  <p>Both parties commit to abide by all housing laws and building house rules.</p>
  <div class="signatures">
  <div><strong>LANDLORD REPRESENTATIVE</strong><br><br><br><br><br>(Signed with full name)</div>
- <div><strong>TENANT REPRESENTATIVE</strong><br><br><br><br><br>${tName || "Tenant"}</div>
+ <div><strong>TENANT REPRESENTATIVE</strong><br><br><br><br><br>${tName || 'Tenant'}</div>
  </div>
 </body>
-</html>`;
- }
+</html>`
+    }
 
- return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="vi">
 <head>
  <meta charset="UTF-8">
@@ -135,214 +132,222 @@ export default function ContractPreviewModal({
  <p class="code">Mã số HĐ: <strong>${cid}</strong></p>
  <p>Hôm nay, ngày ${day} tháng ${month} năm ${year}, các bên thống nhất ký kết Hợp đồng thuê phòng trọ với các nội dung sau:</p>
  <div class="section">I. ĐỐI TƯỢNG HỢP ĐỒNG</div>
- <p>Bên cho thuê đồng ý cho Bên thuê: <strong>${tName || "Khách thuê"}</strong> thuê phòng số <strong>${rNum}</strong>.</p>
+ <p>Bên cho thuê đồng ý cho Bên thuê: <strong>${tName || 'Khách thuê'}</strong> thuê phòng số <strong>${rNum}</strong>.</p>
  <div class="section">II. ĐIỀU KHOẢN CHUNG</div>
  <p>Hai bên cam kết thực hiện đúng các điều khoản thuê nhà theo quy định của pháp luật và nội quy tòa nhà.</p>
  <div class="signatures">
  <div><strong>ĐẠI DIỆN BÊN CHO THUÊ</strong><br><br><br><br><br>(Ký và ghi rõ họ tên)</div>
- <div><strong>ĐẠI DIỆN BÊN THUÊ</strong><br><br><br><br><br>${tName || "Khách thuê"}</div>
+ <div><strong>ĐẠI DIỆN BÊN THUÊ</strong><br><br><br><br><br>${tName || 'Khách thuê'}</div>
  </div>
 </body>
-</html>`;
- }
+</html>`
+  }
 
- useEffect(() => {
- if (!isOpen || !contractId || !buildingId) {
- setHtmlContent("");
- setIsLoading(false);
- setError(null);
- return;
- }
+  useEffect(() => {
+    if (!isOpen || !contractId || !buildingId) {
+      setHtmlContent('')
+      setIsLoading(false)
+      setError(null)
+      return
+    }
 
- let isMounted = true;
- setIsLoading(true);
- setError(null);
+    let isMounted = true
+    setIsLoading(true)
+    setError(null)
 
- getContractPrintHtml(buildingId, contractId, false)
- .then((html) => {
- if (isMounted) {
- setHtmlContent(html);
- setIsLoading(false);
- }
- })
- .catch((err: any) => {
- if (isMounted) {
- console.warn("Could not fetch server template, falling back to client preview:", err);
- setHtmlContent(generateFallbackContractHtml(contractId, roomNumber, tenantName));
- setIsLoading(false);
- }
- });
+    getContractPrintHtml(buildingId, contractId, false)
+      .then(html => {
+        if (isMounted) {
+          setHtmlContent(html)
+          setIsLoading(false)
+        }
+      })
+      .catch((err: any) => {
+        if (isMounted) {
+          console.warn('Could not fetch server template, falling back to client preview:', err)
+          setHtmlContent(generateFallbackContractHtml(contractId, roomNumber, tenantName))
+          setIsLoading(false)
+        }
+      })
 
- return () => {
- isMounted = false;
- };
- }, [isOpen, contractId, buildingId, roomNumber, tenantName, isEn]);
+    return () => {
+      isMounted = false
+    }
+  }, [isOpen, contractId, buildingId, roomNumber, tenantName, isEn])
 
- if (!isOpen) return null;
+  if (!isOpen) return null
 
- // Direct print trigger from the loaded iframe
- const handlePrint = () => {
- if (!iframeRef.current || !iframeRef.current.contentWindow) {
- window.print();
- return;
- }
- try {
- iframeRef.current.contentWindow.focus();
- iframeRef.current.contentWindow.print();
- } catch {
- window.print();
- }
- };
+  // Direct print trigger from the loaded iframe
+  const handlePrint = () => {
+    if (!iframeRef.current || !iframeRef.current.contentWindow) {
+      window.print()
+      return
+    }
+    try {
+      iframeRef.current.contentWindow.focus()
+      iframeRef.current.contentWindow.print()
+    } catch {
+      window.print()
+    }
+  }
 
- // Direct download of the current HTML content
- const handleDownloadLocalHtml = () => {
- if (!htmlContent) return;
- const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
- const url = URL.createObjectURL(blob);
- const a = document.createElement("a");
- a.href = url;
- a.download = `hop-dong-phong-${roomNumber.replace(/[^a-zA-Z0-9_-]/g, "_")}-${contractId.substring(0, 8)}.html`;
- document.body.appendChild(a);
- a.click();
- document.body.removeChild(a);
- URL.revokeObjectURL(url);
- showToast(t("landlordContractsExportToastDownloadSuccess"), "success");
- };
+  // Direct download of the current HTML content
+  const handleDownloadLocalHtml = () => {
+    if (!htmlContent) return
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `hop-dong-phong-${roomNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}-${contractId.substring(0, 8)}.html`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    showToast(t('landlordContractsExportToastDownloadSuccess'), 'success')
+  }
 
- // Persist export on backend & download
- const handleExportDocument = async () => {
- try {
- setIsExporting(true);
- const res = await exportContract(buildingId, contractId);
- if (res?.data) {
- showToast(t("landlordContractsExportToastExportSuccess"), "success");
- onExportSuccess?.();
- handleDownloadLocalHtml();
- }
- } catch (err: any) {
- console.error("Failed to export contract document:", err);
- showToast(err.message || t("landlordContractsExportToastExportFailed"), "error");
- } finally {
- setIsExporting(false);
- }
- };
+  // Persist export on backend & download
+  const handleExportDocument = async () => {
+    try {
+      setIsExporting(true)
+      const res = await exportContract(buildingId, contractId)
+      if (res?.data) {
+        showToast(t('landlordContractsExportToastExportSuccess'), 'success')
+        onExportSuccess?.()
+        handleDownloadLocalHtml()
+      }
+    } catch (err: any) {
+      console.error('Failed to export contract document:', err)
+      showToast(err.message || t('landlordContractsExportToastExportFailed'), 'error')
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
- return (
- <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
- <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200">
- {/* Modal Header */}
- <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
- <div className="flex items-center gap-3">
- <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 flex items-center justify-center text-[#2AC1BC]">
- <FileText className="w-5 h-5" />
- </div>
- <div>
- <h2 className="text-base sm:text-lg font-black text-zinc-900 leading-tight">
- {t("landlordContractsExportTitle", { roomNumber })}
- </h2>
- <p className="text-xs text-zinc-500 font-medium">
- {tenantName ? `${t("landlordContractsExportRep", { tenantName })} • ` : ""}
- <span className="font-mono font-bold text-zinc-700">{contractId.substring(0, 12)}...</span>
- </p>
- </div>
- </div>
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 flex items-center justify-center text-[#2AC1BC]">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-zinc-900 leading-tight">
+                {t('landlordContractsExportTitle', { roomNumber })}
+              </h2>
+              <p className="text-xs text-zinc-500 font-medium">
+                {tenantName ? `${t('landlordContractsExportRep', { tenantName })} • ` : ''}
+                <span className="font-mono font-bold text-zinc-700">
+                  {contractId.substring(0, 12)}...
+                </span>
+              </p>
+            </div>
+          </div>
 
- <div className="flex items-center gap-2">
- <button
- onClick={handlePrint}
- disabled={isLoading || !!error}
- className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer disabled:opacity-50"
- title={t("landlordContractsExportPrintTooltip")}
- >
- <Printer className="w-3.5 h-3.5 text-[#2AC1BC]" />
- <span className="hidden sm:inline">{t("landlordContractsExportPrintBtn")}</span>
- </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              disabled={isLoading || !!error}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer disabled:opacity-50"
+              title={t('landlordContractsExportPrintTooltip')}
+            >
+              <Printer className="w-3.5 h-3.5 text-[#2AC1BC]" />
+              <span className="hidden sm:inline">{t('landlordContractsExportPrintBtn')}</span>
+            </button>
 
- <button
- onClick={handleExportDocument}
- disabled={isLoading || isExporting || !!error}
- className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl transition-colors shadow-xs cursor-pointer disabled:opacity-50"
- title={t("landlordContractsExportExportTooltip")}
- >
- {isExporting ? (
- <Loader2 className="w-3.5 h-3.5 animate-spin" />
- ) : (
- <FileDown className="w-3.5 h-3.5" />
- )}
- <span>{isExporting ? t("landlordContractsExportExporting") : t("landlordContractsExportExportBtn")}</span>
- </button>
+            <button
+              onClick={handleExportDocument}
+              disabled={isLoading || isExporting || !!error}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+              title={t('landlordContractsExportExportTooltip')}
+            >
+              {isExporting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileDown className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {isExporting
+                  ? t('landlordContractsExportExporting')
+                  : t('landlordContractsExportExportBtn')}
+              </span>
+            </button>
 
- <button
- onClick={onClose}
- className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60 rounded-xl transition-colors cursor-pointer ml-1"
- title={t("landlordContractsExportCloseTooltip")}
- >
- <X className="w-5 h-5" />
- </button>
- </div>
- </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60 rounded-xl transition-colors cursor-pointer ml-1"
+              title={t('landlordContractsExportCloseTooltip')}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
 
- {/* Modal Body: Document Preview */}
- <div className="flex-1 bg-zinc-100/70 p-2 sm:p-4 overflow-hidden relative">
- {isLoading && (
- <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-xs">
- <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
- <p className="text-sm font-semibold text-zinc-600">
- {t("landlordContractsExportPreparing")}
- </p>
- </div>
- )}
+        {/* Modal Body: Document Preview */}
+        <div className="flex-1 bg-zinc-100/70 p-2 sm:p-4 overflow-hidden relative">
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-xs">
+              <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+              <p className="text-sm font-semibold text-zinc-600">
+                {t('landlordContractsExportPreparing')}
+              </p>
+            </div>
+          )}
 
- {error && (
- <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white p-6 text-center">
- <AlertTriangle className="w-10 h-10 text-rose-500" />
- <p className="text-base font-bold text-rose-600">{error}</p>
- <p className="text-xs text-zinc-500 max-w-md">
- {t("landlordContractsExportErrorTitle")}
- </p>
- <button
- onClick={onClose}
- className="mt-2 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87]"
- >
- {t("landlordContractsExportCloseBtn")}
- </button>
- </div>
- )}
+          {error && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white p-6 text-center">
+              <AlertTriangle className="w-10 h-10 text-rose-500" />
+              <p className="text-base font-bold text-rose-600">{error}</p>
+              <p className="text-xs text-zinc-500 max-w-md">
+                {t('landlordContractsExportErrorTitle')}
+              </p>
+              <button
+                onClick={onClose}
+                className="mt-2 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87]"
+              >
+                {t('landlordContractsExportCloseBtn')}
+              </button>
+            </div>
+          )}
 
- {!isLoading && !error && (
- <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-zinc-200/80 bg-white">
- <iframe
- ref={iframeRef}
- srcDoc={htmlContent}
- title={t("landlordContractsExportIframeTitle")}
- className="w-full h-full border-0"
- />
- </div>
- )}
- </div>
+          {!isLoading && !error && (
+            <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-zinc-200/80 bg-white">
+              <iframe
+                ref={iframeRef}
+                srcDoc={htmlContent}
+                title={t('landlordContractsExportIframeTitle')}
+                className="w-full h-full border-0"
+              />
+            </div>
+          )}
+        </div>
 
- {/* Modal Footer */}
- <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-200 bg-white text-xs text-zinc-500 font-medium shrink-0">
- <div>
- <span className="font-bold text-zinc-700">{t("landlordContractsExportFormatStandard")}</span>
- </div>
- <div className="flex items-center gap-3">
- <button
- onClick={handleDownloadLocalHtml}
- disabled={isLoading || !htmlContent}
- className="text-zinc-600 hover:text-[#2AC1BC] underline font-semibold cursor-pointer disabled:opacity-50"
- >
- {t("landlordContractsExportDownloadHtml")}
- </button>
- <button
- onClick={onClose}
- className="px-4 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 font-semibold hover:bg-zinc-100 transition-colors cursor-pointer"
- >
- {t("landlordContractsExportCloseBtn")}
- </button>
- </div>
- </div>
- </div>
- </div>
- );
+        {/* Modal Footer */}
+        <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-200 bg-white text-xs text-zinc-500 font-medium shrink-0">
+          <div>
+            <span className="font-bold text-zinc-700">
+              {t('landlordContractsExportFormatStandard')}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownloadLocalHtml}
+              disabled={isLoading || !htmlContent}
+              className="text-zinc-600 hover:text-[#2AC1BC] underline font-semibold cursor-pointer disabled:opacity-50"
+            >
+              {t('landlordContractsExportDownloadHtml')}
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 font-semibold hover:bg-zinc-100 transition-colors cursor-pointer"
+            >
+              {t('landlordContractsExportCloseBtn')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

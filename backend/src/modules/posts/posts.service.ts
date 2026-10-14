@@ -5,13 +5,13 @@ import {
   ForbiddenException,
   BadRequestException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { PayOsService } from '../payments/payos.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
+} from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { PayOsService } from '../payments/payos.service'
+import { CreatePostDto } from './dto/create-post.dto'
+import { UpdatePostDto } from './dto/update-post.dto'
+import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto'
 import {
   PaginatedPostsResponseDto,
   PaginatedPublicPostsResponseDto,
@@ -20,19 +20,19 @@ import {
   PosterProfileResponseDto,
   PublicAddressDto,
   PublicPostResponseDto,
-} from './dto/post-response.dto';
+} from './dto/post-response.dto'
 import {
   DailyReachPointDto,
   PosterAnalyticsOverviewDto,
   SinglePostAnalyticsDto,
   TopPostAnalyticsDto,
-} from './dto/post-analytics.dto';
+} from './dto/post-analytics.dto'
 import {
   CreateAiPostDraftDto,
   AiPostDraftResponseDto,
   AiPostTone,
-} from './dto/create-ai-post-draft.dto';
-import { UnlistedRoomResponseDto } from './dto/unlisted-room-response.dto';
+} from './dto/create-ai-post-draft.dto'
+import { UnlistedRoomResponseDto } from './dto/unlisted-room-response.dto'
 import {
   PostStatus,
   SourceType,
@@ -47,28 +47,28 @@ import {
   PaymentStatus,
   AuditLogAction,
   UserRole,
-} from '@prisma';
+} from '@prisma'
 import {
   CreatePlatformDepositDto,
   InitiatePlatformDepositDto,
   ConfirmPlatformDepositDto,
   PlatformDepositInstructionDto,
-} from './dto/create-platform-deposit.dto';
+} from './dto/create-platform-deposit.dto'
 
-import { VisionService } from '../ai/vision.service';
-import { AiService } from '../ai/ai.service';
-import { Optional } from '@nestjs/common';
+import { VisionService } from '../ai/vision.service'
+import { AiService } from '../ai/ai.service'
+import { Optional } from '@nestjs/common'
 
-export const BASE_DAILY_FREE_POST_QUOTA = 3;
+export const BASE_DAILY_FREE_POST_QUOTA = 3
 
 export interface QuotaAllocation {
-  sourceType: SourceType;
-  postPurchaseId: string | null;
+  sourceType: SourceType
+  postPurchaseId: string | null
 }
 
 @Injectable()
 export class PostsService {
-  private readonly logger = new Logger(PostsService.name);
+  private readonly logger = new Logger(PostsService.name)
 
   constructor(
     private readonly prisma: PrismaService,
@@ -85,8 +85,8 @@ export class PostsService {
   async checkIsLandlord(userId: string): Promise<boolean> {
     const count = await this.prisma.boardingHouse.count({
       where: { ownerId: userId },
-    });
-    return count > 0;
+    })
+    return count > 0
   }
 
   /**
@@ -101,15 +101,12 @@ export class PostsService {
    * - Else: check PostPurchase for buyerId with status = 'paid' and COUNT(posts) < quantityPurchase, FIFO by activatedAt.
    * - If neither: throws ForbiddenException.
    */
-  async checkQuota(
-    userId: string,
-    isLandlord: boolean,
-  ): Promise<QuotaAllocation> {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+  async checkQuota(userId: string, isLandlord: boolean): Promise<QuotaAllocation> {
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
 
     // a) Free posts used today (only published posts count against quota)
     const freePostsUsedToday = await this.prisma.post.count({
@@ -122,10 +119,10 @@ export class PostsService {
           lte: endOfDay,
         },
       },
-    });
+    })
 
     // b) Total free quota calculation
-    let bonusQuota = 0;
+    let bonusQuota = 0
     if (isLandlord) {
       const activeSub = await this.prisma.userSubscription.findFirst({
         where: {
@@ -138,21 +135,21 @@ export class PostsService {
         include: {
           subscriptionPlan: true,
         },
-      });
+      })
 
-      bonusQuota = activeSub?.subscriptionPlan?.dailyPostQuote ?? 0;
+      bonusQuota = activeSub?.subscriptionPlan?.dailyPostQuote ?? 0
     }
 
-    const totalFreeDailyQuota = BASE_DAILY_FREE_POST_QUOTA + bonusQuota;
+    const totalFreeDailyQuota = BASE_DAILY_FREE_POST_QUOTA + bonusQuota
 
     if (freePostsUsedToday < totalFreeDailyQuota) {
       this.logger.debug(
         `User ${userId} (isLandlord: ${isLandlord}) using free quota (${freePostsUsedToday + 1}/${totalFreeDailyQuota})`,
-      );
+      )
       return {
         sourceType: SourceType.free_quote,
         postPurchaseId: null,
-      };
+      }
     }
 
     // Fallback: check purchased credits (FIFO order by activatedAt)
@@ -171,41 +168,39 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
-    const availableCredit = paidPurchases.find(
-      (pp) => pp._count.posts < pp.quantityPurchase,
-    );
+    const availableCredit = paidPurchases.find(pp => pp._count.posts < pp.quantityPurchase)
 
     if (availableCredit) {
       this.logger.debug(
         `User ${userId} using purchased credit package ${availableCredit.id} (${availableCredit._count.posts + 1}/${availableCredit.quantityPurchase})`,
-      );
+      )
       return {
         sourceType: SourceType.purchased,
         postPurchaseId: availableCredit.id,
-      };
+      }
     }
 
     this.logger.warn(
       `User ${userId} rejected: posting quota exhausted (free: ${freePostsUsedToday}/${totalFreeDailyQuota}, purchased: 0)`,
-    );
+    )
     throw new ForbiddenException(
       'Daily posting quota exhausted. Please upgrade your subscription plan or purchase post credits.',
-    );
+    )
   }
 
   /**
    * Retrieves quota statistics for the authenticated poster.
    */
   async getQuotaStatus(userId: string): Promise<PostQuotaDto> {
-    const isLandlord = await this.checkIsLandlord(userId);
+    const isLandlord = await this.checkIsLandlord(userId)
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
 
     const freePostsUsedToday = await this.prisma.post.count({
       where: {
@@ -217,10 +212,10 @@ export class PostsService {
           lte: endOfDay,
         },
       },
-    });
+    })
 
-    let planName = 'leasing_agent';
-    let bonusDailyQuota = 0;
+    let planName = 'leasing_agent'
+    let bonusDailyQuota = 0
 
     if (isLandlord) {
       const activeSub = await this.prisma.userSubscription.findFirst({
@@ -234,14 +229,14 @@ export class PostsService {
         include: {
           subscriptionPlan: true,
         },
-      });
+      })
 
-      planName = activeSub?.planName ?? 'free';
-      bonusDailyQuota = activeSub?.subscriptionPlan?.dailyPostQuote ?? 0;
+      planName = activeSub?.planName ?? 'free'
+      bonusDailyQuota = activeSub?.subscriptionPlan?.dailyPostQuote ?? 0
     }
 
-    const baseDailyQuota = BASE_DAILY_FREE_POST_QUOTA;
-    const dailyPostQuota = baseDailyQuota + bonusDailyQuota;
+    const baseDailyQuota = BASE_DAILY_FREE_POST_QUOTA
+    const dailyPostQuota = baseDailyQuota + bonusDailyQuota
 
     const paidPurchases = await this.prisma.postPurchase.findMany({
       where: {
@@ -255,19 +250,15 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
     const purchasedCreditsAvailable = paidPurchases.reduce((acc, pp) => {
-      const remaining = Math.max(0, pp.quantityPurchase - pp._count.posts);
-      return acc + remaining;
-    }, 0);
+      const remaining = Math.max(0, pp.quantityPurchase - pp._count.posts)
+      return acc + remaining
+    }, 0)
 
-    const freePostsRemainingToday = Math.max(
-      0,
-      dailyPostQuota - freePostsUsedToday,
-    );
-    const canPublish =
-      freePostsRemainingToday > 0 || purchasedCreditsAvailable > 0;
+    const freePostsRemainingToday = Math.max(0, dailyPostQuota - freePostsUsedToday)
+    const canPublish = freePostsRemainingToday > 0 || purchasedCreditsAvailable > 0
 
     return {
       isLandlord,
@@ -279,29 +270,24 @@ export class PostsService {
       freePostsRemainingToday,
       purchasedCreditsAvailable,
       canPublish,
-    };
+    }
   }
 
   /**
    * UC-P-01: Publish Rental Listing
    */
-  async createPost(
-    userId: string,
-    dto: CreatePostDto,
-  ): Promise<PostResponseDto> {
-    this.logger.log(
-      `Creating post listing for user ${userId} with title "${dto.title}"`,
-    );
+  async createPost(userId: string, dto: CreatePostDto): Promise<PostResponseDto> {
+    this.logger.log(`Creating post listing for user ${userId} with title "${dto.title}"`)
 
     // Step 1 — Determine landlord-or-not
-    const isLandlord = await this.checkIsLandlord(userId);
+    const isLandlord = await this.checkIsLandlord(userId)
 
     // Step 2 — Room-linking rule (validate before quota)
     if (!isLandlord) {
       if (dto.roomId) {
         throw new BadRequestException(
           'Leasing agents can only publish general listings and cannot link to specific rooms',
-        );
+        )
       }
     } else {
       if (dto.roomId) {
@@ -310,16 +296,16 @@ export class PostsService {
           include: {
             boardingHouse: true,
           },
-        });
+        })
 
         if (!room) {
-          throw new NotFoundException(`Room with ID ${dto.roomId} was not found`);
+          throw new NotFoundException(`Room with ID ${dto.roomId} was not found`)
         }
 
         if (room.boardingHouse.ownerId !== userId) {
           throw new ForbiddenException(
             'You do not have permission to publish a listing for a room owned by another landlord',
-          );
+          )
         }
       }
     }
@@ -328,15 +314,15 @@ export class PostsService {
     let quota: QuotaAllocation = {
       sourceType: SourceType.free_quote,
       postPurchaseId: null,
-    };
+    }
     if (dto.status !== PostStatus.draft) {
-      quota = await this.checkQuota(userId, isLandlord);
+      quota = await this.checkQuota(userId, isLandlord)
     }
 
     // Step 4 — Database Insertion in transaction
-    const farFuture = new Date('2099-12-31');
+    const farFuture = new Date('2099-12-31')
 
-    const createdPost = await this.prisma.$transaction(async (tx) => {
+    const createdPost = await this.prisma.$transaction(async tx => {
       const post = await tx.post.create({
         data: {
           postedBy: userId,
@@ -349,21 +335,21 @@ export class PostsService {
           postPurchaseId: quota.postPurchaseId,
           deletedAt: farFuture,
         },
-      });
+      })
 
       if (dto.imageUrls && dto.imageUrls.length > 0) {
         await tx.postImage.createMany({
-          data: dto.imageUrls.map((url) => ({
+          data: dto.imageUrls.map(url => ({
             postId: post.id,
             url,
           })),
-        });
+        })
       }
 
-      return post;
-    });
+      return post
+    })
 
-    return this.getPostById(userId, createdPost.id);
+    return this.getPostById(userId, createdPost.id)
   }
 
   /**
@@ -386,44 +372,41 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
     if (!post) {
-      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`)
     }
 
-    return this.mapToResponseDto(post);
+    return this.mapToResponseDto(post)
   }
 
   /**
    * Retrieve all listings posted by the current user with pagination and filters
    */
-  async getMyPosts(
-    userId: string,
-    query: PostQueryDto,
-  ): Promise<PaginatedPostsResponseDto> {
-    const { page = 1, limit = 10, status, search, boardingHouseId } = query;
-    const skip = (page - 1) * limit;
+  async getMyPosts(userId: string, query: PostQueryDto): Promise<PaginatedPostsResponseDto> {
+    const { page = 1, limit = 10, status, search, boardingHouseId } = query
+    const skip = (page - 1) * limit
 
     const where: Prisma.PostWhereInput = {
       postedBy: userId,
-    };
+    }
 
     if (status) {
-      where.status = status;
+      where.status = status
     }
 
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { content: { contains: search, mode: 'insensitive' } },
-      ];
+      ]
     }
 
     if (boardingHouseId) {
       where.room = {
         boardingHouseId,
-      };
+      }
     }
 
     const [total, posts] = await Promise.all([
@@ -450,17 +433,17 @@ export class PostsService {
         skip,
         take: limit,
       }),
-    ]);
+    ])
 
     return {
-      data: posts.map((post) => this.mapToResponseDto(post)),
+      data: posts.map(post => this.mapToResponseDto(post)),
       meta: {
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit) || 1,
       },
-    };
+    }
   }
 
   /**
@@ -474,24 +457,24 @@ export class PostsService {
   ): Promise<PostResponseDto> {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
-    });
+    })
 
     if (!post) {
-      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`)
     }
 
     if (userRole !== UserRole.admin && post.postedBy !== userId) {
       throw new ForbiddenException(
         'You do not have permission to change the status of this listing',
-      );
+      )
     }
 
     await this.prisma.post.update({
       where: { id: postId },
       data: { status },
-    });
+    })
 
-    return this.getPostById(userId, postId);
+    return this.getPostById(userId, postId)
   }
 
   /**
@@ -506,44 +489,42 @@ export class PostsService {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
       include: { postImages: true },
-    });
+    })
 
     if (!post) {
-      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`)
     }
 
     if (userRole !== UserRole.admin && post.postedBy !== userId) {
-      throw new ForbiddenException(
-        'You do not have permission to edit this listing',
-      );
+      throw new ForbiddenException('You do not have permission to edit this listing')
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      const data: Prisma.PostUpdateInput = {};
-      if (dto.title) data.title = dto.title;
-      if (dto.content) data.content = dto.content;
+    await this.prisma.$transaction(async tx => {
+      const data: Prisma.PostUpdateInput = {}
+      if (dto.title) data.title = dto.title
+      if (dto.content) data.content = dto.content
       if (dto.depositAmount !== undefined) {
-        data.depositAmount = new Prisma.Decimal(dto.depositAmount);
+        data.depositAmount = new Prisma.Decimal(dto.depositAmount)
       }
-      if (dto.status) data.status = dto.status;
+      if (dto.status) data.status = dto.status
 
       await tx.post.update({
         where: { id: postId },
         data,
-      });
+      })
 
       if (dto.imageUrls && dto.imageUrls.length > 0) {
-        await tx.postImage.deleteMany({ where: { postId } });
+        await tx.postImage.deleteMany({ where: { postId } })
         await tx.postImage.createMany({
-          data: dto.imageUrls.map((url) => ({
+          data: dto.imageUrls.map(url => ({
             postId,
             url,
           })),
-        });
+        })
       }
-    });
+    })
 
-    return this.getPostById(userId, postId);
+    return this.getPostById(userId, postId)
   }
 
   /**
@@ -565,16 +546,14 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
     if (!post) {
-      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`)
     }
 
     if (userRole !== UserRole.admin && post.postedBy !== userId) {
-      throw new ForbiddenException(
-        'You do not have permission to delete this listing',
-      );
+      throw new ForbiddenException('You do not have permission to delete this listing')
     }
 
     // Soft delete by setting deletedAt to current time and hiding post
@@ -584,12 +563,12 @@ export class PostsService {
         deletedAt: new Date(),
         status: PostStatus.hidden,
       },
-    });
+    })
 
     // If deleted by admin, notify the author
     if (userRole === UserRole.admin) {
       const deleteReason =
-        reason?.trim() || 'Vi phạm tiêu chuẩn cộng đồng hoặc thông tin phòng không chính xác';
+        reason?.trim() || 'Vi phạm tiêu chuẩn cộng đồng hoặc thông tin phòng không chính xác'
 
       await this.prisma.notification.create({
         data: {
@@ -600,17 +579,17 @@ export class PostsService {
           content: `Bài viết "${post.title}" của bạn đã bị quản trị viên xóa. Lý do: ${deleteReason}`,
           isRead: false,
         },
-      });
+      })
 
       this.logger.log(
         `Admin ${userId} deleted post ${postId} with reason: "${deleteReason}". Notification dispatched to author ${post.postedBy}.`,
-      );
+      )
     }
 
     return {
       success: true,
       message: 'Bài viết/tin đăng đã được xóa thành công',
-    };
+    }
   }
 
   /**
@@ -623,10 +602,10 @@ export class PostsService {
     userId: string,
     days: number = 14,
   ): Promise<PosterAnalyticsOverviewDto> {
-    const validDays = Math.max(1, Math.min(days, 90));
+    const validDays = Math.max(1, Math.min(days, 90))
     this.logger.log(
       `Calculating poster analytics overview for user ${userId} over last ${validDays} days`,
-    );
+    )
 
     // 1. Fetch all user posts with reach and bookmark relations
     const posts = await this.prisma.post.findMany({
@@ -650,42 +629,42 @@ export class PostsService {
       orderBy: {
         createdAt: 'desc',
       },
-    });
+    })
 
-    const totalPosts = posts.length;
-    const activePosts = posts.filter((p) => p.status === PostStatus.posted).length;
-    const totalViews = posts.reduce((sum, p) => sum + (p._count?.postReaches ?? 0), 0);
-    const totalSaved = posts.reduce((sum, p) => sum + (p._count?.savedPosts ?? 0), 0);
+    const totalPosts = posts.length
+    const activePosts = posts.filter(p => p.status === PostStatus.posted).length
+    const totalViews = posts.reduce((sum, p) => sum + (p._count?.postReaches ?? 0), 0)
+    const totalSaved = posts.reduce((sum, p) => sum + (p._count?.savedPosts ?? 0), 0)
     const averageViewsPerPost =
-      activePosts > 0 ? Math.round((totalViews / activePosts) * 10) / 10 : 0;
+      activePosts > 0 ? Math.round((totalViews / activePosts) * 10) / 10 : 0
 
-    const postIds = posts.map((p) => p.id);
+    const postIds = posts.map(p => p.id)
 
     // 2. Fetch daily reach trend records within the time window
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (validDays - 1));
-    startDate.setHours(0, 0, 0, 0);
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - (validDays - 1))
+    startDate.setHours(0, 0, 0, 0)
 
     const reachRecords =
       postIds.length > 0
         ? await this.prisma.postReach.findMany({
-          where: {
-            postId: { in: postIds },
-            viewedAt: { gte: startDate },
-          },
-          select: {
-            viewedAt: true,
-            viewedBy: true,
-          },
-        })
-        : [];
+            where: {
+              postId: { in: postIds },
+              viewedAt: { gte: startDate },
+            },
+            select: {
+              viewedAt: true,
+              viewedBy: true,
+            },
+          })
+        : []
 
-    const dailyTrends = this.buildDailyTrendMap(reachRecords, validDays);
+    const dailyTrends = this.buildDailyTrendMap(reachRecords, validDays)
 
     // 3. Format top performing posts
     const topPosts: TopPostAnalyticsDto[] = [...posts]
       .sort((a, b) => (b._count?.postReaches ?? 0) - (a._count?.postReaches ?? 0))
-      .map((p) => ({
+      .map(p => ({
         id: p.id,
         title: p.title,
         status: p.status,
@@ -696,7 +675,7 @@ export class PostsService {
         viewsCount: p._count?.postReaches ?? 0,
         savedCount: p._count?.savedPosts ?? 0,
         createdAt: p.createdAt,
-      }));
+      }))
 
     return {
       totalPosts,
@@ -706,7 +685,7 @@ export class PostsService {
       averageViewsPerPost,
       dailyTrends,
       topPosts,
-    };
+    }
   }
 
   /**
@@ -720,10 +699,10 @@ export class PostsService {
     postId: string,
     days: number = 14,
   ): Promise<SinglePostAnalyticsDto> {
-    const validDays = Math.max(1, Math.min(days, 90));
+    const validDays = Math.max(1, Math.min(days, 90))
     this.logger.log(
       `Calculating single post analytics for post ${postId} over ${validDays} days by user ${userId}`,
-    );
+    )
 
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
@@ -741,21 +720,21 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
     if (!post) {
-      throw new NotFoundException(`Listing with ID ${postId} was not found`);
+      throw new NotFoundException(`Listing with ID ${postId} was not found`)
     }
 
     if (post.postedBy !== userId) {
       throw new ForbiddenException(
         'You do not have permission to view analytics for a listing that does not belong to you',
-      );
+      )
     }
 
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (validDays - 1));
-    startDate.setHours(0, 0, 0, 0);
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - (validDays - 1))
+    startDate.setHours(0, 0, 0, 0)
 
     const reachRecords = await this.prisma.postReach.findMany({
       where: {
@@ -766,10 +745,10 @@ export class PostsService {
         viewedAt: true,
         viewedBy: true,
       },
-    });
+    })
 
-    const dailyTrends = this.buildDailyTrendMap(reachRecords, validDays);
-    const uniqueViewersSet = new Set(reachRecords.map((r) => r.viewedBy));
+    const dailyTrends = this.buildDailyTrendMap(reachRecords, validDays)
+    const uniqueViewersSet = new Set(reachRecords.map(r => r.viewedBy))
 
     const postDto: TopPostAnalyticsDto = {
       id: post.id,
@@ -782,55 +761,55 @@ export class PostsService {
       viewsCount: post._count?.postReaches ?? 0,
       savedCount: post._count?.savedPosts ?? 0,
       createdAt: post.createdAt,
-    };
+    }
 
     return {
       post: postDto,
       totalViews: post._count?.postReaches ?? 0,
       totalUniqueViewers: uniqueViewersSet.size,
       dailyTrends,
-    };
+    }
   }
 
   private buildDailyTrendMap(
     records: { viewedAt: Date; viewedBy: string }[],
     days: number,
   ): DailyReachPointDto[] {
-    const result: DailyReachPointDto[] = [];
-    const now = new Date();
+    const result: DailyReachPointDto[] = []
+    const now = new Date()
 
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(now.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const d = new Date()
+      d.setDate(now.getDate() - i)
+      const dateStr = d.toISOString().split('T')[0]
       result.push({
         date: dateStr,
         views: 0,
         uniqueViewers: 0,
-      });
+      })
     }
 
-    const uniqueUsersByDate: Record<string, Set<string>> = {};
+    const uniqueUsersByDate: Record<string, Set<string>> = {}
     for (const item of result) {
-      uniqueUsersByDate[item.date] = new Set<string>();
+      uniqueUsersByDate[item.date] = new Set<string>()
     }
 
     for (const record of records) {
-      const recordDateStr = new Date(record.viewedAt).toISOString().split('T')[0];
-      const point = result.find((p) => p.date === recordDateStr);
+      const recordDateStr = new Date(record.viewedAt).toISOString().split('T')[0]
+      const point = result.find(p => p.date === recordDateStr)
       if (point) {
-        point.views++;
+        point.views++
         if (record.viewedBy) {
-          uniqueUsersByDate[recordDateStr]?.add(record.viewedBy);
+          uniqueUsersByDate[recordDateStr]?.add(record.viewedBy)
         }
       }
     }
 
     for (const point of result) {
-      point.uniqueViewers = uniqueUsersByDate[point.date]?.size ?? point.views;
+      point.uniqueViewers = uniqueUsersByDate[point.date]?.size ?? point.views
     }
 
-    return result;
+    return result
   }
 
   /**
@@ -863,7 +842,7 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
     if (!post) {
       post = await this.prisma.post.findFirst({
@@ -890,7 +869,7 @@ export class PostsService {
             },
           },
         },
-      });
+      })
     }
 
     if (!post) {
@@ -910,13 +889,15 @@ export class PostsService {
             },
           },
         },
-      });
+      })
 
       if (!room) {
-        throw new NotFoundException(`Public listing or room with ID ${postId} was not found or is not available`);
+        throw new NotFoundException(
+          `Public listing or room with ID ${postId} was not found or is not available`,
+        )
       }
 
-      const bh = room.boardingHouse;
+      const bh = room.boardingHouse
       const address: PublicAddressDto | null = bh
         ? {
             province: bh.province,
@@ -925,7 +906,7 @@ export class PostsService {
             street: bh.street,
             houseNumber: bh.houseNumber,
           }
-        : null;
+        : null
 
       return {
         id: room.id,
@@ -954,13 +935,12 @@ export class PostsService {
           : null,
         viewsCount: 0,
         savedCount: 0,
-      };
+      }
     }
 
-    this.logger.log(`Public post detail fetched: ${post.id}`);
-    return this.mapToPublicResponseDto(post);
+    this.logger.log(`Public post detail fetched: ${post.id}`)
+    return this.mapToPublicResponseDto(post)
   }
-
 
   /**
    * UC-PU-01: Browse & Filter Listings (public, no auth required)
@@ -969,9 +949,7 @@ export class PostsService {
    * minPrice/maxPrice (depositAmount), minArea/maxArea (room.area).
    * Location filters use structured BoardingHouse address fields — NOT free-text.
    */
-  async browsePosts(
-    query: BrowsePostsQueryDto,
-  ): Promise<PaginatedPublicPostsResponseDto> {
+  async browsePosts(query: BrowsePostsQueryDto): Promise<PaginatedPublicPostsResponseDto> {
     const {
       page = 1,
       limit = 12,
@@ -986,21 +964,21 @@ export class PostsService {
       maxPrice,
       minArea,
       maxArea,
-    } = query;
-    const skip = (page - 1) * limit;
+    } = query
+    const skip = (page - 1) * limit
 
     const where: Prisma.PostWhereInput = {
       deletedAt: { gt: new Date() },
-    };
+    }
 
     if (status) {
       if (status === 'reported') {
-        where.status = PostStatus.locked;
+        where.status = PostStatus.locked
       } else if (status !== 'all' && (Object.values(PostStatus) as string[]).includes(status)) {
-        where.status = status as PostStatus;
+        where.status = status as PostStatus
       }
     } else {
-      where.status = PostStatus.posted;
+      where.status = PostStatus.posted
     }
 
     // Keyword filter: title, content, author username, boardingHouse address fields, or room type name (case-insensitive)
@@ -1029,7 +1007,7 @@ export class PostsService {
             },
           },
         },
-      ];
+      ]
     }
 
     // Room type / Category filter
@@ -1038,79 +1016,79 @@ export class PostsService {
         phong: ['phòng', 'common', 'trọ'],
         studio: ['studio', 'căn hộ', 'duplex', 'mini'],
         nguyencan: ['nguyên căn', 'nhà', 'house'],
-      };
-      const keywords = typeKeywords[roomType] ?? [roomType];
+      }
+      const keywords = typeKeywords[roomType] ?? [roomType]
       const typeConditions: Prisma.PostWhereInput[] = [
-        ...keywords.map((kw) => ({ title: { contains: kw, mode: 'insensitive' as const } })),
-        ...keywords.map((kw) => ({ content: { contains: kw, mode: 'insensitive' as const } })),
-        ...keywords.map((kw) => ({
+        ...keywords.map(kw => ({ title: { contains: kw, mode: 'insensitive' as const } })),
+        ...keywords.map(kw => ({ content: { contains: kw, mode: 'insensitive' as const } })),
+        ...keywords.map(kw => ({
           room: {
             roomType: {
               name: { contains: kw, mode: 'insensitive' as const },
             },
           },
         })),
-      ];
+      ]
 
       if (where.AND) {
         if (Array.isArray(where.AND)) {
-          where.AND.push({ OR: typeConditions });
+          where.AND.push({ OR: typeConditions })
         } else {
-          where.AND = [where.AND, { OR: typeConditions }];
+          where.AND = [where.AND, { OR: typeConditions }]
         }
       } else {
-        where.AND = [{ OR: typeConditions }];
+        where.AND = [{ OR: typeConditions }]
       }
     }
 
     // Build room+boardingHouse filter for location, property & area
-    const roomFilter: Prisma.RoomWhereInput = {};
-    const boardingHouseFilter: Prisma.BoardingHouseWhereInput = {};
-    let hasLocationFilter = false;
-    let hasAreaFilter = false;
+    const roomFilter: Prisma.RoomWhereInput = {}
+    const boardingHouseFilter: Prisma.BoardingHouseWhereInput = {}
+    let hasLocationFilter = false
+    let hasAreaFilter = false
 
     if (property && property !== 'all') {
-      boardingHouseFilter.name = { contains: property, mode: 'insensitive' };
-      hasLocationFilter = true;
+      boardingHouseFilter.name = { contains: property, mode: 'insensitive' }
+      hasLocationFilter = true
     }
     if (province) {
-      const cleanProv = province.replace(/^(Thành phố|Tỉnh|TP\.?)\s+/i, '').trim();
-      boardingHouseFilter.province = { contains: cleanProv, mode: 'insensitive' };
-      hasLocationFilter = true;
+      const cleanProv = province.replace(/^(Thành phố|Tỉnh|TP\.?)\s+/i, '').trim()
+      boardingHouseFilter.province = { contains: cleanProv, mode: 'insensitive' }
+      hasLocationFilter = true
     }
     if (district) {
-      const cleanDistrict = district.replace(/^(Quận|Huyện|Thị xã|Thành phố)\s+/i, '').trim();
-      boardingHouseFilter.district = { contains: cleanDistrict, mode: 'insensitive' };
-      hasLocationFilter = true;
+      const cleanDistrict = district.replace(/^(Quận|Huyện|Thị xã|Thành phố)\s+/i, '').trim()
+      boardingHouseFilter.district = { contains: cleanDistrict, mode: 'insensitive' }
+      hasLocationFilter = true
     }
     if (ward) {
-      const cleanWard = ward.replace(/^(Phường|Xã|Thị trấn)\s+/i, '').trim();
-      boardingHouseFilter.ward = { contains: cleanWard, mode: 'insensitive' };
-      hasLocationFilter = true;
+      const cleanWard = ward.replace(/^(Phường|Xã|Thị trấn)\s+/i, '').trim()
+      boardingHouseFilter.ward = { contains: cleanWard, mode: 'insensitive' }
+      hasLocationFilter = true
     }
     if (hasLocationFilter) {
-      roomFilter.boardingHouse = boardingHouseFilter;
+      roomFilter.boardingHouse = boardingHouseFilter
     }
 
     if (minArea !== undefined || maxArea !== undefined) {
-      const areaFilter: { gte?: string; lte?: string } = {};
-      if (minArea !== undefined) areaFilter.gte = String(minArea);
-      if (maxArea !== undefined) areaFilter.lte = String(maxArea);
-      roomFilter.area = areaFilter as Prisma.RoomWhereInput['area'];
-      hasAreaFilter = true;
+      const areaFilter: { gte?: string; lte?: string } = {}
+      if (minArea !== undefined) areaFilter.gte = String(minArea)
+      if (maxArea !== undefined) areaFilter.lte = String(maxArea)
+      roomFilter.area = areaFilter
+      hasAreaFilter = true
     }
 
     if (hasLocationFilter || hasAreaFilter) {
       // Posts without a linked room are excluded when area/location filters are active
-      where.room = roomFilter;
+      where.room = roomFilter
     }
 
     // Price filter on depositAmount (Decimal field — use string values for Prisma Decimal comparison)
     if (minPrice !== undefined || maxPrice !== undefined) {
-      const priceFilter: { gte?: string; lte?: string } = {};
-      if (minPrice !== undefined) priceFilter.gte = String(minPrice);
-      if (maxPrice !== undefined) priceFilter.lte = String(maxPrice);
-      where.depositAmount = priceFilter as Prisma.PostWhereInput['depositAmount'];
+      const priceFilter: { gte?: string; lte?: string } = {}
+      if (minPrice !== undefined) priceFilter.gte = String(minPrice)
+      if (maxPrice !== undefined) priceFilter.lte = String(maxPrice)
+      where.depositAmount = priceFilter
     }
 
     const [total, posts] = await Promise.all([
@@ -1144,17 +1122,17 @@ export class PostsService {
         skip,
         take: limit,
       }),
-    ]);
+    ])
 
     return {
-      data: posts.map((post) => this.mapToPublicResponseDto(post)),
+      data: posts.map(post => this.mapToPublicResponseDto(post)),
       meta: {
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit) || 1,
       },
-    };
+    }
   }
 
   /**
@@ -1166,21 +1144,21 @@ export class PostsService {
       select: { name: true },
       distinct: ['name'],
       orderBy: { name: 'asc' },
-    });
-    return boardingHouses.map((bh) => bh.name).filter(Boolean);
+    })
+    return boardingHouses.map(bh => bh.name).filter(Boolean)
   }
 
   private mapToPublicResponseDto(post: any): PublicPostResponseDto {
-    const bh = post.room?.boardingHouse;
+    const bh = post.room?.boardingHouse
     const address: PublicAddressDto | null = bh
       ? {
-        province: bh.province,
-        district: bh.district,
-        ward: bh.ward,
-        street: bh.street,
-        houseNumber: bh.houseNumber,
-      }
-      : null;
+          province: bh.province,
+          district: bh.district,
+          ward: bh.ward,
+          street: bh.street,
+          houseNumber: bh.houseNumber,
+        }
+      : null
 
     return {
       id: post.id,
@@ -1195,31 +1173,34 @@ export class PostsService {
       })),
       room: post.room
         ? {
-          id: post.room.id,
-          roomNumber: post.room.roomNumber,
-          floor: post.room.floor,
-          area: post.room.area ? Number(post.room.area) : undefined,
-          roomTypeName: post.room.roomType?.name,
-          boardingHouseName: post.room.boardingHouse?.name,
-          boardingHouseId: post.room.boardingHouseId,
-        }
+            id: post.room.id,
+            roomNumber: post.room.roomNumber,
+            floor: post.room.floor,
+            area: post.room.area ? Number(post.room.area) : undefined,
+            roomTypeName: post.room.roomType?.name,
+            boardingHouseName: post.room.boardingHouse?.name,
+            boardingHouseId: post.room.boardingHouseId,
+          }
         : null,
       address,
       poster: post.postedByUser
         ? {
-          id: post.postedByUser.id,
-          username: post.postedByUser.username,
-          avatarUrl: post.postedByUser.avatarUrl,
-        }
+            id: post.postedByUser.id,
+            username: post.postedByUser.username,
+            avatarUrl: post.postedByUser.avatarUrl,
+          }
         : null,
       viewsCount: post._count?.postReaches ?? 0,
       savedCount: post._count?.savedPosts ?? 0,
       reportsCount: post.status === 'locked' ? 3 : undefined,
-      reportReasons: post.status === 'locked' ? [
-        'Giá ảo câu khách, khi gọi điện báo giá khác',
-        'Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống',
-      ] : undefined,
-    };
+      reportReasons:
+        post.status === 'locked'
+          ? [
+              'Giá ảo câu khách, khi gọi điện báo giá khác',
+              'Yêu cầu chuyển cọc giữ chỗ ngoài hệ thống',
+            ]
+          : undefined,
+    }
   }
 
   private mapToResponseDto(post: any): PostResponseDto {
@@ -1242,17 +1223,17 @@ export class PostsService {
       })),
       room: post.room
         ? {
-          id: post.room.id,
-          roomNumber: post.room.roomNumber,
-          floor: post.room.floor,
-          area: post.room.area ? Number(post.room.area) : undefined,
-          roomTypeName: post.room.roomType?.name,
-          boardingHouseName: post.room.boardingHouse?.name,
-          boardingHouseId: post.room.boardingHouseId,
-        }
+            id: post.room.id,
+            roomNumber: post.room.roomNumber,
+            floor: post.room.floor,
+            area: post.room.area ? Number(post.room.area) : undefined,
+            roomTypeName: post.room.roomType?.name,
+            boardingHouseName: post.room.boardingHouse?.name,
+            boardingHouseId: post.room.boardingHouseId,
+          }
         : null,
       viewsCount: post._count?.postReaches ?? 0,
-    };
+    }
   }
 
   /**
@@ -1280,18 +1261,16 @@ export class PostsService {
     targetId: string,
     dto: InitiatePlatformDepositDto,
   ): Promise<PlatformDepositInstructionDto> {
-    this.logger.log(
-      `UC-PU-04: Initiate platform deposit on target ${targetId} by user ${userId}`,
-    );
+    this.logger.log(`UC-PU-04: Initiate platform deposit on target ${targetId} by user ${userId}`)
 
     // 1. Identity Verification Gate (UC-PU-04 Step 1)
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { userIdentification: true },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`)
     }
 
     if (!user.userIdentification) {
@@ -1299,7 +1278,7 @@ export class PostsService {
         code: 'IDENTITY_VERIFICATION_REQUIRED',
         message:
           'Vui lòng hoàn thành xác minh danh tính (CCCD) trước khi thực hiện đặt cọc trực tuyến theo quy định nền tảng (UC-PU-04).',
-      });
+      })
     }
 
     // 2. Load post or room
@@ -1312,7 +1291,7 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
     if (!post) {
       post = await this.prisma.post.findFirst({
@@ -1324,45 +1303,45 @@ export class PostsService {
             },
           },
         },
-      });
+      })
     }
 
-    let roomId: string;
-    let boardingHouseId: string;
-    let roomNumber: string;
-    let defaultDeposit: number;
-    let resolvedPostId: string | null = null;
+    let roomId: string
+    let boardingHouseId: string
+    let roomNumber: string
+    let defaultDeposit: number
+    let resolvedPostId: string | null = null
 
     if (post && post.room) {
       if (post.status !== PostStatus.posted) {
         throw new BadRequestException(
           'Tin đăng này hiện không nhận đặt cọc trực tuyến (đã tạm ẩn hoặc chưa đăng).',
-        );
+        )
       }
-      resolvedPostId = post.id;
-      roomId = post.room.id;
-      boardingHouseId = post.room.boardingHouseId;
-      roomNumber = post.room.roomNumber;
-      defaultDeposit = Number(post.depositAmount);
+      resolvedPostId = post.id
+      roomId = post.room.id
+      boardingHouseId = post.room.boardingHouseId
+      roomNumber = post.room.roomNumber
+      defaultDeposit = Number(post.depositAmount)
     } else {
       // Fallback: check room directly
       const directRoom = await this.prisma.room.findUnique({
         where: { id: targetId },
         include: { boardingHouse: true },
-      });
+      })
       if (!directRoom) {
         throw new NotFoundException(
           `Không tìm thấy thông tin phòng hoặc tin đăng với ID ${targetId}.`,
-        );
+        )
       }
-      roomId = directRoom.id;
-      boardingHouseId = directRoom.boardingHouseId;
-      roomNumber = directRoom.roomNumber;
-      defaultDeposit = 0;
+      roomId = directRoom.id
+      boardingHouseId = directRoom.boardingHouseId
+      roomNumber = directRoom.roomNumber
+      defaultDeposit = 0
     }
 
-    const now = new Date();
-    const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    const now = new Date()
+    const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000)
 
     // 3. Reusable Pending Session Check (< 15 mins) for current user
     const existingUserPending = await this.prisma.deposit.findFirst({
@@ -1379,7 +1358,7 @@ export class PostsService {
         payment: true,
       },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
     if (
       existingUserPending &&
@@ -1387,38 +1366,34 @@ export class PostsService {
       existingUserPending.payment.orderCode &&
       existingUserPending.payment.qrCodeUrl
     ) {
-      const elapsedMs =
-        now.getTime() - existingUserPending.createdAt.getTime();
-      const remainingSecs = Math.max(
-        30,
-        Math.floor((15 * 60 * 1000 - elapsedMs) / 1000),
-      );
+      const elapsedMs = now.getTime() - existingUserPending.createdAt.getTime()
+      const remainingSecs = Math.max(30, Math.floor((15 * 60 * 1000 - elapsedMs) / 1000))
 
       this.logger.log(
         `Reusing existing deposit payment session (OrderCode: ${existingUserPending.payment.orderCode}) for user ${userId}`,
-      );
+      )
 
-      let bin = '970422';
-      let accountNumber = '0987654321';
-      let accountName = 'DORMIO ESCROW VIETNAM';
+      let bin = '970422'
+      let accountNumber = '0987654321'
+      let accountName = 'DORMIO ESCROW VIETNAM'
       let checkoutUrl = existingUserPending.payment.qrCodeUrl.startsWith('http')
         ? existingUserPending.payment.qrCodeUrl
-        : '';
+        : ''
 
       try {
         const linkInfo = await this.payOsService.getPaymentLinkInformation(
           Number(existingUserPending.payment.orderCode),
-        );
+        )
         if (linkInfo) {
-          bin = linkInfo.bin || bin;
-          accountNumber = linkInfo.accountNumber || accountNumber;
-          accountName = linkInfo.accountName || accountName;
-          checkoutUrl = linkInfo.checkoutUrl || checkoutUrl;
+          bin = linkInfo.bin || bin
+          accountNumber = linkInfo.accountNumber || accountNumber
+          accountName = linkInfo.accountName || accountName
+          checkoutUrl = linkInfo.checkoutUrl || checkoutUrl
         }
       } catch (err: any) {
         this.logger.warn(
           `Could not fetch PayOS link info for order ${existingUserPending.payment.orderCode}: ${err.message}`,
-        );
+        )
       }
 
       return {
@@ -1449,17 +1424,17 @@ export class PostsService {
         bin,
         expiresIn: remainingSecs,
         isReused: true,
-      };
+      }
     }
 
     // 4. Validate Room Availability
     const currentRoom = await this.prisma.room.findUnique({
       where: { id: roomId },
-    });
+    })
     if (!currentRoom || currentRoom.status !== RoomStatus.available) {
       throw new BadRequestException(
         'Phòng trọ này hiện không còn khả dụng để đặt cọc (đang thuê hoặc đã có người cọc).',
-      );
+      )
     }
 
     // Guard: no other active deposit on this room
@@ -1468,46 +1443,40 @@ export class PostsService {
         roomId,
         status: { in: [DepositStatus.pending, DepositStatus.paid] },
       },
-    });
+    })
     if (existingOtherDeposit) {
       throw new BadRequestException(
         'Phòng này hiện đã có người đặt cọc giữ chỗ đang được xử lý. Vui lòng chọn phòng khác.',
-      );
+      )
     }
 
     // 5. Determine deposit amount
     const rawAmount =
-      dto.amount !== undefined && dto.amount > 0
-        ? Number(dto.amount)
-        : defaultDeposit;
+      dto.amount !== undefined && dto.amount > 0 ? Number(dto.amount) : defaultDeposit
     if (isNaN(rawAmount) || rawAmount <= 0) {
-      throw new BadRequestException('Số tiền đặt cọc giữ chỗ không hợp lệ.');
+      throw new BadRequestException('Số tiền đặt cọc giữ chỗ không hợp lệ.')
     }
-    const depositAmount = new Prisma.Decimal(rawAmount);
+    const depositAmount = new Prisma.Decimal(rawAmount)
 
     const tenantName =
-      dto.tenantName?.trim() ||
-      user.userIdentification.fullName ||
-      user.username ||
-      'Khách thuê';
-    const tenantPhone = dto.tenantPhone?.trim() || user.phoneNumber;
+      dto.tenantName?.trim() || user.userIdentification.fullName || user.username || 'Khách thuê'
+    const tenantPhone = dto.tenantPhone?.trim() || user.phoneNumber
 
     const notePayload = JSON.stringify({
       tenantName,
       tenantPhone,
       note: dto.note?.trim() ?? null,
-    });
+    })
 
     // 6. Generate unique numeric orderCode
     const orderCode = Number(
       `${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`,
-    );
-    const sanitizedRoom = roomNumber.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8);
-    const description = `COC P${sanitizedRoom} ${orderCode % 10000}`.slice(0, 25);
-    const appUrl =
-      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
-    const cancelUrl = `${appUrl}/rooms/${targetId}/deposit?canceled=true`;
-    const returnUrl = `${appUrl}/rooms/${targetId}/deposit?success=true&orderCode=${orderCode}`;
+    )
+    const sanitizedRoom = roomNumber.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)
+    const description = `COC P${sanitizedRoom} ${orderCode % 10000}`.slice(0, 25)
+    const appUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'
+    const cancelUrl = `${appUrl}/rooms/${targetId}/deposit?canceled=true`
+    const returnUrl = `${appUrl}/rooms/${targetId}/deposit?success=true&orderCode=${orderCode}`
 
     // 7. Create PayOS Payment Link
     const linkResult = await this.payOsService.createPaymentLink({
@@ -1526,12 +1495,12 @@ export class PostsService {
       buyerName: tenantName,
       buyerPhone: tenantPhone,
       expiredAt: Math.floor(now.getTime() / 1000) + 15 * 60,
-    });
+    })
 
-    const transactionRef = `TXN-DEP-${orderCode}-${Date.now().toString().slice(-4)}`;
+    const transactionRef = `TXN-DEP-${orderCode}-${Date.now().toString().slice(-4)}`
 
     // 8. Atomic creation of Deposit (pending) + Payment (pending)
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async tx => {
       const dep = await tx.deposit.create({
         data: {
           roomId,
@@ -1545,7 +1514,7 @@ export class PostsService {
           recordedBy: null,
           note: notePayload,
         },
-      });
+      })
 
       const payment = await tx.payment.create({
         data: {
@@ -1562,14 +1531,14 @@ export class PostsService {
           orderCode: BigInt(orderCode),
           paymentLinkId: linkResult.paymentLinkId,
         },
-      });
+      })
 
-      return { dep, payment };
-    });
+      return { dep, payment }
+    })
 
     this.logger.log(
       `UC-PU-04: Created pending deposit ${result.dep.id} and payment ${result.payment.id} for target ${targetId}`,
-    );
+    )
 
     return {
       depositId: result.dep.id,
@@ -1579,8 +1548,7 @@ export class PostsService {
       amount: rawAmount,
       transactionRef,
       qrCodeUrl:
-        linkResult.qrCode.startsWith('http') ||
-        linkResult.qrCode.startsWith('data:image')
+        linkResult.qrCode.startsWith('http') || linkResult.qrCode.startsWith('data:image')
           ? linkResult.qrCode
           : `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(linkResult.qrCode)}`,
       bankCode: linkResult.bin,
@@ -1595,7 +1563,7 @@ export class PostsService {
       bin: linkResult.bin,
       expiresIn: 900,
       isReused: false,
-    };
+    }
   }
 
   /**
@@ -1605,10 +1573,10 @@ export class PostsService {
     userId: string,
     orderCode: number,
   ): Promise<{
-    orderCode: number;
-    status: string;
-    isPaid: boolean;
-    paidAt?: string;
+    orderCode: number
+    status: string
+    isPaid: boolean
+    paidAt?: string
   }> {
     const payment = await this.prisma.payment.findFirst({
       where: {
@@ -1618,45 +1586,45 @@ export class PostsService {
       include: {
         deposit: true,
       },
-    });
+    })
 
     if (!payment) {
-      throw new NotFoundException('Không tìm thấy giao dịch đặt cọc.');
+      throw new NotFoundException('Không tìm thấy giao dịch đặt cọc.')
     }
 
     // Double check PayOS if still pending in DB
     if (payment.status === PaymentStatus.pending && this.payOsService.hasValidConfig()) {
       try {
-        const linkInfo = await this.payOsService.getPaymentLinkInformation(orderCode);
+        const linkInfo = await this.payOsService.getPaymentLinkInformation(orderCode)
         if (linkInfo && linkInfo.status === 'PAID') {
-          const paidAtDate = new Date();
-          await this.prisma.$transaction(async (tx) => {
+          const paidAtDate = new Date()
+          await this.prisma.$transaction(async tx => {
             await tx.payment.update({
               where: { id: payment.id },
               data: { status: PaymentStatus.success, paidAt: paidAtDate },
-            });
+            })
             if (payment.depositId) {
               await tx.deposit.update({
                 where: { id: payment.depositId },
                 data: { status: DepositStatus.paid },
-              });
+              })
               if (payment.deposit) {
                 await tx.room.update({
                   where: { id: payment.deposit.roomId },
                   data: { status: RoomStatus.deposited },
-                });
+                })
               }
             }
-          });
+          })
           return {
             orderCode,
             status: 'success',
             isPaid: true,
             paidAt: paidAtDate.toISOString(),
-          };
+          }
         }
       } catch (err: any) {
-        this.logger.warn(`Could not verify PayOS status for order ${orderCode}: ${err.message}`);
+        this.logger.warn(`Could not verify PayOS status for order ${orderCode}: ${err.message}`)
       }
     }
 
@@ -1665,7 +1633,7 @@ export class PostsService {
       status: payment.status,
       isPaid: payment.status === PaymentStatus.success,
       paidAt: payment.paidAt ? payment.paidAt.toISOString() : undefined,
-    };
+    }
   }
 
   /**
@@ -1684,7 +1652,7 @@ export class PostsService {
   ): Promise<{ success: boolean; depositId: string; status: string; message: string }> {
     this.logger.log(
       `UC-PU-04: Confirm platform deposit ${dto.depositId} on post ${postId} by user ${userId}`,
-    );
+    )
 
     const deposit = await this.prisma.deposit.findFirst({
       where: {
@@ -1704,10 +1672,10 @@ export class PostsService {
           },
         },
       },
-    });
+    })
 
     if (!deposit) {
-      throw new NotFoundException(`Khoản đặt cọc không tồn tại hoặc không khớp với tin đăng`);
+      throw new NotFoundException(`Khoản đặt cọc không tồn tại hoặc không khớp với tin đăng`)
     }
 
     // Idempotency: if already paid, return success immediately
@@ -1717,28 +1685,28 @@ export class PostsService {
         depositId: deposit.id,
         status: 'paid',
         message: 'Khoản đặt cọc này đã được thanh toán thành công trước đó.',
-      };
+      }
     }
 
     if (deposit.status !== DepositStatus.pending) {
       throw new BadRequestException(
         `Không thể xác nhận khoản đặt cọc có trạng thái: ${deposit.status}`,
-      );
+      )
     }
 
     if (!deposit.payment) {
       throw new BadRequestException(
         'Không tìm thấy thông tin giao dịch thanh toán của khoản cọc này.',
-      );
+      )
     }
 
     const payer = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { userIdentification: true },
-    });
+    })
 
     // Execute atomic transaction (UC-PU-04 Step 5 + Rule 4 AuditLog)
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       // 1. Payment.status = 'success'
       await tx.payment.update({
         where: { id: deposit.payment!.id },
@@ -1747,7 +1715,7 @@ export class PostsService {
           paidAt: new Date(),
           transactionRef: dto.transactionRef || deposit.payment!.transactionRef,
         },
-      });
+      })
 
       // 2. Deposit.status = 'paid'
       await tx.deposit.update({
@@ -1755,7 +1723,7 @@ export class PostsService {
         data: {
           status: DepositStatus.paid,
         },
-      });
+      })
 
       // 3. Room.status = 'deposited'
       await tx.room.update({
@@ -1763,7 +1731,7 @@ export class PostsService {
         data: {
           status: RoomStatus.deposited,
         },
-      });
+      })
 
       // 4. AuditLog for PAYMENT (Rule 4)
       await tx.auditLog.create({
@@ -1780,7 +1748,7 @@ export class PostsService {
             transactionRef: dto.transactionRef || deposit.payment!.transactionRef,
           },
         },
-      });
+      })
 
       // 5. AuditLog for DEPOSIT (Rule 4)
       await tx.auditLog.create({
@@ -1796,18 +1764,15 @@ export class PostsService {
             amount: Number(deposit.amount),
           },
         },
-      });
-    });
+      })
+    })
 
     // 6. Notify the landlord outside transaction (UC-PU-04 Step 6)
     if (deposit.post?.postedBy) {
-      const payerName =
-        payer?.userIdentification?.fullName ||
-        payer?.username ||
-        'Khách thuê';
-      const roomNumber = deposit.room?.roomNumber || '';
-      const houseName = deposit.room?.boardingHouse?.name || 'Nhà trọ';
-      const formattedAmount = Number(deposit.amount).toLocaleString('vi-VN');
+      const payerName = payer?.userIdentification?.fullName || payer?.username || 'Khách thuê'
+      const roomNumber = deposit.room?.roomNumber || ''
+      const houseName = deposit.room?.boardingHouse?.name || 'Nhà trọ'
+      const formattedAmount = Number(deposit.amount).toLocaleString('vi-VN')
 
       await this.prisma.notification
         .create({
@@ -1820,51 +1785,46 @@ export class PostsService {
             isRead: false,
           },
         })
-        .catch((err) => {
-          this.logger.warn(`Could not dispatch notification to landlord: ${err.message}`);
-        });
+        .catch(err => {
+          this.logger.warn(`Could not dispatch notification to landlord: ${err.message}`)
+        })
     }
 
     this.logger.log(
       `UC-PU-04: Deposit ${deposit.id} marked paid, payment marked success, room marked deposited, landlord notified.`,
-    );
+    )
 
     return {
       success: true,
       depositId: deposit.id,
       status: 'paid',
       message: 'Đặt cọc giữ chỗ thành công! Chủ nhà trọ đã được thông báo để tạo hợp đồng.',
-    };
+    }
   }
 
   /**
    * UC-PU-03: Save a rental listing for the authenticated user (idempotent).
    */
-  async savePost(
-    userId: string,
-    postId: string,
-  ): Promise<{ saved: boolean; savedCount: number }> {
+  async savePost(userId: string, postId: string): Promise<{ saved: boolean; savedCount: number }> {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
       select: { id: true },
-    });
+    })
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException('Post not found')
     }
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true },
-    });
+    })
     if (!user) {
-      throw new UnauthorizedException(
-        'User account not found or expired. Please log in again.',
-      );
+      throw new UnauthorizedException('User account not found or expired. Please log in again.')
     }
 
     const existing = await this.prisma.savedPost.findFirst({
       where: { postId, savedBy: userId },
-    });
+    })
 
     if (!existing) {
       try {
@@ -1873,26 +1833,21 @@ export class PostsService {
             postId,
             savedBy: userId,
           },
-        });
-        this.logger.log(`User ${userId} saved post ${postId}`);
+        })
+        this.logger.log(`User ${userId} saved post ${postId}`)
       } catch (err) {
-        if (
-          err instanceof Prisma.PrismaClientKnownRequestError &&
-          err.code === 'P2003'
-        ) {
-          throw new UnauthorizedException(
-            'User account not found or expired. Please log in again.',
-          );
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+          throw new UnauthorizedException('User account not found or expired. Please log in again.')
         }
-        throw err;
+        throw err
       }
     }
 
     const savedCount = await this.prisma.savedPost.count({
       where: { postId },
-    });
+    })
 
-    return { saved: true, savedCount };
+    return { saved: true, savedCount }
   }
 
   /**
@@ -1905,21 +1860,21 @@ export class PostsService {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
       select: { id: true },
-    });
+    })
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException('Post not found')
     }
 
     await this.prisma.savedPost.deleteMany({
       where: { postId, savedBy: userId },
-    });
-    this.logger.log(`User ${userId} unsaved post ${postId}`);
+    })
+    this.logger.log(`User ${userId} unsaved post ${postId}`)
 
     const savedCount = await this.prisma.savedPost.count({
       where: { postId },
-    });
+    })
 
-    return { saved: false, savedCount };
+    return { saved: false, savedCount }
   }
 
   /**
@@ -1932,34 +1887,32 @@ export class PostsService {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
       select: { id: true },
-    });
+    })
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException('Post not found')
     }
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true },
-    });
+    })
     if (!user) {
-      throw new UnauthorizedException(
-        'User account not found or expired. Please log in again.',
-      );
+      throw new UnauthorizedException('User account not found or expired. Please log in again.')
     }
 
     const existing = await this.prisma.savedPost.findFirst({
       where: { postId, savedBy: userId },
-    });
+    })
 
     if (existing) {
       await this.prisma.savedPost.deleteMany({
         where: { postId, savedBy: userId },
-      });
-      this.logger.log(`User ${userId} toggled post ${postId} -> unsaved`);
+      })
+      this.logger.log(`User ${userId} toggled post ${postId} -> unsaved`)
       const savedCount = await this.prisma.savedPost.count({
         where: { postId },
-      });
-      return { saved: false, savedCount };
+      })
+      return { saved: false, savedCount }
     } else {
       try {
         await this.prisma.savedPost.create({
@@ -1967,23 +1920,18 @@ export class PostsService {
             postId,
             savedBy: userId,
           },
-        });
-        this.logger.log(`User ${userId} toggled post ${postId} -> saved`);
+        })
+        this.logger.log(`User ${userId} toggled post ${postId} -> saved`)
       } catch (err) {
-        if (
-          err instanceof Prisma.PrismaClientKnownRequestError &&
-          err.code === 'P2003'
-        ) {
-          throw new UnauthorizedException(
-            'User account not found or expired. Please log in again.',
-          );
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+          throw new UnauthorizedException('User account not found or expired. Please log in again.')
         }
-        throw err;
+        throw err
       }
       const savedCount = await this.prisma.savedPost.count({
         where: { postId },
-      });
-      return { saved: true, savedCount };
+      })
+      return { saved: true, savedCount }
     }
   }
 
@@ -1994,8 +1942,8 @@ export class PostsService {
     const saved = await this.prisma.savedPost.findMany({
       where: { savedBy: userId },
       select: { postId: true },
-    });
-    return saved.map((s) => s.postId);
+    })
+    return saved.map(s => s.postId)
   }
 
   /**
@@ -2031,11 +1979,9 @@ export class PostsService {
         },
       },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
-    return savedRecords
-      .filter((s) => s.post != null)
-      .map((s) => this.mapToPublicResponseDto(s.post));
+    return savedRecords.filter(s => s.post != null).map(s => this.mapToPublicResponseDto(s.post))
   }
 
   /**
@@ -2044,8 +1990,8 @@ export class PostsService {
   async isPostSaved(userId: string, postId: string): Promise<boolean> {
     const count = await this.prisma.savedPost.count({
       where: { postId, savedBy: userId },
-    });
-    return count > 0;
+    })
+    return count > 0
   }
 
   /**
@@ -2063,7 +2009,7 @@ export class PostsService {
   ): Promise<PosterProfileResponseDto> {
     this.logger.log(
       `getPosterProfile called for posterId=${posterId}, viewerId=${viewerId ?? 'anonymous'}`,
-    );
+    )
 
     // 1. Fetch poster info
     const poster = await this.prisma.user.findUnique({
@@ -2078,19 +2024,19 @@ export class PostsService {
         phoneNumber: true,
         email: true,
       },
-    });
+    })
 
     if (!poster) {
-      throw new NotFoundException(`Poster with ID ${posterId} not found`);
+      throw new NotFoundException(`Poster with ID ${posterId} not found`)
     }
 
     // 2. Check if viewer is allowed to see contact info
-    let canViewContact = false;
-    let hasActiveConversation = false;
+    let canViewContact = false
+    let hasActiveConversation = false
 
     if (viewerId) {
       if (viewerId === posterId) {
-        canViewContact = true;
+        canViewContact = true
       } else {
         const activeConversation = await this.prisma.conversation.findFirst({
           where: {
@@ -2100,10 +2046,10 @@ export class PostsService {
               { user1Id: posterId, user2Id: viewerId },
             ],
           },
-        });
+        })
         if (activeConversation) {
-          hasActiveConversation = true;
-          canViewContact = true;
+          hasActiveConversation = true
+          canViewContact = true
         }
       }
     }
@@ -2114,7 +2060,7 @@ export class PostsService {
         postedBy: posterId,
         status: PostStatus.posted,
       },
-    });
+    })
 
     // 4. Fetch active public listings for this poster
     const rawPosts = await this.prisma.post.findMany({
@@ -2145,11 +2091,9 @@ export class PostsService {
         },
       },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
-    const activeListings = rawPosts.map((post) =>
-      this.mapToPublicResponseDto(post),
-    );
+    const activeListings = rawPosts.map(post => this.mapToPublicResponseDto(post))
 
     // 5. Build DTO with explicit privacy enforcement
     return {
@@ -2164,7 +2108,7 @@ export class PostsService {
       email: canViewContact ? poster.email : undefined,
       hasActiveConversation,
       activeListings,
-    };
+    }
   }
 
   // ─── UC-L-12: AI Rental Post Suggestions ────────────────────────────────────
@@ -2178,7 +2122,7 @@ export class PostsService {
     userId: string,
     dto: CreateAiPostDraftDto,
   ): Promise<AiPostDraftResponseDto> {
-    this.logger.log(`generateAiPostDraft called by user ${userId} for room ${dto.roomId}`);
+    this.logger.log(`generateAiPostDraft called by user ${userId} for room ${dto.roomId}`)
 
     const room = await this.prisma.room.findUnique({
       where: { id: dto.roomId },
@@ -2198,52 +2142,62 @@ export class PostsService {
           take: 1,
         },
       },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException(`Không tìm thấy thông tin phòng với ID: ${dto.roomId}`);
+      throw new NotFoundException(`Không tìm thấy thông tin phòng với ID: ${dto.roomId}`)
     }
 
     if (room.boardingHouse.ownerId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền truy cập hoặc tạo bản nháp tin đăng cho phòng này');
+      throw new ForbiddenException(
+        'Bạn không có quyền truy cập hoặc tạo bản nháp tin đăng cho phòng này',
+      )
     }
 
-    const house = room.boardingHouse;
-    const roomType = room.roomType?.name || 'Phòng khép kín';
-    const areaStr = room.area ? `${room.area}m²` : '20-25m²';
-    const floorStr = `Tầng ${room.floor}`;
-    const maxOccupantsStr = room.maxOccupants ? `${room.maxOccupants} người` : '1-2 người';
-    const addressStr = `${house.houseNumber} ${house.street}, ${house.ward}, ${house.district}, ${house.city || house.province}`;
+    const house = room.boardingHouse
+    const roomType = room.roomType?.name || 'Phòng khép kín'
+    const areaStr = room.area ? `${room.area}m²` : '20-25m²'
+    const floorStr = `Tầng ${room.floor}`
+    const maxOccupantsStr = room.maxOccupants ? `${room.maxOccupants} người` : '1-2 người'
+    const addressStr = `${house.houseNumber} ${house.street}, ${house.ward}, ${house.district}, ${house.city || house.province}`
 
     // Compute estimated base price / deposit
-    const activeContract = room.contracts[0];
+    const activeContract = room.contracts[0]
     const estimatedPrice = activeContract
       ? Number(activeContract.rentPrice)
-      : (room.area ? Math.round((Number(room.area) * 140000) / 100000) * 100000 : 3500000);
-    const depositAmount = estimatedPrice;
+      : room.area
+        ? Math.round((Number(room.area) * 140000) / 100000) * 100000
+        : 3500000
+    const depositAmount = estimatedPrice
 
     // Services list
-    const attachedServices = (room.roomServices && room.roomServices.length > 0)
-      ? room.roomServices.map((rs) => rs.service)
-      : house.services;
+    const attachedServices =
+      room.roomServices && room.roomServices.length > 0
+        ? room.roomServices.map(rs => rs.service)
+        : house.services
 
-    const servicesListText = attachedServices.length > 0
-      ? attachedServices.map((s) => `- ${s.name}: ${Number(s.price).toLocaleString('vi-VN')} đ / ${s.unit}`).join('\n')
-      : '- Điện: 3.500 đ / kWh\n- Nước: 25.000 đ / m³\n- Wifi tốc độ cao & Dịch vụ chung: 150.000 đ / người';
+    const servicesListText =
+      attachedServices.length > 0
+        ? attachedServices
+            .map(s => `- ${s.name}: ${Number(s.price).toLocaleString('vi-VN')} đ / ${s.unit}`)
+            .join('\n')
+        : '- Điện: 3.500 đ / kWh\n- Nước: 25.000 đ / m³\n- Wifi tốc độ cao & Dịch vụ chung: 150.000 đ / người'
 
     // Tone customization
-    const tone = dto.tone || AiPostTone.PROFESSIONAL;
-    let headlinePrefix = 'Cho thuê phòng';
-    let vibeDescription = 'Không gian sống tiện nghi, sạch sẽ và an ninh tuyệt đối.';
+    const tone = dto.tone || AiPostTone.PROFESSIONAL
+    let headlinePrefix = 'Cho thuê phòng'
+    let vibeDescription = 'Không gian sống tiện nghi, sạch sẽ và an ninh tuyệt đối.'
     if (tone === AiPostTone.YOUTHFUL) {
-      headlinePrefix = 'Phòng trọ sinh viên / giới trẻ cực chill';
-      vibeDescription = 'Môi trường sống trẻ trung, giờ giấc tự do 100%, thuận tiện kết nối các trường Đại học & văn phòng.';
+      headlinePrefix = 'Phòng trọ sinh viên / giới trẻ cực chill'
+      vibeDescription =
+        'Môi trường sống trẻ trung, giờ giấc tự do 100%, thuận tiện kết nối các trường Đại học & văn phòng.'
     } else if (tone === AiPostTone.BUDGET) {
-      headlinePrefix = 'Phòng trọ giá tốt, tối ưu chi phí';
-      vibeDescription = 'Phòng sạch đẹp, chi phí hợp lý, cam kết minh bạch điện nước, không phát sinh chi phí ẩn.';
+      headlinePrefix = 'Phòng trọ giá tốt, tối ưu chi phí'
+      vibeDescription =
+        'Phòng sạch đẹp, chi phí hợp lý, cam kết minh bạch điện nước, không phát sinh chi phí ẩn.'
     }
 
-    const title = `${headlinePrefix} ${roomType} P.${room.roomNumber} tại ${house.name} - ${areaStr}, ${house.district}`;
+    const title = `${headlinePrefix} ${roomType} P.${room.roomNumber} tại ${house.name} - ${areaStr}, ${house.district}`
 
     const highlights = [
       `Diện tích ${areaStr} (${floorStr})`,
@@ -2251,13 +2205,14 @@ export class PostsService {
       'Giờ giấc tự do 100%',
       'Khóa vân tay / Thẻ từ an ninh',
       'Không chung chủ',
-    ];
+    ]
 
     if (dto.customNotes) {
-      highlights.push(dto.customNotes);
+      highlights.push(dto.customNotes)
     }
 
-    const content = `🏠 ${title.toUpperCase()}\n\n` +
+    const content =
+      `🏠 ${title.toUpperCase()}\n\n` +
       `✨ TỔNG QUAN PHÒNG TRỌ:\n` +
       `- Tòa nhà: ${house.name}\n` +
       `- Vị trí: ${addressStr}\n` +
@@ -2282,39 +2237,39 @@ export class PostsService {
       `- Hợp đồng minh bạch, ký kết online hoặc trực tiếp linh hoạt từ 6 - 12 tháng.\n\n` +
       `📞 LIÊN HỆ XEM PHÒNG NGAY:\n` +
       `- Bấm "Đặt giữ chỗ" hoặc nhắn tin trực tiếp để giữ phòng tốt nhất trong hôm nay!\n` +
-      `- Hỗ trợ xem phòng trực tiếp các ngày trong tuần.`;
+      `- Hỗ trợ xem phòng trực tiếp các ngày trong tuần.`
 
-    const imageUrls: string[] = [];
+    const imageUrls: string[] = []
     if (room.image_url) {
-      imageUrls.push(room.image_url);
+      imageUrls.push(room.image_url)
     }
     if (house.thumbnail && !imageUrls.includes(house.thumbnail)) {
-      imageUrls.push(house.thumbnail);
+      imageUrls.push(house.thumbnail)
     }
 
     // Call Gemini Vision to analyze room photos if available
-    let visionDescription = '';
+    let visionDescription = ''
     if (this.visionService && imageUrls.length > 0) {
       try {
-        const photoAnalysis = await this.visionService.analyzeRoomPhotos(imageUrls);
+        const photoAnalysis = await this.visionService.analyzeRoomPhotos(imageUrls)
         if (photoAnalysis?.features && photoAnalysis.features.length > 0) {
           for (const feat of photoAnalysis.features) {
             if (!highlights.includes(feat)) {
-              highlights.push(feat);
+              highlights.push(feat)
             }
           }
         }
         if (photoAnalysis?.description) {
-          visionDescription = `\n📸 ĐẶC ĐIỂM KHÔNG GIAN THỰC TẾ (QUA ẢNH):\n${photoAnalysis.description}\n`;
+          visionDescription = `\n📸 ĐẶC ĐIỂM KHÔNG GIAN THỰC TẾ (QUA ẢNH):\n${photoAnalysis.description}\n`
         }
       } catch (visErr) {
-        this.logger.warn(`Photo analysis failed for room ${room.id}: ${visErr}`);
+        this.logger.warn(`Photo analysis failed for room ${room.id}: ${visErr}`)
       }
     }
 
     const finalContent = visionDescription
       ? content.replace('✨ TỔNG QUAN PHÒNG TRỌ:', `✨ TỔNG QUAN PHÒNG TRỌ:${visionDescription}`)
-      : content;
+      : content
 
     // Persist AiConversation and AiMessage per UC-L-12 spec
     let conversation = await this.prisma.aiConversation.findFirst({
@@ -2323,7 +2278,7 @@ export class PostsService {
         boardingHouseId: house.id,
       },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
     if (!conversation) {
       conversation = await this.prisma.aiConversation.create({
@@ -2331,10 +2286,10 @@ export class PostsService {
           userId,
           boardingHouseId: house.id,
         },
-      });
+      })
     }
 
-    const userPrompt = `Tạo bản nháp tin đăng cho phòng ${room.roomNumber} (${roomType}, ${areaStr}) tại ${house.name}. Tone: ${tone}. Ghi chú thêm: ${dto.customNotes || 'Không'}`;
+    const userPrompt = `Tạo bản nháp tin đăng cho phòng ${room.roomNumber} (${roomType}, ${areaStr}) tại ${house.name}. Tone: ${tone}. Ghi chú thêm: ${dto.customNotes || 'Không'}`
 
     try {
       await this.prisma.aiMessage.create({
@@ -2344,7 +2299,7 @@ export class PostsService {
           content: userPrompt,
           model: 'gemini-3.5-flash-lite',
         },
-      });
+      })
 
       await this.prisma.aiMessage.create({
         data: {
@@ -2354,9 +2309,9 @@ export class PostsService {
           model: 'gemini-3.5-flash-lite',
           tokenUsage: 520,
         },
-      });
+      })
     } catch (err) {
-      this.logger.warn(`Failed to persist AiMessage for room ${room.id}: ${err}`);
+      this.logger.warn(`Failed to persist AiMessage for room ${room.id}: ${err}`)
     }
 
     return {
@@ -2367,7 +2322,7 @@ export class PostsService {
       highlights,
       imageUrls,
       createdAt: new Date().toISOString(),
-    };
+    }
   }
 
   /**
@@ -2375,9 +2330,9 @@ export class PostsService {
    * Direct trigger for UC-L-12 AI post suggestions.
    */
   async getUnlistedVacantRooms(userId: string): Promise<UnlistedRoomResponseDto[]> {
-    this.logger.log(`getUnlistedVacantRooms called for user ${userId}`);
+    this.logger.log(`getUnlistedVacantRooms called for user ${userId}`)
 
-    const now = new Date();
+    const now = new Date()
     const vacantRooms = await this.prisma.room.findMany({
       where: {
         boardingHouse: {
@@ -2402,16 +2357,21 @@ export class PostsService {
       },
       orderBy: { updatedAt: 'desc' },
       take: 20,
-    });
+    })
 
-    return vacantRooms.map((room) => {
-      const house = room.boardingHouse;
-      const fullAddress = `${house.houseNumber} ${house.street}, ${house.ward}, ${house.district}, ${house.city || house.province}`;
-      const lastUpdated = room.updatedAt || room.createdAt;
-      const vacantDays = Math.max(1, Math.floor((now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24)));
+    return vacantRooms.map(room => {
+      const house = room.boardingHouse
+      const fullAddress = `${house.houseNumber} ${house.street}, ${house.ward}, ${house.district}, ${house.city || house.province}`
+      const lastUpdated = room.updatedAt || room.createdAt
+      const vacantDays = Math.max(
+        1,
+        Math.floor((now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24)),
+      )
       const basePrice = room.contracts[0]
         ? Number(room.contracts[0].rentPrice)
-        : (room.area ? Math.round((Number(room.area) * 140000) / 100000) * 100000 : 3500000);
+        : room.area
+          ? Math.round((Number(room.area) * 140000) / 100000) * 100000
+          : 3500000
 
       return {
         roomId: room.id,
@@ -2426,8 +2386,7 @@ export class PostsService {
         basePrice,
         thumbnail: room.image_url || house.thumbnail || null,
         vacantDays,
-      };
-    });
+      }
+    })
   }
 }
-

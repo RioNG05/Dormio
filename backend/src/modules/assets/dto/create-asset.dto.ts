@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsString,
   IsNotEmpty,
@@ -10,9 +10,9 @@ import {
   IsInt,
   IsISO8601,
   MaxLength,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { AssetCondition } from '@prisma';
+} from 'class-validator'
+import { Type } from 'class-transformer'
+import { AssetCondition } from '@prisma'
 
 export class CreateAssetDto {
   @ApiProperty({
@@ -22,7 +22,7 @@ export class CreateAssetDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  name: string;
+  name: string
 
   @ApiPropertyOptional({
     description: 'Category of the asset (e.g. Điện tử, Nội thất, Gia dụng)',
@@ -31,7 +31,7 @@ export class CreateAssetDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  category?: string;
+  category?: string
 
   @ApiProperty({
     description: 'Location or placement within the boarding house',
@@ -40,7 +40,7 @@ export class CreateAssetDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  location: string;
+  location: string
 
   @ApiPropertyOptional({
     description: 'Room UUID if assigned to a specific room, or null if unassigned / shared space',
@@ -49,7 +49,7 @@ export class CreateAssetDto {
   })
   @IsOptional()
   @IsUUID('4')
-  roomId?: string | null;
+  roomId?: string | null
 
   @ApiPropertyOptional({
     description: 'Quantity of items',
@@ -60,7 +60,7 @@ export class CreateAssetDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  quantity?: number = 1;
+  quantity?: number = 1
 
   @ApiPropertyOptional({
     description: 'Current physical condition of the asset',
@@ -69,7 +69,7 @@ export class CreateAssetDto {
   })
   @IsOptional()
   @IsEnum(AssetCondition)
-  condition?: AssetCondition = AssetCondition.good;
+  condition?: AssetCondition = AssetCondition.good
 
   @ApiPropertyOptional({
     description: 'Purchase price in VND',
@@ -80,7 +80,7 @@ export class CreateAssetDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  purchasePrice?: number;
+  purchasePrice?: number
 
   @ApiPropertyOptional({
     description: 'Purchase date in ISO 8601 string format',
@@ -88,7 +88,7 @@ export class CreateAssetDto {
   })
   @IsOptional()
   @IsISO8601()
-  purchaseDate?: string;
+  purchaseDate?: string
 
   @ApiPropertyOptional({
     description: 'Image URL of the asset photo',
@@ -96,7 +96,7 @@ export class CreateAssetDto {
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string
 
   @ApiPropertyOptional({
     description: 'Additional notes or warranty info',
@@ -104,5 +104,5 @@ export class CreateAssetDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

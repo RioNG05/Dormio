@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsNotEmpty, Min } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsNumber, IsNotEmpty, Min } from 'class-validator'
 
 export class UpdateMeterReadingDto {
   @ApiProperty({
@@ -9,5 +9,5 @@ export class UpdateMeterReadingDto {
   @IsNumber()
   @IsNotEmpty()
   @Min(0)
-  readingValue: number;
+  readingValue: number
 }

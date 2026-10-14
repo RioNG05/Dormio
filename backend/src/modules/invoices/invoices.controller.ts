@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  UseGuards,
-  Request,
-  Logger,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Request, Logger, HttpStatus } from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -14,22 +6,19 @@ import {
   ApiResponse,
   ApiOkResponse,
   ApiParam,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { InvoicesService } from './invoices.service';
-import {
-  TenantInvoiceDto,
-  TenantInvoicesListResponseDto,
-} from './dto/tenant-invoices-response.dto';
-import { TenantUsageAnalyticsResponseDto } from './dto/usage-analytics-response.dto';
-import { PaymentHistoryResponseDto } from './dto/payment-history-response.dto';
+} from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { InvoicesService } from './invoices.service'
+import { TenantInvoiceDto, TenantInvoicesListResponseDto } from './dto/tenant-invoices-response.dto'
+import { TenantUsageAnalyticsResponseDto } from './dto/usage-analytics-response.dto'
+import { PaymentHistoryResponseDto } from './dto/payment-history-response.dto'
 
 @ApiTags('Tenant Invoices & Analytics')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('tenant')
 export class InvoicesController {
-  private readonly logger = new Logger(InvoicesController.name);
+  private readonly logger = new Logger(InvoicesController.name)
 
   constructor(private readonly invoicesService: InvoicesService) {}
 
@@ -52,9 +41,9 @@ export class InvoicesController {
     description: 'Không tìm thấy hợp đồng thuê phòng của người dùng',
   })
   async getTenantInvoices(@Request() req: any): Promise<TenantInvoicesListResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(`GET /api/v1/tenant/invoices triggered by user ${userId}`);
-    return this.invoicesService.getTenantInvoices(userId);
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/invoices triggered by user ${userId}`)
+    return this.invoicesService.getTenantInvoices(userId)
   }
 
   @Get('invoices/:id')
@@ -76,9 +65,9 @@ export class InvoicesController {
     @Request() req: any,
     @Param('id') id: string,
   ): Promise<TenantInvoiceDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(`GET /api/v1/tenant/invoices/${id} triggered by user ${userId}`);
-    return this.invoicesService.getTenantInvoiceById(userId, id);
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/invoices/${id} triggered by user ${userId}`)
+    return this.invoicesService.getTenantInvoiceById(userId, id)
   }
 
   @Get('analytics/usage')
@@ -99,14 +88,10 @@ export class InvoicesController {
     status: HttpStatus.NOT_FOUND,
     description: 'Không tìm thấy hợp đồng thuê phòng của người dùng',
   })
-  async getTenantUsageAnalytics(
-    @Request() req: any,
-  ): Promise<TenantUsageAnalyticsResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(
-      `GET /api/v1/tenant/analytics/usage triggered by user ${userId}`,
-    );
-    return this.invoicesService.getTenantUsageAnalytics(userId);
+  async getTenantUsageAnalytics(@Request() req: any): Promise<TenantUsageAnalyticsResponseDto> {
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/analytics/usage triggered by user ${userId}`)
+    return this.invoicesService.getTenantUsageAnalytics(userId)
   }
 
   @Get('payments/history')
@@ -123,14 +108,9 @@ export class InvoicesController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Chưa đăng nhập hoặc token không hợp lệ',
   })
-  async getTenantPaymentHistory(
-    @Request() req: any,
-  ): Promise<PaymentHistoryResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(
-      `GET /api/v1/tenant/payments/history triggered by user ${userId}`,
-    );
-    return this.invoicesService.getTenantPaymentHistory(userId);
+  async getTenantPaymentHistory(@Request() req: any): Promise<PaymentHistoryResponseDto> {
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/payments/history triggered by user ${userId}`)
+    return this.invoicesService.getTenantPaymentHistory(userId)
   }
 }
-

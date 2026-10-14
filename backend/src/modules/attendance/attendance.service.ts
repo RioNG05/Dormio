@@ -1,36 +1,28 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import { AttendanceStatus, AuditLogAction, ScheduleStatus } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { AttendanceStatus, AuditLogAction, ScheduleStatus } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
 import {
   AttendanceListResponseDto,
   AttendanceRecordDto,
   AttendanceSummaryDto,
-} from './dto/attendance-response.dto';
-import { OverrideAttendanceDto } from './dto/override-attendance.dto';
-import { QueryAttendanceDto } from './dto/query-attendance.dto';
-import { StaffCheckInDto } from './dto/staff-check-in.dto';
-import { StaffCheckOutDto } from './dto/staff-check-out.dto';
-import { StaffDutyProofDto } from './dto/staff-duty-proof.dto';
-import {
-  StaffDutyDto,
-  StaffTodayOverviewResponseDto,
-} from './dto/staff-today-response.dto';
-import { StaffMonthlySummaryResponseDto } from './dto/staff-monthly-summary-response.dto';
-import { QueryStaffAttendanceHistoryDto } from './dto/query-staff-attendance-history.dto';
+} from './dto/attendance-response.dto'
+import { OverrideAttendanceDto } from './dto/override-attendance.dto'
+import { QueryAttendanceDto } from './dto/query-attendance.dto'
+import { StaffCheckInDto } from './dto/staff-check-in.dto'
+import { StaffCheckOutDto } from './dto/staff-check-out.dto'
+import { StaffDutyProofDto } from './dto/staff-duty-proof.dto'
+import { StaffDutyDto, StaffTodayOverviewResponseDto } from './dto/staff-today-response.dto'
+import { StaffMonthlySummaryResponseDto } from './dto/staff-monthly-summary-response.dto'
+import { QueryStaffAttendanceHistoryDto } from './dto/query-staff-attendance-history.dto'
 import {
   StaffAttendanceHistoryItemDto,
   StaffAttendanceHistoryResponseDto,
-} from './dto/staff-attendance-history-response.dto';
-import { StaffShiftTypeResponseDto } from './dto/staff-shift-type-response.dto';
+} from './dto/staff-attendance-history-response.dto'
+import { StaffShiftTypeResponseDto } from './dto/staff-shift-type-response.dto'
 
 @Injectable()
 export class AttendanceService {
-  private readonly logger = new Logger(AttendanceService.name);
+  private readonly logger = new Logger(AttendanceService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -38,27 +30,27 @@ export class AttendanceService {
    * Format a Date object to "HH:mm" string (24h)
    */
   private formatTime(date: Date): string {
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    const hours = String(date.getUTCHours()).padStart(2, '0')
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+    return `${hours}:${minutes}`
   }
 
   /**
    * Format Date to "YYYY-MM-DD" string
    */
   private formatDateOnly(date: Date): string {
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   /**
    * Parse date string "YYYY-MM-DD" to Date at UTC 00:00:00
    */
   private parseDateOnly(dateStr: string): Date {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
   }
 
   /**
@@ -68,22 +60,16 @@ export class AttendanceService {
     boardingHouseId: string,
     query: QueryAttendanceDto,
   ): Promise<AttendanceListResponseDto> {
-    this.logger.log(
-      `getAttendance house=${boardingHouseId} query=${JSON.stringify(query)}`,
-    );
+    this.logger.log(`getAttendance house=${boardingHouseId} query=${JSON.stringify(query)}`)
 
-    const now = new Date();
-    const defaultStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
-    const defaultEnd = new Date(
-      Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999),
-    );
+    const now = new Date()
+    const defaultStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
+    const defaultEnd = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999))
 
-    const startDate = query.startDate
-      ? this.parseDateOnly(query.startDate)
-      : defaultStart;
+    const startDate = query.startDate ? this.parseDateOnly(query.startDate) : defaultStart
     const endDate = query.endDate
       ? new Date(this.parseDateOnly(query.endDate).getTime() + 86400000 - 1)
-      : defaultEnd;
+      : defaultEnd
 
     const where: any = {
       boardingHouseId,
@@ -91,18 +77,18 @@ export class AttendanceService {
         gte: startDate,
         lte: endDate,
       },
-    };
+    }
 
     if (query.employeeId) {
-      where.employeeId = query.employeeId;
+      where.employeeId = query.employeeId
     }
 
     if (query.shiftId) {
-      where.shiftId = query.shiftId;
+      where.shiftId = query.shiftId
     }
 
     if (query.search) {
-      const search = query.search.trim();
+      const search = query.search.trim()
       where.employee = {
         user: {
           OR: [
@@ -115,7 +101,7 @@ export class AttendanceService {
             },
           ],
         },
-      };
+      }
     }
 
     // First, fetch all matching schedules in range for summary stats
@@ -127,28 +113,28 @@ export class AttendanceService {
           take: 1,
         },
       },
-    });
+    })
 
-    let onTimeCount = 0;
-    let lateCount = 0;
-    let absentCount = 0;
-    let notYetCount = 0;
+    let onTimeCount = 0
+    let lateCount = 0
+    let absentCount = 0
+    let notYetCount = 0
 
     for (const s of allRangeSchedules) {
-      const att = s.attendances[0];
-      const st = att ? att.status : AttendanceStatus.not_yet;
-      if (st === AttendanceStatus.on_time) onTimeCount++;
-      else if (st === AttendanceStatus.late) lateCount++;
-      else if (st === AttendanceStatus.absent) absentCount++;
-      else notYetCount++;
+      const att = s.attendances[0]
+      const st = att ? att.status : AttendanceStatus.not_yet
+      if (st === AttendanceStatus.on_time) onTimeCount++
+      else if (st === AttendanceStatus.late) lateCount++
+      else if (st === AttendanceStatus.absent) absentCount++
+      else notYetCount++
     }
 
-    const totalShifts = allRangeSchedules.length;
-    const evaluatedCount = totalShifts - notYetCount;
+    const totalShifts = allRangeSchedules.length
+    const evaluatedCount = totalShifts - notYetCount
     const attendanceRate =
       evaluatedCount > 0
         ? Math.round(((onTimeCount + lateCount) / evaluatedCount) * 1000) / 10
-        : 100;
+        : 100
 
     const summary: AttendanceSummaryDto = {
       totalShifts,
@@ -157,25 +143,25 @@ export class AttendanceService {
       absentCount,
       notYetCount,
       attendanceRate,
-    };
-
-    // If query.status filter is active, filter schedules in memory or in query
-    let filteredIds: string[] | null = null;
-    if (query.status) {
-      filteredIds = allRangeSchedules
-        .filter((s) => {
-          const att = s.attendances[0];
-          const st = att ? att.status : AttendanceStatus.not_yet;
-          return st === query.status;
-        })
-        .map((s) => s.id);
-
-      where.id = { in: filteredIds };
     }
 
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
-    const skip = (page - 1) * limit;
+    // If query.status filter is active, filter schedules in memory or in query
+    let filteredIds: string[] | null = null
+    if (query.status) {
+      filteredIds = allRangeSchedules
+        .filter(s => {
+          const att = s.attendances[0]
+          const st = att ? att.status : AttendanceStatus.not_yet
+          return st === query.status
+        })
+        .map(s => s.id)
+
+      where.id = { in: filteredIds }
+    }
+
+    const page = query.page && query.page > 0 ? query.page : 1
+    const limit = query.limit && query.limit > 0 ? query.limit : 10
+    const skip = (page - 1) * limit
 
     const [total, schedules] = await Promise.all([
       this.prisma.workSchedule.count({ where }),
@@ -209,21 +195,21 @@ export class AttendanceService {
           },
         },
       }),
-    ]);
+    ])
 
-    const mappedData: AttendanceRecordDto[] = schedules.map((item) => {
-      const attendance = item.attendances[0];
-      const assignment = item.employee.employeeAssignments[0];
+    const mappedData: AttendanceRecordDto[] = schedules.map(item => {
+      const attendance = item.attendances[0]
+      const assignment = item.employee.employeeAssignments[0]
       const userName =
         item.employee.user.userIdentification?.fullName ||
         item.employee.user.username ||
-        item.employee.user.phoneNumber;
+        item.employee.user.phoneNumber
 
       const editedByName = attendance?.editedByUser
         ? attendance.editedByUser.userIdentification?.fullName ||
           attendance.editedByUser.username ||
           'Chủ nhà'
-        : null;
+        : null
 
       return {
         workScheduleId: item.id,
@@ -245,8 +231,8 @@ export class AttendanceService {
         editedBy: attendance?.editedBy || null,
         editedByName,
         updatedAt: attendance?.updatedAt ? attendance.updatedAt.toISOString() : null,
-      };
-    });
+      }
+    })
 
     return {
       data: mappedData,
@@ -255,7 +241,7 @@ export class AttendanceService {
       limit,
       total,
       totalPages: Math.ceil(total / limit) || 1,
-    };
+    }
   }
 
   /**
@@ -272,7 +258,7 @@ export class AttendanceService {
   ): Promise<AttendanceRecordDto> {
     this.logger.log(
       `overrideAttendance house=${boardingHouseId} schedule=${dto.workScheduleId} user=${currentUserId} status=${dto.status}`,
-    );
+    )
 
     const schedule = await this.prisma.workSchedule.findFirst({
       where: {
@@ -292,21 +278,23 @@ export class AttendanceService {
           },
         },
       },
-    });
+    })
 
     if (!schedule) {
-      throw new NotFoundException('Không tìm thấy ca làm việc tại nhà trọ này');
+      throw new NotFoundException('Không tìm thấy ca làm việc tại nhà trọ này')
     }
 
     const existingAttendance = await this.prisma.attendance.findFirst({
       where: { workScheduleId: dto.workScheduleId },
-    });
+    })
 
-    const checkInDate = dto.checkIn !== undefined ? (dto.checkIn ? new Date(dto.checkIn) : null) : undefined;
-    const checkOutDate = dto.checkOut !== undefined ? (dto.checkOut ? new Date(dto.checkOut) : null) : undefined;
+    const checkInDate =
+      dto.checkIn !== undefined ? (dto.checkIn ? new Date(dto.checkIn) : null) : undefined
+    const checkOutDate =
+      dto.checkOut !== undefined ? (dto.checkOut ? new Date(dto.checkOut) : null) : undefined
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      let attRecord;
+    const result = await this.prisma.$transaction(async tx => {
+      let attRecord
 
       if (existingAttendance) {
         // UPDATE existing Attendance
@@ -324,7 +312,7 @@ export class AttendanceService {
               include: { userIdentification: true },
             },
           },
-        });
+        })
 
         // Rule 4: AuditLog in same transaction
         await tx.auditLog.create({
@@ -349,7 +337,7 @@ export class AttendanceService {
             },
             ipAddress,
           },
-        });
+        })
       } else {
         // CREATE new Attendance row
         attRecord = await tx.attendance.create({
@@ -366,7 +354,7 @@ export class AttendanceService {
               include: { userIdentification: true },
             },
           },
-        });
+        })
 
         // Rule 4: AuditLog in same transaction
         await tx.auditLog.create({
@@ -388,23 +376,23 @@ export class AttendanceService {
             },
             ipAddress,
           },
-        });
+        })
       }
 
-      return attRecord;
-    });
+      return attRecord
+    })
 
-    const assignment = schedule.employee.employeeAssignments[0];
+    const assignment = schedule.employee.employeeAssignments[0]
     const userName =
       schedule.employee.user.userIdentification?.fullName ||
       schedule.employee.user.username ||
-      schedule.employee.user.phoneNumber;
+      schedule.employee.user.phoneNumber
 
     const editedByName = result.editedByUser
       ? result.editedByUser.userIdentification?.fullName ||
         result.editedByUser.username ||
         'Chủ nhà'
-      : 'Chủ nhà';
+      : 'Chủ nhà'
 
     return {
       workScheduleId: schedule.id,
@@ -426,14 +414,14 @@ export class AttendanceService {
       editedBy: result.editedBy,
       editedByName,
       updatedAt: result.updatedAt ? result.updatedAt.toISOString() : null,
-    };
+    }
   }
 
   /**
    * Helper to return default duties based on job position name
    */
   private getDefaultDutiesForPosition(positionName?: string): StaffDutyDto[] {
-    const name = (positionName || '').toLowerCase();
+    const name = (positionName || '').toLowerCase()
     if (name.includes('vệ sinh') || name.includes('tạp vụ') || name.includes('clean')) {
       return [
         {
@@ -461,7 +449,7 @@ export class AttendanceService {
           requiresPhoto: true,
           completed: false,
         },
-      ];
+      ]
     }
 
     if (name.includes('kỹ thuật') || name.includes('bảo trì') || name.includes('maint')) {
@@ -491,7 +479,7 @@ export class AttendanceService {
           requiresPhoto: false,
           completed: false,
         },
-      ];
+      ]
     }
 
     // Default: Security & Building Operations
@@ -521,7 +509,7 @@ export class AttendanceService {
         requiresPhoto: true,
         completed: false,
       },
-    ];
+    ]
   }
 
   /**
@@ -533,57 +521,57 @@ export class AttendanceService {
     attendance: any,
     coWorkers: any[],
   ): StaffTodayOverviewResponseDto {
-    const activeAssignment = employee.employeeAssignments[0];
-    const positionName = activeAssignment?.position?.name || 'Nhân viên';
-    const positionDesc = activeAssignment?.position?.description || null;
-    const positionId = activeAssignment?.position?.id || 'default-pos';
+    const activeAssignment = employee.employeeAssignments[0]
+    const positionName = activeAssignment?.position?.name || 'Nhân viên'
+    const positionDesc = activeAssignment?.position?.description || null
+    const positionId = activeAssignment?.position?.id || 'default-pos'
 
-    const defaultDuties = this.getDefaultDutiesForPosition(positionName);
+    const defaultDuties = this.getDefaultDutiesForPosition(positionName)
     const duties: StaffDutyDto[] =
       attendance?.dutyTasks && Array.isArray(attendance.dutyTasks)
-        ? (attendance.dutyTasks as unknown as StaffDutyDto[])
-        : defaultDuties;
+        ? attendance.dutyTasks
+        : defaultDuties
 
     const staffName =
       employee.user.userIdentification?.fullName ||
       employee.user.username ||
-      employee.user.phoneNumber;
+      employee.user.phoneNumber
 
-    const shiftStartTimeStr = this.formatTime(schedule.shift.startTime);
-    const shiftEndTimeStr = this.formatTime(schedule.shift.endTime);
+    const shiftStartTimeStr = this.formatTime(schedule.shift.startTime)
+    const shiftEndTimeStr = this.formatTime(schedule.shift.endTime)
     const durationHours = Math.max(
       1,
       Math.round(
-        (schedule.shift.endTime.getTime() - schedule.shift.startTime.getTime()) /
-          (1000 * 60 * 60),
+        (schedule.shift.endTime.getTime() - schedule.shift.startTime.getTime()) / (1000 * 60 * 60),
       ),
-    );
+    )
 
-    let totalHours = 0;
-    let isEarlyCheckOut = false;
+    let totalHours = 0
+    let isEarlyCheckOut = false
     if (attendance?.checkIn && attendance?.checkOut) {
-      const diffMs = attendance.checkOut.getTime() - attendance.checkIn.getTime();
-      totalHours = Math.max(0, Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10);
+      const diffMs = attendance.checkOut.getTime() - attendance.checkIn.getTime()
+      totalHours = Math.max(0, Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10)
     }
 
     if (attendance?.checkOut) {
-      const [endH, endM] = shiftEndTimeStr.split(':').map(Number);
-      const checkOutH = attendance.checkOut.getUTCHours();
-      const checkOutM = attendance.checkOut.getUTCMinutes();
+      const [endH, endM] = shiftEndTimeStr.split(':').map(Number)
+      const checkOutH = attendance.checkOut.getUTCHours()
+      const checkOutM = attendance.checkOut.getUTCMinutes()
       if (checkOutH * 60 + checkOutM < endH * 60 + endM) {
-        isEarlyCheckOut = true;
+        isEarlyCheckOut = true
       }
     }
 
-    const boardingHouseAddress = [
-      schedule.boardingHouse.houseNumber,
-      schedule.boardingHouse.street,
-      schedule.boardingHouse.ward,
-      schedule.boardingHouse.district,
-      schedule.boardingHouse.city,
-    ]
-      .filter(Boolean)
-      .join(', ') || schedule.boardingHouse.name;
+    const boardingHouseAddress =
+      [
+        schedule.boardingHouse.houseNumber,
+        schedule.boardingHouse.street,
+        schedule.boardingHouse.ward,
+        schedule.boardingHouse.district,
+        schedule.boardingHouse.city,
+      ]
+        .filter(Boolean)
+        .join(', ') || schedule.boardingHouse.name
 
     return {
       employeeId: employee.id,
@@ -634,14 +622,14 @@ export class AttendanceService {
         checkOutExplanation: attendance?.checkOutExplanation || undefined,
         isEarlyCheckOut,
       },
-    };
+    }
   }
 
   /**
    * UC-S-01 & UC-S-02: Get today's staff schedule, attendance, duties and co-workers
    */
   async getTodayStaffAttendance(userId: string): Promise<StaffTodayOverviewResponseDto> {
-    this.logger.log(`getTodayStaffAttendance for user ${userId}`);
+    this.logger.log(`getTodayStaffAttendance for user ${userId}`)
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
@@ -657,10 +645,10 @@ export class AttendanceService {
           },
         },
       },
-    });
+    })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.');
+      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
     }
 
     const activeAssignment =
@@ -668,15 +656,19 @@ export class AttendanceService {
       (await this.prisma.employeeAssignment.findFirst({
         where: { employeeId: employee.id },
         include: { position: true, boardingHouse: true },
-      }));
+      }))
 
     if (!activeAssignment) {
-      throw new BadRequestException('Nhân viên chưa được phân công nhiệm vụ tại nhà trọ nào.');
+      throw new BadRequestException('Nhân viên chưa được phân công nhiệm vụ tại nhà trọ nào.')
     }
 
-    const now = new Date();
-    const todayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    const todayEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const now = new Date()
+    const todayDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0),
+    )
+    const todayEnd = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999),
+    )
 
     let schedule = await this.prisma.workSchedule.findFirst({
       where: {
@@ -694,12 +686,12 @@ export class AttendanceService {
           take: 1,
         },
       },
-    });
+    })
 
     if (!schedule) {
       let shift = await this.prisma.shift.findFirst({
         where: { boardingHouseId: activeAssignment.boardingHouseId },
-      });
+      })
 
       if (!shift) {
         shift = await this.prisma.shift.create({
@@ -709,7 +701,7 @@ export class AttendanceService {
             startTime: new Date('1970-01-01T07:00:00Z'),
             endTime: new Date('1970-01-01T15:00:00Z'),
           },
-        });
+        })
       }
 
       schedule = await this.prisma.workSchedule.create({
@@ -725,12 +717,12 @@ export class AttendanceService {
           boardingHouse: true,
           attendances: true,
         },
-      });
+      })
     }
 
-    let attendance = schedule.attendances?.[0];
+    let attendance = schedule.attendances?.[0]
     if (!attendance) {
-      const initialDuties = this.getDefaultDutiesForPosition(activeAssignment.position?.name);
+      const initialDuties = this.getDefaultDutiesForPosition(activeAssignment.position?.name)
       attendance = await this.prisma.attendance.create({
         data: {
           workScheduleId: schedule.id,
@@ -738,7 +730,7 @@ export class AttendanceService {
           status: AttendanceStatus.not_yet,
           dutyTasks: initialDuties as any,
         },
-      });
+      })
     }
 
     const coWorkerAssignments = await this.prisma.employeeAssignment.findMany({
@@ -758,9 +750,9 @@ export class AttendanceService {
         position: true,
       },
       take: 10,
-    });
+    })
 
-    const coWorkers = coWorkerAssignments.map((a) => ({
+    const coWorkers = coWorkerAssignments.map(a => ({
       id: a.employee.id,
       name:
         a.employee.user.userIdentification?.fullName ||
@@ -769,9 +761,9 @@ export class AttendanceService {
       phone: a.employee.user.phoneNumber,
       positionName: a.position?.name || 'Nhân viên',
       avatar: a.employee.user.avatarUrl || null,
-    }));
+    }))
 
-    return this.buildStaffTodayOverview(employee, schedule, attendance, coWorkers);
+    return this.buildStaffTodayOverview(employee, schedule, attendance, coWorkers)
   }
 
   /**
@@ -782,13 +774,13 @@ export class AttendanceService {
     dto: StaffCheckInDto,
     ipAddress: string,
   ): Promise<StaffTodayOverviewResponseDto> {
-    this.logger.log(`staffCheckIn for user ${userId}, schedule ${dto.workScheduleId}`);
+    this.logger.log(`staffCheckIn for user ${userId}, schedule ${dto.workScheduleId}`)
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
-    });
+    })
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
     }
 
     const schedule = await this.prisma.workSchedule.findUnique({
@@ -797,10 +789,10 @@ export class AttendanceService {
         shift: true,
         boardingHouse: true,
       },
-    });
+    })
 
     if (!schedule || schedule.employeeId !== employee.id) {
-      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.');
+      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.')
     }
 
     const existingAttendance = await this.prisma.attendance.findFirst({
@@ -808,23 +800,23 @@ export class AttendanceService {
         workScheduleId: dto.workScheduleId,
         employeeId: employee.id,
       },
-    });
+    })
 
     if (existingAttendance?.checkIn) {
-      throw new BadRequestException('Bạn đã thực hiện check-in cho ca trực này rồi.');
+      throw new BadRequestException('Bạn đã thực hiện check-in cho ca trực này rồi.')
     }
 
-    const now = new Date();
-    let h: number;
-    let m: number;
+    const now = new Date()
+    let h: number
+    let m: number
     if (dto.capturedTime) {
-      const [parsedH, parsedM] = dto.capturedTime.split(':').map(Number);
-      h = parsedH || 0;
-      m = parsedM || 0;
+      const [parsedH, parsedM] = dto.capturedTime.split(':').map(Number)
+      h = parsedH || 0
+      m = parsedM || 0
     } else {
       // Vietnam UTC+7
-      h = (now.getUTCHours() + 7) % 24;
-      m = now.getUTCMinutes();
+      h = (now.getUTCHours() + 7) % 24
+      m = now.getUTCMinutes()
     }
 
     const checkInDate = new Date(
@@ -837,31 +829,32 @@ export class AttendanceService {
         now.getUTCSeconds(),
         0,
       ),
-    );
+    )
 
-    const [startH, startM] = this.formatTime(schedule.shift.startTime).split(':').map(Number);
-    const shiftStartMinutes = startH * 60 + startM;
-    const checkInMinutes = h * 60 + m;
-    const isLate = checkInMinutes > shiftStartMinutes;
-    const newStatus = isLate ? AttendanceStatus.late : AttendanceStatus.on_time;
+    const [startH, startM] = this.formatTime(schedule.shift.startTime).split(':').map(Number)
+    const shiftStartMinutes = startH * 60 + startM
+    const checkInMinutes = h * 60 + m
+    const isLate = checkInMinutes > shiftStartMinutes
+    const newStatus = isLate ? AttendanceStatus.late : AttendanceStatus.on_time
 
-    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    const boardingHouseAddress = [
-      schedule.boardingHouse.houseNumber,
-      schedule.boardingHouse.street,
-      schedule.boardingHouse.ward,
-      schedule.boardingHouse.district,
-      schedule.boardingHouse.city,
-    ]
-      .filter(Boolean)
-      .join(', ') || schedule.boardingHouse.name;
-    const placeStr = dto.watermark?.place || boardingHouseAddress;
+    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    const boardingHouseAddress =
+      [
+        schedule.boardingHouse.houseNumber,
+        schedule.boardingHouse.street,
+        schedule.boardingHouse.ward,
+        schedule.boardingHouse.district,
+        schedule.boardingHouse.city,
+      ]
+        .filter(Boolean)
+        .join(', ') || schedule.boardingHouse.name
+    const placeStr = dto.watermark?.place || boardingHouseAddress
     const note = isLate
       ? `Check-in muộn lúc ${timeStr} tại ${placeStr}. Giải trình: "${dto.explanation || 'Chưa có'}"`
-      : `Check-in đúng giờ lúc ${timeStr} tại ${placeStr}.`;
+      : `Check-in đúng giờ lúc ${timeStr} tại ${placeStr}.`
 
-    await this.prisma.$transaction(async (tx) => {
-      let recordId: string;
+    await this.prisma.$transaction(async tx => {
+      let recordId: string
       if (existingAttendance) {
         const updated = await tx.attendance.update({
           where: { id: existingAttendance.id },
@@ -873,8 +866,8 @@ export class AttendanceService {
             checkInExplanation: dto.explanation || null,
             note,
           },
-        });
-        recordId = updated.id;
+        })
+        recordId = updated.id
       } else {
         const created = await tx.attendance.create({
           data: {
@@ -887,8 +880,8 @@ export class AttendanceService {
             checkInExplanation: dto.explanation || null,
             note,
           },
-        });
-        recordId = created.id;
+        })
+        recordId = created.id
       }
 
       // Rule 4: AuditLog in same transaction
@@ -910,10 +903,10 @@ export class AttendanceService {
           },
           ipAddress,
         },
-      });
-    });
+      })
+    })
 
-    return this.getTodayStaffAttendance(userId);
+    return this.getTodayStaffAttendance(userId)
   }
 
   /**
@@ -924,13 +917,13 @@ export class AttendanceService {
     dto: StaffCheckOutDto,
     ipAddress: string,
   ): Promise<StaffTodayOverviewResponseDto> {
-    this.logger.log(`staffCheckOut for user ${userId}, schedule ${dto.workScheduleId}`);
+    this.logger.log(`staffCheckOut for user ${userId}, schedule ${dto.workScheduleId}`)
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
-    });
+    })
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
     }
 
     const schedule = await this.prisma.workSchedule.findUnique({
@@ -939,10 +932,10 @@ export class AttendanceService {
         shift: true,
         boardingHouse: true,
       },
-    });
+    })
 
     if (!schedule || schedule.employeeId !== employee.id) {
-      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.');
+      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.')
     }
 
     const attendance = await this.prisma.attendance.findFirst({
@@ -950,27 +943,27 @@ export class AttendanceService {
         workScheduleId: dto.workScheduleId,
         employeeId: employee.id,
       },
-    });
+    })
 
     if (!attendance || !attendance.checkIn) {
-      throw new BadRequestException('Bạn cần hoàn tất check-in trước khi check-out.');
+      throw new BadRequestException('Bạn cần hoàn tất check-in trước khi check-out.')
     }
 
     if (attendance.checkOut) {
-      throw new BadRequestException('Bạn đã hoàn thành check-out cho ca trực này rồi.');
+      throw new BadRequestException('Bạn đã hoàn thành check-out cho ca trực này rồi.')
     }
 
-    const now = new Date();
-    let h: number;
-    let m: number;
+    const now = new Date()
+    let h: number
+    let m: number
     if (dto.capturedTime) {
-      const [parsedH, parsedM] = dto.capturedTime.split(':').map(Number);
-      h = parsedH || 0;
-      m = parsedM || 0;
+      const [parsedH, parsedM] = dto.capturedTime.split(':').map(Number)
+      h = parsedH || 0
+      m = parsedM || 0
     } else {
       // Vietnam UTC+7
-      h = (now.getUTCHours() + 7) % 24;
-      m = now.getUTCMinutes();
+      h = (now.getUTCHours() + 7) % 24
+      m = now.getUTCMinutes()
     }
 
     const checkOutDate = new Date(
@@ -983,30 +976,31 @@ export class AttendanceService {
         now.getUTCSeconds(),
         0,
       ),
-    );
+    )
 
-    const [endH, endM] = this.formatTime(schedule.shift.endTime).split(':').map(Number);
-    const shiftEndMinutes = endH * 60 + endM;
-    const checkOutMinutes = h * 60 + m;
-    const isEarly = checkOutMinutes < shiftEndMinutes;
+    const [endH, endM] = this.formatTime(schedule.shift.endTime).split(':').map(Number)
+    const shiftEndMinutes = endH * 60 + endM
+    const checkOutMinutes = h * 60 + m
+    const isEarly = checkOutMinutes < shiftEndMinutes
 
-    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    const boardingHouseAddress = [
-      schedule.boardingHouse.houseNumber,
-      schedule.boardingHouse.street,
-      schedule.boardingHouse.ward,
-      schedule.boardingHouse.district,
-      schedule.boardingHouse.city,
-    ]
-      .filter(Boolean)
-      .join(', ') || schedule.boardingHouse.name;
-    const placeStr = dto.watermark?.place || boardingHouseAddress;
+    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    const boardingHouseAddress =
+      [
+        schedule.boardingHouse.houseNumber,
+        schedule.boardingHouse.street,
+        schedule.boardingHouse.ward,
+        schedule.boardingHouse.district,
+        schedule.boardingHouse.city,
+      ]
+        .filter(Boolean)
+        .join(', ') || schedule.boardingHouse.name
+    const placeStr = dto.watermark?.place || boardingHouseAddress
     const appendNote = isEarly
       ? `Check-out sớm lúc ${timeStr} tại ${placeStr}. Giải trình: "${dto.explanation || 'Chưa có'}"`
-      : `Check-out hoàn thành lúc ${timeStr} tại ${placeStr}.`;
-    const combinedNote = attendance.note ? `${attendance.note} | ${appendNote}` : appendNote;
+      : `Check-out hoàn thành lúc ${timeStr} tại ${placeStr}.`
+    const combinedNote = attendance.note ? `${attendance.note} | ${appendNote}` : appendNote
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       await tx.attendance.update({
         where: { id: attendance.id },
         data: {
@@ -1016,7 +1010,7 @@ export class AttendanceService {
           checkOutExplanation: dto.explanation || null,
           note: combinedNote,
         },
-      });
+      })
 
       // Rule 4: AuditLog in same transaction
       await tx.auditLog.create({
@@ -1035,10 +1029,10 @@ export class AttendanceService {
           },
           ipAddress,
         },
-      });
-    });
+      })
+    })
 
-    return this.getTodayStaffAttendance(userId);
+    return this.getTodayStaffAttendance(userId)
   }
 
   /**
@@ -1048,7 +1042,7 @@ export class AttendanceService {
     userId: string,
     dto: StaffDutyProofDto,
   ): Promise<StaffTodayOverviewResponseDto> {
-    this.logger.log(`saveStaffDutyProof for user ${userId}, task ${dto.dutyId}`);
+    this.logger.log(`saveStaffDutyProof for user ${userId}, task ${dto.dutyId}`)
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
@@ -1058,18 +1052,18 @@ export class AttendanceService {
           include: { position: true },
         },
       },
-    });
+    })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
     }
 
     const schedule = await this.prisma.workSchedule.findUnique({
       where: { id: dto.workScheduleId },
-    });
+    })
 
     if (!schedule || schedule.employeeId !== employee.id) {
-      throw new NotFoundException('Lịch làm việc không hợp lệ.');
+      throw new NotFoundException('Lịch làm việc không hợp lệ.')
     }
 
     let attendance = await this.prisma.attendance.findFirst({
@@ -1077,10 +1071,10 @@ export class AttendanceService {
         workScheduleId: dto.workScheduleId,
         employeeId: employee.id,
       },
-    });
+    })
 
-    const activeAssignment = employee.employeeAssignments[0];
-    const defaultDuties = this.getDefaultDutiesForPosition(activeAssignment?.position?.name);
+    const activeAssignment = employee.employeeAssignments[0]
+    const defaultDuties = this.getDefaultDutiesForPosition(activeAssignment?.position?.name)
 
     if (!attendance) {
       attendance = await this.prisma.attendance.create({
@@ -1090,41 +1084,41 @@ export class AttendanceService {
           status: AttendanceStatus.not_yet,
           dutyTasks: defaultDuties as any,
         },
-      });
+      })
     }
 
     const duties: StaffDutyDto[] =
       attendance.dutyTasks && Array.isArray(attendance.dutyTasks)
         ? (attendance.dutyTasks as unknown as StaffDutyDto[])
-        : defaultDuties;
+        : defaultDuties
 
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-    const fullProofTimeStr = `${timeStr}:${String(now.getSeconds()).padStart(2, '0')} - ${dateStr}`;
+    const now = new Date()
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`
+    const fullProofTimeStr = `${timeStr}:${String(now.getSeconds()).padStart(2, '0')} - ${dateStr}`
 
-    const updatedDuties = duties.map((duty) => {
+    const updatedDuties = duties.map(duty => {
       if (duty.id === dto.dutyId) {
-        const isCompleted = dto.markCompleted !== undefined ? dto.markCompleted : duty.completed;
+        const isCompleted = dto.markCompleted !== undefined ? dto.markCompleted : duty.completed
         return {
           ...duty,
           photoProof: dto.photo || duty.photoProof,
           photoProofTime: dto.photo ? fullProofTimeStr : duty.photoProofTime,
           note: dto.note !== undefined ? dto.note : duty.note,
           completed: isCompleted,
-          completedAt: isCompleted ? (duty.completedAt || timeStr) : undefined,
-        };
+          completedAt: isCompleted ? duty.completedAt || timeStr : undefined,
+        }
       }
-      return duty;
-    });
+      return duty
+    })
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       await tx.attendance.update({
         where: { id: attendance.id },
         data: {
           dutyTasks: updatedDuties as any,
         },
-      });
+      })
 
       // Rule 4: AuditLog in same transaction
       await tx.auditLog.create({
@@ -1138,10 +1132,10 @@ export class AttendanceService {
           newValue: { dutyTasks: updatedDuties as any, dutyId: dto.dutyId },
           ipAddress: '127.0.0.1',
         },
-      });
-    });
+      })
+    })
 
-    return this.getTodayStaffAttendance(userId);
+    return this.getTodayStaffAttendance(userId)
   }
 
   /**
@@ -1153,37 +1147,31 @@ export class AttendanceService {
   ): Promise<StaffMonthlySummaryResponseDto> {
     this.logger.log(
       `getStaffMonthlySummary for user ${userId}, requested month: ${month || 'current'}`,
-    );
+    )
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
-    });
+    })
 
     if (!employee) {
-      throw new NotFoundException(
-        'Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.',
-      );
+      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
     }
 
-    let targetYear: number;
-    let targetMonth: number; // 0-indexed for Date
+    let targetYear: number
+    let targetMonth: number // 0-indexed for Date
     if (month && /^\d{4}-\d{2}$/.test(month)) {
-      const [y, m] = month.split('-').map(Number);
-      targetYear = y;
-      targetMonth = m - 1;
+      const [y, m] = month.split('-').map(Number)
+      targetYear = y
+      targetMonth = m - 1
     } else {
-      const now = new Date();
-      targetYear = now.getUTCFullYear();
-      targetMonth = now.getUTCMonth();
+      const now = new Date()
+      targetYear = now.getUTCFullYear()
+      targetMonth = now.getUTCMonth()
     }
 
-    const startOfMonth = new Date(
-      Date.UTC(targetYear, targetMonth, 1, 0, 0, 0, 0),
-    );
-    const endOfMonth = new Date(
-      Date.UTC(targetYear, targetMonth + 1, 0, 23, 59, 59, 999),
-    );
-    const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}`;
+    const startOfMonth = new Date(Date.UTC(targetYear, targetMonth, 1, 0, 0, 0, 0))
+    const endOfMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0, 23, 59, 59, 999))
+    const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}`
 
     const schedules = await this.prisma.workSchedule.findMany({
       where: {
@@ -1200,45 +1188,43 @@ export class AttendanceService {
           take: 1,
         },
       },
-    });
+    })
 
-    let totalHours = 0;
-    let onTimeCount = 0;
-    let lateCount = 0;
-    let earlyCount = 0;
+    let totalHours = 0
+    let onTimeCount = 0
+    let lateCount = 0
+    let earlyCount = 0
 
     for (const item of schedules) {
-      const att = item.attendances?.[0];
-      if (!att) continue;
+      const att = item.attendances?.[0]
+      if (!att) continue
 
       if (att.status === AttendanceStatus.on_time) {
-        onTimeCount++;
+        onTimeCount++
       } else if (att.status === AttendanceStatus.late) {
-        lateCount++;
+        lateCount++
       }
 
       if (att.checkIn && att.checkOut) {
-        const diffMs = att.checkOut.getTime() - att.checkIn.getTime();
-        const hours = Math.max(0, diffMs / (1000 * 60 * 60));
-        totalHours += hours;
+        const diffMs = att.checkOut.getTime() - att.checkIn.getTime()
+        const hours = Math.max(0, diffMs / (1000 * 60 * 60))
+        totalHours += hours
 
-        const shiftEndTimeStr = this.formatTime(item.shift.endTime);
-        const [endH, endM] = shiftEndTimeStr.split(':').map(Number);
-        const checkOutH = att.checkOut.getUTCHours();
-        const checkOutM = att.checkOut.getUTCMinutes();
+        const shiftEndTimeStr = this.formatTime(item.shift.endTime)
+        const [endH, endM] = shiftEndTimeStr.split(':').map(Number)
+        const checkOutH = att.checkOut.getUTCHours()
+        const checkOutM = att.checkOut.getUTCMinutes()
         if (checkOutH * 60 + checkOutM < endH * 60 + endM) {
-          earlyCount++;
+          earlyCount++
         }
       } else if (att.checkOutExplanation) {
-        earlyCount++;
+        earlyCount++
       }
     }
 
-    const totalAttended = onTimeCount + lateCount;
+    const totalAttended = onTimeCount + lateCount
     const onTimeRate =
-      totalAttended > 0
-        ? Math.round((onTimeCount / totalAttended) * 1000) / 10
-        : 100;
+      totalAttended > 0 ? Math.round((onTimeCount / totalAttended) * 1000) / 10 : 100
 
     return {
       month: monthKey,
@@ -1248,14 +1234,14 @@ export class AttendanceService {
       onTimeCount,
       lateCount,
       earlyCount,
-    };
+    }
   }
 
   /**
    * UC-S-01: Get distinct shifts available for the logged-in staff member
    */
   async getStaffShifts(userId: string): Promise<StaffShiftTypeResponseDto[]> {
-    this.logger.log(`getStaffShifts for userId=${userId}`);
+    this.logger.log(`getStaffShifts for userId=${userId}`)
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
@@ -1265,17 +1251,13 @@ export class AttendanceService {
           select: { boardingHouseId: true },
         },
       },
-    });
+    })
 
     if (!employee) {
-      throw new NotFoundException(
-        'Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.',
-      );
+      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
     }
 
-    const assignedHouseIds = employee.employeeAssignments.map(
-      (a) => a.boardingHouseId,
-    );
+    const assignedHouseIds = employee.employeeAssignments.map(a => a.boardingHouseId)
 
     // Fetch shifts from assigned boarding houses
     let shiftsFromHouses = await this.prisma.shift.findMany({
@@ -1283,12 +1265,12 @@ export class AttendanceService {
         boardingHouseId: { in: assignedHouseIds },
       },
       orderBy: { startTime: 'asc' },
-    });
+    })
 
     // Auto-seed default shifts if none exist yet for the active assigned properties
     if (shiftsFromHouses.length === 0 && assignedHouseIds.length > 0) {
-      const houseId = assignedHouseIds[0];
-      this.logger.log(`Auto-seeding default shifts for house ${houseId}`);
+      const houseId = assignedHouseIds[0]
+      this.logger.log(`Auto-seeding default shifts for house ${houseId}`)
       await Promise.all([
         this.prisma.shift.create({
           data: {
@@ -1314,17 +1296,17 @@ export class AttendanceService {
             endTime: new Date('1970-01-01T07:00:00Z'),
           },
         }),
-      ]);
+      ])
 
       shiftsFromHouses = await this.prisma.shift.findMany({
         where: {
           boardingHouseId: { in: assignedHouseIds },
         },
         orderBy: { startTime: 'asc' },
-      });
+      })
     }
 
-    const shiftMap = new Map<string, StaffShiftTypeResponseDto>();
+    const shiftMap = new Map<string, StaffShiftTypeResponseDto>()
 
     for (const s of shiftsFromHouses) {
       shiftMap.set(s.id, {
@@ -1332,7 +1314,7 @@ export class AttendanceService {
         name: s.name,
         startTime: this.formatTime(s.startTime),
         endTime: this.formatTime(s.endTime),
-      });
+      })
     }
 
     // Also include any shifts from employee's schedules (e.g. historical or cross-house)
@@ -1340,7 +1322,7 @@ export class AttendanceService {
       where: { employeeId: employee.id },
       select: { shift: true },
       take: 100,
-    });
+    })
 
     for (const item of schedules) {
       if (item.shift && !shiftMap.has(item.shift.id)) {
@@ -1349,11 +1331,11 @@ export class AttendanceService {
           name: item.shift.name,
           startTime: this.formatTime(item.shift.startTime),
           endTime: this.formatTime(item.shift.endTime),
-        });
+        })
       }
     }
 
-    return Array.from(shiftMap.values());
+    return Array.from(shiftMap.values())
   }
 
   /**
@@ -1365,40 +1347,34 @@ export class AttendanceService {
   ): Promise<StaffAttendanceHistoryResponseDto> {
     this.logger.log(
       `getStaffAttendanceHistory for userId=${userId}, query=${JSON.stringify(query)}`,
-    );
+    )
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
-    });
+    })
 
     if (!employee) {
-      throw new NotFoundException(
-        'Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.',
-      );
+      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
     }
 
     const where: any = {
       employeeId: employee.id,
       status: { not: ScheduleStatus.canceled },
-    };
+    }
 
     if (query.startDate && query.endDate) {
       where.workDate = {
         gte: this.parseDateOnly(query.startDate),
-        lte: new Date(
-          this.parseDateOnly(query.endDate).getTime() + 86400000 - 1,
-        ),
-      };
+        lte: new Date(this.parseDateOnly(query.endDate).getTime() + 86400000 - 1),
+      }
     } else if (query.startDate) {
       where.workDate = {
         gte: this.parseDateOnly(query.startDate),
-      };
+      }
     } else if (query.endDate) {
       where.workDate = {
-        lte: new Date(
-          this.parseDateOnly(query.endDate).getTime() + 86400000 - 1,
-        ),
-      };
+        lte: new Date(this.parseDateOnly(query.endDate).getTime() + 86400000 - 1),
+      }
     }
 
     const allSchedules = await this.prisma.workSchedule.findMany({
@@ -1412,84 +1388,79 @@ export class AttendanceService {
         },
       },
       orderBy: [{ workDate: 'desc' }, { shift: { startTime: 'asc' } }],
-    });
+    })
 
-    const now = new Date();
-    const todayDateStr = this.formatDateOnly(now);
+    const now = new Date()
+    const todayDateStr = this.formatDateOnly(now)
 
-    let onTimeCount = 0;
-    let lateCount = 0;
-    let absentCount = 0;
-    let totalWorkHours = 0;
+    let onTimeCount = 0
+    let lateCount = 0
+    let absentCount = 0
+    let totalWorkHours = 0
 
-    const allItems: StaffAttendanceHistoryItemDto[] = allSchedules.map(
-      (item) => {
-        const att = item.attendances?.[0];
-        const workDateStr = this.formatDateOnly(item.workDate);
+    const allItems: StaffAttendanceHistoryItemDto[] = allSchedules.map(item => {
+      const att = item.attendances?.[0]
+      const workDateStr = this.formatDateOnly(item.workDate)
 
-        // Status resolution
-        let itemStatus: string;
-        if (att?.status) {
-          itemStatus = att.status;
-        } else if (workDateStr < todayDateStr) {
-          itemStatus = 'absent';
-        } else {
-          itemStatus = 'not_yet';
+      // Status resolution
+      let itemStatus: string
+      if (att?.status) {
+        itemStatus = att.status
+      } else if (workDateStr < todayDateStr) {
+        itemStatus = 'absent'
+      } else {
+        itemStatus = 'not_yet'
+      }
+
+      // Hours & early checkout calculation
+      let hours = 0
+      let isEarlyCheckOut = false
+      if (att?.checkIn && att?.checkOut) {
+        const diffMs = att.checkOut.getTime() - att.checkIn.getTime()
+        hours = Math.max(0, Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10)
+
+        const shiftEndTimeStr = this.formatTime(item.shift.endTime)
+        const [endH, endM] = shiftEndTimeStr.split(':').map(Number)
+        const checkOutH = att.checkOut.getUTCHours()
+        const checkOutM = att.checkOut.getUTCMinutes()
+        if (checkOutH * 60 + checkOutM < endH * 60 + endM) {
+          isEarlyCheckOut = true
         }
+      } else if (att?.checkOutExplanation) {
+        isEarlyCheckOut = true
+      }
 
-        // Hours & early checkout calculation
-        let hours = 0;
-        let isEarlyCheckOut = false;
-        if (att?.checkIn && att?.checkOut) {
-          const diffMs = att.checkOut.getTime() - att.checkIn.getTime();
-          hours = Math.max(
-            0,
-            Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10,
-          );
+      // Accumulate metrics
+      if (itemStatus === 'on_time') onTimeCount++
+      else if (itemStatus === 'late') lateCount++
+      else if (itemStatus === 'absent') absentCount++
+      totalWorkHours += hours
 
-          const shiftEndTimeStr = this.formatTime(item.shift.endTime);
-          const [endH, endM] = shiftEndTimeStr.split(':').map(Number);
-          const checkOutH = att.checkOut.getUTCHours();
-          const checkOutM = att.checkOut.getUTCMinutes();
-          if (checkOutH * 60 + checkOutM < endH * 60 + endM) {
-            isEarlyCheckOut = true;
-          }
-        } else if (att?.checkOutExplanation) {
-          isEarlyCheckOut = true;
-        }
+      const shiftStartStr = this.formatTime(item.shift.startTime)
+      const shiftEndStr = this.formatTime(item.shift.endTime)
 
-        // Accumulate metrics
-        if (itemStatus === 'on_time') onTimeCount++;
-        else if (itemStatus === 'late') lateCount++;
-        else if (itemStatus === 'absent') absentCount++;
-        totalWorkHours += hours;
-
-        const shiftStartStr = this.formatTime(item.shift.startTime);
-        const shiftEndStr = this.formatTime(item.shift.endTime);
-
-        return {
-          id: att?.id || item.id,
-          workScheduleId: item.id,
-          workDate: workDateStr,
-          boardingHouseName: item.boardingHouse.name,
-          shiftName: item.shift.name,
-          shiftTime: `${shiftStartStr} - ${shiftEndStr}`,
-          checkIn: att?.checkIn ? this.formatTime(att.checkIn) : null,
-          checkOut: att?.checkOut ? this.formatTime(att.checkOut) : null,
-          status: itemStatus,
-          totalHours: hours,
-          editedByLandlord: !!att?.editedBy,
-          note: att?.note || null,
-          checkInPhoto: att?.checkInPhoto || null,
-          checkInWatermark: (att?.checkInWatermark as any) || null,
-          checkInExplanation: att?.checkInExplanation || null,
-          checkOutPhoto: att?.checkOutPhoto || null,
-          checkOutWatermark: (att?.checkOutWatermark as any) || null,
-          checkOutExplanation: att?.checkOutExplanation || null,
-          isEarlyCheckOut,
-        };
-      },
-    );
+      return {
+        id: att?.id || item.id,
+        workScheduleId: item.id,
+        workDate: workDateStr,
+        boardingHouseName: item.boardingHouse.name,
+        shiftName: item.shift.name,
+        shiftTime: `${shiftStartStr} - ${shiftEndStr}`,
+        checkIn: att?.checkIn ? this.formatTime(att.checkIn) : null,
+        checkOut: att?.checkOut ? this.formatTime(att.checkOut) : null,
+        status: itemStatus,
+        totalHours: hours,
+        editedByLandlord: !!att?.editedBy,
+        note: att?.note || null,
+        checkInPhoto: att?.checkInPhoto || null,
+        checkInWatermark: (att?.checkInWatermark as any) || null,
+        checkInExplanation: att?.checkInExplanation || null,
+        checkOutPhoto: att?.checkOutPhoto || null,
+        checkOutWatermark: (att?.checkOutWatermark as any) || null,
+        checkOutExplanation: att?.checkOutExplanation || null,
+        isEarlyCheckOut,
+      }
+    })
 
     const summary = {
       total: allSchedules.length,
@@ -1497,48 +1468,44 @@ export class AttendanceService {
       late: lateCount,
       absent: absentCount,
       hours: (Math.round(totalWorkHours * 10) / 10).toFixed(1),
-    };
+    }
 
     // Filter by status if specified
-    let filteredItems = allItems;
+    let filteredItems = allItems
     if (query.status && query.status !== 'all') {
-      filteredItems = filteredItems.filter((i) => i.status === query.status);
+      filteredItems = filteredItems.filter(i => i.status === query.status)
     }
 
     // Filter by search keyword (date, shift, property)
     if (query.search) {
-      const q = query.search.trim().toLowerCase();
+      const q = query.search.trim().toLowerCase()
       filteredItems = filteredItems.filter(
-        (i) =>
+        i =>
           i.workDate.toLowerCase().includes(q) ||
           i.shiftName.toLowerCase().includes(q) ||
           i.boardingHouseName.toLowerCase().includes(q),
-      );
+      )
     }
 
     // Filter by specific work date if specified
     if (query.date && query.date.trim()) {
-      const targetDate = query.date.trim();
-      filteredItems = filteredItems.filter((i) =>
-        i.workDate.includes(targetDate),
-      );
+      const targetDate = query.date.trim()
+      filteredItems = filteredItems.filter(i => i.workDate.includes(targetDate))
     }
 
     // Filter by shift name if specified
     if (query.shiftName && query.shiftName !== 'all' && query.shiftName.trim()) {
-      const targetShift = query.shiftName.trim().toLowerCase();
-      filteredItems = filteredItems.filter((i) =>
-        i.shiftName.toLowerCase().includes(targetShift),
-      );
+      const targetShift = query.shiftName.trim().toLowerCase()
+      filteredItems = filteredItems.filter(i => i.shiftName.toLowerCase().includes(targetShift))
     }
 
     // Pagination (Rule #9)
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
-    const total = filteredItems.length;
-    const totalPages = Math.ceil(total / limit) || 1;
-    const startIndex = (page - 1) * limit;
-    const data = filteredItems.slice(startIndex, startIndex + limit);
+    const page = query.page && query.page > 0 ? query.page : 1
+    const limit = query.limit && query.limit > 0 ? query.limit : 10
+    const total = filteredItems.length
+    const totalPages = Math.ceil(total / limit) || 1
+    const startIndex = (page - 1) * limit
+    const data = filteredItems.slice(startIndex, startIndex + limit)
 
     return {
       data,
@@ -1547,7 +1514,6 @@ export class AttendanceService {
       limit,
       total,
       totalPages,
-    };
+    }
   }
 }
-

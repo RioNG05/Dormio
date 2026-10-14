@@ -21,24 +21,25 @@ export enum CronExpression {
 }
 
 // Decorator no-op — @Cron() just annotates the method; no scheduling in tests.
-export const Cron = (_cronTime: string | CronExpression) =>
+export const Cron =
+  (_cronTime: string | CronExpression) =>
   (_target: object, _key: string, _descriptor: PropertyDescriptor) =>
-    _descriptor;
+    _descriptor
 
-export const Interval = (_ms: number) =>
-  (_target: object, _key: string, _descriptor: PropertyDescriptor) =>
-    _descriptor;
+export const Interval =
+  (_ms: number) => (_target: object, _key: string, _descriptor: PropertyDescriptor) =>
+    _descriptor
 
-export const Timeout = (_ms: number) =>
-  (_target: object, _key: string, _descriptor: PropertyDescriptor) =>
-    _descriptor;
+export const Timeout =
+  (_ms: number) => (_target: object, _key: string, _descriptor: PropertyDescriptor) =>
+    _descriptor
 
 export const SchedulerRegistry = class {
-  getCronJob = jest.fn();
-  addCronJob = jest.fn();
-  deleteCronJob = jest.fn();
-};
+  getCronJob = jest.fn()
+  addCronJob = jest.fn()
+  deleteCronJob = jest.fn()
+}
 
 export const ScheduleModule = {
   forRoot: jest.fn().mockReturnValue({ module: class ScheduleRootModule {} }),
-};
+}

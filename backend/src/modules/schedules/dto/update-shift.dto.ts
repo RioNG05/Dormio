@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Matches } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, Matches } from 'class-validator'
 
 export class UpdateShiftDto {
   @ApiPropertyOptional({
@@ -8,7 +8,7 @@ export class UpdateShiftDto {
   })
   @IsOptional()
   @IsString()
-  name?: string;
+  name?: string
 
   @ApiPropertyOptional({
     description: 'Start time in HH:mm format (24h)',
@@ -19,7 +19,7 @@ export class UpdateShiftDto {
   @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
     message: 'Giờ bắt đầu phải theo định dạng HH:mm (ví dụ 06:00)',
   })
-  startTime?: string;
+  startTime?: string
 
   @ApiPropertyOptional({
     description: 'End time in HH:mm format (24h)',
@@ -30,5 +30,5 @@ export class UpdateShiftDto {
   @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
     message: 'Giờ kết thúc phải theo định dạng HH:mm (ví dụ 14:00)',
   })
-  endTime?: string;
+  endTime?: string
 }

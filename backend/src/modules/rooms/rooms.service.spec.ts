@@ -1,11 +1,11 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ContractStatus, Prisma, RoomStatus, SubscriptionPackage } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { RoomsService } from './rooms.service';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
+import { ContractStatus, Prisma, RoomStatus, SubscriptionPackage } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { RoomsService } from './rooms.service'
 
 describe('RoomsService', () => {
-  let service: RoomsService;
+  let service: RoomsService
 
   const mockTx = {
     room: {
@@ -17,7 +17,7 @@ describe('RoomsService', () => {
       deleteMany: jest.fn(),
       createMany: jest.fn(),
     },
-  };
+  }
 
   const mockPrisma = {
     roomType: {
@@ -45,26 +45,23 @@ describe('RoomsService', () => {
       createMany: jest.fn(),
     },
     $transaction: jest.fn(),
-  };
+  }
 
-  const landlordId = 'user-uuid-1';
-  const boardingHouseId = 'bh-uuid-1';
-  const roomTypeId = 'rt-uuid-1';
-  const serviceId1 = 'srv-uuid-1';
+  const landlordId = 'user-uuid-1'
+  const boardingHouseId = 'bh-uuid-1'
+  const roomTypeId = 'rt-uuid-1'
+  const serviceId1 = 'srv-uuid-1'
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-    mockPrisma.$transaction.mockImplementation(async (callback) => callback(mockTx));
+    jest.clearAllMocks()
+    mockPrisma.$transaction.mockImplementation(async callback => callback(mockTx))
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RoomsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
-    }).compile();
+      providers: [RoomsService, { provide: PrismaService, useValue: mockPrisma }],
+    }).compile()
 
-    service = module.get<RoomsService>(RoomsService);
-  });
+    service = module.get<RoomsService>(RoomsService)
+  })
 
   describe('bulkGenerateRooms', () => {
     const dto = {
@@ -75,16 +72,16 @@ describe('RoomsService', () => {
       maxOccupants: 2,
       roomTypeId,
       serviceIds: [serviceId1],
-    };
+    }
 
     it('generates rooms successfully in transaction when all checks pass', async () => {
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId, name: 'Standard' });
-      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]);
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId, name: 'Standard' })
+      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }])
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 50, planName: SubscriptionPackage.plus },
-      });
-      mockPrisma.room.count.mockResolvedValue(0);
-      mockPrisma.room.findMany.mockResolvedValue([]); // No existing collisions
+      })
+      mockPrisma.room.count.mockResolvedValue(0)
+      mockPrisma.room.findMany.mockResolvedValue([]) // No existing collisions
 
       mockTx.room.create.mockImplementation(({ data }) => ({
         id: `room-${data.roomNumber}`,
@@ -109,122 +106,130 @@ describe('RoomsService', () => {
         ],
         createdAt: new Date('2026-09-05T00:00:00.000Z'),
         updatedAt: null,
-      }));
+      }))
 
-      const result = await service.bulkGenerateRooms(landlordId, boardingHouseId, dto);
+      const result = await service.bulkGenerateRooms(landlordId, boardingHouseId, dto)
 
       expect(mockPrisma.roomType.findFirst).toHaveBeenCalledWith({
         where: { id: roomTypeId, boardingHouseId },
-      });
+      })
       expect(mockPrisma.service.findMany).toHaveBeenCalledWith({
         where: { id: { in: [serviceId1] }, boardingHouseId },
         select: { id: true },
-      });
-      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(mockTx.room.create).toHaveBeenCalledTimes(4); // 2 floors * 2 rooms
-      expect(result.success).toBe(true);
-      expect(result.count).toBe(4);
-      expect(result.data.map((r) => r.roomNumber)).toEqual(['P101', 'P102', 'P201', 'P202']);
-    });
+      })
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1)
+      expect(mockTx.room.create).toHaveBeenCalledTimes(4) // 2 floors * 2 rooms
+      expect(result.success).toBe(true)
+      expect(result.count).toBe(4)
+      expect(result.data.map(r => r.roomNumber)).toEqual(['P101', 'P102', 'P201', 'P202'])
+    })
 
     it('throws NotFoundException when roomTypeId does not belong to property', async () => {
-      mockPrisma.roomType.findFirst.mockResolvedValue(null);
+      mockPrisma.roomType.findFirst.mockResolvedValue(null)
 
-      await expect(
-        service.bulkGenerateRooms(landlordId, boardingHouseId, dto),
-      ).rejects.toThrow(NotFoundException);
-    });
+      await expect(service.bulkGenerateRooms(landlordId, boardingHouseId, dto)).rejects.toThrow(
+        NotFoundException,
+      )
+    })
 
     it('throws BadRequestException when serviceIds do not belong to property', async () => {
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId });
-      mockPrisma.service.findMany.mockResolvedValue([]); // Service not found
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId })
+      mockPrisma.service.findMany.mockResolvedValue([]) // Service not found
 
-      await expect(
-        service.bulkGenerateRooms(landlordId, boardingHouseId, dto),
-      ).rejects.toThrow(BadRequestException);
-    });
+      await expect(service.bulkGenerateRooms(landlordId, boardingHouseId, dto)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
 
     it('throws BadRequestException when subscription maxRoom limit is exceeded (custom plan)', async () => {
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId });
-      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]);
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId })
+      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }])
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 10, planName: SubscriptionPackage.free },
-      });
-      mockPrisma.room.count.mockResolvedValue(8); // 8 + 4 = 12 > 10
+      })
+      mockPrisma.room.count.mockResolvedValue(8) // 8 + 4 = 12 > 10
 
-      await expect(
-        service.bulkGenerateRooms(landlordId, boardingHouseId, dto),
-      ).rejects.toThrow(BadRequestException);
-    });
+      await expect(service.bulkGenerateRooms(landlordId, boardingHouseId, dto)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
 
     it('falls back to free plan (10 rooms) when no active subscription row exists', async () => {
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId });
-      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]);
-      mockPrisma.userSubscription.findFirst.mockResolvedValue(null);
-      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({ maxRoom: 10 });
-      mockPrisma.room.count.mockResolvedValue(9); // 9 + 4 = 13 > 10
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId })
+      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }])
+      mockPrisma.userSubscription.findFirst.mockResolvedValue(null)
+      mockPrisma.subscriptionPlan.findUnique.mockResolvedValue({ maxRoom: 10 })
+      mockPrisma.room.count.mockResolvedValue(9) // 9 + 4 = 13 > 10
 
-      await expect(
-        service.bulkGenerateRooms(landlordId, boardingHouseId, dto),
-      ).rejects.toThrow(/allows a maximum of 10 rooms/i);
-    });
+      await expect(service.bulkGenerateRooms(landlordId, boardingHouseId, dto)).rejects.toThrow(
+        /allows a maximum of 10 rooms/i,
+      )
+    })
 
     it('throws ConflictException when room numbers collide with existing rooms in database', async () => {
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId });
-      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]);
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId })
+      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }])
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 50 },
-      });
-      mockPrisma.room.count.mockResolvedValue(0);
-      mockPrisma.room.findMany.mockResolvedValue([{ roomNumber: 'P101' }]); // Collision
+      })
+      mockPrisma.room.count.mockResolvedValue(0)
+      mockPrisma.room.findMany.mockResolvedValue([{ roomNumber: 'P101' }]) // Collision
 
-      await expect(
-        service.bulkGenerateRooms(landlordId, boardingHouseId, dto),
-      ).rejects.toThrow(ConflictException);
-    });
+      await expect(service.bulkGenerateRooms(landlordId, boardingHouseId, dto)).rejects.toThrow(
+        ConflictException,
+      )
+    })
 
     it('throws BadRequestException when template generates duplicate numbers in same batch', async () => {
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId });
-      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]);
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId })
+      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }])
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 50 },
-      });
-      mockPrisma.room.count.mockResolvedValue(0);
+      })
+      mockPrisma.room.count.mockResolvedValue(0)
 
       const badDto = {
         ...dto,
         nameFormat: 'Room-Fixed', // No index or floor token, causes duplicates
-      };
+      }
 
-      await expect(
-        service.bulkGenerateRooms(landlordId, boardingHouseId, badDto),
-      ).rejects.toThrow(/duplicate room number/i);
-    });
-  });
+      await expect(service.bulkGenerateRooms(landlordId, boardingHouseId, badDto)).rejects.toThrow(
+        /duplicate room number/i,
+      )
+    })
+  })
 
   describe('getRoomMetadata', () => {
     it('returns room types, services, plan cap, and current room count', async () => {
-      mockPrisma.roomType.findMany.mockResolvedValue([{ id: 'rt-1', name: 'Studio', description: null }]);
+      mockPrisma.roomType.findMany.mockResolvedValue([
+        { id: 'rt-1', name: 'Studio', description: null },
+      ])
       mockPrisma.service.findMany.mockResolvedValue([
-        { id: 'srv-1', name: 'Water', price: new Prisma.Decimal('25000.00'), unit: 'm³', isMetered: true },
-      ]);
+        {
+          id: 'srv-1',
+          name: 'Water',
+          price: new Prisma.Decimal('25000.00'),
+          unit: 'm³',
+          isMetered: true,
+        },
+      ])
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 20 },
-      });
-      mockPrisma.room.count.mockResolvedValue(5);
+      })
+      mockPrisma.room.count.mockResolvedValue(5)
 
-      const meta = await service.getRoomMetadata(landlordId, boardingHouseId);
+      const meta = await service.getRoomMetadata(landlordId, boardingHouseId)
 
-      expect(meta.roomTypes).toHaveLength(1);
-      expect(meta.services).toHaveLength(1);
-      expect(meta.maxRoom).toBe(20);
-      expect(meta.currentRoomCount).toBe(5);
-    });
-  });
+      expect(meta.roomTypes).toHaveLength(1)
+      expect(meta.services).toHaveLength(1)
+      expect(meta.maxRoom).toBe(20)
+      expect(meta.currentRoomCount).toBe(5)
+    })
+  })
 
   describe('getRooms', () => {
     it('returns paginated rooms with total count', async () => {
-      mockPrisma.room.count.mockResolvedValue(1);
+      mockPrisma.room.count.mockResolvedValue(1)
       mockPrisma.room.findMany.mockResolvedValue([
         {
           id: 'room-1',
@@ -240,14 +245,14 @@ describe('RoomsService', () => {
           createdAt: new Date('2026-09-05T00:00:00.000Z'),
           updatedAt: null,
         },
-      ]);
+      ])
 
-      const result = await service.getRooms(boardingHouseId, { page: 1, limit: 10 });
-      expect(result.data).toHaveLength(1);
-      expect(result.meta.total).toBe(1);
-      expect(result.meta.page).toBe(1);
-    });
-  });
+      const result = await service.getRooms(boardingHouseId, { page: 1, limit: 10 })
+      expect(result.data).toHaveLength(1)
+      expect(result.meta.total).toBe(1)
+      expect(result.meta.page).toBe(1)
+    })
+  })
 
   describe('createRoom', () => {
     const createDto = {
@@ -257,16 +262,16 @@ describe('RoomsService', () => {
       area: 25.5,
       maxOccupants: 2,
       status: RoomStatus.available,
-    };
+    }
 
     it('creates a single room successfully and auto-attaches active autoApplied services when serviceIds is not provided', async () => {
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 10, planName: SubscriptionPackage.free },
-      });
-      mockPrisma.room.count.mockResolvedValue(2);
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId, name: 'Studio' });
-      mockPrisma.room.findFirst.mockResolvedValue(null); // No collision
-      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]); // Auto-applied active services
+      })
+      mockPrisma.room.count.mockResolvedValue(2)
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId, name: 'Studio' })
+      mockPrisma.room.findFirst.mockResolvedValue(null) // No collision
+      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]) // Auto-applied active services
 
       mockTx.room.create.mockResolvedValue({
         id: 'room-new-1',
@@ -291,13 +296,13 @@ describe('RoomsService', () => {
         ],
         createdAt: new Date('2026-09-07T00:00:00.000Z'),
         updatedAt: null,
-      });
+      })
 
-      const result = await service.createRoom(landlordId, boardingHouseId, createDto);
+      const result = await service.createRoom(landlordId, boardingHouseId, createDto)
 
-      expect(result.id).toBe('room-new-1');
-      expect(result.roomNumber).toBe('101');
-      expect(result.services).toHaveLength(1);
+      expect(result.id).toBe('room-new-1')
+      expect(result.roomNumber).toBe('101')
+      expect(result.services).toHaveLength(1)
       expect(mockTx.room.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -309,17 +314,17 @@ describe('RoomsService', () => {
             },
           }),
         }),
-      );
-    });
+      )
+    })
 
     it('creates a single room with specified serviceIds when provided', async () => {
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 10 },
-      });
-      mockPrisma.room.count.mockResolvedValue(2);
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId, name: 'Studio' });
-      mockPrisma.room.findFirst.mockResolvedValue(null);
-      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]); // Valid service check
+      })
+      mockPrisma.room.count.mockResolvedValue(2)
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId, name: 'Studio' })
+      mockPrisma.room.findFirst.mockResolvedValue(null)
+      mockPrisma.service.findMany.mockResolvedValue([{ id: serviceId1 }]) // Valid service check
 
       mockTx.room.create.mockResolvedValue({
         id: 'room-new-2',
@@ -334,72 +339,72 @@ describe('RoomsService', () => {
         roomServices: [],
         createdAt: new Date('2026-09-07T00:00:00.000Z'),
         updatedAt: null,
-      });
+      })
 
       const result = await service.createRoom(landlordId, boardingHouseId, {
         ...createDto,
         roomNumber: '102',
         imageUrl: 'https://example.com/photo.jpg',
         serviceIds: [serviceId1],
-      });
+      })
 
-      expect(result.roomNumber).toBe('102');
-      expect(result.imageUrl).toBe('https://example.com/photo.jpg');
-    });
+      expect(result.roomNumber).toBe('102')
+      expect(result.imageUrl).toBe('https://example.com/photo.jpg')
+    })
 
     it('throws BadRequestException when room creation would exceed subscription quota', async () => {
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 5 },
-      });
-      mockPrisma.room.count.mockResolvedValue(5); // Already at 5/5
+      })
+      mockPrisma.room.count.mockResolvedValue(5) // Already at 5/5
 
-      await expect(
-        service.createRoom(landlordId, boardingHouseId, createDto),
-      ).rejects.toThrow(BadRequestException);
-    });
+      await expect(service.createRoom(landlordId, boardingHouseId, createDto)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
 
     it('throws NotFoundException when roomTypeId does not exist for the property', async () => {
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 10 },
-      });
-      mockPrisma.room.count.mockResolvedValue(0);
-      mockPrisma.roomType.findFirst.mockResolvedValue(null); // Not found
+      })
+      mockPrisma.room.count.mockResolvedValue(0)
+      mockPrisma.roomType.findFirst.mockResolvedValue(null) // Not found
 
-      await expect(
-        service.createRoom(landlordId, boardingHouseId, createDto),
-      ).rejects.toThrow(NotFoundException);
-    });
+      await expect(service.createRoom(landlordId, boardingHouseId, createDto)).rejects.toThrow(
+        NotFoundException,
+      )
+    })
 
     it('throws ConflictException when roomNumber already exists in the boarding house', async () => {
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 10 },
-      });
-      mockPrisma.room.count.mockResolvedValue(1);
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId });
-      mockPrisma.room.findFirst.mockResolvedValue({ id: 'existing-room', roomNumber: '101' });
+      })
+      mockPrisma.room.count.mockResolvedValue(1)
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId })
+      mockPrisma.room.findFirst.mockResolvedValue({ id: 'existing-room', roomNumber: '101' })
 
-      await expect(
-        service.createRoom(landlordId, boardingHouseId, createDto),
-      ).rejects.toThrow(ConflictException);
-    });
+      await expect(service.createRoom(landlordId, boardingHouseId, createDto)).rejects.toThrow(
+        ConflictException,
+      )
+    })
 
     it('throws BadRequestException when selected serviceIds do not belong to the property', async () => {
       mockPrisma.userSubscription.findFirst.mockResolvedValue({
         subscriptionPlan: { maxRoom: 10 },
-      });
-      mockPrisma.room.count.mockResolvedValue(1);
-      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId });
-      mockPrisma.room.findFirst.mockResolvedValue(null);
-      mockPrisma.service.findMany.mockResolvedValue([]); // 0 of 1 valid
+      })
+      mockPrisma.room.count.mockResolvedValue(1)
+      mockPrisma.roomType.findFirst.mockResolvedValue({ id: roomTypeId })
+      mockPrisma.room.findFirst.mockResolvedValue(null)
+      mockPrisma.service.findMany.mockResolvedValue([]) // 0 of 1 valid
 
       await expect(
         service.createRoom(landlordId, boardingHouseId, {
           ...createDto,
           serviceIds: ['foreign-srv-id'],
         }),
-      ).rejects.toThrow(BadRequestException);
-    });
-  });
+      ).rejects.toThrow(BadRequestException)
+    })
+  })
 
   describe('getRoomById', () => {
     it('returns room when found', async () => {
@@ -416,27 +421,27 @@ describe('RoomsService', () => {
         roomServices: [],
         createdAt: new Date('2026-09-05T00:00:00.000Z'),
         updatedAt: null,
-      });
+      })
 
-      const result = await service.getRoomById(boardingHouseId, 'room-1');
-      expect(result.id).toBe('room-1');
-      expect(result.roomNumber).toBe('101');
-    });
+      const result = await service.getRoomById(boardingHouseId, 'room-1')
+      expect(result.id).toBe('room-1')
+      expect(result.roomNumber).toBe('101')
+    })
 
     it('throws NotFoundException when room does not exist in the boarding house', async () => {
-      mockPrisma.room.findFirst.mockResolvedValue(null);
+      mockPrisma.room.findFirst.mockResolvedValue(null)
 
       await expect(service.getRoomById(boardingHouseId, 'unknown-id')).rejects.toThrow(
         NotFoundException,
-      );
-    });
-  });
+      )
+    })
+  })
 
   describe('updateRoom', () => {
     it('updates room when room exists and no collision', async () => {
       mockPrisma.room.findFirst
         .mockResolvedValueOnce({ id: 'room-1', roomNumber: '101', boardingHouseId }) // Existing
-        .mockResolvedValueOnce(null); // No collision on new number
+        .mockResolvedValueOnce(null) // No collision on new number
       mockTx.room.update.mockResolvedValue({
         id: 'room-1',
         boardingHouseId,
@@ -450,28 +455,28 @@ describe('RoomsService', () => {
         roomServices: [],
         createdAt: new Date('2026-09-05T00:00:00.000Z'),
         updatedAt: new Date('2026-09-05T00:00:00.000Z'),
-      });
+      })
 
       const updated = await service.updateRoom(boardingHouseId, 'room-1', {
         roomNumber: '102',
         imageUrl: 'https://example.com/updated.jpg',
-      });
-      expect(updated.roomNumber).toBe('102');
-      expect(updated.imageUrl).toBe('https://example.com/updated.jpg');
-    });
+      })
+      expect(updated.roomNumber).toBe('102')
+      expect(updated.imageUrl).toBe('https://example.com/updated.jpg')
+    })
 
     it('synchronizes services when serviceIds is provided', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({
         id: 'room-1',
         roomNumber: '101',
         boardingHouseId,
-      });
-      mockPrisma.service.findMany.mockResolvedValue([{ id: 'srv-2' }]);
+      })
+      mockPrisma.service.findMany.mockResolvedValue([{ id: 'srv-2' }])
       mockTx.roomService.findMany.mockResolvedValue([
         { id: 'rs-1', serviceId: 'srv-1' }, // Old service to be removed
-      ]);
-      mockTx.roomService.deleteMany.mockResolvedValue({ count: 1 });
-      mockTx.roomService.createMany.mockResolvedValue({ count: 1 });
+      ])
+      mockTx.roomService.deleteMany.mockResolvedValue({ count: 1 })
+      mockTx.roomService.createMany.mockResolvedValue({ count: 1 })
       mockTx.room.update.mockResolvedValue({
         id: 'room-1',
         boardingHouseId,
@@ -495,54 +500,54 @@ describe('RoomsService', () => {
         ],
         createdAt: new Date('2026-09-05T00:00:00.000Z'),
         updatedAt: new Date('2026-09-05T00:00:00.000Z'),
-      });
+      })
 
       const updated = await service.updateRoom(boardingHouseId, 'room-1', {
         serviceIds: ['srv-2'],
-      });
+      })
 
       expect(mockTx.roomService.deleteMany).toHaveBeenCalledWith({
         where: { id: { in: ['rs-1'] } },
-      });
+      })
       expect(mockTx.roomService.createMany).toHaveBeenCalledWith({
         data: [{ roomId: 'room-1', serviceId: 'srv-2' }],
-      });
-      expect(updated.services).toHaveLength(1);
-    });
+      })
+      expect(updated.services).toHaveLength(1)
+    })
 
     it('throws NotFoundException if room does not exist', async () => {
-      mockPrisma.room.findFirst.mockResolvedValue(null);
+      mockPrisma.room.findFirst.mockResolvedValue(null)
       await expect(
         service.updateRoom(boardingHouseId, 'room-x', { roomNumber: '102' }),
-      ).rejects.toThrow(NotFoundException);
-    });
+      ).rejects.toThrow(NotFoundException)
+    })
 
     it('throws ConflictException if updated room number collides with another room', async () => {
       mockPrisma.room.findFirst
         .mockResolvedValueOnce({ id: 'room-1', roomNumber: '101', boardingHouseId })
-        .mockResolvedValueOnce({ id: 'room-2', roomNumber: '102' }); // Collision
+        .mockResolvedValueOnce({ id: 'room-2', roomNumber: '102' }) // Collision
 
       await expect(
         service.updateRoom(boardingHouseId, 'room-1', { roomNumber: '102' }),
-      ).rejects.toThrow(ConflictException);
-    });
-  });
+      ).rejects.toThrow(ConflictException)
+    })
+  })
 
   describe('getRoomDashboard', () => {
-    const roomId = 'room-uuid-1';
+    const roomId = 'room-uuid-1'
 
     it('throws NotFoundException when room does not exist in property', async () => {
-      mockPrisma.room.findFirst.mockResolvedValue(null);
+      mockPrisma.room.findFirst.mockResolvedValue(null)
 
       await expect(service.getRoomDashboard(boardingHouseId, roomId)).rejects.toThrow(
         NotFoundException,
-      );
+      )
       expect(mockPrisma.room.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: roomId, boardingHouseId },
         }),
-      );
-    });
+      )
+    })
 
     it('returns full aggregated dashboard when room is occupied with active contract and tenants', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({
@@ -639,26 +644,26 @@ describe('RoomsService', () => {
             },
           },
         ],
-      });
+      })
 
-      const result = await service.getRoomDashboard(boardingHouseId, roomId);
+      const result = await service.getRoomDashboard(boardingHouseId, roomId)
 
-      expect(result.room.id).toBe(roomId);
-      expect(result.room.roomNumber).toBe('101');
-      expect(result.room.roomType.name).toBe('Studio Master');
-      expect(result.services).toHaveLength(1);
-      expect(result.currentContract).not.toBeNull();
-      expect(result.currentContract?.rentPrice).toBe('3500000');
-      expect(result.currentContract?.tenants).toHaveLength(1);
-      expect(result.currentContract?.tenants[0].fullName).toBe('Nguyen Van An');
-      expect(result.currentContract?.tenants[0].hasIdentification).toBe(true);
-      expect(result.rentalHistory).toHaveLength(1);
-      expect(result.rentalHistory[0].primaryTenantName).toBe('Nguyen Van An');
-      expect(result.invoices).toHaveLength(1);
-      expect(result.invoices[0].totalAmount).toBe('3850000');
-      expect(result.meterReadings).toHaveLength(1);
-      expect(result.meterReadings[0].serviceName).toBe('Electricity');
-    });
+      expect(result.room.id).toBe(roomId)
+      expect(result.room.roomNumber).toBe('101')
+      expect(result.room.roomType.name).toBe('Studio Master')
+      expect(result.services).toHaveLength(1)
+      expect(result.currentContract).not.toBeNull()
+      expect(result.currentContract?.rentPrice).toBe('3500000')
+      expect(result.currentContract?.tenants).toHaveLength(1)
+      expect(result.currentContract?.tenants[0].fullName).toBe('Nguyen Van An')
+      expect(result.currentContract?.tenants[0].hasIdentification).toBe(true)
+      expect(result.rentalHistory).toHaveLength(1)
+      expect(result.rentalHistory[0].primaryTenantName).toBe('Nguyen Van An')
+      expect(result.invoices).toHaveLength(1)
+      expect(result.invoices[0].totalAmount).toBe('3850000')
+      expect(result.meterReadings).toHaveLength(1)
+      expect(result.meterReadings[0].serviceName).toBe('Electricity')
+    })
 
     it('returns clean aggregate with currentContract: null when room is vacant', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({
@@ -681,16 +686,16 @@ describe('RoomsService', () => {
         contracts: [],
         invoices: [],
         meterReadings: [],
-      });
+      })
 
-      const result = await service.getRoomDashboard(boardingHouseId, roomId);
+      const result = await service.getRoomDashboard(boardingHouseId, roomId)
 
-      expect(result.room.id).toBe(roomId);
-      expect(result.room.status).toBe(RoomStatus.available);
-      expect(result.currentContract).toBeNull();
-      expect(result.rentalHistory).toEqual([]);
-      expect(result.invoices).toEqual([]);
-      expect(result.meterReadings).toEqual([]);
-    });
-  });
-});
+      expect(result.room.id).toBe(roomId)
+      expect(result.room.status).toBe(RoomStatus.available)
+      expect(result.currentContract).toBeNull()
+      expect(result.rentalHistory).toEqual([])
+      expect(result.invoices).toEqual([])
+      expect(result.meterReadings).toEqual([])
+    })
+  })
+})

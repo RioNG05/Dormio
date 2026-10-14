@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import React, { useState } from "react";
-import Link from "next/link";
-import Logo from "@/components/Logo";
-import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import React, { useState } from 'react'
+import Link from 'next/link'
+import Logo from '@/components/Logo'
+import { usePathname } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/context/AuthContext'
 import {
   Menu,
   X,
@@ -22,27 +22,25 @@ import {
   FileText,
   CreditCard,
   UserCheck,
-  Heart
-} from "lucide-react";
+  Heart,
+} from 'lucide-react'
 
-import { FEATURE_FLAGS } from "@/config/features";
+import { FEATURE_FLAGS } from '@/config/features'
 
 export function PublicHeader() {
-  const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const pathname = usePathname()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
 
-  const { isLoggedIn, user, logout, toggleLoginDemo } = useAuth();
+  const { isLoggedIn, user, logout, toggleLoginDemo } = useAuth()
 
   const navLinks = [
-    { href: "/", label: "Trang chủ", icon: Home },
-    ...(FEATURE_FLAGS.ENABLE_BHRP
-      ? [{ href: "/rooms", label: "Phòng trọ", icon: Building2 }]
-      : []),
-    { href: "/pricing", label: "Tính năng & Giá", icon: Layers },
-    { href: "/blog", label: "Blog", icon: BookOpen },
-    { href: "/contact", label: "Liên hệ", icon: Mail },
-  ];
+    { href: '/', label: 'Trang chủ', icon: Home },
+    ...(FEATURE_FLAGS.ENABLE_BHRP ? [{ href: '/rooms', label: 'Phòng trọ', icon: Building2 }] : []),
+    { href: '/pricing', label: 'Tính năng & Giá', icon: Layers },
+    { href: '/blog', label: 'Blog', icon: BookOpen },
+    { href: '/contact', label: 'Liên hệ', icon: Mail },
+  ]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md transition-all">
@@ -52,24 +50,20 @@ export function PublicHeader() {
 
         {/* Desktop & Tablet Navigation Links */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-8">
-          {navLinks.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
+          {navLinks.map(link => {
+            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href)
 
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-xs lg:text-sm font-bold transition-colors ${isActive
-                  ? "text-[#2AC1BC]"
-                  : "text-zinc-600 hover:text-[#2AC1BC]"
-                  }`}
+                className={`text-xs lg:text-sm font-bold transition-colors ${
+                  isActive ? 'text-[#2AC1BC]' : 'text-zinc-600 hover:text-[#2AC1BC]'
+                }`}
               >
                 {link.label}
               </Link>
-            );
+            )
           })}
         </nav>
 
@@ -78,20 +72,22 @@ export function PublicHeader() {
           {isLoggedIn ? (
             <>
               {/* Prominent "Đăng ký trở thành chủ trọ" or "Bảng điều khiển" Button next to Avatar */}
-              <Link href={user?.role === "landlord" ? "/landlord" : "/landlord/setup"}>
+              <Link href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}>
                 <Button
                   className={`rounded-xl px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-bold shadow-md flex items-center gap-1.5 transition-all hover:scale-105 ${
-                    user?.role === "landlord"
-                      ? "bg-[#2AC1BC] hover:bg-[#25aca7] shadow-[#2AC1BC]/25"
-                      : "bg-[#FF6B35] hover:bg-[#d55e23] shadow-[#FF6B35]/25"
+                    user?.role === 'landlord'
+                      ? 'bg-[#2AC1BC] hover:bg-[#25aca7] shadow-[#2AC1BC]/25'
+                      : 'bg-[#FF6B35] hover:bg-[#d55e23] shadow-[#FF6B35]/25'
                   }`}
                 >
                   <Building2 className="w-4 h-4" />
                   <span className="hidden sm:inline">
-                    {user?.role === "landlord" ? "Bảng điều khiển Chủ trọ" : "Đăng ký trở thành chủ trọ"}
+                    {user?.role === 'landlord'
+                      ? 'Bảng điều khiển Chủ trọ'
+                      : 'Đăng ký trở thành chủ trọ'}
                   </span>
                   <span className="sm:hidden">
-                    {user?.role === "landlord" ? "Chủ trọ" : "Làm Chủ trọ"}
+                    {user?.role === 'landlord' ? 'Chủ trọ' : 'Làm Chủ trọ'}
                   </span>
                 </Button>
               </Link>
@@ -104,12 +100,15 @@ export function PublicHeader() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"}
-                    alt={user?.name || "User Avatar"}
+                    src={
+                      user?.avatar ||
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'
+                    }
+                    alt={user?.name || 'User Avatar'}
                     className="w-8 h-8 rounded-xl object-cover border border-[#2AC1BC]/30"
                   />
                   <span className="hidden lg:inline text-xs font-bold text-zinc-800">
-                    {user?.name || "Tài khoản"}
+                    {user?.name || 'Tài khoản'}
                   </span>
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
                 </button>
@@ -119,8 +118,12 @@ export function PublicHeader() {
                   <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white p-3 shadow-2xl border border-zinc-200/80 z-50 flex flex-col gap-2 text-xs">
                     {/* User Info Header */}
                     <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex flex-col">
-                      <span className="font-bold text-zinc-900 text-sm">{user?.name || "Tài khoản"}</span>
-                      <span className="text-zinc-500 text-[11px]">{user?.email || "user@example.com"}</span>
+                      <span className="font-bold text-zinc-900 text-sm">
+                        {user?.name || 'Tài khoản'}
+                      </span>
+                      <span className="text-zinc-500 text-[11px]">
+                        {user?.email || 'user@example.com'}
+                      </span>
                       <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-[#2AC1BC] uppercase">
                         ● Khách thuê trọ
                       </span>
@@ -128,19 +131,19 @@ export function PublicHeader() {
 
                     {/* Quick Landlord Action */}
                     <Link
-                      href={user?.role === "landlord" ? "/landlord" : "/landlord/setup"}
+                      href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}
                       onClick={() => setUserDropdownOpen(false)}
                       className={`flex items-center gap-2.5 p-2.5 rounded-xl font-bold transition-colors ${
-                        user?.role === "landlord"
-                          ? "bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20"
-                          : "bg-[#FF6B35]/10 text-[#FF6B35] hover:bg-[#FF6B35]/20"
+                        user?.role === 'landlord'
+                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20'
+                          : 'bg-[#FF6B35]/10 text-[#FF6B35] hover:bg-[#FF6B35]/20'
                       }`}
                     >
                       <Building2 className="w-4 h-4 shrink-0" />
                       <span>
-                        {user?.role === "landlord"
-                          ? "Bảng điều khiển Chủ trọ →"
-                          : "Đăng ký trở thành chủ trọ →"}
+                        {user?.role === 'landlord'
+                          ? 'Bảng điều khiển Chủ trọ →'
+                          : 'Đăng ký trở thành chủ trọ →'}
                       </span>
                     </Link>
 
@@ -171,8 +174,8 @@ export function PublicHeader() {
                       </Link>
                       <button
                         onClick={() => {
-                          logout();
-                          setUserDropdownOpen(false);
+                          logout()
+                          setUserDropdownOpen(false)
                         }}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-red-50 text-red-600 font-semibold text-left transition-colors mt-1 border-t border-zinc-100 w-full"
                       >
@@ -214,49 +217,43 @@ export function PublicHeader() {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-x-0 top-16 bg-white/98 backdrop-blur-xl border-b border-zinc-200 px-4 pt-3 pb-6 flex flex-col gap-3 shadow-2xl z-50">
           <div className="flex flex-col gap-1">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive =
-                link.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(link.href);
+            {navLinks.map(link => {
+              const Icon = link.icon
+              const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href)
 
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${isActive
-                    ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
-                    : "text-zinc-700 hover:bg-zinc-100"
-                    }`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    isActive ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]' : 'text-zinc-700 hover:bg-zinc-100'
+                  }`}
                 >
                   <Icon className="w-4 h-4 text-[#2AC1BC]" />
                   {link.label}
                 </Link>
-              );
+              )
             })}
           </div>
 
           <div className="pt-3 border-t border-zinc-100 flex flex-col gap-2">
             <Link
-              href={user?.role === "landlord" ? "/landlord" : "/landlord/setup"}
+              href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-sm font-bold shadow-md ${
-                user?.role === "landlord" ? "bg-[#2AC1BC]" : "bg-[#FF6B35]"
+                user?.role === 'landlord' ? 'bg-[#2AC1BC]' : 'bg-[#FF6B35]'
               }`}
             >
-              <Building2 className="w-4 h-4" />{" "}
-              {user?.role === "landlord"
-                ? "Bảng điều khiển Chủ trọ"
-                : "Đăng ký trở thành chủ trọ"}
+              <Building2 className="w-4 h-4" />{' '}
+              {user?.role === 'landlord' ? 'Bảng điều khiển Chủ trọ' : 'Đăng ký trở thành chủ trọ'}
             </Link>
 
             {isLoggedIn ? (
               <button
                 onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
+                  logout()
+                  setMobileMenuOpen(false)
                 }}
                 className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 mt-1"
               >
@@ -275,7 +272,5 @@ export function PublicHeader() {
         </div>
       )}
     </header>
-  );
+  )
 }
-
-

@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class CreatePositionDto {
   @ApiProperty({
@@ -9,7 +9,7 @@ export class CreatePositionDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  name: string;
+  name: string
 
   @ApiPropertyOptional({
     description: 'Free-text duty description (e.g., trực cổng, kiểm tra thẻ xe, tuần tra ban đêm)',
@@ -17,5 +17,5 @@ export class CreatePositionDto {
   })
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string
 }

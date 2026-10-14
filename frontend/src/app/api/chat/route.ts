@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server';
-import { DORMIO_SYSTEM_CONTEXT } from '@/lib/dormio-context';
+import { NextResponse } from 'next/server'
+import { DORMIO_SYSTEM_CONTEXT } from '@/lib/dormio-context'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const GEMINI_API_KEY = process.env.AI_API_KEY;
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const GEMINI_API_KEY = process.env.AI_API_KEY
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { messages, locale, boardingHouseId } = body;
+    const body = await req.json()
+    const { messages, locale, boardingHouseId } = body
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid messages format' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid messages format' }, { status: 400 })
     }
 
     // 1. Try forwarding to backend NestJS centralized AI chat endpoint
@@ -25,81 +25,94 @@ export async function POST(req: Request) {
           locale: locale || 'vi',
           boardingHouseId,
         }),
-      });
+      })
 
       if (backendRes.ok) {
-        const backendData = await backendRes.json();
-        const reply = backendData?.data?.reply || backendData?.reply;
+        const backendData = await backendRes.json()
+        const reply = backendData?.data?.reply || backendData?.reply
         if (reply) {
-          return NextResponse.json({ reply });
+          return NextResponse.json({ reply })
         }
       }
     } catch (backendErr) {
-      console.warn('Backend AI endpoint not reachable, falling back to direct Gemini API:', backendErr);
+      console.warn(
+        'Backend AI endpoint not reachable, falling back to direct Gemini API:',
+        backendErr,
+      )
     }
 
     // 2. Direct fallback to Gemini 3.5 Flash Lite
-    let filteredMessages = messages;
+    let filteredMessages = messages
     if (filteredMessages.length > 0 && filteredMessages[0].role === 'assistant') {
-      filteredMessages = filteredMessages.slice(1);
+      filteredMessages = filteredMessages.slice(1)
     }
 
     // Prepare history and merge consecutive roles to satisfy Gemini API requirements
     const rawContents = filteredMessages.map((msg: any) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }]
-    }));
+      parts: [{ text: msg.content }],
+    }))
 
-    const contents: any[] = [];
+    const contents: any[] = []
     for (const msg of rawContents) {
       if (contents.length > 0 && contents[contents.length - 1].role === msg.role) {
-        contents[contents.length - 1].parts[0].text += `\n${msg.parts[0].text}`;
+        contents[contents.length - 1].parts[0].text += `\n${msg.parts[0].text}`
       } else {
-        contents.push(msg);
+        contents.push(msg)
       }
     }
 
     // Ensure the conversation starts with a user message
     if (contents.length > 0 && contents[0].role === 'model') {
-      contents.shift();
+      contents.shift()
     }
 
     // Inject system prompt into the very first user message
     if (contents.length > 0 && contents[0].role === 'user') {
-      const originalText = contents[0].parts[0].text;
+      const originalText = contents[0].parts[0].text
       if (!originalText.includes('[SYSTEM CONTEXT START]')) {
-        contents[0].parts[0].text = `[SYSTEM CONTEXT START]\n${DORMIO_SYSTEM_CONTEXT}\n[SYSTEM CONTEXT END]\n\nNgười dùng: ${originalText}`;
+        contents[0].parts[0].text = `[SYSTEM CONTEXT START]\n${DORMIO_SYSTEM_CONTEXT}\n[SYSTEM CONTEXT END]\n\nNgười dùng: ${originalText}`
       }
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents,
+        }),
       },
-      body: JSON.stringify({
-        contents
-      })
-    });
+    )
 
     if (!response.ok) {
-      const errorText = await response.text();
-      let errorData;
+      const errorText = await response.text()
+      let errorData
       try {
-        errorData = JSON.parse(errorText);
+        errorData = JSON.parse(errorText)
       } catch (e) {
-        errorData = errorText;
+        errorData = errorText
       }
-      console.error('Gemini API Error details:', errorData);
-      return NextResponse.json({ error: 'Failed to communicate with AI', details: errorData }, { status: 500 });
+      console.error('Gemini API Error details:', errorData)
+      return NextResponse.json(
+        { error: 'Failed to communicate with AI', details: errorData },
+        { status: 500 },
+      )
     }
 
-    const data = await response.json();
-    const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Xin lỗi, tôi không thể trả lời lúc này.";
+    const data = await response.json()
+    const replyText =
+      data.candidates?.[0]?.content?.parts?.[0]?.text || 'Xin lỗi, tôi không thể trả lời lúc này.'
 
-    return NextResponse.json({ reply: replyText });
+    return NextResponse.json({ reply: replyText })
   } catch (error: any) {
-    console.error('Chat API Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error', message: error.message, stack: error.stack }, { status: 500 });
+    console.error('Chat API Error:', error)
+    return NextResponse.json(
+      { error: 'Internal Server Error', message: error.message, stack: error.stack },
+      { status: 500 },
+    )
   }
 }

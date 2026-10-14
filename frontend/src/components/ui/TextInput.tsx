@@ -1,17 +1,16 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import * as React from 'react'
+import { cn } from '@/lib/utils'
 
-export interface TextInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
-  label?: React.ReactNode;
-  labelRight?: React.ReactNode;
-  required?: boolean;
-  error?: string;
-  helperText?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-  containerClassName?: string;
-  labelClassName?: string;
+export interface TextInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+  label?: React.ReactNode
+  labelRight?: React.ReactNode
+  required?: boolean
+  error?: string
+  helperText?: string
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
+  containerClassName?: string
+  labelClassName?: string
 }
 
 export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
@@ -31,23 +30,23 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
       id,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Generate fallback unique ID if not provided
-    const reactGeneratedId = React.useId();
-    const inputId = id || reactGeneratedId;
+    const reactGeneratedId = React.useId()
+    const inputId = id || reactGeneratedId
 
     return (
-      <div className={cn("space-y-1.5 w-full", containerClassName)}>
+      <div className={cn('space-y-1.5 w-full', containerClassName)}>
         {(label || labelRight) && (
           <div className="flex items-center justify-between gap-2">
             {label && (
               <label
                 htmlFor={inputId}
                 className={cn(
-                  "block text-xs font-bold text-zinc-700 select-none",
-                  disabled && "text-zinc-400 cursor-not-allowed",
-                  labelClassName
+                  'block text-xs font-bold text-zinc-700 select-none',
+                  disabled && 'text-zinc-400 cursor-not-allowed',
+                  labelClassName,
                 )}
               >
                 <span>{label}</span>
@@ -71,16 +70,16 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
             required={required}
             disabled={disabled}
             className={cn(
-              "w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold transition-all outline-none",
-              "placeholder:text-zinc-400 placeholder:font-normal",
-              leftIcon ? "pl-9" : "",
-              rightIcon ? "pr-9" : "",
+              'w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold transition-all outline-none',
+              'placeholder:text-zinc-400 placeholder:font-normal',
+              leftIcon ? 'pl-9' : '',
+              rightIcon ? 'pr-9' : '',
               disabled
-                ? "bg-zinc-100 text-zinc-500 border-zinc-200 cursor-not-allowed select-none shadow-none"
+                ? 'bg-zinc-100 text-zinc-500 border-zinc-200 cursor-not-allowed select-none shadow-none'
                 : error
-                ? "bg-white border-rose-400 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                : "bg-white border-zinc-200 text-zinc-800 hover:border-zinc-300 focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15",
-              className
+                  ? 'bg-white border-rose-400 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                  : 'bg-white border-zinc-200 text-zinc-800 hover:border-zinc-300 focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15',
+              className,
             )}
             {...props}
           />
@@ -93,15 +92,13 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
         </div>
 
         {error ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">
-            {error}
-          </p>
+          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
         ) : helperText ? (
           <p className="text-[11px] text-zinc-400">{helperText}</p>
         ) : null}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-TextInput.displayName = "TextInput";
+TextInput.displayName = 'TextInput'

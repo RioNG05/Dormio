@@ -1,27 +1,27 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class StrategyActionStepDto {
   @ApiProperty({ example: 1 })
-  dayRange: string; // e.g., "Ngày 1 - 7"
+  dayRange: string // e.g., "Ngày 1 - 7"
 
   @ApiProperty({ example: 'Khảo sát và điều chỉnh giá' })
-  title: string;
+  title: string
 
   @ApiProperty({
     example: 'Giảm 5% giá thuê cho các phòng trống trên 30 ngày tại cơ sở Cầu Giấy.',
   })
-  description: string;
+  description: string
 }
 
 export class AiStrategyResponseDto {
   @ApiProperty({ example: 'Chiến lược tối ưu hóa lợi nhuận và lấp đầy phòng Q3/2026' })
-  title: string;
+  title: string
 
   @ApiProperty({
     example:
       'Hệ thống đang vận hành 3 cơ sở với tỷ lệ lấp đầy 84.4%. Điểm nghẽn lớn nhất nằm ở cơ sở Nam Từ Liêm với 4 phòng trống kéo dài.',
   })
-  executiveSummary: string;
+  executiveSummary: string
 
   @ApiProperty({
     example: [
@@ -29,7 +29,7 @@ export class AiStrategyResponseDto {
       'Đưa ra gói ưu đãi cọc 0.5 tháng cho khách ký hợp đồng 12 tháng tại các phòng trống.',
     ],
   })
-  pricingRecommendations: string[];
+  pricingRecommendations: string[]
 
   @ApiProperty({
     example: [
@@ -37,7 +37,7 @@ export class AiStrategyResponseDto {
       'Liên kết với hội sinh viên các trường ĐH Quốc Gia và ĐH Sư Phạm trong bán kính 2km.',
     ],
   })
-  marketingCampaigns: string[];
+  marketingCampaigns: string[]
 
   @ApiProperty({
     example: [
@@ -45,11 +45,11 @@ export class AiStrategyResponseDto {
       'Áp dụng quy trình thu nợ tự động qua tin nhắn Zalo trước hạn 3 ngày.',
     ],
   })
-  operationalOptimizations: string[];
+  operationalOptimizations: string[]
 
   @ApiProperty({ type: [StrategyActionStepDto] })
-  actionPlan30Days: StrategyActionStepDto[];
+  actionPlan30Days: StrategyActionStepDto[]
 
   @ApiProperty({ example: '2026-09-12T01:45:00.000Z' })
-  createdAt: string;
+  createdAt: string
 }

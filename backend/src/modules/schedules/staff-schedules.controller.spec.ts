@@ -1,15 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { StaffSchedulesController } from './staff-schedules.controller';
-import { SchedulesService } from './schedules.service';
+import { Test, TestingModule } from '@nestjs/testing'
+import { StaffSchedulesController } from './staff-schedules.controller'
+import { SchedulesService } from './schedules.service'
 
 describe('StaffSchedulesController', () => {
-  let controller: StaffSchedulesController;
-  let service: any;
+  let controller: StaffSchedulesController
+  let service: any
 
   const mockUser = {
     id: 'user-staff-123',
     role: 'employee' as any,
-  };
+  }
 
   const mockBoardingHouses = [
     {
@@ -22,7 +22,7 @@ describe('StaffSchedulesController', () => {
       name: 'Dormio Campus Cầu Giấy',
       address: 'Cầu Giấy, Hà Nội',
     },
-  ];
+  ]
 
   const mockSchedules = [
     {
@@ -66,13 +66,13 @@ describe('StaffSchedulesController', () => {
       ],
       additionalTasks: [],
     },
-  ];
+  ]
 
   beforeEach(async () => {
     service = {
       getStaffBoardingHouses: jest.fn().mockResolvedValue(mockBoardingHouses),
       getStaffSchedules: jest.fn().mockResolvedValue(mockSchedules),
-    };
+    }
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StaffSchedulesController],
@@ -82,30 +82,30 @@ describe('StaffSchedulesController', () => {
           useValue: service,
         },
       ],
-    }).compile();
+    }).compile()
 
-    controller = module.get<StaffSchedulesController>(StaffSchedulesController);
-  });
+    controller = module.get<StaffSchedulesController>(StaffSchedulesController)
+  })
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+    expect(controller).toBeDefined()
+  })
 
   describe('getBoardingHouses', () => {
     it('should return list of active assigned boarding houses for staff', async () => {
-      const result = await controller.getBoardingHouses(mockUser);
-      expect(result).toEqual(mockBoardingHouses);
-      expect(service.getStaffBoardingHouses).toHaveBeenCalledWith(mockUser.id);
-    });
-  });
+      const result = await controller.getBoardingHouses(mockUser)
+      expect(result).toEqual(mockBoardingHouses)
+      expect(service.getStaffBoardingHouses).toHaveBeenCalledWith(mockUser.id)
+    })
+  })
 
   describe('getBoardingHousesAlias', () => {
     it('should return boarding houses via alias route', async () => {
-      const result = await controller.getBoardingHousesAlias(mockUser);
-      expect(result).toEqual(mockBoardingHouses);
-      expect(service.getStaffBoardingHouses).toHaveBeenCalledWith(mockUser.id);
-    });
-  });
+      const result = await controller.getBoardingHousesAlias(mockUser)
+      expect(result).toEqual(mockBoardingHouses)
+      expect(service.getStaffBoardingHouses).toHaveBeenCalledWith(mockUser.id)
+    })
+  })
 
   describe('getSchedules', () => {
     it('should return list of schedules for staff within requested range', async () => {
@@ -113,11 +113,10 @@ describe('StaffSchedulesController', () => {
         startDate: '2026-09-14',
         endDate: '2026-09-20',
         boardingHouseId: 'house-1',
-      };
-      const result = await controller.getSchedules(mockUser, query);
-      expect(result).toEqual(mockSchedules);
-      expect(service.getStaffSchedules).toHaveBeenCalledWith(mockUser.id, query);
-    });
-  });
-});
-
+      }
+      const result = await controller.getSchedules(mockUser, query)
+      expect(result).toEqual(mockSchedules)
+      expect(service.getStaffSchedules).toHaveBeenCalledWith(mockUser.id, query)
+    })
+  })
+})

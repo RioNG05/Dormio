@@ -1,73 +1,73 @@
-"use client";
+'use client'
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { Eye, EyeOff, ExternalLink } from "lucide-react";
-import { useTranslations } from "@/context/LanguageContext";
-import { userService } from "@/services/user.service";
-import { TextInput, Button, Form } from "@/components/ui";
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { Eye, EyeOff, ExternalLink } from 'lucide-react'
+import { useTranslations } from '@/context/LanguageContext'
+import { userService } from '@/services/user.service'
+import { TextInput, Button, Form } from '@/components/ui'
 
 export default function SecurityTab() {
-  const t = useTranslations("guest");
+  const t = useTranslations('guest')
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false)
 
   const handleSavePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-    setPasswordSavedSuccess(false);
+    e.preventDefault()
+    setErrorMessage(null)
+    setPasswordSavedSuccess(false)
 
     if (newPassword.length < 8) {
-      setErrorMessage(t("guestProfilePasswordErrorMinLength"));
-      return;
+      setErrorMessage(t('guestProfilePasswordErrorMinLength'))
+      return
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage(t("guestProfileAlertPasswordMismatch"));
-      return;
+      setErrorMessage(t('guestProfileAlertPasswordMismatch'))
+      return
     }
 
     if (currentPassword === newPassword) {
-      setErrorMessage(t("guestProfilePasswordErrorMustDiffer"));
-      return;
+      setErrorMessage(t('guestProfilePasswordErrorMustDiffer'))
+      return
     }
 
     try {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
       await userService.changePassword({
         currentPassword,
         newPassword,
-      });
+      })
 
-      setPasswordSavedSuccess(true);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeout(() => setPasswordSavedSuccess(false), 4000);
+      setPasswordSavedSuccess(true)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => setPasswordSavedSuccess(false), 4000)
     } catch (err: any) {
-      const msg = err?.message || "";
-      if (msg.includes("current_password_incorrect")) {
-        setErrorMessage(t("guestProfilePasswordErrorCurrentIncorrect"));
-      } else if (msg.includes("new_password_must_differ")) {
-        setErrorMessage(t("guestProfilePasswordErrorMustDiffer"));
-      } else if (msg.includes("at least 8 characters") || msg.includes("8 ký tự")) {
-        setErrorMessage(t("guestProfilePasswordErrorMinLength"));
+      const msg = err?.message || ''
+      if (msg.includes('current_password_incorrect')) {
+        setErrorMessage(t('guestProfilePasswordErrorCurrentIncorrect'))
+      } else if (msg.includes('new_password_must_differ')) {
+        setErrorMessage(t('guestProfilePasswordErrorMustDiffer'))
+      } else if (msg.includes('at least 8 characters') || msg.includes('8 ký tự')) {
+        setErrorMessage(t('guestProfilePasswordErrorMinLength'))
       } else {
-        setErrorMessage(msg || t("guestProfilePasswordErrorGeneral"));
+        setErrorMessage(msg || t('guestProfilePasswordErrorGeneral'))
       }
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -75,48 +75,40 @@ export default function SecurityTab() {
       {passwordSavedSuccess && (
         <Form.Alert
           variant="success"
-          message={t("guestProfilePasswordSuccess")}
+          message={t('guestProfilePasswordSuccess')}
           onClose={() => setPasswordSavedSuccess(false)}
         />
       )}
 
       {/* Password Error Alert */}
       {errorMessage && (
-        <Form.Alert
-          variant="error"
-          message={errorMessage}
-          onClose={() => setErrorMessage(null)}
-        />
+        <Form.Alert variant="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
       )}
 
       {/* Password Change Form using base Form component */}
-      <Form
-        variant="card"
-        onSubmit={handleSavePassword}
-        isLoading={isSubmitting}
-      >
+      <Form variant="card" onSubmit={handleSavePassword} isLoading={isSubmitting}>
         <Form.Header
-          title={t("guestProfilePasswordSectionTitle")}
-          description={t("guestProfilePasswordSectionSub")}
+          title={t('guestProfilePasswordSectionTitle')}
+          description={t('guestProfilePasswordSectionSub')}
           actions={
             <Link
               href="/forgot-password"
               className="text-xs text-zinc-400 font-bold inline-flex items-center gap-1 underline transition-colors"
             >
-              <span>{t("guestProfilePasswordForgotLink")}</span>
+              <span>{t('guestProfilePasswordForgotLink')}</span>
               <ExternalLink className="w-3 h-3" />
             </Link>
           }
         />
 
         <TextInput
-          label={t("guestProfilePasswordCurrentLabel")}
-          type={showCurrentPassword ? "text" : "password"}
+          label={t('guestProfilePasswordCurrentLabel')}
+          type={showCurrentPassword ? 'text' : 'password'}
           required
           disabled={isSubmitting}
           placeholder="••••••••"
           value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          onChange={e => setCurrentPassword(e.target.value)}
           rightIcon={
             <Button
               type="button"
@@ -133,14 +125,14 @@ export default function SecurityTab() {
 
         <div className="space-y-1.5">
           <TextInput
-            label={t("guestProfilePasswordNewLabel")}
-            type={showNewPassword ? "text" : "password"}
+            label={t('guestProfilePasswordNewLabel')}
+            type={showNewPassword ? 'text' : 'password'}
             required
             disabled={isSubmitting}
             minLength={8}
             placeholder="••••••••"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={e => setNewPassword(e.target.value)}
             rightIcon={
               <Button
                 type="button"
@@ -161,32 +153,34 @@ export default function SecurityTab() {
               <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    newPassword.length >= 10 && /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword)
-                      ? "bg-emerald-500 w-full"
+                    newPassword.length >= 10 &&
+                    /[A-Z]/.test(newPassword) &&
+                    /[0-9]/.test(newPassword)
+                      ? 'bg-emerald-500 w-full'
                       : newPassword.length >= 8
-                        ? "bg-amber-500 w-2/3"
-                        : "bg-rose-500 w-1/3"
+                        ? 'bg-amber-500 w-2/3'
+                        : 'bg-rose-500 w-1/3'
                   }`}
                 />
               </div>
               <span className="text-[10px] font-extrabold text-zinc-500 whitespace-nowrap">
                 {newPassword.length >= 10 && /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword)
-                  ? t("guestProfilePasswordStrengthStrong")
-                  : t("guestProfilePasswordStrengthMedium")}
+                  ? t('guestProfilePasswordStrengthStrong')
+                  : t('guestProfilePasswordStrengthMedium')}
               </span>
             </div>
           )}
         </div>
 
         <TextInput
-          label={t("guestProfilePasswordConfirmLabel")}
-          type={showConfirmPassword ? "text" : "password"}
+          label={t('guestProfilePasswordConfirmLabel')}
+          type={showConfirmPassword ? 'text' : 'password'}
           required
           disabled={isSubmitting}
           minLength={8}
           placeholder="••••••••"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={e => setConfirmPassword(e.target.value)}
           rightIcon={
             <Button
               type="button"
@@ -209,10 +203,10 @@ export default function SecurityTab() {
             className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25"
             rightIcon={<span>&rarr;</span>}
           >
-            {t("guestProfilePasswordBtnSave")}
+            {t('guestProfilePasswordBtnSave')}
           </Button>
         </Form.Actions>
       </Form>
     </div>
-  );
+  )
 }

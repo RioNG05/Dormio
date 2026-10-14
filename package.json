@@ -19,6 +19,8 @@
 		"lint": "pnpm lint:be && pnpm lint:fe",
 		"lint:be": "pnpm --filter backend lint",
 		"lint:fe": "pnpm --filter frontend lint",
+		"format": "prettier --write \"backend/src/**/*.ts\" \"backend/test/**/*.ts\" \"frontend/src/**/*.{ts,tsx,js,jsx}\"",
+		"format:check": "prettier --check \"backend/src/**/*.ts\" \"backend/test/**/*.ts\" \"frontend/src/**/*.{ts,tsx,js,jsx}\"",
 		"db:generate": "pnpm --filter backend db:generate",
 		"db:migrate": "pnpm --filter backend db:migrate",
 		"db:migrate:prod": "pnpm --filter backend db:migrate:deploy",
@@ -37,6 +39,7 @@
 		"docker:clean": "docker compose down -v"
 	},
 	"devDependencies": {
-		"concurrently": "^9.0.0"
+		"concurrently": "^9.0.0",
+		"prettier": "^3.9.6"
 	}
 }

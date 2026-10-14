@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsDateString, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
 
 export class CreateAdhocScheduleDto {
   @ApiProperty({
@@ -8,7 +8,7 @@ export class CreateAdhocScheduleDto {
   })
   @IsUUID('4', { message: 'ID nhân viên không hợp lệ' })
   @IsNotEmpty({ message: 'Cần chọn nhân viên' })
-  employeeId: string;
+  employeeId: string
 
   @ApiProperty({
     description: 'Shift UUID',
@@ -16,14 +16,14 @@ export class CreateAdhocScheduleDto {
   })
   @IsUUID('4', { message: 'ID ca làm việc không hợp lệ' })
   @IsNotEmpty({ message: 'Cần chọn ca làm việc' })
-  shiftId: string;
+  shiftId: string
 
   @ApiProperty({
     description: 'Work date (YYYY-MM-DD)',
     example: '2026-09-16',
   })
   @IsDateString({}, { message: 'Ngày làm việc không hợp lệ (YYYY-MM-DD)' })
-  workDate: string;
+  workDate: string
 
   @ApiPropertyOptional({
     description: 'Optional note or specific duty for this shift',
@@ -31,5 +31,5 @@ export class CreateAdhocScheduleDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }
