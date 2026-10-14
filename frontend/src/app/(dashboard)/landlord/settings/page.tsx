@@ -1,8 +1,22 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Building2, Save, RotateCcw, Loader2, Home, MapPin, FileText } from 'lucide-react'
+import {
+  Building2,
+  Save,
+  RotateCcw,
+  Loader2,
+  Home,
+  MapPin,
+  Zap,
+  Bed,
+  CheckCircle2,
+  ExternalLink,
+  Phone,
+  Layers,
+} from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { useTranslations } from '@/context/LanguageContext'
@@ -26,7 +40,9 @@ import {
 } from '@/services/vietnam-address.service'
 import {
   getBoardingHouseById,
+  getMyBoardingHouses,
   updateBoardingHouse,
+  type BoardingHouse,
   type UpdateBoardingHousePayload,
 } from '@/services/boarding-house.service'
 
@@ -64,11 +80,19 @@ export default function LandlordSettingsPage() {
   const router = useRouter()
   const t = useTranslations('landlord')
   const { toast } = useToast()
-  const { buildings, activeBuildingId, selectBuilding, refreshBuildings, isBuildingsLoading } =
-    useAuth()
+  const {
+    user,
+    buildings,
+    activeBuildingId,
+    activeBuilding,
+    selectBuilding,
+    refreshBuildings,
+    isBuildingsLoading,
+  } = useAuth()
 
-  // Selected building to edit
+  // Selected building to edit & full loaded details
   const [selectedHouseId, setSelectedHouseId] = useState<string>('')
+  const [loadedHouse, setLoadedHouse] = useState<BoardingHouse | null>(null)
   const [formData, setFormData] = useState<HouseFormData>(INITIAL_FORM_DATA)
   const [originalData, setOriginalData] = useState<HouseFormData | null>(null)
 
@@ -122,30 +146,56 @@ export default function LandlordSettingsPage() {
     let isMounted = true
     setIsLoadingHouse(true)
 
+    // Helper to populate form state from a BoardingHouse object
+    const populateHouseData = (house: BoardingHouse) => {
+      const builtAtFormatted = house.builtAt ? house.builtAt.split('T')[0] : ''
+      const populated: HouseFormData = {
+        name: house.name || '',
+        description: house.description || '',
+        country: house.country || 'Việt Nam',
+        province: house.province || '',
+        city: house.city || '',
+        district: house.district || '',
+        ward: house.ward || '',
+        street: house.street || '',
+        houseNumber: house.houseNumber || '',
+        totalFloor: house.totalFloor ? String(house.totalFloor) : '',
+        builtAt: builtAtFormatted,
+        thumbnail: house.thumbnail || '',
+      }
+      setLoadedHouse(house)
+      setFormData(populated)
+      setOriginalData(populated)
+    }
+
     getBoardingHouseById(selectedHouseId)
       .then(house => {
         if (!isMounted) return
-        const builtAtFormatted = house.builtAt ? house.builtAt.split('T')[0] : ''
-        const populated: HouseFormData = {
-          name: house.name || '',
-          description: house.description || '',
-          country: house.country || 'Việt Nam',
-          province: house.province || '',
-          city: house.city || '',
-          district: house.district || '',
-          ward: house.ward || '',
-          street: house.street || '',
-          houseNumber: house.houseNumber || '',
-          totalFloor: house.totalFloor ? String(house.totalFloor) : '',
-          builtAt: builtAtFormatted,
-          thumbnail: house.thumbnail || '',
+        if (house && house.id) {
+          populateHouseData(house)
+        } else {
+          throw new Error('Invalid house response')
         }
-        setFormData(populated)
-        setOriginalData(populated)
       })
       .catch(err => {
-        console.error('Failed to fetch boarding house details:', err)
-        toast.error(t('landlordSettingsSaveError'))
+        console.warn('Direct getBoardingHouseById failed, falling back to list:', err)
+        // Fallback: search within getMyBoardingHouses
+        getMyBoardingHouses({ silent: true })
+          .then(list => {
+            if (!isMounted) return
+            const matched = list.find(h => h.id === selectedHouseId)
+            if (matched) {
+              populateHouseData(matched)
+            } else if (list.length > 0) {
+              populateHouseData(list[0])
+            }
+          })
+          .catch(fallbackErr => {
+            console.error('Failed to fallback load boarding house:', fallbackErr)
+            if (isMounted) {
+              toast.error(t('landlordSettingsSaveError'))
+            }
+          })
       })
       .finally(() => {
         if (isMounted) {
@@ -266,9 +316,12 @@ export default function LandlordSettingsPage() {
         thumbnail: formData.thumbnail || undefined,
       }
 
-      await updateBoardingHouse(selectedHouseId, payload)
+      const updated = await updateBoardingHouse(selectedHouseId, payload)
       await refreshBuildings()
 
+      if (updated && updated.id) {
+        setLoadedHouse(prev => (prev ? { ...prev, ...updated } : updated))
+      }
       setOriginalData(formData)
       toast.success(t('landlordSettingsSavedSuccess'))
     } catch (error) {
@@ -310,6 +363,11 @@ export default function LandlordSettingsPage() {
     )
   }
 
+  const roomCount = loadedHouse?.totalRooms ?? activeBuilding?.totalRooms ?? 0
+  const servicesList = loadedHouse?.services ?? []
+  const roomTypesList = loadedHouse?.roomTypes ?? []
+  const contactPhone = user?.phone || '0988777666'
+
   return (
     <div className="space-y-8 max-w-4xl mx-auto pb-12">
       {/* Page Header */}
@@ -340,6 +398,103 @@ export default function LandlordSettingsPage() {
             </SelectInput>
           </div>
         )}
+      </div>
+
+      {/* Quick Overview of Existing Property System Information */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Status Card */}
+        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+              {t('landlordSettingsTabBuildingInfo')}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {t('landlordSettingsStatusActive')}
+            </span>
+          </div>
+          <Text as="p" className="text-base font-black text-zinc-900 truncate">
+            {formData.name || activeBuilding?.name || t('landlordSettingsTabBuildingInfo')}
+          </Text>
+          <Text as="p" size="xs" color="secondary" className="truncate">
+            {formData.province || 'Việt Nam'}
+          </Text>
+        </div>
+
+        {/* Total Rooms Card */}
+        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+              {t('landlordSettingsTotalRoomsLabel')}
+            </span>
+            <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+              <Bed className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <Text as="p" className="text-2xl font-black text-zinc-900">
+              {roomCount}
+            </Text>
+            <Text as="span" size="xs" color="secondary">
+              {t('landlordSettingsTotalRoomsSuffix')}
+            </Text>
+          </div>
+          <Link
+            href="/landlord/rooms"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#2AC1BC] hover:underline"
+          >
+            {t('landlordSettingsManageRoomsBtn')} <ExternalLink className="w-3 h-3" />
+          </Link>
+        </div>
+
+        {/* Services Card */}
+        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+              {t('landlordServicesTitle')}
+            </span>
+            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+              <Zap className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <Text as="p" className="text-2xl font-black text-zinc-900">
+              {servicesList.length}
+            </Text>
+            <Text as="span" size="xs" color="secondary">
+              dịch vụ
+            </Text>
+          </div>
+          <Link
+            href="/landlord/services"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#2AC1BC] hover:underline"
+          >
+            {t('landlordSettingsManageServicesBtn')} <ExternalLink className="w-3 h-3" />
+          </Link>
+        </div>
+
+        {/* Room Types Card */}
+        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+              {t('landlordSettingsRoomTypesSection')}
+            </span>
+            <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600">
+              <Layers className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <Text as="p" className="text-2xl font-black text-zinc-900">
+              {roomTypesList.length}
+            </Text>
+            <Text as="span" size="xs" color="secondary">
+              loại phòng
+            </Text>
+          </div>
+          <Text as="p" size="xs" color="secondary" className="truncate">
+            {formData.totalFloor ? `${formData.totalFloor} tầng` : 'Nhiều tầng'}
+          </Text>
+        </div>
       </div>
 
       {isLoadingHouse ? (
@@ -379,6 +534,16 @@ export default function LandlordSettingsPage() {
                 />
               </div>
 
+              {/* Contact Phone (Prefilled with Landlord Phone) */}
+              <TextInput
+                label={t('landlordSettingsPhoneContact')}
+                helperText="Số hotline / liên hệ hiển thị cho khách thuê"
+                value={contactPhone}
+                readOnly
+                disabled
+                leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
+              />
+
               {/* Total Floors */}
               <NumberInput
                 label={t('landlordSetupTotalFloorLabel')}
@@ -392,13 +557,15 @@ export default function LandlordSettingsPage() {
               />
 
               {/* Built At Date */}
-              <TextInput
-                type="date"
-                label={t('landlordSetupBuiltAtLabel')}
-                value={formData.builtAt}
-                onChange={e => handleUpdateField('builtAt', e.target.value)}
-                disabled={isSaving}
-              />
+              <div className="md:col-span-2">
+                <TextInput
+                  type="date"
+                  label={t('landlordSetupBuiltAtLabel')}
+                  value={formData.builtAt}
+                  onChange={e => handleUpdateField('builtAt', e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
 
               {/* Cover Photo Upload */}
               <div className="md:col-span-2">
@@ -524,6 +691,96 @@ export default function LandlordSettingsPage() {
                 </div>
               </Form.Grid>
             </div>
+          </Form.Section>
+
+          {/* Section 3: Existing Services & Utilities */}
+          <Form.Section
+            icon={<Zap className="w-4 h-4" />}
+            title={t('landlordSettingsServicesSection')}
+            description={t('landlordSettingsServicesDesc')}
+            actions={
+              <Link href="/landlord/services">
+                <Button type="button" variant="outline" size="sm">
+                  {t('landlordSettingsManageServicesBtn')}
+                </Button>
+              </Link>
+            }
+            divider
+          >
+            {servicesList.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center">
+                <Text variant="caption" color="secondary">
+                  {t('landlordSettingsNoServices')}
+                </Text>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {servicesList.map(service => (
+                  <div
+                    key={service.id}
+                    className="p-3.5 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-sm text-zinc-900 truncate">
+                        {service.name}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          service.isMetered
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {service.isMetered
+                          ? t('landlordSettingsMeteredBadge')
+                          : t('landlordSettingsFlatBadge')}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between text-xs">
+                      <span className="text-zinc-500 font-medium">Đơn giá:</span>
+                      <span className="font-extrabold text-[#2AC1BC]">
+                        {Number(service.price).toLocaleString('vi-VN')} đ / {service.unit}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Form.Section>
+
+          {/* Section 4: Existing Room Types */}
+          <Form.Section
+            icon={<Layers className="w-4 h-4" />}
+            title={t('landlordSettingsRoomTypesSection')}
+            description={t('landlordSettingsRoomTypesDesc')}
+            divider
+          >
+            {roomTypesList.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center">
+                <Text variant="caption" color="secondary">
+                  {t('landlordSettingsNoRoomTypes')}
+                </Text>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {roomTypesList.map(rt => (
+                  <div
+                    key={rt.id}
+                    className="p-3.5 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 space-y-1"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-purple-500" />
+                      <span className="font-bold text-sm text-zinc-900">{rt.name}</span>
+                    </div>
+                    {rt.description && (
+                      <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed pl-4">
+                        {rt.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </Form.Section>
 
           {/* Form Actions */}
