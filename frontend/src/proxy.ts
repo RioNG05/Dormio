@@ -14,10 +14,46 @@ export function proxy(request: NextRequest) {
   const role = request.cookies.get('dormio_user_role')?.value;
   const isLoggedIn = request.cookies.get('dormio_logged_in')?.value === 'true';
 
-  // 0. Protected checkout route /pricing/**/purchase and /rooms/:id/deposit (requires login)
+  // 0. Redirect hidden rental marketplace routes (BHRP) on frontend
   if (
-    (pathname.startsWith('/pricing/') && pathname.includes('/purchase')) ||
-    (pathname.startsWith('/rooms/') && pathname.endsWith('/deposit'))
+    pathname === '/rooms' ||
+    pathname.startsWith('/rooms/') ||
+    pathname === '/saved-posts' ||
+    pathname.startsWith('/saved-posts/') ||
+    pathname === '/compare' ||
+    pathname.startsWith('/compare/') ||
+    pathname === '/posts' ||
+    pathname.startsWith('/posts/') ||
+    pathname === '/posters' ||
+    pathname.startsWith('/posters/')
+  ) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  if (
+    pathname === '/pricing/rental-platform' ||
+    pathname.startsWith('/pricing/rental-platform/')
+  ) {
+    return NextResponse.redirect(new URL('/pricing', request.url));
+  }
+
+  if (
+    pathname === '/landlord/listings' ||
+    pathname.startsWith('/landlord/listings/')
+  ) {
+    return NextResponse.redirect(new URL('/landlord', request.url));
+  }
+
+  if (
+    pathname === '/admin/blogs' ||
+    pathname.startsWith('/admin/blogs/')
+  ) {
+    return NextResponse.redirect(new URL('/admin', request.url));
+  }
+
+  // 1. Protected checkout route /pricing/**/purchase (requires login)
+  if (
+    pathname.startsWith('/pricing/') && pathname.includes('/purchase')
   ) {
     if (!isLoggedIn) {
       const loginUrl = new URL('/login', request.url);
@@ -87,5 +123,9 @@ export const config = {
     '/staff/:path*',
     '/pricing/:path*',
     '/rooms/:path*',
+    '/saved-posts/:path*',
+    '/compare/:path*',
+    '/posts/:path*',
+    '/posters/:path*',
   ],
 };

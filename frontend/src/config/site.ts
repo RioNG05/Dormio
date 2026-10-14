@@ -1,6 +1,6 @@
 export const siteConfig = {
-  name: "Dormio - Nền tảng Quản lý & Cho thuê Phòng trọ",
-  description: "Giải pháp quản lý phòng trọ chuyên nghiệp, tìm phòng nhanh chóng, trải nghiệm mượt mà.",
+  name: "Dormio - Hệ thống Quản lý Nhà trọ Thông minh",
+  description: "Giải pháp chuyển đổi số toàn diện cho chủ trọ: quản lý phòng, hợp đồng điện tử, hóa đơn VietQR gạch nợ tự động.",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   ogImage: "https://dormio.vn/og.jpg",
   links: {
