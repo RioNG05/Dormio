@@ -4,9 +4,27 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Building, CreditCard, ShieldCheck, ChevronDown, ArrowRight, Banknote, Sparkles, Star, Zap } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Building,
+  CreditCard,
+  ShieldCheck,
+  ChevronDown,
+  ArrowRight,
+  Banknote,
+  Sparkles,
+  Star,
+  Zap,
+  Receipt,
+  FileText,
+  Users,
+  BarChart3,
+  CheckCircle2,
+} from "lucide-react";
 import { formatVND } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { FEATURE_FLAGS } from "@/config/features";
 import { postService, type PublicPostListing } from "@/services/post.service";
 
 // Helper: build address string from structured fields
@@ -23,13 +41,14 @@ export default function HomePage() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<"phong" | "studio" | "nguyencan">("phong");
-  const [processTab, setProcessTab] = useState<"tenant" | "landlord">("tenant");
+  const [processTab, setProcessTab] = useState<"tenant" | "landlord">("landlord");
   const [searchQuery, setSearchQuery] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
   const [selectedCityFilter, setSelectedCityFilter] = useState<"all" | "hcm" | "hanoi">("all");
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (!FEATURE_FLAGS.ENABLE_BHRP) return;
     const params = new URLSearchParams();
     const trimmed = searchQuery.trim();
     if (trimmed) {
@@ -51,10 +70,15 @@ export default function HomePage() {
   };
 
   const [featuredRooms, setFeaturedRooms] = useState<PublicPostListing[]>([]);
-  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(FEATURE_FLAGS.ENABLE_BHRP);
 
-  // Fetch real featured rooms from backend API based on selected city filter
+  // Fetch real featured rooms from backend API if BHRP is enabled
   useEffect(() => {
+    if (!FEATURE_FLAGS.ENABLE_BHRP) {
+      setIsLoadingFeatured(false);
+      return;
+    }
+
     let isMounted = true;
     setIsLoadingFeatured(true);
 
@@ -121,100 +145,137 @@ export default function HomePage() {
             {t("guestHomeSubtitle")}
           </p>
 
-          {/* Floating Search Card Widget with Premium Shadows */}
-          <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-zinc-900 border border-white/80 animate-in fade-in duration-700">
-
-            {/* Category Tabs */}
-            <div className="flex items-center justify-center sm:justify-start gap-2 mb-3.5 border-b border-zinc-100 pb-3">
-              <button
-                onClick={() => setActiveTab("phong")}
-                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "phong"
-                  ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                  : "text-zinc-500 font-bold hover:text-zinc-900"
-                  }`}
-              >
-                {t("guestHomeTabRent")}
-              </button>
-              <button
-                onClick={() => setActiveTab("studio")}
-                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "studio"
-                  ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                  : "text-zinc-500 font-bold hover:text-zinc-900"
-                  }`}
-              >
-                {t("guestHomeTabStudio")}
-              </button>
-              <button
-                onClick={() => setActiveTab("nguyencan")}
-                className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "nguyencan"
-                  ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
-                  : "text-zinc-500 font-bold hover:text-zinc-900"
-                  }`}
-              >
-                {t("guestHomeTabWhole")}
-              </button>
-            </div>
-
-            {/* Inputs Row */}
-            <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end">
-              <div className="sm:col-span-5 space-y-1">
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">{t("guestHomeKeywordLabel")}</label>
-                <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <input
-                    type="text"
-                    placeholder={t("guestHomeKeywordPlaceholder")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleSearch();
-                      }
-                    }}
-                    className="w-full pl-9 pr-3 h-11 text-xs font-semibold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-4 space-y-1">
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">{t("guestHomePriceLabel")}</label>
-                <div className="relative">
-                  <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <select
-                    value={priceFilter}
-                    onChange={(e) => setPriceFilter(e.target.value)}
-                    className="w-full pl-9 pr-8 h-11 text-xs font-bold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all cursor-pointer"
-                  >
-                    <option value="">{t("guestHomeAllPrices")}</option>
-                    <option value="under3">{t("guestHomeUnder3m")}</option>
-                    <option value="3to5">{t("guestHomeFrom3to5m")}</option>
-                    <option value="above5">{t("guestHomeAbove5m")}</option>
-                  </select>
-                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
-                </div>
-              </div>
-
-              <div className="sm:col-span-3 space-y-1">
-                <span className="text-[10px] font-black text-transparent select-none uppercase tracking-wider block hidden sm:block">&nbsp;</span>
+          {/* Hero Content / Actions */}
+          {FEATURE_FLAGS.ENABLE_BHRP ? (
+            /* Floating Search Card Widget with Premium Shadows */
+            <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-zinc-900 border border-white/80 animate-in fade-in duration-700">
+              {/* Category Tabs */}
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-3.5 border-b border-zinc-100 pb-3">
                 <button
-                  type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#FF6B35]/25 flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  onClick={() => setActiveTab("phong")}
+                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "phong"
+                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                    : "text-zinc-500 font-bold hover:text-zinc-900"
+                    }`}
                 >
-                  <Search className="w-3.5 h-3.5" /> {t("guestHomeSearchNow")}
+                  {t("guestHomeTabRent")}
+                </button>
+                <button
+                  onClick={() => setActiveTab("studio")}
+                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "studio"
+                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                    : "text-zinc-500 font-bold hover:text-zinc-900"
+                    }`}
+                >
+                  {t("guestHomeTabStudio")}
+                </button>
+                <button
+                  onClick={() => setActiveTab("nguyencan")}
+                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${activeTab === "nguyencan"
+                    ? "bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105"
+                    : "text-zinc-500 font-bold hover:text-zinc-900"
+                    }`}
+                >
+                  {t("guestHomeTabWhole")}
                 </button>
               </div>
-            </form>
-          </div>
 
-          {/* Action Buttons Below Search */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-            <Link href="#features">
-              <button className="px-7 py-3 bg-zinc-900/80 hover:bg-[#FF6B35] text-white font-black text-xs sm:text-sm rounded-full border border-zinc-700/80 hover:border-[#FF6B35] backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300 cursor-pointer">
-                {t("guestHomeExploreBtn")}
-              </button>
-            </Link>
-          </div>
+              {/* Inputs Row */}
+              <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end">
+                <div className="sm:col-span-5 space-y-1">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">{t("guestHomeKeywordLabel")}</label>
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                      type="text"
+                      placeholder={t("guestHomeKeywordPlaceholder")}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSearch();
+                        }
+                      }}
+                      className="w-full pl-9 pr-3 h-11 text-xs font-semibold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-4 space-y-1">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">{t("guestHomePriceLabel")}</label>
+                  <div className="relative">
+                    <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <select
+                      value={priceFilter}
+                      onChange={(e) => setPriceFilter(e.target.value)}
+                      className="w-full pl-9 pr-8 h-11 text-xs font-bold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all cursor-pointer"
+                    >
+                      <option value="">{t("guestHomeAllPrices")}</option>
+                      <option value="under3">{t("guestHomeUnder3m")}</option>
+                      <option value="3to5">{t("guestHomeFrom3to5m")}</option>
+                      <option value="above5">{t("guestHomeAbove5m")}</option>
+                    </select>
+                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-3 space-y-1">
+                  <span className="text-[10px] font-black text-transparent select-none uppercase tracking-wider block hidden sm:block">&nbsp;</span>
+                  <button
+                    type="submit"
+                    className="w-full h-11 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#FF6B35]/25 flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  >
+                    <Search className="w-3.5 h-3.5" /> {t("guestHomeSearchNow")}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="mt-8 sm:mt-10 flex flex-col items-center gap-6 w-full max-w-2xl animate-in fade-in duration-700">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
+                <Link href="/register" className="w-full sm:w-auto">
+                  <button className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] text-white font-extrabold text-sm rounded-full shadow-lg shadow-[#2AC1BC]/25 hover:shadow-[#2AC1BC]/40 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    {t("guestHomeTrialBtn")}
+                  </button>
+                </Link>
+                <Link href="/pricing" className="w-full sm:w-auto">
+                  <button className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white font-extrabold text-sm rounded-full border border-white/20 hover:border-white/40 backdrop-blur-md hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
+                    {t("guestFeaturesViewPricingBtn")}
+                    <ArrowRight className="w-4 h-4 text-[#2AC1BC]" />
+                  </button>
+                </Link>
+              </div>
+
+              {/* Value Badges */}
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-zinc-300 font-semibold">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
+                  <span>{t("guestHomeBadgeFreeTrial")}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
+                  <span>{t("guestHomeBadgeNoCard")}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
+                  <span>{t("guestHomeBadgeSupport")}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons Below Search (only when BHRP enabled) */}
+          {FEATURE_FLAGS.ENABLE_BHRP && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
+              <Link href="#features">
+                <button className="px-7 py-3 bg-zinc-900/80 hover:bg-[#FF6B35] text-white font-black text-xs sm:text-sm rounded-full border border-zinc-700/80 hover:border-[#FF6B35] backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300 cursor-pointer">
+                  {t("guestHomeExploreBtn")}
+                </button>
+              </Link>
+            </div>
+          )}
 
           {/* Social Proof Stars */}
           <div className="flex items-center justify-center gap-2 mt-5 sm:mt-6 text-xs text-zinc-400 font-medium">
@@ -244,31 +305,33 @@ export default function HomePage() {
             {t("guestHomeProcessSubtitle")}
           </p>
 
-          {/* Interactive Role Switcher Pill Tabs (NO WORD WRAPPING / CHỐNG RỚT CHỮ) */}
-          <div className="inline-flex items-center p-1 sm:p-1.5 bg-white border border-zinc-200/80 rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
-            <button
-              onClick={() => setProcessTab("tenant")}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "tenant"
-                ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
-                : "text-zinc-500 hover:text-zinc-900"
-                }`}
-            >
-              {t("guestHomeForTenant")}
-            </button>
-            <button
-              onClick={() => setProcessTab("landlord")}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "landlord"
-                ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
-                : "text-zinc-500 hover:text-zinc-900"
-                }`}
-            >
-              {t("guestHomeForLandlord")}
-            </button>
-          </div>
+          {/* Interactive Role Switcher Pill Tabs (only when BHRP enabled) */}
+          {FEATURE_FLAGS.ENABLE_BHRP && (
+            <div className="inline-flex items-center p-1 sm:p-1.5 bg-white border border-zinc-200/80 rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
+              <button
+                onClick={() => setProcessTab("tenant")}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "tenant"
+                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
+                  : "text-zinc-500 hover:text-zinc-900"
+                  }`}
+              >
+                {t("guestHomeForTenant")}
+              </button>
+              <button
+                onClick={() => setProcessTab("landlord")}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${processTab === "landlord"
+                  ? "bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25"
+                  : "text-zinc-500 hover:text-zinc-900"
+                  }`}
+              >
+                {t("guestHomeForLandlord")}
+              </button>
+            </div>
+          )}
 
           {/* 3 Step Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left">
-            {processTab === "tenant" ? (
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left ${!FEATURE_FLAGS.ENABLE_BHRP ? "mt-10" : ""}`}>
+            {processTab === "tenant" && FEATURE_FLAGS.ENABLE_BHRP ? (
               <>
                 {/* Step 01 */}
                 <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
@@ -368,96 +431,173 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Room Grid / Loading Skeleton / Empty State */}
-        {isLoadingFeatured ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="rounded-3xl bg-white shadow-sm border border-zinc-200 overflow-hidden animate-pulse">
-                <div className="aspect-video w-full bg-zinc-200" />
-                <div className="p-6 space-y-3">
-                  <div className="h-5 bg-zinc-200 rounded w-3/4" />
-                  <div className="h-3 bg-zinc-200 rounded w-1/2" />
-                  <div className="pt-4 border-t border-zinc-100 flex justify-between items-center">
-                    <div className="h-6 w-24 bg-zinc-200 rounded" />
-                    <div className="h-8 w-24 bg-zinc-200 rounded-xl" />
+        {FEATURE_FLAGS.ENABLE_BHRP ? (
+          <>
+            {/* Room Grid / Loading Skeleton / Empty State */}
+            {isLoadingFeatured ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="rounded-3xl bg-white shadow-sm border border-zinc-200 overflow-hidden animate-pulse">
+                    <div className="aspect-video w-full bg-zinc-200" />
+                    <div className="p-6 space-y-3">
+                      <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                      <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                      <div className="pt-4 border-t border-zinc-100 flex justify-between items-center">
+                        <div className="h-6 w-24 bg-zinc-200 rounded" />
+                        <div className="h-8 w-24 bg-zinc-200 rounded-xl" />
+                      </div>
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : featuredRooms.length === 0 ? (
+              <div className="rounded-3xl bg-zinc-50 border border-zinc-200 p-12 text-center space-y-3">
+                <p className="text-zinc-500 font-bold text-sm">
+                  Hiện chưa có phòng trọ nào được đăng tại khu vực này.
+                </p>
+                <Link href="/rooms">
+                  <button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                    Khám phá tất cả phòng trọ
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {featuredRooms.map((room) => {
+                  const image = room.images?.[0]?.url || "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
+                  const address = buildAddressString(room);
+                  return (
+                    <div
+                      key={room.id}
+                      className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm border border-zinc-200 hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
+                        <img
+                          src={image}
+                          alt={room.title}
+                          className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white shadow-sm flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestHomeVerified")}
+                        </div>
+                        {room.room?.roomTypeName && (
+                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-zinc-700 shadow-sm">
+                            {room.room.roomTypeName}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-1 flex-col p-6 gap-3">
+                        <h3 className="font-extrabold text-base text-zinc-900 leading-snug line-clamp-2 group-hover:text-[#2AC1BC] transition-colors">
+                          {room.title}
+                        </h3>
+                        <div className="flex items-center text-xs text-zinc-500 font-semibold gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                          <span className="truncate">{address || "Việt Nam"}</span>
+                        </div>
+
+                        <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
+                          <div>
+                            <span className="text-lg font-black text-rose-600">
+                              {formatVND(room.depositAmount)}
+                            </span>
+                            <span className="text-xs text-zinc-400 font-normal">{t("guestHomeMonth")}</span>
+                          </div>
+                          <Link href={`/rooms/${room.id}`}>
+                            <button className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                              {t("guestHomeViewDetail")} <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {featuredRooms.length > 0 && (
+              <div className="mt-12 text-center">
+                <Link href="/rooms">
+                  <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
+                    Khám phá thêm phòng trọ trên sàn <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  </button>
+                </Link>
+              </div>
+            )}
+          </>
+        ) : (
+          /* BHMS Core Features Grid */
+          <div className="space-y-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Feature 1 */}
+              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Receipt className="w-7 h-7" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
+                    {t("guestHomeBhmsFeature1Title")}
+                  </h3>
+                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
+                    {t("guestHomeBhmsFeature1Desc")}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : featuredRooms.length === 0 ? (
-          <div className="rounded-3xl bg-zinc-50 border border-zinc-200 p-12 text-center space-y-3">
-            <p className="text-zinc-500 font-bold text-sm">
-              Hiện chưa có phòng trọ nào được đăng tại khu vực này.
-            </p>
-            <Link href="/rooms">
-              <button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                Khám phá tất cả phòng trọ
-              </button>
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredRooms.map((room) => {
-              const image = room.images?.[0]?.url || "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
-              const address = buildAddressString(room);
-              return (
-                <div
-                  key={room.id}
-                  className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm border border-zinc-200 hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
-                    <img
-                      src={image}
-                      alt={room.title}
-                      className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white shadow-sm flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t("guestHomeVerified")}
-                    </div>
-                    {room.room?.roomTypeName && (
-                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-zinc-700 shadow-sm">
-                        {room.room.roomTypeName}
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="flex flex-1 flex-col p-6 gap-3">
-                    <h3 className="font-extrabold text-base text-zinc-900 leading-snug line-clamp-2 group-hover:text-[#2AC1BC] transition-colors">
-                      {room.title}
-                    </h3>
-                    <div className="flex items-center text-xs text-zinc-500 font-semibold gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                      <span className="truncate">{address || "Việt Nam"}</span>
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
-                      <div>
-                        <span className="text-lg font-black text-rose-600">
-                          {formatVND(room.depositAmount)}
-                        </span>
-                        <span className="text-xs text-zinc-400 font-normal">{t("guestHomeMonth")}</span>
-                      </div>
-                      <Link href={`/rooms/${room.id}`}>
-                        <button className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                          {t("guestHomeViewDetail")} <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </Link>
-                    </div>
-                  </div>
+              {/* Feature 2 */}
+              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileText className="w-7 h-7" />
                 </div>
-              );
-            })}
-          </div>
-        )}
+                <div className="space-y-3">
+                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#FF6B35] transition-colors">
+                    {t("guestHomeBhmsFeature2Title")}
+                  </h3>
+                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
+                    {t("guestHomeBhmsFeature2Desc")}
+                  </p>
+                </div>
+              </div>
 
-        {featuredRooms.length > 0 && (
-          <div className="mt-12 text-center">
-            <Link href="/rooms">
-              <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
-                Khám phá thêm phòng trọ trên sàn <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
-              </button>
-            </Link>
+              {/* Feature 3 */}
+              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Users className="w-7 h-7" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
+                    {t("guestHomeBhmsFeature3Title")}
+                  </h3>
+                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
+                    {t("guestHomeBhmsFeature3Desc")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 4 */}
+              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <BarChart3 className="w-7 h-7" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#FF6B35] transition-colors">
+                    {t("guestHomeBhmsFeature4Title")}
+                  </h3>
+                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
+                    {t("guestHomeBhmsFeature4Desc")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center pt-4">
+              <Link href="/pricing">
+                <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs sm:text-sm rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
+                  {t("guestHomeBhmsViewDetails")} <ArrowRight className="w-4 h-4 text-[#2AC1BC]" />
+                </button>
+              </Link>
+            </div>
           </div>
         )}
       </section>
