@@ -21,3 +21,4 @@ export class MapsConfigResponseDto {
   })
   provider: 'google' | 'osm'
 }
+
