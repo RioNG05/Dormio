@@ -23,6 +23,7 @@ import {
 
 import { useTranslations } from "@/context/LanguageContext";
 import { FEATURE_FLAGS } from "@/config/features";
+import { Button, Text } from "@/components/ui";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const tNav = useTranslations("nav");
@@ -31,6 +32,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [buildingDropdownOpen, setBuildingDropdownOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
+
+    // Sidebar scroll persistence across tab navigations & reloads
+    const desktopNavRef = useRef<HTMLElement>(null);
+    const sidebarScrollPos = useRef(0);
+
+    // Initialize scroll position from sessionStorage on mount
+    useEffect(() => {
+        try {
+            const saved = sessionStorage.getItem("dormio_desktop_sidebar_scroll");
+            if (saved && desktopNavRef.current) {
+                const top = parseInt(saved, 10);
+                if (!isNaN(top)) {
+                    desktopNavRef.current.scrollTop = top;
+                    sidebarScrollPos.current = top;
+                }
+            }
+        } catch {
+            // Ignore storage errors in restricted iframe/browser environments
+        }
+    }, []);
+
+    // When switching tabs (pathname changes), restore exact scroll position
+    useEffect(() => {
+        if (desktopNavRef.current) {
+            desktopNavRef.current.scrollTop = sidebarScrollPos.current;
+        }
+    }, [pathname]);
+
+    const handleDesktopScroll = (e: React.UIEvent<HTMLElement>) => {
+        const top = e.currentTarget.scrollTop;
+        sidebarScrollPos.current = top;
+        try {
+            sessionStorage.setItem("dormio_desktop_sidebar_scroll", top.toString());
+        } catch {
+            // Ignore storage errors
+        }
+    };
 
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
         'van-hanh': true,
@@ -122,13 +160,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: tNav("messages"), href: "/tenant/messages", icon: MessageCircle },
     ];
 
-    const NavContent = () => {
+    const renderNavContent = (
+        navRef?: React.RefObject<HTMLElement | null>,
+        onScrollHandler?: (e: React.UIEvent<HTMLElement>) => void
+    ) => {
         if (isAdmin) {
             return (
-                <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1">
-                    <div className="px-3 pb-2 text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5">
-                        <Shield className="w-3 h-3" />
-                        {tNav("adminTag")}
+                <nav
+                    ref={navRef}
+                    onScroll={onScrollHandler}
+                    className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1"
+                >
+                    <div className="px-3 pb-2 flex items-center gap-1.5">
+                        <Shield className="w-3 h-3 text-orange-600" />
+                        <Text as="span" variant="overline" color="orange">
+                            {tNav("adminTag")}
+                        </Text>
                     </div>
                     {adminMenus.map((item, idx) => {
                         const isActive = item.href === '/admin'
@@ -138,6 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Link
                                 key={idx}
                                 href={item.href}
+                                scroll={false}
                                 className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${isActive
                                     ? "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 font-bold shadow-2xs"
                                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
@@ -145,7 +193,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             >
                                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-orange-500 rounded-r-full" />}
                                 <item.icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? "text-orange-600 dark:text-orange-400" : "text-zinc-400"}`} strokeWidth={isActive ? 2.2 : 1.75} />
-                                <span>{item.name}</span>
+                                <Text as="span" size="sm" weight={isActive ? "bold" : "semibold"} color="inherit">
+                                    {item.name}
+                                </Text>
                             </Link>
                         );
                     })}
@@ -155,10 +205,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         if (isStaff) {
             return (
-                <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1">
-                    <div className="px-3 pb-2 text-[10px] font-black text-[#2AC1BC] uppercase tracking-widest flex items-center gap-1.5">
-                        <UserCircle className="w-3.5 h-3.5" />
-                        <span>{tNav("staffTag")}</span>
+                <nav
+                    ref={navRef}
+                    onScroll={onScrollHandler}
+                    className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1"
+                >
+                    <div className="px-3 pb-2 flex items-center gap-1.5">
+                        <UserCircle className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                        <Text as="span" variant="overline" color="brand">
+                            {tNav("staffTag")}
+                        </Text>
                     </div>
                     {staffMenus.map((item, idx) => {
                         const isActive = item.href === '/staff'
@@ -168,6 +224,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Link
                                 key={idx}
                                 href={item.href}
+                                scroll={false}
                                 className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${isActive
                                     ? "bg-[#2AC1BC]/10 text-[#2AC1BC] font-bold shadow-2xs"
                                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
@@ -175,7 +232,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             >
                                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-[#2AC1BC] rounded-r-full" />}
                                 <item.icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? "text-[#2AC1BC]" : "text-zinc-400"}`} strokeWidth={isActive ? 2.2 : 1.75} />
-                                <span>{item.name}</span>
+                                <Text as="span" size="sm" weight={isActive ? "bold" : "semibold"} color="inherit">
+                                    {item.name}
+                                </Text>
                             </Link>
                         );
                     })}
@@ -185,13 +244,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         if (isTenant) {
             return (
-                <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-0.5">
+                <nav
+                    ref={navRef}
+                    onScroll={onScrollHandler}
+                    className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-0.5"
+                >
                     {tenantMenus.map((item, idx) => {
                         const isActive = pathname === item.href || (item.href !== '/tenant' && pathname?.startsWith(item.href + '/'));
                         return (
                             <Link
                                 key={idx}
                                 href={item.href}
+                                scroll={false}
                                 className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
                                     ? "bg-primary/10 text-primary"
                                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
@@ -199,7 +263,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             >
                                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />}
                                 <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-zinc-400"}`} strokeWidth={isActive ? 2 : 1.75} />
-                                <span>{item.name}</span>
+                                <Text as="span" size="sm" weight={isActive ? "bold" : "medium"} color="inherit">
+                                    {item.name}
+                                </Text>
                             </Link>
                         );
                     })}
@@ -208,7 +274,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         return (
-            <nav className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar">
+            <nav
+                ref={navRef}
+                onScroll={onScrollHandler}
+                className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar"
+            >
                 {landlordMenus.map((block, idx) => {
                     // Top-level single item
                     if (!('group' in block)) {
@@ -217,6 +287,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Link
                                 key={idx}
                                 href={block.href!}
+                                scroll={false}
                                 className={`relative flex items-center gap-3 px-3 py-2 mb-3 text-sm font-semibold rounded-lg transition-colors ${isActive
                                     ? "bg-primary/10 text-primary"
                                     : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
@@ -224,7 +295,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             >
                                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />}
                                 <block.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-zinc-500"}`} strokeWidth={isActive ? 2 : 1.75} />
-                                {block.name}
+                                <Text as="span" size="sm" weight={isActive ? "bold" : "semibold"} color="inherit">
+                                    {block.name}
+                                </Text>
                             </Link>
                         );
                     }
@@ -232,16 +305,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     const isOpen = openGroups[block.key!];
                     return (
                         <div key={idx} className="mb-1">
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
                                 onClick={() => toggleGroup(block.key!)}
-                                className="flex items-center justify-between w-full px-3 py-1.5 text-[11px] font-bold text-zinc-400 uppercase tracking-widest hover:text-zinc-600 transition-colors rounded-lg"
+                                className="flex items-center justify-between w-full px-3 py-1.5 h-auto hover:bg-transparent rounded-lg text-left"
                             >
-                                <span>{block.group}</span>
+                                <Text as="span" variant="overline" weight="bold" color="subtle" className="hover:text-zinc-600 transition-colors">
+                                    {block.group}
+                                </Text>
                                 {isOpen
-                                    ? <ChevronDown className="w-3.5 h-3.5" />
-                                    : <ChevronRight className="w-3.5 h-3.5" />
+                                    ? <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                                    : <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
                                 }
-                            </button>
+                            </Button>
 
                             {isOpen && (
                                 <div className="mt-0.5 mb-3 space-y-0.5">
@@ -251,6 +328,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                             <Link
                                                 key={i}
                                                 href={item.href}
+                                                scroll={false}
                                                 className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
                                                     ? "bg-primary/10 text-primary"
                                                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
@@ -263,7 +341,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                     className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-zinc-400"}`}
                                                     strokeWidth={isActive ? 2 : 1.75}
                                                 />
-                                                <span>{item.name}</span>
+                                                <Text as="span" size="sm" weight={isActive ? "bold" : "medium"} color="inherit">
+                                                    {item.name}
+                                                </Text>
                                             </Link>
                                         );
                                     })}
@@ -346,15 +426,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [userMenuOpen]);
 
-    const BuildingSelector = () => (
+    const renderBuildingSelector = () => (
         <div className="relative px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
             <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
+                <Text as="span" variant="overline" color="subtle" className="block">
                     {tNav("managingBuilding")}
-                </span>
-                <span className="text-[10px] font-extrabold text-[#2AC1BC] bg-[#2AC1BC]/10 px-1.5 py-0.5 rounded-md">
+                </Text>
+                <Text as="span" variant="badge" color="brand" className="bg-[#2AC1BC]/10 px-1.5 py-0.5 rounded-md">
                     {tNav("managingPropertiesCount", { count: buildings.length })}
-                </span>
+                </Text>
             </div>
 
             <button
@@ -366,12 +446,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="min-w-0 flex-1 pr-1.5">
                     <div className="flex items-center gap-1.5">
                         <Building2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                        <span className="truncate">{activeBuilding?.name || tNav("selectBuildingPlaceholder")}</span>
+                        <Text as="span" size="xs" weight="black" color="default" truncate>
+                            {activeBuilding?.name || tNav("selectBuildingPlaceholder")}
+                        </Text>
                     </div>
                     {activeBuilding?.address && (
-                        <p className="text-[10px] font-medium text-zinc-400 truncate mt-0.5 pl-5">
+                        <Text size="3xs" weight="medium" color="subtle" truncate className="mt-0.5 pl-5">
                             {activeBuilding.address}
-                        </p>
+                        </Text>
                     )}
                 </div>
                 <ChevronDown
@@ -387,8 +469,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         onClick={() => setBuildingDropdownOpen(false)}
                     />
                     <div className="absolute left-2 right-2 top-full mt-1 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                        <div className="px-2 py-1 text-[10px] font-black text-zinc-400 uppercase tracking-wider flex items-center justify-between">
-                            <span>{tNav("switchProperty")}</span>
+                        <div className="px-2 py-1 flex items-center justify-between">
+                            <Text as="span" variant="overline" color="subtle">
+                                {tNav("switchProperty")}
+                            </Text>
                         </div>
                         <div className="max-h-56 overflow-y-auto space-y-1">
                             {buildings.map((b) => {
@@ -412,11 +496,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                     className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#2AC1BC]" : "text-zinc-400"
                                                         }`}
                                                 />
-                                                <span className="truncate">{b.name}</span>
+                                                <Text as="span" size="xs" weight={isActive ? "black" : "bold"} color="inherit" truncate>
+                                                    {b.name}
+                                                </Text>
                                             </div>
-                                            <p className="text-[10px] text-zinc-400 truncate mt-0.5 pl-5">
+                                            <Text size="3xs" color="subtle" truncate className="mt-0.5 pl-5">
                                                 {b.address || tNav("roomsCount", { count: b.totalRooms })}
-                                            </p>
+                                            </Text>
                                         </div>
                                         {isActive && <Check className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
                                     </button>
@@ -430,7 +516,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-black text-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-xl transition-colors"
                             >
                                 <Plus className="w-3.5 h-3.5" />
-                                <span>{tNav("addNewPropertyBtn")}</span>
+                                <Text as="span" size="xs" weight="black" color="brand">
+                                    {tNav("addNewPropertyBtn")}
+                                </Text>
                             </Link>
                         </div>
                     </div>
@@ -446,10 +534,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     * - Dashboard switcher buttons (shown/enabled only for roles the user actually has)
     * - Logout
     */
-    const UserFooter = () => {
-        // Dashboard options — each entry is shown only when the user actually has that capability.
-        // Uses live `capabilities` from AuthContext (derived from backend relationship queries),
-        // NOT user.role, so a user who is simultaneously a landlord AND a tenant sees both entries.
+    const renderUserFooter = () => {
         const dashboardOptions = [
             {
                 label: tNav("userMenuLandlordDashboard"),
@@ -507,7 +592,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="border-t border-zinc-100 p-3">
                 {/* Language toggle row */}
                 <div className="flex items-center justify-between px-2 mb-2">
-                    <span className="text-xs font-semibold text-zinc-500">{tNav("langLabel")}</span>
+                    <Text as="span" size="xs" weight="semibold" color="secondary">
+                        {tNav("langLabel")}
+                    </Text>
                     <LanguageSwitcher />
                 </div>
 
@@ -519,15 +606,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-zinc-200 rounded-2xl shadow-lg shadow-zinc-200/60 overflow-hidden z-50">
                             {/* Header */}
                             <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50/60">
-                                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">
+                                <Text variant="overline" color="subtle" className="mb-0.5">
                                     {tNav("userMenuTitle")}
-                                </p>
-                                <p className="text-sm font-bold text-zinc-900 truncate">
+                                </Text>
+                                <Text size="sm" weight="bold" color="default" truncate>
                                     {user?.name || tNav(isAdmin ? "adminRole" : isStaff ? "staffRole" : isTenant ? "tenantRole" : "landlordRole")}
-                                </p>
-                                <p className="text-xs text-zinc-400 truncate">
+                                </Text>
+                                <Text size="xs" color="subtle" truncate>
                                     {isAdmin ? tNav("adminRole") : isStaff ? tNav("staffRole") : isTenant ? tNav("tenantRole") : tNav("landlordRole")}
-                                </p>
+                                </Text>
                             </div>
 
                             {/* Profile link */}
@@ -538,7 +625,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
                                 >
                                     <UserCircle className="w-4 h-4 text-zinc-400 shrink-0" />
-                                    {tNav("userMenuProfile")}
+                                    <Text as="span" size="sm" weight="semibold" color="inherit">
+                                        {tNav("userMenuProfile")}
+                                    </Text>
                                 </Link>
                                 <Link
                                     href="/send-application"
@@ -546,7 +635,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
                                 >
                                     <FileText className="w-4 h-4 text-amber-500 shrink-0" />
-                                    {tNav("sendApplication")}
+                                    <Text as="span" size="sm" weight="semibold" color="inherit">
+                                        {tNav("sendApplication")}
+                                    </Text>
                                 </Link>
                             </div>
 
@@ -555,9 +646,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <>
                                     <div className="mx-3 my-1 h-px bg-zinc-100" />
                                     <div className="px-2 py-1.5">
-                                        <p className="px-3 pb-1 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                                        <Text variant="overline" color="subtle" className="px-3 pb-1">
                                             {tNav("userMenuSwitchDashboard")}
-                                        </p>
+                                        </Text>
                                         {availableOptions.map((opt) => {
                                             const Icon = opt.icon;
                                             return (
@@ -568,7 +659,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                     className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${opt.color} ${opt.bg}`}
                                                 >
                                                     <Icon className="w-4 h-4 shrink-0" />
-                                                    {opt.label}
+                                                    <Text as="span" size="sm" weight="semibold" color="inherit">
+                                                        {opt.label}
+                                                    </Text>
                                                     <ExternalLink className="w-3 h-3 ml-auto opacity-50 shrink-0" />
                                                 </Link>
                                             );
@@ -580,41 +673,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {/* Logout */}
                             <div className="mx-3 my-1 h-px bg-zinc-100" />
                             <div className="px-2 py-1.5">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
                                     onClick={handleLogout}
-                                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors w-full text-left cursor-pointer"
+                                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors w-full justify-start h-auto"
                                 >
                                     <LogOut className="w-4 h-4 shrink-0" />
-                                    {tNav("logout")}
-                                </button>
+                                    <Text as="span" size="sm" weight="semibold" color="danger">
+                                        {tNav("logout")}
+                                    </Text>
+                                </Button>
                             </div>
                         </div>
                     )}
 
                     {/* Clickable Profile Card (trigger) */}
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => setUserMenuOpen((prev) => !prev)}
-                        className="group flex items-center gap-3 w-full px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer text-left"
+                        className="group flex items-center gap-3 w-full px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors text-left justify-start h-auto"
                         title={tNav("viewProfileTooltip")}
                     >
                         <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${avatarColor}`}>
                             {avatarInitial}
                         </div>
-                        <div className="overflow-hidden flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-zinc-900 truncate group-hover:text-primary transition-colors">
+                        <div className="overflow-hidden flex-1 min-w-0 text-left">
+                            <Text size="sm" weight="semibold" color="default" truncate className="group-hover:text-primary transition-colors">
                                 {user?.name || (isAdmin ? tNav("adminRole") : isStaff ? tNav("staffRole") : tNav("landlordRole"))}
-                            </div>
-                            <div className="text-xs text-zinc-400 truncate">
+                            </Text>
+                            <Text size="xs" color="subtle" truncate>
                                 {isAdmin ? tNav("adminRole") : isTenant ? tNav("tenantRole") : isStaff ? tNav("staffRole") : tNav("landlordRole")}
-                            </div>
+                            </Text>
                         </div>
                         {userMenuOpen
                             ? <ChevronUp className="w-4 h-4 text-zinc-400 shrink-0" />
                             : <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0" />
                         }
-                    </button>
+                    </Button>
 
                     {/* Logout shortcut (always visible below profile card) */}
                     <Link
@@ -623,7 +720,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg hover:bg-orange-100 transition-colors"
                     >
                         <LogOut className="h-4 w-4 shrink-0" />
-                        {tNav("logout")}
+                        <Text as="span" size="sm" weight="medium" color="danger">
+                            {tNav("logout")}
+                        </Text>
                     </Link>
                 </div>
             </div>
@@ -642,10 +741,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
 
                         {/* Global Landlord Building Selector */}
-                        {!isAdmin && !isStaff && !isTenant && <BuildingSelector />}
+                        {!isAdmin && !isStaff && !isTenant && renderBuildingSelector()}
 
-                        <NavContent />
-                        <UserFooter />
+                        {renderNavContent(desktopNavRef, handleDesktopScroll)}
+                        {renderUserFooter()}
                     </div>
                 </aside>
 
@@ -658,20 +757,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <Logo size="sm" imageClassName="h-7 w-auto" />
                                 <div className="flex items-center gap-1">
                                     <NotificationBell align="left" />
-                                    <button
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                                        className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg h-9 w-9"
                                     >
                                         <X className="w-5 h-5" />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
 
                             {/* Global Landlord Building Selector on Mobile Drawer */}
-                            {!isAdmin && !isStaff && !isTenant && <BuildingSelector />}
+                            {!isAdmin && !isStaff && !isTenant && renderBuildingSelector()}
 
-                            <NavContent />
-                            <UserFooter />
+                            {renderNavContent()}
+                            {renderUserFooter()}
                         </aside>
                     </div>
                 )}
@@ -681,26 +783,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {/* Mobile topbar */}
                     <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 bg-white sticky top-0 z-30 gap-2">
                         <div className="flex items-center gap-2 shrink-0">
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setMobileMenuOpen(true)}
-                                className="p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg h-9 w-9"
                             >
                                 <Menu className="w-5 h-5" />
-                            </button>
+                            </Button>
                             <Logo />
                             <NotificationBell align="left" />
                         </div>
 
                         {/* Admin badge or Staff Badge or Building Selector Dropdown on Mobile Topbar */}
                         {isAdmin ? (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200/80 text-[10px] font-black text-orange-600 uppercase tracking-wide">
-                                <Shield className="w-3.5 h-3.5" />
-                                <span>{tNav("adminTag")}</span>
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200/80">
+                                <Shield className="w-3.5 h-3.5 text-orange-600" />
+                                <Text as="span" variant="overline" color="orange">
+                                    {tNav("adminTag")}
+                                </Text>
                             </div>
                         ) : isStaff ? (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 text-[10px] font-black text-[#2AC1BC] uppercase tracking-wide">
-                                <UserCircle className="w-3.5 h-3.5" />
-                                <span>{tNav("staffTag")}</span>
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2AC1BC]/10 border border-[#2AC1BC]/30">
+                                <UserCircle className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                                <Text as="span" variant="overline" color="brand">
+                                    {tNav("staffTag")}
+                                </Text>
                             </div>
                         ) : !isTenant && (
                             <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
