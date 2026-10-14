@@ -161,9 +161,15 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
       {/* Top Header Card */}
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
+          <Text
+            as="span"
+            variant="caption"
+            size="3xs"
+            weight="black"
+            className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider"
+          >
             <ShieldCheck className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t('authLegalDecree13Badge')}
-          </span>
+          </Text>
           <Text variant="caption" color="subtle" size="xs">
             {t('authLegalLastUpdated')}
           </Text>
@@ -284,20 +290,26 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
                     {t('authPrivacySec7Title')}
                   </Text>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-600">
+                <Form.Grid cols={2} gap="sm" className="text-zinc-600">
                   <div className="flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    <span>Hotline DPO: 0344 265 925 (24/7)</span>
+                    <Text as="span" variant="body" size="xs" color="secondary">
+                      Hotline DPO: 0344 265 925 (24/7)
+                    </Text>
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    <span>Email: privacy@dormio.vn</span>
+                    <Text as="span" variant="body" size="xs" color="secondary">
+                      Email: privacy@dormio.vn
+                    </Text>
                   </div>
-                  <div className="flex items-start gap-2 sm:col-span-2">
+                  <div className="flex items-start gap-2 col-span-full">
                     <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
-                    <span>Đại học FPT Hà Nội, Khu CNC Hòa Lạc, Thạch Thất, Hà Nội</span>
+                    <Text as="span" variant="body" size="xs" color="secondary">
+                      Đại học FPT Hà Nội, Khu CNC Hòa Lạc, Thạch Thất, Hà Nội
+                    </Text>
                   </div>
-                </div>
+                </Form.Grid>
               </div>
             )}
           </>
@@ -309,7 +321,7 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
         <Text variant="caption" size="2xs" color="subtle" className="leading-relaxed block">
           {t('authLegalAcceptFooter')}
         </Text>
-        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-0.5">
+        <Form.Actions align="center" stackedOnMobile={false} className="gap-2.5 pt-0.5">
           <Link href="/register">
             <Button
               type="button"
@@ -331,7 +343,7 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
               {t('authLoginBtn')}
             </Button>
           </Link>
-        </div>
+        </Form.Actions>
       </div>
     </div>
   )

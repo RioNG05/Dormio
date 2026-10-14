@@ -161,11 +161,16 @@ export default function LoginPage() {
           label={t('authLoginPasswordLabel')}
           labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
           labelRight={
-            <Link
-              href="/forgot-password"
-              className="text-xs font-extrabold text-[#2AC1BC] hover:underline"
-            >
-              {t('authForgotPassword')}
+            <Link href="/forgot-password">
+              <Text
+                as="span"
+                variant="body"
+                size="xs"
+                weight="extrabold"
+                className="text-[#2AC1BC] hover:underline cursor-pointer"
+              >
+                {t('authForgotPassword')}
+              </Text>
             </Link>
           }
           type={showPassword ? 'text' : 'password'}
@@ -205,25 +210,35 @@ export default function LoginPage() {
         {/* Error alert reusing Form.Alert */}
         {error && <Form.Alert variant="error" message={error} onClose={() => setError(null)} />}
 
-        {/* Submit Button reusing Base Button */}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          isLoading={isLoading}
-          rightIcon={<ArrowRight className="w-4 h-4" />}
-          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
-        >
-          {t('authLoginSubmitBtn')}
-        </Button>
+        {/* Submit Button reusing Base Form.Actions & Button */}
+        <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            isLoading={isLoading}
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+          >
+            {t('authLoginSubmitBtn')}
+          </Button>
+        </Form.Actions>
       </Form>
 
       {/* Bottom Auth Navigation Link */}
       <div className="text-center pt-2">
         <Text variant="body" size="xs" color="subtle">
           {t('authNoAccount')}{' '}
-          <Link href="/register" className="font-extrabold text-[#2AC1BC] hover:underline">
-            {t('authRegisterNow')}
+          <Link href="/register">
+            <Text
+              as="span"
+              variant="body"
+              size="xs"
+              weight="extrabold"
+              className="text-[#2AC1BC] hover:underline"
+            >
+              {t('authRegisterNow')}
+            </Text>
           </Link>
         </Text>
       </div>

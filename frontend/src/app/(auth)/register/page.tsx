@@ -237,12 +237,28 @@ export default function RegisterPage() {
             label={
               <Text variant="body" size="xs" color="secondary" className="select-none font-medium">
                 {t('authRegisterTermsAgree')}{' '}
-                <Link href="/terms" className="font-extrabold text-[#2AC1BC] hover:underline">
-                  {t('authRegisterTermsLink')}
+                <Link href="/terms">
+                  <Text
+                    as="span"
+                    variant="body"
+                    size="xs"
+                    weight="extrabold"
+                    className="text-[#2AC1BC] hover:underline"
+                  >
+                    {t('authRegisterTermsLink')}
+                  </Text>
                 </Link>{' '}
                 {t('authRegisterTermsAnd')}{' '}
-                <Link href="/privacy" className="font-extrabold text-[#2AC1BC] hover:underline">
-                  {t('authRegisterPrivacyLink')}
+                <Link href="/privacy">
+                  <Text
+                    as="span"
+                    variant="body"
+                    size="xs"
+                    weight="extrabold"
+                    className="text-[#2AC1BC] hover:underline"
+                  >
+                    {t('authRegisterPrivacyLink')}
+                  </Text>
                 </Link>{' '}
                 {t('authRegisterTermsSuffix')}
               </Text>
@@ -253,26 +269,36 @@ export default function RegisterPage() {
         {/* Error alert reusing Form.Alert */}
         {error && <Form.Alert variant="error" message={error} onClose={() => setError(null)} />}
 
-        {/* Submit Button using Base Button Component */}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          disabled={!agreed || isLoading}
-          isLoading={isLoading}
-          rightIcon={<ArrowRight className="w-4 h-4" />}
-          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
-        >
-          {t('authRegisterSubmitBtn')}
-        </Button>
+        {/* Submit Button using Base Form.Actions & Button Component */}
+        <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={!agreed || isLoading}
+            isLoading={isLoading}
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+          >
+            {t('authRegisterSubmitBtn')}
+          </Button>
+        </Form.Actions>
       </Form>
 
       {/* Bottom Auth Navigation Link */}
       <div className="text-center pt-2">
         <Text variant="body" size="xs" color="subtle">
           {t('authRegisterAlreadyAccount')}{' '}
-          <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
-            {t('authRegisterLoginLink')}
+          <Link href="/login">
+            <Text
+              as="span"
+              variant="body"
+              size="xs"
+              weight="extrabold"
+              className="text-[#2AC1BC] hover:underline"
+            >
+              {t('authRegisterLoginLink')}
+            </Text>
           </Link>
         </Text>
       </div>

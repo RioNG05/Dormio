@@ -25,9 +25,15 @@ export default function ForgotPasswordPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header & Badge */}
       <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
+        <Text
+          as="span"
+          variant="caption"
+          size="3xs"
+          weight="black"
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider"
+        >
           <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t('authForgotPassBadge')}
-        </span>
+        </Text>
 
         <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
           {t('authForgotPassword')}
@@ -116,16 +122,18 @@ export default function ForgotPasswordPage() {
               className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
             />
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-              className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
-            >
-              {t('authForgotPassSubmitBtn')}
-            </Button>
+            {/* Submit Button using Base Form.Actions & Button */}
+            <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+                className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+              >
+                {t('authForgotPassSubmitBtn')}
+              </Button>
+            </Form.Actions>
           </Form>
         </>
       )}
@@ -134,8 +142,16 @@ export default function ForgotPasswordPage() {
       <div className="text-center pt-2">
         <Text variant="body" size="xs" color="subtle">
           {t('authForgotPassRememberPrompt')}{' '}
-          <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
-            {t('authForgotPassBackToLogin')}
+          <Link href="/login">
+            <Text
+              as="span"
+              variant="body"
+              size="xs"
+              weight="extrabold"
+              className="text-[#2AC1BC] hover:underline"
+            >
+              {t('authForgotPassBackToLogin')}
+            </Text>
           </Link>
         </Text>
       </div>

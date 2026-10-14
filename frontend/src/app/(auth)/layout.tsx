@@ -8,6 +8,7 @@ import { Building2, CheckCircle2, Star } from 'lucide-react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
 import { Text } from '@/components/ui/Text'
+import { Button } from '@/components/ui/Button'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('auth')
@@ -23,11 +24,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
-            <Link
-              href="/"
-              className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
-            >
-              {t('authLayoutBackHome')}
+            <Link href="/">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] px-2.5 py-1.5 rounded-xl h-auto"
+              >
+                {t('authLayoutBackHome')}
+              </Button>
             </Link>
           </div>
         </div>
@@ -71,9 +76,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   </Text>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-full border border-emerald-500/30">
+              <Text
+                as="span"
+                variant="caption"
+                size="3xs"
+                weight="black"
+                className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30"
+              >
                 {t('authLayoutShowcaseStatusActive')}
-              </span>
+              </Text>
             </div>
 
             {/* 3 Metric Stat Boxes */}
@@ -169,9 +180,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   </Text>
                 </div>
               </div>
-              <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-lg shrink-0">
+              <Text
+                as="span"
+                variant="caption"
+                size="3xs"
+                weight="black"
+                className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-lg shrink-0"
+              >
                 {t('authLayoutShowcaseVietQrSuccess')}
-              </span>
+              </Text>
             </div>
 
             {/* Floating Verified Landlord Testimonial Overlay */}
