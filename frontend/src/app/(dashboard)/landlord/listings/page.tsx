@@ -20,6 +20,8 @@ import {
  Wand2,
 } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import {
  postService,
  PostListing,
@@ -29,6 +31,9 @@ import {
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 
 export default function ListingsPage() {
+ if (!FEATURE_FLAGS.ENABLE_BHRP) {
+   redirect("/landlord");
+ }
  const t = useTranslations("landlord");
  const { currentLocale } = useLanguage();
 

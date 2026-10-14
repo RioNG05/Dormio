@@ -10,14 +10,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { FEATURE_FLAGS } from "@/config/features";
 
 export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" }) {
   const router = useRouter();
   const { currentLocale } = useLanguage();
   const t = useTranslations("guest");
 
-  const isBhrp = initialTab === "bhrp";
-  const activeSection: "bhms" | "bhrp" = initialTab;
+  const isBhrp = FEATURE_FLAGS.ENABLE_BHRP && initialTab === "bhrp";
+  const activeSection: "bhms" | "bhrp" = isBhrp ? "bhrp" : "bhms";
 
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -247,36 +248,38 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
       {/* ── Main Content ─────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 w-full space-y-20">
 
-        {/* ── Shared Tab Switcher (controls both Features & Pricing) ───────── */}
-        <div className="flex justify-center w-full">
-          <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-zinc-100 rounded-3xl border border-zinc-200/80 max-w-xl w-full gap-2 sm:gap-0">
-            <Button
-              id="tab-bhms"
-              variant="ghost"
-              onClick={() => router.push("/pricing/management-system", { scroll: false })}
-              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
-                isBhms
-                  ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30 hover:bg-[#25aba6] hover:text-white"
-                  : "text-zinc-500 hover:text-zinc-900"
-              }`}
-            >
-              <Building2 className="w-4 h-4" /> {t("guestFeaturesBhmsTab")}
-            </Button>
+        {/* ── Shared Tab Switcher (Chỉ hiển thị khi sàn BHRP được mở) ───────── */}
+        {FEATURE_FLAGS.ENABLE_BHRP && (
+          <div className="flex justify-center w-full">
+            <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-zinc-100 rounded-3xl border border-zinc-200/80 max-w-xl w-full gap-2 sm:gap-0">
+              <Button
+                id="tab-bhms"
+                variant="ghost"
+                onClick={() => router.push("/pricing/management-system", { scroll: false })}
+                className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
+                  isBhms
+                    ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30 hover:bg-[#25aba6] hover:text-white"
+                    : "text-zinc-500 hover:text-zinc-900"
+                }`}
+              >
+                <Building2 className="w-4 h-4" /> {t("guestFeaturesBhmsTab")}
+              </Button>
 
-            <Button
-              id="tab-bhrp"
-              variant="ghost"
-              onClick={() => router.push("/pricing/rental-platform", { scroll: false })}
-              className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
-                !isBhms
-                  ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30 hover:bg-[#e85a26] hover:text-white"
-                  : "text-zinc-500 hover:text-zinc-900"
-              }`}
-            >
-              <QrCode className="w-4 h-4" /> {t("guestFeaturesBhrpTab")}
-            </Button>
+              <Button
+                id="tab-bhrp"
+                variant="ghost"
+                onClick={() => router.push("/pricing/rental-platform", { scroll: false })}
+                className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
+                  !isBhms
+                    ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30 hover:bg-[#e85a26] hover:text-white"
+                    : "text-zinc-500 hover:text-zinc-900"
+                }`}
+              >
+                <QrCode className="w-4 h-4" /> {t("guestFeaturesBhrpTab")}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ════════════════════════════════════════════════════════════════════
             SECTION 1 — PRICING

@@ -34,6 +34,8 @@ import {
  BarChart,
  Bar,
 } from "recharts";
+import { redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import {
  postService,
  PosterAnalyticsOverview,
@@ -42,6 +44,9 @@ import {
 } from "@/services/post.service";
 
 export default function PublicPostAnalyticsPage() {
+ if (!FEATURE_FLAGS.ENABLE_BHRP) {
+   redirect("/");
+ }
  const t = useTranslations("guest");
  const { currentLocale } = useLanguage();
  const isEn = currentLocale === "en";

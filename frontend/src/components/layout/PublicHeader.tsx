@@ -25,6 +25,8 @@ import {
   Heart
 } from "lucide-react";
 
+import { FEATURE_FLAGS } from "@/config/features";
+
 export function PublicHeader() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,7 +36,9 @@ export function PublicHeader() {
 
   const navLinks = [
     { href: "/", label: "Trang chủ", icon: Home },
-    { href: "/rooms", label: "Phòng trọ", icon: Building2 },
+    ...(FEATURE_FLAGS.ENABLE_BHRP
+      ? [{ href: "/rooms", label: "Phòng trọ", icon: Building2 }]
+      : []),
     { href: "/pricing", label: "Tính năng & Giá", icon: Layers },
     { href: "/blog", label: "Blog", icon: BookOpen },
     { href: "/contact", label: "Liên hệ", icon: Mail },
@@ -142,13 +146,15 @@ export function PublicHeader() {
 
                     {/* Menu links */}
                     <div className="flex flex-col gap-1 pt-1 border-t border-zinc-100 text-zinc-700">
-                      <Link
-                        href="/saved-posts"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
-                      >
-                        <Heart className="w-4 h-4 text-zinc-400" /> Phòng trọ đã lưu
-                      </Link>
+                      {FEATURE_FLAGS.ENABLE_BHRP && (
+                        <Link
+                          href="/saved-posts"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
+                        >
+                          <Heart className="w-4 h-4 text-zinc-400" /> Phòng trọ đã lưu
+                        </Link>
+                      )}
                       <Link
                         href="/tenant/contracts"
                         onClick={() => setUserDropdownOpen(false)}

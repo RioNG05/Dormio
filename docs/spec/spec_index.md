@@ -87,6 +87,12 @@
 
 ### MODULE 2: BHRP (Boarding House Rental Platform)
 
+> **Important — Phasing & Frontend Gating (Phase 1 vs Phase 2)**:
+> In the current stage (Phase 1), Dormio prioritizes **BHMS** (boarding house and property management for landlords, staff, and tenants).
+> All public rental marketplace features (BHRP: UC-P-01, UC-P-02, UC-PU-01 → UC-PU-05, quota purchases, and admin post moderation) are **temporarily hidden on the frontend** via `FEATURE_FLAGS.ENABLE_BHRP = false` in `frontend/src/config/features.ts`.
+> All backend database models, migrations, endpoints, and services remain completely intact.
+> **Re-enabling condition:** BHRP frontend features will be reopened in Phase 2 once the platform attains a sufficient critical mass of active landlords, registered boarding houses, and rooms in the system. Re-activation requires only flipping `ENABLE_BHRP: true`.
+
 #### Leasing Agent & Landlord — posting (`spec/04-bhrp-poster.md`)
 
 | UC | Title | Tier |

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import Link from "next/link";
 import {
   ArrowLeft, ShieldCheck, Loader2, AlertCircle,
@@ -46,6 +47,9 @@ function SkeletonDeposit() {
 
 // ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
 export default function DepositPage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/");
+  }
   return (
     <IdentityGuard>
       <DepositPageInner />

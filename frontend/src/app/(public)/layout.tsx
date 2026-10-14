@@ -14,6 +14,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
 import Logo from "@/components/Logo";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { FEATURE_FLAGS } from "@/config/features";
 
 export default function PublicLayout({
     children,
@@ -95,38 +96,44 @@ export default function PublicLayout({
     };
 
     const searchResults = [
-        {
-            type: "room",
-            title: tNav("searchMockRoom1Title"),
-            href: "/rooms/1",
-            price: tNav("searchMockRoom1Price"),
-            location: tNav("searchMockRoom1Location"),
-        },
-        {
-            type: "room",
-            title: tNav("searchMockRoom2Title"),
-            href: "/rooms/2",
-            price: tNav("searchMockRoom2Price"),
-            location: tNav("searchMockRoom2Location"),
-        },
-        {
-            type: "room",
-            title: tNav("searchMockRoom3Title"),
-            href: "/rooms/3",
-            price: tNav("searchMockRoom3Price"),
-            location: tNav("searchMockRoom3Location"),
-        },
+        ...(FEATURE_FLAGS.ENABLE_BHRP ? [
+            {
+                type: "room",
+                title: tNav("searchMockRoom1Title"),
+                href: "/rooms/1",
+                price: tNav("searchMockRoom1Price"),
+                location: tNav("searchMockRoom1Location"),
+            },
+            {
+                type: "room",
+                title: tNav("searchMockRoom2Title"),
+                href: "/rooms/2",
+                price: tNav("searchMockRoom2Price"),
+                location: tNav("searchMockRoom2Location"),
+            },
+            {
+                type: "room",
+                title: tNav("searchMockRoom3Title"),
+                href: "/rooms/3",
+                price: tNav("searchMockRoom3Price"),
+                location: tNav("searchMockRoom3Location"),
+            },
+        ] : []),
         {
             type: "blog",
             title: tNav("searchMockBlog1Title"),
             href: "/blog",
             category: tNav("searchMockBlog1Category"),
+            price: undefined,
+            location: undefined,
         },
         {
             type: "blog",
             title: tNav("searchMockBlog2Title"),
             href: "/blog",
             category: tNav("searchMockBlog2Category"),
+            price: undefined,
+            location: undefined,
         },
     ].filter(
         (item) =>
@@ -137,7 +144,7 @@ export default function PublicLayout({
 
     const navItems = [
         { href: "/", label: tNav("home") },
-        { href: "/rooms", label: tNav("rooms") },
+        ...(FEATURE_FLAGS.ENABLE_BHRP ? [{ href: "/rooms", label: tNav("rooms") }] : []),
         { href: "/pricing", label: tNav("pricing") },
         { href: "/blog", label: tNav("blog") },
         { href: "/contact", label: tNav("contact") },
@@ -255,37 +262,40 @@ export default function PublicLayout({
                                                 <span>{user.role === "landlord" ? tNav("manageHouses") : user.role === "employee" ? tNav("myShifts") : tNav("myRentedRooms")}</span>
                                             </Link>
 
-                                            {/* 3. Phòng trọ đã lưu */}
-                                            <Link
-                                                href="/saved-posts"
-                                                onClick={() => setIsUserMenuOpen(false)}
-                                                className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
-                                            >
-                                                <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                                                <span>{tNav("mySavedRooms")}</span>
-                                            </Link>
-
-                                            <div className="border-t border-zinc-100 pt-1">
-                                                {/* 4. Đăng tin tìm khách (BHRP) */}
+                                            {/* 3. Phòng trọ đã lưu (Chỉ hiện khi bật sàn BHRP) */}
+                                            {FEATURE_FLAGS.ENABLE_BHRP && (
                                                 <Link
-                                                    href="/posts/create"
+                                                    href="/saved-posts"
                                                     onClick={() => setIsUserMenuOpen(false)}
                                                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                                                 >
-                                                    <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                                                    <span>{tNav("postListing")}</span>
+                                                    <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
+                                                    <span>{tNav("mySavedRooms")}</span>
                                                 </Link>
+                                            )}
 
-                                                {/* 5. Thống kê hiệu quả tin đăng */}
-                                                <Link
-                                                    href="/posts/analytics"
-                                                    onClick={() => setIsUserMenuOpen(false)}
-                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
-                                                >
-                                                    <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                                                    <span>{tNav("postAnalytics")}</span>
-                                                </Link>
-                                            </div>
+                                            {/* 4. Đăng tin tìm khách & Thống kê (Chỉ hiện khi bật sàn BHRP) */}
+                                            {FEATURE_FLAGS.ENABLE_BHRP && (
+                                                <div className="border-t border-zinc-100 pt-1">
+                                                    <Link
+                                                        href="/posts/create"
+                                                        onClick={() => setIsUserMenuOpen(false)}
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                                                    >
+                                                        <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
+                                                        <span>{tNav("postListing")}</span>
+                                                    </Link>
+
+                                                    <Link
+                                                        href="/posts/analytics"
+                                                        onClick={() => setIsUserMenuOpen(false)}
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                                                    >
+                                                        <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
+                                                        <span>{tNav("postAnalytics")}</span>
+                                                    </Link>
+                                                </div>
+                                            )}
 
                                             <div className="border-t border-zinc-100 pt-1">
                                                 {/* 6. Đăng xuất */}
@@ -415,44 +425,49 @@ export default function PublicLayout({
                                             <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                                         </Link>
 
-                                        {/* 3. Phòng trọ đã lưu */}
-                                        <Link
-                                            href="/saved-posts"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                                                <span>{tNav("mySavedRooms")}</span>
-                                            </div>
-                                            <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                                        </Link>
+                                        {/* 3. Phòng trọ đã lưu (Chỉ hiện khi bật sàn BHRP) */}
+                                        {FEATURE_FLAGS.ENABLE_BHRP && (
+                                            <Link
+                                                href="/saved-posts"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
+                                                    <span>{tNav("mySavedRooms")}</span>
+                                                </div>
+                                                <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
+                                            </Link>
+                                        )}
 
-                                        {/* 4. Đăng tin tìm khách (BHRP) */}
-                                        <Link
-                                            href="/posts/create"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                                                <span>{tNav("postListing")}</span>
-                                            </div>
-                                            <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                                        </Link>
+                                        {/* 4. Đăng tin & Thống kê (Chỉ hiện khi bật sàn BHRP) */}
+                                        {FEATURE_FLAGS.ENABLE_BHRP && (
+                                            <>
+                                                <Link
+                                                    href="/posts/create"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                    className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                                                >
+                                                    <div className="flex items-center gap-2.5">
+                                                        <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
+                                                        <span>{tNav("postListing")}</span>
+                                                    </div>
+                                                    <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
+                                                </Link>
 
-                                        {/* 5. Thống kê hiệu quả tin đăng */}
-                                        <Link
-                                            href="/posts/analytics"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                                                <span>{tNav("postAnalytics")}</span>
-                                            </div>
-                                            <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                                        </Link>
+                                                <Link
+                                                    href="/posts/analytics"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                    className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                                                >
+                                                    <div className="flex items-center gap-2.5">
+                                                        <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
+                                                        <span>{tNav("postAnalytics")}</span>
+                                                    </div>
+                                                    <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
+                                                </Link>
+                                            </>
+                                        )}
 
                                         {/* 6. Đăng xuất */}
                                         <button
@@ -669,7 +684,9 @@ export default function PublicLayout({
                         <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">{tFooter("systemModules")}</h4>
                         <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
                             <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("bhms")}</Link></li>
-                            <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("bhrp")}</Link></li>
+                            {FEATURE_FLAGS.ENABLE_BHRP && (
+                                <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("bhrp")}</Link></li>
+                            )}
                             <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("vietqr")}</Link></li>
                             <li><Link href="/pricing" className="hover:text-white transition-colors">{tFooter("aiOcr")}</Link></li>
                         </ul>

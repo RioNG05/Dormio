@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import {
   ChevronLeft,
   Sparkles,
@@ -24,6 +25,9 @@ import { Button } from "@/components/ui/button";
 import { MultiImageUpload } from "@/components/MultiImageUpload";
 
 export default function PublicCreatePostPage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/");
+  }
   const t = useTranslations("guest");
   const router = useRouter();
 

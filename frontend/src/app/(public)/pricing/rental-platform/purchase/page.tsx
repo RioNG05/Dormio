@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import {
   Check,
   ShieldCheck,
@@ -615,6 +616,9 @@ function BuyTurnsPageInner() {
 
 // ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
 export default function RentalPlatformPurchasePage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/pricing");
+  }
   return (
     <IdentityGuard>
       <React.Suspense fallback={
