@@ -7,6 +7,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
+import { Form } from '@/components/ui/Form'
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth')
@@ -93,8 +94,8 @@ export default function ForgotPasswordPage() {
             </Button>
           </div>
 
-          {/* Form using Base TextInput & Button */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Form using Base Form Component */}
+          <Form onSubmit={handleSubmit} className="space-y-4">
             <TextInput
               label={
                 method === 'phone' ? t('authForgotPassPhoneLabel') : t('authForgotPassEmailLabel')
@@ -125,7 +126,7 @@ export default function ForgotPasswordPage() {
             >
               {t('authForgotPassSubmitBtn')}
             </Button>
-          </form>
+          </Form>
         </>
       )}
 

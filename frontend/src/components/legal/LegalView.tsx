@@ -22,6 +22,7 @@ import {
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
+import { Form } from '@/components/ui/Form'
 import { useTranslations } from '@/context/LanguageContext'
 
 interface LegalViewProps {
@@ -206,7 +207,7 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
       </div>
 
       {/* Search & Actions Bar */}
-      <div className="flex items-center gap-2">
+      <Form onSubmit={e => e.preventDefault()} className="flex items-center gap-2">
         <TextInput
           placeholder={t('authLegalSearchPlaceholder')}
           value={searchQuery}
@@ -225,7 +226,7 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
         >
           {t('authLegalPrint')}
         </Button>
-      </div>
+      </Form>
 
       {/* Dedicated Scrollable Sections Container: Only policy info scrolls, page layout stays fixed */}
       <div className="border border-zinc-200/80 rounded-2xl p-2.5 sm:p-3.5 bg-zinc-50/50 space-y-3 max-h-[46vh] sm:max-h-[50vh] lg:max-h-[52vh] overflow-y-auto custom-scrollbar">

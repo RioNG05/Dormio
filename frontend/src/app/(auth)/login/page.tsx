@@ -8,8 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
 import { getHighestRoleRedirect } from '@/utils'
-import { TextInput, Button, Checkbox } from '@/components/ui'
-import { Text } from '@/components/ui/Text'
+import { TextInput, Button, Checkbox, Form, Text } from '@/components/ui'
 
 export default function LoginPage() {
   const t = useTranslations('auth')
@@ -134,8 +133,8 @@ export default function LoginPage() {
         </Button>
       </div>
 
-      {/* Login Form reusing Base Components */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Login Form reusing Base Form Component */}
+      <Form onSubmit={handleSubmit} isLoading={isLoading} className="space-y-4">
         {/* Phone or Email input */}
         <TextInput
           label={method === 'phone' ? t('authLoginPhoneLabel') : t('authLoginEmailLabel')}
@@ -203,12 +202,8 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600 animate-in fade-in">
-            {error}
-          </div>
-        )}
+        {/* Error alert reusing Form.Alert */}
+        {error && <Form.Alert variant="error" message={error} onClose={() => setError(null)} />}
 
         {/* Submit Button reusing Base Button */}
         <Button
@@ -221,7 +216,7 @@ export default function LoginPage() {
         >
           {t('authLoginSubmitBtn')}
         </Button>
-      </form>
+      </Form>
 
       {/* Bottom Auth Navigation Link */}
       <div className="text-center pt-2">
