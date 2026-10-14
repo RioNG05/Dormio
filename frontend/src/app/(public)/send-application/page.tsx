@@ -26,7 +26,7 @@ import {
   AlertCircle,
   Calendar,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
 import { SelectInput } from '@/components/ui/SelectInput'

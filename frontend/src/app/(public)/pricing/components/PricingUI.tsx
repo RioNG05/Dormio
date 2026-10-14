@@ -23,7 +23,7 @@ import {
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { FEATURE_FLAGS } from '@/config/features'
 
 export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' }) {

@@ -33,7 +33,7 @@ import {
   ExternalLink,
   Sparkles,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'

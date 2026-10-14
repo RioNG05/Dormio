@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { AlertTriangle, CheckCircle2, AlertCircle, Info, ChevronDown, X } from 'lucide-react'
-import { Button } from './button'
+import { Button } from './Button'
 
 /* -------------------------------------------------------------------------- */
 /*                               Form Context                                 */

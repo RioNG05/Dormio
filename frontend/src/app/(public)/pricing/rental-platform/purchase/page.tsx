@@ -24,7 +24,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import IdentityGuard from '@/components/IdentityGuard'
 
 // ─── Bank name map ─────────────────────────────────────────────────────────────

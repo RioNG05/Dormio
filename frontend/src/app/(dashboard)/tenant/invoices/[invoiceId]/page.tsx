@@ -27,7 +27,7 @@ import {
   FileQuestion,
   AlertCircle,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { ImageUpload } from '@/components/ImageUpload'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'

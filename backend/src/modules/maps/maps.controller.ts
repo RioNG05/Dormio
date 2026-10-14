@@ -28,4 +28,3 @@ export class MapsController {
     return this.mapsService.getMapsConfig()
   }
 }
-
