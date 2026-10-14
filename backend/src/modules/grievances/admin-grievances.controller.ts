@@ -9,7 +9,7 @@ import {
   Request,
   Logger,
   HttpStatus,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -17,18 +17,18 @@ import {
   ApiResponse,
   ApiOkResponse,
   ApiParam,
-} from '@nestjs/swagger';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { UserRole } from '@prisma';
-import { GrievancesService } from './grievances.service';
+} from '@nestjs/swagger'
+import { RolesGuard } from '../../common/guards/roles.guard'
+import { Roles } from '../../common/decorators/roles.decorator'
+import { UserRole } from '@prisma'
+import { GrievancesService } from './grievances.service'
 import {
   AdminGrievanceQueryDto,
   AdminGrievanceListResponseDto,
   AdminGrievanceItemDto,
   ResolveGrievanceDto,
   RejectGrievanceDto,
-} from './dto/admin-grievance.dto';
+} from './dto/admin-grievance.dto'
 
 @ApiTags('Admin Grievance Management')
 @ApiBearerAuth('JWT')
@@ -36,7 +36,7 @@ import {
 @Roles(UserRole.admin)
 @Controller('admin/grievances')
 export class AdminGrievancesController {
-  private readonly logger = new Logger(AdminGrievancesController.name);
+  private readonly logger = new Logger(AdminGrievancesController.name)
 
   constructor(private readonly grievancesService: GrievancesService) {}
 
@@ -59,8 +59,8 @@ export class AdminGrievancesController {
   ): Promise<AdminGrievanceListResponseDto> {
     this.logger.log(
       `GET /admin/grievances called with status=${query.status || 'all'}, priority=${query.priority || 'all'}, page=${query.page || 1}`,
-    );
-    return this.grievancesService.getAdminGrievanceQueue(query);
+    )
+    return this.grievancesService.getAdminGrievanceQueue(query)
   }
 
   @Get(':id')
@@ -78,11 +78,9 @@ export class AdminGrievancesController {
     status: HttpStatus.NOT_FOUND,
     description: 'Grievance not found',
   })
-  async getAdminGrievanceById(
-    @Param('id') id: string,
-  ): Promise<AdminGrievanceItemDto> {
-    this.logger.log(`GET /admin/grievances/${id} called`);
-    return this.grievancesService.getAdminGrievanceById(id);
+  async getAdminGrievanceById(@Param('id') id: string): Promise<AdminGrievanceItemDto> {
+    this.logger.log(`GET /admin/grievances/${id} called`)
+    return this.grievancesService.getAdminGrievanceById(id)
   }
 
   @Patch(':id/in-progress')
@@ -104,9 +102,9 @@ export class AdminGrievancesController {
     @Request() req: any,
     @Param('id') id: string,
   ): Promise<AdminGrievanceItemDto> {
-    const adminId = req.user?.id || req.user?.sub;
-    this.logger.log(`PATCH /admin/grievances/${id}/in-progress called by admin ${adminId}`);
-    return this.grievancesService.updateGrievanceStatusInProgress(adminId, id);
+    const adminId = req.user?.id || req.user?.sub
+    this.logger.log(`PATCH /admin/grievances/${id}/in-progress called by admin ${adminId}`)
+    return this.grievancesService.updateGrievanceStatusInProgress(adminId, id)
   }
 
   @Patch(':id/resolve')
@@ -129,9 +127,9 @@ export class AdminGrievancesController {
     @Param('id') id: string,
     @Body() dto: ResolveGrievanceDto,
   ): Promise<AdminGrievanceItemDto> {
-    const adminId = req.user?.id || req.user?.sub;
-    this.logger.log(`PATCH /admin/grievances/${id}/resolve called by admin ${adminId}`);
-    return this.grievancesService.resolveGrievance(adminId, id, dto);
+    const adminId = req.user?.id || req.user?.sub
+    this.logger.log(`PATCH /admin/grievances/${id}/resolve called by admin ${adminId}`)
+    return this.grievancesService.resolveGrievance(adminId, id, dto)
   }
 
   @Patch(':id/reject')
@@ -154,8 +152,8 @@ export class AdminGrievancesController {
     @Param('id') id: string,
     @Body() dto: RejectGrievanceDto,
   ): Promise<AdminGrievanceItemDto> {
-    const adminId = req.user?.id || req.user?.sub;
-    this.logger.log(`PATCH /admin/grievances/${id}/reject called by admin ${adminId}`);
-    return this.grievancesService.rejectGrievance(adminId, id, dto);
+    const adminId = req.user?.id || req.user?.sub
+    this.logger.log(`PATCH /admin/grievances/${id}/reject called by admin ${adminId}`)
+    return this.grievancesService.rejectGrievance(adminId, id, dto)
   }
 }

@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
 
 export class StaffDutyProofDto {
   @ApiProperty({
@@ -8,7 +8,7 @@ export class StaffDutyProofDto {
   })
   @IsNotEmpty()
   @IsUUID()
-  workScheduleId: string;
+  workScheduleId: string
 
   @ApiProperty({
     description: 'Unique identifier of the duty task',
@@ -16,7 +16,7 @@ export class StaffDutyProofDto {
   })
   @IsNotEmpty()
   @IsString()
-  dutyId: string;
+  dutyId: string
 
   @ApiPropertyOptional({
     description: 'Data URL or image URL of the photo proof',
@@ -24,7 +24,7 @@ export class StaffDutyProofDto {
   })
   @IsOptional()
   @IsString()
-  photo?: string;
+  photo?: string
 
   @ApiPropertyOptional({
     description: 'Progress or handover note for the duty',
@@ -32,7 +32,7 @@ export class StaffDutyProofDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 
   @ApiPropertyOptional({
     description: 'Whether to mark the duty task as completed',
@@ -40,6 +40,5 @@ export class StaffDutyProofDto {
   })
   @IsOptional()
   @IsBoolean()
-  markCompleted?: boolean;
+  markCompleted?: boolean
 }
-

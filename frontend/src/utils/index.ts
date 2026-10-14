@@ -1,105 +1,106 @@
-export type SupportedLocale = "vi" | "en";
+export type SupportedLocale = 'vi' | 'en'
 
 /**
  * Format currency dynamically according to active locale (VND / USD or VND display)
  */
-export function formatCurrency(amount: number | string, locale: "vi" | "en" = "vi"): string {
-  const num = typeof amount === "number" ? amount : parseFloat(String(amount).replace(/\D/g, "")) || 0;
-  if (locale === "en") {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "VND",
+export function formatCurrency(amount: number | string, locale: 'vi' | 'en' = 'vi'): string {
+  const num =
+    typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/\D/g, '')) || 0
+  if (locale === 'en') {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'VND',
       maximumFractionDigits: 0,
-    }).format(num);
+    }).format(num)
   }
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
     maximumFractionDigits: 0,
-  }).format(num);
+  }).format(num)
 }
 
 /**
  * Format VND backward compatibility helper
  */
 export function formatVND(amount: number): string {
-  return formatCurrency(amount, "vi");
+  return formatCurrency(amount, 'vi')
 }
 
 /**
  * Format date dynamically according to active locale
  */
-export function formatDate(dateInput: string | Date, locale: "vi" | "en" = "vi"): string {
-  if (!dateInput) return "";
-  const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return String(dateInput);
+export function formatDate(dateInput: string | Date, locale: 'vi' | 'en' = 'vi'): string {
+  if (!dateInput) return ''
+  const date = new Date(dateInput)
+  if (isNaN(date.getTime())) return String(dateInput)
 
-  if (locale === "en") {
-    return new Intl.DateTimeFormat("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }).format(date);
+  if (locale === 'en') {
+    return new Intl.DateTimeFormat('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date)
   }
 
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date)
 }
 
 /**
  * Truncate text if too long
  */
 export function truncateText(text: string, maxLength: number = 100): string {
-  if (!text || text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + "...";
+  if (!text || text.length <= maxLength) return text
+  return text.slice(0, maxLength) + '...'
 }
 
 /**
  * Type guard for SupportedLocale
  */
 export function isValidLocale(value: unknown): value is SupportedLocale {
-  return value === "vi" || value === "en";
+  return value === 'vi' || value === 'en'
 }
 
 /**
  * Get active locale from browser storage or cookie safely
  */
 export function getStoredLocale(): SupportedLocale {
-  if (typeof window === "undefined") return "vi";
+  if (typeof window === 'undefined') return 'vi'
 
   try {
-    const local = localStorage.getItem("dormio_lang");
-    if (isValidLocale(local)) return local;
+    const local = localStorage.getItem('dormio_lang')
+    if (isValidLocale(local)) return local
 
     // Check cookie NEXT_LOCALE
-    const cookieMatch = document.cookie.match(/NEXT_LOCALE=([^;]+)/);
+    const cookieMatch = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
     if (cookieMatch && isValidLocale(cookieMatch[1])) {
-      return cookieMatch[1];
+      return cookieMatch[1]
     }
   } catch (err) {
-    console.error("Error reading stored locale:", err);
+    console.error('Error reading stored locale:', err)
   }
 
-  return "vi";
+  return 'vi'
 }
 
 /**
  * Set active locale in browser storage, cookie, and HTML tag
  */
 export function setStoredLocale(locale: SupportedLocale): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return
 
   try {
-    localStorage.setItem("dormio_lang", locale);
-    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+    localStorage.setItem('dormio_lang', locale)
+    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`
     if (document.documentElement) {
-      document.documentElement.lang = locale;
+      document.documentElement.lang = locale
     }
   } catch (err) {
-    console.error("Error persisting locale:", err);
+    console.error('Error persisting locale:', err)
   }
 }
 
@@ -108,56 +109,56 @@ export function setStoredLocale(locale: SupportedLocale): void {
  */
 export const dbEnumTranslations: Record<string, Record<string, { vi: string; en: string }>> = {
   roomStatus: {
-    available: { vi: "Trống", en: "Vacant" },
-    occupied: { vi: "Đang thuê", en: "Occupied" },
-    deposited: { vi: "Đặt cọc", en: "Reserved" },
-    maintenance: { vi: "Bảo trì", en: "Maintenance" },
+    available: { vi: 'Trống', en: 'Vacant' },
+    occupied: { vi: 'Đang thuê', en: 'Occupied' },
+    deposited: { vi: 'Đặt cọc', en: 'Reserved' },
+    maintenance: { vi: 'Bảo trì', en: 'Maintenance' },
   },
   contractStatus: {
-    draft: { vi: "Nháp", en: "Draft" },
-    active: { vi: "Hiệu lực", en: "Active" },
-    expired: { vi: "Hết hạn", en: "Expired" },
-    canceled: { vi: "Đã hủy", en: "Canceled" },
+    draft: { vi: 'Nháp', en: 'Draft' },
+    active: { vi: 'Hiệu lực', en: 'Active' },
+    expired: { vi: 'Hết hạn', en: 'Expired' },
+    canceled: { vi: 'Đã hủy', en: 'Canceled' },
   },
   invoiceStatus: {
-    paid: { vi: "Đã thu", en: "Paid" },
-    pending: { vi: "Chưa thanh toán", en: "Pending" },
-    overdue: { vi: "Quá hạn", en: "Overdue" },
-    canceled: { vi: "Đã hủy", en: "Canceled" },
+    paid: { vi: 'Đã thu', en: 'Paid' },
+    pending: { vi: 'Chưa thanh toán', en: 'Pending' },
+    overdue: { vi: 'Quá hạn', en: 'Overdue' },
+    canceled: { vi: 'Đã hủy', en: 'Canceled' },
   },
   serviceCode: {
-    dien: { vi: "Điện", en: "Electricity" },
-    nuoc: { vi: "Nước", en: "Water" },
-    wifi: { vi: "Wifi", en: "Internet / Wifi" },
-    rac: { vi: "Rác", en: "Trash / Sanitation" },
-    bao_ve: { vi: "Bảo vệ", en: "Security Guard" },
-    ve_sinh: { vi: "Vệ sinh", en: "Cleaning Service" },
-    gui_xe: { vi: "Gửi xe", en: "Parking Fee" },
+    dien: { vi: 'Điện', en: 'Electricity' },
+    nuoc: { vi: 'Nước', en: 'Water' },
+    wifi: { vi: 'Wifi', en: 'Internet / Wifi' },
+    rac: { vi: 'Rác', en: 'Trash / Sanitation' },
+    bao_ve: { vi: 'Bảo vệ', en: 'Security Guard' },
+    ve_sinh: { vi: 'Vệ sinh', en: 'Cleaning Service' },
+    gui_xe: { vi: 'Gửi xe', en: 'Parking Fee' },
   },
   incidentPriority: {
-    high: { vi: "Mức độ cao", en: "High Priority" },
-    medium: { vi: "Mức độ trung bình", en: "Medium Priority" },
-    low: { vi: "Mức độ nhẹ", en: "Low Priority" },
+    high: { vi: 'Mức độ cao', en: 'High Priority' },
+    medium: { vi: 'Mức độ trung bình', en: 'Medium Priority' },
+    low: { vi: 'Mức độ nhẹ', en: 'Low Priority' },
   },
   userRole: {
-    landlord: { vi: "Chủ nhà trọ", en: "Landlord" },
-    tenant: { vi: "Người thuê", en: "Tenant" },
-    employee: { vi: "Nhân viên", en: "Employee" },
-    admin: { vi: "Quản trị viên", en: "Admin" },
+    landlord: { vi: 'Chủ nhà trọ', en: 'Landlord' },
+    tenant: { vi: 'Người thuê', en: 'Tenant' },
+    employee: { vi: 'Nhân viên', en: 'Employee' },
+    admin: { vi: 'Quản trị viên', en: 'Admin' },
   },
-};
+}
 
 export function localizeDbEnum(
   category: keyof typeof dbEnumTranslations,
   code: string,
-  locale: "vi" | "en" = "vi"
+  locale: 'vi' | 'en' = 'vi',
 ): string {
-  const normCode = code?.toLowerCase().trim();
-  const foundCategory = dbEnumTranslations[category];
+  const normCode = code?.toLowerCase().trim()
+  const foundCategory = dbEnumTranslations[category]
   if (foundCategory && foundCategory[normCode]) {
-    return foundCategory[normCode][locale];
+    return foundCategory[normCode][locale]
   }
-  return code;
+  return code
 }
 
 /**
@@ -169,17 +170,17 @@ export function localizeDbEnum(
  * 4: landlord (landlord, owner) -> /landlord
  * 5: admin (admin, administrator) -> /admin
  */
-export type CanonicalDisplayRole = "admin" | "landlord" | "employee" | "tenant" | "poster";
+export type CanonicalDisplayRole = 'admin' | 'landlord' | 'employee' | 'tenant' | 'poster'
 
 export interface RoleRedirectInfo {
-  role: CanonicalDisplayRole;
-  redirectPath: string;
-  rank: number;
+  role: CanonicalDisplayRole
+  redirectPath: string
+  rank: number
 }
 
 export function getHighestRoleRedirect(user: any): RoleRedirectInfo {
   if (!user) {
-    return { role: "poster", redirectPath: "/", rank: 0 };
+    return { role: 'poster', redirectPath: '/', rank: 0 }
   }
 
   const roleConfigs: Record<
@@ -187,81 +188,80 @@ export function getHighestRoleRedirect(user: any): RoleRedirectInfo {
     { rank: number; path: string; displayRole: CanonicalDisplayRole }
   > = {
     // Rank 5: Admin (highest)
-    admin: { rank: 5, path: "/admin", displayRole: "admin" },
-    administrator: { rank: 5, path: "/admin", displayRole: "admin" },
+    admin: { rank: 5, path: '/admin', displayRole: 'admin' },
+    administrator: { rank: 5, path: '/admin', displayRole: 'admin' },
 
     // Rank 4: Landlord
-    landlord: { rank: 4, path: "/landlord", displayRole: "landlord" },
-    owner: { rank: 4, path: "/landlord", displayRole: "landlord" },
+    landlord: { rank: 4, path: '/landlord', displayRole: 'landlord' },
+    owner: { rank: 4, path: '/landlord', displayRole: 'landlord' },
 
     // Rank 3: Staff / Employee
-    staff: { rank: 3, path: "/staff", displayRole: "employee" },
-    employee: { rank: 3, path: "/staff", displayRole: "employee" },
+    staff: { rank: 3, path: '/staff', displayRole: 'employee' },
+    employee: { rank: 3, path: '/staff', displayRole: 'employee' },
 
     // Rank 2: Tenant
-    tenant: { rank: 2, path: "/tenant", displayRole: "tenant" },
+    tenant: { rank: 2, path: '/tenant', displayRole: 'tenant' },
 
     // Rank 1: Leasing Agent / Poster
-    leasing_agent: { rank: 1, path: "/", displayRole: "poster" },
-    "leasing-agent": { rank: 1, path: "/", displayRole: "poster" },
-    leasingagent: { rank: 1, path: "/", displayRole: "poster" },
-    poster: { rank: 1, path: "/", displayRole: "poster" },
+    leasing_agent: { rank: 1, path: '/', displayRole: 'poster' },
+    'leasing-agent': { rank: 1, path: '/', displayRole: 'poster' },
+    leasingagent: { rank: 1, path: '/', displayRole: 'poster' },
+    poster: { rank: 1, path: '/', displayRole: 'poster' },
 
     // Rank 0: Guest
-    guest: { rank: 0, path: "/", displayRole: "poster" },
-  };
+    guest: { rank: 0, path: '/', displayRole: 'poster' },
+  }
 
-  const candidateRoles: string[] = [];
+  const candidateRoles: string[] = []
 
   // Extract from user.roles array if present
   if (Array.isArray(user.roles)) {
     for (const r of user.roles) {
-      if (typeof r === "string") {
-        candidateRoles.push(r.trim().toLowerCase());
+      if (typeof r === 'string') {
+        candidateRoles.push(r.trim().toLowerCase())
       }
     }
   }
 
   // Extract from user.role if present (can be string or comma-separated)
-  if (typeof user.role === "string") {
-    const split = user.role.split(",");
+  if (typeof user.role === 'string') {
+    const split = user.role.split(',')
     for (const s of split) {
       if (s.trim()) {
-        candidateRoles.push(s.trim().toLowerCase());
+        candidateRoles.push(s.trim().toLowerCase())
       }
     }
   }
 
   // Check relationship-based hints if present
   if (user.isLandlord || (Array.isArray(user.boardingHouses) && user.boardingHouses.length > 0)) {
-    candidateRoles.push("landlord");
+    candidateRoles.push('landlord')
   }
   if (user.isEmployee || user.isStaff || user.employee) {
-    candidateRoles.push("employee");
+    candidateRoles.push('employee')
   }
   if (user.isTenant || (Array.isArray(user.tenantContracts) && user.tenantContracts.length > 0)) {
-    candidateRoles.push("tenant");
+    candidateRoles.push('tenant')
   }
 
   // Find candidate role with the highest rank
-  let best = { rank: 0, path: "/", displayRole: "poster" as CanonicalDisplayRole };
+  let best = { rank: 0, path: '/', displayRole: 'poster' as CanonicalDisplayRole }
 
   for (const rawRole of candidateRoles) {
-    const config = roleConfigs[rawRole];
+    const config = roleConfigs[rawRole]
     if (config && config.rank > best.rank) {
-      best = config;
+      best = config
     }
   }
 
   // If candidate was leasing_agent or poster specifically, ensure rank is 1
-  if (best.rank === 0 && candidateRoles.some((r) => r === "leasing_agent" || r === "poster")) {
-    best = roleConfigs["leasing_agent"];
+  if (best.rank === 0 && candidateRoles.some(r => r === 'leasing_agent' || r === 'poster')) {
+    best = roleConfigs['leasing_agent']
   }
 
   return {
     role: best.displayRole,
     redirectPath: best.path,
     rank: best.rank,
-  };
+  }
 }
-

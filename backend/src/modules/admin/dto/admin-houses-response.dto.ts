@@ -1,79 +1,82 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class AdminHouseItemDto {
   @ApiProperty({ description: 'Unique identifier of the boarding house' })
-  id: string;
+  id: string
 
   @ApiProperty({ description: 'Display name of the boarding house' })
-  name: string;
+  name: string
 
   @ApiProperty({ description: 'Full name or username of the landlord' })
-  landlordName: string;
+  landlordName: string
 
   @ApiProperty({ description: 'Phone number of the landlord' })
-  landlordPhone: string;
+  landlordPhone: string
 
   @ApiProperty({ description: 'Email address of the landlord' })
-  landlordEmail: string;
+  landlordEmail: string
 
   @ApiProperty({ description: 'Full formatted physical address' })
-  address: string;
+  address: string
 
   @ApiProperty({ description: 'Total number of rooms' })
-  totalRooms: number;
+  totalRooms: number
 
   @ApiProperty({ description: 'Number of currently occupied rooms' })
-  occupiedRooms: number;
+  occupiedRooms: number
 
   @ApiProperty({ description: 'Calculated occupancy rate percentage' })
-  occupancyRate: number;
+  occupancyRate: number
 
   @ApiProperty({
     description: 'Moderation status',
     enum: ['active', 'locked', 'reported'],
   })
-  status: 'active' | 'locked' | 'reported';
+  status: 'active' | 'locked' | 'reported'
 
   @ApiProperty({ description: 'Number of active/pending grievances reported for this house' })
-  reportsCount: number;
+  reportsCount: number
 
   @ApiProperty({ description: 'Summary list of report reasons', type: [String] })
-  reportReasons: string[];
+  reportReasons: string[]
 
   @ApiPropertyOptional({ description: 'Reason why the property was locked' })
-  lockReason?: string;
+  lockReason?: string
 
   @ApiPropertyOptional({ description: 'ISO date string when the property was locked' })
-  lockedAt?: string;
+  lockedAt?: string
 
   @ApiProperty({ description: 'ISO date string when the property was created' })
-  createdAt: string;
+  createdAt: string
 
   @ApiProperty({ description: 'Cover image URL of the property' })
-  coverImage: string;
+  coverImage: string
 }
 
 export class AdminHousesPaginationDto {
   @ApiProperty({ description: 'Total number of records matching filter criteria' })
-  total: number;
+  total: number
 
   @ApiProperty({ description: 'Current page number' })
-  page: number;
+  page: number
 
   @ApiProperty({ description: 'Number of records per page' })
-  limit: number;
+  limit: number
 
   @ApiProperty({ description: 'Total number of pages' })
-  totalPages: number;
+  totalPages: number
 }
 
 export class AdminHousesListResponseDto {
   @ApiProperty({ description: 'Whether the operation was successful' })
-  success: boolean;
+  success: boolean
 
-  @ApiProperty({ description: 'List of boarding house moderation items', type: [AdminHouseItemDto] })
-  data: AdminHouseItemDto[];
+  @ApiProperty({
+    description: 'List of boarding house moderation items',
+    type: [AdminHouseItemDto],
+  })
+  data: AdminHouseItemDto[]
 
   @ApiProperty({ description: 'Pagination details', type: AdminHousesPaginationDto })
-  pagination: AdminHousesPaginationDto;
+  pagination: AdminHousesPaginationDto
 }

@@ -1,7 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsEnum, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ContractStatus } from '@prisma';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsEnum, IsInt, Min, Max } from 'class-validator'
+import { Type } from 'class-transformer'
+import { ContractStatus } from '@prisma'
 
 export class QueryContractsDto {
   @ApiPropertyOptional({
@@ -10,7 +10,7 @@ export class QueryContractsDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by contract status',
@@ -19,7 +19,7 @@ export class QueryContractsDto {
   })
   @IsOptional()
   @IsEnum(ContractStatus)
-  status?: ContractStatus;
+  status?: ContractStatus
 
   @ApiPropertyOptional({
     description: 'Page number (default 1)',
@@ -30,7 +30,7 @@ export class QueryContractsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page (default 10, max 200)',
@@ -42,5 +42,5 @@ export class QueryContractsDto {
   @IsInt()
   @Min(1)
   @Max(200)
-  limit?: number = 10;
+  limit?: number = 10
 }

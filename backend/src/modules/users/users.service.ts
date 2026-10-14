@@ -1,19 +1,14 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  Logger,
-} from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { UploadService } from '../upload/upload.service';
-import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto';
-import { UpsertBankAccountDto } from './dto/upsert-bank-account.dto';
-import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common'
+import { randomUUID } from 'crypto'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { UploadService } from '../upload/upload.service'
+import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto'
+import { UpsertBankAccountDto } from './dto/upsert-bank-account.dto'
+import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto'
 
 @Injectable()
 export class UsersService {
-  private readonly logger = new Logger(UsersService.name);
+  private readonly logger = new Logger(UsersService.name)
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,15 +27,15 @@ export class UsersService {
    *   - isAdmin     → user.role === 'admin' (the one case the flat field IS authoritative)
    */
   async getCapabilities(userId: string): Promise<UserCapabilitiesResponseDto> {
-    this.logger.log(`Fetching capabilities for user ${userId}`);
+    this.logger.log(`Fetching capabilities for user ${userId}`)
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { role: true, status: true },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`)
     }
 
     // Run all three relationship count queries in parallel for efficiency
@@ -66,7 +61,7 @@ export class UsersService {
             status: 'active',
           },
         }),
-      ]);
+      ])
 
     return {
       role: user.role,
@@ -76,28 +71,28 @@ export class UsersService {
         isEmployee: activeEmployeeAssignmentCount > 0,
         isAdmin: user.role === 'admin',
       },
-    };
+    }
   }
 
   /**
    * Retrieves identity verification details for the given user.
    */
   async getIdentification(userId: string) {
-    this.logger.log(`Fetching identification for user ${userId}`);
+    this.logger.log(`Fetching identification for user ${userId}`)
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { userIdentification: true },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`)
     }
 
     return {
       hasIdentification: !!user.userIdentification,
       identification: user.userIdentification || null,
-    };
+    }
   }
 
   /**
@@ -107,51 +102,51 @@ export class UsersService {
   async upsertIdentification(userId: string, dto: UpsertUserIdentificationDto) {
     this.logger.log(
       `Upserting identification for user ${userId} (identityNumber: ${dto.identityNumber})`,
-    );
+    )
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { userIdentification: true },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`)
     }
 
     // Check if another user already registered this identityNumber
     const existingWithNumber = await this.prisma.userIdentification.findUnique({
       where: { identityNumber: dto.identityNumber },
-    });
+    })
 
     if (existingWithNumber && existingWithNumber.userId !== userId) {
       throw new ConflictException(
         'Số căn cước công dân (CCCD) này đã được đăng ký bởi tài khoản khác.',
-      );
+      )
     }
 
     const placeOfOrigin =
       typeof dto.placeOfOrigin === 'string'
         ? { address: dto.placeOfOrigin }
-        : dto.placeOfOrigin || {};
+        : dto.placeOfOrigin || {}
 
     const placeOfResidence =
       typeof dto.placeOfResidence === 'string'
         ? { address: dto.placeOfResidence }
-        : dto.placeOfResidence || {};
+        : dto.placeOfResidence || {}
 
-    const issueDate = dto.issueDate ? new Date(dto.issueDate) : new Date();
+    const issueDate = dto.issueDate ? new Date(dto.issueDate) : new Date()
     const expiryDate = dto.expiryDate
       ? new Date(dto.expiryDate)
-      : new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000);
+      : new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000)
 
     const frontUrl = await this.uploadService.ensureCloudinaryUrl(
       dto.cardFrontUrl,
       'dormio/identifications',
-    );
+    )
     const backUrl = await this.uploadService.ensureCloudinaryUrl(
       dto.cardBackUrl,
       'dormio/identifications',
-    );
+    )
 
     const saved = await this.prisma.userIdentification.upsert({
       where: { userId },
@@ -185,46 +180,44 @@ export class UsersService {
         cardFrontUrl: frontUrl?.trim() || '',
         cardBackUrl: backUrl?.trim() || '',
       },
-    });
+    })
 
-    this.logger.log(
-      `Successfully saved identification ${saved.id} for user ${userId}`,
-    );
+    this.logger.log(`Successfully saved identification ${saved.id} for user ${userId}`)
 
     return {
       hasIdentification: true,
       identification: saved,
-    };
+    }
   }
 
   /**
    * Retrieves bank account information for the given user.
    */
   async getBankAccount(userId: string) {
-    this.logger.log(`Fetching bank account for user ${userId}`);
+    this.logger.log(`Fetching bank account for user ${userId}`)
 
     const bankAccount = await this.prisma.bankAccount.findUnique({
       where: { userId },
-    });
+    })
 
     return {
       hasBankAccount: !!bankAccount,
       bankAccount: bankAccount || null,
-    };
+    }
   }
 
   /**
    * Creates or updates BankAccount for the given user.
    */
   async upsertBankAccount(userId: string, dto: UpsertBankAccountDto) {
-    this.logger.log(`Upserting bank account for user ${userId}`);
+    this.logger.log(`Upserting bank account for user ${userId}`)
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`)
     }
 
     const saved = await this.prisma.bankAccount.upsert({
@@ -240,15 +233,13 @@ export class UsersService {
         accountNumber: dto.accountNumber.trim(),
         accountName: dto.accountName.trim().toUpperCase(),
       },
-    });
+    })
 
-    this.logger.log(
-      `Successfully saved bank account ${saved.id} for user ${userId}`,
-    );
+    this.logger.log(`Successfully saved bank account ${saved.id} for user ${userId}`)
 
     return {
       hasBankAccount: true,
       bankAccount: saved,
-    };
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   ContractStatus,
   DepositStatus,
@@ -7,218 +7,218 @@ import {
   PaymentMethod,
   PaymentStatus,
   RoomStatus,
-} from '@prisma';
-import { RoomServiceItemDto, RoomTypeSummaryDto } from './room-response.dto';
+} from '@prisma'
+import { RoomServiceItemDto, RoomTypeSummaryDto } from './room-response.dto'
 
 export class RoomDashboardTenantDto {
   @ApiProperty({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'Nguyen Van A' })
-  fullName: string;
+  fullName: string
 
   @ApiProperty({ example: '0912345678' })
-  phoneNumber: string;
+  phoneNumber: string
 
   @ApiPropertyOptional({ example: 'tenant@example.com' })
-  email?: string | null;
+  email?: string | null
 
   @ApiPropertyOptional({ example: 'https://res.cloudinary.com/.../avatar.jpg' })
-  avatarUrl?: string | null;
+  avatarUrl?: string | null
 
   @ApiProperty({ example: true })
-  isPrimary: boolean;
+  isPrimary: boolean
 
   @ApiProperty({ example: true })
-  hasIdentification: boolean;
+  hasIdentification: boolean
 
   @ApiPropertyOptional({ example: '079201012345' })
-  identityNumber?: string | null;
+  identityNumber?: string | null
 
   @ApiPropertyOptional({ example: '1998-05-12T00:00:00.000Z' })
-  dateOfBirth?: string | null;
+  dateOfBirth?: string | null
 
   @ApiPropertyOptional({ example: 'male' })
-  gender?: string | null;
+  gender?: string | null
 }
 
 export class RoomDashboardDepositDto {
   @ApiProperty({ example: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: '3500000.00' })
-  amount: string;
+  amount: string
 
   @ApiProperty({ enum: DepositStatus, example: DepositStatus.paid })
-  status: DepositStatus;
+  status: DepositStatus
 
   @ApiProperty({ enum: DepositType, example: DepositType.contract })
-  type: DepositType;
+  type: DepositType
 }
 
 export class RoomDashboardDocumentDto {
   @ApiProperty({ example: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'https://storage.example.com/contracts/doc1.pdf' })
-  url: string;
+  url: string
 
   @ApiProperty({ example: '2026-09-01T00:00:00.000Z' })
-  createdAt: string;
+  createdAt: string
 }
 
 export class RoomDashboardContractDto {
   @ApiProperty({ example: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: '2026-09-01T00:00:00.000Z' })
-  startDate: string;
+  startDate: string
 
   @ApiProperty({ example: '2027-09-01T00:00:00.000Z' })
-  endDate: string;
+  endDate: string
 
   @ApiProperty({ example: '3500000.00' })
-  rentPrice: string;
+  rentPrice: string
 
   @ApiProperty({ example: 5 })
-  monthlyPaymentDate: number;
+  monthlyPaymentDate: number
 
   @ApiProperty({ enum: ContractStatus, example: ContractStatus.active })
-  status: ContractStatus;
+  status: ContractStatus
 
   @ApiPropertyOptional({ example: 'Thanh toan tien phong vao ngay 5 hang thang' })
-  note?: string | null;
+  note?: string | null
 
   @ApiPropertyOptional({ type: RoomDashboardDepositDto })
-  deposit?: RoomDashboardDepositDto | null;
+  deposit?: RoomDashboardDepositDto | null
 
   @ApiProperty({ type: [RoomDashboardTenantDto] })
-  tenants: RoomDashboardTenantDto[];
+  tenants: RoomDashboardTenantDto[]
 
   @ApiProperty({ type: [RoomDashboardDocumentDto] })
-  documents: RoomDashboardDocumentDto[];
+  documents: RoomDashboardDocumentDto[]
 }
 
 export class RoomDashboardRentalHistoryItemDto {
   @ApiProperty({ example: 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: '2025-08-01T00:00:00.000Z' })
-  startDate: string;
+  startDate: string
 
   @ApiProperty({ example: '2026-08-01T00:00:00.000Z' })
-  endDate: string;
+  endDate: string
 
   @ApiProperty({ example: '3200000.00' })
-  rentPrice: string;
+  rentPrice: string
 
   @ApiProperty({ enum: ContractStatus, example: ContractStatus.expired })
-  status: ContractStatus;
+  status: ContractStatus
 
   @ApiProperty({ example: 'Tran Thi B' })
-  primaryTenantName: string;
+  primaryTenantName: string
 
   @ApiProperty({ example: '0987654321' })
-  primaryTenantPhone: string;
+  primaryTenantPhone: string
 
   @ApiProperty({ example: 2 })
-  tenantsCount: number;
+  tenantsCount: number
 }
 
 export class RoomDashboardInvoiceDto {
   @ApiProperty({ example: 'f0eebc99-9c0b-4ef8-bb6d-6bb9bd380a66' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: '3850000.00' })
-  totalAmount: string;
+  totalAmount: string
 
   @ApiProperty({ enum: InvoiceStatus, example: InvoiceStatus.paid })
-  status: InvoiceStatus;
+  status: InvoiceStatus
 
   @ApiProperty({ example: '2026-09-10T00:00:00.000Z' })
-  dueDate: string;
+  dueDate: string
 
   @ApiProperty({ example: '2026-09-01T00:00:00.000Z' })
-  createdAt: string;
+  createdAt: string
 
   @ApiPropertyOptional({ enum: PaymentStatus, example: PaymentStatus.success })
-  paymentStatus?: PaymentStatus | null;
+  paymentStatus?: PaymentStatus | null
 
   @ApiPropertyOptional({ enum: PaymentMethod, example: PaymentMethod.banking })
-  paymentMethod?: PaymentMethod | null;
+  paymentMethod?: PaymentMethod | null
 }
 
 export class RoomDashboardMeterReadingDto {
   @ApiProperty({ example: '10eebc99-9c0b-4ef8-bb6d-6bb9bd380a77' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: '20eebc99-9c0b-4ef8-bb6d-6bb9bd380a88' })
-  serviceId: string;
+  serviceId: string
 
   @ApiProperty({ example: 'Điện' })
-  serviceName: string;
+  serviceName: string
 
   @ApiPropertyOptional({ example: '1240.50' })
-  readingValue?: string | null;
+  readingValue?: string | null
 
   @ApiPropertyOptional({ example: 'https://res.cloudinary.com/.../meter.jpg' })
-  imageUrl?: string | null;
+  imageUrl?: string | null
 
   @ApiProperty({ example: '2026-09-01T00:00:00.000Z' })
-  createdAt: string;
+  createdAt: string
 }
 
 export class RoomDashboardDetailsDto {
   @ApiProperty({ example: '30eebc99-9c0b-4ef8-bb6d-6bb9bd380a99' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: '40eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa' })
-  boardingHouseId: string;
+  boardingHouseId: string
 
   @ApiProperty({ example: 'P101' })
-  roomNumber: string;
+  roomNumber: string
 
   @ApiProperty({ example: 1 })
-  floor: number;
+  floor: number
 
   @ApiPropertyOptional({ example: '25.5' })
-  area?: string | null;
+  area?: string | null
 
   @ApiPropertyOptional({ example: 2 })
-  maxOccupants?: number | null;
+  maxOccupants?: number | null
 
   @ApiProperty({ enum: RoomStatus, example: RoomStatus.occupied })
-  status: RoomStatus;
+  status: RoomStatus
 
   @ApiPropertyOptional({ example: 'https://res.cloudinary.com/.../room.jpg' })
-  imageUrl?: string | null;
+  imageUrl?: string | null
 
   @ApiProperty({ type: RoomTypeSummaryDto })
-  roomType: RoomTypeSummaryDto;
+  roomType: RoomTypeSummaryDto
 
   @ApiProperty({ example: '2026-09-01T00:00:00.000Z' })
-  createdAt: string;
+  createdAt: string
 
   @ApiPropertyOptional({ example: '2026-09-01T00:00:00.000Z' })
-  updatedAt?: string | null;
+  updatedAt?: string | null
 }
 
 export class RoomDashboardResponseDto {
   @ApiProperty({ type: RoomDashboardDetailsDto })
-  room: RoomDashboardDetailsDto;
+  room: RoomDashboardDetailsDto
 
   @ApiProperty({ type: [RoomServiceItemDto] })
-  services: RoomServiceItemDto[];
+  services: RoomServiceItemDto[]
 
   @ApiPropertyOptional({ type: RoomDashboardContractDto })
-  currentContract?: RoomDashboardContractDto | null;
+  currentContract?: RoomDashboardContractDto | null
 
   @ApiProperty({ type: [RoomDashboardRentalHistoryItemDto] })
-  rentalHistory: RoomDashboardRentalHistoryItemDto[];
+  rentalHistory: RoomDashboardRentalHistoryItemDto[]
 
   @ApiProperty({ type: [RoomDashboardInvoiceDto] })
-  invoices: RoomDashboardInvoiceDto[];
+  invoices: RoomDashboardInvoiceDto[]
 
   @ApiProperty({ type: [RoomDashboardMeterReadingDto] })
-  meterReadings: RoomDashboardMeterReadingDto[];
+  meterReadings: RoomDashboardMeterReadingDto[]
 }

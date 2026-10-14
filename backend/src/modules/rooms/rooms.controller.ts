@@ -10,7 +10,7 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -18,24 +18,24 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
-} from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger';
-import { JwtPayload } from '../auth/types/jwt-payload.type';
-import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto';
-import { CreateRoomDto } from './dto/create-room.dto';
-import { RoomDashboardResponseDto } from './dto/room-dashboard-response.dto';
-import { RoomQueryDto } from './dto/room-query.dto';
+} from '@nestjs/swagger'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { ApiAuth, ApiBoardingHouseHeader } from '../../common/swagger'
+import { JwtPayload } from '../auth/types/jwt-payload.type'
+import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto'
+import { CreateRoomDto } from './dto/create-room.dto'
+import { RoomDashboardResponseDto } from './dto/room-dashboard-response.dto'
+import { RoomQueryDto } from './dto/room-query.dto'
 import {
   BulkGenerateRoomsResponseDto,
   RoomListResponseDto,
   RoomMetadataResponseDto,
   RoomResponseDto,
-} from './dto/room-response.dto';
-import { UpdateRoomDto } from './dto/update-room.dto';
-import { RoomsService } from './rooms.service';
+} from './dto/room-response.dto'
+import { UpdateRoomDto } from './dto/update-room.dto'
+import { RoomsService } from './rooms.service'
 
 @ApiTags('Rooms')
 @ApiAuth()
@@ -43,7 +43,7 @@ import { RoomsService } from './rooms.service';
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 @Controller('rooms')
 export class RoomsController {
-  private readonly logger = new Logger(RoomsController.name);
+  private readonly logger = new Logger(RoomsController.name)
 
   constructor(private readonly roomsService: RoomsService) {}
 
@@ -59,8 +59,7 @@ export class RoomsController {
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid input, invalid service IDs, or subscription plan max room limit exceeded',
+    description: 'Invalid input, invalid service IDs, or subscription plan max room limit exceeded',
   })
   @ApiResponse({
     status: 404,
@@ -76,8 +75,8 @@ export class RoomsController {
   ): Promise<RoomResponseDto> {
     this.logger.log(
       `POST /rooms called by user ${user.id} for house ${boardingHouseId} (roomNumber=${dto.roomNumber})`,
-    );
-    return this.roomsService.createRoom(user.id, boardingHouseId, dto);
+    )
+    return this.roomsService.createRoom(user.id, boardingHouseId, dto)
   }
 
   @Post('bulk-generate')
@@ -105,8 +104,8 @@ export class RoomsController {
   ): Promise<BulkGenerateRoomsResponseDto> {
     this.logger.log(
       `POST /rooms/bulk-generate called by user ${user.id} for house ${boardingHouseId}`,
-    );
-    return this.roomsService.bulkGenerateRooms(user.id, boardingHouseId, dto);
+    )
+    return this.roomsService.bulkGenerateRooms(user.id, boardingHouseId, dto)
   }
 
   @Get('metadata')
@@ -123,10 +122,8 @@ export class RoomsController {
     @CurrentUser() user: JwtPayload,
     @Headers('x-boarding-house-id') boardingHouseId: string,
   ): Promise<RoomMetadataResponseDto> {
-    this.logger.log(
-      `GET /rooms/metadata called by user ${user.id} for house ${boardingHouseId}`,
-    );
-    return this.roomsService.getRoomMetadata(user.id, boardingHouseId);
+    this.logger.log(`GET /rooms/metadata called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.getRoomMetadata(user.id, boardingHouseId)
   }
 
   @Get()
@@ -146,8 +143,8 @@ export class RoomsController {
   ): Promise<RoomListResponseDto> {
     this.logger.log(
       `GET /rooms called by user ${user.id} for house ${boardingHouseId} (page=${query.page}, limit=${query.limit})`,
-    );
-    return this.roomsService.getRooms(boardingHouseId, query);
+    )
+    return this.roomsService.getRooms(boardingHouseId, query)
   }
 
   @Get(':id/dashboard')
@@ -168,8 +165,8 @@ export class RoomsController {
   ): Promise<RoomDashboardResponseDto> {
     this.logger.log(
       `GET /rooms/${id}/dashboard called by user ${user.id} for house ${boardingHouseId}`,
-    );
-    return this.roomsService.getRoomDashboard(boardingHouseId, id);
+    )
+    return this.roomsService.getRoomDashboard(boardingHouseId, id)
   }
 
   @Get(':id')
@@ -188,10 +185,8 @@ export class RoomsController {
     @Headers('x-boarding-house-id') boardingHouseId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<RoomResponseDto> {
-    this.logger.log(
-      `GET /rooms/${id} called by user ${user.id} for house ${boardingHouseId}`,
-    );
-    return this.roomsService.getRoomById(boardingHouseId, id);
+    this.logger.log(`GET /rooms/${id} called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.getRoomById(boardingHouseId, id)
   }
 
   @Patch(':id')
@@ -212,9 +207,7 @@ export class RoomsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateRoomDto,
   ): Promise<RoomResponseDto> {
-    this.logger.log(
-      `PATCH /rooms/${id} called by user ${user.id} for house ${boardingHouseId}`,
-    );
-    return this.roomsService.updateRoom(boardingHouseId, id, dto);
+    this.logger.log(`PATCH /rooms/${id} called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.updateRoom(boardingHouseId, id, dto)
   }
 }

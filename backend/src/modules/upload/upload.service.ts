@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CloudinaryService, CloudinaryUploadResult } from './cloudinary.service';
-import { UploadImageDto } from './dto/upload-image.dto';
+import { Injectable, Logger } from '@nestjs/common'
+import { CloudinaryService, CloudinaryUploadResult } from './cloudinary.service'
+import { UploadImageDto } from './dto/upload-image.dto'
 
 @Injectable()
 export class UploadService {
-  private readonly logger = new Logger(UploadService.name);
+  private readonly logger = new Logger(UploadService.name)
 
   constructor(private readonly cloudinaryService: CloudinaryService) {}
 
@@ -12,8 +12,8 @@ export class UploadService {
    * Upload an image from data URL or remote URL
    */
   async uploadImage(dto: UploadImageDto): Promise<CloudinaryUploadResult> {
-    this.logger.log(`Handling upload image request with folder: ${dto.folder ?? 'default'}`);
-    return this.cloudinaryService.uploadImage(dto.image, dto.folder);
+    this.logger.log(`Handling upload image request with folder: ${dto.folder ?? 'default'}`)
+    return this.cloudinaryService.uploadImage(dto.image, dto.folder)
   }
 
   /**
@@ -24,8 +24,10 @@ export class UploadService {
     folder?: string,
     filename?: string,
   ): Promise<CloudinaryUploadResult> {
-    this.logger.log(`Handling file buffer upload (${buffer.length} bytes) to folder: ${folder ?? 'default'}`);
-    return this.cloudinaryService.uploadFileBuffer(buffer, folder, filename);
+    this.logger.log(
+      `Handling file buffer upload (${buffer.length} bytes) to folder: ${folder ?? 'default'}`,
+    )
+    return this.cloudinaryService.uploadFileBuffer(buffer, folder, filename)
   }
 
   /**
@@ -37,19 +39,19 @@ export class UploadService {
     imageStr?: string,
     folder: string = 'dormio/uploads',
   ): Promise<string | undefined> {
-    if (!imageStr) return undefined;
+    if (!imageStr) return undefined
 
-    const trimmed = imageStr.trim();
-    if (!trimmed) return undefined;
+    const trimmed = imageStr.trim()
+    if (!trimmed) return undefined
 
     // If it's a data URL, upload to Cloudinary
     if (trimmed.startsWith('data:image/') || trimmed.startsWith('data:application/')) {
-      this.logger.log(`Detected base64 data URL, uploading to Cloudinary (${folder})...`);
-      const result = await this.cloudinaryService.uploadImage(trimmed, folder);
-      return result.secureUrl || result.url;
+      this.logger.log(`Detected base64 data URL, uploading to Cloudinary (${folder})...`)
+      const result = await this.cloudinaryService.uploadImage(trimmed, folder)
+      return result.secureUrl || result.url
     }
 
     // Already a remote URL or object key
-    return trimmed;
+    return trimmed
   }
 }

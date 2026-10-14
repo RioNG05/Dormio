@@ -1,98 +1,104 @@
-"use client";
+'use client'
 
-import React, { useState, useRef, useEffect } from "react";
-import { X, Send, Bot, User, Loader2 } from "lucide-react";
-import { useLanguage, useTranslations } from "@/context/LanguageContext";
-import { api } from "@/services/api";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import React, { useState, useRef, useEffect } from 'react'
+import { X, Send, Bot, User, Loader2 } from 'lucide-react'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { api } from '@/services/api'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-};
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+}
 
 export default function AIChatBot() {
-  const { locale } = useLanguage();
-  const t = useTranslations("common");
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { locale } = useLanguage()
+  const t = useTranslations('common')
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Initialize welcome message when component mounts or when messages are empty
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
         {
-          id: "welcome",
-          role: "assistant",
-          content: t("aiChatWelcomeMessage"),
+          id: 'welcome',
+          role: 'assistant',
+          content: t('aiChatWelcomeMessage'),
         },
-      ]);
+      ])
     }
-  }, [locale, t, messages.length]);
+  }, [locale, t, messages.length])
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
     if (isOpen) {
-      scrollToBottom();
+      scrollToBottom()
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen])
 
   const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
 
     const userMsg: Message = {
       id: Date.now().toString(),
-      role: "user",
+      role: 'user',
       content: input.trim(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setIsLoading(true);
+    }
+    setMessages(prev => [...prev, userMsg])
+    setInput('')
+    setIsLoading(true)
 
     try {
-      const response = await api.post<{ reply: string }>("/v1/ai/chat", {
-        messages: [...messages, userMsg].map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      }, {
-        headers: {
-          "Accept-Language": locale,
+      const response = await api.post<{ reply: string }>(
+        '/v1/ai/chat',
+        {
+          messages: [...messages, userMsg].map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
         },
-      });
+        {
+          headers: {
+            'Accept-Language': locale,
+          },
+        },
+      )
 
       // The api client typically returns { success: true, data: ... } or just the data depending on unwrapping
       // The backend returns: { success: true, data: { reply: "..." } }
       // So response might be the raw object or the data property. We will safely handle it:
-      const replyData = (response as any).data ? (response as any).data.reply : (response as any).reply;
+      const replyData = (response as any).data
+        ? (response as any).data.reply
+        : (response as any).reply
 
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
-        { id: Date.now().toString(), role: "assistant", content: replyData },
-      ]);
+        { id: Date.now().toString(), role: 'assistant', content: replyData },
+      ])
     } catch (error: any) {
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         {
           id: Date.now().toString(),
-          role: "assistant",
-          content: t("aiChatErrorMessage"),
+          role: 'assistant',
+          content: t('aiChatErrorMessage'),
         },
-      ]);
+      ])
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <>
@@ -101,8 +107,8 @@ export default function AIChatBot() {
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-[100] group cursor-pointer"
-          title={t("aiChatBotTitle")}
-          aria-label={t("aiChatBotTitle")}
+          title={t('aiChatBotTitle')}
+          aria-label={t('aiChatBotTitle')}
         >
           <Bot className="w-7 h-7 group-hover:animate-pulse" />
           <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#FF6B35] border-2 border-white rounded-full"></div>
@@ -119,19 +125,17 @@ export default function AIChatBot() {
                 <Bot className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-base">
-                  {t("aiChatHeaderTitle")}
-                </h3>
+                <h3 className="font-bold text-base">{t('aiChatHeaderTitle')}</h3>
                 <p className="text-xs text-teal-100 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                  {t("aiChatAlwaysOnline")}
+                  {t('aiChatAlwaysOnline')}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
               className="p-2 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
-              aria-label={t("aiChatCloseAria")}
+              aria-label={t('aiChatCloseAria')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -139,24 +143,24 @@ export default function AIChatBot() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-50/50 custom-scrollbar">
-            {messages.map((msg) => (
+            {messages.map(msg => (
               <div
                 key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
                   className={`flex gap-2 max-w-[85%] ${
-                    msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                    msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                   }`}
                 >
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                      msg.role === "user"
-                        ? "bg-zinc-200 text-zinc-600"
-                        : "bg-[#2AC1BC]/10 text-[#2AC1BC]"
+                      msg.role === 'user'
+                        ? 'bg-zinc-200 text-zinc-600'
+                        : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
                     }`}
                   >
-                    {msg.role === "user" ? (
+                    {msg.role === 'user' ? (
                       <User className="w-4 h-4" />
                     ) : (
                       <Bot className="w-5 h-5" />
@@ -164,14 +168,12 @@ export default function AIChatBot() {
                   </div>
                   <div
                     className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${
-                      msg.role === "user"
-                        ? "bg-[#2AC1BC] text-white rounded-tr-sm prose-invert"
-                        : "bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0"
+                      msg.role === 'user'
+                        ? 'bg-[#2AC1BC] text-white rounded-tr-sm prose-invert'
+                        : 'bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
                     }`}
                   >
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {msg.content}
-                    </ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -186,11 +188,11 @@ export default function AIChatBot() {
                     <span className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"></span>
                     <span
                       className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"
-                      style={{ animationDelay: "0.15s" }}
+                      style={{ animationDelay: '0.15s' }}
                     ></span>
                     <span
                       className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"
-                      style={{ animationDelay: "0.3s" }}
+                      style={{ animationDelay: '0.3s' }}
                     ></span>
                   </div>
                 </div>
@@ -205,8 +207,8 @@ export default function AIChatBot() {
               <input
                 type="text"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={t("aiChatInputPlaceholder")}
+                onChange={e => setInput(e.target.value)}
+                placeholder={t('aiChatInputPlaceholder')}
                 className="w-full pl-4 pr-12 py-3 bg-zinc-100 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all text-sm outline-none"
                 disabled={isLoading}
               />
@@ -223,13 +225,11 @@ export default function AIChatBot() {
               </button>
             </form>
             <div className="text-center mt-2">
-              <span className="text-[10px] text-zinc-400">
-                {t("aiChatPoweredBy")}
-              </span>
+              <span className="text-[10px] text-zinc-400">{t('aiChatPoweredBy')}</span>
             </div>
           </div>
         </div>
       )}
     </>
-  );
+  )
 }

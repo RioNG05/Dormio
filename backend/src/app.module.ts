@@ -1,44 +1,44 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { BullModule } from '@nestjs/bullmq';
-import { ScheduleModule } from '@nestjs/schedule';
+import { Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { BullModule } from '@nestjs/bullmq'
+import { ScheduleModule } from '@nestjs/schedule'
 
-import configuration from './config/configuration';
-import { PrismaModule } from './common/prisma/prisma.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { ContractsModule } from './modules/contracts/contracts.module';
-import { BillingCronModule } from './modules/billing-cron/billing-cron.module';
-import { MeterReadingsModule } from './modules/meter-readings/meter-readings.module';
-import { InvoicesModule } from './modules/invoices/invoices.module';
-import { GrievancesModule } from './modules/grievances/grievances.module';
-import { PaymentsModule } from './modules/payments/payments.module';
-import { PostsModule } from './modules/posts/posts.module';
-import { BoardingHousesModule } from './modules/boarding-houses/boarding-houses.module';
-import { RoomsModule } from './modules/rooms/rooms.module';
-import { DepositsModule } from './modules/deposits/deposits.module';
-import { MessagesModule } from './modules/messages/messages.module';
-import { ExpensesModule } from './modules/expenses/expenses.module';
-import { ServicesModule } from './modules/services/services.module';
-import { UsersModule } from './modules/users/users.module';
-import { EmployeesModule } from './modules/employees/employees.module';
-import { SchedulesModule } from './modules/schedules/schedules.module';
-import { AttendanceModule } from './modules/attendance/attendance.module';
-import { AdminModule } from './modules/admin/admin.module';
-import { AssetsModule } from './modules/assets/assets.module';
-import { UploadModule } from './modules/upload/upload.module';
-import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
-import { AiModule } from './modules/ai/ai.module';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
-import { SubscriptionTierGuard } from './common/guards/subscription-tier.guard';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import configuration from './config/configuration'
+import { PrismaModule } from './common/prisma/prisma.module'
+import { AuthModule } from './modules/auth/auth.module'
+import { NotificationsModule } from './modules/notifications/notifications.module'
+import { ContractsModule } from './modules/contracts/contracts.module'
+import { BillingCronModule } from './modules/billing-cron/billing-cron.module'
+import { MeterReadingsModule } from './modules/meter-readings/meter-readings.module'
+import { InvoicesModule } from './modules/invoices/invoices.module'
+import { GrievancesModule } from './modules/grievances/grievances.module'
+import { PaymentsModule } from './modules/payments/payments.module'
+import { PostsModule } from './modules/posts/posts.module'
+import { BoardingHousesModule } from './modules/boarding-houses/boarding-houses.module'
+import { RoomsModule } from './modules/rooms/rooms.module'
+import { DepositsModule } from './modules/deposits/deposits.module'
+import { MessagesModule } from './modules/messages/messages.module'
+import { ExpensesModule } from './modules/expenses/expenses.module'
+import { ServicesModule } from './modules/services/services.module'
+import { UsersModule } from './modules/users/users.module'
+import { EmployeesModule } from './modules/employees/employees.module'
+import { SchedulesModule } from './modules/schedules/schedules.module'
+import { AttendanceModule } from './modules/attendance/attendance.module'
+import { AdminModule } from './modules/admin/admin.module'
+import { AssetsModule } from './modules/assets/assets.module'
+import { UploadModule } from './modules/upload/upload.module'
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module'
+import { AiModule } from './modules/ai/ai.module'
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
+import { SubscriptionTierGuard } from './common/guards/subscription-tier.guard'
+import { HttpExceptionFilter } from './common/filters/http-exception.filter'
+import { TransformInterceptor } from './common/interceptors/transform.interceptor'
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
 
 @Module({
   imports: [
@@ -54,7 +54,7 @@ import { AppService } from './app.service';
       {
         name: 'default',
         ttl: 60000, // 1 minute window
-        limit: 60,  // 60 requests per minute globally
+        limit: 60, // 60 requests per minute globally
       },
     ]),
 
@@ -141,4 +141,4 @@ import { AppService } from './app.service';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

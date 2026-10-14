@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString } from 'class-validator'
 
 export class DeletePostDto {
   @ApiPropertyOptional({
@@ -8,5 +8,5 @@ export class DeletePostDto {
   })
   @IsOptional()
   @IsString({ message: 'Reason must be a string' })
-  reason?: string;
+  reason?: string
 }

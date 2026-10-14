@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams, redirect } from "next/navigation";
-import { FEATURE_FLAGS } from "@/config/features";
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams, redirect } from 'next/navigation'
+import { FEATURE_FLAGS } from '@/config/features'
 import {
   Check,
   ShieldCheck,
@@ -20,263 +20,260 @@ import {
   Lock,
   Package,
   Star,
-} from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { useToast } from "@/context/ToastContext";
-import { Button } from "@/components/ui/button";
-import IdentityGuard from "@/components/IdentityGuard";
+} from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import { Button } from '@/components/ui/button'
+import IdentityGuard from '@/components/IdentityGuard'
 
 // ─── Bank name map ─────────────────────────────────────────────────────────────
 const BANK_NAMES: Record<string, string> = {
-  "970422": "MB Bank (Quân Đội)",
-  "970415": "VietinBank",
-  "970436": "Vietcombank",
-  "970407": "Techcombank",
-  "970423": "TPBank",
-  "970432": "VPBank",
-  "970418": "BIDV",
-  "970405": "Agribank",
-  "970416": "ACB",
-  "970441": "VIB",
-  "970403": "Sacombank",
-  "970448": "OCB",
-  "970452": "KienlongBank",
-};
+  '970422': 'MB Bank (Quân Đội)',
+  '970415': 'VietinBank',
+  '970436': 'Vietcombank',
+  '970407': 'Techcombank',
+  '970423': 'TPBank',
+  '970432': 'VPBank',
+  '970418': 'BIDV',
+  '970405': 'Agribank',
+  '970416': 'ACB',
+  '970441': 'VIB',
+  '970403': 'Sacombank',
+  '970448': 'OCB',
+  '970452': 'KienlongBank',
+}
 
 // ─── Pack definitions ──────────────────────────────────────────────────────────
-type PackKey = "1" | "10" | "100";
+type PackKey = '1' | '10' | '100'
 
 interface TurnPack {
-  key: PackKey;
-  name: string;
-  nameEn: string;
-  turns: number;
-  price: number;
-  pricePerTurn: number;
-  badge: string;
-  accentColor: string;
-  iconColor: string;
-  features: string[];
-  featuresEn: string[];
-  popular: boolean;
+  key: PackKey
+  name: string
+  nameEn: string
+  turns: number
+  price: number
+  pricePerTurn: number
+  badge: string
+  accentColor: string
+  iconColor: string
+  features: string[]
+  featuresEn: string[]
+  popular: boolean
 }
 
 const TURN_PACKS: TurnPack[] = [
   {
-    key: "1",
-    name: "Theo lượt",
-    nameEn: "Per turn",
+    key: '1',
+    name: 'Theo lượt',
+    nameEn: 'Per turn',
     turns: 1,
     price: 20000,
     pricePerTurn: 20000,
-    badge: "MỚI",
-    accentColor: "#F59E0B",
-    iconColor: "#FBBF24",
+    badge: 'MỚI',
+    accentColor: '#F59E0B',
+    iconColor: '#FBBF24',
     features: [],
     featuresEn: [],
     popular: false,
   },
   {
-    key: "10",
-    name: "Gói 10 tin",
-    nameEn: "10 turns pack",
+    key: '10',
+    name: 'Gói 10 tin',
+    nameEn: '10 turns pack',
     turns: 10,
     price: 170000,
     pricePerTurn: 17000,
-    badge: "PHỔ BIẾN",
-    accentColor: "#F59E0B",
-    iconColor: "#FBBF24",
+    badge: 'PHỔ BIẾN',
+    accentColor: '#F59E0B',
+    iconColor: '#FBBF24',
     features: [],
     featuresEn: [],
     popular: true,
   },
   {
-    key: "100",
-    name: "Gói 100 tin",
-    nameEn: "100 turns pack",
+    key: '100',
+    name: 'Gói 100 tin',
+    nameEn: '100 turns pack',
     turns: 100,
     price: 1690000,
     pricePerTurn: 16900,
-    badge: "GIÁ TRỊ NHẤT",
-    accentColor: "#2AC1BC",
-    iconColor: "#5EEAD4",
+    badge: 'GIÁ TRỊ NHẤT',
+    accentColor: '#2AC1BC',
+    iconColor: '#5EEAD4',
     features: [],
     featuresEn: [],
     popular: false,
   },
-];
+]
 
 // ─── QR image helper ──────────────────────────────────────────────────────────
 function getQrImageUrl(qrCode: string | undefined): string {
-  if (!qrCode) return "";
+  if (!qrCode) return ''
   if (
-    qrCode.startsWith("http://") ||
-    qrCode.startsWith("https://") ||
-    qrCode.startsWith("data:image")
+    qrCode.startsWith('http://') ||
+    qrCode.startsWith('https://') ||
+    qrCode.startsWith('data:image')
   ) {
-    return qrCode;
+    return qrCode
   }
-  return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrCode)}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrCode)}`
 }
 
 // ─── Checkout response shape ──────────────────────────────────────────────────
 interface BhrpCheckoutResponse {
-  orderCode: number;
-  qrCode: string;
-  bin: string;
-  accountNumber: string;
-  accountName: string;
-  amount: number;
-  description: string;
-  expiresIn: number;
-  isReused?: boolean;
+  orderCode: number
+  qrCode: string
+  bin: string
+  accountNumber: string
+  accountName: string
+  amount: number
+  description: string
+  expiresIn: number
+  isReused?: boolean
 }
 
 // ─── Inner page ───────────────────────────────────────────────────────────────
 function BuyTurnsPageInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const packParam = (searchParams.get("pack") ?? "10") as PackKey;
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const packParam = (searchParams.get('pack') ?? '10') as PackKey
 
-  const { isLoggedIn, isHydrating } = useAuth();
-  const { locale } = useLanguage();
-  const t = useTranslations("guest");
-  const { toast } = useToast();
+  const { isLoggedIn, isHydrating } = useAuth()
+  const { locale } = useLanguage()
+  const t = useTranslations('guest')
+  const { toast } = useToast()
 
-  const isVi = locale === "vi";
+  const isVi = locale === 'vi'
 
   const [selectedPack, setSelectedPack] = useState<PackKey>(
-    TURN_PACKS.some((p) => p.key === packParam) ? packParam : "10"
-  );
-  const pack = TURN_PACKS.find((p) => p.key === selectedPack)!;
+    TURN_PACKS.some(p => p.key === packParam) ? packParam : '10',
+  )
+  const pack = TURN_PACKS.find(p => p.key === selectedPack)!
 
-  const [checkoutData, setCheckoutData] = useState<BhrpCheckoutResponse | null>(null);
-  const [isGeneratingQr, setIsGeneratingQr] = useState(false);
-  const [countdown, setCountdown] = useState<number>(0);
-  const [isExpired, setIsExpired] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isCopiedAcc, setIsCopiedAcc] = useState(false);
-  const [isCopiedSyntax, setIsCopiedSyntax] = useState(false);
+  const [checkoutData, setCheckoutData] = useState<BhrpCheckoutResponse | null>(null)
+  const [isGeneratingQr, setIsGeneratingQr] = useState(false)
+  const [countdown, setCountdown] = useState<number>(0)
+  const [isExpired, setIsExpired] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [isCopiedAcc, setIsCopiedAcc] = useState(false)
+  const [isCopiedSyntax, setIsCopiedSyntax] = useState(false)
 
   useEffect(() => {
     if (!isHydrating && !isLoggedIn) {
-      router.push(`/login?redirect=/pricing/rental-platform/purchase?pack=${selectedPack}`);
+      router.push(`/login?redirect=/pricing/rental-platform/purchase?pack=${selectedPack}`)
     }
-  }, [isHydrating, isLoggedIn, router, selectedPack]);
+  }, [isHydrating, isLoggedIn, router, selectedPack])
 
   useEffect(() => {
-    if (!checkoutData || isSuccess) return;
+    if (!checkoutData || isSuccess) return
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(timer);
-          setIsExpired(true);
-          return 0;
+          clearInterval(timer)
+          setIsExpired(true)
+          return 0
         }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [checkoutData?.orderCode, isSuccess]);
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [checkoutData?.orderCode, isSuccess])
 
   const formatTimer = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  };
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
 
   const formatVnd = (num: number) =>
-    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(num);
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num)
 
   const handleGenerateCheckout = async () => {
-    setIsGeneratingQr(true);
-    setIsExpired(false);
+    setIsGeneratingQr(true)
+    setIsExpired(false)
     try {
       // NOTE: replace with actual postTurnsService.createCheckout when backend is ready
       const res = await fetch(`/api/posts/buy-turns`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pack: selectedPack }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data: BhrpCheckoutResponse = await res.json();
-      setCheckoutData(data);
-      setCountdown(data.expiresIn || 900);
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const data: BhrpCheckoutResponse = await res.json()
+      setCheckoutData(data)
+      setCountdown(data.expiresIn || 900)
       if (data.isReused) {
-        toast.success(t("guestPricingCheckoutResumeSession"));
+        toast.success(t('guestPricingCheckoutResumeSession'))
       }
     } catch (err: any) {
-      console.error("Error creating buy-turns checkout", err);
-      toast.error(err.message || t("guestPricingCheckoutGenerateQrError"));
+      console.error('Error creating buy-turns checkout', err)
+      toast.error(err.message || t('guestPricingCheckoutGenerateQrError'))
     } finally {
-      setIsGeneratingQr(false);
+      setIsGeneratingQr(false)
     }
-  };
+  }
 
-  const isPollingRef = useRef(false);
+  const isPollingRef = useRef(false)
   useEffect(() => {
-    const orderCode = checkoutData?.orderCode;
-    if (!orderCode || isSuccess || isExpired) return;
+    const orderCode = checkoutData?.orderCode
+    if (!orderCode || isSuccess || isExpired) return
 
     const checkStatus = async () => {
-      if (isPollingRef.current) return;
-      isPollingRef.current = true;
+      if (isPollingRef.current) return
+      isPollingRef.current = true
       try {
-        const res = await fetch(`/api/posts/buy-turns/status?orderCode=${orderCode}`);
-        if (!res.ok) return;
-        const data = await res.json();
+        const res = await fetch(`/api/posts/buy-turns/status?orderCode=${orderCode}`)
+        if (!res.ok) return
+        const data = await res.json()
         if (data.isPaid) {
-          setIsSuccess(true);
+          setIsSuccess(true)
           toast.success(
             isVi
               ? `Mua thành công ${pack.turns} lượt đăng tin ${pack.name}!`
-              : `Successfully purchased ${pack.turns} ${pack.nameEn} listing turns!`
-          );
+              : `Successfully purchased ${pack.turns} ${pack.nameEn} listing turns!`,
+          )
         }
       } catch {
         // silent
       } finally {
-        isPollingRef.current = false;
+        isPollingRef.current = false
       }
-    };
-
-    const interval = setInterval(checkStatus, 3000);
-    return () => clearInterval(interval);
-  }, [checkoutData?.orderCode, isSuccess, isExpired, pack, isVi, toast]);
-
-  const handleCopy = (text: string, type: "acc" | "syntax") => {
-    navigator.clipboard.writeText(text);
-    if (type === "acc") {
-      setIsCopiedAcc(true);
-      setTimeout(() => setIsCopiedAcc(false), 2000);
-    } else {
-      setIsCopiedSyntax(true);
-      setTimeout(() => setIsCopiedSyntax(false), 2000);
     }
-  };
+
+    const interval = setInterval(checkStatus, 3000)
+    return () => clearInterval(interval)
+  }, [checkoutData?.orderCode, isSuccess, isExpired, pack, isVi, toast])
+
+  const handleCopy = (text: string, type: 'acc' | 'syntax') => {
+    navigator.clipboard.writeText(text)
+    if (type === 'acc') {
+      setIsCopiedAcc(true)
+      setTimeout(() => setIsCopiedAcc(false), 2000)
+    } else {
+      setIsCopiedSyntax(true)
+      setTimeout(() => setIsCopiedSyntax(false), 2000)
+    }
+  }
 
   const handleSelectPack = (key: PackKey) => {
-    setSelectedPack(key);
-    setCheckoutData(null);
-    setIsExpired(false);
-    setIsSuccess(false);
-  };
+    setSelectedPack(key)
+    setCheckoutData(null)
+    setIsExpired(false)
+    setIsSuccess(false)
+  }
 
   if (isHydrating || (!isLoggedIn && !isSuccess)) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-zinc-500">
         <Lock className="w-8 h-8 text-[#FF6B35] animate-pulse" />
-        <p className="text-sm font-semibold">
-          {t("guestPricingCheckoutAuthVerifying")}
-        </p>
+        <p className="text-sm font-semibold">{t('guestPricingCheckoutAuthVerifying')}</p>
       </div>
-    );
+    )
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen pb-28 animate-in fade-in duration-300">
-
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="mb-8">
         <Link
@@ -284,43 +281,41 @@ function BuyTurnsPageInner() {
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-900 transition-colors mb-4 group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-          <span>{t("guestPricingCheckoutBackToPricing")}</span>
+          <span>{t('guestPricingCheckoutBackToPricing')}</span>
         </Link>
 
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-black tracking-widest uppercase text-[#FF6B35] mb-1">
               <Sparkles className="w-4 h-4" />
-              <span>{isVi ? "MUA LƯỢT ĐĂNG TIN VIP" : "BUY VIP LISTING TURNS"}</span>
+              <span>{isVi ? 'MUA LƯỢT ĐĂNG TIN VIP' : 'BUY VIP LISTING TURNS'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-              {isVi ? "Mua lượt đăng tin nổi bật" : "Purchase VIP Listing Turns"}
+              {isVi ? 'Mua lượt đăng tin nổi bật' : 'Purchase VIP Listing Turns'}
             </h1>
             <p className="text-sm text-zinc-500 font-medium mt-1">
               {isVi
-                ? "Không đăng ký định kỳ · Mua theo lượt · Sử dụng linh hoạt"
-                : "No subscription · Pay per pack · Use anytime"}
+                ? 'Không đăng ký định kỳ · Mua theo lượt · Sử dụng linh hoạt'
+                : 'No subscription · Pay per pack · Use anytime'}
             </p>
           </div>
           <div className="flex items-center gap-2 bg-zinc-100 border border-zinc-200/80 px-3.5 py-1.5 rounded-full text-xs font-medium text-zinc-600">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>{t("guestPricingCheckoutGatewayBadge")}</span>
+            <span>{t('guestPricingCheckoutGatewayBadge')}</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
         {/* ── LEFT: Pack selector + features ─────────────────────────── */}
         <div className="lg:col-span-6 space-y-6">
-
           {/* Pack selector cards */}
           <div className="space-y-3">
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">
-              {isVi ? "Chọn gói lượt muốn mua:" : "Select a pack:"}
+              {isVi ? 'Chọn gói lượt muốn mua:' : 'Select a pack:'}
             </label>
-            {TURN_PACKS.map((p) => {
-              const isSelected = selectedPack === p.key;
+            {TURN_PACKS.map(p => {
+              const isSelected = selectedPack === p.key
               return (
                 <button
                   key={p.key}
@@ -328,13 +323,13 @@ function BuyTurnsPageInner() {
                   onClick={() => handleSelectPack(p.key)}
                   className={`w-full relative text-left p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-4 ${
                     isSelected
-                      ? "border-[#FF6B35] bg-[#FF6B35]/5 shadow-md"
-                      : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+                      ? 'border-[#FF6B35] bg-[#FF6B35]/5 shadow-md'
+                      : 'border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50'
                   }`}
                 >
                   {p.popular && (
                     <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full bg-[#FF6B35] text-white shadow-sm">
-                      {isVi ? p.badge : "POPULAR"}
+                      {isVi ? p.badge : 'POPULAR'}
                     </span>
                   )}
 
@@ -350,10 +345,7 @@ function BuyTurnsPageInner() {
                       <span className="font-black text-zinc-900 text-sm">
                         {isVi ? p.name : p.nameEn}
                       </span>
-                      <span
-                        className="text-lg font-black"
-                        style={{ color: p.accentColor }}
-                      >
+                      <span className="text-lg font-black" style={{ color: p.accentColor }}>
                         {formatVnd(p.price)}
                       </span>
                     </div>
@@ -362,25 +354,23 @@ function BuyTurnsPageInner() {
                         className="text-xs font-bold px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: `${p.accentColor}1A`, color: p.accentColor }}
                       >
-                        {p.turns} {isVi ? "lượt" : "turns"}
+                        {p.turns} {isVi ? 'lượt' : 'turns'}
                       </span>
                       <span className="text-[11px] text-zinc-400 font-medium">
-                        ≈ {formatVnd(p.pricePerTurn)} / {isVi ? "lượt" : "turn"}
+                        ≈ {formatVnd(p.pricePerTurn)} / {isVi ? 'lượt' : 'turn'}
                       </span>
                     </div>
                   </div>
 
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                      isSelected
-                        ? "border-[#FF6B35] bg-[#FF6B35]"
-                        : "border-zinc-300 bg-white"
+                      isSelected ? 'border-[#FF6B35] bg-[#FF6B35]' : 'border-zinc-300 bg-white'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 text-white" />}
                   </div>
                 </button>
-              );
+              )
             })}
           </div>
 
@@ -389,12 +379,15 @@ function BuyTurnsPageInner() {
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-[#FF6B35]" />
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                {isVi ? "Quyền lợi khi dùng lượt" : "Benefits per turn"}
+                {isVi ? 'Quyền lợi khi dùng lượt' : 'Benefits per turn'}
               </span>
             </div>
             <ul className="space-y-2.5">
               {(isVi ? pack.features : pack.featuresEn).map((f, i) => (
-                <li key={i} className="flex items-center gap-3 text-xs sm:text-sm text-zinc-700 font-medium">
+                <li
+                  key={i}
+                  className="flex items-center gap-3 text-xs sm:text-sm text-zinc-700 font-medium"
+                >
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${pack.accentColor}1A` }}
@@ -413,19 +406,19 @@ function BuyTurnsPageInner() {
                 onClick={handleGenerateCheckout}
                 className={`w-full py-4 px-6 rounded-2xl font-black text-sm tracking-wide flex items-center justify-center gap-2.5 shadow-lg transition-all active:scale-[0.99] h-auto ${
                   isSuccess
-                    ? "bg-emerald-600 text-white cursor-default hover:bg-emerald-600"
-                    : "bg-[#FF6B35] hover:bg-[#e85a26] text-white shadow-[#FF6B35]/25 cursor-pointer"
+                    ? 'bg-emerald-600 text-white cursor-default hover:bg-emerald-600'
+                    : 'bg-[#FF6B35] hover:bg-[#e85a26] text-white shadow-[#FF6B35]/25 cursor-pointer'
                 }`}
               >
                 {isGeneratingQr ? (
                   <>
                     <RefreshCw className="w-5 h-5 animate-spin" />
-                    <span>{t("guestPricingCheckoutPayBtnLoading")}</span>
+                    <span>{t('guestPricingCheckoutPayBtnLoading')}</span>
                   </>
                 ) : isSuccess ? (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    <span>{t("guestPricingCheckoutSuccessTitle")}</span>
+                    <span>{t('guestPricingCheckoutSuccessTitle')}</span>
                   </>
                 ) : (
                   <>
@@ -446,7 +439,6 @@ function BuyTurnsPageInner() {
         {/* ── RIGHT: QR Payment area ──────────────────────────────────── */}
         <div className="lg:col-span-6">
           <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-sm p-6 sm:p-8 relative overflow-hidden">
-
             {/* SUCCESS STATE */}
             {isSuccess ? (
               <div className="py-8 text-center space-y-6 animate-in zoom-in-95 duration-400">
@@ -455,7 +447,7 @@ function BuyTurnsPageInner() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
-                    {t("guestPricingCheckoutSuccessTitle")}
+                    {t('guestPricingCheckoutSuccessTitle')}
                   </h2>
                   <p className="text-sm text-zinc-600 mt-2 max-w-md mx-auto leading-relaxed">
                     {isVi
@@ -465,51 +457,52 @@ function BuyTurnsPageInner() {
                 </div>
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 max-w-sm mx-auto text-left text-xs space-y-1.5 font-medium text-zinc-600">
                   <div className="flex justify-between">
-                    <span>{isVi ? "Gói đã mua:" : "Pack:"}</span>
+                    <span>{isVi ? 'Gói đã mua:' : 'Pack:'}</span>
                     <strong className="text-zinc-900">{isVi ? pack.name : pack.nameEn}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span>{isVi ? "Số lượt:" : "Turns:"}</span>
-                    <strong className="text-[#FF6B35]">+{pack.turns} {isVi ? "lượt" : "turns"}</strong>
+                    <span>{isVi ? 'Số lượt:' : 'Turns:'}</span>
+                    <strong className="text-[#FF6B35]">
+                      +{pack.turns} {isVi ? 'lượt' : 'turns'}
+                    </strong>
                   </div>
                   <div className="flex justify-between">
-                    <span>{isVi ? "Số tiền:" : "Amount:"}</span>
+                    <span>{isVi ? 'Số tiền:' : 'Amount:'}</span>
                     <strong className="text-zinc-900">{formatVnd(pack.price)}</strong>
                   </div>
                 </div>
                 <div className="pt-2 flex gap-3 justify-center flex-wrap">
                   <Link href="/posts/create">
                     <Button className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl font-black text-sm bg-[#FF6B35] text-white hover:bg-[#e85a26] transition shadow-lg shadow-[#FF6B35]/20 active:scale-95 h-auto">
-                      <span>{isVi ? "Đăng tin ngay" : "Post Now"}</span>
+                      <span>{isVi ? 'Đăng tin ngay' : 'Post Now'}</span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                   <Link href="/pricing">
                     <Button className="inline-flex items-center gap-2.5 px-6 py-4 rounded-2xl font-black text-sm bg-zinc-900 text-white hover:bg-zinc-800 transition shadow-lg shadow-zinc-900/20 active:scale-95 h-auto">
-                      {isVi ? "Bảng giá" : "Pricing"}
+                      {isVi ? 'Bảng giá' : 'Pricing'}
                     </Button>
                   </Link>
                 </div>
               </div>
-
             ) : checkoutData ? (
               /* QR ACTIVE STATE */
               <div className="space-y-6">
                 <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900">
                   <div className="flex items-center gap-2 text-xs font-bold">
                     <Clock className="w-4 h-4 text-amber-600" />
-                    <span>{t("guestPricingCheckoutQrExpiryCountdown")}</span>
+                    <span>{t('guestPricingCheckoutQrExpiryCountdown')}</span>
                   </div>
                   <div
                     className={`text-sm font-black font-mono tracking-wider px-3 py-1 rounded-xl ${
                       isExpired
-                        ? "bg-rose-600 text-white"
+                        ? 'bg-rose-600 text-white'
                         : countdown < 120
-                        ? "bg-rose-500 text-white animate-pulse"
-                        : "bg-amber-600 text-white"
+                          ? 'bg-rose-500 text-white animate-pulse'
+                          : 'bg-amber-600 text-white'
                     }`}
                   >
-                    {isExpired ? "00:00" : formatTimer(countdown)}
+                    {isExpired ? '00:00' : formatTimer(countdown)}
                   </div>
                 </div>
 
@@ -518,27 +511,31 @@ function BuyTurnsPageInner() {
                   <img
                     src={getQrImageUrl(checkoutData.qrCode)}
                     alt="VietQR PayOS"
-                    className={`w-full h-full object-contain rounded-xl transition-all ${isExpired ? "blur-xs opacity-20" : ""}`}
-                    onError={(e) => {
-                      const target = e.currentTarget;
+                    className={`w-full h-full object-contain rounded-xl transition-all ${isExpired ? 'blur-xs opacity-20' : ''}`}
+                    onError={e => {
+                      const target = e.currentTarget
                       if (checkoutData?.bin && checkoutData?.accountNumber) {
-                        const fallbackUrl = `https://api.vietqr.io/image/${checkoutData.bin}-${checkoutData.accountNumber}-qr_only.png?amount=${checkoutData.amount}&addInfo=${encodeURIComponent(checkoutData.description)}&accountName=${encodeURIComponent(checkoutData.accountName)}`;
-                        if (target.src !== fallbackUrl) target.src = fallbackUrl;
+                        const fallbackUrl = `https://api.vietqr.io/image/${checkoutData.bin}-${checkoutData.accountNumber}-qr_only.png?amount=${checkoutData.amount}&addInfo=${encodeURIComponent(checkoutData.description)}&accountName=${encodeURIComponent(checkoutData.accountName)}`
+                        if (target.src !== fallbackUrl) target.src = fallbackUrl
                       }
                     }}
                   />
                   {isExpired && (
                     <div className="absolute inset-0 bg-white/90 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-4 text-center">
                       <AlertTriangle className="w-10 h-10 text-rose-500 mb-2" />
-                      <div className="text-sm font-black text-zinc-900">{t("guestPricingCheckoutQrExpired")}</div>
-                      <p className="text-xs text-zinc-500 mt-1 mb-4">{t("guestPricingCheckoutQrExpiredDesc")}</p>
+                      <div className="text-sm font-black text-zinc-900">
+                        {t('guestPricingCheckoutQrExpired')}
+                      </div>
+                      <p className="text-xs text-zinc-500 mt-1 mb-4">
+                        {t('guestPricingCheckoutQrExpiredDesc')}
+                      </p>
                       <Button
                         type="button"
                         onClick={handleGenerateCheckout}
                         className="px-4 py-2 rounded-xl bg-zinc-900 text-white text-xs font-bold hover:bg-zinc-800 transition flex items-center gap-2 cursor-pointer h-auto"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
-                        <span>{t("guestPricingCheckoutGenerateNewQr")}</span>
+                        <span>{t('guestPricingCheckoutGenerateNewQr')}</span>
                       </Button>
                     </div>
                   )}
@@ -546,34 +543,66 @@ function BuyTurnsPageInner() {
 
                 <div className="space-y-2.5 pt-2 text-xs">
                   <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t("guestPricingCheckoutBank")}</span>
+                    <span className="text-zinc-500">{t('guestPricingCheckoutBank')}</span>
                     <strong className="text-zinc-900 font-bold">
                       {BANK_NAMES[checkoutData.bin] || `Ngân hàng (BIN: ${checkoutData.bin})`}
                     </strong>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t("guestPricingCheckoutAccountNumber")}</span>
+                    <span className="text-zinc-500">{t('guestPricingCheckoutAccountNumber')}</span>
                     <div className="flex items-center gap-2">
-                      <strong className="text-zinc-900 font-mono font-bold">{checkoutData.accountNumber}</strong>
-                      <Button type="button" variant="ghost" size="icon" onClick={() => handleCopy(checkoutData.accountNumber, "acc")} className="w-7 h-7 p-1 rounded-md text-zinc-400 hover:text-zinc-800 hover:bg-zinc-200/60 transition cursor-pointer" title="Copy">
-                        {isCopiedAcc ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <strong className="text-zinc-900 font-mono font-bold">
+                        {checkoutData.accountNumber}
+                      </strong>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleCopy(checkoutData.accountNumber, 'acc')}
+                        className="w-7 h-7 p-1 rounded-md text-zinc-400 hover:text-zinc-800 hover:bg-zinc-200/60 transition cursor-pointer"
+                        title="Copy"
+                      >
+                        {isCopiedAcc ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
                       </Button>
                     </div>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t("guestPricingCheckoutAccountName")}</span>
-                    <strong className="text-zinc-900 font-bold uppercase">{checkoutData.accountName}</strong>
+                    <span className="text-zinc-500">{t('guestPricingCheckoutAccountName')}</span>
+                    <strong className="text-zinc-900 font-bold uppercase">
+                      {checkoutData.accountName}
+                    </strong>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t("guestPricingCheckoutAmount")}</span>
-                    <strong className="text-emerald-600 font-black text-sm">{formatVnd(checkoutData.amount)}</strong>
+                    <span className="text-zinc-500">{t('guestPricingCheckoutAmount')}</span>
+                    <strong className="text-emerald-600 font-black text-sm">
+                      {formatVnd(checkoutData.amount)}
+                    </strong>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200/60">
-                    <span className="text-amber-800 font-medium">{t("guestPricingCheckoutTransferContent")}</span>
+                    <span className="text-amber-800 font-medium">
+                      {t('guestPricingCheckoutTransferContent')}
+                    </span>
                     <div className="flex items-center gap-2">
-                      <strong className="text-amber-950 font-mono font-black">{checkoutData.description}</strong>
-                      <Button type="button" variant="ghost" size="icon" onClick={() => handleCopy(checkoutData.description, "syntax")} className="w-7 h-7 p-1 rounded-md text-amber-600 hover:text-amber-950 hover:bg-amber-100 transition cursor-pointer" title="Copy">
-                        {isCopiedSyntax ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <strong className="text-amber-950 font-mono font-black">
+                        {checkoutData.description}
+                      </strong>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleCopy(checkoutData.description, 'syntax')}
+                        className="w-7 h-7 p-1 rounded-md text-amber-600 hover:text-amber-950 hover:bg-amber-100 transition cursor-pointer"
+                        title="Copy"
+                      >
+                        {isCopiedSyntax ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -581,10 +610,9 @@ function BuyTurnsPageInner() {
 
                 <div className="p-3.5 rounded-2xl bg-orange-50 border border-orange-200/60 flex items-center justify-center gap-3 text-xs font-semibold text-orange-800">
                   <RefreshCw className="w-4 h-4 text-[#FF6B35] animate-spin shrink-0" />
-                  <span>{t("guestPricingCheckoutWaitingTransfer")}</span>
+                  <span>{t('guestPricingCheckoutWaitingTransfer')}</span>
                 </div>
               </div>
-
             ) : (
               /* PLACEHOLDER STATE */
               <div className="py-14 px-4 text-center space-y-4 text-zinc-400">
@@ -593,17 +621,17 @@ function BuyTurnsPageInner() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-zinc-800">
-                    {t("guestPricingCheckoutReadyTitle")}
+                    {t('guestPricingCheckoutReadyTitle')}
                   </h3>
                   <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-relaxed">
                     {isVi
                       ? "Chọn gói lượt bên trái và nhấn nút 'Thanh toán VietQR' để hiển thị mã QR."
-                      : "Select a pack on the left then click to show your payment QR code."}
+                      : 'Select a pack on the left then click to show your payment QR code.'}
                   </p>
                 </div>
                 <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-[#FF6B35]">
                   <Zap className="w-4 h-4" />
-                  <span>{t("guestPricingCheckoutInstantReconcile")}</span>
+                  <span>{t('guestPricingCheckoutInstantReconcile')}</span>
                 </div>
               </div>
             )}
@@ -611,23 +639,25 @@ function BuyTurnsPageInner() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
 export default function RentalPlatformPurchasePage() {
   if (!FEATURE_FLAGS.ENABLE_BHRP) {
-    redirect("/pricing");
+    redirect('/pricing')
   }
   return (
     <IdentityGuard>
-      <React.Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center text-xs font-bold text-zinc-400">
-          Loading...
-        </div>
-      }>
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center text-xs font-bold text-zinc-400">
+            Loading...
+          </div>
+        }
+      >
         <BuyTurnsPageInner />
       </React.Suspense>
     </IdentityGuard>
-  );
+  )
 }

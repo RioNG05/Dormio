@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsString,
   IsNotEmpty,
@@ -7,9 +7,9 @@ import {
   ValidateNested,
   IsEnum,
   IsNumber,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { MessageAttachmentType } from '@prisma';
+} from 'class-validator'
+import { Type } from 'class-transformer'
+import { MessageAttachmentType } from '@prisma'
 
 export class MessageAttachmentInputDto {
   @ApiProperty({
@@ -18,7 +18,7 @@ export class MessageAttachmentInputDto {
     example: MessageAttachmentType.image,
   })
   @IsEnum(MessageAttachmentType)
-  type: MessageAttachmentType;
+  type: MessageAttachmentType
 
   @ApiProperty({
     description: 'URL or storage key of the uploaded attachment',
@@ -26,7 +26,7 @@ export class MessageAttachmentInputDto {
   })
   @IsString()
   @IsNotEmpty()
-  url: string;
+  url: string
 
   @ApiPropertyOptional({
     description: 'File size in bytes',
@@ -35,7 +35,7 @@ export class MessageAttachmentInputDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  sizeBytes?: number;
+  sizeBytes?: number
 
   @ApiPropertyOptional({
     description: 'Sort order of attachment',
@@ -44,7 +44,7 @@ export class MessageAttachmentInputDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  sortOrder?: number;
+  sortOrder?: number
 }
 
 export class CreateMessageDto {
@@ -54,7 +54,7 @@ export class CreateMessageDto {
   })
   @IsString({ message: 'Nội dung tin nhắn phải là chuỗi ký tự' })
   @IsNotEmpty({ message: 'Nội dung tin nhắn không được để trống' })
-  content: string;
+  content: string
 
   @ApiPropertyOptional({
     description: 'List of media or document attachments',
@@ -64,5 +64,5 @@ export class CreateMessageDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MessageAttachmentInputDto)
-  attachments?: MessageAttachmentInputDto[];
+  attachments?: MessageAttachmentInputDto[]
 }

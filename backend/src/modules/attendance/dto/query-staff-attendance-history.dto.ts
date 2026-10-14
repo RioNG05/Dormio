@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsDateString, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { IsDateString, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator'
 
 export class QueryStaffAttendanceHistoryDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class QueryStaffAttendanceHistoryDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by attendance status',
@@ -20,7 +20,7 @@ export class QueryStaffAttendanceHistoryDto {
   @IsIn(['all', 'on_time', 'late', 'absent'], {
     message: 'status must be one of: all, on_time, late, absent',
   })
-  status?: 'all' | 'on_time' | 'late' | 'absent';
+  status?: 'all' | 'on_time' | 'late' | 'absent'
 
   @ApiPropertyOptional({
     description: 'Filter specific work date string (YYYY-MM-DD or partial)',
@@ -28,7 +28,7 @@ export class QueryStaffAttendanceHistoryDto {
   })
   @IsOptional()
   @IsString()
-  date?: string;
+  date?: string
 
   @ApiPropertyOptional({
     description: 'Filter shift name or shift type (e.g. Ca Sáng, Ca Chiều, Ca Đêm, or all)',
@@ -36,7 +36,7 @@ export class QueryStaffAttendanceHistoryDto {
   })
   @IsOptional()
   @IsString()
-  shiftName?: string;
+  shiftName?: string
 
   @ApiPropertyOptional({
     description: 'Filter start date (YYYY-MM-DD)',
@@ -44,7 +44,7 @@ export class QueryStaffAttendanceHistoryDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'startDate must be a valid date string (YYYY-MM-DD)' })
-  startDate?: string;
+  startDate?: string
 
   @ApiPropertyOptional({
     description: 'Filter end date (YYYY-MM-DD)',
@@ -52,7 +52,7 @@ export class QueryStaffAttendanceHistoryDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'endDate must be a valid date string (YYYY-MM-DD)' })
-  endDate?: string;
+  endDate?: string
 
   @ApiPropertyOptional({
     description: 'Page number for list view pagination (Rule #9)',
@@ -63,7 +63,7 @@ export class QueryStaffAttendanceHistoryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page for list view pagination (Rule #9)',
@@ -74,5 +74,5 @@ export class QueryStaffAttendanceHistoryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit?: number = 10
 }

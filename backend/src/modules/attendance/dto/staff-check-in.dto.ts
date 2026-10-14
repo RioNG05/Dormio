@@ -1,23 +1,23 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
 
 export class AttendanceWatermarkDto {
   @ApiProperty({ example: '2026-09-17 06:55:00' })
   @IsString()
-  time: string;
+  time: string
 
   @ApiProperty({ example: '123 Nguyễn Huệ, Quận 1, TP.HCM' })
   @IsString()
-  place: string;
+  place: string
 
   @ApiProperty({ example: 'Phạm Văn Bảo (NV01)' })
   @IsString()
-  staffName: string;
+  staffName: string
 
   @ApiPropertyOptional({ example: '10.7769° N, 106.7009° E' })
   @IsOptional()
   @IsString()
-  coordinates?: string;
+  coordinates?: string
 }
 
 export class StaffCheckInDto {
@@ -27,7 +27,7 @@ export class StaffCheckInDto {
   })
   @IsNotEmpty()
   @IsUUID()
-  workScheduleId: string;
+  workScheduleId: string
 
   @ApiPropertyOptional({
     description: 'Data URL or uploaded image URL of the verification photo',
@@ -35,14 +35,14 @@ export class StaffCheckInDto {
   })
   @IsOptional()
   @IsString()
-  photo?: string;
+  photo?: string
 
   @ApiPropertyOptional({
     description: 'Watermark metadata embedded in the verification photo',
     type: AttendanceWatermarkDto,
   })
   @IsOptional()
-  watermark?: AttendanceWatermarkDto;
+  watermark?: AttendanceWatermarkDto
 
   @ApiPropertyOptional({
     description: 'Optional explanation if checking in late',
@@ -50,7 +50,7 @@ export class StaffCheckInDto {
   })
   @IsOptional()
   @IsString()
-  explanation?: string;
+  explanation?: string
 
   @ApiPropertyOptional({
     description: 'Simulated or captured time in HH:mm format',
@@ -58,6 +58,5 @@ export class StaffCheckInDto {
   })
   @IsOptional()
   @IsString()
-  capturedTime?: string;
+  capturedTime?: string
 }
-

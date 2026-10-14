@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
-import React, { useEffect, useState, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { ShieldCheck, AlertTriangle, Loader2, User, CreditCard } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { useTranslations } from "@/context/LanguageContext";
-import { useToast } from "@/context/ToastContext";
-import { userService } from "@/services/user.service";
+import React, { useEffect, useState, useCallback } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { ShieldCheck, AlertTriangle, Loader2, User, CreditCard } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import { userService } from '@/services/user.service'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface IdentityCheckResult {
-  checked: boolean;
-  hasIdentification: boolean;
-  hasBankAccount: boolean;
+  checked: boolean
+  hasIdentification: boolean
+  hasBankAccount: boolean
 }
 
 // ─── Checking spinner screen ──────────────────────────────────────────────────
@@ -29,7 +29,7 @@ function IdentityCheckingScreen({ title, desc }: { title: string; desc: string }
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Missing info blocker screen ──────────────────────────────────────────────
@@ -38,11 +38,11 @@ function IdentityBlockerScreen({
   missingBank,
   t,
 }: {
-  missingId: boolean;
-  missingBank: boolean;
-  t: (key: string) => string;
+  missingId: boolean
+  missingBank: boolean
+  t: (key: string) => string
 }) {
-  const router = useRouter();
+  const router = useRouter()
 
   return (
     <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
@@ -54,11 +54,9 @@ function IdentityBlockerScreen({
 
         {/* Title */}
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-black text-zinc-900">
-            {t("identityGuardMissingTitle")}
-          </h2>
+          <h2 className="text-xl font-black text-zinc-900">{t('identityGuardMissingTitle')}</h2>
           <p className="text-sm text-zinc-500 font-medium leading-relaxed">
-            {t("identityGuardMissingDesc")}
+            {t('identityGuardMissingDesc')}
           </p>
         </div>
 
@@ -66,56 +64,44 @@ function IdentityBlockerScreen({
         <div className="space-y-3">
           <div
             className={`flex items-center gap-3 p-3 rounded-2xl border ${
-              missingId
-                ? "bg-red-50 border-red-200"
-                : "bg-emerald-50 border-emerald-200"
+              missingId ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'
             }`}
           >
             <div
               className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                missingId ? "bg-red-100" : "bg-emerald-100"
+                missingId ? 'bg-red-100' : 'bg-emerald-100'
               }`}
             >
-              <User
-                className={`w-4 h-4 ${missingId ? "text-red-500" : "text-emerald-600"}`}
-              />
+              <User className={`w-4 h-4 ${missingId ? 'text-red-500' : 'text-emerald-600'}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <p
-                className={`text-xs font-bold ${
-                  missingId ? "text-red-700" : "text-emerald-700"
-                }`}
-              >
-                {missingId ? "✗ " : "✓ "}
-                {t("identityGuardMissingId")}
+              <p className={`text-xs font-bold ${missingId ? 'text-red-700' : 'text-emerald-700'}`}>
+                {missingId ? '✗ ' : '✓ '}
+                {t('identityGuardMissingId')}
               </p>
             </div>
           </div>
 
           <div
             className={`flex items-center gap-3 p-3 rounded-2xl border ${
-              missingBank
-                ? "bg-red-50 border-red-200"
-                : "bg-emerald-50 border-emerald-200"
+              missingBank ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'
             }`}
           >
             <div
               className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                missingBank ? "bg-red-100" : "bg-emerald-100"
+                missingBank ? 'bg-red-100' : 'bg-emerald-100'
               }`}
             >
               <CreditCard
-                className={`w-4 h-4 ${missingBank ? "text-red-500" : "text-emerald-600"}`}
+                className={`w-4 h-4 ${missingBank ? 'text-red-500' : 'text-emerald-600'}`}
               />
             </div>
             <div className="flex-1 min-w-0">
               <p
-                className={`text-xs font-bold ${
-                  missingBank ? "text-red-700" : "text-emerald-700"
-                }`}
+                className={`text-xs font-bold ${missingBank ? 'text-red-700' : 'text-emerald-700'}`}
               >
-                {missingBank ? "✗ " : "✓ "}
-                {t("identityGuardMissingBank")}
+                {missingBank ? '✗ ' : '✓ '}
+                {t('identityGuardMissingBank')}
               </p>
             </div>
           </div>
@@ -123,15 +109,15 @@ function IdentityBlockerScreen({
 
         {/* CTA */}
         <button
-          onClick={() => router.push("/profile?tab=bank&from=identity_guard")}
+          onClick={() => router.push('/profile?tab=bank&from=identity_guard')}
           className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white font-extrabold text-sm
             rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all hover:scale-[1.02] cursor-pointer"
         >
-          {t("identityGuardGoToProfile")}
+          {t('identityGuardGoToProfile')}
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 // ─── IdentityGuard ────────────────────────────────────────────────────────────
@@ -150,96 +136,96 @@ function IdentityBlockerScreen({
  * - /pricing/[plan]
  */
 export default function IdentityGuard({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, isHydrating } = useAuth();
-  const t = useTranslations("guest");
-  const { toast } = useToast();
-  const pathname = usePathname();
+  const { isLoggedIn, isHydrating } = useAuth()
+  const t = useTranslations('guest')
+  const { toast } = useToast()
+  const pathname = usePathname()
 
-  const [status, setStatus] = useState<"checking" | "ok" | "blocked">("checking");
+  const [status, setStatus] = useState<'checking' | 'ok' | 'blocked'>('checking')
   const [checkResult, setCheckResult] = useState<IdentityCheckResult>({
     checked: false,
     hasIdentification: false,
     hasBankAccount: false,
-  });
+  })
 
   // Track which path was already checked to avoid re-running on locale switch
-  const [checkedForPath, setCheckedForPath] = useState<string | null>(null);
+  const [checkedForPath, setCheckedForPath] = useState<string | null>(null)
 
   // Guard against React StrictMode double-invoking effects → toast fires only once
-  const toastShownRef = React.useRef(false);
+  const toastShownRef = React.useRef(false)
 
   const runCheck = useCallback(async () => {
     if (!isLoggedIn) {
-      setStatus("ok"); // not logged in → let AuthGuard handle
-      return;
+      setStatus('ok') // not logged in → let AuthGuard handle
+      return
     }
 
     try {
       const [idRes, bankRes] = await Promise.all([
         userService.getIdentification().catch(() => ({ hasIdentification: false })),
         userService.getBankAccount().catch(() => ({ hasBankAccount: false })),
-      ]);
+      ])
 
-      const hasId = idRes.hasIdentification;
-      const hasBank = bankRes.hasBankAccount;
+      const hasId = idRes.hasIdentification
+      const hasBank = bankRes.hasBankAccount
 
       setCheckResult({
         checked: true,
         hasIdentification: hasId,
         hasBankAccount: hasBank,
-      });
+      })
 
       if (hasId && hasBank) {
-        setStatus("ok");
+        setStatus('ok')
       } else {
-        setStatus("blocked");
+        setStatus('blocked')
         // Only fire the toast once per path visit (prevents double-toast in StrictMode)
         if (!toastShownRef.current) {
-          toastShownRef.current = true;
-          toast.warning(t("identityGuardToastDesc"), {
-            title: t("identityGuardToastTitle"),
+          toastShownRef.current = true
+          toast.warning(t('identityGuardToastDesc'), {
+            title: t('identityGuardToastTitle'),
             duration: 6000,
-          });
+          })
         }
       }
     } catch {
       // On error, allow through — do not block the user
-      setStatus("ok");
+      setStatus('ok')
     }
-  }, [isLoggedIn, t, toast]);
+  }, [isLoggedIn, t, toast])
 
   useEffect(() => {
     // Wait for auth hydration before checking
-    if (isHydrating) return;
+    if (isHydrating) return
 
     // Only run once per pathname mount (prevent re-check on locale switch)
-    if (checkedForPath === pathname) return;
+    if (checkedForPath === pathname) return
 
     // Reset the toast guard for the new path
-    toastShownRef.current = false;
-    setStatus("checking");
-    setCheckedForPath(pathname);
-    runCheck();
-  }, [isHydrating, pathname, checkedForPath, runCheck]);
+    toastShownRef.current = false
+    setStatus('checking')
+    setCheckedForPath(pathname)
+    runCheck()
+  }, [isHydrating, pathname, checkedForPath, runCheck])
 
-  if (isHydrating || status === "checking") {
+  if (isHydrating || status === 'checking') {
     return (
       <IdentityCheckingScreen
-        title={t("identityGuardCheckingTitle")}
-        desc={t("identityGuardCheckingDesc")}
+        title={t('identityGuardCheckingTitle')}
+        desc={t('identityGuardCheckingDesc')}
       />
-    );
+    )
   }
 
-  if (status === "blocked") {
+  if (status === 'blocked') {
     return (
       <IdentityBlockerScreen
         missingId={!checkResult.hasIdentification}
         missingBank={!checkResult.hasBankAccount}
         t={t}
       />
-    );
+    )
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }

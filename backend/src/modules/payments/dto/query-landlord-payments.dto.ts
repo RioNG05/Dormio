@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { IsOptional, IsString, IsInt, Min } from 'class-validator'
 
 export class QueryLandlordPaymentsDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class QueryLandlordPaymentsDto {
   })
   @IsOptional()
   @IsString()
-  roomId?: string;
+  roomId?: string
 
   @ApiPropertyOptional({
     description: 'Số trang hiện tại (bắt đầu từ 1)',
@@ -20,7 +20,7 @@ export class QueryLandlordPaymentsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Số lượng bản ghi mỗi trang',
@@ -31,7 +31,7 @@ export class QueryLandlordPaymentsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit?: number = 10
 
   @ApiPropertyOptional({
     description: 'Hình thức thanh toán: cash, banking, hoặc all',
@@ -39,7 +39,7 @@ export class QueryLandlordPaymentsDto {
   })
   @IsOptional()
   @IsString()
-  method?: string;
+  method?: string
 
   @ApiPropertyOptional({
     description: 'Tháng thanh toán: 1-12 hoặc all',
@@ -47,7 +47,7 @@ export class QueryLandlordPaymentsDto {
   })
   @IsOptional()
   @IsString()
-  month?: string;
+  month?: string
 
   @ApiPropertyOptional({
     description: 'Năm thanh toán: e.g. 2026 hoặc all',
@@ -55,7 +55,7 @@ export class QueryLandlordPaymentsDto {
   })
   @IsOptional()
   @IsString()
-  year?: string;
+  year?: string
 
   @ApiPropertyOptional({
     description: 'Từ khóa tìm kiếm (mã GD, số phòng, số biên nhận, người thanh toán)',
@@ -63,5 +63,5 @@ export class QueryLandlordPaymentsDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 }

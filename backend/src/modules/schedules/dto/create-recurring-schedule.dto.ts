@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   ArrayNotEmpty,
   IsArray,
@@ -7,7 +7,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
-} from 'class-validator';
+} from 'class-validator'
 
 export class CreateRecurringScheduleDto {
   @ApiProperty({
@@ -18,7 +18,7 @@ export class CreateRecurringScheduleDto {
   @IsArray()
   @ArrayNotEmpty({ message: 'Cần chọn ít nhất một nhân viên' })
   @IsUUID('4', { each: true, message: 'ID nhân viên không hợp lệ' })
-  employeeIds: string[];
+  employeeIds: string[]
 
   @ApiProperty({
     description: 'Shift UUID',
@@ -26,30 +26,29 @@ export class CreateRecurringScheduleDto {
   })
   @IsUUID('4', { message: 'ID ca làm việc không hợp lệ' })
   @IsNotEmpty({ message: 'Cần chọn ca làm việc' })
-  shiftId: string;
+  shiftId: string
 
   @ApiProperty({
-    description:
-      'Comma-separated days of week. Supports 0-6 (0=Sun) or Vietnamese 2,3,4,5,6,7,CN',
+    description: 'Comma-separated days of week. Supports 0-6 (0=Sun) or Vietnamese 2,3,4,5,6,7,CN',
     example: '2,4,6',
   })
   @IsString()
   @IsNotEmpty({ message: 'Cần chọn các ngày trong tuần (ví dụ: 2,4,6)' })
-  daysOfWeek: string;
+  daysOfWeek: string
 
   @ApiProperty({
     description: 'Start date (YYYY-MM-DD)',
     example: '2026-09-15',
   })
   @IsDateString({}, { message: 'Ngày bắt đầu không hợp lệ (YYYY-MM-DD)' })
-  startDate: string;
+  startDate: string
 
   @ApiProperty({
     description: 'End date (YYYY-MM-DD)',
     example: '2026-10-15',
   })
   @IsDateString({}, { message: 'Ngày kết thúc không hợp lệ (YYYY-MM-DD)' })
-  endDate: string;
+  endDate: string
 
   @ApiPropertyOptional({
     description: 'Optional note for the scheduled shifts',
@@ -57,5 +56,5 @@ export class CreateRecurringScheduleDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

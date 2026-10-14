@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class BroadcastAnnouncementDto {
   @ApiProperty({
@@ -10,15 +10,16 @@ export class BroadcastAnnouncementDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  title: string;
+  title: string
 
   @ApiProperty({
     description: 'Detailed content of the announcement',
-    example: 'Kính gửi quý khách thuê phòng, hệ thống điện lưới sẽ tạm ngắt để bảo trì từ 8h00 - 11h00 ngày mai.',
+    example:
+      'Kính gửi quý khách thuê phòng, hệ thống điện lưới sẽ tạm ngắt để bảo trì từ 8h00 - 11h00 ngày mai.',
   })
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content: string
 
   @ApiPropertyOptional({
     description: 'Category tag of the announcement',
@@ -27,7 +28,7 @@ export class BroadcastAnnouncementDto {
   })
   @IsOptional()
   @IsString()
-  category?: string;
+  category?: string
 
   @ApiPropertyOptional({
     description: 'Target scope of the announcement (e.g., all building or specific floor/room)',
@@ -36,7 +37,7 @@ export class BroadcastAnnouncementDto {
   })
   @IsOptional()
   @IsString()
-  targetScope?: string;
+  targetScope?: string
 
   @ApiPropertyOptional({
     description: 'Primary delivery channel for the announcement',
@@ -45,5 +46,5 @@ export class BroadcastAnnouncementDto {
   })
   @IsOptional()
   @IsString()
-  channel?: string;
+  channel?: string
 }

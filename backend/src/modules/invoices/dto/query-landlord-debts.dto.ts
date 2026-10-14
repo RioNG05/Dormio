@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class QueryLandlordDebtsDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class QueryLandlordDebtsDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter debts by overdue duration / aging category',
@@ -18,7 +18,7 @@ export class QueryLandlordDebtsDto {
   })
   @IsOptional()
   @IsIn(['all', 'current', 'overdue', '1_month', '2_months', 'bad_debt'])
-  duration?: 'all' | 'current' | 'overdue' | '1_month' | '2_months' | 'bad_debt' = 'all';
+  duration?: 'all' | 'current' | 'overdue' | '1_month' | '2_months' | 'bad_debt' = 'all'
 
   @ApiPropertyOptional({
     description: 'Sort criteria for the debt ledger',
@@ -27,7 +27,7 @@ export class QueryLandlordDebtsDto {
   })
   @IsOptional()
   @IsIn(['debt_desc', 'aging_desc', 'room_asc'])
-  sortBy?: 'debt_desc' | 'aging_desc' | 'room_asc' = 'debt_desc';
+  sortBy?: 'debt_desc' | 'aging_desc' | 'room_asc' = 'debt_desc'
 
   @ApiPropertyOptional({
     description: 'Page number (default: 1)',
@@ -38,7 +38,7 @@ export class QueryLandlordDebtsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page (default: 6 for grid, 10 for table)',
@@ -50,5 +50,5 @@ export class QueryLandlordDebtsDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 6;
+  limit?: number = 6
 }

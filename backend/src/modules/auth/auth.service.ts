@@ -3,18 +3,18 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { JwtPayload } from './types/jwt-payload.type';
-import { User, UserRole } from '@prisma';
-import * as bcrypt from 'bcrypt';
+} from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { RegisterDto } from './dto/register.dto'
+import { LoginDto } from './dto/login.dto'
+import { ChangePasswordDto } from './dto/change-password.dto'
+import { JwtPayload } from './types/jwt-payload.type'
+import { User, UserRole } from '@prisma'
+import * as bcrypt from 'bcrypt'
 
-const BCRYPT_ROUNDS = 10;
-const DEFAULT_PASSWORD = '00000000';
+const BCRYPT_ROUNDS = 10
+const DEFAULT_PASSWORD = '00000000'
 
 @Injectable()
 export class AuthService {
@@ -26,27 +26,27 @@ export class AuthService {
   // ─── Register ──────────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto) {
-    const phoneNumber = dto.phoneNumber.trim();
+    const phoneNumber = dto.phoneNumber.trim()
     // Check phone uniqueness
     const existingByPhone = await this.prisma.user.findUnique({
       where: { phoneNumber },
-    });
+    })
     if (existingByPhone) {
-      throw new ConflictException('phone_number_already_exists');
+      throw new ConflictException('phone_number_already_exists')
     }
 
-    const email = dto.email?.trim() || null;
+    const email = dto.email?.trim() || null
     // Check email uniqueness if provided
     if (email) {
       const existingByEmail = await this.prisma.user.findUnique({
         where: { email },
-      });
+      })
       if (existingByEmail) {
-        throw new ConflictException('email_already_exists');
+        throw new ConflictException('email_already_exists')
       }
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS)
 
     const user = await this.prisma.user.create({
       data: {
@@ -57,24 +57,24 @@ export class AuthService {
         role: UserRole.leasing_agent, // Self-registered users start as leasing agents.
         mustChangePassword: false, // Self-registered users choose their own password
       },
-    });
+    })
 
     return {
       token: this.signToken(user),
       user: this.sanitizeUser(user),
-    };
+    }
   }
 
   // ─── Login ─────────────────────────────────────────────────────────────────
 
   async login(dto: LoginDto) {
-    const raw = (dto.identifier || '').trim();
+    const raw = (dto.identifier || '').trim()
     // Normalize phone number (strip spaces, dots, dashes, convert +84 to 0)
-    let cleanPhone = raw.replace(/[\s.-]/g, '');
+    let cleanPhone = raw.replace(/[\s.-]/g, '')
     if (cleanPhone.startsWith('+84')) {
-      cleanPhone = '0' + cleanPhone.slice(3);
+      cleanPhone = '0' + cleanPhone.slice(3)
     } else if (cleanPhone.startsWith('84') && cleanPhone.length === 11) {
-      cleanPhone = '0' + cleanPhone.slice(2);
+      cleanPhone = '0' + cleanPhone.slice(2)
     }
 
     const user = await this.prisma.user.findFirst({
@@ -86,15 +86,15 @@ export class AuthService {
           { username: { equals: raw, mode: 'insensitive' } },
         ],
       },
-    });
+    })
 
     if (!user) {
-      throw new UnauthorizedException('invalid_credentials');
+      throw new UnauthorizedException('invalid_credentials')
     }
 
-    let isValid = false;
+    let isValid = false
     if (user.hashedPassword) {
-      isValid = await bcrypt.compare(dto.password, user.hashedPassword);
+      isValid = await bcrypt.compare(dto.password, user.hashedPassword)
     }
 
     // Support both admin requirement 88888888 and seed 123456789
@@ -103,18 +103,18 @@ export class AuthService {
       user.role === UserRole.admin &&
       (dto.password === '88888888' || dto.password === '123456789')
     ) {
-      isValid = true;
+      isValid = true
     }
 
     if (!isValid) {
-      throw new UnauthorizedException('invalid_credentials');
+      throw new UnauthorizedException('invalid_credentials')
     }
 
     return {
       token: this.signToken(user),
       user: this.sanitizeUser(user),
       mustChangePassword: user.mustChangePassword,
-    };
+    }
   }
 
   // ─── Change Password ────────────────────────────────────────────────────────
@@ -122,21 +122,18 @@ export class AuthService {
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
-    });
+    })
 
-    const isValid = await bcrypt.compare(
-      dto.currentPassword,
-      user.hashedPassword,
-    );
+    const isValid = await bcrypt.compare(dto.currentPassword, user.hashedPassword)
     if (!isValid) {
-      throw new BadRequestException('current_password_incorrect');
+      throw new BadRequestException('current_password_incorrect')
     }
 
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException('new_password_must_differ');
+      throw new BadRequestException('new_password_must_differ')
     }
 
-    const hashedPassword = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS)
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -144,7 +141,7 @@ export class AuthService {
         hashedPassword,
         mustChangePassword: false,
       },
-    });
+    })
   }
 
   // ─── findOrCreateByPhone (used by UC-L-04 and UC-L-19) ────────────────────
@@ -156,11 +153,11 @@ export class AuthService {
   ): Promise<User> {
     const existing = await this.prisma.user.findUnique({
       where: { phoneNumber },
-    });
+    })
 
-    if (existing) return existing;
+    if (existing) return existing
 
-    const hashedPassword = await bcrypt.hash(DEFAULT_PASSWORD, BCRYPT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(DEFAULT_PASSWORD, BCRYPT_ROUNDS)
 
     const user = await this.prisma.user.create({
       data: {
@@ -170,9 +167,9 @@ export class AuthService {
         role,
         mustChangePassword: true, // Force password reset on first login
       },
-    });
+    })
 
-    return user;
+    return user
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -181,13 +178,13 @@ export class AuthService {
     const payload: Omit<JwtPayload, 'id'> & { sub: string } = {
       sub: user.id,
       role: user.role,
-    };
-    return this.jwtService.sign(payload);
+    }
+    return this.jwtService.sign(payload)
   }
 
   private sanitizeUser(user: User) {
     // Never return hashedPassword to client
-    const { hashedPassword: _, ...safe } = user;
-    return safe;
+    const { hashedPassword: _, ...safe } = user
+    return safe
   }
 }

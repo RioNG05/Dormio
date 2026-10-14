@@ -1,15 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { InvoicesService } from './invoices.service';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
+import { Test, TestingModule } from '@nestjs/testing'
+import { NotFoundException } from '@nestjs/common'
+import { InvoicesService } from './invoices.service'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 
 describe('InvoicesService', () => {
-  let service: InvoicesService;
+  let service: InvoicesService
 
-  const mockUserId = 'user-tenant-uuid-1';
-  const mockContractId = 'contract-uuid-1';
-  const mockRoomId = 'room-uuid-1';
+  const mockUserId = 'user-tenant-uuid-1'
+  const mockContractId = 'contract-uuid-1'
+  const mockRoomId = 'room-uuid-1'
 
   const mockContract = {
     id: mockContractId,
@@ -27,7 +27,7 @@ describe('InvoicesService', () => {
         name: 'Dormio Tân Bình',
       },
     },
-  };
+  }
 
   const mockTenantContract = {
     id: 'tc-uuid-1',
@@ -35,7 +35,7 @@ describe('InvoicesService', () => {
     contractId: mockContractId,
     isPrimary: true,
     contract: mockContract,
-  };
+  }
 
   const mockInvoices = [
     {
@@ -174,7 +174,7 @@ describe('InvoicesService', () => {
       ],
       meterReadings: [],
     },
-  ];
+  ]
 
   const mockPrisma = {
     tenantContract: {
@@ -209,15 +209,15 @@ describe('InvoicesService', () => {
     auditLog: {
       create: jest.fn(),
     },
-    $transaction: jest.fn().mockImplementation(async (callback) => callback(mockPrisma)),
-  };
+    $transaction: jest.fn().mockImplementation(async callback => callback(mockPrisma)),
+  }
 
   const mockNotificationsService = {
     createDebtReminderNotification: jest.fn(),
-  };
+  }
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -231,110 +231,108 @@ describe('InvoicesService', () => {
           useValue: mockNotificationsService,
         },
       ],
-    }).compile();
+    }).compile()
 
-    service = module.get<InvoicesService>(InvoicesService);
-  });
+    service = module.get<InvoicesService>(InvoicesService)
+  })
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+    expect(service).toBeDefined()
+  })
 
   describe('resolveActiveTenantContract', () => {
     it('should return active contract when found', async () => {
-      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract);
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract)
 
-      const res = await service.resolveActiveTenantContract(mockUserId);
-      expect(res.id).toBe(mockContractId);
-      expect(res.roomId).toBe(mockRoomId);
-    });
+      const res = await service.resolveActiveTenantContract(mockUserId)
+      expect(res.id).toBe(mockContractId)
+      expect(res.roomId).toBe(mockRoomId)
+    })
 
     it('should throw NotFoundException when no active contract exists', async () => {
-      mockPrisma.tenantContract.findFirst.mockResolvedValue(null);
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(null)
 
-      await expect(
-        service.resolveActiveTenantContract(mockUserId),
-      ).rejects.toThrow(NotFoundException);
-    });
-  });
+      await expect(service.resolveActiveTenantContract(mockUserId)).rejects.toThrow(
+        NotFoundException,
+      )
+    })
+  })
 
   describe('getTenantInvoices', () => {
     it('should return list of mapped invoices with line items and meter readings', async () => {
-      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract);
-      mockPrisma.invoice.findMany.mockResolvedValue(mockInvoices);
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract)
+      mockPrisma.invoice.findMany.mockResolvedValue(mockInvoices)
 
-      const result = await service.getTenantInvoices(mockUserId);
+      const result = await service.getTenantInvoices(mockUserId)
 
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(2);
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(2)
 
-      const inv1 = result.data[0];
-      expect(inv1.id).toBe('inv-1');
-      expect(inv1.period).toBe('Tháng 08/2026');
-      expect(inv1.status).toBe('paid');
-      expect(inv1.amount).toBe(5125000);
-      expect(inv1.details).toHaveLength(4);
-      expect(inv1.details[0].name).toBe('Tiền phòng');
-      expect(inv1.details[1].name).toBe('Tiền điện');
-      expect(inv1.details[1].quantity).toBe(120);
-      expect(inv1.details[1].unit).toBe('kWh');
-      expect(inv1.meterReadings).toHaveLength(1);
-      expect(inv1.meterReadings[0].readingValue).toBe(1250);
+      const inv1 = result.data[0]
+      expect(inv1.id).toBe('inv-1')
+      expect(inv1.period).toBe('Tháng 08/2026')
+      expect(inv1.status).toBe('paid')
+      expect(inv1.amount).toBe(5125000)
+      expect(inv1.details).toHaveLength(4)
+      expect(inv1.details[0].name).toBe('Tiền phòng')
+      expect(inv1.details[1].name).toBe('Tiền điện')
+      expect(inv1.details[1].quantity).toBe(120)
+      expect(inv1.details[1].unit).toBe('kWh')
+      expect(inv1.meterReadings).toHaveLength(1)
+      expect(inv1.meterReadings[0].readingValue).toBe(1250)
 
-      const inv2 = result.data[1];
-      expect(inv2.id).toBe('inv-2');
-      expect(inv2.period).toBe('Tháng 09/2026');
-      expect(inv2.status).toBe('unpaid');
-    });
-  });
+      const inv2 = result.data[1]
+      expect(inv2.id).toBe('inv-2')
+      expect(inv2.period).toBe('Tháng 09/2026')
+      expect(inv2.status).toBe('unpaid')
+    })
+  })
 
   describe('getTenantUsageAnalytics', () => {
     it('should return empty summary and chart data when no invoices exist', async () => {
-      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract);
-      mockPrisma.invoice.findMany.mockResolvedValue([]);
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract)
+      mockPrisma.invoice.findMany.mockResolvedValue([])
 
-      const result = await service.getTenantUsageAnalytics(mockUserId);
+      const result = await service.getTenantUsageAnalytics(mockUserId)
 
-      expect(result.success).toBe(true);
-      expect(result.summary.currentCycleDue).toBe(0);
-      expect(result.chartData).toHaveLength(0);
-    });
+      expect(result.success).toBe(true)
+      expect(result.summary.currentCycleDue).toBe(0)
+      expect(result.chartData).toHaveLength(0)
+    })
 
     it('should compute consumption points, MoM trend and averages correctly', async () => {
-      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract);
-      mockPrisma.invoice.findMany.mockResolvedValue(mockInvoices);
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockTenantContract)
+      mockPrisma.invoice.findMany.mockResolvedValue(mockInvoices)
 
-      const result = await service.getTenantUsageAnalytics(mockUserId);
+      const result = await service.getTenantUsageAnalytics(mockUserId)
 
-      expect(result.success).toBe(true);
-      expect(result.chartData).toHaveLength(2);
+      expect(result.success).toBe(true)
+      expect(result.chartData).toHaveLength(2)
 
       // Verify chart data points
-      const p1 = result.chartData[0];
-      expect(p1.period).toBe('T8/26');
-      expect(p1.electricityKwh).toBe(120);
-      expect(p1.waterM3).toBe(6);
-      expect(p1.roomRent).toBe(4500000);
-      expect(p1.totalAmount).toBe(5125000);
+      const p1 = result.chartData[0]
+      expect(p1.period).toBe('T8/26')
+      expect(p1.electricityKwh).toBe(120)
+      expect(p1.waterM3).toBe(6)
+      expect(p1.roomRent).toBe(4500000)
+      expect(p1.totalAmount).toBe(5125000)
 
-      const p2 = result.chartData[1];
-      expect(p2.period).toBe('T9/26');
-      expect(p2.electricityKwh).toBe(140);
-      expect(p2.waterM3).toBe(6);
-      expect(p2.totalAmount).toBe(5200000);
+      const p2 = result.chartData[1]
+      expect(p2.period).toBe('T9/26')
+      expect(p2.electricityKwh).toBe(140)
+      expect(p2.waterM3).toBe(6)
+      expect(p2.totalAmount).toBe(5200000)
 
       // Verify summary calculations
-      expect(result.summary.currentCycleDue).toBe(5200000);
-      expect(result.summary.averageMonthlySpend).toBe(
-        Math.round((5125000 + 5200000) / 2),
-      );
-      expect(result.summary.averageElectricityKwh).toBe(130);
-      expect(result.summary.averageWaterM3).toBe(6);
-      expect(result.summary.isUp).toBe(true);
-      expect(result.summary.momChangeAmount).toBe(75000);
-      expect(result.summary.momChangePercent).toBe(1.5);
-    });
-  });
+      expect(result.summary.currentCycleDue).toBe(5200000)
+      expect(result.summary.averageMonthlySpend).toBe(Math.round((5125000 + 5200000) / 2))
+      expect(result.summary.averageElectricityKwh).toBe(130)
+      expect(result.summary.averageWaterM3).toBe(6)
+      expect(result.summary.isUp).toBe(true)
+      expect(result.summary.momChangeAmount).toBe(75000)
+      expect(result.summary.momChangePercent).toBe(1.5)
+    })
+  })
 
   describe('getTenantPaymentHistory', () => {
     it('should aggregate lifetime invoices and upfront payments across all contracts', async () => {
@@ -355,7 +353,7 @@ describe('InvoicesService', () => {
             },
           },
         },
-      ]);
+      ])
 
       mockPrisma.invoice.findMany.mockResolvedValue([
         {
@@ -404,7 +402,7 @@ describe('InvoicesService', () => {
             },
           ],
         },
-      ]);
+      ])
 
       mockPrisma.payment.findMany.mockResolvedValue([
         {
@@ -416,35 +414,33 @@ describe('InvoicesService', () => {
           paidAt: new Date('2026-01-01'),
           depositId: null,
         },
-      ]);
+      ])
 
-      const result = await service.getTenantPaymentHistory(mockUserId);
+      const result = await service.getTenantPaymentHistory(mockUserId)
 
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(3);
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(3)
 
       // Verify summary calculations
-      expect(result.summary.totalTransactions).toBe(3);
-      expect(result.summary.totalPaidAmount).toBe(5125000 + 10000000);
-      expect(result.summary.totalPendingAmount).toBe(5200000);
-      expect(result.summary.lastPaymentDate).toBe(
-        new Date('2026-08-04').toISOString(),
-      );
+      expect(result.summary.totalTransactions).toBe(3)
+      expect(result.summary.totalPaidAmount).toBe(5125000 + 10000000)
+      expect(result.summary.totalPendingAmount).toBe(5200000)
+      expect(result.summary.lastPaymentDate).toBe(new Date('2026-08-04').toISOString())
 
       // Verify itemized breakdown on record
-      const invRecord = result.data.find((r) => r.id === 'inv-1');
-      expect(invRecord).toBeDefined();
-      expect(invRecord?.source).toBe('monthly_invoice');
-      expect(invRecord?.breakdown[0].label).toBe('Tiền thuê phòng');
-      expect(invRecord?.paymentMethod).toBe('banking');
-    });
-  });
+      const invRecord = result.data.find(r => r.id === 'inv-1')
+      expect(invRecord).toBeDefined()
+      expect(invRecord?.source).toBe('monthly_invoice')
+      expect(invRecord?.breakdown[0].label).toBe('Tiền thuê phòng')
+      expect(invRecord?.paymentMethod).toBe('banking')
+    })
+  })
 
   // ─── Landlord Invoices Tests (UC-L-06) ───────────────────────────────────────
 
   describe('Landlord Invoices (UC-L-06)', () => {
-    const mockBoardingHouseId = 'bh-uuid-1';
-    const mockLandlordId = 'landlord-uuid-1';
+    const mockBoardingHouseId = 'bh-uuid-1'
+    const mockLandlordId = 'landlord-uuid-1'
 
     const mockLandlordInvoicesDb = [
       {
@@ -517,7 +513,7 @@ describe('InvoicesService', () => {
           },
         ],
       },
-    ];
+    ]
 
     it('should list paginated landlord invoices with summary metrics', async () => {
       mockPrisma.invoice.findMany
@@ -529,40 +525,37 @@ describe('InvoicesService', () => {
             totalAmount: 4030000,
           },
         ]) // period query for summary
-        .mockResolvedValueOnce(mockLandlordInvoicesDb); // paginated query
+        .mockResolvedValueOnce(mockLandlordInvoicesDb) // paginated query
 
-      mockPrisma.invoice.count.mockResolvedValue(1);
+      mockPrisma.invoice.count.mockResolvedValue(1)
 
       const result = await service.getLandlordInvoices(
         mockBoardingHouseId,
         { page: 1, limit: 10, status: 'all', month: '08', year: '2026' },
         mockLandlordId,
-      );
+      )
 
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0].roomName).toBe('101');
-      expect(result.data[0].tenantName).toBe('Nguyễn Văn Tuấn');
-      expect(result.data[0].totalAmount).toBe(4030000);
-      expect(result.data[0].vietQrUrl).toContain('https://img.vietqr.io/image/');
-      expect(result.summary.totalInvoicesCount).toBe(1);
-      expect(result.summary.unpaidCount).toBe(1);
-      expect(result.summary.totalUnpaidAmount).toBe(4030000);
-    });
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(1)
+      expect(result.data[0].roomName).toBe('101')
+      expect(result.data[0].tenantName).toBe('Nguyễn Văn Tuấn')
+      expect(result.data[0].totalAmount).toBe(4030000)
+      expect(result.data[0].vietQrUrl).toContain('https://img.vietqr.io/image/')
+      expect(result.summary.totalInvoicesCount).toBe(1)
+      expect(result.summary.unpaidCount).toBe(1)
+      expect(result.summary.totalUnpaidAmount).toBe(4030000)
+    })
 
     it('should retrieve landlord invoice detail by ID', async () => {
-      mockPrisma.invoice.findUnique.mockResolvedValue(mockLandlordInvoicesDb[0]);
+      mockPrisma.invoice.findUnique.mockResolvedValue(mockLandlordInvoicesDb[0])
 
-      const result = await service.getLandlordInvoiceDetail(
-        mockBoardingHouseId,
-        'inv-landlord-1',
-      );
+      const result = await service.getLandlordInvoiceDetail(mockBoardingHouseId, 'inv-landlord-1')
 
-      expect(result.id).toBe('inv-landlord-1');
-      expect(result.roomName).toBe('101');
-      expect(result.rentAmount).toBe(3500000);
-      expect(result.ocrMeterImage).toBe('https://example.com/meter.jpg');
-    });
+      expect(result.id).toBe('inv-landlord-1')
+      expect(result.roomName).toBe('101')
+      expect(result.rentAmount).toBe(3500000)
+      expect(result.ocrMeterImage).toBe('https://example.com/meter.jpg')
+    })
 
     it('should create manual invoice with line items, meter reading, and AuditLog', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({
@@ -573,7 +566,7 @@ describe('InvoicesService', () => {
           { service: { id: 'srv-elec', name: 'Điện', isMetered: true, price: 3500 } },
           { service: { id: 'srv-water', name: 'Nước', isMetered: true, price: 15000 } },
         ],
-      });
+      })
 
       mockPrisma.invoice.create.mockResolvedValue({
         id: 'inv-new-1',
@@ -581,35 +574,31 @@ describe('InvoicesService', () => {
         totalAmount: 4030000,
         status: 'unpaid',
         dueDate: new Date('2026-08-20'),
-      });
+      })
 
-      mockPrisma.invoiceItem.create.mockResolvedValue({ id: 'item-new-1' });
-      mockPrisma.meterReading.create.mockResolvedValue({ id: 'mr-new-1' });
-      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' });
+      mockPrisma.invoiceItem.create.mockResolvedValue({ id: 'item-new-1' })
+      mockPrisma.meterReading.create.mockResolvedValue({ id: 'mr-new-1' })
+      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' })
 
       // Mock detail query on return
-      mockPrisma.invoice.findUnique.mockResolvedValue(mockLandlordInvoicesDb[0]);
+      mockPrisma.invoice.findUnique.mockResolvedValue(mockLandlordInvoicesDb[0])
 
-      const result = await service.createManualInvoice(
-        mockLandlordId,
-        mockBoardingHouseId,
-        {
-          roomId: mockRoomId,
-          period: '08/2026',
-          dueDate: '2026-08-20',
-          rentAmount: 3500000,
-          elecOld: 1318,
-          elecNew: 1418,
-          elecRate: 3500,
-          waterOld: 240,
-          waterNew: 252,
-          waterRate: 15000,
-          serviceFees: [{ name: 'WiFi', amount: 100000 }],
-        },
-      );
+      const result = await service.createManualInvoice(mockLandlordId, mockBoardingHouseId, {
+        roomId: mockRoomId,
+        period: '08/2026',
+        dueDate: '2026-08-20',
+        rentAmount: 3500000,
+        elecOld: 1318,
+        elecNew: 1418,
+        elecRate: 3500,
+        waterOld: 240,
+        waterNew: 252,
+        waterRate: 15000,
+        serviceFees: [{ name: 'WiFi', amount: 100000 }],
+      })
 
-      expect(result).toBeDefined();
-      expect(mockPrisma.invoice.create).toHaveBeenCalled();
+      expect(result).toBeDefined()
+      expect(mockPrisma.invoice.create).toHaveBeenCalled()
       expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -617,75 +606,75 @@ describe('InvoicesService', () => {
             entityType: 'INVOICE',
           }),
         }),
-      );
-    });
+      )
+    })
 
     it('should record manual payment with idempotency and AuditLogs', async () => {
       mockPrisma.invoice.findUnique.mockResolvedValue({
         ...mockLandlordInvoicesDb[0],
         status: 'unpaid',
         payment: null,
-      });
+      })
 
       mockPrisma.payment.create.mockResolvedValue({
         id: 'pay-manual-1',
         method: 'cash',
         status: 'success',
-      });
+      })
 
       mockPrisma.invoice.update.mockResolvedValue({
         id: 'inv-landlord-1',
         status: 'paid',
-      });
+      })
 
-      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-pay-1' });
+      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-pay-1' })
 
       const result = await service.recordLandlordManualPayment(
         mockLandlordId,
         mockBoardingHouseId,
         'inv-landlord-1',
         { method: 'cash', note: 'Thanh toán tiền mặt' },
-      );
+      )
 
-      expect(result.success).toBe(true);
-      expect(result.paymentId).toBe('pay-manual-1');
-      expect(mockPrisma.payment.create).toHaveBeenCalled();
+      expect(result.success).toBe(true)
+      expect(result.paymentId).toBe('pay-manual-1')
+      expect(mockPrisma.payment.create).toHaveBeenCalled()
       expect(mockPrisma.invoice.update).toHaveBeenCalledWith({
         where: { id: 'inv-landlord-1' },
         data: { status: 'paid' },
-      });
+      })
       // Verify AuditLogs created for PAYMENT and INVOICE (Rule 4)
-      expect(mockPrisma.auditLog.create).toHaveBeenCalledTimes(2);
-    });
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledTimes(2)
+    })
 
     it('should return idempotent success if invoice is already paid', async () => {
       mockPrisma.invoice.findUnique.mockResolvedValue({
         ...mockLandlordInvoicesDb[0],
         status: 'paid',
         payment: { id: 'existing-pay-1' },
-      });
+      })
 
       const result = await service.recordLandlordManualPayment(
         mockLandlordId,
         mockBoardingHouseId,
         'inv-landlord-1',
         { method: 'cash' },
-      );
+      )
 
-      expect(result.success).toBe(true);
-      expect(result.paymentId).toBe('existing-pay-1');
-      expect(mockPrisma.payment.create).not.toHaveBeenCalled();
-    });
-  });
+      expect(result.success).toBe(true)
+      expect(result.paymentId).toBe('existing-pay-1')
+      expect(mockPrisma.payment.create).not.toHaveBeenCalled()
+    })
+  })
 
   describe('UC-L-16: Debt Tracking', () => {
     describe('flipOverdueInvoices', () => {
       it('should flip unpaid invoices past dueDate to overdue', async () => {
-        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 3 });
+        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 3 })
 
-        const result = await service.flipOverdueInvoices('bh-uuid-1');
+        const result = await service.flipOverdueInvoices('bh-uuid-1')
 
-        expect(result.count).toBe(3);
+        expect(result.count).toBe(3)
         expect(mockPrisma.invoice.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
             where: expect.objectContaining({
@@ -694,19 +683,19 @@ describe('InvoicesService', () => {
             }),
             data: { status: 'overdue' },
           }),
-        );
-      });
-    });
+        )
+      })
+    })
 
     describe('getLandlordDebts', () => {
       it('should group invoices by room, compute aging, and return ledger with summary metrics', async () => {
-        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 1 });
+        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 1 })
 
-        const pastDue = new Date();
-        pastDue.setDate(pastDue.getDate() - 45); // 45 days ago -> 2_months
+        const pastDue = new Date()
+        pastDue.setDate(pastDue.getDate() - 45) // 45 days ago -> 2_months
 
-        const recentDue = new Date();
-        recentDue.setDate(recentDue.getDate() - 10); // 10 days ago -> 1_month
+        const recentDue = new Date()
+        recentDue.setDate(recentDue.getDate() - 10) // 10 days ago -> 1_month
 
         const mockDebtsDb = [
           {
@@ -784,38 +773,38 @@ describe('InvoicesService', () => {
               ],
             },
           },
-        ];
+        ]
 
-        mockPrisma.invoice.findMany.mockResolvedValue(mockDebtsDb);
+        mockPrisma.invoice.findMany.mockResolvedValue(mockDebtsDb)
 
         const result = await service.getLandlordDebts(
           'bh-1',
           { duration: 'all', page: 1, limit: 10, sortBy: 'debt_desc' },
           'landlord-1',
-        );
+        )
 
-        expect(result.success).toBe(true);
-        expect(result.data.length).toBe(2); // 2 distinct rooms
-        expect(result.summary.debtorRoomsCount).toBe(2);
-        expect(result.summary.totalDebtAmount).toBe(11000000); // 4.5M + 3.5M + 3.0M
-        expect(result.summary.totalInvoicesCount).toBe(3);
+        expect(result.success).toBe(true)
+        expect(result.data.length).toBe(2) // 2 distinct rooms
+        expect(result.summary.debtorRoomsCount).toBe(2)
+        expect(result.summary.totalDebtAmount).toBe(11000000) // 4.5M + 3.5M + 3.0M
+        expect(result.summary.totalInvoicesCount).toBe(3)
 
         // Room 101 has 8M debt, max aging 45 days -> 2_months
-        const room101 = result.data.find((r) => r.roomId === 'room-101');
-        expect(room101).toBeDefined();
-        expect(room101?.totalDebtAmount).toBe(8000000);
-        expect(room101?.agingCategory).toBe('2_months');
-        expect(room101?.invoicesCount).toBe(2);
-      });
+        const room101 = result.data.find(r => r.roomId === 'room-101')
+        expect(room101).toBeDefined()
+        expect(room101?.totalDebtAmount).toBe(8000000)
+        expect(room101?.agingCategory).toBe('2_months')
+        expect(room101?.invoicesCount).toBe(2)
+      })
 
       it('should filter debts by duration bracket', async () => {
-        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 0 });
+        mockPrisma.invoice.updateMany.mockResolvedValue({ count: 0 })
 
-        const pastDueBad = new Date();
-        pastDueBad.setDate(pastDueBad.getDate() - 75); // 75 days -> bad_debt
+        const pastDueBad = new Date()
+        pastDueBad.setDate(pastDueBad.getDate() - 75) // 75 days -> bad_debt
 
-        const recentDue = new Date();
-        recentDue.setDate(recentDue.getDate() - 10); // 10 days -> 1_month
+        const recentDue = new Date()
+        recentDue.setDate(recentDue.getDate() - 10) // 10 days -> 1_month
 
         mockPrisma.invoice.findMany.mockResolvedValue([
           {
@@ -838,19 +827,19 @@ describe('InvoicesService', () => {
             room: { roomNumber: '202', floor: 2, boardingHouse: { id: 'bh-1', name: 'Nhà trọ' } },
             contract: { tenantContracts: [] },
           },
-        ]);
+        ])
 
         const result = await service.getLandlordDebts(
           'bh-1',
           { duration: 'bad_debt', page: 1, limit: 10 },
           'landlord-1',
-        );
+        )
 
-        expect(result.data.length).toBe(1);
-        expect(result.data[0].roomId).toBe('room-bad');
-        expect(result.data[0].agingCategory).toBe('bad_debt');
-      });
-    });
+        expect(result.data.length).toBe(1)
+        expect(result.data[0].roomId).toBe('room-bad')
+        expect(result.data[0].agingCategory).toBe('bad_debt')
+      })
+    })
 
     describe('sendDebtReminder', () => {
       it('should dispatch debt reminder notification to primary tenant', async () => {
@@ -876,22 +865,20 @@ describe('InvoicesService', () => {
               ],
             },
           ],
-        });
+        })
 
-        mockPrisma.invoice.findMany.mockResolvedValue([
-          { id: 'inv-1', totalAmount: 3500000 },
-        ]);
+        mockPrisma.invoice.findMany.mockResolvedValue([{ id: 'inv-1', totalAmount: 3500000 }])
 
         const result = await service.sendDebtReminder('bh-1', 'landlord-1', {
           roomId: 'room-101',
           note: 'Vui lòng thanh toán hôm nay',
-        });
+        })
 
-        expect(result.success).toBe(true);
-        expect(result.tenantName).toBe('Nguyễn Văn Tuấn');
-        expect(result.totalDebtAmount).toBe(3500000);
-        expect(result.reminderText).toContain('Nguyễn Văn Tuấn');
-        expect(result.reminderText).toContain('3.500.000');
+        expect(result.success).toBe(true)
+        expect(result.tenantName).toBe('Nguyễn Văn Tuấn')
+        expect(result.totalDebtAmount).toBe(3500000)
+        expect(result.reminderText).toContain('Nguyễn Văn Tuấn')
+        expect(result.reminderText).toContain('3.500.000')
         expect(mockNotificationsService.createDebtReminderNotification).toHaveBeenCalledWith(
           expect.objectContaining({
             senderId: 'landlord-1',
@@ -899,8 +886,8 @@ describe('InvoicesService', () => {
             roomNumber: '101',
             totalDebtAmount: 3500000,
           }),
-        );
-      });
-    });
-  });
-});
+        )
+      })
+    })
+  })
+})

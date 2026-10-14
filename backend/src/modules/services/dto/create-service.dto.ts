@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsArray,
   IsBoolean,
@@ -9,8 +9,8 @@ import {
   IsString,
   IsUUID,
   Min,
-} from 'class-validator';
-import { ServiceStatus } from '@prisma';
+} from 'class-validator'
+import { ServiceStatus } from '@prisma'
 
 export class CreateServiceDto {
   @ApiProperty({
@@ -19,7 +19,7 @@ export class CreateServiceDto {
   })
   @IsString()
   @IsNotEmpty({ message: 'Tên dịch vụ không được để trống' })
-  name: string;
+  name: string
 
   @ApiProperty({
     description: 'Unit price for this service (in VNĐ)',
@@ -27,7 +27,7 @@ export class CreateServiceDto {
   })
   @IsNumber({}, { message: 'Đơn giá phải là số' })
   @Min(0, { message: 'Đơn giá không được nhỏ hơn 0' })
-  price: number;
+  price: number
 
   @ApiProperty({
     description: 'Unit of measurement (e.g. kWh, m3, phòng/tháng, xe/tháng)',
@@ -35,7 +35,7 @@ export class CreateServiceDto {
   })
   @IsString()
   @IsNotEmpty({ message: 'Đơn vị tính không được để trống' })
-  unit: string;
+  unit: string
 
   @ApiPropertyOptional({
     description: 'Whether service usage is calculated via meter readings',
@@ -43,7 +43,7 @@ export class CreateServiceDto {
   })
   @IsOptional()
   @IsBoolean()
-  isMetered?: boolean = false;
+  isMetered?: boolean = false
 
   @ApiPropertyOptional({
     description: 'Whether this service is automatically attached to rooms by default',
@@ -51,7 +51,7 @@ export class CreateServiceDto {
   })
   @IsOptional()
   @IsBoolean()
-  autoApplied?: boolean = true;
+  autoApplied?: boolean = true
 
   @ApiPropertyOptional({
     description: 'Status of the service',
@@ -60,7 +60,7 @@ export class CreateServiceDto {
   })
   @IsOptional()
   @IsEnum(ServiceStatus)
-  status?: ServiceStatus = ServiceStatus.active;
+  status?: ServiceStatus = ServiceStatus.active
 
   @ApiPropertyOptional({
     description: 'Optional list of room IDs to attach this service to immediately',
@@ -70,5 +70,5 @@ export class CreateServiceDto {
   @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true, message: 'roomIds phải là danh sách UUID hợp lệ' })
-  roomIds?: string[];
+  roomIds?: string[]
 }

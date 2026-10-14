@@ -4,36 +4,36 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-} from '@nestjs/common';
-import { ScheduleStatus } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { CreateAdhocScheduleDto } from './dto/create-adhoc-schedule.dto';
-import { CreateRecurringScheduleDto } from './dto/create-recurring-schedule.dto';
-import { CreateShiftDto } from './dto/create-shift.dto';
-import { QuerySchedulesDto } from './dto/query-schedules.dto';
+} from '@nestjs/common'
+import { ScheduleStatus } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { CreateAdhocScheduleDto } from './dto/create-adhoc-schedule.dto'
+import { CreateRecurringScheduleDto } from './dto/create-recurring-schedule.dto'
+import { CreateShiftDto } from './dto/create-shift.dto'
+import { QuerySchedulesDto } from './dto/query-schedules.dto'
 import {
   CreateRecurringResponseDto,
   SchedulesListResponseDto,
   WorkScheduleItemDto,
-} from './dto/schedule-response.dto';
-import { ShiftItemDto } from './dto/shift-response.dto';
-import { UpdateRecurrenceDto } from './dto/update-recurrence.dto';
-import { UpdateScheduleDto } from './dto/update-schedule.dto';
-import { UpdateShiftDto } from './dto/update-shift.dto';
-import { QueryStaffSchedulesDto } from './dto/query-staff-schedules.dto';
-import { StaffBoardingHouseResponseDto } from './dto/staff-boarding-house-response.dto';
-import { StaffScheduleItemResponseDto } from './dto/staff-schedule-response.dto';
+} from './dto/schedule-response.dto'
+import { ShiftItemDto } from './dto/shift-response.dto'
+import { UpdateRecurrenceDto } from './dto/update-recurrence.dto'
+import { UpdateScheduleDto } from './dto/update-schedule.dto'
+import { UpdateShiftDto } from './dto/update-shift.dto'
+import { QueryStaffSchedulesDto } from './dto/query-staff-schedules.dto'
+import { StaffBoardingHouseResponseDto } from './dto/staff-boarding-house-response.dto'
+import { StaffScheduleItemResponseDto } from './dto/staff-schedule-response.dto'
 
 const DEFAULT_SHIFTS = [
   { name: 'Ca sáng', startTime: '06:00', endTime: '14:00' },
   { name: 'Ca chiều', startTime: '14:00', endTime: '22:00' },
   { name: 'Ca đêm', startTime: '22:00', endTime: '06:00' },
   { name: 'Hành chính', startTime: '08:00', endTime: '17:00' },
-];
+]
 
 @Injectable()
 export class SchedulesService {
-  private readonly logger = new Logger(SchedulesService.name);
+  private readonly logger = new Logger(SchedulesService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -41,18 +41,18 @@ export class SchedulesService {
    * Format a Date object to "HH:mm" string
    */
   private formatTime(date: Date): string {
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    const hours = String(date.getUTCHours()).padStart(2, '0')
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+    return `${hours}:${minutes}`
   }
 
   /**
    * Parse a "HH:mm" string into a Date object (anchored at 1970-01-01 UTC)
    */
   private parseTimeString(timeStr: string): Date {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const date = new Date(Date.UTC(1970, 0, 1, hours, minutes, 0, 0));
-    return date;
+    const [hours, minutes] = timeStr.split(':').map(Number)
+    const date = new Date(Date.UTC(1970, 0, 1, hours, minutes, 0, 0))
+    return date
   }
 
   /**
@@ -63,58 +63,52 @@ export class SchedulesService {
   private parseTargetDays(daysOfWeekStr: string): Set<number> {
     const tokens = (daysOfWeekStr || '')
       .split(',')
-      .map((s) => s.trim().toUpperCase())
-      .filter(Boolean);
-    const targetDays = new Set<number>();
+      .map(s => s.trim().toUpperCase())
+      .filter(Boolean)
+    const targetDays = new Set<number>()
 
     for (const t of tokens) {
       if (t === '2' || t === 'T2' || t === 'THU2' || t === 'MON') {
-        targetDays.add(1); // Monday
+        targetDays.add(1) // Monday
       } else if (t === '3' || t === 'T3' || t === 'THU3' || t === 'TUE') {
-        targetDays.add(2); // Tuesday
+        targetDays.add(2) // Tuesday
       } else if (t === '4' || t === 'T4' || t === 'THU4' || t === 'WED') {
-        targetDays.add(3); // Wednesday
+        targetDays.add(3) // Wednesday
       } else if (t === '5' || t === 'T5' || t === 'THU5' || t === 'THU') {
-        targetDays.add(4); // Thursday
+        targetDays.add(4) // Thursday
       } else if (t === '6' || t === 'T6' || t === 'THU6' || t === 'FRI') {
-        targetDays.add(5); // Friday
+        targetDays.add(5) // Friday
       } else if (t === '7' || t === 'T7' || t === 'THU7' || t === 'SAT') {
-        targetDays.add(6); // Saturday
-      } else if (
-        t === 'CN' ||
-        t === 'CHUNHAT' ||
-        t === '8' ||
-        t === '0' ||
-        t === 'SUN'
-      ) {
-        targetDays.add(0); // Sunday
+        targetDays.add(6) // Saturday
+      } else if (t === 'CN' || t === 'CHUNHAT' || t === '8' || t === '0' || t === 'SUN') {
+        targetDays.add(0) // Sunday
       } else if (!isNaN(Number(t))) {
-        const n = Number(t);
+        const n = Number(t)
         if (n >= 0 && n <= 6) {
-          targetDays.add(n);
+          targetDays.add(n)
         }
       }
     }
 
-    return targetDays;
+    return targetDays
   }
 
   /**
    * Parse date string "YYYY-MM-DD" to Date at UTC 00:00:00
    */
   private parseDateOnly(dateStr: string): Date {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
   }
 
   /**
    * Format Date to "YYYY-MM-DD" string
    */
   private formatDateOnly(date: Date): string {
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -126,19 +120,17 @@ export class SchedulesService {
    * If none exist yet, automatically seed the 4 default shifts for the property.
    */
   async getShifts(boardingHouseId: string): Promise<ShiftItemDto[]> {
-    this.logger.log(`getShifts boardingHouseId=${boardingHouseId}`);
+    this.logger.log(`getShifts boardingHouseId=${boardingHouseId}`)
 
     let shifts = await this.prisma.shift.findMany({
       where: { boardingHouseId },
       orderBy: { startTime: 'asc' },
-    });
+    })
 
     if (shifts.length === 0) {
-      this.logger.log(
-        `Seeding default shifts for boarding house ${boardingHouseId}`,
-      );
+      this.logger.log(`Seeding default shifts for boarding house ${boardingHouseId}`)
       await this.prisma.$transaction(
-        DEFAULT_SHIFTS.map((s) =>
+        DEFAULT_SHIFTS.map(s =>
           this.prisma.shift.create({
             data: {
               boardingHouseId,
@@ -148,46 +140,39 @@ export class SchedulesService {
             },
           }),
         ),
-      );
+      )
 
       shifts = await this.prisma.shift.findMany({
         where: { boardingHouseId },
         orderBy: { startTime: 'asc' },
-      });
+      })
     }
 
-    return shifts.map((s) => ({
+    return shifts.map(s => ({
       id: s.id,
       boardingHouseId: s.boardingHouseId,
       name: s.name,
       startTime: this.formatTime(s.startTime),
       endTime: this.formatTime(s.endTime),
       createdAt: s.createdAt.toISOString(),
-    }));
+    }))
   }
 
   /**
    * Create a new shift for the property
    */
-  async createShift(
-    boardingHouseId: string,
-    dto: CreateShiftDto,
-  ): Promise<ShiftItemDto> {
-    this.logger.log(
-      `createShift boardingHouseId=${boardingHouseId} name="${dto.name}"`,
-    );
+  async createShift(boardingHouseId: string, dto: CreateShiftDto): Promise<ShiftItemDto> {
+    this.logger.log(`createShift boardingHouseId=${boardingHouseId} name="${dto.name}"`)
 
     const existing = await this.prisma.shift.findFirst({
       where: {
         boardingHouseId,
         name: { equals: dto.name.trim(), mode: 'insensitive' },
       },
-    });
+    })
 
     if (existing) {
-      throw new ConflictException(
-        `Ca làm việc "${dto.name}" đã tồn tại tại nhà trọ này`,
-      );
+      throw new ConflictException(`Ca làm việc "${dto.name}" đã tồn tại tại nhà trọ này`)
     }
 
     const created = await this.prisma.shift.create({
@@ -197,7 +182,7 @@ export class SchedulesService {
         startTime: this.parseTimeString(dto.startTime),
         endTime: this.parseTimeString(dto.endTime),
       },
-    });
+    })
 
     return {
       id: created.id,
@@ -206,7 +191,7 @@ export class SchedulesService {
       startTime: this.formatTime(created.startTime),
       endTime: this.formatTime(created.endTime),
       createdAt: created.createdAt.toISOString(),
-    };
+    }
   }
 
   /**
@@ -217,32 +202,24 @@ export class SchedulesService {
     shiftId: string,
     dto: UpdateShiftDto,
   ): Promise<ShiftItemDto> {
-    this.logger.log(
-      `updateShift boardingHouseId=${boardingHouseId} shiftId=${shiftId}`,
-    );
+    this.logger.log(`updateShift boardingHouseId=${boardingHouseId} shiftId=${shiftId}`)
 
     const shift = await this.prisma.shift.findFirst({
       where: { id: shiftId, boardingHouseId },
-    });
+    })
 
     if (!shift) {
-      throw new NotFoundException('Không tìm thấy ca làm việc');
+      throw new NotFoundException('Không tìm thấy ca làm việc')
     }
 
     const updated = await this.prisma.shift.update({
       where: { id: shiftId },
       data: {
         name: dto.name !== undefined ? dto.name.trim() : undefined,
-        startTime:
-          dto.startTime !== undefined
-            ? this.parseTimeString(dto.startTime)
-            : undefined,
-        endTime:
-          dto.endTime !== undefined
-            ? this.parseTimeString(dto.endTime)
-            : undefined,
+        startTime: dto.startTime !== undefined ? this.parseTimeString(dto.startTime) : undefined,
+        endTime: dto.endTime !== undefined ? this.parseTimeString(dto.endTime) : undefined,
       },
-    });
+    })
 
     return {
       id: updated.id,
@@ -251,16 +228,14 @@ export class SchedulesService {
       startTime: this.formatTime(updated.startTime),
       endTime: this.formatTime(updated.endTime),
       createdAt: updated.createdAt.toISOString(),
-    };
+    }
   }
 
   /**
    * Delete a shift if not referenced by active schedules
    */
   async deleteShift(boardingHouseId: string, shiftId: string): Promise<void> {
-    this.logger.log(
-      `deleteShift boardingHouseId=${boardingHouseId} shiftId=${shiftId}`,
-    );
+    this.logger.log(`deleteShift boardingHouseId=${boardingHouseId} shiftId=${shiftId}`)
 
     const shift = await this.prisma.shift.findFirst({
       where: { id: shiftId, boardingHouseId },
@@ -270,21 +245,19 @@ export class SchedulesService {
           take: 1,
         },
       },
-    });
+    })
 
     if (!shift) {
-      throw new NotFoundException('Không tìm thấy ca làm việc');
+      throw new NotFoundException('Không tìm thấy ca làm việc')
     }
 
     if (shift.workSchedules.length > 0) {
-      throw new BadRequestException(
-        'Không thể xóa ca làm việc đang có lịch trực đã lên lịch.',
-      );
+      throw new BadRequestException('Không thể xóa ca làm việc đang có lịch trực đã lên lịch.')
     }
 
     await this.prisma.shift.delete({
       where: { id: shiftId },
-    });
+    })
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -300,21 +273,17 @@ export class SchedulesService {
   ): Promise<SchedulesListResponseDto> {
     this.logger.log(
       `getSchedules boardingHouseId=${boardingHouseId} query=${JSON.stringify(query)}`,
-    );
+    )
 
     // Default to current month window if not provided
-    const now = new Date();
-    const defaultStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
-    const defaultEnd = new Date(
-      Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999),
-    );
+    const now = new Date()
+    const defaultStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
+    const defaultEnd = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999))
 
-    const startDate = query.startDate
-      ? this.parseDateOnly(query.startDate)
-      : defaultStart;
+    const startDate = query.startDate ? this.parseDateOnly(query.startDate) : defaultStart
     const endDate = query.endDate
       ? new Date(this.parseDateOnly(query.endDate).getTime() + 86400000 - 1)
-      : defaultEnd;
+      : defaultEnd
 
     const where: any = {
       boardingHouseId,
@@ -322,22 +291,22 @@ export class SchedulesService {
         gte: startDate,
         lte: endDate,
       },
-    };
+    }
 
     if (query.employeeId) {
-      where.employeeId = query.employeeId;
+      where.employeeId = query.employeeId
     }
 
     if (query.shiftId) {
-      where.shiftId = query.shiftId;
+      where.shiftId = query.shiftId
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status
     }
 
     if (query.search) {
-      const search = query.search.trim();
+      const search = query.search.trim()
       where.employee = {
         user: {
           OR: [
@@ -350,12 +319,12 @@ export class SchedulesService {
             },
           ],
         },
-      };
+      }
     }
 
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
-    const skip = (page - 1) * limit;
+    const page = query.page && query.page > 0 ? query.page : 1
+    const limit = query.limit && query.limit > 0 ? query.limit : 10
+    const skip = (page - 1) * limit
 
     const [total, items, allRangeSchedules] = await Promise.all([
       this.prisma.workSchedule.count({ where }),
@@ -396,30 +365,22 @@ export class SchedulesService {
           recurrenceId: true,
         },
       }),
-    ]);
+    ])
 
-    const scheduledCount = allRangeSchedules.filter(
-      (s) => s.status === 'scheduled',
-    ).length;
-    const canceledCount = allRangeSchedules.filter(
-      (s) => s.status === 'canceled',
-    ).length;
-    const recurringCount = allRangeSchedules.filter(
-      (s) => s.recurrenceId !== null,
-    ).length;
-    const adhocCount = allRangeSchedules.filter(
-      (s) => s.recurrenceId === null,
-    ).length;
+    const scheduledCount = allRangeSchedules.filter(s => s.status === 'scheduled').length
+    const canceledCount = allRangeSchedules.filter(s => s.status === 'canceled').length
+    const recurringCount = allRangeSchedules.filter(s => s.recurrenceId !== null).length
+    const adhocCount = allRangeSchedules.filter(s => s.recurrenceId === null).length
 
-    const mappedData: WorkScheduleItemDto[] = items.map((item) => {
-      const assignment = item.employee.employeeAssignments[0];
-      const attendance = item.attendances[0];
-      const isRecurring = item.recurrenceId !== null;
+    const mappedData: WorkScheduleItemDto[] = items.map(item => {
+      const assignment = item.employee.employeeAssignments[0]
+      const attendance = item.attendances[0]
+      const isRecurring = item.recurrenceId !== null
 
       const userName =
         item.employee.user.userIdentification?.fullName ||
         item.employee.user.username ||
-        item.employee.user.phoneNumber;
+        item.employee.user.phoneNumber
 
       return {
         id: item.id,
@@ -442,8 +403,8 @@ export class SchedulesService {
         checkIn: attendance?.checkIn ? attendance.checkIn.toISOString() : null,
         checkOut: attendance?.checkOut ? attendance.checkOut.toISOString() : null,
         createdAt: item.createdAt.toISOString(),
-      };
-    });
+      }
+    })
 
     return {
       data: mappedData,
@@ -458,7 +419,7 @@ export class SchedulesService {
       limit,
       total,
       totalPages: Math.ceil(total / limit) || 1,
-    };
+    }
   }
 
   /**
@@ -472,14 +433,14 @@ export class SchedulesService {
   ): Promise<CreateRecurringResponseDto> {
     this.logger.log(
       `createRecurringSchedule boardingHouseId=${boardingHouseId} shiftId=${dto.shiftId} days=${dto.daysOfWeek} range=${dto.startDate}->${dto.endDate}`,
-    );
+    )
 
     // 1. Verify shift
     const shift = await this.prisma.shift.findFirst({
       where: { id: dto.shiftId, boardingHouseId },
-    });
+    })
     if (!shift) {
-      throw new NotFoundException('Ca làm việc không tồn tại tại nhà trọ này');
+      throw new NotFoundException('Ca làm việc không tồn tại tại nhà trọ này')
     }
 
     // 2. Verify all employees belong to property
@@ -489,55 +450,49 @@ export class SchedulesService {
         employeeId: { in: dto.employeeIds },
         status: 'active',
       },
-    });
+    })
 
-    const activeEmployeeIds = new Set(activeAssignments.map((a) => a.employeeId));
-    const missingEmployees = dto.employeeIds.filter(
-      (id) => !activeEmployeeIds.has(id),
-    );
+    const activeEmployeeIds = new Set(activeAssignments.map(a => a.employeeId))
+    const missingEmployees = dto.employeeIds.filter(id => !activeEmployeeIds.has(id))
     if (missingEmployees.length > 0) {
-      throw new BadRequestException(
-        'Một số nhân viên được chọn không hoạt động tại nhà trọ này',
-      );
+      throw new BadRequestException('Một số nhân viên được chọn không hoạt động tại nhà trọ này')
     }
 
     // 3. Parse target days of week
-    const targetDays = this.parseTargetDays(dto.daysOfWeek);
+    const targetDays = this.parseTargetDays(dto.daysOfWeek)
     if (targetDays.size === 0) {
       throw new BadRequestException(
         'Vui lòng chọn ít nhất một ngày trong tuần (ví dụ: 2,4,6 hoặc T2,T4,T6)',
-      );
+      )
     }
 
     // 4. Parse date range
-    const start = this.parseDateOnly(dto.startDate);
-    const end = this.parseDateOnly(dto.endDate);
+    const start = this.parseDateOnly(dto.startDate)
+    const end = this.parseDateOnly(dto.endDate)
     if (start > end) {
-      throw new BadRequestException(
-        'Ngày bắt đầu không được lớn hơn ngày kết thúc',
-      );
+      throw new BadRequestException('Ngày bắt đầu không được lớn hơn ngày kết thúc')
     }
 
     // Pre-calculate matching dates
-    const matchingDates: Date[] = [];
-    const curr = new Date(start);
+    const matchingDates: Date[] = []
+    const curr = new Date(start)
     while (curr <= end) {
       if (targetDays.has(curr.getUTCDay())) {
-        matchingDates.push(new Date(curr));
+        matchingDates.push(new Date(curr))
       }
-      curr.setUTCDate(curr.getUTCDate() + 1);
+      curr.setUTCDate(curr.getUTCDate() + 1)
     }
 
     if (matchingDates.length === 0) {
       throw new BadRequestException(
         'Không có ngày nào trong khoảng thời gian đã chọn trùng với các ngày trong tuần đã chọn',
-      );
+      )
     }
 
-    let totalMaterialized = 0;
-    let patternsCreated = 0;
+    let totalMaterialized = 0
+    let patternsCreated = 0
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       for (const employeeId of dto.employeeIds) {
         // Create RecurrencePattern
         const pattern = await tx.recurrencePattern.create({
@@ -550,8 +505,8 @@ export class SchedulesService {
             endTime: shift.endTime,
             createdBy: currentUserId,
           },
-        });
-        patternsCreated++;
+        })
+        patternsCreated++
 
         // Materialize individual WorkSchedule rows for each matching date
         for (const date of matchingDates) {
@@ -563,7 +518,7 @@ export class SchedulesService {
               shiftId: dto.shiftId,
               workDate: date,
             },
-          });
+          })
 
           if (!existingSchedule) {
             await tx.workSchedule.create({
@@ -575,8 +530,8 @@ export class SchedulesService {
                 recurrenceId: pattern.id,
                 status: 'scheduled',
               },
-            });
-            totalMaterialized++;
+            })
+            totalMaterialized++
           } else if (existingSchedule.status === 'canceled') {
             // Re-activate if was canceled
             await tx.workSchedule.update({
@@ -585,19 +540,19 @@ export class SchedulesService {
                 status: 'scheduled',
                 recurrenceId: pattern.id,
               },
-            });
-            totalMaterialized++;
+            })
+            totalMaterialized++
           }
         }
       }
-    });
+    })
 
     return {
       success: true,
       patternsCreated,
       schedulesMaterialized: totalMaterialized,
       message: `Đã phân ca lặp lại và tạo thành công ${totalMaterialized} lịch làm việc cho ${patternsCreated} nhân viên.`,
-    };
+    }
   }
 
   /**
@@ -609,14 +564,14 @@ export class SchedulesService {
   ): Promise<WorkScheduleItemDto> {
     this.logger.log(
       `createAdhocSchedule boardingHouseId=${boardingHouseId} employeeId=${dto.employeeId} shiftId=${dto.shiftId} date=${dto.workDate}`,
-    );
+    )
 
     // Verify shift
     const shift = await this.prisma.shift.findFirst({
       where: { id: dto.shiftId, boardingHouseId },
-    });
+    })
     if (!shift) {
-      throw new NotFoundException('Ca làm việc không tồn tại tại nhà trọ này');
+      throw new NotFoundException('Ca làm việc không tồn tại tại nhà trọ này')
     }
 
     // Verify employee
@@ -630,15 +585,13 @@ export class SchedulesService {
         employee: { include: { user: true } },
         position: true,
       },
-    });
+    })
 
     if (!assignment) {
-      throw new BadRequestException(
-        'Nhân viên không hoạt động tại nhà trọ này',
-      );
+      throw new BadRequestException('Nhân viên không hoạt động tại nhà trọ này')
     }
 
-    const workDate = this.parseDateOnly(dto.workDate);
+    const workDate = this.parseDateOnly(dto.workDate)
 
     // Insert single WorkSchedule with recurrenceId = null
     const created = await this.prisma.workSchedule.create({
@@ -660,12 +613,12 @@ export class SchedulesService {
           },
         },
       },
-    });
+    })
 
     const employeeName =
       created.employee.user.userIdentification?.fullName ||
       created.employee.user.username ||
-      created.employee.user.phoneNumber;
+      created.employee.user.phoneNumber
 
     return {
       id: created.id,
@@ -688,7 +641,7 @@ export class SchedulesService {
       checkIn: null,
       checkOut: null,
       createdAt: created.createdAt.toISOString(),
-    };
+    }
   }
 
   /**
@@ -699,9 +652,7 @@ export class SchedulesService {
     scheduleId: string,
     dto: UpdateScheduleDto,
   ): Promise<WorkScheduleItemDto> {
-    this.logger.log(
-      `updateSchedule boardingHouseId=${boardingHouseId} scheduleId=${scheduleId}`,
-    );
+    this.logger.log(`updateSchedule boardingHouseId=${boardingHouseId} scheduleId=${scheduleId}`)
 
     const existing = await this.prisma.workSchedule.findFirst({
       where: { id: scheduleId, boardingHouseId },
@@ -719,18 +670,18 @@ export class SchedulesService {
         },
         attendances: { take: 1, orderBy: { createdAt: 'desc' } },
       },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy ca làm việc');
+      throw new NotFoundException('Không tìm thấy ca làm việc')
     }
 
     if (dto.shiftId && dto.shiftId !== existing.shiftId) {
       const shift = await this.prisma.shift.findFirst({
         where: { id: dto.shiftId, boardingHouseId },
-      });
+      })
       if (!shift) {
-        throw new BadRequestException('Ca làm việc mới không tồn tại');
+        throw new BadRequestException('Ca làm việc mới không tồn tại')
       }
     }
 
@@ -738,9 +689,7 @@ export class SchedulesService {
       where: { id: scheduleId },
       data: {
         shiftId: dto.shiftId || existing.shiftId,
-        workDate: dto.workDate
-          ? this.parseDateOnly(dto.workDate)
-          : existing.workDate,
+        workDate: dto.workDate ? this.parseDateOnly(dto.workDate) : existing.workDate,
         status: dto.status || existing.status,
       },
       include: {
@@ -759,15 +708,15 @@ export class SchedulesService {
         },
         attendances: { take: 1, orderBy: { createdAt: 'desc' } },
       },
-    });
+    })
 
-    const assignment = updated.employee.employeeAssignments[0];
-    const attendance = updated.attendances[0];
+    const assignment = updated.employee.employeeAssignments[0]
+    const attendance = updated.attendances[0]
 
     const employeeName =
       updated.employee.user.userIdentification?.fullName ||
       updated.employee.user.username ||
-      updated.employee.user.phoneNumber;
+      updated.employee.user.phoneNumber
 
     return {
       id: updated.id,
@@ -790,7 +739,7 @@ export class SchedulesService {
       checkIn: attendance?.checkIn ? attendance.checkIn.toISOString() : null,
       checkOut: attendance?.checkOut ? attendance.checkOut.toISOString() : null,
       createdAt: updated.createdAt.toISOString(),
-    };
+    }
   }
 
   /**
@@ -803,22 +752,22 @@ export class SchedulesService {
   ): Promise<{ updatedCount: number; message: string }> {
     this.logger.log(
       `updateRecurrence boardingHouseId=${boardingHouseId} recurrenceId=${recurrenceId}`,
-    );
+    )
 
     const pattern = await this.prisma.recurrencePattern.findFirst({
       where: { id: recurrenceId, boardingHouseId },
-    });
+    })
 
     if (!pattern) {
-      throw new NotFoundException('Không tìm thấy mẫu lặp ca');
+      throw new NotFoundException('Không tìm thấy mẫu lặp ca')
     }
 
     if (dto.shiftId && dto.shiftId !== pattern.shiftId) {
       const shift = await this.prisma.shift.findFirst({
         where: { id: dto.shiftId, boardingHouseId },
-      });
+      })
       if (!shift) {
-        throw new BadRequestException('Ca làm việc mới không tồn tại');
+        throw new BadRequestException('Ca làm việc mới không tồn tại')
       }
 
       await this.prisma.recurrencePattern.update({
@@ -828,15 +777,15 @@ export class SchedulesService {
           startTime: shift.startTime,
           endTime: shift.endTime,
         },
-      });
+      })
     }
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
 
-    const updateData: any = {};
-    if (dto.shiftId) updateData.shiftId = dto.shiftId;
-    if (dto.status) updateData.status = dto.status;
+    const updateData: any = {}
+    if (dto.shiftId) updateData.shiftId = dto.shiftId
+    if (dto.status) updateData.status = dto.status
 
     const res = await this.prisma.workSchedule.updateMany({
       where: {
@@ -845,12 +794,12 @@ export class SchedulesService {
         workDate: { gte: today },
       },
       data: updateData,
-    });
+    })
 
     return {
       updatedCount: res.count,
       message: `Đã cập nhật ${res.count} ca làm việc từ hôm nay trở đi.`,
-    };
+    }
   }
 
   /**
@@ -865,19 +814,19 @@ export class SchedulesService {
   ): Promise<{ deletedCount: number; message: string }> {
     this.logger.log(
       `deleteSchedule boardingHouseId=${boardingHouseId} scheduleId=${scheduleId} mode=${mode}`,
-    );
+    )
 
     const schedule = await this.prisma.workSchedule.findFirst({
       where: { id: scheduleId, boardingHouseId },
-    });
+    })
 
     if (!schedule) {
-      throw new NotFoundException('Không tìm thấy ca làm việc');
+      throw new NotFoundException('Không tìm thấy ca làm việc')
     }
 
     if (mode === 'future' && schedule.recurrenceId) {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
+      const today = new Date()
+      today.setUTCHours(0, 0, 0, 0)
 
       const res = await this.prisma.workSchedule.updateMany({
         where: {
@@ -886,24 +835,24 @@ export class SchedulesService {
           workDate: { gte: today },
         },
         data: { status: 'canceled' },
-      });
+      })
 
       return {
         deletedCount: res.count,
         message: `Đã hủy ${res.count} ca làm việc định kỳ trong tương lai.`,
-      };
+      }
     }
 
     // Cancel single schedule
     await this.prisma.workSchedule.update({
       where: { id: scheduleId },
       data: { status: 'canceled' },
-    });
+    })
 
     return {
       deletedCount: 1,
       message: 'Đã hủy ca làm việc thành công.',
-    };
+    }
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -913,17 +862,15 @@ export class SchedulesService {
   /**
    * UC-S-01: Get list of active assigned boarding houses for staff member
    */
-  async getStaffBoardingHouses(
-    userId: string,
-  ): Promise<StaffBoardingHouseResponseDto[]> {
-    this.logger.log(`getStaffBoardingHouses for userId=${userId}`);
+  async getStaffBoardingHouses(userId: string): Promise<StaffBoardingHouseResponseDto[]> {
+    this.logger.log(`getStaffBoardingHouses for userId=${userId}`)
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
-    });
+    })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
     }
 
     const assignments = await this.prisma.employeeAssignment.findMany({
@@ -935,9 +882,9 @@ export class SchedulesService {
         boardingHouse: true,
       },
       orderBy: { boardingHouse: { name: 'asc' } },
-    });
+    })
 
-    const houseMap = new Map<string, StaffBoardingHouseResponseDto>();
+    const houseMap = new Map<string, StaffBoardingHouseResponseDto>()
     for (const a of assignments) {
       if (!houseMap.has(a.boardingHouseId)) {
         const address = [
@@ -948,17 +895,17 @@ export class SchedulesService {
           a.boardingHouse.city || a.boardingHouse.province,
         ]
           .filter(Boolean)
-          .join(', ');
+          .join(', ')
 
         houseMap.set(a.boardingHouseId, {
           id: a.boardingHouse.id,
           name: a.boardingHouse.name,
           address: address || null,
-        });
+        })
       }
     }
 
-    return Array.from(houseMap.values());
+    return Array.from(houseMap.values())
   }
 
   /**
@@ -968,39 +915,33 @@ export class SchedulesService {
     userId: string,
     query: QueryStaffSchedulesDto,
   ): Promise<StaffScheduleItemResponseDto[]> {
-    this.logger.log(
-      `getStaffSchedules for userId=${userId} query=${JSON.stringify(query)}`,
-    );
+    this.logger.log(`getStaffSchedules for userId=${userId} query=${JSON.stringify(query)}`)
 
     const employee = await this.prisma.employee.findUnique({
       where: { userId },
-    });
+    })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.');
+      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
     }
 
     // Determine target start and end dates
-    let startDate: Date;
-    let endDate: Date;
+    let startDate: Date
+    let endDate: Date
 
     if (query.startDate) {
-      startDate = this.parseDateOnly(query.startDate);
+      startDate = this.parseDateOnly(query.startDate)
     } else {
-      const now = new Date();
-      const day = now.getUTCDay();
-      const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1); // Monday
-      startDate = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0),
-      );
+      const now = new Date()
+      const day = now.getUTCDay()
+      const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1) // Monday
+      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0))
     }
 
     if (query.endDate) {
-      endDate = new Date(
-        this.parseDateOnly(query.endDate).getTime() + 86400000 - 1,
-      );
+      endDate = new Date(this.parseDateOnly(query.endDate).getTime() + 86400000 - 1)
     } else {
-      endDate = new Date(startDate.getTime() + 7 * 86400000 - 1);
+      endDate = new Date(startDate.getTime() + 7 * 86400000 - 1)
     }
 
     // Get active employee assignments
@@ -1013,22 +954,20 @@ export class SchedulesService {
         position: true,
         boardingHouse: true,
       },
-    });
+    })
 
-    const assignedHouseIds = Array.from(
-      new Set(assignments.map((a) => a.boardingHouseId)),
-    );
+    const assignedHouseIds = Array.from(new Set(assignments.map(a => a.boardingHouseId)))
 
     if (assignedHouseIds.length === 0) {
-      return [];
+      return []
     }
 
-    let targetHouseIds = assignedHouseIds;
+    let targetHouseIds = assignedHouseIds
     if (query.boardingHouseId) {
       if (!assignedHouseIds.includes(query.boardingHouseId)) {
-        return [];
+        return []
       }
-      targetHouseIds = [query.boardingHouseId];
+      targetHouseIds = [query.boardingHouseId]
     }
 
     // Fetch work schedules for the staff member
@@ -1051,20 +990,18 @@ export class SchedulesService {
         },
       },
       orderBy: [{ workDate: 'asc' }, { shift: { startTime: 'asc' } }],
-    });
+    })
 
-    const result: StaffScheduleItemResponseDto[] = [];
+    const result: StaffScheduleItemResponseDto[] = []
 
     for (const item of schedules) {
-      const assignment = assignments.find(
-        (a) => a.boardingHouseId === item.boardingHouseId,
-      );
+      const assignment = assignments.find(a => a.boardingHouseId === item.boardingHouseId)
       const position = assignment?.position || {
         id: 'default',
         name: 'Nhân viên vận hành',
         description:
           'Kiểm tra an ninh và kiểm soát xe ra vào.\nTuần tra hành lang và khu vực công cộng.\nBàn giao ca trực đầy đủ.',
-      };
+      }
 
       // Query shift colleagues / co-workers on duty
       const coWorkerSchedules = await this.prisma.workSchedule.findMany({
@@ -1092,16 +1029,12 @@ export class SchedulesService {
             },
           },
         },
-      });
+      })
 
-      const coWorkers = coWorkerSchedules.map((cs) => {
-        const empUser = cs.employee.user;
-        const name =
-          empUser.userIdentification?.fullName ||
-          empUser.username ||
-          empUser.phoneNumber;
-        const posName =
-          cs.employee.employeeAssignments[0]?.position?.name || 'Nhân viên';
+      const coWorkers = coWorkerSchedules.map(cs => {
+        const empUser = cs.employee.user
+        const name = empUser.userIdentification?.fullName || empUser.username || empUser.phoneNumber
+        const posName = cs.employee.employeeAssignments[0]?.position?.name || 'Nhân viên'
 
         return {
           id: cs.employee.id,
@@ -1109,23 +1042,19 @@ export class SchedulesService {
           phone: empUser.phoneNumber,
           positionName: posName,
           avatar: empUser.avatarUrl || null,
-        };
-      });
+        }
+      })
 
       // Resolve duty checklist items
-      let dutyItems: any[] = [];
-      const att = item.attendances[0];
-      if (
-        att?.dutyTasks &&
-        Array.isArray(att.dutyTasks) &&
-        att.dutyTasks.length > 0
-      ) {
-        dutyItems = att.dutyTasks;
+      let dutyItems: any[] = []
+      const att = item.attendances[0]
+      if (att?.dutyTasks && Array.isArray(att.dutyTasks) && att.dutyTasks.length > 0) {
+        dutyItems = att.dutyTasks
       } else {
         const lines = (position.description || '')
           .split('\n')
-          .map((l) => l.trim().replace(/^[•\s\d.-]+/, ''))
-          .filter(Boolean);
+          .map(l => l.trim().replace(/^[•\s\d.-]+/, ''))
+          .filter(Boolean)
 
         if (lines.length > 0) {
           dutyItems = lines.map((title, idx) => ({
@@ -1137,7 +1066,7 @@ export class SchedulesService {
             photoProof: null,
             photoProofTime: null,
             note: null,
-          }));
+          }))
         } else {
           dutyItems = [
             {
@@ -1160,7 +1089,7 @@ export class SchedulesService {
               photoProofTime: null,
               note: null,
             },
-          ];
+          ]
         }
       }
 
@@ -1185,9 +1114,9 @@ export class SchedulesService {
         coWorkers,
         duties: dutyItems,
         additionalTasks: [],
-      });
+      })
     }
 
-    return result;
+    return result
   }
 }

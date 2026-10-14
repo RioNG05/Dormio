@@ -1,19 +1,28 @@
-"use client";
+'use client'
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
-  Sparkles, User, Building2, Shield, ChevronUp, ChevronDown,
-  Home, X, Check, ArrowRight, EyeOff
-} from "lucide-react";
-import { useAuth, DemoPreset } from "@/context/AuthContext";
+  Sparkles,
+  User,
+  Building2,
+  Shield,
+  ChevronUp,
+  ChevronDown,
+  Home,
+  X,
+  Check,
+  ArrowRight,
+  EyeOff,
+} from 'lucide-react'
+import { useAuth, DemoPreset } from '@/context/AuthContext'
 
 export default function DemoControlBar() {
-  const router = useRouter();
-  const { isLoggedIn, user, setDemoPreset } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const router = useRouter()
+  const { isLoggedIn, user, setDemoPreset } = useAuth()
+  const [isOpen, setIsOpen] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false)
 
   if (isDismissed) {
     return (
@@ -25,47 +34,51 @@ export default function DemoControlBar() {
         <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" />
         <span>Thử nghiệm</span>
       </button>
-    );
+    )
   }
 
   const handleSelectPreset = (preset: DemoPreset, redirectPath?: string) => {
-    setDemoPreset(preset);
+    setDemoPreset(preset)
     if (redirectPath) {
-      router.push(redirectPath);
+      router.push(redirectPath)
     }
-  };
+  }
 
   const getActivePreset = (): DemoPreset => {
-    if (!isLoggedIn || !user) return "guest";
-    if (user.role === "admin") return "admin";
-    if (user.role === "employee") return "staff";
-    if (user.role === "tenant") return "tenant";
-    if (user.role === "landlord") {
-      return user.houseName ? "landlord_active" : "landlord_empty";
+    if (!isLoggedIn || !user) return 'guest'
+    if (user.role === 'admin') return 'admin'
+    if (user.role === 'employee') return 'staff'
+    if (user.role === 'tenant') return 'tenant'
+    if (user.role === 'landlord') {
+      return user.houseName ? 'landlord_active' : 'landlord_empty'
     }
-    return "guest";
-  };
+    return 'guest'
+  }
 
-  const activePreset = getActivePreset();
+  const activePreset = getActivePreset()
 
   const getPresetLabel = (preset: DemoPreset) => {
     switch (preset) {
-      case "guest": return "🌐 Khách Vãng Lai";
-      case "tenant": return "👤 Khách Thuê (Tenant)";
-      case "staff": return "👷 Nhân Viên (Staff)";
-      case "landlord_empty": return "🏠 Chủ Trọ Mới (Trống Trơn)";
-      case "landlord_active": return "📊 Chủ Trọ Đang Vận Hành";
-      case "admin": return "👑 Admin Nền Tảng";
+      case 'guest':
+        return '🌐 Khách Vãng Lai'
+      case 'tenant':
+        return '👤 Khách Thuê (Tenant)'
+      case 'staff':
+        return '👷 Nhân Viên (Staff)'
+      case 'landlord_empty':
+        return '🏠 Chủ Trọ Mới (Trống Trơn)'
+      case 'landlord_active':
+        return '📊 Chủ Trọ Đang Vận Hành'
+      case 'admin':
+        return '👑 Admin Nền Tảng'
     }
-  };
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-auto">
-
       {/* Floating Expanded Control Panel Panel */}
       {isOpen && (
         <div className="mb-3 max-w-sm sm:max-w-md w-full bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800 p-5 rounded-3xl shadow-2xl text-white space-y-4 animate-in slide-in-from-bottom-4 duration-200">
-
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
             <div className="flex items-center gap-2">
@@ -74,7 +87,9 @@ export default function DemoControlBar() {
               </div>
               <div>
                 <h4 className="text-xs font-black text-white">Bảng Thử Nghiệm Project</h4>
-                <p className="text-[10px] text-zinc-400 font-medium">Chuyển đổi vai trò & kiểm thử các luồng 1-click</p>
+                <p className="text-[10px] text-zinc-400 font-medium">
+                  Chuyển đổi vai trò & kiểm thử các luồng 1-click
+                </p>
               </div>
             </div>
 
@@ -102,82 +117,89 @@ export default function DemoControlBar() {
             </span>
 
             <div className="grid grid-cols-1 gap-2">
-
               {/* Guest */}
               <button
-                onClick={() => handleSelectPreset("guest", "/")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "guest"
-                  ? "border-white bg-white text-zinc-950 shadow-md"
-                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                  }`}
+                onClick={() => handleSelectPreset('guest', '/')}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                  activePreset === 'guest'
+                    ? 'border-white bg-white text-zinc-950 shadow-md'
+                    : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
+                }`}
               >
                 <span>🌐 1. Khách Vãng Lai (Chưa đăng nhập)</span>
-                {activePreset === "guest" && <Check className="w-4 h-4 text-zinc-950 stroke-[3]" />}
+                {activePreset === 'guest' && <Check className="w-4 h-4 text-zinc-950 stroke-[3]" />}
               </button>
 
               {/* Tenant */}
               <button
-                onClick={() => handleSelectPreset("tenant", "/tenant")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "tenant"
-                  ? "border-[#FF6B35] bg-[#FF6B35] text-white shadow-md"
-                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                  }`}
+                onClick={() => handleSelectPreset('tenant', '/tenant')}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                  activePreset === 'tenant'
+                    ? 'border-[#FF6B35] bg-[#FF6B35] text-white shadow-md'
+                    : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
+                }`}
               >
                 <span>👤 2. Khách Thuê </span>
-                {activePreset === "tenant" && <Check className="w-4 h-4 text-white stroke-[3]" />}
+                {activePreset === 'tenant' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
               {/* Staff */}
               <button
-                onClick={() => handleSelectPreset("staff", "/staff")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "staff"
-                  ? "border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md"
-                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                  }`}
+                onClick={() => handleSelectPreset('staff', '/staff')}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                  activePreset === 'staff'
+                    ? 'border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md'
+                    : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
+                }`}
               >
                 <span>👷 3. Nhân Viên Vận Hành (Staff)</span>
-                {activePreset === "staff" && <Check className="w-4 h-4 text-white stroke-[3]" />}
+                {activePreset === 'staff' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
               {/* Landlord Empty */}
               <button
-                onClick={() => handleSelectPreset("landlord_empty", "/landlord")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "landlord_empty"
-                  ? "border-rose-500 bg-rose-500 text-white shadow-md"
-                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                  }`}
+                onClick={() => handleSelectPreset('landlord_empty', '/landlord')}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                  activePreset === 'landlord_empty'
+                    ? 'border-rose-500 bg-rose-500 text-white shadow-md'
+                    : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
+                }`}
               >
                 <span>🏠 4. Chủ Trọ Mới (Dashboard Trống Trơn)</span>
-                {activePreset === "landlord_empty" && <Check className="w-4 h-4 text-white stroke-[3]" />}
+                {activePreset === 'landlord_empty' && (
+                  <Check className="w-4 h-4 text-white stroke-[3]" />
+                )}
               </button>
 
               {/* Landlord Active */}
               <button
-                onClick={() => handleSelectPreset("landlord_active", "/landlord")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "landlord_active"
-                  ? "border-emerald-600 bg-emerald-600 text-white shadow-md"
-                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                  }`}
+                onClick={() => handleSelectPreset('landlord_active', '/landlord')}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                  activePreset === 'landlord_active'
+                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-md'
+                    : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
+                }`}
               >
                 <span>📊 5. Chủ Trọ Đang Vận Hành</span>
-                {activePreset === "landlord_active" && <Check className="w-4 h-4 text-white stroke-[3]" />}
+                {activePreset === 'landlord_active' && (
+                  <Check className="w-4 h-4 text-white stroke-[3]" />
+                )}
               </button>
 
               {/* Admin */}
               <button
-                onClick={() => handleSelectPreset("admin", "/admin")}
-                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${activePreset === "admin"
-                  ? "border-purple-600 bg-purple-600 text-white shadow-md"
-                  : "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800"
-                  }`}
+                onClick={() => handleSelectPreset('admin', '/admin')}
+                className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                  activePreset === 'admin'
+                    ? 'border-purple-600 bg-purple-600 text-white shadow-md'
+                    : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
+                }`}
               >
                 <span>👑 6. Admin Nền Tảng (System)</span>
-                {activePreset === "admin" && <Check className="w-4 h-4 text-white stroke-[3]" />}
+                {activePreset === 'admin' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
-
             </div>
           </div>
-
         </div>
       )}
 
@@ -200,7 +222,6 @@ export default function DemoControlBar() {
           <ChevronUp className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
         )}
       </button>
-
     </div>
-  );
+  )
 }

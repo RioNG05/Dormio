@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ScheduleStatus } from '@prisma';
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { ScheduleStatus } from '@prisma'
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator'
 
 export class UpdateScheduleDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class UpdateScheduleDto {
   })
   @IsOptional()
   @IsUUID('4', { message: 'ID ca làm việc không hợp lệ' })
-  shiftId?: string;
+  shiftId?: string
 
   @ApiPropertyOptional({
     description: 'Updated work date (YYYY-MM-DD)',
@@ -17,7 +17,7 @@ export class UpdateScheduleDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'Ngày làm việc không hợp lệ' })
-  workDate?: string;
+  workDate?: string
 
   @ApiPropertyOptional({
     description: 'Schedule status',
@@ -26,7 +26,7 @@ export class UpdateScheduleDto {
   })
   @IsOptional()
   @IsEnum(ScheduleStatus, { message: 'Trạng thái ca làm việc không hợp lệ' })
-  status?: ScheduleStatus;
+  status?: ScheduleStatus
 
   @ApiPropertyOptional({
     description: 'Duty note for the shift',
@@ -34,5 +34,5 @@ export class UpdateScheduleDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

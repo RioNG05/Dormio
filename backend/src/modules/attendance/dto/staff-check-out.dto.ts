@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
-import { AttendanceWatermarkDto } from './staff-check-in.dto';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
+import { AttendanceWatermarkDto } from './staff-check-in.dto'
 
 export class StaffCheckOutDto {
   @ApiProperty({
@@ -9,7 +9,7 @@ export class StaffCheckOutDto {
   })
   @IsNotEmpty()
   @IsUUID()
-  workScheduleId: string;
+  workScheduleId: string
 
   @ApiPropertyOptional({
     description: 'Data URL or uploaded image URL of the verification photo',
@@ -17,14 +17,14 @@ export class StaffCheckOutDto {
   })
   @IsOptional()
   @IsString()
-  photo?: string;
+  photo?: string
 
   @ApiPropertyOptional({
     description: 'Watermark metadata embedded in the verification photo',
     type: AttendanceWatermarkDto,
   })
   @IsOptional()
-  watermark?: AttendanceWatermarkDto;
+  watermark?: AttendanceWatermarkDto
 
   @ApiPropertyOptional({
     description: 'Optional explanation if checking out early',
@@ -32,7 +32,7 @@ export class StaffCheckOutDto {
   })
   @IsOptional()
   @IsString()
-  explanation?: string;
+  explanation?: string
 
   @ApiPropertyOptional({
     description: 'Simulated or captured time in HH:mm format',
@@ -40,6 +40,5 @@ export class StaffCheckOutDto {
   })
   @IsOptional()
   @IsString()
-  capturedTime?: string;
+  capturedTime?: string
 }
-

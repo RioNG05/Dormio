@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import Image from "next/image";
+import React, { useState, useRef, useCallback, useEffect } from 'react'
+import Image from 'next/image'
 import {
   UploadCloud,
   Camera,
@@ -13,38 +13,38 @@ import {
   X,
   RotateCcw,
   Sparkles,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { uploadImageToBackend } from "@/services/upload.service";
-import { useTranslations } from "@/context/LanguageContext";
-import { cn } from "@/lib/utils";
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { uploadImageToBackend } from '@/services/upload.service'
+import { useTranslations } from '@/context/LanguageContext'
+import { cn } from '@/lib/utils'
 
 export interface MultiImageUploadProps {
-  values: string[];
-  onChange: (urls: string[]) => void;
-  folder?: string;
-  maxImages?: number;
-  maxSizeMb?: number;
-  disabled?: boolean;
-  error?: string | null;
-  label?: string;
-  helperText?: string;
-  containerClassName?: string;
-  onDirty?: () => void;
+  values: string[]
+  onChange: (urls: string[]) => void
+  folder?: string
+  maxImages?: number
+  maxSizeMb?: number
+  disabled?: boolean
+  error?: string | null
+  label?: string
+  helperText?: string
+  containerClassName?: string
+  onDirty?: () => void
 }
 
 interface UploadingQueueItem {
-  id: string;
-  previewUrl: string;
-  isUploading: boolean;
-  error?: string | null;
-  file?: File;
+  id: string
+  previewUrl: string
+  isUploading: boolean
+  error?: string | null
+  file?: File
 }
 
 export function MultiImageUpload({
   values = [],
   onChange,
-  folder = "dormio/posts",
+  folder = 'dormio/posts',
   maxImages = 10,
   maxSizeMb = 10,
   disabled = false,
@@ -54,66 +54,64 @@ export function MultiImageUpload({
   containerClassName,
   onDirty,
 }: MultiImageUploadProps) {
-  const t = useTranslations("guest");
+  const t = useTranslations('guest')
 
-  const deviceInputRef = useRef<HTMLInputElement | null>(null);
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const deviceInputRef = useRef<HTMLInputElement | null>(null)
+  const cameraInputRef = useRef<HTMLInputElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [internalError, setInternalError] = useState<string | null>(null);
-  const [uploadingItems, setUploadingItems] = useState<UploadingQueueItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false)
+  const [internalError, setInternalError] = useState<string | null>(null)
+  const [uploadingItems, setUploadingItems] = useState<UploadingQueueItem[]>([])
 
   // Camera modal state
-  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
-  const [cameraLoading, setCameraLoading] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false)
+  const [cameraLoading, setCameraLoading] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
 
   // Inspect / preview zoomed photo
-  const [inspectedImageUrl, setInspectedImageUrl] = useState<string | null>(null);
+  const [inspectedImageUrl, setInspectedImageUrl] = useState<string | null>(null)
 
-  const activeError = externalError || internalError;
-  const isAtMaxImages = values.length + uploadingItems.length >= maxImages;
+  const activeError = externalError || internalError
+  const isAtMaxImages = values.length + uploadingItems.length >= maxImages
 
   // ─── File Processing & Upload Pipeline ──────────────────────────────────────
   const processAndUploadFiles = useCallback(
     async (files: File[]) => {
-      if (disabled) return;
-      setInternalError(null);
+      if (disabled) return
+      setInternalError(null)
 
-      const availableSlots = maxImages - (values.length + uploadingItems.length);
+      const availableSlots = maxImages - (values.length + uploadingItems.length)
       if (availableSlots <= 0) {
         setInternalError(
-          t("guestPostsCreateMaxImagesReached", { max: maxImages }) ||
-            `Đã đạt tối đa ${maxImages} ảnh.`
-        );
-        return;
+          t('guestPostsCreateMaxImagesReached', { max: maxImages }) ||
+            `Đã đạt tối đa ${maxImages} ảnh.`,
+        )
+        return
       }
 
-      const filesToProcess = files.slice(0, availableSlots);
+      const filesToProcess = files.slice(0, availableSlots)
 
       for (const file of filesToProcess) {
-        if (!file.type.startsWith("image/")) {
-          setInternalError("Chỉ chấp nhận tệp định dạng hình ảnh (JPG, PNG, WEBP).");
-          continue;
+        if (!file.type.startsWith('image/')) {
+          setInternalError('Chỉ chấp nhận tệp định dạng hình ảnh (JPG, PNG, WEBP).')
+          continue
         }
 
         if (file.size > maxSizeMb * 1024 * 1024) {
-          setInternalError(
-            `Ảnh "${file.name}" vượt quá kích thước cho phép (${maxSizeMb}MB).`
-          );
-          continue;
+          setInternalError(`Ảnh "${file.name}" vượt quá kích thước cho phép (${maxSizeMb}MB).`)
+          continue
         }
 
-        const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 
         // Read local base64 for instant optimistic preview
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const base64Data = e.target?.result as string;
-          if (!base64Data) return;
+        const reader = new FileReader()
+        reader.onload = async e => {
+          const base64Data = e.target?.result as string
+          if (!base64Data) return
 
           // Add to uploading queue
           const queueItem: UploadingQueueItem = {
@@ -121,114 +119,114 @@ export function MultiImageUpload({
             previewUrl: base64Data,
             isUploading: true,
             file,
-          };
+          }
 
-          setUploadingItems((prev) => [...prev, queueItem]);
-          onDirty?.();
+          setUploadingItems(prev => [...prev, queueItem])
+          onDirty?.()
 
           // Upload to backend Cloudinary storage
           try {
-            const res = await uploadImageToBackend(base64Data, folder);
-            const uploadedUrl = res?.url || base64Data;
+            const res = await uploadImageToBackend(base64Data, folder)
+            const uploadedUrl = res?.url || base64Data
 
             // Remove from uploading queue and append to final values
-            setUploadingItems((prev) => prev.filter((item) => item.id !== tempId));
-            onChange([...values, uploadedUrl]);
+            setUploadingItems(prev => prev.filter(item => item.id !== tempId))
+            onChange([...values, uploadedUrl])
           } catch (uploadErr: any) {
-            console.error("Failed to upload image to Cloudinary:", uploadErr);
-            setUploadingItems((prev) =>
-              prev.map((item) =>
+            console.error('Failed to upload image to Cloudinary:', uploadErr)
+            setUploadingItems(prev =>
+              prev.map(item =>
                 item.id === tempId
                   ? {
                       ...item,
                       isUploading: false,
                       error:
                         uploadErr?.message ||
-                        t("guestPostsCreateUploadFailed") ||
-                        "Tải ảnh thất bại",
+                        t('guestPostsCreateUploadFailed') ||
+                        'Tải ảnh thất bại',
                     }
-                  : item
-              )
-            );
+                  : item,
+              ),
+            )
           }
-        };
+        }
 
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file)
       }
     },
-    [disabled, maxImages, values, uploadingItems.length, maxSizeMb, t, folder, onChange, onDirty]
-  );
+    [disabled, maxImages, values, uploadingItems.length, maxSizeMb, t, folder, onChange, onDirty],
+  )
 
   // ─── Input Handlers ────────────────────────────────────────────────────────
   const handleDeviceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processAndUploadFiles(Array.from(e.target.files));
-      e.target.value = "";
+      processAndUploadFiles(Array.from(e.target.files))
+      e.target.value = ''
     }
-  };
+  }
 
   const handleCameraCaptureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processAndUploadFiles(Array.from(e.target.files));
-      e.target.value = "";
+      processAndUploadFiles(Array.from(e.target.files))
+      e.target.value = ''
     }
-  };
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (!disabled && !isAtMaxImages) {
-      setIsDragging(true);
+      setIsDragging(true)
     }
-  };
+  }
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+    e.preventDefault()
+    setIsDragging(false)
+  }
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (disabled || isAtMaxImages) return;
+    e.preventDefault()
+    setIsDragging(false)
+    if (disabled || isAtMaxImages) return
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processAndUploadFiles(Array.from(e.dataTransfer.files));
+      processAndUploadFiles(Array.from(e.dataTransfer.files))
     }
-  };
+  }
 
   // ─── Reorder & Delete Actions ──────────────────────────────────────────────
   const handleRemoveImage = (indexToRemove: number) => {
-    if (disabled) return;
-    const newValues = values.filter((_, idx) => idx !== indexToRemove);
-    onChange(newValues);
-    onDirty?.();
-  };
+    if (disabled) return
+    const newValues = values.filter((_, idx) => idx !== indexToRemove)
+    onChange(newValues)
+    onDirty?.()
+  }
 
   const handleSetCoverPhoto = (indexToCover: number) => {
-    if (disabled || indexToCover === 0) return;
-    const item = values[indexToCover];
-    const remaining = values.filter((_, idx) => idx !== indexToCover);
-    onChange([item, ...remaining]);
-    onDirty?.();
-  };
+    if (disabled || indexToCover === 0) return
+    const item = values[indexToCover]
+    const remaining = values.filter((_, idx) => idx !== indexToCover)
+    onChange([item, ...remaining])
+    onDirty?.()
+  }
 
   const handleRemoveUploadingItem = (idToRemove: string) => {
-    setUploadingItems((prev) => prev.filter((item) => item.id !== idToRemove));
-  };
+    setUploadingItems(prev => prev.filter(item => item.id !== idToRemove))
+  }
 
   // ─── Web Camera Live Stream Modal ──────────────────────────────────────────
-  const startCamera = async (mode: "user" | "environment") => {
-    stopCamera();
-    setCameraLoading(true);
-    setCameraError(null);
+  const startCamera = async (mode: 'user' | 'environment') => {
+    stopCamera()
+    setCameraLoading(true)
+    setCameraError(null)
 
-    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       setCameraError(
-        t("guestPostsCreateCameraPermissionDenied") ||
-          "Trình duyệt không hỗ trợ trực tiếp mở camera webcam."
-      );
-      setCameraLoading(false);
-      return;
+        t('guestPostsCreateCameraPermissionDenied') ||
+          'Trình duyệt không hỗ trợ trực tiếp mở camera webcam.',
+      )
+      setCameraLoading(false)
+      return
     }
 
     try {
@@ -239,114 +237,110 @@ export function MultiImageUpload({
           height: { ideal: 720 },
         },
         audio: false,
-      };
+      }
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = mediaStream;
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
+      streamRef.current = mediaStream
 
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play().catch(() => {});
+        videoRef.current.srcObject = mediaStream
+        await videoRef.current.play().catch(() => {})
       }
-      setCameraLoading(false);
+      setCameraLoading(false)
     } catch (err: any) {
-      console.warn("Could not start camera live stream:", err);
-      setCameraLoading(false);
+      console.warn('Could not start camera live stream:', err)
+      setCameraLoading(false)
       setCameraError(
-        t("guestPostsCreateCameraPermissionDenied") ||
-          "Không thể truy cập camera. Vui lòng cấp quyền hoặc tải ảnh từ thiết bị."
-      );
+        t('guestPostsCreateCameraPermissionDenied') ||
+          'Không thể truy cập camera. Vui lòng cấp quyền hoặc tải ảnh từ thiết bị.',
+      )
     }
-  };
+  }
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
     }
     if (videoRef.current) {
-      videoRef.current.srcObject = null;
+      videoRef.current.srcObject = null
     }
-  };
+  }
 
   const openCamera = () => {
     // Check if on touch/mobile device: use native capture for best mobile OS camera experience
     const isMobileDevice =
-      typeof window !== "undefined" &&
-      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) ||
-        window.matchMedia("(pointer:coarse)").matches);
+      typeof window !== 'undefined' &&
+      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.matchMedia('(pointer:coarse)').matches)
 
     if (isMobileDevice && cameraInputRef.current) {
-      cameraInputRef.current.click();
-      return;
+      cameraInputRef.current.click()
+      return
     }
 
-    setIsCameraModalOpen(true);
-    startCamera(facingMode);
-  };
+    setIsCameraModalOpen(true)
+    startCamera(facingMode)
+  }
 
   const closeCamera = () => {
-    stopCamera();
-    setIsCameraModalOpen(false);
-    setCameraError(null);
-  };
+    stopCamera()
+    setIsCameraModalOpen(false)
+    setCameraError(null)
+  }
 
   const handleToggleFacingMode = () => {
-    const nextMode = facingMode === "user" ? "environment" : "user";
-    setFacingMode(nextMode);
-    startCamera(nextMode);
-  };
+    const nextMode = facingMode === 'user' ? 'environment' : 'user'
+    setFacingMode(nextMode)
+    startCamera(nextMode)
+  }
 
   const handleSnapPhoto = () => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
+    if (!videoRef.current) return
+    const video = videoRef.current
 
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth || 1280;
-      canvas.height = video.videoHeight || 720;
-      const ctx = canvas.getContext("2d");
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth || 1280
+      canvas.height = video.videoHeight || 720
+      const ctx = canvas.getContext('2d')
 
       if (ctx) {
         // Draw video frame to canvas
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
 
         // Convert base64 dataUrl to File
         fetch(dataUrl)
-          .then((res) => res.blob())
-          .then((blob) => {
+          .then(res => res.blob())
+          .then(blob => {
             const snappedFile = new File([blob], `camera-${Date.now()}.jpg`, {
-              type: "image/jpeg",
-            });
-            processAndUploadFiles([snappedFile]);
-          });
+              type: 'image/jpeg',
+            })
+            processAndUploadFiles([snappedFile])
+          })
       }
     } catch (err) {
-      console.error("Failed to capture video snapshot:", err);
+      console.error('Failed to capture video snapshot:', err)
     } finally {
-      closeCamera();
+      closeCamera()
     }
-  };
+  }
 
   useEffect(() => {
     return () => {
-      stopCamera();
-    };
-  }, []);
+      stopCamera()
+    }
+  }, [])
 
   return (
-    <div className={cn("space-y-4 w-full", containerClassName)}>
+    <div className={cn('space-y-4 w-full', containerClassName)}>
       {/* Label & Counter */}
       {label && (
         <div className="flex items-center justify-between">
-          <label className="block text-xs font-bold text-zinc-700 select-none">
-            {label}
-          </label>
+          <label className="block text-xs font-bold text-zinc-700 select-none">{label}</label>
           <span className="text-[11px] font-semibold text-zinc-400">
-            {t("guestPostsCreateImageCount", {
+            {t('guestPostsCreateImageCount', {
               count: values.length,
               max: maxImages,
             }) || `Đã chọn: ${values.length}/${maxImages} ảnh`}
@@ -385,7 +379,7 @@ export function MultiImageUpload({
           className="h-9 px-3.5 text-xs font-bold rounded-xl flex items-center gap-2 border border-zinc-200 hover:bg-zinc-100 transition-colors"
         >
           <UploadCloud className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-          <span>{t("guestPostsCreateUploadDevice") || "Tải ảnh từ máy"}</span>
+          <span>{t('guestPostsCreateUploadDevice') || 'Tải ảnh từ máy'}</span>
         </Button>
 
         <Button
@@ -397,13 +391,13 @@ export function MultiImageUpload({
           className="h-9 px-3.5 text-xs font-bold rounded-xl flex items-center gap-2 border border-zinc-200 hover:bg-zinc-100 transition-colors"
         >
           <Camera className="w-4 h-4 text-[#FF6B35] shrink-0" />
-          <span>{t("guestPostsCreateCaptureCamera") || "Chụp ảnh camera"}</span>
+          <span>{t('guestPostsCreateCaptureCamera') || 'Chụp ảnh camera'}</span>
         </Button>
 
         {isAtMaxImages && (
           <span className="text-xs text-amber-600 font-medium ml-auto flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5" />
-            {t("guestPostsCreateMaxImagesReached", { max: maxImages }) ||
+            {t('guestPostsCreateMaxImagesReached', { max: maxImages }) ||
               `Đã đạt giới hạn tối đa ${maxImages} ảnh`}
           </span>
         )}
@@ -416,15 +410,15 @@ export function MultiImageUpload({
         onDrop={handleDrop}
         onClick={() => {
           if (!disabled && !isAtMaxImages) {
-            deviceInputRef.current?.click();
+            deviceInputRef.current?.click()
           }
         }}
         className={cn(
-          "relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all duration-200 select-none",
+          'relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all duration-200 select-none',
           isDragging
-            ? "border-[#2AC1BC] bg-[#2AC1BC]/5 scale-[0.99]"
-            : "border-zinc-200 hover:border-[#2AC1BC] bg-zinc-50/60 hover:bg-zinc-50",
-          disabled || isAtMaxImages ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+            ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 scale-[0.99]'
+            : 'border-zinc-200 hover:border-[#2AC1BC] bg-zinc-50/60 hover:bg-zinc-50',
+          disabled || isAtMaxImages ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
         )}
       >
         <div className="flex flex-col items-center space-y-2 text-center">
@@ -433,11 +427,10 @@ export function MultiImageUpload({
           </div>
           <div>
             <p className="text-xs font-bold text-zinc-800">
-              {t("guestPostsCreateDropzonePrompt") ||
-                "Kéo thả ảnh vào đây hoặc nhấp để tải từ máy"}
+              {t('guestPostsCreateDropzonePrompt') || 'Kéo thả ảnh vào đây hoặc nhấp để tải từ máy'}
             </p>
             <p className="text-[11px] text-zinc-400 font-medium mt-0.5">
-              {t("guestPostsCreateDropzoneSub", { max: maxImages, size: maxSizeMb }) ||
+              {t('guestPostsCreateDropzoneSub', { max: maxImages, size: maxSizeMb }) ||
                 `Hỗ trợ JPG, PNG, WEBP (tối đa ${maxImages} ảnh, mỗi ảnh tối đa ${maxSizeMb}MB)`}
             </p>
           </div>
@@ -465,7 +458,7 @@ export function MultiImageUpload({
               {idx === 0 && (
                 <div className="absolute top-2 left-2 px-2.5 py-1 bg-[#2AC1BC] text-white text-[10px] font-black rounded-lg shadow-sm flex items-center gap-1 z-10">
                   <Star className="w-3 h-3 fill-current" />
-                  <span>{t("guestPostsCreateCoverBadge") || "Ảnh bìa"}</span>
+                  <span>{t('guestPostsCreateCoverBadge') || 'Ảnh bìa'}</span>
                 </div>
               )}
 
@@ -491,7 +484,7 @@ export function MultiImageUpload({
                     size="icon"
                     onClick={() => handleSetCoverPhoto(idx)}
                     className="h-8 w-8 bg-white/90 hover:bg-white text-amber-500 rounded-xl shadow-sm"
-                    title={t("guestPostsCreateSetCoverTooltip") || "Đặt làm ảnh bìa"}
+                    title={t('guestPostsCreateSetCoverTooltip') || 'Đặt làm ảnh bìa'}
                   >
                     <Star className="w-4 h-4" />
                   </Button>
@@ -515,7 +508,7 @@ export function MultiImageUpload({
           ))}
 
           {/* Uploading Queue Cards */}
-          {uploadingItems.map((item) => (
+          {uploadingItems.map(item => (
             <div
               key={item.id}
               className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video bg-zinc-100 shadow-xs flex items-center justify-center"
@@ -533,15 +526,13 @@ export function MultiImageUpload({
                   <>
                     <Loader2 className="w-6 h-6 text-[#2AC1BC] animate-spin" />
                     <span className="text-[10px] font-bold tracking-wide">
-                      {t("guestPostsCreateUploadingText") || "Đang tải ảnh..."}
+                      {t('guestPostsCreateUploadingText') || 'Đang tải ảnh...'}
                     </span>
                   </>
                 ) : item.error ? (
                   <>
                     <AlertCircle className="w-5 h-5 text-rose-400" />
-                    <span className="text-[10px] font-bold text-rose-300">
-                      {item.error}
-                    </span>
+                    <span className="text-[10px] font-bold text-rose-300">{item.error}</span>
                     <Button
                       type="button"
                       variant="danger"
@@ -549,7 +540,7 @@ export function MultiImageUpload({
                       onClick={() => handleRemoveUploadingItem(item.id)}
                       className="h-6 px-2 text-[10px] font-bold rounded-lg mt-1"
                     >
-                      {t("guestPostsCreateUploadRetry") || "Bỏ qua"}
+                      {t('guestPostsCreateUploadRetry') || 'Bỏ qua'}
                     </Button>
                   </>
                 ) : null}
@@ -581,7 +572,7 @@ export function MultiImageUpload({
                   <Camera className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm font-bold text-zinc-900">
-                  {t("guestPostsCreateCameraModalTitle") || "Chụp ảnh từ Camera"}
+                  {t('guestPostsCreateCameraModalTitle') || 'Chụp ảnh từ Camera'}
                 </h3>
               </div>
               <Button
@@ -613,8 +604,8 @@ export function MultiImageUpload({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      closeCamera();
-                      cameraInputRef.current?.click();
+                      closeCamera()
+                      cameraInputRef.current?.click()
                     }}
                     className="mt-2 text-xs border-zinc-600 text-white hover:bg-zinc-800"
                   >
@@ -643,7 +634,7 @@ export function MultiImageUpload({
                 title="Đổi camera trước/sau"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t("guestPostsCreateCameraModalSwitch") || "Đổi camera"}</span>
+                <span>{t('guestPostsCreateCameraModalSwitch') || 'Đổi camera'}</span>
               </Button>
 
               <div className="flex items-center gap-2">
@@ -654,7 +645,7 @@ export function MultiImageUpload({
                   onClick={closeCamera}
                   className="h-9 px-4 text-xs font-bold rounded-xl text-zinc-600 hover:bg-zinc-100"
                 >
-                  {t("guestPostsCreateCameraModalClose") || "Đóng"}
+                  {t('guestPostsCreateCameraModalClose') || 'Đóng'}
                 </Button>
                 <Button
                   type="button"
@@ -665,7 +656,7 @@ export function MultiImageUpload({
                   className="h-9 px-5 text-xs font-bold rounded-xl bg-[#FF6B35] hover:bg-[#ff5518] text-white flex items-center gap-1.5 shadow-md shadow-[#FF6B35]/25"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>{t("guestPostsCreateCameraModalSnap") || "Chụp ảnh"}</span>
+                  <span>{t('guestPostsCreateCameraModalSnap') || 'Chụp ảnh'}</span>
                 </Button>
               </div>
             </div>
@@ -680,7 +671,7 @@ export function MultiImageUpload({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs animate-in fade-in duration-200 cursor-zoom-out"
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="relative max-w-3xl w-full max-h-[85vh] rounded-3xl overflow-hidden bg-black shadow-2xl border border-zinc-800"
           >
             <div className="relative w-full aspect-video">
@@ -705,5 +696,5 @@ export function MultiImageUpload({
         </div>
       )}
     </div>
-  );
+  )
 }

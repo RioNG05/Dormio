@@ -1,194 +1,186 @@
-import { api } from './api';
+import { api } from './api'
 
-export type GrievanceType = 'complaint' | 'inquiry' | 'feedback';
-export type GrievancePriority = 'low' | 'medium' | 'high';
-export type GrievanceStatus = 'pending' | 'in_progress' | 'resolved' | 'rejected';
+export type GrievanceType = 'complaint' | 'inquiry' | 'feedback'
+export type GrievancePriority = 'low' | 'medium' | 'high'
+export type GrievanceStatus = 'pending' | 'in_progress' | 'resolved' | 'rejected'
 
 export interface GrievanceImage {
- id: string;
- url: string;
- createdAt: string;
+  id: string
+  url: string
+  createdAt: string
 }
 
 export interface Grievance {
- id: string;
- type: GrievanceType;
- title: string;
- description: string;
- priority: GrievancePriority;
- status: GrievanceStatus;
- boardingHouseName: string | null;
- roomNumber: string | null;
- resolutionNote: string | null;
- resolvedAt: string | null;
- resolvedByName: string | null;
- images: GrievanceImage[];
- createdAt: string;
- updatedAt: string;
+  id: string
+  type: GrievanceType
+  title: string
+  description: string
+  priority: GrievancePriority
+  status: GrievanceStatus
+  boardingHouseName: string | null
+  roomNumber: string | null
+  resolutionNote: string | null
+  resolvedAt: string | null
+  resolvedByName: string | null
+  images: GrievanceImage[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface CreateGrievancePayload {
- type: GrievanceType;
- title: string;
- description: string;
- priority?: GrievancePriority;
- imageUrls?: string[];
+  type: GrievanceType
+  title: string
+  description: string
+  priority?: GrievancePriority
+  imageUrls?: string[]
 }
 
 // ─── ADMIN INTERFACES ──────────────────────────────────────────────
 
 export interface AdminGrievanceItem {
- id: string;
- type: GrievanceType;
- title: string;
- description: string;
- priority: GrievancePriority;
- status: GrievanceStatus;
- tenantId: string;
- tenantName: string;
- tenantPhone: string;
- tenantEmail: string;
- boardingHouseId: string | null;
- boardingHouseName: string | null;
- roomId: string | null;
- roomNumber: string | null;
- landlordName: string | null;
- landlordPhone: string | null;
- resolutionNote: string | null;
- resolvedAt: string | null;
- resolvedByName: string | null;
- images: GrievanceImage[];
- createdAt: string;
- updatedAt: string;
+  id: string
+  type: GrievanceType
+  title: string
+  description: string
+  priority: GrievancePriority
+  status: GrievanceStatus
+  tenantId: string
+  tenantName: string
+  tenantPhone: string
+  tenantEmail: string
+  boardingHouseId: string | null
+  boardingHouseName: string | null
+  roomId: string | null
+  roomNumber: string | null
+  landlordName: string | null
+  landlordPhone: string | null
+  resolutionNote: string | null
+  resolvedAt: string | null
+  resolvedByName: string | null
+  images: GrievanceImage[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface GrievanceQueueCounts {
- pending: number;
- inProgress: number;
- resolved: number;
- rejected: number;
- urgent: number;
+  pending: number
+  inProgress: number
+  resolved: number
+  rejected: number
+  urgent: number
 }
 
 export interface AdminGrievanceListResponse {
- success: boolean;
- items: AdminGrievanceItem[];
- total: number;
- page: number;
- limit: number;
- totalPages: number;
- counts: GrievanceQueueCounts;
+  success: boolean
+  items: AdminGrievanceItem[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  counts: GrievanceQueueCounts
 }
 
 export interface AdminGrievanceQuery {
- type?: string;
- status?: string;
- priority?: string;
- search?: string;
- page?: number;
- limit?: number;
+  type?: string
+  status?: string
+  priority?: string
+  search?: string
+  page?: number
+  limit?: number
 }
 
 export interface ResolveGrievancePayload {
- resolutionNote: string;
- escalateLockLandlord?: boolean;
+  resolutionNote: string
+  escalateLockLandlord?: boolean
 }
 
 export interface RejectGrievancePayload {
- resolutionNote: string;
+  resolutionNote: string
 }
 
 export const grievanceService = {
- // ─── TENANT METHODS ──────────────────────────────────────────────
+  // ─── TENANT METHODS ──────────────────────────────────────────────
 
- /**
- * Get all grievances submitted by current tenant
- */
- async getTenantGrievances(): Promise<Grievance[]> {
- try {
- const res = await api.get<{ success: boolean; data: Grievance[] }>(
- '/v1/tenant/grievances',
- { silent: true },
- );
- return res.data || [];
- } catch {
- return [];
- }
- },
+  /**
+   * Get all grievances submitted by current tenant
+   */
+  async getTenantGrievances(): Promise<Grievance[]> {
+    try {
+      const res = await api.get<{ success: boolean; data: Grievance[] }>('/v1/tenant/grievances', {
+        silent: true,
+      })
+      return res.data || []
+    } catch {
+      return []
+    }
+  },
 
- /**
- * Get grievance detail by ID
- */
- async getTenantGrievanceById(id: string): Promise<Grievance> {
- const res = await api.get<{ success: boolean; data: Grievance }>(
- `/v1/tenant/grievances/${id}`,
- );
- return res.data;
- },
+  /**
+   * Get grievance detail by ID
+   */
+  async getTenantGrievanceById(id: string): Promise<Grievance> {
+    const res = await api.get<{ success: boolean; data: Grievance }>(`/v1/tenant/grievances/${id}`)
+    return res.data
+  },
 
- /**
- * Submit a new grievance / complaint
- */
- async createGrievance(payload: CreateGrievancePayload): Promise<Grievance> {
- const res = await api.post<{ success: boolean; data: Grievance }>(
- '/v1/tenant/grievances',
- payload,
- );
- return res.data;
- },
+  /**
+   * Submit a new grievance / complaint
+   */
+  async createGrievance(payload: CreateGrievancePayload): Promise<Grievance> {
+    const res = await api.post<{ success: boolean; data: Grievance }>(
+      '/v1/tenant/grievances',
+      payload,
+    )
+    return res.data
+  },
 
- // ─── ADMIN METHODS ───────────────────────────────────────────────
+  // ─── ADMIN METHODS ───────────────────────────────────────────────
 
- /**
- * Retrieve admin grievances queue with priority ordering and counts
- */
- async getAdminGrievanceQueue(
- query?: AdminGrievanceQuery,
- ): Promise<AdminGrievanceListResponse> {
- const params: Record<string, string> = {};
- if (query?.type) params.type = query.type;
- if (query?.status) params.status = query.status;
- if (query?.priority) params.priority = query.priority;
- if (query?.search) params.search = query.search;
- if (query?.page) params.page = query.page.toString();
- if (query?.limit) params.limit = query.limit.toString();
+  /**
+   * Retrieve admin grievances queue with priority ordering and counts
+   */
+  async getAdminGrievanceQueue(query?: AdminGrievanceQuery): Promise<AdminGrievanceListResponse> {
+    const params: Record<string, string> = {}
+    if (query?.type) params.type = query.type
+    if (query?.status) params.status = query.status
+    if (query?.priority) params.priority = query.priority
+    if (query?.search) params.search = query.search
+    if (query?.page) params.page = query.page.toString()
+    if (query?.limit) params.limit = query.limit.toString()
 
- return api.get<AdminGrievanceListResponse>('/v1/admin/grievances', {
- params,
- });
- },
+    return api.get<AdminGrievanceListResponse>('/v1/admin/grievances', {
+      params,
+    })
+  },
 
- /**
- * Get single grievance detail for admin
- */
- async getAdminGrievanceById(id: string): Promise<AdminGrievanceItem> {
- return api.get<AdminGrievanceItem>(`/v1/admin/grievances/${id}`);
- },
+  /**
+   * Get single grievance detail for admin
+   */
+  async getAdminGrievanceById(id: string): Promise<AdminGrievanceItem> {
+    return api.get<AdminGrievanceItem>(`/v1/admin/grievances/${id}`)
+  },
 
- /**
- * Mark grievance as in-progress
- */
- async updateGrievanceInProgress(id: string): Promise<AdminGrievanceItem> {
- return api.patch<AdminGrievanceItem>(`/v1/admin/grievances/${id}/in-progress`, {});
- },
+  /**
+   * Mark grievance as in-progress
+   */
+  async updateGrievanceInProgress(id: string): Promise<AdminGrievanceItem> {
+    return api.patch<AdminGrievanceItem>(`/v1/admin/grievances/${id}/in-progress`, {})
+  },
 
- /**
- * Resolve grievance with written resolution note
- */
- async resolveGrievance(
- id: string,
- payload: ResolveGrievancePayload,
- ): Promise<AdminGrievanceItem> {
- return api.patch<AdminGrievanceItem>(`/v1/admin/grievances/${id}/resolve`, payload);
- },
+  /**
+   * Resolve grievance with written resolution note
+   */
+  async resolveGrievance(
+    id: string,
+    payload: ResolveGrievancePayload,
+  ): Promise<AdminGrievanceItem> {
+    return api.patch<AdminGrievanceItem>(`/v1/admin/grievances/${id}/resolve`, payload)
+  },
 
- /**
- * Reject grievance with written explanation
- */
- async rejectGrievance(
- id: string,
- payload: RejectGrievancePayload,
- ): Promise<AdminGrievanceItem> {
- return api.patch<AdminGrievanceItem>(`/v1/admin/grievances/${id}/reject`, payload);
- },
-};
+  /**
+   * Reject grievance with written explanation
+   */
+  async rejectGrievance(id: string, payload: RejectGrievancePayload): Promise<AdminGrievanceItem> {
+    return api.patch<AdminGrievanceItem>(`/v1/admin/grievances/${id}/reject`, payload)
+  },
+}

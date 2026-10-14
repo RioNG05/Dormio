@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { BillingCronService } from './billing-cron.service';
-import { NotificationsModule } from '../notifications/notifications.module';
-import { InvoicesModule } from '../invoices/invoices.module';
-import { DepositsModule } from '../deposits/deposits.module';
+import { Module } from '@nestjs/common'
+import { BillingCronService } from './billing-cron.service'
+import { NotificationsModule } from '../notifications/notifications.module'
+import { InvoicesModule } from '../invoices/invoices.module'
+import { DepositsModule } from '../deposits/deposits.module'
 
 /**
  * BillingCronModule — owns the UC-L-06 Part 1 / UC-T-02 daily billing cron.

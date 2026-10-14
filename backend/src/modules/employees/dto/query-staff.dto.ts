@@ -1,7 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { AssignmentStatus } from '@prisma';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
+import { AssignmentStatus } from '@prisma'
 
 export class QueryStaffDto {
   @ApiPropertyOptional({
@@ -10,7 +10,7 @@ export class QueryStaffDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by employment status (active | inactive)',
@@ -19,7 +19,7 @@ export class QueryStaffDto {
   })
   @IsOptional()
   @IsEnum(AssignmentStatus)
-  status?: AssignmentStatus;
+  status?: AssignmentStatus
 
   @ApiPropertyOptional({
     description: 'Filter by job position ID',
@@ -27,7 +27,7 @@ export class QueryStaffDto {
   })
   @IsOptional()
   @IsString()
-  positionId?: string;
+  positionId?: string
 
   @ApiPropertyOptional({
     description: 'Page number (1-based)',
@@ -38,7 +38,7 @@ export class QueryStaffDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page',
@@ -51,7 +51,7 @@ export class QueryStaffDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 10;
+  limit?: number = 10
 
   @ApiPropertyOptional({
     description: 'Sort field',
@@ -60,7 +60,7 @@ export class QueryStaffDto {
   })
   @IsOptional()
   @IsString()
-  sortBy?: 'joinedAt' | 'name' | 'status' = 'joinedAt';
+  sortBy?: 'joinedAt' | 'name' | 'status' = 'joinedAt'
 
   @ApiPropertyOptional({
     description: 'Sort direction',
@@ -69,5 +69,5 @@ export class QueryStaffDto {
   })
   @IsOptional()
   @IsEnum(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc' = 'desc';
+  sortOrder?: 'asc' | 'desc' = 'desc'
 }

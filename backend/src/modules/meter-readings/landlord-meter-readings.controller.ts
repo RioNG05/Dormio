@@ -11,7 +11,7 @@ import {
   Logger,
   HttpStatus,
   HttpCode,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -22,23 +22,23 @@ import {
   ApiHeader,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { MeterReadingsService } from './meter-readings.service';
-import { RecordLandlordMeterReadingDto } from './dto/record-landlord-meter-reading.dto';
-import { UpdateLandlordMeterReadingDto } from './dto/update-landlord-meter-reading.dto';
+} from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { MeterReadingsService } from './meter-readings.service'
+import { RecordLandlordMeterReadingDto } from './dto/record-landlord-meter-reading.dto'
+import { UpdateLandlordMeterReadingDto } from './dto/update-landlord-meter-reading.dto'
 import {
   LandlordRoomMeteredServicesResponseDto,
   LandlordRoomMeterHistoryResponseDto,
-} from './dto/landlord-meter-readings-response.dto';
+} from './dto/landlord-meter-readings-response.dto'
 
 @ApiTags('Landlord Meter Readings')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 @Controller('landlord/meter-readings')
 export class LandlordMeterReadingsController {
-  private readonly logger = new Logger(LandlordMeterReadingsController.name);
+  private readonly logger = new Logger(LandlordMeterReadingsController.name)
 
   constructor(private readonly meterReadingsService: MeterReadingsService) {}
 
@@ -67,12 +67,9 @@ export class LandlordMeterReadingsController {
   ) {
     this.logger.log(
       `GET /api/v1/landlord/meter-readings/room/${roomId}/services called by landlord: ${req.user?.id}`,
-    );
-    const data = await this.meterReadingsService.getRoomMeteredServices(
-      boardingHouseId,
-      roomId,
-    );
-    return { success: true, data };
+    )
+    const data = await this.meterReadingsService.getRoomMeteredServices(boardingHouseId, roomId)
+    return { success: true, data }
   }
 
   @Get('room/:roomId/history')
@@ -100,12 +97,9 @@ export class LandlordMeterReadingsController {
   ) {
     this.logger.log(
       `GET /api/v1/landlord/meter-readings/room/${roomId}/history called by landlord: ${req.user?.id}`,
-    );
-    const data = await this.meterReadingsService.getRoomMeterHistory(
-      boardingHouseId,
-      roomId,
-    );
-    return { success: true, data };
+    )
+    const data = await this.meterReadingsService.getRoomMeterHistory(boardingHouseId, roomId)
+    return { success: true, data }
   }
 
   @Post()
@@ -132,12 +126,8 @@ export class LandlordMeterReadingsController {
   ) {
     this.logger.log(
       `POST /api/v1/landlord/meter-readings called by landlord: ${req.user?.id} for room: ${dto.roomId}`,
-    );
-    return this.meterReadingsService.recordLandlordMeterReading(
-      req.user?.id,
-      boardingHouseId,
-      dto,
-    );
+    )
+    return this.meterReadingsService.recordLandlordMeterReading(req.user?.id, boardingHouseId, dto)
   }
 
   @Patch(':id')
@@ -166,12 +156,12 @@ export class LandlordMeterReadingsController {
   ) {
     this.logger.log(
       `PATCH /api/v1/landlord/meter-readings/${id} called by landlord: ${req.user?.id}`,
-    );
+    )
     return this.meterReadingsService.updateLandlordMeterReading(
       req.user?.id,
       boardingHouseId,
       id,
       dto,
-    );
+    )
   }
 }

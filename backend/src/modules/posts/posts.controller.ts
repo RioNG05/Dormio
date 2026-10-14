@@ -12,8 +12,8 @@ import {
   HttpCode,
   HttpStatus,
   Req,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+} from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -23,18 +23,18 @@ import {
   ApiQuery,
   ApiCreatedResponse,
   ApiOkResponse,
-} from '@nestjs/swagger';
-import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { DeletePostDto } from './dto/delete-post.dto';
+} from '@nestjs/swagger'
+import { PostsService } from './posts.service'
+import { CreatePostDto } from './dto/create-post.dto'
+import { UpdatePostDto } from './dto/update-post.dto'
+import { DeletePostDto } from './dto/delete-post.dto'
 import {
   CreatePlatformDepositDto,
   InitiatePlatformDepositDto,
   ConfirmPlatformDepositDto,
   PlatformDepositInstructionDto,
-} from './dto/create-platform-deposit.dto';
-import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto';
+} from './dto/create-platform-deposit.dto'
+import { PostQueryDto, BrowsePostsQueryDto } from './dto/post-query.dto'
 import {
   PaginatedPostsResponseDto,
   PaginatedPublicPostsResponseDto,
@@ -42,26 +42,20 @@ import {
   PostResponseDto,
   PosterProfileResponseDto,
   PublicPostResponseDto,
-} from './dto/post-response.dto';
-import {
-  PosterAnalyticsOverviewDto,
-  SinglePostAnalyticsDto,
-} from './dto/post-analytics.dto';
-import {
-  CreateAiPostDraftDto,
-  AiPostDraftResponseDto,
-} from './dto/create-ai-post-draft.dto';
-import { UnlistedRoomResponseDto } from './dto/unlisted-room-response.dto';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Public } from '../../common/decorators/public.decorator';
-import { JwtPayload } from '../auth/types/jwt-payload.type';
-import { PostStatus } from '@prisma';
+} from './dto/post-response.dto'
+import { PosterAnalyticsOverviewDto, SinglePostAnalyticsDto } from './dto/post-analytics.dto'
+import { CreateAiPostDraftDto, AiPostDraftResponseDto } from './dto/create-ai-post-draft.dto'
+import { UnlistedRoomResponseDto } from './dto/unlisted-room-response.dto'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { Public } from '../../common/decorators/public.decorator'
+import { JwtPayload } from '../auth/types/jwt-payload.type'
+import { PostStatus } from '@prisma'
 
 @ApiTags('Posts')
 @ApiBearerAuth()
 @Controller('posts')
 export class PostsController {
-  private readonly logger = new Logger(PostsController.name);
+  private readonly logger = new Logger(PostsController.name)
 
   constructor(
     private readonly postsService: PostsService,
@@ -70,15 +64,15 @@ export class PostsController {
 
   private extractViewerId(req: any): string | null {
     try {
-      const authHeader = req?.headers?.authorization || req?.headers?.Authorization;
+      const authHeader = req?.headers?.authorization || req?.headers?.Authorization
       if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
-        return null;
+        return null
       }
-      const token = authHeader.substring(7).trim();
-      const payload = this.jwtService.verify<JwtPayload>(token);
-      return payload?.id ?? null;
+      const token = authHeader.substring(7).trim()
+      const payload = this.jwtService.verify<JwtPayload>(token)
+      return payload?.id ?? null
     } catch {
-      return null;
+      return null
     }
   }
 
@@ -109,32 +103,30 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreatePostDto,
   ): Promise<PostResponseDto> {
-    this.logger.log(`POST /posts called by user ${user.id}`);
-    return this.postsService.createPost(user.id, dto);
+    this.logger.log(`POST /posts called by user ${user.id}`)
+    return this.postsService.createPost(user.id, dto)
   }
 
   @Get('quota')
   @ApiOperation({
     summary: 'Check posting quota status for the current poster',
-    description:
-      'Returns the remaining daily free quota and purchased post credits available.',
+    description: 'Returns the remaining daily free quota and purchased post credits available.',
   })
   @ApiResponse({
     status: 200,
     description: 'Current posting quota status',
     type: PostQuotaDto,
   })
-  async getQuotaStatus(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<PostQuotaDto> {
-    this.logger.log(`GET /posts/quota called by user ${user.id}`);
-    return this.postsService.getQuotaStatus(user.id);
+  async getQuotaStatus(@CurrentUser() user: JwtPayload): Promise<PostQuotaDto> {
+    this.logger.log(`GET /posts/quota called by user ${user.id}`)
+    return this.postsService.getQuotaStatus(user.id)
   }
 
   @Get('my-listings')
   @ApiOperation({
     summary: 'Get all listings posted by the current user',
-    description: 'Retrieves a paginated list of posts created by the authenticated landlord/poster.',
+    description:
+      'Retrieves a paginated list of posts created by the authenticated landlord/poster.',
   })
   @ApiResponse({
     status: 200,
@@ -147,8 +139,8 @@ export class PostsController {
   ): Promise<PaginatedPostsResponseDto> {
     this.logger.log(
       `GET /posts/my-listings called by user ${user.id} with page=${query.page}, limit=${query.limit}`,
-    );
-    return this.postsService.getMyPosts(user.id, query);
+    )
+    return this.postsService.getMyPosts(user.id, query)
   }
 
   // ─── UC-L-12: AI Rental Post Suggestions ──────────────────────────────────
@@ -172,8 +164,8 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateAiPostDraftDto,
   ): Promise<AiPostDraftResponseDto> {
-    this.logger.log(`POST /posts/ai-draft called by user ${user.id} for room ${dto.roomId}`);
-    return this.postsService.generateAiPostDraft(user.id, dto);
+    this.logger.log(`POST /posts/ai-draft called by user ${user.id} for room ${dto.roomId}`)
+    return this.postsService.generateAiPostDraft(user.id, dto)
   }
 
   @Get('unlisted-rooms')
@@ -189,8 +181,8 @@ export class PostsController {
   async getUnlistedVacantRooms(
     @CurrentUser() user: JwtPayload,
   ): Promise<UnlistedRoomResponseDto[]> {
-    this.logger.log(`GET /posts/unlisted-rooms called by user ${user.id}`);
-    return this.postsService.getUnlistedVacantRooms(user.id);
+    this.logger.log(`GET /posts/unlisted-rooms called by user ${user.id}`)
+    return this.postsService.getUnlistedVacantRooms(user.id)
   }
 
   // ─── UC-PU-03: Saved / Bookmarked Posts ───────────────────────────────────
@@ -198,18 +190,17 @@ export class PostsController {
   @Get('saved/ids')
   @ApiOperation({
     summary: 'UC-PU-03: Get all saved post IDs for current user',
-    description: 'Returns an array of post UUIDs that the current authenticated user has bookmarked.',
+    description:
+      'Returns an array of post UUIDs that the current authenticated user has bookmarked.',
   })
   @ApiResponse({
     status: 200,
     description: 'Array of bookmarked post IDs',
     type: [String],
   })
-  async getSavedPostIds(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<string[]> {
-    this.logger.log(`GET /posts/saved/ids called by user ${user.id}`);
-    return this.postsService.getSavedPostIds(user.id);
+  async getSavedPostIds(@CurrentUser() user: JwtPayload): Promise<string[]> {
+    this.logger.log(`GET /posts/saved/ids called by user ${user.id}`)
+    return this.postsService.getSavedPostIds(user.id)
   }
 
   @Get('saved/all')
@@ -223,18 +214,17 @@ export class PostsController {
     description: 'Array of bookmarked public listings',
     type: [PublicPostResponseDto],
   })
-  async getSavedPosts(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<PublicPostResponseDto[]> {
-    this.logger.log(`GET /posts/saved/all called by user ${user.id}`);
-    return this.postsService.getSavedPosts(user.id);
+  async getSavedPosts(@CurrentUser() user: JwtPayload): Promise<PublicPostResponseDto[]> {
+    this.logger.log(`GET /posts/saved/all called by user ${user.id}`)
+    return this.postsService.getSavedPosts(user.id)
   }
 
   @Public()
   @Get('properties')
   @ApiOperation({
     summary: 'Get distinct property / boarding house names for listing filters',
-    description: 'Returns an array of unique active boarding house names for dropdown filter menus.',
+    description:
+      'Returns an array of unique active boarding house names for dropdown filter menus.',
   })
   @ApiResponse({
     status: 200,
@@ -242,8 +232,8 @@ export class PostsController {
     type: [String],
   })
   async getProperties(): Promise<string[]> {
-    this.logger.log('GET /posts/properties called');
-    return this.postsService.getProperties();
+    this.logger.log('GET /posts/properties called')
+    return this.postsService.getProperties()
   }
 
   // ─── UC-PU-01: Public Browse & Filter Listings ────────────────────────────
@@ -262,17 +252,15 @@ export class PostsController {
     description: 'Paginated public listing results',
     type: PaginatedPublicPostsResponseDto,
   })
-  async browsePosts(
-    @Query() query: BrowsePostsQueryDto,
-  ): Promise<PaginatedPublicPostsResponseDto> {
+  async browsePosts(@Query() query: BrowsePostsQueryDto): Promise<PaginatedPublicPostsResponseDto> {
     this.logger.log(
       `GET /posts/browse called (public) — search="${query.search ?? ''}", roomType="${query.roomType ?? ''}", ` +
-      `province="${query.province ?? ''}", district="${query.district ?? ''}", ward="${query.ward ?? ''}", ` +
-      `price=[${query.minPrice ?? '-'}, ${query.maxPrice ?? '-'}], ` +
-      `area=[${query.minArea ?? '-'}, ${query.maxArea ?? '-'}], ` +
-      `page=${query.page ?? 1}, limit=${query.limit ?? 12}`,
-    );
-    return this.postsService.browsePosts(query);
+        `province="${query.province ?? ''}", district="${query.district ?? ''}", ward="${query.ward ?? ''}", ` +
+        `price=[${query.minPrice ?? '-'}, ${query.maxPrice ?? '-'}], ` +
+        `area=[${query.minArea ?? '-'}, ${query.maxArea ?? '-'}], ` +
+        `page=${query.page ?? 1}, limit=${query.limit ?? 12}`,
+    )
+    return this.postsService.browsePosts(query)
   }
 
   @Get('analytics/overview')
@@ -292,11 +280,8 @@ export class PostsController {
   ): Promise<PosterAnalyticsOverviewDto> {
     this.logger.log(
       `GET /posts/analytics/overview called by user ${user.id} with days=${days || 14}`,
-    );
-    return this.postsService.getPosterAnalyticsOverview(
-      user.id,
-      days ? Number(days) : 14,
-    );
+    )
+    return this.postsService.getPosterAnalyticsOverview(user.id, days ? Number(days) : 14)
   }
 
   @Public()
@@ -321,9 +306,9 @@ export class PostsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: any,
   ): Promise<PosterProfileResponseDto> {
-    this.logger.log(`GET /posts/posters/${id} called`);
-    const viewerId = this.extractViewerId(req);
-    return this.postsService.getPosterProfile(id, viewerId);
+    this.logger.log(`GET /posts/posters/${id} called`)
+    const viewerId = this.extractViewerId(req)
+    return this.postsService.getPosterProfile(id, viewerId)
   }
 
   @Public()
@@ -344,11 +329,9 @@ export class PostsController {
     status: 404,
     description: 'Post not found or not publicly available',
   })
-  async getPublicPostById(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<PublicPostResponseDto> {
-    this.logger.log(`GET /posts/browse/${id} called (public)`);
-    return this.postsService.getPublicPostById(id);
+  async getPublicPostById(@Param('id', ParseUUIDPipe) id: string): Promise<PublicPostResponseDto> {
+    this.logger.log(`GET /posts/browse/${id} called (public)`)
+    return this.postsService.getPublicPostById(id)
   }
 
   @Post('browse/:id/deposit')
@@ -370,7 +353,8 @@ export class PostsController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Identity verification required before placing online deposit (IDENTITY_VERIFICATION_REQUIRED)',
+    description:
+      'Identity verification required before placing online deposit (IDENTITY_VERIFICATION_REQUIRED)',
   })
   @ApiResponse({ status: 404, description: 'Post not found' })
   async createPlatformDeposit(
@@ -378,10 +362,8 @@ export class PostsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: InitiatePlatformDepositDto,
   ): Promise<PlatformDepositInstructionDto> {
-    this.logger.log(
-      `POST /posts/browse/${id}/deposit called by user ${user.id}`,
-    );
-    return this.postsService.createPlatformDeposit(user.id, id, dto);
+    this.logger.log(`POST /posts/browse/${id}/deposit called by user ${user.id}`)
+    return this.postsService.createPlatformDeposit(user.id, id, dto)
   }
 
   @Post('browse/:id/deposit/confirm')
@@ -414,8 +396,8 @@ export class PostsController {
   ): Promise<{ success: boolean; depositId: string; status: string; message: string }> {
     this.logger.log(
       `POST /posts/browse/${id}/deposit/confirm called for deposit ${dto.depositId} by user ${user.id}`,
-    );
-    return this.postsService.confirmPlatformDeposit(user.id, id, dto);
+    )
+    return this.postsService.confirmPlatformDeposit(user.id, id, dto)
   }
 
   @Get('browse/:id/deposit/order-status/:orderCode')
@@ -443,16 +425,16 @@ export class PostsController {
     @Param('id') id: string,
     @Param('orderCode') orderCodeStr: string,
   ): Promise<{
-    orderCode: number;
-    status: string;
-    isPaid: boolean;
-    paidAt?: string;
+    orderCode: number
+    status: string
+    isPaid: boolean
+    paidAt?: string
   }> {
-    const orderCode = parseInt(orderCodeStr, 10);
+    const orderCode = parseInt(orderCodeStr, 10)
     this.logger.log(
       `GET /posts/browse/${id}/deposit/order-status/${orderCode} called by user ${user.id}`,
-    );
-    return this.postsService.getDepositOrderStatus(user.id, orderCode);
+    )
+    return this.postsService.getDepositOrderStatus(user.id, orderCode)
   }
 
   @Get(':id')
@@ -473,8 +455,8 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<PostResponseDto> {
-    this.logger.log(`GET /posts/${id} called by user ${user.id}`);
-    return this.postsService.getPostById(user.id, id);
+    this.logger.log(`GET /posts/${id} called by user ${user.id}`)
+    return this.postsService.getPostById(user.id, id)
   }
 
   @Get(':id/analytics')
@@ -502,14 +484,8 @@ export class PostsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Query('days') days?: number,
   ): Promise<SinglePostAnalyticsDto> {
-    this.logger.log(
-      `GET /posts/${id}/analytics called by user ${user.id} with days=${days || 14}`,
-    );
-    return this.postsService.getSinglePostAnalytics(
-      user.id,
-      id,
-      days ? Number(days) : 14,
-    );
+    this.logger.log(`GET /posts/${id}/analytics called by user ${user.id} with days=${days || 14}`)
+    return this.postsService.getSinglePostAnalytics(user.id, id, days ? Number(days) : 14)
   }
 
   @Patch(':id/status')
@@ -537,8 +513,8 @@ export class PostsController {
   ): Promise<PostResponseDto> {
     this.logger.log(
       `PATCH /posts/${id}/status to ${status} called by user ${user.id} (${user.role})`,
-    );
-    return this.postsService.updatePostStatus(user.id, id, status, user.role);
+    )
+    return this.postsService.updatePostStatus(user.id, id, status, user.role)
   }
 
   @Patch(':id')
@@ -559,15 +535,16 @@ export class PostsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePostDto,
   ): Promise<PostResponseDto> {
-    this.logger.log(`PATCH /posts/${id} called by user ${user.id} (${user.role})`);
-    return this.postsService.updatePost(user.id, id, dto, user.role);
+    this.logger.log(`PATCH /posts/${id} called by user ${user.id} (${user.role})`)
+    return this.postsService.updatePost(user.id, id, dto, user.role)
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Delete or archive a rental listing with an optional/mandatory reason',
-    description: 'Soft deletes the post. If deleted by admin, automatically notifies author with the deletion reason.',
+    description:
+      'Soft deletes the post. If deleted by admin, automatically notifies author with the deletion reason.',
   })
   @ApiParam({ name: 'id', description: 'Post listing UUID' })
   @ApiQuery({ name: 'reason', required: false, description: 'Reason for deletion' })
@@ -590,11 +567,11 @@ export class PostsController {
     @Body() dto?: DeletePostDto,
     @Query('reason') queryReason?: string,
   ): Promise<{ success: boolean; message: string }> {
-    const reason = dto?.reason || queryReason;
+    const reason = dto?.reason || queryReason
     this.logger.log(
       `DELETE /posts/${id} called by user ${user.id} (${user.role}) with reason: "${reason || 'none'}"`,
-    );
-    return this.postsService.deletePost(user.id, id, user.role, reason);
+    )
+    return this.postsService.deletePost(user.id, id, user.role, reason)
   }
 
   // ─── UC-PU-03: Save/Bookmark Listing Endpoints ───────────────────────────
@@ -602,7 +579,8 @@ export class PostsController {
   @Get(':id/is-saved')
   @ApiOperation({
     summary: 'UC-PU-03: Check if a post is saved by current user',
-    description: 'Returns whether the specified post is in the authenticated user’s bookmarked list.',
+    description:
+      'Returns whether the specified post is in the authenticated user’s bookmarked list.',
   })
   @ApiParam({ name: 'id', description: 'Post listing UUID' })
   @ApiResponse({
@@ -619,9 +597,9 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ isSaved: boolean }> {
-    this.logger.log(`GET /posts/${id}/is-saved called by user ${user.id}`);
-    const isSaved = await this.postsService.isPostSaved(user.id, id);
-    return { isSaved };
+    this.logger.log(`GET /posts/${id}/is-saved called by user ${user.id}`)
+    const isSaved = await this.postsService.isPostSaved(user.id, id)
+    return { isSaved }
   }
 
   @Post(':id/save')
@@ -646,8 +624,8 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ saved: boolean; savedCount: number }> {
-    this.logger.log(`POST /posts/${id}/save called by user ${user.id}`);
-    return this.postsService.savePost(user.id, id);
+    this.logger.log(`POST /posts/${id}/save called by user ${user.id}`)
+    return this.postsService.savePost(user.id, id)
   }
 
   @Delete(':id/save')
@@ -673,8 +651,8 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ saved: boolean; savedCount: number }> {
-    this.logger.log(`DELETE /posts/${id}/save called by user ${user.id}`);
-    return this.postsService.unsavePost(user.id, id);
+    this.logger.log(`DELETE /posts/${id}/save called by user ${user.id}`)
+    return this.postsService.unsavePost(user.id, id)
   }
 
   @Post(':id/toggle-save')
@@ -699,7 +677,7 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ saved: boolean; savedCount: number }> {
-    this.logger.log(`POST /posts/${id}/toggle-save called by user ${user.id}`);
-    return this.postsService.toggleSavePost(user.id, id);
+    this.logger.log(`POST /posts/${id}/toggle-save called by user ${user.id}`)
+    return this.postsService.toggleSavePost(user.id, id)
   }
 }

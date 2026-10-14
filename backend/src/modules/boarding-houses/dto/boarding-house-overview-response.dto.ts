@@ -1,178 +1,178 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class OverviewRoomsDto {
   @ApiProperty({ example: 10 })
-  totalRooms: number;
+  totalRooms: number
 
   @ApiProperty({ example: 8 })
-  occupiedRooms: number;
+  occupiedRooms: number
 
   @ApiProperty({ example: 2 })
-  vacantRooms: number;
+  vacantRooms: number
 
   @ApiProperty({ example: 0 })
-  depositRooms: number;
+  depositRooms: number
 
   @ApiProperty({ example: 0 })
-  maintenanceRooms: number;
+  maintenanceRooms: number
 
   @ApiProperty({ example: '80%' })
-  occupancyRate: string;
+  occupancyRate: string
 }
 
 export class OverviewFinancialDto {
   @ApiProperty({ example: '45000000.00' })
-  currentMonthRevenue: string;
+  currentMonthRevenue: string
 
   @ApiProperty({ example: '0.00' })
-  unpaidDebt: string;
+  unpaidDebt: string
 
   @ApiProperty({ example: 0 })
-  unpaidInvoicesCount: number;
+  unpaidInvoicesCount: number
 
   @ApiProperty({ example: 6 })
-  paidInvoicesCount: number;
+  paidInvoicesCount: number
 }
 
 export class OverviewRevenueMonthDto {
   @ApiProperty({ example: '08/26' })
-  month: string;
+  month: string
 
   @ApiProperty({ example: 45 })
-  val: number;
+  val: number
 
   @ApiProperty({ example: '45000000.00' })
-  fullAmount: string;
+  fullAmount: string
 }
 
 export class OverviewDepositItemDto {
   @ApiProperty({ example: 'deposit-uuid' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'P101' })
-  room: string;
+  room: string
 
   @ApiProperty({ example: 'Nguyen Van A' })
-  tenant: string;
+  tenant: string
 
   @ApiProperty({ example: 2000000 })
-  amount: number;
+  amount: number
 
   @ApiProperty({ example: '2026-08-25T10:00:00.000Z' })
-  date: string;
+  date: string
 
   @ApiProperty({ example: 'Cọc giữ phòng' })
-  type: string;
+  type: string
 
   @ApiProperty({ example: 'held' })
-  status: string;
+  status: string
 }
 
 export class OverviewMaintenanceItemDto {
   @ApiProperty({ example: 'grievance-uuid' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'P201' })
-  room: string;
+  room: string
 
   @ApiProperty({ example: 'Hỏng vòi nước' })
-  issue: string;
+  issue: string
 
   @ApiProperty({ example: 'high' })
-  priority: string;
+  priority: string
 
   @ApiProperty({ example: 'Tran Van B' })
-  reporter: string;
+  reporter: string
 
   @ApiProperty({ example: '2026-08-25T14:30:00.000Z' })
-  date: string;
+  date: string
 
   @ApiProperty({ example: 'pending' })
-  status: string;
+  status: string
 }
 
 export class OverviewExpiringContractDto {
   @ApiProperty({ example: 'contract-uuid' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'P301' })
-  room: string;
+  room: string
 
   @ApiProperty({ example: 'Le Thi C' })
-  tenant: string;
+  tenant: string
 
   @ApiProperty({ example: '0987654321' })
-  phone: string;
+  phone: string
 
   @ApiProperty({ example: 15 })
-  daysLeft: number;
+  daysLeft: number
 
   @ApiProperty({ example: '2026-09-15' })
-  endDate: string;
+  endDate: string
 }
 
 export class OverviewCollectionStatusDto {
   @ApiProperty({ example: 8, description: 'Số hóa đơn đã thu' })
-  paidCount: number;
+  paidCount: number
 
   @ApiProperty({ example: '35000000.00', description: 'Tổng tiền đã thu' })
-  paidAmount: string;
+  paidAmount: string
 
   @ApiProperty({ example: 2, description: 'Số hóa đơn chưa thu' })
-  unpaidCount: number;
+  unpaidCount: number
 
   @ApiProperty({ example: '7000000.00', description: 'Tổng tiền chưa thu' })
-  unpaidAmount: string;
+  unpaidAmount: string
 
   @ApiProperty({ example: 1, description: 'Số hóa đơn quá hạn' })
-  overdueCount: number;
+  overdueCount: number
 
   @ApiProperty({ example: '3500000.00', description: 'Tổng tiền quá hạn' })
-  overdueAmount: string;
+  overdueAmount: string
 
   @ApiProperty({ example: '45500000.00', description: 'Tổng giá trị hóa đơn trong kỳ' })
-  totalBilledAmount: string;
+  totalBilledAmount: string
 
   @ApiProperty({ example: '76.9%', description: 'Tỷ lệ thu tiền' })
-  collectionRate: string;
+  collectionRate: string
 }
 
 export class OverviewOccupancyMonthDto {
   @ApiProperty({ example: '08/26' })
-  month: string;
+  month: string
 
   @ApiProperty({ example: 85, description: 'Tỷ lệ lấp đầy (%)' })
-  occupied: number;
+  occupied: number
 
   @ApiProperty({ example: 10, description: 'Tổng số phòng' })
-  total: number;
+  total: number
 
   @ApiProperty({ example: 8, description: 'Số phòng đang có khách thuê' })
-  count: number;
+  count: number
 }
 
 export class BoardingHouseOverviewResponseDto {
   @ApiProperty({ type: OverviewRoomsDto })
-  rooms: OverviewRoomsDto;
+  rooms: OverviewRoomsDto
 
   @ApiProperty({ type: OverviewFinancialDto })
-  financial: OverviewFinancialDto;
+  financial: OverviewFinancialDto
 
   @ApiProperty({ type: OverviewCollectionStatusDto })
-  collectionStatus: OverviewCollectionStatusDto;
+  collectionStatus: OverviewCollectionStatusDto
 
   @ApiProperty({ type: [OverviewRevenueMonthDto] })
-  revenueChart: OverviewRevenueMonthDto[];
+  revenueChart: OverviewRevenueMonthDto[]
 
   @ApiProperty({ type: [OverviewOccupancyMonthDto] })
-  occupancyChart: OverviewOccupancyMonthDto[];
+  occupancyChart: OverviewOccupancyMonthDto[]
 
   @ApiProperty({ type: [OverviewDepositItemDto] })
-  depositNotifications: OverviewDepositItemDto[];
+  depositNotifications: OverviewDepositItemDto[]
 
   @ApiProperty({ type: [OverviewMaintenanceItemDto] })
-  maintenanceRequests: OverviewMaintenanceItemDto[];
+  maintenanceRequests: OverviewMaintenanceItemDto[]
 
   @ApiProperty({ type: [OverviewExpiringContractDto] })
-  expiringContracts: OverviewExpiringContractDto[];
+  expiringContracts: OverviewExpiringContractDto[]
 }

@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AdminHousesService } from './admin-houses.service';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { BoardingHouseStatus, AuditLogAction } from '@prisma';
-import { NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing'
+import { AdminHousesService } from './admin-houses.service'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { BoardingHouseStatus, AuditLogAction } from '@prisma'
+import { NotFoundException } from '@nestjs/common'
 
 describe('AdminHousesService', () => {
-  let service: AdminHousesService;
-  let prisma: any;
+  let service: AdminHousesService
+  let prisma: any
 
   const sampleDbHouses = [
     {
@@ -57,7 +57,7 @@ describe('AdminHousesService', () => {
       })),
       grievences: [{ id: 'g-1', title: 'Thấm dột nhà vệ sinh', status: 'pending' }],
     },
-  ];
+  ]
 
   const mockPrismaService = {
     boardingHouse: {
@@ -68,11 +68,11 @@ describe('AdminHousesService', () => {
     auditLog: {
       create: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaService)),
-  };
+    $transaction: jest.fn(callback => callback(mockPrismaService)),
+  }
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -82,100 +82,103 @@ describe('AdminHousesService', () => {
           useValue: mockPrismaService,
         },
       ],
-    }).compile();
+    }).compile()
 
-    service = module.get<AdminHousesService>(AdminHousesService);
-    prisma = module.get<PrismaService>(PrismaService);
-  });
+    service = module.get<AdminHousesService>(AdminHousesService)
+    prisma = module.get<PrismaService>(PrismaService)
+  })
 
   describe('getBoardingHousesForModeration', () => {
     it('should return empty list when DB has no houses', async () => {
-      mockPrismaService.boardingHouse.findMany.mockResolvedValue([]);
+      mockPrismaService.boardingHouse.findMany.mockResolvedValue([])
 
       const result = await service.getBoardingHousesForModeration({
         page: 1,
         limit: 10,
-      });
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.data.length).toBe(0);
-      expect(result.pagination.total).toBe(0);
-    });
+      expect(result.success).toBe(true)
+      expect(result.data.length).toBe(0)
+      expect(result.pagination.total).toBe(0)
+    })
 
     it('should filter by property name or address (propertyQuery)', async () => {
-      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses);
+      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses)
 
       const result = await service.getBoardingHousesForModeration({
         propertyQuery: 'Thủ Đức',
-      });
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.data.length).toBe(1);
-      expect(result.data[0].name).toContain('Thủ Đức');
-    });
+      expect(result.success).toBe(true)
+      expect(result.data.length).toBe(1)
+      expect(result.data[0].name).toContain('Thủ Đức')
+    })
 
     it('should filter by landlord contact name or phone (landlordQuery)', async () => {
-      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses);
+      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses)
 
       const result = await service.getBoardingHousesForModeration({
         landlordQuery: '0988.765.432',
-      });
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.data.length).toBe(1);
-      expect(result.data[0].landlordName).toBe('Nguyễn Văn Hùng');
-    });
+      expect(result.success).toBe(true)
+      expect(result.data.length).toBe(1)
+      expect(result.data[0].landlordName).toBe('Nguyễn Văn Hùng')
+    })
 
     it('should filter by total rooms range (minRooms and maxRooms)', async () => {
-      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses);
+      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses)
 
       const result = await service.getBoardingHousesForModeration({
         minRooms: 25,
         maxRooms: 35,
-      });
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.data.length).toBe(1);
-      expect(result.data[0].totalRooms).toBe(30);
-    });
+      expect(result.success).toBe(true)
+      expect(result.data.length).toBe(1)
+      expect(result.data[0].totalRooms).toBe(30)
+    })
 
     it('should filter by occupancy rate range (minOccupancy and maxOccupancy)', async () => {
-      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses);
+      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses)
 
       const result = await service.getBoardingHousesForModeration({
         minOccupancy: 85,
         maxOccupancy: 100,
-      });
+      })
 
-      expect(result.success).toBe(true);
-      expect(result.data.length).toBe(2);
-    });
+      expect(result.success).toBe(true)
+      expect(result.data.length).toBe(2)
+    })
 
     it('should filter by multiple statuses', async () => {
-      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses);
+      mockPrismaService.boardingHouse.findMany.mockResolvedValue(sampleDbHouses)
 
       const result = await service.getBoardingHousesForModeration({
         status: 'active,reported',
-      });
+      })
 
-      expect(result.success).toBe(true);
-      result.data.forEach((house) => {
-        expect(['active', 'reported']).toContain(house.status);
-      });
-    });
-  });
+      expect(result.success).toBe(true)
+      result.data.forEach(house => {
+        expect(['active', 'reported']).toContain(house.status)
+      })
+    })
+  })
 
   describe('lockHouse & unlockHouse', () => {
     it('should lock a DB house and create AuditLog', async () => {
-      const validUuid = '12345678-1234-4234-8234-123456789abc';
-      mockPrismaService.boardingHouse.findUnique.mockResolvedValue({ id: validUuid, name: 'House DB' });
+      const validUuid = '12345678-1234-4234-8234-123456789abc'
+      mockPrismaService.boardingHouse.findUnique.mockResolvedValue({
+        id: validUuid,
+        name: 'House DB',
+      })
 
-      const res = await service.lockHouse(validUuid, 'Fire code violation', 'admin-user-1');
-      expect(res.success).toBe(true);
+      const res = await service.lockHouse(validUuid, 'Fire code violation', 'admin-user-1')
+      expect(res.success).toBe(true)
       expect(mockPrismaService.boardingHouse.update).toHaveBeenCalledWith({
         where: { id: validUuid },
         data: { status: BoardingHouseStatus.banned },
-      });
+      })
       expect(mockPrismaService.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: AuditLogAction.update,
@@ -183,27 +186,30 @@ describe('AdminHousesService', () => {
           entityId: validUuid,
           userId: 'admin-user-1',
         }),
-      });
-    });
+      })
+    })
 
     it('should throw NotFoundException if house does not exist when locking', async () => {
-      mockPrismaService.boardingHouse.findUnique.mockResolvedValue(null);
+      mockPrismaService.boardingHouse.findUnique.mockResolvedValue(null)
 
       await expect(service.lockHouse('non-existent-id', 'some reason')).rejects.toThrow(
         NotFoundException,
-      );
-    });
+      )
+    })
 
     it('should unlock a DB house and create AuditLog', async () => {
-      const validUuid = '12345678-1234-4234-8234-123456789abc';
-      mockPrismaService.boardingHouse.findUnique.mockResolvedValue({ id: validUuid, name: 'House DB' });
+      const validUuid = '12345678-1234-4234-8234-123456789abc'
+      mockPrismaService.boardingHouse.findUnique.mockResolvedValue({
+        id: validUuid,
+        name: 'House DB',
+      })
 
-      const res = await service.unlockHouse(validUuid, 'admin-user-1');
-      expect(res.success).toBe(true);
+      const res = await service.unlockHouse(validUuid, 'admin-user-1')
+      expect(res.success).toBe(true)
       expect(mockPrismaService.boardingHouse.update).toHaveBeenCalledWith({
         where: { id: validUuid },
         data: { status: BoardingHouseStatus.active },
-      });
+      })
       expect(mockPrismaService.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: AuditLogAction.update,
@@ -211,7 +217,7 @@ describe('AdminHousesService', () => {
           entityId: validUuid,
           userId: 'admin-user-1',
         }),
-      });
-    });
-  });
-});
+      })
+    })
+  })
+})

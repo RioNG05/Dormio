@@ -1,7 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-import { PostStatus } from '@prisma';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator'
+import { Type } from 'class-transformer'
+import { PostStatus } from '@prisma'
 
 export class PostQueryDto {
   @ApiPropertyOptional({
@@ -10,7 +10,7 @@ export class PostQueryDto {
   })
   @IsOptional()
   @IsEnum(PostStatus)
-  status?: PostStatus;
+  status?: PostStatus
 
   @ApiPropertyOptional({
     description: 'Search keyword matching title or content',
@@ -18,7 +18,7 @@ export class PostQueryDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by boarding house ID (via associated room)',
@@ -26,7 +26,7 @@ export class PostQueryDto {
   })
   @IsOptional()
   @IsString()
-  boardingHouseId?: string;
+  boardingHouseId?: string
 
   @ApiPropertyOptional({
     description: 'Page number (1-indexed)',
@@ -37,7 +37,7 @@ export class PostQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
@@ -48,7 +48,7 @@ export class PostQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit?: number = 10
 }
 
 /**
@@ -62,7 +62,7 @@ export class BrowsePostsQueryDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by listing status (draft, posted, hidden, or all)',
@@ -70,7 +70,7 @@ export class BrowsePostsQueryDto {
   })
   @IsOptional()
   @IsString()
-  status?: string;
+  status?: string
 
   @ApiPropertyOptional({
     description: 'Filter by province (exact match on BoardingHouse.province)',
@@ -78,7 +78,7 @@ export class BrowsePostsQueryDto {
   })
   @IsOptional()
   @IsString()
-  province?: string;
+  province?: string
 
   @ApiPropertyOptional({
     description: 'Filter by district (exact match on BoardingHouse.district)',
@@ -86,7 +86,7 @@ export class BrowsePostsQueryDto {
   })
   @IsOptional()
   @IsString()
-  district?: string;
+  district?: string
 
   @ApiPropertyOptional({
     description: 'Filter by ward (exact match on BoardingHouse.ward)',
@@ -94,7 +94,7 @@ export class BrowsePostsQueryDto {
   })
   @IsOptional()
   @IsString()
-  ward?: string;
+  ward?: string
 
   @ApiPropertyOptional({
     description: 'Filter by property / boarding house name',
@@ -102,7 +102,7 @@ export class BrowsePostsQueryDto {
   })
   @IsOptional()
   @IsString()
-  property?: string;
+  property?: string
 
   @ApiPropertyOptional({
     description: 'Filter by room type name or category (e.g. phong, studio, nguyencan)',
@@ -110,7 +110,7 @@ export class BrowsePostsQueryDto {
   })
   @IsOptional()
   @IsString()
-  roomType?: string;
+  roomType?: string
 
   @ApiPropertyOptional({
     description: 'Minimum deposit amount in VND (inclusive)',
@@ -120,7 +120,7 @@ export class BrowsePostsQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  minPrice?: number;
+  minPrice?: number
 
   @ApiPropertyOptional({
     description: 'Maximum deposit amount in VND (inclusive)',
@@ -130,7 +130,7 @@ export class BrowsePostsQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  maxPrice?: number;
+  maxPrice?: number
 
   @ApiPropertyOptional({
     description: 'Minimum room area in m² (inclusive)',
@@ -140,7 +140,7 @@ export class BrowsePostsQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  minArea?: number;
+  minArea?: number
 
   @ApiPropertyOptional({
     description: 'Maximum room area in m² (inclusive)',
@@ -150,7 +150,7 @@ export class BrowsePostsQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  maxArea?: number;
+  maxArea?: number
 
   @ApiPropertyOptional({
     description: 'Page number (1-indexed)',
@@ -161,7 +161,7 @@ export class BrowsePostsQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
@@ -172,6 +172,5 @@ export class BrowsePostsQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 12;
+  limit?: number = 12
 }
-

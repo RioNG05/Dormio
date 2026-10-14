@@ -1,6 +1,6 @@
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from '@nestjs/common'
 
-export const IS_PUBLIC_KEY = 'isPublic';
+export const IS_PUBLIC_KEY = 'isPublic'
 
 /**
  * Mark a route as public (skip JWT auth guard).
@@ -10,4 +10,4 @@ export const IS_PUBLIC_KEY = 'isPublic';
  * @Post('login')
  * async login() {}
  */
-export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true)

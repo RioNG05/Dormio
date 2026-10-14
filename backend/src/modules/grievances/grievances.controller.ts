@@ -8,7 +8,7 @@ import {
   Request,
   Logger,
   HttpStatus,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -16,21 +16,18 @@ import {
   ApiResponse,
   ApiOkResponse,
   ApiParam,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { GrievancesService } from './grievances.service';
-import { CreateGrievanceDto } from './dto/create-grievance.dto';
-import {
-  GrievanceListResponseDto,
-  GrievanceDetailResponseDto,
-} from './dto/grievance-response.dto';
+} from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { GrievancesService } from './grievances.service'
+import { CreateGrievanceDto } from './dto/create-grievance.dto'
+import { GrievanceListResponseDto, GrievanceDetailResponseDto } from './dto/grievance-response.dto'
 
 @ApiTags('Tenant & User Grievances / Applications')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller(['tenant/grievances', 'grievances'])
 export class GrievancesController {
-  private readonly logger = new Logger(GrievancesController.name);
+  private readonly logger = new Logger(GrievancesController.name)
 
   constructor(private readonly grievancesService: GrievancesService) {}
 
@@ -60,9 +57,9 @@ export class GrievancesController {
     @Request() req: any,
     @Body() dto: CreateGrievanceDto,
   ): Promise<GrievanceDetailResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(`POST /api/v1/tenant/grievances triggered by user ${userId}`);
-    return this.grievancesService.createGrievance(userId, dto);
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`POST /api/v1/tenant/grievances triggered by user ${userId}`)
+    return this.grievancesService.createGrievance(userId, dto)
   }
 
   @Get()
@@ -79,12 +76,10 @@ export class GrievancesController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Chưa đăng nhập hoặc token không hợp lệ',
   })
-  async getTenantGrievances(
-    @Request() req: any,
-  ): Promise<GrievanceListResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(`GET /api/v1/tenant/grievances triggered by user ${userId}`);
-    return this.grievancesService.getTenantGrievances(userId);
+  async getTenantGrievances(@Request() req: any): Promise<GrievanceListResponseDto> {
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/grievances triggered by user ${userId}`)
+    return this.grievancesService.getTenantGrievances(userId)
   }
 
   @Get(':id')
@@ -110,10 +105,8 @@ export class GrievancesController {
     @Request() req: any,
     @Param('id') id: string,
   ): Promise<GrievanceDetailResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(
-      `GET /api/v1/tenant/grievances/${id} triggered by user ${userId}`,
-    );
-    return this.grievancesService.getTenantGrievanceById(userId, id);
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/grievances/${id} triggered by user ${userId}`)
+    return this.grievancesService.getTenantGrievanceById(userId, id)
   }
 }

@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsUUID, IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsUUID, IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator'
 
 export class UploadMeterReadingDto {
   @ApiProperty({
@@ -8,7 +8,7 @@ export class UploadMeterReadingDto {
   })
   @IsUUID()
   @IsNotEmpty()
-  serviceId: string;
+  serviceId: string
 
   @ApiProperty({
     description: 'Image URL or data URI of the captured meter dial photo',
@@ -16,7 +16,7 @@ export class UploadMeterReadingDto {
   })
   @IsString()
   @IsNotEmpty()
-  imageUrl: string;
+  imageUrl: string
 
   @ApiPropertyOptional({
     description: 'Optional manual reading value override if provided at upload time',
@@ -25,5 +25,5 @@ export class UploadMeterReadingDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  readingValue?: number;
+  readingValue?: number
 }

@@ -1,15 +1,10 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common'
+import { Observable } from 'rxjs'
+import { map } from 'rxjs/operators'
 
 export interface ApiResponse<T> {
-  success: true;
-  data: T;
+  success: true
+  data: T
 }
 
 /**
@@ -22,13 +17,8 @@ export interface ApiResponse<T> {
  * and the interceptor wraps the whole thing as `data`.
  */
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ApiResponse<T>>
-{
-  intercept(
-    _context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<ApiResponse<T>> {
+export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
+  intercept(_context: ExecutionContext, next: CallHandler): Observable<ApiResponse<T>> {
     return next.handle().pipe(
       map((response: T) => {
         // If the controller already returned { success, data } format, pass through
@@ -37,14 +27,14 @@ export class TransformInterceptor<T>
           typeof response === 'object' &&
           'success' in (response as object)
         ) {
-          return response as unknown as ApiResponse<T>;
+          return response as unknown as ApiResponse<T>
         }
 
         return {
           success: true as const,
           data: response,
-        };
+        }
       }),
-    );
+    )
   }
 }

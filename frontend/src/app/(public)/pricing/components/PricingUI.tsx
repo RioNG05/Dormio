@@ -1,253 +1,263 @@
-"use client";
+'use client'
 
-import React, { useState } from "react";
+import React, { useState } from 'react'
 import {
-  Check, X, Sparkles, Building2, QrCode, HelpCircle, ChevronDown,
-  CreditCard, Cpu, FileText, Users, BarChart3, Smartphone,
-  Scale, MapPin, ShieldCheck, ArrowRight,
-} from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { FEATURE_FLAGS } from "@/config/features";
+  Check,
+  X,
+  Sparkles,
+  Building2,
+  QrCode,
+  HelpCircle,
+  ChevronDown,
+  CreditCard,
+  Cpu,
+  FileText,
+  Users,
+  BarChart3,
+  Smartphone,
+  Scale,
+  MapPin,
+  ShieldCheck,
+  ArrowRight,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { Button } from '@/components/ui/button'
+import { FEATURE_FLAGS } from '@/config/features'
 
-export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" }) {
-  const router = useRouter();
-  const { currentLocale } = useLanguage();
-  const t = useTranslations("guest");
+export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' }) {
+  const router = useRouter()
+  const { currentLocale } = useLanguage()
+  const t = useTranslations('guest')
 
-  const isBhrp = FEATURE_FLAGS.ENABLE_BHRP && initialTab === "bhrp";
-  const activeSection: "bhms" | "bhrp" = isBhrp ? "bhrp" : "bhms";
+  const isBhrp = FEATURE_FLAGS.ENABLE_BHRP && initialTab === 'bhrp'
+  const activeSection: 'bhms' | 'bhrp' = isBhrp ? 'bhrp' : 'bhms'
 
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
 
-  const isBhrpTurns = activeSection === "bhrp";
+  const isBhrpTurns = activeSection === 'bhrp'
 
-  const discountRate = billingCycle === "yearly" ? 0.8 : 1.0;
+  const discountRate = billingCycle === 'yearly' ? 0.8 : 1.0
 
   // ── Feature data ──────────────────────────────────────────────────────────
   const bhmsFeatures = [
     {
       icon: CreditCard,
-      title: t("guestFeaturesBhms1Title"),
-      desc: t("guestFeaturesBhms1Desc"),
-      tag: t("guestFeaturesBhms1Tag"),
+      title: t('guestFeaturesBhms1Title'),
+      desc: t('guestFeaturesBhms1Desc'),
+      tag: t('guestFeaturesBhms1Tag'),
     },
     {
       icon: Cpu,
-      title: t("guestFeaturesBhms2Title"),
-      desc: t("guestFeaturesBhms2Desc"),
-      tag: t("guestFeaturesBhms2Tag"),
+      title: t('guestFeaturesBhms2Title'),
+      desc: t('guestFeaturesBhms2Desc'),
+      tag: t('guestFeaturesBhms2Tag'),
     },
     {
       icon: FileText,
-      title: t("guestFeaturesBhms3Title"),
-      desc: t("guestFeaturesBhms3Desc"),
-      tag: t("guestFeaturesBhms3Tag"),
+      title: t('guestFeaturesBhms3Title'),
+      desc: t('guestFeaturesBhms3Desc'),
+      tag: t('guestFeaturesBhms3Tag'),
     },
     {
       icon: Users,
-      title: t("guestFeaturesBhms4Title"),
-      desc: t("guestFeaturesBhms4Desc"),
-      tag: t("guestFeaturesBhms4Tag"),
+      title: t('guestFeaturesBhms4Title'),
+      desc: t('guestFeaturesBhms4Desc'),
+      tag: t('guestFeaturesBhms4Tag'),
     },
     {
       icon: BarChart3,
-      title: t("guestFeaturesBhms5Title"),
-      desc: t("guestFeaturesBhms5Desc"),
-      tag: t("guestFeaturesBhms5Tag"),
+      title: t('guestFeaturesBhms5Title'),
+      desc: t('guestFeaturesBhms5Desc'),
+      tag: t('guestFeaturesBhms5Tag'),
     },
     {
       icon: Smartphone,
-      title: t("guestFeaturesBhms6Title"),
-      desc: t("guestFeaturesBhms6Desc"),
-      tag: t("guestFeaturesBhms6Tag"),
+      title: t('guestFeaturesBhms6Title'),
+      desc: t('guestFeaturesBhms6Desc'),
+      tag: t('guestFeaturesBhms6Tag'),
     },
-  ];
+  ]
 
   const bhrpFeatures = [
     {
       icon: QrCode,
-      title: t("guestFeaturesBhrp1Title"),
-      desc: t("guestFeaturesBhrp1Desc"),
-      tag: t("guestFeaturesBhrp1Tag"),
+      title: t('guestFeaturesBhrp1Title'),
+      desc: t('guestFeaturesBhrp1Desc'),
+      tag: t('guestFeaturesBhrp1Tag'),
     },
     {
       icon: Scale,
-      title: t("guestFeaturesBhrp2Title"),
-      desc: t("guestFeaturesBhrp2Desc"),
-      tag: t("guestFeaturesBhrp2Tag"),
+      title: t('guestFeaturesBhrp2Title'),
+      desc: t('guestFeaturesBhrp2Desc'),
+      tag: t('guestFeaturesBhrp2Tag'),
     },
     {
       icon: MapPin,
-      title: t("guestFeaturesBhrp3Title"),
-      desc: t("guestFeaturesBhrp3Desc"),
-      tag: t("guestFeaturesBhrp3Tag"),
+      title: t('guestFeaturesBhrp3Title'),
+      desc: t('guestFeaturesBhrp3Desc'),
+      tag: t('guestFeaturesBhrp3Tag'),
     },
     {
       icon: ShieldCheck,
-      title: t("guestFeaturesBhrp4Title"),
-      desc: t("guestFeaturesBhrp4Desc"),
-      tag: t("guestFeaturesBhrp4Tag"),
+      title: t('guestFeaturesBhrp4Title'),
+      desc: t('guestFeaturesBhrp4Desc'),
+      tag: t('guestFeaturesBhrp4Tag'),
     },
-  ];
+  ]
 
   // ── Pricing plan data ─────────────────────────────────────────────────────
   const bhmsPlans = [
     {
-      name: t("guestPricingFreePlanName"),
+      name: t('guestPricingFreePlanName'),
       priceMonthly: 0,
-      description: t("guestPricingFreePlanDesc"),
+      description: t('guestPricingFreePlanDesc'),
       features: [
-        t("guestPricingFreeF1"),
-        t("guestPricingFreeF2"),
-        t("guestPricingFreeF3"),
-        t("guestPricingFreeF4"),
-        t("guestPricingFreeF5"),
-        t("guestPricingFreeF6"),
-        t("guestPricingFreeF7"),
-        t("guestPricingFreeF8"),
+        t('guestPricingFreeF1'),
+        t('guestPricingFreeF2'),
+        t('guestPricingFreeF3'),
+        t('guestPricingFreeF4'),
+        t('guestPricingFreeF5'),
+        t('guestPricingFreeF6'),
+        t('guestPricingFreeF7'),
+        t('guestPricingFreeF8'),
       ],
       notIncluded: [],
-      cta: t("guestPricingFreeCta"),
+      cta: t('guestPricingFreeCta'),
       popular: false,
     },
     {
-      name: t("guestPricingProPlanName"),
+      name: t('guestPricingProPlanName'),
       priceMonthly: 199000,
-      description: t("guestPricingProPlanDesc"),
+      description: t('guestPricingProPlanDesc'),
       features: [
-        t("guestPricingProF1"),
-        t("guestPricingProF2"),
-        t("guestPricingProF3"),
-        t("guestPricingProF4"),
-        t("guestPricingProF5"),
-        t("guestPricingProF6"),
-        t("guestPricingProF7"),
-        t("guestPricingProF8"),
-        t("guestPricingProF9"),
+        t('guestPricingProF1'),
+        t('guestPricingProF2'),
+        t('guestPricingProF3'),
+        t('guestPricingProF4'),
+        t('guestPricingProF5'),
+        t('guestPricingProF6'),
+        t('guestPricingProF7'),
+        t('guestPricingProF8'),
+        t('guestPricingProF9'),
       ],
       notIncluded: [],
-      cta: t("guestPricingProCta"),
+      cta: t('guestPricingProCta'),
       popular: true,
     },
     {
-      name: t("guestPricingEntPlanName"),
+      name: t('guestPricingEntPlanName'),
       priceMonthly: 499000,
-      description: t("guestPricingEntPlanDesc"),
+      description: t('guestPricingEntPlanDesc'),
       features: [
-        t("guestPricingEntF1"),
-        t("guestPricingEntF2"),
-        t("guestPricingEntF3"),
-        t("guestPricingEntF4"),
-        t("guestPricingEntF5"),
-        t("guestPricingEntF6"),
+        t('guestPricingEntF1'),
+        t('guestPricingEntF2'),
+        t('guestPricingEntF3'),
+        t('guestPricingEntF4'),
+        t('guestPricingEntF5'),
+        t('guestPricingEntF6'),
       ],
       notIncluded: [],
-      cta: t("guestPricingEntCta"),
+      cta: t('guestPricingEntCta'),
       popular: false,
     },
-  ];
+  ]
 
   // BHRP plans: per-turn purchase (not subscription)
   const bhrpPlans = [
     {
-      name: t("guestPricingBhrpPlan1Name"),
+      name: t('guestPricingBhrpPlan1Name'),
       price: 0,
       turns: 0,
-      description: t("guestPricingBhrpPlan1Desc"),
+      description: t('guestPricingBhrpPlan1Desc'),
       features: [],
       notIncluded: [],
-      cta: t("guestPricingBhrpPlan1Cta"),
-      href: "/posts/create",
+      cta: t('guestPricingBhrpPlan1Cta'),
+      href: '/posts/create',
       popular: false,
     },
     {
-      name: t("guestPricingBhrpPlan2Name"),
+      name: t('guestPricingBhrpPlan2Name'),
       price: 20000,
       turns: 1,
-      description: t("guestPricingBhrpPlan2Desc"),
+      description: t('guestPricingBhrpPlan2Desc'),
       features: [],
       notIncluded: [],
-      cta: t("guestPricingBhrpPlan2Cta"),
-      href: "/pricing/rental-platform/purchase?pack=1",
+      cta: t('guestPricingBhrpPlan2Cta'),
+      href: '/pricing/rental-platform/purchase?pack=1',
       popular: false,
     },
     {
-      name: t("guestPricingBhrpPlan3Name"),
+      name: t('guestPricingBhrpPlan3Name'),
       price: 170000,
       turns: 10,
-      description: t("guestPricingBhrpPlan3Desc"),
+      description: t('guestPricingBhrpPlan3Desc'),
       features: [],
       notIncluded: [],
-      cta: t("guestPricingBhrpPlan3Cta"),
-      href: "/pricing/rental-platform/purchase?pack=10",
+      cta: t('guestPricingBhrpPlan3Cta'),
+      href: '/pricing/rental-platform/purchase?pack=10',
       popular: true,
     },
     {
-      name: t("guestPricingBhrpPlan4Name"),
+      name: t('guestPricingBhrpPlan4Name'),
       price: 1690000,
       turns: 100,
-      description: t("guestPricingBhrpPlan4Desc"),
+      description: t('guestPricingBhrpPlan4Desc'),
       features: [],
       notIncluded: [],
-      cta: t("guestPricingBhrpPlan4Cta"),
-      href: "/pricing/rental-platform/purchase?pack=100",
+      cta: t('guestPricingBhrpPlan4Cta'),
+      href: '/pricing/rental-platform/purchase?pack=100',
       popular: false,
     },
-  ];
+  ]
 
   const faqs = [
-    { q: t("guestPricingFaq1Q"), a: t("guestPricingFaq1A") },
-    { q: t("guestPricingFaq2Q"), a: t("guestPricingFaq2A") },
-    { q: t("guestPricingFaq3Q"), a: t("guestPricingFaq3A") },
-  ];
+    { q: t('guestPricingFaq1Q'), a: t('guestPricingFaq1A') },
+    { q: t('guestPricingFaq2Q'), a: t('guestPricingFaq2A') },
+    { q: t('guestPricingFaq3Q'), a: t('guestPricingFaq3A') },
+  ]
 
   // Derived helpers
-  const isBhms = activeSection === "bhms";
-  const accentColor = isBhms ? "#2AC1BC" : "#FF6B35";
+  const isBhms = activeSection === 'bhms'
+  const accentColor = isBhms ? '#2AC1BC' : '#FF6B35'
 
-  const currentFeatures = isBhms ? bhmsFeatures : bhrpFeatures;
-  const currentPlans = isBhms ? bhmsPlans : bhrpPlans;
+  const currentFeatures = isBhms ? bhmsFeatures : bhrpFeatures
+  const currentPlans = isBhms ? bhmsPlans : bhrpPlans
 
-  const formatPrice = (n: number) =>
-    n.toLocaleString(currentLocale === "en" ? "en-US" : "vi-VN");
+  const formatPrice = (n: number) => n.toLocaleString(currentLocale === 'en' ? 'en-US' : 'vi-VN')
 
   const formatTurnPrice = (price: number, turns: number) => {
-    if (turns === 0) return "0 ₫";
-    return `${formatPrice(price)} ₫`;
-  };
+    if (turns === 0) return '0 ₫'
+    return `${formatPrice(price)} ₫`
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
-
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2AC1BC]/20 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/30 shadow-lg">
-            <Sparkles className="w-4 h-4" /> {t("guestPricingBadge")}
+            <Sparkles className="w-4 h-4" /> {t('guestPricingBadge')}
           </span>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">{t("guestPricingTitle1")}</span>{" "}
-            <br />
+            <span className="inline-block whitespace-nowrap">{t('guestPricingTitle1')}</span> <br />
             <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
-              {t("guestPricingTitle2")}
+              {t('guestPricingTitle2')}
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto text-balance">
-            {t("guestPricingSubtitle")}
+            {t('guestPricingSubtitle')}
           </p>
         </div>
       </section>
 
       {/* ── Main Content ─────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 w-full space-y-20">
-
         {/* ── Shared Tab Switcher (Chỉ hiển thị khi sàn BHRP được mở) ───────── */}
         {FEATURE_FLAGS.ENABLE_BHRP && (
           <div className="flex justify-center w-full">
@@ -255,27 +265,27 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
               <Button
                 id="tab-bhms"
                 variant="ghost"
-                onClick={() => router.push("/pricing/management-system", { scroll: false })}
+                onClick={() => router.push('/pricing/management-system', { scroll: false })}
                 className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
                   isBhms
-                    ? "bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30 hover:bg-[#25aba6] hover:text-white"
-                    : "text-zinc-500 hover:text-zinc-900"
+                    ? 'bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30 hover:bg-[#25aba6] hover:text-white'
+                    : 'text-zinc-500 hover:text-zinc-900'
                 }`}
               >
-                <Building2 className="w-4 h-4" /> {t("guestFeaturesBhmsTab")}
+                <Building2 className="w-4 h-4" /> {t('guestFeaturesBhmsTab')}
               </Button>
 
               <Button
                 id="tab-bhrp"
                 variant="ghost"
-                onClick={() => router.push("/pricing/rental-platform", { scroll: false })}
+                onClick={() => router.push('/pricing/rental-platform', { scroll: false })}
                 className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
                   !isBhms
-                    ? "bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30 hover:bg-[#e85a26] hover:text-white"
-                    : "text-zinc-500 hover:text-zinc-900"
+                    ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30 hover:bg-[#e85a26] hover:text-white'
+                    : 'text-zinc-500 hover:text-zinc-900'
                 }`}
               >
-                <QrCode className="w-4 h-4" /> {t("guestFeaturesBhrpTab")}
+                <QrCode className="w-4 h-4" /> {t('guestFeaturesBhrpTab')}
               </Button>
             </div>
           </div>
@@ -290,20 +300,32 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
             <div className="text-center max-w-2xl space-y-2">
               <span
                 className="px-3.5 py-1 text-xs font-black rounded-full border uppercase inline-block whitespace-nowrap"
-                style={{ backgroundColor: `${accentColor}1A`, color: accentColor, borderColor: `${accentColor}33` }}
+                style={{
+                  backgroundColor: `${accentColor}1A`,
+                  color: accentColor,
+                  borderColor: `${accentColor}33`,
+                }}
               >
-                {isBhms ? t("guestPricingBhmsBadge") : t("guestPricingBhrpBadge")}
+                {isBhms ? t('guestPricingBhmsBadge') : t('guestPricingBhrpBadge')}
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
                 {isBhms ? (
                   <>
-                    <span className="inline-block whitespace-nowrap">{t("guestPricingBhmsTitle1")}</span>{" "}
-                    <span className="inline-block whitespace-nowrap">{t("guestPricingBhmsTitle2")}</span>
+                    <span className="inline-block whitespace-nowrap">
+                      {t('guestPricingBhmsTitle1')}
+                    </span>{' '}
+                    <span className="inline-block whitespace-nowrap">
+                      {t('guestPricingBhmsTitle2')}
+                    </span>
                   </>
                 ) : (
                   <>
-                    <span className="inline-block whitespace-nowrap">{t("guestPricingBhrpTitle1")}</span>{" "}
-                    <span className="inline-block whitespace-nowrap">{t("guestPricingBhrpTitle2")}</span>
+                    <span className="inline-block whitespace-nowrap">
+                      {t('guestPricingBhrpTitle1')}
+                    </span>{' '}
+                    <span className="inline-block whitespace-nowrap">
+                      {t('guestPricingBhrpTitle2')}
+                    </span>
                   </>
                 )}
               </h2>
@@ -315,24 +337,28 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                 <Button
                   id="billing-monthly"
                   variant="ghost"
-                  onClick={() => setBillingCycle("monthly")}
+                  onClick={() => setBillingCycle('monthly')}
                   className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer h-auto ${
-                    billingCycle === "monthly" ? "bg-white text-zinc-900 shadow-xs hover:bg-white" : "text-zinc-500 hover:text-zinc-900"
+                    billingCycle === 'monthly'
+                      ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
+                      : 'text-zinc-500 hover:text-zinc-900'
                   }`}
                 >
-                  {t("guestPricingPayMonthly")}
+                  {t('guestPricingPayMonthly')}
                 </Button>
                 <Button
                   id="billing-yearly"
                   variant="ghost"
-                  onClick={() => setBillingCycle("yearly")}
+                  onClick={() => setBillingCycle('yearly')}
                   className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 h-auto ${
-                    billingCycle === "yearly" ? "bg-zinc-900 text-white shadow-xs hover:bg-zinc-800 hover:text-white" : "text-zinc-500 hover:text-zinc-900"
+                    billingCycle === 'yearly'
+                      ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-800 hover:text-white'
+                      : 'text-zinc-500 hover:text-zinc-900'
                   }`}
                 >
-                  <span>{t("guestPricingPayYearly")}</span>
+                  <span>{t('guestPricingPayYearly')}</span>
                   <span className="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full uppercase">
-                    {t("guestPricingSave20")}
+                    {t('guestPricingSave20')}
                   </span>
                 </Button>
               </div>
@@ -341,7 +367,7 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
             {!isBhms && (
               <div className="flex items-center gap-2 px-4 py-2 bg-[#FF6B35]/10 rounded-2xl border border-[#FF6B35]/30 text-xs font-bold text-[#FF6B35]">
                 <QrCode className="w-4 h-4" />
-                <span>{t("guestPricingBhrpTurnLabel")}</span>
+                <span>{t('guestPricingBhrpTurnLabel')}</span>
               </div>
             )}
           </div>
@@ -350,25 +376,26 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
             {currentPlans.map((plan, idx) => {
               // BHMS: monthly/yearly price; BHRP: flat per-turn price
-              const bhmsPrice = Math.round((plan as any).priceMonthly * discountRate);
-              const bhrpPrice = (plan as any).price ?? 0;
-              const bhrpTurns = (plan as any).turns ?? 0;
-              const planHref = (plan as any).href;
+              const bhmsPrice = Math.round((plan as any).priceMonthly * discountRate)
+              const bhrpPrice = (plan as any).price ?? 0
+              const bhrpTurns = (plan as any).turns ?? 0
+              const planHref = (plan as any).href
 
-              const displayPrice = isBhms ? bhmsPrice : bhrpPrice;
+              const displayPrice = isBhms ? bhmsPrice : bhrpPrice
               return (
                 <div
                   key={idx}
-                  className={`bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${plan.popular ? "-translate-y-2" : "hover:shadow-md"
-                    }`}
+                  className={`bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${
+                    plan.popular ? '-translate-y-2' : 'hover:shadow-md'
+                  }`}
                   style={
                     plan.popular
                       ? {
-                        borderColor: accentColor,
-                        boxShadow: `0 20px 40px ${accentColor}26`,
-                        outline: `2px solid ${accentColor}33`,
-                      }
-                      : { borderColor: "#e4e4e7" }
+                          borderColor: accentColor,
+                          boxShadow: `0 20px 40px ${accentColor}26`,
+                          outline: `2px solid ${accentColor}33`,
+                        }
+                      : { borderColor: '#e4e4e7' }
                   }
                 >
                   {plan.popular && (
@@ -376,14 +403,16 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                       className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 text-white text-[10px] font-black rounded-full uppercase tracking-wider shadow-md whitespace-nowrap"
                       style={{ backgroundColor: accentColor }}
                     >
-                      {isBhms ? t("guestPricingMostPopular") : t("guestPricingBhrp3xViews")}
+                      {isBhms ? t('guestPricingMostPopular') : t('guestPricingBhrp3xViews')}
                     </span>
                   )}
 
                   <div className="space-y-4">
                     <div>
                       <h3 className="text-xl font-black text-zinc-900">{plan.name}</h3>
-                      <p className="text-xs text-zinc-500 font-medium mt-1 leading-relaxed">{plan.description}</p>
+                      <p className="text-xs text-zinc-500 font-medium mt-1 leading-relaxed">
+                        {plan.description}
+                      </p>
                     </div>
 
                     <div className="py-2 border-y border-zinc-100">
@@ -392,13 +421,16 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                         <>
                           <div className="flex items-baseline gap-1">
                             <span className="text-3xl font-black" style={{ color: accentColor }}>
-                              {bhmsPrice === 0 ? "0 ₫" : `${formatPrice(bhmsPrice)} ₫`}
+                              {bhmsPrice === 0 ? '0 ₫' : `${formatPrice(bhmsPrice)} ₫`}
                             </span>
-                            <span className="text-xs text-zinc-400 font-bold">{t("guestPricingMonth")}</span>
+                            <span className="text-xs text-zinc-400 font-bold">
+                              {t('guestPricingMonth')}
+                            </span>
                           </div>
-                          {billingCycle === "yearly" && bhmsPrice > 0 && (
+                          {billingCycle === 'yearly' && bhmsPrice > 0 && (
                             <span className="text-[10px] font-bold block mt-0.5 text-emerald-600">
-                              {t("guestPricingYearlyPayNote")}: {formatPrice(bhmsPrice * 12)} ₫ {t("guestPricingYear")}
+                              {t('guestPricingYearlyPayNote')}: {formatPrice(bhmsPrice * 12)} ₫{' '}
+                              {t('guestPricingYear')}
                             </span>
                           )}
                         </>
@@ -407,36 +439,46 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                         <>
                           <div className="flex items-baseline gap-1">
                             <span className="text-3xl font-black" style={{ color: accentColor }}>
-                              {bhrpPrice === 0 ? "0 ₫" : `${formatPrice(bhrpPrice)} ₫`}
+                              {bhrpPrice === 0 ? '0 ₫' : `${formatPrice(bhrpPrice)} ₫`}
                             </span>
                           </div>
                           {bhrpTurns > 0 && (
                             <span className="text-[10px] font-bold block mt-0.5 text-[#FF6B35]">
-                              {t("guestPricingBhrpTurns", { count: bhrpTurns })}
+                              {t('guestPricingBhrpTurns', { count: bhrpTurns })}
                             </span>
                           )}
                           {bhrpTurns > 0 && (
                             <span className="text-[10px] font-medium block mt-0.5 text-zinc-400">
-                              ≈ {formatPrice(Math.round(bhrpPrice / bhrpTurns))} ₫ / {t("guestPricingBhrpPerTurn")}
+                              ≈ {formatPrice(Math.round(bhrpPrice / bhrpTurns))} ₫ /{' '}
+                              {t('guestPricingBhrpPerTurn')}
                             </span>
                           )}
                         </>
                       )}
                     </div>
 
-                    { (plan.features.length > 0 || plan.notIncluded.length > 0) && (
+                    {(plan.features.length > 0 || plan.notIncluded.length > 0) && (
                       <div className="space-y-3 pt-2">
                         <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">
-                          {isBhms ? t("guestPricingIncluded") : t("guestPricingBhrpIncluded")}
+                          {isBhms ? t('guestPricingIncluded') : t('guestPricingBhrpIncluded')}
                         </span>
                         {plan.features.map((feat, fIdx) => (
-                          <div key={fIdx} className="flex items-start gap-2 text-xs font-semibold text-zinc-700">
-                            <Check className="w-4 h-4 shrink-0 mt-0.5" style={{ color: accentColor }} />
+                          <div
+                            key={fIdx}
+                            className="flex items-start gap-2 text-xs font-semibold text-zinc-700"
+                          >
+                            <Check
+                              className="w-4 h-4 shrink-0 mt-0.5"
+                              style={{ color: accentColor }}
+                            />
                             <span>{feat}</span>
                           </div>
                         ))}
                         {plan.notIncluded.map((feat, nIdx) => (
-                          <div key={nIdx} className="flex items-start gap-2 text-xs font-medium text-zinc-400 opacity-60">
+                          <div
+                            key={nIdx}
+                            className="flex items-start gap-2 text-xs font-medium text-zinc-400 opacity-60"
+                          >
                             <X className="w-4 h-4 text-zinc-300 shrink-0 mt-0.5" />
                             <span className="line-through">{feat}</span>
                           </div>
@@ -449,11 +491,11 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                     href={
                       isBhms
                         ? idx === 1
-                          ? "/pricing/management-system/purchase?pack=plus"
+                          ? '/pricing/management-system/purchase?pack=plus'
                           : idx === 2
-                          ? "/pricing/management-system/purchase?pack=pro"
-                          : "/register/landlord"
-                        : (planHref ?? "/register")
+                            ? '/pricing/management-system/purchase?pack=pro'
+                            : '/register/landlord'
+                        : (planHref ?? '/register')
                     }
                     className="pt-4"
                   >
@@ -462,22 +504,25 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                       style={
                         plan.popular
                           ? { backgroundColor: accentColor }
-                          : { backgroundColor: "#18181b" }
+                          : { backgroundColor: '#18181b' }
                       }
                       onMouseEnter={e => {
-                        if (plan.popular) (e.currentTarget as HTMLButtonElement).style.opacity = "0.85";
-                        else (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#27272a";
+                        if (plan.popular)
+                          (e.currentTarget as HTMLButtonElement).style.opacity = '0.85'
+                        else
+                          (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#27272a'
                       }}
                       onMouseLeave={e => {
-                        if (plan.popular) (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                        else (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#18181b";
+                        if (plan.popular) (e.currentTarget as HTMLButtonElement).style.opacity = '1'
+                        else
+                          (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#18181b'
                       }}
                     >
                       {plan.cta} &rarr;
                     </Button>
                   </Link>
                 </div>
-              );
+              )
             })}
           </div>
         </section>
@@ -490,29 +535,43 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span
               className="px-3.5 py-1 text-xs font-black rounded-full border uppercase inline-block whitespace-nowrap"
-              style={{ backgroundColor: `${accentColor}1A`, color: accentColor, borderColor: `${accentColor}33` }}
+              style={{
+                backgroundColor: `${accentColor}1A`,
+                color: accentColor,
+                borderColor: `${accentColor}33`,
+              }}
             >
-              {isBhms ? t("guestFeaturesBhmsBadge") : t("guestFeaturesBhrpBadge")}
+              {isBhms ? t('guestFeaturesBhmsBadge') : t('guestFeaturesBhrpBadge')}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
               {isBhms ? (
                 <>
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhmsTitle1")}</span>{" "}
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhmsTitle2")}</span>
+                  <span className="inline-block whitespace-nowrap">
+                    {t('guestFeaturesBhmsTitle1')}
+                  </span>{' '}
+                  <span className="inline-block whitespace-nowrap">
+                    {t('guestFeaturesBhmsTitle2')}
+                  </span>
                 </>
               ) : (
                 <>
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhrpTitle1")}</span>{" "}
-                  <span className="inline-block whitespace-nowrap">{t("guestFeaturesBhrpTitle2")}</span>
+                  <span className="inline-block whitespace-nowrap">
+                    {t('guestFeaturesBhrpTitle1')}
+                  </span>{' '}
+                  <span className="inline-block whitespace-nowrap">
+                    {t('guestFeaturesBhrpTitle2')}
+                  </span>
                 </>
               )}
             </h2>
           </div>
 
           {/* Feature cards grid */}
-          <div className={`grid grid-cols-1 gap-6 sm:gap-8 ${isBhms ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2 max-w-5xl mx-auto"}`}>
+          <div
+            className={`grid grid-cols-1 gap-6 sm:gap-8 ${isBhms ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2 max-w-5xl mx-auto'}`}
+          >
             {currentFeatures.map((feat, idx) => {
-              const Icon = feat.icon;
+              const Icon = feat.icon
               return (
                 <div
                   key={idx}
@@ -541,17 +600,15 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
 
                     <h3
                       className="text-lg font-black text-zinc-900 transition-colors leading-snug group-hover:text-current"
-                      style={{ "--hover-color": accentColor } as React.CSSProperties}
+                      style={{ '--hover-color': accentColor } as React.CSSProperties}
                     >
                       {feat.title}
                     </h3>
 
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {feat.desc}
-                    </p>
+                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">{feat.desc}</p>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </section>
@@ -560,14 +617,14 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
         <section className="bg-zinc-50 rounded-3xl p-8 sm:p-12 border border-zinc-200/80 space-y-6">
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <h3 className="text-xl font-black text-zinc-900 flex items-center justify-center gap-2">
-              <HelpCircle className="w-5 h-5 text-[#2AC1BC]" /> {t("guestPricingFaqTitle")}
+              <HelpCircle className="w-5 h-5 text-[#2AC1BC]" /> {t('guestPricingFaqTitle')}
             </h3>
-            <p className="text-xs text-zinc-500 font-medium">{t("guestPricingFaqSubtitle")}</p>
+            <p className="text-xs text-zinc-500 font-medium">{t('guestPricingFaqSubtitle')}</p>
           </div>
 
           <div className="max-w-3xl mx-auto space-y-3">
             {faqs.map((faq, idx) => {
-              const isOpen = openFaq === idx;
+              const isOpen = openFaq === idx
               return (
                 <div
                   key={idx}
@@ -576,7 +633,9 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                 >
                   <div className="flex items-center justify-between font-bold text-xs sm:text-sm text-zinc-900">
                     <span>{faq.q}</span>
-                    <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? "rotate-180 text-[#2AC1BC]" : ""}`} />
+                    <ChevronDown
+                      className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? 'rotate-180 text-[#2AC1BC]' : ''}`}
+                    />
                   </div>
                   {isOpen && (
                     <p className="text-xs text-zinc-500 font-medium leading-relaxed pt-2 border-t border-zinc-100 animate-in fade-in duration-200">
@@ -584,7 +643,7 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
                     </p>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
         </section>
@@ -592,22 +651,21 @@ export default function PricingUI({ initialTab }: { initialTab: "bhms" | "bhrp" 
         {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
         <section className="bg-zinc-900 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-2xl border border-zinc-800">
           <h2 className="text-2xl sm:text-4xl font-black text-white leading-snug">
-            <span className="inline-block whitespace-nowrap">{t("guestPricingCtaTitle1")}</span>{" "}
-            <span className="inline-block whitespace-nowrap">{t("guestPricingCtaTitle2")}</span>
+            <span className="inline-block whitespace-nowrap">{t('guestPricingCtaTitle1')}</span>{' '}
+            <span className="inline-block whitespace-nowrap">{t('guestPricingCtaTitle2')}</span>
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto font-medium">
-            {t("guestPricingCtaSubtitle")}
+            {t('guestPricingCtaSubtitle')}
           </p>
           <div className="flex justify-center">
             <Link href="/register">
               <Button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105 h-auto">
-                {t("guestPricingCtaBtn")} &rarr;
+                {t('guestPricingCtaBtn')} &rarr;
               </Button>
             </Link>
           </div>
         </section>
-
       </div>
     </div>
-  );
+  )
 }

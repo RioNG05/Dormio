@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   IsArray,
@@ -13,8 +13,8 @@ import {
   Matches,
   MaxLength,
   Min,
-} from 'class-validator';
-import { RoomStatus } from '@prisma';
+} from 'class-validator'
+import { RoomStatus } from '@prisma'
 
 export class CreateRoomDto {
   @ApiProperty({
@@ -26,7 +26,7 @@ export class CreateRoomDto {
   @IsNotEmpty()
   @Matches(/\S/, { message: 'roomNumber must not be blank' })
   @MaxLength(50)
-  roomNumber: string;
+  roomNumber: string
 
   @ApiProperty({
     example: 1,
@@ -36,14 +36,14 @@ export class CreateRoomDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  floor: number;
+  floor: number
 
   @ApiProperty({
     example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     description: 'UUID of the room type for this room',
   })
   @IsUUID('all', { message: 'roomTypeId must be a valid UUID' })
-  roomTypeId: string;
+  roomTypeId: string
 
   @ApiPropertyOptional({
     example: 25.5,
@@ -54,7 +54,7 @@ export class CreateRoomDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0.1)
-  area?: number;
+  area?: number
 
   @ApiPropertyOptional({
     example: 2,
@@ -65,7 +65,7 @@ export class CreateRoomDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  maxOccupants?: number;
+  maxOccupants?: number
 
   @ApiPropertyOptional({
     enum: RoomStatus,
@@ -74,7 +74,7 @@ export class CreateRoomDto {
   })
   @IsOptional()
   @IsEnum(RoomStatus)
-  status?: RoomStatus;
+  status?: RoomStatus
 
   @ApiPropertyOptional({
     example: 'https://res.cloudinary.com/demo/image/upload/room101.jpg',
@@ -82,7 +82,7 @@ export class CreateRoomDto {
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string
 
   @ApiPropertyOptional({
     type: [String],
@@ -94,5 +94,5 @@ export class CreateRoomDto {
   @IsArray()
   @ArrayMaxSize(30)
   @IsUUID('all', { each: true, message: 'Each serviceId must be a valid UUID' })
-  serviceIds?: string[];
+  serviceIds?: string[]
 }

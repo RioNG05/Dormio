@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useRef, useMemo, use } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, useMemo, use } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Camera,
@@ -26,145 +26,140 @@ import {
   X,
   FileQuestion,
   AlertCircle,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { NumberInput } from "@/components/ui/NumberInput";
-import { ImageUpload } from "@/components/ImageUpload";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { useToast } from "@/context/ToastContext";
-import { formatCurrency } from "@/utils";
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { NumberInput } from '@/components/ui/NumberInput'
+import { ImageUpload } from '@/components/ImageUpload'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import { formatCurrency } from '@/utils'
 import {
   meterReadingService,
   ActiveMeteredServicesResponse,
-} from "@/services/meter-reading.service";
-import {
-  tenantInvoiceService,
-  TenantInvoice,
-} from "@/services/tenant-invoice.service";
-import {
-  paymentService,
-  InvoicePayOsCheckoutResponse,
-} from "@/services/payment.service";
-import { uploadImageToBackend } from "@/services/upload.service";
+} from '@/services/meter-reading.service'
+import { tenantInvoiceService, TenantInvoice } from '@/services/tenant-invoice.service'
+import { paymentService, InvoicePayOsCheckoutResponse } from '@/services/payment.service'
+import { uploadImageToBackend } from '@/services/upload.service'
 
 /**
  * Bank names mapping by BIN code
  */
 const BANK_NAMES: Record<string, string> = {
-  "970422": "MB Bank (Quân Đội)",
-  "970415": "VietinBank",
-  "970436": "Vietcombank (VCB)",
-  "970407": "Techcombank",
-  "970423": "TPBank",
-  "970432": "VPBank",
-  "970418": "BIDV",
-  "970405": "Agribank",
-  "970416": "ACB",
-  "970441": "VIB",
-  "970403": "Sacombank",
-};
+  '970422': 'MB Bank (Quân Đội)',
+  '970415': 'VietinBank',
+  '970436': 'Vietcombank (VCB)',
+  '970407': 'Techcombank',
+  '970423': 'TPBank',
+  '970432': 'VPBank',
+  '970418': 'BIDV',
+  '970405': 'Agribank',
+  '970416': 'ACB',
+  '970441': 'VIB',
+  '970403': 'Sacombank',
+}
 
 /**
  * Helper to ensure valid QR image display
  */
 function getQrImageUrl(qrData: string | undefined): string {
-  if (!qrData) return "";
+  if (!qrData) return ''
   if (
-    qrData.startsWith("http://") ||
-    qrData.startsWith("https://") ||
-    qrData.startsWith("data:image")
+    qrData.startsWith('http://') ||
+    qrData.startsWith('https://') ||
+    qrData.startsWith('data:image')
   ) {
-    return qrData;
+    return qrData
   }
   return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
-    qrData
-  )}`;
+    qrData,
+  )}`
 }
 
 interface MeterServiceState {
-  serviceId: string;
-  serviceName: string;
-  readingId?: string;
-  currentValue: number | "";
-  previousValue: number | null;
-  imageUrl: string | null;
-  unit: string;
-  unitPrice: number;
-  isScanning: boolean;
-  isExtractedByAi: boolean;
-  hasManualEdits: boolean;
-  hasPhotoUploaded: boolean;
+  serviceId: string
+  serviceName: string
+  readingId?: string
+  currentValue: number | ''
+  previousValue: number | null
+  imageUrl: string | null
+  unit: string
+  unitPrice: number
+  isScanning: boolean
+  isExtractedByAi: boolean
+  hasManualEdits: boolean
+  hasPhotoUploaded: boolean
 }
 
 interface PageProps {
-  params: Promise<{ invoiceId: string }>;
+  params: Promise<{ invoiceId: string }>
 }
 
 export default function TenantInvoiceDetailPage({ params }: PageProps) {
-  const { invoiceId } = use(params);
-  const router = useRouter();
+  const { invoiceId } = use(params)
+  const router = useRouter()
 
-  const t = useTranslations("tenantPortal");
-  const { locale } = useLanguage();
-  const { toast } = useToast();
+  const t = useTranslations('tenantPortal')
+  const { locale } = useLanguage()
+  const { toast } = useToast()
 
   // Page level states
-  const [loading, setLoading] = useState(true);
-  const [invoice, setInvoice] = useState<TenantInvoice | null>(null);
-  const [meterData, setMeterData] = useState<ActiveMeteredServicesResponse | null>(null);
-  const [serviceStates, setServiceStates] = useState<Record<string, MeterServiceState>>({});
+  const [loading, setLoading] = useState(true)
+  const [invoice, setInvoice] = useState<TenantInvoice | null>(null)
+  const [meterData, setMeterData] = useState<ActiveMeteredServicesResponse | null>(null)
+  const [serviceStates, setServiceStates] = useState<Record<string, MeterServiceState>>({})
 
   // PayOS Checkout states
-  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
-  const [payOsData, setPayOsData] = useState<InvoicePayOsCheckoutResponse | null>(null);
-  const [countdown, setCountdown] = useState<number>(0);
-  const [isExpired, setIsExpired] = useState(false);
-  const [isPaidSuccess, setIsPaidSuccess] = useState(false);
-  const isPollingRef = useRef(false);
+  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false)
+  const [payOsData, setPayOsData] = useState<InvoicePayOsCheckoutResponse | null>(null)
+  const [countdown, setCountdown] = useState<number>(0)
+  const [isExpired, setIsExpired] = useState(false)
+  const [isPaidSuccess, setIsPaidSuccess] = useState(false)
+  const isPollingRef = useRef(false)
 
   // Copy indicators
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   // Image inspection modal
-  const [inspectImage, setInspectImage] = useState<string | null>(null);
+  const [inspectImage, setInspectImage] = useState<string | null>(null)
 
   // Rule 10: Confirmation modal on uncommitted exit
-  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false)
 
   // Per-service validation errors displayed below the two action buttons
-  const [uploadErrors, setUploadErrors] = useState<Record<string, string | null>>({});
+  const [uploadErrors, setUploadErrors] = useState<Record<string, string | null>>({})
 
   // Refs for upload inputs (device vs camera)
-  const deviceUploadRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const cameraUploadRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const deviceUploadRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const cameraUploadRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   // ─── 1. Load Real Invoice and Real Meter Data from Database ──────────────────
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     async function fetchData() {
-      setLoading(true);
+      setLoading(true)
       try {
         const [invoiceResult, activeServices] = await Promise.all([
           tenantInvoiceService.getTenantInvoiceById(invoiceId).catch(() => null),
           meterReadingService.getActiveMeteredServices().catch(() => null),
-        ]);
+        ])
 
-        if (!isMounted) return;
+        if (!isMounted) return
 
         if (invoiceResult) {
-          setInvoice(invoiceResult);
+          setInvoice(invoiceResult)
         }
 
         if (activeServices) {
-          setMeterData(activeServices);
+          setMeterData(activeServices)
 
           // Populate meter state strictly from database values — no mockup data!
-          const initialMap: Record<string, MeterServiceState> = {};
-          activeServices.meteredServices.forEach((ms) => {
-            const hasPrev = ms.previousReading && typeof ms.previousReading.readingValue === "number";
-            const currentVal = ms.currentReading?.readingValue ?? "";
-            const hasCurrentPhoto = Boolean(ms.currentReading?.imageUrl);
+          const initialMap: Record<string, MeterServiceState> = {}
+          activeServices.meteredServices.forEach(ms => {
+            const hasPrev =
+              ms.previousReading && typeof ms.previousReading.readingValue === 'number'
+            const currentVal = ms.currentReading?.readingValue ?? ''
+            const hasCurrentPhoto = Boolean(ms.currentReading?.imageUrl)
 
             initialMap[ms.serviceId] = {
               serviceId: ms.serviceId,
@@ -176,78 +171,75 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               unit: ms.unit,
               unitPrice: ms.unitPrice,
               isScanning: false,
-              isExtractedByAi: currentVal !== "",
+              isExtractedByAi: currentVal !== '',
               hasManualEdits: false,
               hasPhotoUploaded: hasCurrentPhoto,
-            };
-          });
-          setServiceStates(initialMap);
+            }
+          })
+          setServiceStates(initialMap)
         }
       } catch (err) {
-        console.error("Failed to load invoice from database:", err);
-        toast.error(t("loadInvoiceError"));
+        console.error('Failed to load invoice from database:', err)
+        toast.error(t('loadInvoiceError'))
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setLoading(false)
         }
       }
     }
 
     if (invoiceId) {
-      fetchData();
+      fetchData()
     }
 
     return () => {
-      isMounted = false;
-    };
-  }, [invoiceId]);
+      isMounted = false
+    }
+  }, [invoiceId])
 
   // ─── 2. Handle Photo Upload / Camera Capture & AI OCR Extraction ─────────────
   const handlePhotoUpload = async (serviceId: string, file: File) => {
     // Clear previous error for this specific service
-    setUploadErrors((prev) => ({ ...prev, [serviceId]: null }));
+    setUploadErrors(prev => ({ ...prev, [serviceId]: null }))
 
     // Set immediate scanning indicator in the image box (without showing image yet)
-    setServiceStates((prev) => ({
+    setServiceStates(prev => ({
       ...prev,
       [serviceId]: {
         ...prev[serviceId],
         isScanning: true,
       },
-    }));
+    }))
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64Data = e.target?.result as string;
+    const reader = new FileReader()
+    reader.onload = async e => {
+      const base64Data = e.target?.result as string
       if (!base64Data) {
-        setServiceStates((prev) => ({
+        setServiceStates(prev => ({
           ...prev,
           [serviceId]: {
             ...prev[serviceId],
             isScanning: false,
           },
-        }));
-        return;
+        }))
+        return
       }
 
-      const serviceName = serviceStates[serviceId]?.serviceName || "";
+      const serviceName = serviceStates[serviceId]?.serviceName || ''
 
       try {
         // Step 1: Send image data directly to AI first (before uploading to Cloudinary)
-        const aiResponse = await meterReadingService.scanMeterWithAi(
-          base64Data,
-          serviceName,
-        );
+        const aiResponse = await meterReadingService.scanMeterWithAi(base64Data, serviceName)
 
         // Step 2: Check AI result - if success == false or invalid image
         if (!aiResponse?.success || !aiResponse?.data?.isValid) {
           const aiErrorMsg =
             aiResponse?.message ||
             aiResponse?.data?.errorMessage ||
-            "Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể đọc được chỉ số.";
+            'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể đọc được chỉ số.'
 
           // Turn off scanning, keep existing photo if previously verified, do NOT upload to Cloudinary
-          setServiceStates((prev) => ({
+          setServiceStates(prev => ({
             ...prev,
             [serviceId]: {
               ...prev[serviceId],
@@ -255,25 +247,22 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               imageUrl: prev[serviceId]?.readingId ? prev[serviceId]?.imageUrl : null,
               hasPhotoUploaded: Boolean(prev[serviceId]?.readingId),
             },
-          }));
+          }))
 
           // Display error message below the buttons without toast error
-          setUploadErrors((prev) => ({
+          setUploadErrors(prev => ({
             ...prev,
             [serviceId]: aiErrorMsg,
-          }));
-          return;
+          }))
+          return
         }
 
         // Step 3: AI returned success == true -> Now upload image to Cloudinary
-        const uploadResult = await uploadImageToBackend(
-          base64Data,
-          "dormio/meter-readings",
-        );
-        const cloudinaryUrl = uploadResult?.url;
+        const uploadResult = await uploadImageToBackend(base64Data, 'dormio/meter-readings')
+        const cloudinaryUrl = uploadResult?.url
 
         if (!cloudinaryUrl) {
-          throw new Error("Không thể lưu ảnh lên máy chủ Cloudinary.");
+          throw new Error('Không thể lưu ảnh lên máy chủ Cloudinary.')
         }
 
         // Step 4: Save validated reading to database with Cloudinary URL
@@ -281,42 +270,42 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           serviceId,
           imageUrl: cloudinaryUrl,
           readingValue:
-            typeof aiResponse.data.readingValue === "number"
+            typeof aiResponse.data.readingValue === 'number'
               ? aiResponse.data.readingValue
               : undefined,
-        });
+        })
 
         // Step 5: Update state -> Show photo on UI, update readingValue, clear error
-        setServiceStates((prev) => ({
+        setServiceStates(prev => ({
           ...prev,
           [serviceId]: {
             ...prev[serviceId],
             readingId: readingResult?.id,
             currentValue:
-              typeof aiResponse.data.readingValue === "number"
+              typeof aiResponse.data.readingValue === 'number'
                 ? aiResponse.data.readingValue
-                : (typeof readingResult?.readingValue === "number"
-                    ? readingResult.readingValue
-                    : prev[serviceId]?.currentValue),
+                : typeof readingResult?.readingValue === 'number'
+                  ? readingResult.readingValue
+                  : prev[serviceId]?.currentValue,
             imageUrl: cloudinaryUrl,
             isScanning: false,
             isExtractedByAi: true,
             hasManualEdits: false,
             hasPhotoUploaded: true,
           },
-        }));
+        }))
 
-        setUploadErrors((prev) => ({ ...prev, [serviceId]: null }));
-        toast.success(t("aiExtractedBadge"));
+        setUploadErrors(prev => ({ ...prev, [serviceId]: null }))
+        toast.success(t('aiExtractedBadge'))
       } catch (err: any) {
-        console.error("AI Meter scan or upload error:", err);
+        console.error('AI Meter scan or upload error:', err)
         const serverMessage =
           err?.message ||
           err?.data?.message ||
           err?.response?.data?.message ||
-          "Không thể xử lý hình ảnh qua AI. Vui lòng thử lại.";
+          'Không thể xử lý hình ảnh qua AI. Vui lòng thử lại.'
 
-        setServiceStates((prev) => ({
+        setServiceStates(prev => ({
           ...prev,
           [serviceId]: {
             ...prev[serviceId],
@@ -324,248 +313,229 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             imageUrl: prev[serviceId]?.readingId ? prev[serviceId]?.imageUrl : null,
             hasPhotoUploaded: Boolean(prev[serviceId]?.readingId),
           },
-        }));
+        }))
 
         // Display error message below the action buttons (NO toast error)
-        setUploadErrors((prev) => ({
+        setUploadErrors(prev => ({
           ...prev,
           [serviceId]: serverMessage,
-        }));
+        }))
       }
-    };
-    reader.readAsDataURL(file);
-  };
+    }
+    reader.readAsDataURL(file)
+  }
 
   // ─── 3. Handle Manual Input Editing ─────────────────────────────────────────
   const handleValueChange = (serviceId: string, rawVal: string) => {
-    const num = rawVal === "" ? "" : Number(rawVal);
-    setServiceStates((prev) => ({
+    const num = rawVal === '' ? '' : Number(rawVal)
+    setServiceStates(prev => ({
       ...prev,
       [serviceId]: {
         ...prev[serviceId],
         currentValue: num,
         hasManualEdits: true,
       },
-    }));
-  };
+    }))
+  }
 
   // ─── 4. Dynamic Calculations (Only calculated once photo is uploaded) ───────
   const utilityCalculations = useMemo(() => {
-    let totalUtilityCost = 0;
-    let hasAnyMeteredService = false;
-    let allPhotosUploaded = true;
+    let totalUtilityCost = 0
+    let hasAnyMeteredService = false
+    let allPhotosUploaded = true
     const perServiceDetails: Record<
       string,
       {
-        hasCalculated: boolean;
-        delta: number;
-        cost: number;
+        hasCalculated: boolean
+        delta: number
+        cost: number
       }
-    > = {};
+    > = {}
 
-    const serviceEntries = Object.entries(serviceStates);
+    const serviceEntries = Object.entries(serviceStates)
     if (serviceEntries.length > 0) {
-      hasAnyMeteredService = true;
+      hasAnyMeteredService = true
     }
 
     serviceEntries.forEach(([sId, state]) => {
       // Calculate ONLY when photo has been uploaded
-      if (state.hasPhotoUploaded && typeof state.currentValue === "number") {
-        const prev = state.previousValue ?? 0;
-        const delta = Math.max(0, state.currentValue - prev);
-        const cost = Math.round(delta * state.unitPrice);
+      if (state.hasPhotoUploaded && typeof state.currentValue === 'number') {
+        const prev = state.previousValue ?? 0
+        const delta = Math.max(0, state.currentValue - prev)
+        const cost = Math.round(delta * state.unitPrice)
 
-        totalUtilityCost += cost;
+        totalUtilityCost += cost
         perServiceDetails[sId] = {
           hasCalculated: true,
           delta,
           cost,
-        };
+        }
       } else {
-        allPhotosUploaded = false;
+        allPhotosUploaded = false
         perServiceDetails[sId] = {
           hasCalculated: false,
           delta: 0,
           cost: 0,
-        };
+        }
       }
-    });
+    })
 
     return {
       hasAnyMeteredService,
       allPhotosUploaded: hasAnyMeteredService ? allPhotosUploaded : true,
       totalUtilityCost,
       perServiceDetails,
-    };
-  }, [serviceStates]);
+    }
+  }, [serviceStates])
 
   // Total payable amount: non-metered base items + calculated utility costs
   const payableAmount = useMemo(() => {
-    if (!invoice) return 0;
+    if (!invoice) return 0
 
     // Filter non-metered base line items (Room rent, Garbage, Internet, etc.)
-    const nonMeteredDetails = invoice.details.filter((d) => !d.isMetered);
-    const nonMeteredBaseTotal = nonMeteredDetails.reduce(
-      (sum, item) => sum + item.value,
-      0
-    );
+    const nonMeteredDetails = invoice.details.filter(d => !d.isMetered)
+    const nonMeteredBaseTotal = nonMeteredDetails.reduce((sum, item) => sum + item.value, 0)
 
     // If there are metered services and photos were uploaded, add calculated utilities
     if (utilityCalculations.hasAnyMeteredService) {
-      return nonMeteredBaseTotal + utilityCalculations.totalUtilityCost;
+      return nonMeteredBaseTotal + utilityCalculations.totalUtilityCost
     }
 
     // Fallback to invoice stored amount
-    return invoice.amount;
-  }, [invoice, utilityCalculations]);
+    return invoice.amount
+  }, [invoice, utilityCalculations])
 
   // ─── 5. Complete & Generate PayOS QR Code ───────────────────────────────────
   const handleCompleteAndPay = async () => {
-    if (!invoice) return;
+    if (!invoice) return
 
     // If metered services exist and photos have not been uploaded yet
-    if (
-      utilityCalculations.hasAnyMeteredService &&
-      !utilityCalculations.allPhotosUploaded
-    ) {
-      toast.error(t("photoRequiredToCalculate"));
-      return;
+    if (utilityCalculations.hasAnyMeteredService && !utilityCalculations.allPhotosUploaded) {
+      toast.error(t('photoRequiredToCalculate'))
+      return
     }
 
-    setIsCreatingCheckout(true);
-    setIsExpired(false);
+    setIsCreatingCheckout(true)
+    setIsExpired(false)
 
     try {
       // Commit any manually edited meter readings
       for (const [sId, state] of Object.entries(serviceStates)) {
-        if (
-          state.readingId &&
-          state.hasManualEdits &&
-          typeof state.currentValue === "number"
-        ) {
+        if (state.readingId && state.hasManualEdits && typeof state.currentValue === 'number') {
           try {
-            await meterReadingService.updateMeterReading(
-              state.readingId,
-              state.currentValue
-            );
+            await meterReadingService.updateMeterReading(state.readingId, state.currentValue)
           } catch (updateErr) {
-            console.warn(`Failed to update reading ${state.readingId}:`, updateErr);
+            console.warn(`Failed to update reading ${state.readingId}:`, updateErr)
           }
         }
       }
 
       // Generate 15-minute PayOS checkout session
-      const checkoutRes = await paymentService.createInvoicePayOsCheckout(
-        invoice.id
-      );
-      setPayOsData(checkoutRes);
-      setCountdown(checkoutRes.expiresIn || 900);
+      const checkoutRes = await paymentService.createInvoicePayOsCheckout(invoice.id)
+      setPayOsData(checkoutRes)
+      setCountdown(checkoutRes.expiresIn || 900)
 
       // Smooth scroll to QR section
       setTimeout(() => {
-        const qrEl = document.getElementById("payos-qr-section");
+        const qrEl = document.getElementById('payos-qr-section')
         if (qrEl) {
-          qrEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          qrEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
-      }, 200);
+      }, 200)
     } catch (err: any) {
-      console.error("PayOS checkout generation failed:", err);
-      toast.error(err?.message || t("loadInvoiceError"));
+      console.error('PayOS checkout generation failed:', err)
+      toast.error(err?.message || t('loadInvoiceError'))
     } finally {
-      setIsCreatingCheckout(false);
+      setIsCreatingCheckout(false)
     }
-  };
+  }
 
   // ─── 6. Countdown Timer Effect (15 minutes) ─────────────────────────────────
   useEffect(() => {
-    if (!payOsData || isPaidSuccess) return;
+    if (!payOsData || isPaidSuccess) return
 
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(timer);
-          setIsExpired(true);
-          return 0;
+          clearInterval(timer)
+          setIsExpired(true)
+          return 0
         }
-        return prev - 1;
-      });
-    }, 1000);
+        return prev - 1
+      })
+    }, 1000)
 
-    return () => clearInterval(timer);
-  }, [payOsData?.orderCode, isPaidSuccess]);
+    return () => clearInterval(timer)
+  }, [payOsData?.orderCode, isPaidSuccess])
 
   const formatTimer = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  };
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
 
   // ─── 7. Realtime Polling for Payment Status ──────────────────────────────────
   useEffect(() => {
-    const orderCode = payOsData?.orderCode;
-    if (!orderCode || isPaidSuccess || isExpired) return;
+    const orderCode = payOsData?.orderCode
+    if (!orderCode || isPaidSuccess || isExpired) return
 
     const checkStatus = async () => {
-      if (isPollingRef.current) return;
-      isPollingRef.current = true;
+      if (isPollingRef.current) return
+      isPollingRef.current = true
       try {
-        const statusRes = await paymentService.getInvoicePaymentStatus(orderCode);
+        const statusRes = await paymentService.getInvoicePaymentStatus(orderCode)
         if (statusRes.isPaid) {
-          setIsPaidSuccess(true);
-          toast.success(t("paymentSuccessToast"));
+          setIsPaidSuccess(true)
+          toast.success(t('paymentSuccessToast'))
 
           // Redirect back to invoices page after toast
           setTimeout(() => {
-            router.push("/tenant/invoices");
-          }, 1800);
+            router.push('/tenant/invoices')
+          }, 1800)
         }
       } catch (pollErr) {
         // Silent polling error
       } finally {
-        isPollingRef.current = false;
+        isPollingRef.current = false
       }
-    };
+    }
 
-    const interval = setInterval(checkStatus, 3000);
-    return () => clearInterval(interval);
-  }, [payOsData?.orderCode, isPaidSuccess, isExpired, router, t, toast]);
+    const interval = setInterval(checkStatus, 3000)
+    return () => clearInterval(interval)
+  }, [payOsData?.orderCode, isPaidSuccess, isExpired, router, t, toast])
 
   // ─── 8. Copy Helper ─────────────────────────────────────────────────────────
   const handleCopy = (text: string, key: string) => {
-    if (typeof navigator !== "undefined") {
-      navigator.clipboard.writeText(text);
-      setCopiedKey(key);
-      toast.success(t("copySuccessTooltip"));
-      setTimeout(() => setCopiedKey(null), 2000);
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(text)
+      setCopiedKey(key)
+      toast.success(t('copySuccessTooltip'))
+      setTimeout(() => setCopiedKey(null), 2000)
     }
-  };
+  }
 
   // ─── 9. Handle Exit Navigation with Unsaved Check (Rule 10) ───────────────────
   const hasUnsavedChanges = () => {
-    if (isPaidSuccess) return false;
-    return Object.values(serviceStates).some(
-      (s) => s.hasManualEdits || s.imageUrl !== null
-    );
-  };
+    if (isPaidSuccess) return false
+    return Object.values(serviceStates).some(s => s.hasManualEdits || s.imageUrl !== null)
+  }
 
   const handleBackClick = () => {
     if (hasUnsavedChanges() && !payOsData) {
-      setShowDiscardModal(true);
+      setShowDiscardModal(true)
     } else {
-      router.push("/tenant/invoices");
+      router.push('/tenant/invoices')
     }
-  };
+  }
 
   // ─── Loading State ──────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-        <span className="text-xs font-semibold text-zinc-400">
-          {t("loading")}
-        </span>
+        <span className="text-xs font-semibold text-zinc-400">{t('loading')}</span>
       </div>
-    );
+    )
   }
 
   // ─── Empty State: No Invoice Data Found ─────────────────────────────────────
@@ -576,28 +546,24 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           <FileQuestion className="w-8 h-8" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-lg font-black text-zinc-800">
-            {t("noInvoiceData")}
-          </h2>
-          <p className="text-xs text-zinc-400 max-w-md mx-auto">
-            {t("loadInvoiceError")}
-          </p>
+          <h2 className="text-lg font-black text-zinc-800">{t('noInvoiceData')}</h2>
+          <p className="text-xs text-zinc-400 max-w-md mx-auto">{t('loadInvoiceError')}</p>
         </div>
         <div>
           <Button
             variant="primary"
-            onClick={() => router.push("/tenant/invoices")}
+            onClick={() => router.push('/tenant/invoices')}
             className="rounded-xl px-5 py-2.5 text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            <span>{t("backToInvoices")}</span>
+            <span>{t('backToInvoices')}</span>
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
-  const meteredServicesList = meterData?.meteredServices || [];
+  const meteredServicesList = meterData?.meteredServices || []
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-16 animate-in fade-in duration-300 max-w-5xl mx-auto">
@@ -609,25 +575,20 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             size="icon"
             onClick={handleBackClick}
             className="rounded-xl border border-zinc-200"
-            title={t("backToInvoices")}
+            title={t('backToInvoices')}
           >
             <ArrowLeft className="w-5 h-5 text-zinc-700" />
           </Button>
           <div>
             <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
-              <Link
-                href="/tenant/invoices"
-                className="hover:text-zinc-700 transition-colors"
-              >
-                {t("invoicesTitle")}
+              <Link href="/tenant/invoices" className="hover:text-zinc-700 transition-colors">
+                {t('invoicesTitle')}
               </Link>
               <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-zinc-700 font-bold">
-                {t("paymentPageTitle")}
-              </span>
+              <span className="text-zinc-700 font-bold">{t('paymentPageTitle')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight mt-0.5">
-              {t("paymentPageTitle")}
+              {t('paymentPageTitle')}
             </h1>
           </div>
         </div>
@@ -635,9 +596,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
         {/* Invoice Summary Pill */}
         <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-2xl border border-zinc-200/80 shadow-xs self-start sm:self-auto">
           <Receipt className="w-4 h-4 text-[#FF6B35]" />
-          <span className="text-xs font-bold text-zinc-800">
-            {invoice.period}
-          </span>
+          <span className="text-xs font-bold text-zinc-800">{invoice.period}</span>
           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 uppercase font-mono">
             {invoice.id}
           </span>
@@ -652,31 +611,27 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               1
             </div>
             <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
-              {t("metersSectionTitle")}
+              {t('metersSectionTitle')}
             </h2>
           </div>
-          <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-            {t("metersSectionDesc")}
-          </p>
+          <p className="text-xs text-zinc-400 mt-1 max-w-2xl">{t('metersSectionDesc')}</p>
         </div>
 
         {/* If no metered services exist for this invoice/room */}
         {meteredServicesList.length === 0 ? (
           <div className="py-8 px-4 text-center rounded-2xl bg-zinc-50 border border-zinc-200/60 space-y-2">
             <Info className="w-6 h-6 text-zinc-400 mx-auto" />
-            <p className="text-xs font-medium text-zinc-500">
-              {t("noMeteredServices")}
-            </p>
+            <p className="text-xs font-medium text-zinc-500">{t('noMeteredServices')}</p>
           </div>
         ) : (
           /* Grid of Metered Services (Electricity & Water) */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {meteredServicesList.map((service) => {
-              const sId = service.serviceId;
+            {meteredServicesList.map(service => {
+              const sId = service.serviceId
               const state = serviceStates[sId] || {
                 serviceId: sId,
                 serviceName: service.serviceName,
-                currentValue: "",
+                currentValue: '',
                 previousValue: service.previousReading?.readingValue ?? null,
                 imageUrl: null,
                 unit: service.unit,
@@ -685,21 +640,21 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 isExtractedByAi: false,
                 hasManualEdits: false,
                 hasPhotoUploaded: false,
-              };
+              }
 
               const isElec =
-                service.serviceName.toLowerCase().includes("điện") ||
-                service.serviceName.toLowerCase().includes("elec");
+                service.serviceName.toLowerCase().includes('điện') ||
+                service.serviceName.toLowerCase().includes('elec')
 
-              const serviceCalc = utilityCalculations.perServiceDetails[sId];
+              const serviceCalc = utilityCalculations.perServiceDetails[sId]
 
               return (
                 <div
                   key={sId}
                   className={`rounded-2xl border p-5 transition-all space-y-4 ${
                     isElec
-                      ? "border-amber-200/80 bg-gradient-to-br from-amber-50/40 via-white to-white"
-                      : "border-sky-200/80 bg-gradient-to-br from-sky-50/40 via-white to-white"
+                      ? 'border-amber-200/80 bg-gradient-to-br from-amber-50/40 via-white to-white'
+                      : 'border-sky-200/80 bg-gradient-to-br from-sky-50/40 via-white to-white'
                   }`}
                 >
                   {/* Card Title & Unit Price */}
@@ -708,23 +663,16 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                           isElec
-                            ? "bg-amber-500 text-white shadow-xs shadow-amber-500/20"
-                            : "bg-sky-500 text-white shadow-xs shadow-sky-500/20"
+                            ? 'bg-amber-500 text-white shadow-xs shadow-amber-500/20'
+                            : 'bg-sky-500 text-white shadow-xs shadow-sky-500/20'
                         }`}
                       >
-                        {isElec ? (
-                          <Zap className="w-5 h-5" />
-                        ) : (
-                          <Droplets className="w-5 h-5" />
-                        )}
+                        {isElec ? <Zap className="w-5 h-5" /> : <Droplets className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h3 className="text-sm font-black text-zinc-900">
-                          {service.serviceName}
-                        </h3>
+                        <h3 className="text-sm font-black text-zinc-900">{service.serviceName}</h3>
                         <span className="text-[11px] font-bold text-zinc-400">
-                          {formatCurrency(service.unitPrice, locale)} /{" "}
-                          {service.unit}
+                          {formatCurrency(service.unitPrice, locale)} / {service.unit}
                         </span>
                       </div>
                     </div>
@@ -733,12 +681,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     {state.isScanning ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 text-white text-[10px] font-bold shadow-xs animate-pulse">
                         <RefreshCw className="w-3 h-3 animate-spin text-[#2AC1BC]" />
-                        <span>{t("aiScanningBadge")}</span>
+                        <span>{t('aiScanningBadge')}</span>
                       </span>
                     ) : state.isExtractedByAi ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">
                         <Sparkles className="w-3 h-3 text-emerald-600" />
-                        <span>{t("aiExtractedBadge")}</span>
+                        <span>{t('aiExtractedBadge')}</span>
                       </span>
                     ) : null}
                   </div>
@@ -750,53 +698,51 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       value={state.imageUrl}
                       alt={service.serviceName}
                       isLoading={state.isScanning}
-                      loadingText={t("aiScanningBadge") || "AI đang quét số công tơ..."}
+                      loadingText={t('aiScanningBadge') || 'AI đang quét số công tơ...'}
                       className="w-full h-48 sm:h-56"
                       aspectRatio="auto"
                       hideActionButtons={true}
                       showInspectButton={true}
-                      onInspect={(url) => setInspectImage(url)}
-                      onFileSelect={(file) => handlePhotoUpload(sId, file)}
+                      onInspect={url => setInspectImage(url)}
+                      onFileSelect={file => handlePhotoUpload(sId, file)}
                       emptyPlaceholder={
                         <div className="flex flex-col items-center justify-center p-4 text-center text-zinc-400 space-y-1.5">
                           <div className="w-12 h-12 rounded-2xl bg-white border border-zinc-200/80 flex items-center justify-center text-zinc-400 shadow-2xs">
                             <Camera className="w-6 h-6" />
                           </div>
                           <span className="text-xs font-bold text-zinc-600">
-                            {t("uploadOrCapture")}
+                            {t('uploadOrCapture')}
                           </span>
-                          <span className="text-[10px] text-zinc-400">
-                            JPG, PNG, WEBP
-                          </span>
+                          <span className="text-[10px] text-zinc-400">JPG, PNG, WEBP</span>
                         </div>
                       }
                     />
 
                     {/* Hidden File Inputs for Device Upload & Camera Capture */}
                     <input
-                      ref={(el) => {
-                        deviceUploadRefs.current[sId] = el;
+                      ref={el => {
+                        deviceUploadRefs.current[sId] = el
                       }}
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={e => {
                         if (e.target.files?.[0]) {
-                          handlePhotoUpload(sId, e.target.files[0]);
+                          handlePhotoUpload(sId, e.target.files[0])
                         }
                       }}
                     />
                     <input
-                      ref={(el) => {
-                        cameraUploadRefs.current[sId] = el;
+                      ref={el => {
+                        cameraUploadRefs.current[sId] = el
                       }}
                       type="file"
                       accept="image/*"
                       capture="environment"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={e => {
                         if (e.target.files?.[0]) {
-                          handlePhotoUpload(sId, e.target.files[0]);
+                          handlePhotoUpload(sId, e.target.files[0])
                         }
                       }}
                     />
@@ -811,7 +757,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         className="h-9 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 border border-zinc-200 hover:bg-zinc-100"
                       >
                         <UploadCloud className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{t("btnUploadFromDevice")}</span>
+                        <span className="truncate">{t('btnUploadFromDevice')}</span>
                       </Button>
                       <Button
                         variant="primary"
@@ -821,7 +767,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         className="h-9 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white"
                       >
                         <Camera className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{t("btnCaptureNow")}</span>
+                        <span className="truncate">{t('btnCaptureNow')}</span>
                       </Button>
                     </div>
 
@@ -847,31 +793,29 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       {/* Previous Reading (Disabled from DB) */}
                       <div>
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                          {t("previousReadingLabel")}
+                          {t('previousReadingLabel')}
                         </span>
                         <div className="px-3.5 py-2.5 rounded-xl bg-zinc-100 border border-zinc-200 text-xs font-bold text-zinc-600 truncate">
                           {state.previousValue !== null
                             ? `${state.previousValue} ${state.unit}`
-                            : t("noData")}
+                            : t('noData')}
                         </div>
                       </div>
 
                       {/* Current Reading (Base NumberInput Component) */}
                       <div>
                         <NumberInput
-                          label={`${t("currentReadingInput")}`}
+                          label={`${t('currentReadingInput')}`}
                           suffixText={state.unit}
                           value={state.currentValue}
-                          onChange={(e) => handleValueChange(sId, e.target.value)}
+                          onChange={e => handleValueChange(sId, e.target.value)}
                           placeholder="0"
                           className={`font-black text-xs ${
                             isElec
-                              ? "border-amber-300 text-amber-800"
-                              : "border-sky-300 text-sky-800"
+                              ? 'border-amber-300 text-amber-800'
+                              : 'border-sky-300 text-sky-800'
                           }`}
-                          helperText={
-                            state.hasManualEdits ? "Đã chỉnh sửa" : undefined
-                          }
+                          helperText={state.hasManualEdits ? 'Đã chỉnh sửa' : undefined}
                         />
                       </div>
                     </div>
@@ -881,7 +825,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       <div className="p-3 rounded-xl bg-white/95 border border-zinc-200/80 shadow-2xs flex items-center justify-between text-xs animate-in fade-in">
                         <div>
                           <span className="text-[10px] text-zinc-400 block font-medium">
-                            {t("consumptionDelta")}
+                            {t('consumptionDelta')}
                           </span>
                           <span className="font-black text-zinc-800 text-sm">
                             {serviceCalc.delta} {state.unit}
@@ -889,7 +833,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         </div>
                         <div className="text-right">
                           <span className="text-[10px] text-zinc-400 block font-medium">
-                            {t("estimatedFee")}
+                            {t('estimatedFee')}
                           </span>
                           <span className="font-black text-[#FF6B35] text-sm">
                             {formatCurrency(serviceCalc.cost, locale)}
@@ -899,17 +843,17 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     ) : (
                       <div className="p-3 rounded-xl bg-zinc-50 border border-dashed border-zinc-300 text-xs text-zinc-500 flex items-center gap-2">
                         <Info className="w-4 h-4 text-zinc-400 shrink-0" />
-                        <span>{t("pendingPhotoUpload")}</span>
+                        <span>{t('pendingPhotoUpload')}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="text-[10px] text-zinc-400 flex items-center gap-1 pt-0.5">
                     <Info className="w-3 h-3 text-zinc-400 shrink-0" />
-                    <span>{t("aiAccuracyNote")}</span>
+                    <span>{t('aiAccuracyNote')}</span>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         )}
@@ -923,17 +867,15 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               2
             </div>
             <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
-              {t("summarySectionTitle")}
+              {t('summarySectionTitle')}
             </h2>
           </div>
 
           <div className="text-right">
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-              {t("paymentDueDate")}
+              {t('paymentDueDate')}
             </span>
-            <span className="text-xs font-bold text-zinc-700">
-              {invoice.dueDate}
-            </span>
+            <span className="text-xs font-bold text-zinc-700">{invoice.dueDate}</span>
           </div>
         </div>
 
@@ -941,7 +883,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
         <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4 space-y-3">
           {/* Base non-metered items */}
           {invoice.details
-            .filter((d) => !d.isMetered)
+            .filter(d => !d.isMetered)
             .map((item, idx) => (
               <div
                 key={`fixed-${idx}`}
@@ -962,9 +904,9 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             ))}
 
           {/* Metered services items with photo-dependent calculation */}
-          {meteredServicesList.map((service) => {
-            const sId = service.serviceId;
-            const calc = utilityCalculations.perServiceDetails[sId];
+          {meteredServicesList.map(service => {
+            const sId = service.serviceId
+            const calc = utilityCalculations.perServiceDetails[sId]
 
             return (
               <div
@@ -972,9 +914,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 className="flex items-center justify-between pt-2.5 text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-zinc-600">
-                    {service.serviceName}
-                  </span>
+                  <span className="font-medium text-zinc-600">{service.serviceName}</span>
                   {calc?.hasCalculated ? (
                     <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
                       {calc.delta} {service.unit}
@@ -988,23 +928,23 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   </span>
                 ) : (
                   <span className="text-[11px] font-medium text-amber-600 italic">
-                    {t("pendingPhotoUpload")}
+                    {t('pendingPhotoUpload')}
                   </span>
                 )}
               </div>
-            );
+            )
           })}
 
           {/* Grand Total */}
           <div className="flex items-center justify-between pt-3 border-t-2 border-zinc-200 text-sm">
             <div>
               <span className="font-black text-zinc-900 uppercase tracking-wider block">
-                {t("totalPayment")}
+                {t('totalPayment')}
               </span>
               {utilityCalculations.hasAnyMeteredService &&
                 !utilityCalculations.allPhotosUploaded && (
                   <span className="text-[10px] text-amber-600 font-bold block">
-                    {t("awaitingPhotosNote")}
+                    {t('awaitingPhotosNote')}
                   </span>
                 )}
             </div>
@@ -1021,7 +961,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             onClick={handleBackClick}
             className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-zinc-600 hover:text-zinc-900 text-xs font-bold cursor-pointer"
           >
-            {t("btnClose")}
+            {t('btnClose')}
           </Button>
 
           <Button
@@ -1033,12 +973,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             {isCreatingCheckout ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>{t("btnCreatingQr")}</span>
+                <span>{t('btnCreatingQr')}</span>
               </>
             ) : (
               <>
                 <CreditCard className="w-4 h-4" />
-                <span>{t("btnCompleteAndPay")}</span>
+                <span>{t('btnCompleteAndPay')}</span>
               </>
             )}
           </Button>
@@ -1059,25 +999,21 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-black text-zinc-900">
-                  {t("qrSectionTitle")}
+                  {t('qrSectionTitle')}
                 </h2>
-                <p className="text-xs text-zinc-400">
-                  {t("scanQrGuide")}
-                </p>
+                <p className="text-xs text-zinc-400">{t('scanQrGuide')}</p>
               </div>
             </div>
 
             {/* 15-Minute Countdown Badge */}
             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-100 border border-zinc-200 self-start sm:self-auto">
               <Clock className="w-4 h-4 text-amber-600 animate-spin" />
-              <span className="text-xs text-zinc-500 font-semibold">
-                {t("qrExpiresIn")}
-              </span>
+              <span className="text-xs text-zinc-500 font-semibold">{t('qrExpiresIn')}</span>
               <span
                 className={`font-black text-xs font-mono px-2 py-0.5 rounded-md ${
                   countdown <= 60
-                    ? "bg-rose-100 text-rose-700 animate-pulse"
-                    : "bg-white text-zinc-900 shadow-2xs"
+                    ? 'bg-rose-100 text-rose-700 animate-pulse'
+                    : 'bg-white text-zinc-900 shadow-2xs'
                 }`}
               >
                 {formatTimer(countdown)}
@@ -1094,21 +1030,21 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-black text-sky-950 uppercase tracking-wide">
-                    {t("systemAccountNoticeTitle")}
+                    {t('systemAccountNoticeTitle')}
                   </h4>
                   <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-sky-200/80 text-sky-800">
                     Dormio Escrow
                   </span>
                 </div>
                 <p className="text-xs text-sky-900 leading-relaxed font-medium">
-                  {t("systemAccountNoticeDesc")}
+                  {t('systemAccountNoticeDesc')}
                 </p>
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-2.5 text-xs text-amber-900 font-bold">
               <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <span>{t("lockedInfoWarning")}</span>
+              <span>{t('lockedInfoWarning')}</span>
             </div>
           </div>
 
@@ -1120,9 +1056,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 {isExpired ? (
                   <div className="flex flex-col items-center justify-center text-center p-4 space-y-2">
                     <Clock className="w-10 h-10 text-rose-500" />
-                    <p className="text-xs font-bold text-rose-600">
-                      {t("qrExpired")}
-                    </p>
+                    <p className="text-xs font-bold text-rose-600">{t('qrExpired')}</p>
                   </div>
                 ) : (
                   <img
@@ -1140,12 +1074,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   className="w-full py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span>{t("btnRegenerateQr")}</span>
+                  <span>{t('btnRegenerateQr')}</span>
                 </Button>
               ) : (
                 <div className="flex items-center gap-2 text-xs text-zinc-500 font-bold animate-pulse">
                   <RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC] animate-spin" />
-                  <span>{t("waitingForPayment")}</span>
+                  <span>{t('waitingForPayment')}</span>
                 </div>
               )}
             </div>
@@ -1156,11 +1090,10 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    {t("bankNameLabel")}
+                    {t('bankNameLabel')}
                   </span>
                   <span className="font-bold text-zinc-800 text-sm">
-                    {BANK_NAMES[payOsData.bin] ||
-                      `Ngân hàng (BIN: ${payOsData.bin})`}
+                    {BANK_NAMES[payOsData.bin] || `Ngân hàng (BIN: ${payOsData.bin})`}
                   </span>
                 </div>
               </div>
@@ -1169,7 +1102,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    {t("accountNumberLabel")}
+                    {t('accountNumberLabel')}
                   </span>
                   <span className="font-mono font-black text-zinc-900 text-base tracking-wider">
                     {payOsData.accountNumber}
@@ -1179,11 +1112,11 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   variant="ghost"
                   size="icon"
                   type="button"
-                  onClick={() => handleCopy(payOsData.accountNumber, "acc")}
+                  onClick={() => handleCopy(payOsData.accountNumber, 'acc')}
                   className="h-8 w-8 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer"
                   title="Sao chép số tài khoản"
                 >
-                  {copiedKey === "acc" ? (
+                  {copiedKey === 'acc' ? (
                     <Check className="w-4 h-4 text-emerald-600" />
                   ) : (
                     <Copy className="w-4 h-4" />
@@ -1194,11 +1127,9 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               {/* Account Holder */}
               <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                  {t("accountHolderLabel")}
+                  {t('accountHolderLabel')}
                 </span>
-                <span className="font-black text-zinc-900 text-sm">
-                  {payOsData.accountName}
-                </span>
+                <span className="font-black text-zinc-900 text-sm">{payOsData.accountName}</span>
               </div>
 
               {/* Exact Amount (Locked) */}
@@ -1206,11 +1137,11 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">
-                      {t("transferAmountLabel")}
+                      {t('transferAmountLabel')}
                     </span>
                     <span className="px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-900 text-[9px] font-extrabold flex items-center gap-0.5">
                       <Lock className="w-2.5 h-2.5" />
-                      {t("lockedBadge")}
+                      {t('lockedBadge')}
                     </span>
                   </div>
                   <span className="font-black text-[#FF6B35] text-lg">
@@ -1221,13 +1152,11 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   variant="ghost"
                   size="icon"
                   type="button"
-                  onClick={() =>
-                    handleCopy(payOsData.amount.toString(), "amount")
-                  }
+                  onClick={() => handleCopy(payOsData.amount.toString(), 'amount')}
                   className="h-8 w-8 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer"
                   title="Sao chép số tiền"
                 >
-                  {copiedKey === "amount" ? (
+                  {copiedKey === 'amount' ? (
                     <Check className="w-4 h-4 text-emerald-600" />
                   ) : (
                     <Copy className="w-4 h-4" />
@@ -1240,11 +1169,11 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold text-sky-700 uppercase tracking-wider block">
-                      {t("transferSyntaxLabel")}
+                      {t('transferSyntaxLabel')}
                     </span>
                     <span className="px-1.5 py-0.5 rounded bg-sky-200/70 text-sky-900 text-[9px] font-extrabold flex items-center gap-0.5">
                       <Lock className="w-2.5 h-2.5" />
-                      {t("lockedBadge")}
+                      {t('lockedBadge')}
                     </span>
                   </div>
                   <span className="font-mono font-black text-[#2AC1BC] text-sm tracking-wide">
@@ -1255,11 +1184,11 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   variant="ghost"
                   size="icon"
                   type="button"
-                  onClick={() => handleCopy(payOsData.description, "syntax")}
+                  onClick={() => handleCopy(payOsData.description, 'syntax')}
                   className="h-8 w-8 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer"
                   title="Sao chép cú pháp"
                 >
-                  {copiedKey === "syntax" ? (
+                  {copiedKey === 'syntax' ? (
                     <Check className="w-4 h-4 text-emerald-600" />
                   ) : (
                     <Copy className="w-4 h-4" />
@@ -1278,13 +1207,11 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           onClick={() => setInspectImage(null)}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl shadow-2xl max-w-xl w-full p-4 overflow-hidden border border-zinc-200 space-y-4"
           >
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="text-sm font-black text-zinc-900">
-                {t("meterReadingPhotoTitle")}
-              </h3>
+              <h3 className="text-sm font-black text-zinc-900">{t('meterReadingPhotoTitle')}</h3>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1308,7 +1235,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 onClick={() => setInspectImage(null)}
                 className="rounded-xl font-bold"
               >
-                {t("btnClose")}
+                {t('btnClose')}
               </Button>
             </div>
           </div>
@@ -1322,7 +1249,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           onClick={() => setShowDiscardModal(false)}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 overflow-hidden border border-zinc-200 space-y-4"
           >
             <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -1330,10 +1257,10 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             </div>
             <div>
               <h3 className="text-base font-black text-zinc-900">
-                {t("discardPaymentModalTitle")}
+                {t('discardPaymentModalTitle')}
               </h3>
               <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                {t("discardPaymentModalDesc")}
+                {t('discardPaymentModalDesc')}
               </p>
             </div>
             <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -1342,22 +1269,22 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 onClick={() => setShowDiscardModal(false)}
                 className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 rounded-xl cursor-pointer"
               >
-                {t("btnStay")}
+                {t('btnStay')}
               </Button>
               <Button
                 variant="danger"
                 onClick={() => {
-                  setShowDiscardModal(false);
-                  router.push("/tenant/invoices");
+                  setShowDiscardModal(false)
+                  router.push('/tenant/invoices')
                 }}
                 className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer shadow-xs"
               >
-                {t("btnDiscard")}
+                {t('btnDiscard')}
               </Button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsUUID,
   IsString,
@@ -7,18 +7,18 @@ import {
   IsArray,
   ValidateNested,
   Min,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class ServiceFeeItemDto {
   @ApiProperty({ description: 'Name of the service', example: 'WiFi' })
   @IsString()
-  name: string;
+  name: string
 
   @ApiProperty({ description: 'Fee amount in VND', example: 100000 })
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount: number
 }
 
 export class CreateManualInvoiceDto {
@@ -27,21 +27,21 @@ export class CreateManualInvoiceDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID('4')
-  roomId: string;
+  roomId: string
 
   @ApiProperty({
     description: 'Billing period in format MM/YYYY',
     example: '08/2026',
   })
   @IsString()
-  period: string;
+  period: string
 
   @ApiProperty({
     description: 'Payment deadline / Due date',
     example: '2026-08-20T00:00:00.000Z',
   })
   @IsString()
-  dueDate: string;
+  dueDate: string
 
   @ApiProperty({
     description: 'Room rental base amount in VND',
@@ -49,43 +49,43 @@ export class CreateManualInvoiceDto {
   })
   @IsNumber()
   @Min(0)
-  rentAmount: number;
+  rentAmount: number
 
   @ApiPropertyOptional({ description: 'Previous electricity meter index', example: 1318 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  elecOld?: number;
+  elecOld?: number
 
   @ApiPropertyOptional({ description: 'Current electricity meter index', example: 1418 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  elecNew?: number;
+  elecNew?: number
 
   @ApiPropertyOptional({ description: 'Electricity unit price in VND/kWh', example: 3500 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  elecRate?: number;
+  elecRate?: number
 
   @ApiPropertyOptional({ description: 'Previous water meter index', example: 240 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  waterOld?: number;
+  waterOld?: number
 
   @ApiPropertyOptional({ description: 'Current water meter index', example: 252 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  waterNew?: number;
+  waterNew?: number
 
   @ApiPropertyOptional({ description: 'Water unit price in VND/m³', example: 15000 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  waterRate?: number;
+  waterRate?: number
 
   @ApiPropertyOptional({
     description: 'Other flat service fees (wifi, trash, cleaning, etc.)',
@@ -95,16 +95,23 @@ export class CreateManualInvoiceDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ServiceFeeItemDto)
-  serviceFees?: ServiceFeeItemDto[];
+  serviceFees?: ServiceFeeItemDto[]
 
-  @ApiPropertyOptional({ description: 'Discount or deduction amount in VND', example: 0, default: 0 })
+  @ApiPropertyOptional({
+    description: 'Discount or deduction amount in VND',
+    example: 0,
+    default: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  discount?: number;
+  discount?: number
 
-  @ApiPropertyOptional({ description: 'Optional note from landlord', example: 'Đã trừ 50k hỗ trợ wifi' })
+  @ApiPropertyOptional({
+    description: 'Optional note from landlord',
+    example: 'Đã trừ 50k hỗ trợ wifi',
+  })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

@@ -4,13 +4,12 @@ import {
   ExecutionContext,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { JwtPayload } from '../../modules/auth/types/jwt-payload.type';
+} from '@nestjs/common'
+import { PrismaService } from '../prisma/prisma.service'
+import { JwtPayload } from '../../modules/auth/types/jwt-payload.type'
 
 /** UUID v4 regex used to validate boarding house IDs before hitting the DB */
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /**
  * Guard that verifies the authenticated landlord actually owns the boarding house
@@ -29,59 +28,54 @@ export class PropertyOwnershipGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<{
-      user: JwtPayload;
-      headers: Record<string, string>;
-      params?: Record<string, string>;
-      query?: Record<string, string>;
-      boardingHouseId?: string;
-      boardingHouse?: { id: string; name: string };
-    }>();
+      user: JwtPayload
+      headers: Record<string, string>
+      params?: Record<string, string>
+      query?: Record<string, string>
+      boardingHouseId?: string
+      boardingHouse?: { id: string; name: string }
+    }>()
 
     // Check header first (standard BHMS context), then fallback to route params or query
-    const headerId = req.headers['x-boarding-house-id'];
-    const paramId = req.params?.boardingHouseId || req.params?.id;
-    const queryId = req.query?.boardingHouseId;
+    const headerId = req.headers['x-boarding-house-id']
+    const paramId = req.params?.boardingHouseId || req.params?.id
+    const queryId = req.query?.boardingHouseId
 
-    let rawId = (headerId || paramId || queryId)?.trim();
+    let rawId = (headerId || paramId || queryId)?.trim()
 
     if (!rawId) {
-      throw new BadRequestException('X-Boarding-House-Id header is required');
+      throw new BadRequestException('X-Boarding-House-Id header is required')
     }
 
     // In case multiple headers were joined into a comma-separated string by Node.js, take the first value
     if (rawId.includes(',')) {
-      rawId = rawId.split(',')[0].trim();
+      rawId = rawId.split(',')[0].trim()
     }
 
     // Reject non-UUID values early to avoid PostgreSQL cast errors (500)
     if (!UUID_REGEX.test(rawId)) {
-      throw new BadRequestException(
-        'X-Boarding-House-Id must be a valid UUID',
-      );
+      throw new BadRequestException('X-Boarding-House-Id must be a valid UUID')
     }
 
-    const userId = req.user?.id;
+    const userId = req.user?.id
     if (!userId) {
-      return false;
+      return false
     }
 
     const house = await this.prisma.boardingHouse.findFirst({
       where: { id: rawId, ownerId: userId },
       select: { id: true, name: true },
-    });
+    })
 
     if (!house) {
-      throw new ForbiddenException(
-        'You do not have access to this boarding house',
-      );
+      throw new ForbiddenException('You do not have access to this boarding house')
     }
 
     // Attach validated property context to request object for downstream use
-    req.boardingHouseId = house.id;
-    req.boardingHouse = house;
-    req.headers['x-boarding-house-id'] = house.id;
+    req.boardingHouseId = house.id
+    req.boardingHouse = house
+    req.headers['x-boarding-house-id'] = house.id
 
-    return true;
+    return true
   }
 }
-

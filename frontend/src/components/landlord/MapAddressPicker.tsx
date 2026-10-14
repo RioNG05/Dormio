@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react'
 import {
   MapPin,
   Search,
@@ -10,31 +10,28 @@ import {
   Navigation,
   Maximize2,
   Minimize2,
-} from 'lucide-react';
-import {
-  Province,
-  matchProvince,
-} from '@/services/vietnam-address.service';
+} from 'lucide-react'
+import { Province, matchProvince } from '@/services/vietnam-address.service'
 
 export interface SelectedMapAddress {
-  province: string;
-  ward: string;
-  street: string;
-  houseNumber: string;
-  fullAddress: string;
+  province: string
+  ward: string
+  street: string
+  houseNumber: string
+  fullAddress: string
 }
 
 interface MapAddressPickerProps {
-  provinces: Province[];
-  onSelectAddress: (addr: SelectedMapAddress) => void;
-  initialAddress?: string;
+  provinces: Province[]
+  onSelectAddress: (addr: SelectedMapAddress) => void
+  initialAddress?: string
 }
 
 declare global {
   interface Window {
-    google?: any;
-    L?: any;
-    initGoogleMapPicker?: () => void;
+    google?: any
+    L?: any
+    initGoogleMapPicker?: () => void
   }
 }
 
@@ -43,22 +40,22 @@ export function MapAddressPicker({
   onSelectAddress,
   initialAddress,
 }: MapAddressPickerProps) {
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerInstanceRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapInstanceRef = useRef<any>(null)
+  const markerInstanceRef = useRef<any>(null)
 
-  const [searchQuery, setSearchQuery] = useState(initialAddress || '');
-  const [isSearching, setIsSearching] = useState(false);
-  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
-  const [isApplied, setIsApplied] = useState(false);
-  const [resolvedAddress, setResolvedAddress] = useState<SelectedMapAddress | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(initialAddress || '')
+  const [isSearching, setIsSearching] = useState(false)
+  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false)
+  const [isApplied, setIsApplied] = useState(false)
+  const [resolvedAddress, setResolvedAddress] = useState<SelectedMapAddress | null>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const isGoogleAvailable = Boolean(apiKey && apiKey.trim() !== '');
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  const isGoogleAvailable = Boolean(apiKey && apiKey.trim() !== '')
 
   // Default coordinates: Ho Chi Minh City center
-  const defaultCoords = { lat: 10.7769, lng: 106.7009 };
+  const defaultCoords = { lat: 10.7769, lng: 106.7009 }
 
   // Parse reverse geocoding result into structured address fields
   const parseAddressComponents = (
@@ -66,10 +63,10 @@ export function MapAddressPicker({
     rawWard: string,
     rawStreet: string,
     rawHouseNumber: string,
-    formattedAddress: string
+    formattedAddress: string,
   ) => {
-    const matched = matchProvince(rawCity, provinces);
-    const resolvedProvince = matched ? matched.name : rawCity;
+    const matched = matchProvince(rawCity, provinces)
+    const resolvedProvince = matched ? matched.name : rawCity
 
     const parsed: SelectedMapAddress = {
       province: resolvedProvince,
@@ -77,15 +74,15 @@ export function MapAddressPicker({
       street: rawStreet || '',
       houseNumber: rawHouseNumber || '',
       fullAddress: formattedAddress,
-    };
+    }
 
-    setResolvedAddress(parsed);
-    setIsApplied(false);
-  };
+    setResolvedAddress(parsed)
+    setIsApplied(false)
+  }
 
   // Reverse geocode via Nominatim (Leaflet fallback)
   const reverseGeocodeOSM = async (lat: number, lng: number) => {
-    setIsReverseGeocoding(true);
+    setIsReverseGeocoding(true)
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
@@ -93,214 +90,189 @@ export function MapAddressPicker({
           headers: {
             'Accept-Language': 'vi',
           },
-        }
-      );
-      if (!res.ok) throw new Error(`OSM error ${res.status}`);
-      const data = await res.json();
-      const addr = data.address || {};
+        },
+      )
+      if (!res.ok) throw new Error(`OSM error ${res.status}`)
+      const data = await res.json()
+      const addr = data.address || {}
 
-      const city =
-        addr.city ||
-        addr.state ||
-        addr.province ||
-        addr.county ||
-        '';
+      const city = addr.city || addr.state || addr.province || addr.county || ''
 
-      const ward =
-        addr.suburb ||
-        addr.quarter ||
-        addr.neighbourhood ||
-        addr.village ||
-        '';
+      const ward = addr.suburb || addr.quarter || addr.neighbourhood || addr.village || ''
 
-      const street = addr.road || addr.pedestrian || addr.street || '';
-      const houseNumber = addr.house_number || '';
+      const street = addr.road || addr.pedestrian || addr.street || ''
+      const houseNumber = addr.house_number || ''
 
-      parseAddressComponents(
-        city,
-        ward,
-        street,
-        houseNumber,
-        data.display_name || ''
-      );
+      parseAddressComponents(city, ward, street, houseNumber, data.display_name || '')
     } catch (err) {
-      console.error('OSM reverse geocoding error:', err);
+      console.error('OSM reverse geocoding error:', err)
     } finally {
-      setIsReverseGeocoding(false);
+      setIsReverseGeocoding(false)
     }
-  };
+  }
 
   // Search address via Nominatim
   const handleSearchOSM = async () => {
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
+    if (!searchQuery.trim()) return
+    setIsSearching(true)
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-          searchQuery
+          searchQuery,
         )}&format=json&addressdetails=1&countrycodes=vn&limit=1`,
         {
           headers: {
             'Accept-Language': 'vi',
           },
-        }
-      );
-      if (!res.ok) throw new Error(`OSM search error: ${res.status}`);
-      const data = await res.json();
+        },
+      )
+      if (!res.ok) throw new Error(`OSM search error: ${res.status}`)
+      const data = await res.json()
       if (data && data.length > 0) {
-        const item = data[0];
-        const lat = parseFloat(item.lat);
-        const lng = parseFloat(item.lon);
+        const item = data[0]
+        const lat = parseFloat(item.lat)
+        const lng = parseFloat(item.lon)
 
         if (mapInstanceRef.current && markerInstanceRef.current) {
-          mapInstanceRef.current.setView([lat, lng], 16);
-          markerInstanceRef.current.setLatLng([lat, lng]);
+          mapInstanceRef.current.setView([lat, lng], 16)
+          markerInstanceRef.current.setLatLng([lat, lng])
         }
 
-        const addr = item.address || {};
-        const city = addr.city || addr.state || addr.province || '';
-        const ward = addr.suburb || addr.quarter || addr.neighbourhood || '';
-        const street = addr.road || '';
-        const houseNumber = addr.house_number || '';
+        const addr = item.address || {}
+        const city = addr.city || addr.state || addr.province || ''
+        const ward = addr.suburb || addr.quarter || addr.neighbourhood || ''
+        const street = addr.road || ''
+        const houseNumber = addr.house_number || ''
 
-        parseAddressComponents(
-          city,
-          ward,
-          street,
-          houseNumber,
-          item.display_name || searchQuery
-        );
+        parseAddressComponents(city, ward, street, houseNumber, item.display_name || searchQuery)
       }
     } catch (err) {
-      console.error('Search error:', err);
+      console.error('Search error:', err)
     } finally {
-      setIsSearching(false);
+      setIsSearching(false)
     }
-  };
+  }
 
   // Initialize Map
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     if (isGoogleAvailable) {
       // 1. Load Google Maps API
-      const scriptId = 'google-maps-script';
+      const scriptId = 'google-maps-script'
       if (!document.getElementById(scriptId)) {
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-        script.async = true;
+        const script = document.createElement('script')
+        script.id = scriptId
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
+        script.async = true
         script.onload = () => {
-          if (isMounted) initGoogleMap();
-        };
-        document.body.appendChild(script);
+          if (isMounted) initGoogleMap()
+        }
+        document.body.appendChild(script)
       } else if (window.google?.maps) {
-        initGoogleMap();
+        initGoogleMap()
       }
 
       function initGoogleMap() {
-        if (!mapContainerRef.current || !window.google?.maps) return;
+        if (!mapContainerRef.current || !window.google?.maps) return
 
         const map = new window.google.maps.Map(mapContainerRef.current, {
           center: defaultCoords,
           zoom: 15,
           mapTypeControl: false,
           streetViewControl: false,
-        });
-        mapInstanceRef.current = map;
+        })
+        mapInstanceRef.current = map
 
         const marker = new window.google.maps.Marker({
           position: defaultCoords,
           map,
           draggable: true,
-        });
-        markerInstanceRef.current = marker;
+        })
+        markerInstanceRef.current = marker
 
-        const geocoder = new window.google.maps.Geocoder();
+        const geocoder = new window.google.maps.Geocoder()
 
         const reverseGoogle = (latLng: any) => {
-          setIsReverseGeocoding(true);
+          setIsReverseGeocoding(true)
           geocoder.geocode({ location: latLng }, (results: any[], status: string) => {
-            setIsReverseGeocoding(false);
+            setIsReverseGeocoding(false)
             if (status === 'OK' && results?.[0]) {
-              const res = results[0];
-              let houseNumber = '';
-              let street = '';
-              let ward = '';
-              let city = '';
+              const res = results[0]
+              let houseNumber = ''
+              let street = ''
+              let ward = ''
+              let city = ''
 
               for (const comp of res.address_components) {
-                const types = comp.types;
-                if (types.includes('street_number')) houseNumber = comp.long_name;
-                if (types.includes('route')) street = comp.long_name;
-                if (types.includes('sublocality_level_1') || types.includes('administrative_area_level_2')) {
-                  ward = comp.long_name;
+                const types = comp.types
+                if (types.includes('street_number')) houseNumber = comp.long_name
+                if (types.includes('route')) street = comp.long_name
+                if (
+                  types.includes('sublocality_level_1') ||
+                  types.includes('administrative_area_level_2')
+                ) {
+                  ward = comp.long_name
                 }
                 if (types.includes('administrative_area_level_1')) {
-                  city = comp.long_name;
+                  city = comp.long_name
                 }
               }
 
-              parseAddressComponents(
-                city,
-                ward,
-                street,
-                houseNumber,
-                res.formatted_address
-              );
+              parseAddressComponents(city, ward, street, houseNumber, res.formatted_address)
             }
-          });
-        };
+          })
+        }
 
         map.addListener('click', (e: any) => {
-          marker.setPosition(e.latLng);
-          reverseGoogle(e.latLng);
-        });
+          marker.setPosition(e.latLng)
+          reverseGoogle(e.latLng)
+        })
 
         marker.addListener('dragend', () => {
-          reverseGoogle(marker.getPosition());
-        });
+          reverseGoogle(marker.getPosition())
+        })
       }
     } else {
       // 2. Fallback: Leaflet + OpenStreetMap
-      const cssId = 'leaflet-css';
+      const cssId = 'leaflet-css'
       if (!document.getElementById(cssId)) {
-        const link = document.createElement('link');
-        link.id = cssId;
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
+        const link = document.createElement('link')
+        link.id = cssId
+        link.rel = 'stylesheet'
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+        document.head.appendChild(link)
       }
 
-      const scriptId = 'leaflet-js';
+      const scriptId = 'leaflet-js'
       if (!document.getElementById(scriptId)) {
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        script.async = true;
+        const script = document.createElement('script')
+        script.id = scriptId
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+        script.async = true
         script.onload = () => {
-          if (isMounted) initLeaflet();
-        };
-        document.body.appendChild(script);
+          if (isMounted) initLeaflet()
+        }
+        document.body.appendChild(script)
       } else if (window.L) {
-        initLeaflet();
+        initLeaflet()
       }
 
       function initLeaflet() {
-        if (!mapContainerRef.current || !window.L) return;
-        if (mapInstanceRef.current) return;
+        if (!mapContainerRef.current || !window.L) return
+        if (mapInstanceRef.current) return
 
-        const L = window.L;
+        const L = window.L
         const map = L.map(mapContainerRef.current).setView(
           [defaultCoords.lat, defaultCoords.lng],
-          15
-        );
-        mapInstanceRef.current = map;
+          15,
+        )
+        mapInstanceRef.current = map
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap contributors',
           maxZoom: 19,
-        }).addTo(map);
+        }).addTo(map)
 
         // Custom pin icon
         const pinIcon = L.divIcon({
@@ -313,58 +285,58 @@ export function MapAddressPicker({
           className: '',
           iconSize: [34, 34],
           iconAnchor: [17, 34],
-        });
+        })
 
         const marker = L.marker([defaultCoords.lat, defaultCoords.lng], {
           draggable: true,
           icon: pinIcon,
-        }).addTo(map);
-        markerInstanceRef.current = marker;
+        }).addTo(map)
+        markerInstanceRef.current = marker
 
         map.on('click', (e: any) => {
-          marker.setLatLng(e.latlng);
-          reverseGeocodeOSM(e.latlng.lat, e.latlng.lng);
-        });
+          marker.setLatLng(e.latlng)
+          reverseGeocodeOSM(e.latlng.lat, e.latlng.lng)
+        })
 
         marker.on('dragend', () => {
-          const latlng = marker.getLatLng();
-          reverseGeocodeOSM(latlng.lat, latlng.lat ? latlng.lng : 0);
-        });
+          const latlng = marker.getLatLng()
+          reverseGeocodeOSM(latlng.lat, latlng.lat ? latlng.lng : 0)
+        })
       }
     }
 
     return () => {
-      isMounted = false;
+      isMounted = false
       if (mapInstanceRef.current && !isGoogleAvailable) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
       }
-    };
-  }, [isGoogleAvailable, apiKey]);
+    }
+  }, [isGoogleAvailable, apiKey])
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (mapInstanceRef.current?.invalidateSize) {
-        mapInstanceRef.current.invalidateSize();
+        mapInstanceRef.current.invalidateSize()
       }
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [isExpanded]);
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [isExpanded])
 
   const handleApply = () => {
-    if (!resolvedAddress) return;
-    onSelectAddress(resolvedAddress);
-    setIsApplied(true);
-    setTimeout(() => setIsApplied(false), 3000);
-  };
+    if (!resolvedAddress) return
+    onSelectAddress(resolvedAddress)
+    setIsApplied(true)
+    setTimeout(() => setIsApplied(false), 3000)
+  }
 
   const openGoogleMapsDirectly = () => {
-    const query = resolvedAddress?.fullAddress || searchQuery || 'Việt Nam';
+    const query = resolvedAddress?.fullAddress || searchQuery || 'Việt Nam'
     window.open(
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
-      '_blank'
-    );
-  };
+      '_blank',
+    )
+  }
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs transition-all">
@@ -390,7 +362,7 @@ export function MapAddressPicker({
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
+            onClick={() => setIsExpanded(prev => !prev)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
           >
             {isExpanded ? (
@@ -424,11 +396,11 @@ export function MapAddressPicker({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={e => {
               if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSearchOSM();
+                e.preventDefault()
+                handleSearchOSM()
               }
             }}
             placeholder="Nhập địa chỉ, tên đường hoặc địa danh để tìm kiếm..."
@@ -530,5 +502,5 @@ export function MapAddressPicker({
         </div>
       )}
     </div>
-  );
+  )
 }

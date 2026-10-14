@@ -1,12 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsNumber,
-  IsOptional,
-  Min,
-  IsUUID,
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsString, IsNumber, IsOptional, Min, IsUUID } from 'class-validator'
 
 /**
  * DTO for UC-PU-04 Step 2: Initiate Direct Online Deposit on a Post.
@@ -19,7 +12,7 @@ export class InitiatePlatformDepositDto {
   @IsOptional()
   @IsNumber({}, { message: 'Deposit amount must be a number' })
   @Min(0, { message: 'Deposit amount must not be negative' })
-  amount?: number;
+  amount?: number
 
   @ApiPropertyOptional({
     description: 'Optional note from the prospective tenant',
@@ -27,7 +20,7 @@ export class InitiatePlatformDepositDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 
   @ApiPropertyOptional({
     description: 'Tenant name (optional override)',
@@ -35,7 +28,7 @@ export class InitiatePlatformDepositDto {
   })
   @IsOptional()
   @IsString()
-  tenantName?: string;
+  tenantName?: string
 
   @ApiPropertyOptional({
     description: 'Tenant mobile phone number (optional override)',
@@ -43,7 +36,7 @@ export class InitiatePlatformDepositDto {
   })
   @IsOptional()
   @IsString()
-  tenantPhone?: string;
+  tenantPhone?: string
 }
 
 /**
@@ -61,7 +54,7 @@ export class ConfirmPlatformDepositDto {
   })
   @IsUUID('4', { message: 'depositId must be a valid UUID' })
   @IsNotEmpty({ message: 'depositId is required' })
-  depositId: string;
+  depositId: string
 
   @ApiPropertyOptional({
     description: 'Transaction reference code from banking gateway or VietQR',
@@ -69,7 +62,7 @@ export class ConfirmPlatformDepositDto {
   })
   @IsOptional()
   @IsString()
-  transactionRef?: string;
+  transactionRef?: string
 }
 
 /**
@@ -77,60 +70,61 @@ export class ConfirmPlatformDepositDto {
  */
 export class PlatformDepositInstructionDto {
   @ApiProperty()
-  depositId: string;
+  depositId: string
 
   @ApiProperty()
-  paymentId: string;
+  paymentId: string
 
   @ApiProperty()
-  postId: string;
+  postId: string
 
   @ApiProperty()
-  roomId: string;
+  roomId: string
 
   @ApiProperty()
-  amount: number;
+  amount: number
 
   @ApiProperty()
-  transactionRef: string;
+  transactionRef: string
 
   @ApiProperty()
-  qrCodeUrl: string;
+  qrCodeUrl: string
 
   @ApiProperty()
-  bankCode: string;
+  bankCode: string
 
   @ApiProperty()
-  accountNumber: string;
+  accountNumber: string
 
   @ApiProperty()
-  accountName: string;
+  accountName: string
 
   @ApiProperty()
-  transferContent: string;
+  transferContent: string
 
   @ApiProperty()
-  status: string;
+  status: string
 
   @ApiProperty()
-  message: string;
+  message: string
 
   @ApiPropertyOptional({ description: 'PayOS Order Code' })
-  orderCode?: number;
+  orderCode?: number
 
   @ApiPropertyOptional({ description: 'PayOS Payment Link ID' })
-  paymentLinkId?: string;
+  paymentLinkId?: string
 
   @ApiPropertyOptional({ description: 'PayOS Checkout Web URL' })
-  checkoutUrl?: string;
+  checkoutUrl?: string
 
   @ApiPropertyOptional({ description: 'Bank Bin Code' })
-  bin?: string;
+  bin?: string
 
   @ApiPropertyOptional({ description: 'Countdown seconds until QR expiration' })
-  expiresIn?: number;
+  expiresIn?: number
 
-  @ApiPropertyOptional({ description: 'Whether this session was reused from an active pending deposit' })
-  isReused?: boolean;
+  @ApiPropertyOptional({
+    description: 'Whether this session was reused from an active pending deposit',
+  })
+  isReused?: boolean
 }
-

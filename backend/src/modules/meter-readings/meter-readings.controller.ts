@@ -9,7 +9,7 @@ import {
   HttpCode,
   Logger,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -18,24 +18,24 @@ import {
   ApiParam,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
-} from '@nestjs/swagger';
-import { MeterReadingsService } from './meter-readings.service';
-import { UploadMeterReadingDto } from './dto/upload-meter-reading.dto';
-import { UpdateMeterReadingDto } from './dto/update-meter-reading.dto';
-import { ActiveMeteredServicesResponseDto } from './dto/active-metered-service-response.dto';
-import { ConfirmReadingsResponseDto } from './dto/confirm-readings-response.dto';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+} from '@nestjs/swagger'
+import { MeterReadingsService } from './meter-readings.service'
+import { UploadMeterReadingDto } from './dto/upload-meter-reading.dto'
+import { UpdateMeterReadingDto } from './dto/update-meter-reading.dto'
+import { ActiveMeteredServicesResponseDto } from './dto/active-metered-service-response.dto'
+import { ConfirmReadingsResponseDto } from './dto/confirm-readings-response.dto'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Tenant Meter Readings')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('tenant/meter-readings')
 export class MeterReadingsController {
-  private readonly logger = new Logger(MeterReadingsController.name);
+  private readonly logger = new Logger(MeterReadingsController.name)
 
-  constructor(private readonly meterReadingsService: MeterReadingsService) { }
+  constructor(private readonly meterReadingsService: MeterReadingsService) {}
 
   // ─── GET /api/v1/tenant/meter-readings/active-services ──────────────────────
 
@@ -52,13 +52,9 @@ export class MeterReadingsController {
   })
   @ApiNotFoundResponse({ description: 'No active tenancy found for tenant' })
   async getActiveServices(@CurrentUser() user: JwtPayload) {
-    this.logger.log(
-      `GET /api/v1/tenant/meter-readings/active-services called by user: ${user?.id}`,
-    );
-    const data = await this.meterReadingsService.getActiveServicesForTenant(
-      user.id,
-    );
-    return { success: true, data };
+    this.logger.log(`GET /api/v1/tenant/meter-readings/active-services called by user: ${user?.id}`)
+    const data = await this.meterReadingsService.getActiveServicesForTenant(user.id)
+    return { success: true, data }
   }
 
   // ─── POST /api/v1/tenant/meter-readings/upload ─────────────────────────────
@@ -74,18 +70,12 @@ export class MeterReadingsController {
     description: 'Meter reading saved/updated successfully',
   })
   @ApiBadRequestResponse({ description: 'Invalid service or upload payload' })
-  async uploadReading(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: UploadMeterReadingDto,
-  ) {
+  async uploadReading(@CurrentUser() user: JwtPayload, @Body() dto: UploadMeterReadingDto) {
     this.logger.log(
       `POST /api/v1/tenant/meter-readings/upload called by user: ${user?.id} for service: ${dto.serviceId}`,
-    );
-    const data = await this.meterReadingsService.uploadOrUpdateReading(
-      user.id,
-      dto,
-    );
-    return { success: true, data, message: 'Đã lưu chỉ số điện nước thành công' };
+    )
+    const data = await this.meterReadingsService.uploadOrUpdateReading(user.id, dto)
+    return { success: true, data, message: 'Đã lưu chỉ số điện nước thành công' }
   }
 
   // ─── PATCH /api/v1/tenant/meter-readings/:id ────────────────────────────────
@@ -110,13 +100,9 @@ export class MeterReadingsController {
   ) {
     this.logger.log(
       `PATCH /api/v1/tenant/meter-readings/${id} called by user: ${user?.id} with value: ${dto.readingValue}`,
-    );
-    const data = await this.meterReadingsService.updateReadingValue(
-      user.id,
-      id,
-      dto,
-    );
-    return { success: true, data, message: 'Đã cập nhật chỉ số thành công' };
+    )
+    const data = await this.meterReadingsService.updateReadingValue(user.id, id, dto)
+    return { success: true, data, message: 'Đã cập nhật chỉ số thành công' }
   }
 
   // ─── POST /api/v1/tenant/meter-readings/confirm ─────────────────────────────
@@ -136,16 +122,12 @@ export class MeterReadingsController {
     description: 'Incomplete readings or validation error',
   })
   async confirmAndGenerateInvoice(@CurrentUser() user: JwtPayload) {
-    this.logger.log(
-      `POST /api/v1/tenant/meter-readings/confirm called by user: ${user?.id}`,
-    );
-    const data = await this.meterReadingsService.confirmAndGenerateInvoice(
-      user.id,
-    );
+    this.logger.log(`POST /api/v1/tenant/meter-readings/confirm called by user: ${user?.id}`)
+    const data = await this.meterReadingsService.confirmAndGenerateInvoice(user.id)
     return {
       success: true,
       data,
       message: 'Xác nhận chỉ số thành công. Hóa đơn đã được tạo!',
-    };
+    }
   }
 }

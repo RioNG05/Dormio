@@ -1,16 +1,39 @@
-"use client";
+'use client'
 
-import React, { useState, useRef, useEffect, Suspense, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useRef, useEffect, Suspense, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  Send, Paperclip, Smile, ImageIcon, Phone, Search, Info,
-  Building2, User, FileText, CheckCheck, Sparkles, ChevronRight,
-  MessageSquare, ShieldCheck, ExternalLink, Plus, X, Eye,
-  AlertCircle, ArrowRight, DoorOpen, FileImage, File, ArrowLeft, Loader2, Download
-} from "lucide-react";
+  Send,
+  Paperclip,
+  Smile,
+  ImageIcon,
+  Phone,
+  Search,
+  Info,
+  Building2,
+  User,
+  FileText,
+  CheckCheck,
+  Sparkles,
+  ChevronRight,
+  MessageSquare,
+  ShieldCheck,
+  ExternalLink,
+  Plus,
+  X,
+  Eye,
+  AlertCircle,
+  ArrowRight,
+  DoorOpen,
+  FileImage,
+  File,
+  ArrowLeft,
+  Loader2,
+  Download,
+} from 'lucide-react'
 
-import { useAuth } from "@/context/AuthContext";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { useAuth } from '@/context/AuthContext'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import {
   ConversationItem,
   MessageItem,
@@ -22,410 +45,427 @@ import {
   markAsRead,
   getContacts,
   initMessagesSocket,
-} from "@/services/message.service";
-import { TextInput, Button } from "@/components/ui";
+} from '@/services/message.service'
+import { TextInput, Button } from '@/components/ui'
 
 const AVATAR_COLORS = [
-  "bg-teal-600",
-  "bg-[#2AC1BC]",
-  "bg-blue-600",
-  "bg-indigo-600",
-  "bg-emerald-600",
-  "bg-purple-600",
-  "bg-amber-600",
-  "bg-rose-600",
-];
+  'bg-teal-600',
+  'bg-[#2AC1BC]',
+  'bg-blue-600',
+  'bg-indigo-600',
+  'bg-emerald-600',
+  'bg-purple-600',
+  'bg-amber-600',
+  'bg-rose-600',
+]
 
 function getAvatarBg(str: string): string {
-  if (!str) return "bg-teal-600";
-  let hash = 0;
+  if (!str) return 'bg-teal-600'
+  let hash = 0
   for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    hash = str.charCodeAt(i) + ((hash << 5) - hash)
   }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
 function formatMessageTime(isoString: string): string {
   try {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+    const d = new Date(isoString)
+    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
   } catch {
-    return "";
+    return ''
   }
 }
 
 function formatConversationTime(isoString: string): string {
   try {
-    const d = new Date(isoString);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
+    const d = new Date(isoString)
+    const now = new Date()
+    const isToday = d.toDateString() === now.toDateString()
     if (isToday) {
-      return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     }
-    return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
   } catch {
-    return "";
+    return ''
   }
 }
 
 function appendOrUpdateMessage(list: MessageItem[], newMsg: MessageItem): MessageItem[] {
-  const index = list.findIndex((m) => m.id === newMsg.id);
+  const index = list.findIndex(m => m.id === newMsg.id)
   if (index >= 0) {
-    const updated = [...list];
-    updated[index] = newMsg;
-    return updated;
+    const updated = [...list]
+    updated[index] = newMsg
+    return updated
   }
-  return [...list, newMsg];
+  return [...list, newMsg]
 }
 
 function MessagesContent() {
-  const { user, activeBuilding } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const t = useTranslations("landlord");
+  const { user, activeBuilding } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const t = useTranslations('landlord')
 
-  const urlConversationId = searchParams.get("conversationId") || searchParams.get("id") || "";
-  const urlRoom = searchParams.get("room") || searchParams.get("search") || "";
-  const urlTenant = searchParams.get("tenant") || "";
-  const urlUserId = searchParams.get("userId") || searchParams.get("participantId") || "";
-  const urlInvId = searchParams.get("invId") || "";
-  const urlAmount = searchParams.get("amount") || "";
-  const urlPeriod = searchParams.get("period") || "";
-  const autoSend = searchParams.get("autoSend") === "true";
-  const urlType = searchParams.get("type") || "";
-  const urlDepId = searchParams.get("depId") || "";
+  const urlConversationId = searchParams.get('conversationId') || searchParams.get('id') || ''
+  const urlRoom = searchParams.get('room') || searchParams.get('search') || ''
+  const urlTenant = searchParams.get('tenant') || ''
+  const urlUserId = searchParams.get('userId') || searchParams.get('participantId') || ''
+  const urlInvId = searchParams.get('invId') || ''
+  const urlAmount = searchParams.get('amount') || ''
+  const urlPeriod = searchParams.get('period') || ''
+  const autoSend = searchParams.get('autoSend') === 'true'
+  const urlType = searchParams.get('type') || ''
+  const urlDepId = searchParams.get('depId') || ''
 
-  const [isMounted, setIsMounted] = useState(false);
-  const [conversations, setConversations] = useState<ConversationItem[]>([]);
-  const [contacts, setContacts] = useState<ContactItem[]>([]);
-  const [activeChat, setActiveChat] = useState<ConversationItem | null>(null);
-  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [isMounted, setIsMounted] = useState(false)
+  const [conversations, setConversations] = useState<ConversationItem[]>([])
+  const [contacts, setContacts] = useState<ContactItem[]>([])
+  const [activeChat, setActiveChat] = useState<ConversationItem | null>(null)
+  const [messages, setMessages] = useState<MessageItem[]>([])
 
-  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [isSending, setIsSending] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<"all" | "unread" | "read" | "tenant" | "lead">("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showRightDrawer, setShowRightDrawer] = useState(false);
-  const [mobileShowChat, setMobileShowChat] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'read' | 'tenant' | 'lead'>('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showRightDrawer, setShowRightDrawer] = useState(false)
+  const [mobileShowChat, setMobileShowChat] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   // New Chat Modal state
-  const [showNewChatModal, setShowNewChatModal] = useState(false);
-  const [newChatSearch, setNewChatSearch] = useState("");
-  const [showCloseModalConfirm, setShowCloseModalConfirm] = useState(false);
-  const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [showNewChatModal, setShowNewChatModal] = useState(false)
+  const [newChatSearch, setNewChatSearch] = useState('')
+  const [showCloseModalConfirm, setShowCloseModalConfirm] = useState(false)
+  const [isCreatingChat, setIsCreatingChat] = useState(false)
 
   // Message input state
-  const [inputMessage, setInputMessage] = useState("");
+  const [inputMessage, setInputMessage] = useState('')
   const [pendingAttachments, setPendingAttachments] = useState<
-    { type: "image" | "file"; url: string; name: string; sizeBytes: number }[]
-  >([]);
+    { type: 'image' | 'file'; url: string; name: string; sizeBytes: number }[]
+  >([])
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const socketRef = useRef<any>(null);
-  const activeChatRef = useRef<ConversationItem | null>(null);
-  const conversationsRef = useRef<ConversationItem[]>([]);
-  const contactsRef = useRef<ContactItem[]>([]);
-  const autoSentKeysRef = useRef<Record<string, boolean>>({});
-
-  useEffect(() => {
-    activeChatRef.current = activeChat;
-  }, [activeChat]);
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const socketRef = useRef<any>(null)
+  const activeChatRef = useRef<ConversationItem | null>(null)
+  const conversationsRef = useRef<ConversationItem[]>([])
+  const contactsRef = useRef<ContactItem[]>([])
+  const autoSentKeysRef = useRef<Record<string, boolean>>({})
 
   useEffect(() => {
-    conversationsRef.current = conversations;
-  }, [conversations]);
+    activeChatRef.current = activeChat
+  }, [activeChat])
 
   useEffect(() => {
-    contactsRef.current = contacts;
-  }, [contacts]);
+    conversationsRef.current = conversations
+  }, [conversations])
+
+  useEffect(() => {
+    contactsRef.current = contacts
+  }, [contacts])
 
   // Preset Smart Quick Replies
   const quickReplies = useMemo(
     () => [
-      t("landlordMessagesQuick1"),
-      t("landlordMessagesQuick2"),
-      t("landlordMessagesQuick3"),
-      t("landlordMessagesQuick4"),
+      t('landlordMessagesQuick1'),
+      t('landlordMessagesQuick2'),
+      t('landlordMessagesQuick3'),
+      t('landlordMessagesQuick4'),
     ],
-    [t]
-  );
+    [t],
+  )
 
   // 1. Mount & load initial conversations & contacts
   useEffect(() => {
-    setIsMounted(true);
+    setIsMounted(true)
 
     async function loadInitialData() {
-      setIsLoadingConversations(true);
+      setIsLoadingConversations(true)
       try {
         const [convList, contactList] = await Promise.all([
           getConversations(),
           getContacts().catch(() => []),
-        ]);
-        setConversations(convList);
-        setContacts(contactList);
-        conversationsRef.current = convList;
-        contactsRef.current = contactList;
+        ])
+        setConversations(convList)
+        setContacts(contactList)
+        conversationsRef.current = convList
+        contactsRef.current = contactList
 
         if (urlConversationId) {
-          const match = convList.find((c) => c.id === urlConversationId);
+          const match = convList.find(c => c.id === urlConversationId)
           if (match) {
-            activeChatRef.current = match;
-            setActiveChat(match);
-            setMobileShowChat(true);
+            activeChatRef.current = match
+            setActiveChat(match)
+            setMobileShowChat(true)
           }
         }
       } catch (error) {
-        console.error("Failed to load conversations:", error);
+        console.error('Failed to load conversations:', error)
       } finally {
-        setIsLoadingConversations(false);
+        setIsLoadingConversations(false)
       }
     }
 
-    loadInitialData();
-  }, []);
+    loadInitialData()
+  }, [])
 
   // 2. Setup WebSocket connection
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted) return
 
-    const socket = initMessagesSocket();
-    if (!socket) return;
-    socketRef.current = socket;
+    const socket = initMessagesSocket()
+    if (!socket) return
+    socketRef.current = socket
 
-    socket.on("connect", () => {
+    socket.on('connect', () => {
       if (activeChatRef.current) {
-        socket.emit("join_conversation", { conversationId: activeChatRef.current.id });
+        socket.emit('join_conversation', { conversationId: activeChatRef.current.id })
       }
-    });
+    })
 
-    socket.on("new_message", (newMsg: MessageItem) => {
+    socket.on('new_message', (newMsg: MessageItem) => {
       // If message belongs to active chat, append or update it
       if (activeChatRef.current && activeChatRef.current.id === newMsg.conversationId) {
-        setMessages((prev) => appendOrUpdateMessage(prev, newMsg));
+        setMessages(prev => appendOrUpdateMessage(prev, newMsg))
         // Auto mark as read if received in active chat
         if (newMsg.senderId !== user?.id) {
-          markAsRead(activeChatRef.current.id).catch(() => { });
+          markAsRead(activeChatRef.current.id).catch(() => {})
         }
       }
 
       // Update conversations list lastMessage & unread count
-      setConversations((prev) =>
-        prev.map((c) => {
+      setConversations(prev =>
+        prev.map(c => {
           if (c.id === newMsg.conversationId) {
-            const isActive = activeChatRef.current?.id === c.id;
+            const isActive = activeChatRef.current?.id === c.id
             return {
               ...c,
               lastMessage: newMsg,
               updatedAt: newMsg.sentAt,
               unreadCount: isActive || newMsg.senderId === user?.id ? 0 : c.unreadCount + 1,
-            };
+            }
           }
-          return c;
-        })
-      );
-    });
+          return c
+        }),
+      )
+    })
 
-    socket.on("messages_read", ({ conversationId }: { conversationId: string; readerId: string }) => {
-      if (activeChatRef.current && activeChatRef.current.id === conversationId) {
-        setMessages((prev) =>
-          prev.map((m) => (m.readAt ? m : { ...m, readAt: new Date().toISOString() }))
-        );
-      }
-    });
+    socket.on(
+      'messages_read',
+      ({ conversationId }: { conversationId: string; readerId: string }) => {
+        if (activeChatRef.current && activeChatRef.current.id === conversationId) {
+          setMessages(prev =>
+            prev.map(m => (m.readAt ? m : { ...m, readAt: new Date().toISOString() })),
+          )
+        }
+      },
+    )
 
     return () => {
       if (socket) {
-        socket.disconnect();
+        socket.disconnect()
       }
-    };
-  }, [isMounted, user?.id]);
+    }
+  }, [isMounted, user?.id])
 
   // 3. Switch conversation & join WebSocket room
   useEffect(() => {
     if (!activeChat) {
-      setMessages([]);
-      return;
+      setMessages([])
+      return
     }
 
-    let isCancelled = false;
-    setIsLoadingMessages(true);
+    let isCancelled = false
+    setIsLoadingMessages(true)
 
     if (socketRef.current) {
-      socketRef.current.emit("join_conversation", { conversationId: activeChat.id });
+      socketRef.current.emit('join_conversation', { conversationId: activeChat.id })
     }
 
     getConversationMessages(activeChat.id)
-      .then((msgs) => {
+      .then(msgs => {
         if (!isCancelled) {
-          const uniqueMap = new Map<string, MessageItem>();
-          msgs.forEach((m) => uniqueMap.set(m.id, m));
-          setMessages(Array.from(uniqueMap.values()));
+          const uniqueMap = new Map<string, MessageItem>()
+          msgs.forEach(m => uniqueMap.set(m.id, m))
+          setMessages(Array.from(uniqueMap.values()))
         }
       })
-      .catch((err) => {
-        console.error("Failed to load messages:", err);
+      .catch(err => {
+        console.error('Failed to load messages:', err)
       })
       .finally(() => {
         if (!isCancelled) {
-          setIsLoadingMessages(false);
+          setIsLoadingMessages(false)
         }
-      });
+      })
 
     // Mark as read on open
     if (activeChat.unreadCount > 0) {
-      markAsRead(activeChat.id).catch(() => { });
-      setConversations((prev) =>
-        prev.map((c) => (c.id === activeChat.id ? { ...c, unreadCount: 0 } : c))
-      );
+      markAsRead(activeChat.id).catch(() => {})
+      setConversations(prev =>
+        prev.map(c => (c.id === activeChat.id ? { ...c, unreadCount: 0 } : c)),
+      )
     }
 
     return () => {
-      isCancelled = true;
+      isCancelled = true
       if (socketRef.current && activeChat) {
-        socketRef.current.emit("leave_conversation", { conversationId: activeChat.id });
+        socketRef.current.emit('leave_conversation', { conversationId: activeChat.id })
       }
-    };
-  }, [activeChat?.id]);
+    }
+  }, [activeChat?.id])
 
   // 4. Handle URL Navigation query params & synchronize active conversation
   useEffect(() => {
-    if (!isMounted || isLoadingConversations) return;
+    if (!isMounted || isLoadingConversations) return
 
     // Case 1: Direct conversationId in URL
     if (urlConversationId) {
       if (activeChatRef.current?.id !== urlConversationId) {
-        const match = conversationsRef.current.find((c) => c.id === urlConversationId);
+        const match = conversationsRef.current.find(c => c.id === urlConversationId)
         if (match) {
-          activeChatRef.current = match;
-          setActiveChat(match);
-          setMobileShowChat(true);
+          activeChatRef.current = match
+          setActiveChat(match)
+          setMobileShowChat(true)
         }
       }
-      return;
+      return
     }
 
     // Case 2: External query params (?room=..., ?tenant=..., ?userId=..., autoSend=true)
     if (urlUserId || urlRoom || urlTenant || urlInvId) {
-      let isCancelled = false;
+      let isCancelled = false
 
       async function handleUrlParams() {
-        let match: ConversationItem | undefined = undefined;
+        let match: ConversationItem | undefined = undefined
 
         // 1. If urlUserId is provided, find or create conversation for this exact user
         if (urlUserId) {
-          match = conversationsRef.current.find((c) => c.participant.id === urlUserId);
+          match = conversationsRef.current.find(c => c.participant.id === urlUserId)
           if (!match) {
             try {
-              const newConv = await getOrCreateConversation(urlUserId);
+              const newConv = await getOrCreateConversation(urlUserId)
               if (newConv && !isCancelled) {
-                setConversations((prev) => {
-                  const updated = [newConv, ...prev.filter((c) => c.id !== newConv.id)];
-                  conversationsRef.current = updated;
-                  return updated;
-                });
-                match = newConv;
+                setConversations(prev => {
+                  const updated = [newConv, ...prev.filter(c => c.id !== newConv.id)]
+                  conversationsRef.current = updated
+                  return updated
+                })
+                match = newConv
               }
             } catch (e) {
-              console.error("Failed to get/create conversation with userId:", e);
+              console.error('Failed to get/create conversation with userId:', e)
             }
           }
         } else if (urlRoom || urlTenant) {
           // 2. Fallback to matching by room or tenant name if urlUserId not provided
-          match = conversationsRef.current.find((c) => {
-            if (urlRoom && (c.participant.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
-              c.participant.roomName?.replace("Phòng ", "") === urlRoom)) return true;
-            if (urlTenant && c.participant.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
-            return false;
-          });
+          match = conversationsRef.current.find(c => {
+            if (
+              urlRoom &&
+              (c.participant.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
+                c.participant.roomName?.replace('Phòng ', '') === urlRoom)
+            )
+              return true
+            if (urlTenant && c.participant.fullName.toLowerCase().includes(urlTenant.toLowerCase()))
+              return true
+            return false
+          })
 
           if (!match) {
-            const targetContact = contactsRef.current.find((ct) => {
-              if (urlRoom && (ct.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
-                ct.roomName?.replace("Phòng ", "") === urlRoom)) return true;
-              if (urlTenant && ct.fullName.toLowerCase().includes(urlTenant.toLowerCase())) return true;
-              return false;
-            });
+            const targetContact = contactsRef.current.find(ct => {
+              if (
+                urlRoom &&
+                (ct.roomName?.toLowerCase().includes(urlRoom.toLowerCase()) ||
+                  ct.roomName?.replace('Phòng ', '') === urlRoom)
+              )
+                return true
+              if (urlTenant && ct.fullName.toLowerCase().includes(urlTenant.toLowerCase()))
+                return true
+              return false
+            })
 
             if (targetContact) {
               try {
-                const newConv = await getOrCreateConversation(targetContact.id);
+                const newConv = await getOrCreateConversation(targetContact.id)
                 if (newConv && !isCancelled) {
-                  setConversations((prev) => {
-                    const updated = [newConv, ...prev.filter((c) => c.id !== newConv.id)];
-                    conversationsRef.current = updated;
-                    return updated;
-                  });
-                  match = newConv;
+                  setConversations(prev => {
+                    const updated = [newConv, ...prev.filter(c => c.id !== newConv.id)]
+                    conversationsRef.current = updated
+                    return updated
+                  })
+                  match = newConv
                 }
               } catch (e) {
-                console.error("Failed to auto-create conversation from contact:", e);
+                console.error('Failed to auto-create conversation from contact:', e)
               }
             }
           }
         }
 
         if (match && !isCancelled) {
-          activeChatRef.current = match;
-          setActiveChat(match);
-          setMobileShowChat(true);
+          activeChatRef.current = match
+          setActiveChat(match)
+          setMobileShowChat(true)
 
           // Handle autoSend if present
           if (autoSend) {
-            const autoKey = `${match.id}_${urlInvId || urlDepId || urlType || "auto"}`;
+            const autoKey = `${match.id}_${urlInvId || urlDepId || urlType || 'auto'}`
             if (!autoSentKeysRef.current[autoKey]) {
-              autoSentKeysRef.current[autoKey] = true;
-              const roomLabel = match.participant.roomName || t("landlordMessagesYourRoom");
+              autoSentKeysRef.current[autoKey] = true
+              const roomLabel = match.participant.roomName || t('landlordMessagesYourRoom')
               if (urlInvId) {
-                const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
-                const autoMsgContent = t("landlordMessagesAutoInvoiceNotice")
-                  .replace("{period}", urlPeriod || t("landlordMessagesCurrentPeriod"))
-                  .replace("{room}", roomLabel)
-                  .replace("{amount}", formattedAmount)
-                  .replace("{invId}", urlInvId);
+                const formattedAmount = urlAmount
+                  ? Number(urlAmount).toLocaleString('vi-VN') + ' ₫'
+                  : ''
+                const autoMsgContent = t('landlordMessagesAutoInvoiceNotice')
+                  .replace('{period}', urlPeriod || t('landlordMessagesCurrentPeriod'))
+                  .replace('{room}', roomLabel)
+                  .replace('{amount}', formattedAmount)
+                  .replace('{invId}', urlInvId)
                 sendMessage(match.id, { content: autoMsgContent })
-                  .then((savedMsg) => {
-                    setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
+                  .then(savedMsg => {
+                    setMessages(prev => appendOrUpdateMessage(prev, savedMsg))
                   })
-                  .catch(console.error);
-              } else if (urlType === "upgrade" || urlDepId) {
-                const formattedAmount = urlAmount ? Number(urlAmount).toLocaleString("vi-VN") + " ₫" : "";
-                const autoMsgContent = t("landlordMessagesAutoDepositNotice")
-                  .replace("{room}", roomLabel)
-                  .replace("{tenant}", match.participant.fullName)
-                  .replace("{amount}", formattedAmount);
+                  .catch(console.error)
+              } else if (urlType === 'upgrade' || urlDepId) {
+                const formattedAmount = urlAmount
+                  ? Number(urlAmount).toLocaleString('vi-VN') + ' ₫'
+                  : ''
+                const autoMsgContent = t('landlordMessagesAutoDepositNotice')
+                  .replace('{room}', roomLabel)
+                  .replace('{tenant}', match.participant.fullName)
+                  .replace('{amount}', formattedAmount)
                 sendMessage(match.id, { content: autoMsgContent })
-                  .then((savedMsg) => {
-                    setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
+                  .then(savedMsg => {
+                    setMessages(prev => appendOrUpdateMessage(prev, savedMsg))
                   })
-                  .catch(console.error);
+                  .catch(console.error)
               }
             }
           }
 
           // Synchronize URL with conversationId
-          const newParams = new URLSearchParams();
-          newParams.set("conversationId", match.id);
-          router.replace(`/landlord/messages?${newParams.toString()}`, { scroll: false });
+          const newParams = new URLSearchParams()
+          newParams.set('conversationId', match.id)
+          router.replace(`/landlord/messages?${newParams.toString()}`, { scroll: false })
         }
       }
 
-      handleUrlParams();
+      handleUrlParams()
       return () => {
-        isCancelled = true;
-      };
+        isCancelled = true
+      }
     }
 
     // Case 3: No conversation query in URL -> reset activeChat to null
     if (!urlConversationId && !urlUserId && !urlRoom && !urlTenant && !urlInvId) {
       if (activeChatRef.current !== null) {
-        activeChatRef.current = null;
-        setActiveChat(null);
-        setMobileShowChat(false);
+        activeChatRef.current = null
+        setActiveChat(null)
+        setMobileShowChat(false)
       }
     }
   }, [
@@ -441,125 +481,125 @@ function MessagesContent() {
     autoSend,
     urlType,
     urlDepId,
-  ]);
+  ])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeChat]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, activeChat])
 
   // Filtered conversation list
   const filteredConversations = useMemo(() => {
-    return conversations.filter((c) => {
-      const p = c.participant;
+    return conversations.filter(c => {
+      const p = c.participant
       const matchSearch =
         (p.fullName && p.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (p.roomName && p.roomName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.phoneNumber && p.phoneNumber.includes(searchTerm));
+        (p.phoneNumber && p.phoneNumber.includes(searchTerm))
 
-      if (!matchSearch) return false;
+      if (!matchSearch) return false
 
-      if (activeTab === "unread") return c.unreadCount > 0;
-      if (activeTab === "read") return c.unreadCount === 0;
-      if (activeTab === "tenant") return p.role === "tenant";
-      if (activeTab === "lead") return p.role !== "tenant";
-      return true;
-    });
-  }, [conversations, searchTerm, activeTab]);
+      if (activeTab === 'unread') return c.unreadCount > 0
+      if (activeTab === 'read') return c.unreadCount === 0
+      if (activeTab === 'tenant') return p.role === 'tenant'
+      if (activeTab === 'lead') return p.role !== 'tenant'
+      return true
+    })
+  }, [conversations, searchTerm, activeTab])
 
   // Media files extracted from all messages of the active conversation
   const activeChatMedia = useMemo(() => {
-    const images: { id: string; url: string; name: string }[] = [];
-    const files: { id: string; url: string; name: string; size: string; time: string }[] = [];
+    const images: { id: string; url: string; name: string }[] = []
+    const files: { id: string; url: string; name: string; size: string; time: string }[] = []
 
-    messages.forEach((m) => {
+    messages.forEach(m => {
       if (m.attachments && Array.isArray(m.attachments)) {
-        m.attachments.forEach((att) => {
-          if (att.type === "image") {
+        m.attachments.forEach(att => {
+          if (att.type === 'image') {
             images.push({
               id: att.id,
               url: att.url,
-              name: att.url.split("/").pop() || "image.png",
-            });
+              name: att.url.split('/').pop() || 'image.png',
+            })
           } else {
-            const kb = Math.round(att.sizeBytes / 1024);
-            const sizeStr = kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
+            const kb = Math.round(att.sizeBytes / 1024)
+            const sizeStr = kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`
             files.push({
               id: att.id,
               url: att.url,
-              name: att.url.split("/").pop() || "file",
+              name: att.url.split('/').pop() || 'file',
               size: sizeStr,
               time: formatConversationTime(m.sentAt),
-            });
+            })
           }
-        });
+        })
       }
-    });
+    })
 
-    return { images, files, total: images.length + files.length };
-  }, [messages]);
+    return { images, files, total: images.length + files.length }
+  }, [messages])
 
   // Select conversation and synchronize with URL
   const handleSelectConversation = (chat: ConversationItem) => {
-    if (activeChatRef.current?.id === chat.id) return;
-    activeChatRef.current = chat;
-    setActiveChat(chat);
-    setMobileShowChat(true);
-    const params = new URLSearchParams();
-    params.set("conversationId", chat.id);
-    router.replace(`/landlord/messages?${params.toString()}`, { scroll: false });
-  };
+    if (activeChatRef.current?.id === chat.id) return
+    activeChatRef.current = chat
+    setActiveChat(chat)
+    setMobileShowChat(true)
+    const params = new URLSearchParams()
+    params.set('conversationId', chat.id)
+    router.replace(`/landlord/messages?${params.toString()}`, { scroll: false })
+  }
 
   // Send message handler
   const handleSendMessage = async (textToSend?: string) => {
-    const text = (textToSend !== undefined ? textToSend : inputMessage).trim();
-    if (!text && pendingAttachments.length === 0) return;
-    if (!activeChat) return;
+    const text = (textToSend !== undefined ? textToSend : inputMessage).trim()
+    if (!text && pendingAttachments.length === 0) return
+    if (!activeChat) return
 
-    setIsSending(true);
+    setIsSending(true)
     try {
       const payload = {
-        content: text || t("landlordMessagesDefaultAttachmentText"),
+        content: text || t('landlordMessagesDefaultAttachmentText'),
         attachments: pendingAttachments.map((att, idx) => ({
           type: att.type,
           url: att.url,
           sizeBytes: att.sizeBytes,
           sortOrder: idx,
         })),
-      };
+      }
 
-      const savedMsg = await sendMessage(activeChat.id, payload);
+      const savedMsg = await sendMessage(activeChat.id, payload)
 
-      setMessages((prev) => appendOrUpdateMessage(prev, savedMsg));
-      setConversations((prev) =>
-        prev.map((c) =>
+      setMessages(prev => appendOrUpdateMessage(prev, savedMsg))
+      setConversations(prev =>
+        prev.map(c =>
           c.id === activeChat.id
             ? { ...c, lastMessage: savedMsg, updatedAt: savedMsg.sentAt, unreadCount: 0 }
-            : c
-        )
-      );
+            : c,
+        ),
+      )
 
       if (textToSend === undefined) {
-        setInputMessage("");
+        setInputMessage('')
       }
-      setPendingAttachments([]);
+      setPendingAttachments([])
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error('Failed to send message:', error)
     } finally {
-      setIsSending(false);
+      setIsSending(false)
     }
-  };
+  }
 
   // Handle file uploads (image / document)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "file") => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        const url = uploadEvent.target?.result as string;
-        setPendingAttachments((prev) => [
+    Array.from(files).forEach(file => {
+      const reader = new FileReader()
+      reader.onload = uploadEvent => {
+        const url = uploadEvent.target?.result as string
+        setPendingAttachments(prev => [
           ...prev,
           {
             type,
@@ -567,72 +607,73 @@ function MessagesContent() {
             name: file.name,
             sizeBytes: file.size,
           },
-        ]);
-      };
-      reader.readAsDataURL(file);
-    });
+        ])
+      }
+      reader.readAsDataURL(file)
+    })
 
     // Reset input
-    e.target.value = "";
-  };
+    e.target.value = ''
+  }
 
   // Start new conversation from contact modal
   const handleSelectContactToChat = async (contact: ContactItem) => {
-    setIsCreatingChat(true);
+    setIsCreatingChat(true)
     try {
-      const conv = await getOrCreateConversation(contact.id);
-      setConversations((prev) => {
-        const exists = prev.some((c) => c.id === conv.id);
-        return exists ? prev : [conv, ...prev];
-      });
-      setShowNewChatModal(false);
-      setNewChatSearch("");
-      handleSelectConversation(conv);
+      const conv = await getOrCreateConversation(contact.id)
+      setConversations(prev => {
+        const exists = prev.some(c => c.id === conv.id)
+        return exists ? prev : [conv, ...prev]
+      })
+      setShowNewChatModal(false)
+      setNewChatSearch('')
+      handleSelectConversation(conv)
     } catch (error) {
-      console.error("Failed to create conversation:", error);
+      console.error('Failed to create conversation:', error)
     } finally {
-      setIsCreatingChat(false);
+      setIsCreatingChat(false)
     }
-  };
+  }
 
   // Filtered contacts for modal
   const filteredContacts = useMemo(() => {
-    return contacts.filter((c) => {
-      const q = newChatSearch.toLowerCase().trim();
-      if (!q) return true;
+    return contacts.filter(c => {
+      const q = newChatSearch.toLowerCase().trim()
+      if (!q) return true
       return (
         c.fullName.toLowerCase().includes(q) ||
         (c.roomName && c.roomName.toLowerCase().includes(q)) ||
         (c.phoneNumber && c.phoneNumber.includes(q))
-      );
-    });
-  }, [contacts, newChatSearch]);
+      )
+    })
+  }, [contacts, newChatSearch])
 
   const handleCloseNewChatModal = () => {
     if (newChatSearch.trim()) {
-      setShowCloseModalConfirm(true);
+      setShowCloseModalConfirm(true)
     } else {
-      setShowNewChatModal(false);
-      setNewChatSearch("");
+      setShowNewChatModal(false)
+      setNewChatSearch('')
     }
-  };
+  }
 
-  if (!isMounted) return null;
+  if (!isMounted) return null
 
   return (
     <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-screen bg-white border-y border-zinc-200/80 overflow-hidden flex">
       {/* PANE 1: Left Conversation List */}
       <div
-        className={`w-full lg:w-96 border-r border-zinc-200/80 flex-col bg-zinc-50/50 shrink-0 ${mobileShowChat ? "hidden lg:flex" : "flex"
-          }`}
+        className={`w-full lg:w-96 border-r border-zinc-200/80 flex-col bg-zinc-50/50 shrink-0 ${
+          mobileShowChat ? 'hidden lg:flex' : 'flex'
+        }`}
       >
         {/* Top Search & Filter Tabs */}
         <div className="p-3.5 border-b border-zinc-200/80 space-y-3 bg-white">
           <div className="flex items-center gap-2">
             <TextInput
-              placeholder={t("landlordMessagesSearchPlaceholder")}
+              placeholder={t('landlordMessagesSearchPlaceholder')}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
               className="py-2 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
               containerClassName="flex-1"
@@ -641,7 +682,7 @@ function MessagesContent() {
               size="icon"
               variant="primary"
               onClick={() => setShowNewChatModal(true)}
-              title={t("landlordMessagesTooltipNewChat")}
+              title={t('landlordMessagesTooltipNewChat')}
               className="h-9 w-9 rounded-xl shrink-0"
             >
               <Plus className="w-4 h-4" />
@@ -652,68 +693,73 @@ function MessagesContent() {
           <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px] font-extrabold">
             <button
               type="button"
-              onClick={() => setActiveTab("all")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "all"
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-                }`}
+              onClick={() => setActiveTab('all')}
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'all'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
+              }`}
             >
-              {t("landlordMessagesAll").replace("{count}", String(conversations.length))}
+              {t('landlordMessagesAll').replace('{count}', String(conversations.length))}
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab("unread")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "unread"
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-                }`}
+              onClick={() => setActiveTab('unread')}
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'unread'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
+              }`}
             >
-              {t("landlordMessagesUnread").replace(
-                "{count}",
-                String(conversations.filter((c) => c.unreadCount > 0).length)
+              {t('landlordMessagesUnread').replace(
+                '{count}',
+                String(conversations.filter(c => c.unreadCount > 0).length),
               )}
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab("read")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "read"
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-                }`}
+              onClick={() => setActiveTab('read')}
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'read'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
+              }`}
             >
-              {t("landlordMessagesRead").replace(
-                "{count}",
-                String(conversations.filter((c) => c.unreadCount === 0).length)
+              {t('landlordMessagesRead').replace(
+                '{count}',
+                String(conversations.filter(c => c.unreadCount === 0).length),
               )}
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab("tenant")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "tenant"
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-                }`}
+              onClick={() => setActiveTab('tenant')}
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'tenant'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
+              }`}
             >
-              {t("landlordMessagesTenant").replace(
-                "{count}",
-                String(conversations.filter((c) => c.participant.role === "tenant").length)
+              {t('landlordMessagesTenant').replace(
+                '{count}',
+                String(conversations.filter(c => c.participant.role === 'tenant').length),
               )}
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab("lead")}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${activeTab === "lead"
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70"
-                }`}
+              onClick={() => setActiveTab('lead')}
+              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'lead'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
+              }`}
             >
-              {t("landlordMessagesTabNewGuests").replace(
-                "{count}",
-                String(conversations.filter((c) => c.participant.role !== "tenant").length)
+              {t('landlordMessagesTabNewGuests').replace(
+                '{count}',
+                String(conversations.filter(c => c.participant.role !== 'tenant').length),
               )}
             </button>
           </div>
@@ -724,12 +770,12 @@ function MessagesContent() {
           {isLoadingConversations ? (
             <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-              <span>{t("landlordMessagesLoadingConversations")}</span>
+              <span>{t('landlordMessagesLoadingConversations')}</span>
             </div>
           ) : filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-2">
               <MessageSquare className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
-              <p>{t("landlordMessagesEmptyConversations")}</p>
+              <p>{t('landlordMessagesEmptyConversations')}</p>
               {contacts.length > 0 && (
                 <Button
                   size="sm"
@@ -738,32 +784,33 @@ function MessagesContent() {
                   leftIcon={<Plus className="w-3.5 h-3.5" />}
                   className="mt-2 border-[#2AC1BC]/30 text-[#2AC1BC] hover:bg-[#2AC1BC] hover:text-white"
                 >
-                  {t("landlordMessagesBtnStartChat")}
+                  {t('landlordMessagesBtnStartChat')}
                 </Button>
               )}
             </div>
           ) : (
             filteredConversations.map((chat, chatIdx) => {
-              const isSelected = activeChat?.id === chat.id;
-              const p = chat.participant;
-              const avatarBg = getAvatarBg(p.id || p.fullName);
-              const isTenant = p.role === "tenant";
+              const isSelected = activeChat?.id === chat.id
+              const p = chat.participant
+              const avatarBg = getAvatarBg(p.id || p.fullName)
+              const isTenant = p.role === 'tenant'
 
               return (
                 <div
                   key={`conv-${chat.id}-${chatIdx}`}
                   onClick={() => handleSelectConversation(chat)}
-                  className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${isSelected
-                      ? "bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]"
-                      : "hover:bg-zinc-100/80"
-                    }`}
+                  className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]'
+                      : 'hover:bg-zinc-100/80'
+                  }`}
                 >
                   {/* Avatar with Status */}
                   <div className="relative shrink-0 pt-0.5">
                     <div
                       className={`w-10 h-10 rounded-2xl ${avatarBg} text-white font-black text-sm flex items-center justify-center shadow-2xs`}
                     >
-                      {p.fullName ? p.fullName.charAt(0).toUpperCase() : "U"}
+                      {p.fullName ? p.fullName.charAt(0).toUpperCase() : 'U'}
                     </div>
                   </div>
 
@@ -774,8 +821,9 @@ function MessagesContent() {
                         {p.roomName || p.fullName}
                       </span>
                       <span
-                        className={`text-[10px] font-bold shrink-0 ${chat.unreadCount > 0 ? "text-[#2AC1BC]" : "text-zinc-400"
-                          }`}
+                        className={`text-[10px] font-bold shrink-0 ${
+                          chat.unreadCount > 0 ? 'text-[#2AC1BC]' : 'text-zinc-400'
+                        }`}
                       >
                         {chat.lastMessage
                           ? formatConversationTime(chat.lastMessage.sentAt)
@@ -789,23 +837,24 @@ function MessagesContent() {
                       </span>
                       {isTenant ? (
                         <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                          {t("landlordMessagesRoleTenant")}
+                          {t('landlordMessagesRoleTenant')}
                         </span>
                       ) : (
                         <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
-                          {t("landlordMessagesRoleGuest")}
+                          {t('landlordMessagesRoleGuest')}
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
                       <p
-                        className={`text-xs truncate ${chat.unreadCount > 0
-                            ? "font-extrabold text-zinc-900"
-                            : "font-medium text-zinc-500"
-                          }`}
+                        className={`text-xs truncate ${
+                          chat.unreadCount > 0
+                            ? 'font-extrabold text-zinc-900'
+                            : 'font-medium text-zinc-500'
+                        }`}
                       >
-                        {chat.lastMessage?.content || t("landlordMessagesNoMessageYet")}
+                        {chat.lastMessage?.content || t('landlordMessagesNoMessageYet')}
                       </p>
                       {chat.unreadCount > 0 && (
                         <span className="w-4 h-4 rounded-full bg-[#2AC1BC] text-white text-[10px] font-black flex items-center justify-center shrink-0">
@@ -815,7 +864,7 @@ function MessagesContent() {
                     </div>
                   </div>
                 </div>
-              );
+              )
             })
           )}
         </div>
@@ -823,8 +872,7 @@ function MessagesContent() {
 
       {/* PANE 2: Center Main Chat Stream */}
       <div
-        className={`flex-1 flex-col min-w-0 bg-white ${mobileShowChat ? "flex" : "hidden lg:flex"
-          }`}
+        className={`flex-1 flex-col min-w-0 bg-white ${mobileShowChat ? 'flex' : 'hidden lg:flex'}`}
       >
         {activeChat ? (
           <>
@@ -835,13 +883,13 @@ function MessagesContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    activeChatRef.current = null;
-                    setActiveChat(null);
-                    setMobileShowChat(false);
-                    router.replace("/landlord/messages", { scroll: false });
+                    activeChatRef.current = null
+                    setActiveChat(null)
+                    setMobileShowChat(false)
+                    router.replace('/landlord/messages', { scroll: false })
                   }}
                   className="lg:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
-                  title={t("landlordMessagesTooltipBackToList")}
+                  title={t('landlordMessagesTooltipBackToList')}
                 >
                   <ArrowLeft className="w-5 h-5 text-zinc-700" />
                 </button>
@@ -849,7 +897,7 @@ function MessagesContent() {
                 <div className="relative shrink-0">
                   <div
                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${getAvatarBg(
-                      activeChat.participant.id || activeChat.participant.fullName
+                      activeChat.participant.id || activeChat.participant.fullName,
                     )} text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-2xs`}
                   >
                     {activeChat.participant.fullName.charAt(0).toUpperCase()}
@@ -867,7 +915,9 @@ function MessagesContent() {
                   </div>
                   <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-zinc-400 truncate">
                     {activeChat.participant.phoneNumber && (
-                      <span>{t("landlordMessagesPhonePrefix")} {activeChat.participant.phoneNumber}</span>
+                      <span>
+                        {t('landlordMessagesPhonePrefix')} {activeChat.participant.phoneNumber}
+                      </span>
                     )}
                     {activeChat.participant.boardingHouseName && (
                       <span className="hidden sm:inline">
@@ -884,7 +934,7 @@ function MessagesContent() {
                   <a
                     href={`tel:${activeChat.participant.phoneNumber}`}
                     className="p-1.5 sm:p-2 hover:bg-zinc-100 text-zinc-600 rounded-xl transition-colors cursor-pointer"
-                    title={t("landlordMessagesTooltipCall")}
+                    title={t('landlordMessagesTooltipCall')}
                   >
                     <Phone className="w-4 h-4" />
                   </a>
@@ -894,23 +944,24 @@ function MessagesContent() {
                     variant="secondary"
                     size="sm"
                     onClick={() => {
-                      const roomNo = activeChat.participant.roomName?.replace("Phòng ", "") || "";
-                      router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`);
+                      const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
+                      router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
                     }}
                     leftIcon={<FileText className="w-3.5 h-3.5" />}
                     className="hidden md:inline-flex rounded-xl font-bold hover:bg-[#2AC1BC] hover:text-white"
                   >
-                    {t("landlordMessagesBtnContract")}
+                    {t('landlordMessagesBtnContract')}
                   </Button>
                 )}
                 <button
                   type="button"
                   onClick={() => setShowRightDrawer(!showRightDrawer)}
-                  className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${showRightDrawer
-                      ? "bg-[#2AC1BC]/10 text-[#2AC1BC]"
-                      : "hover:bg-zinc-100 text-zinc-600"
-                    }`}
-                  title={t("landlordMessagesTooltipInfo")}
+                  className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
+                    showRightDrawer
+                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
+                      : 'hover:bg-zinc-100 text-zinc-600'
+                  }`}
+                  title={t('landlordMessagesTooltipInfo')}
                 >
                   <Info className="w-4.5 h-4.5" />
                 </button>
@@ -922,21 +973,22 @@ function MessagesContent() {
               {isLoadingMessages ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
-                  <span>{t("landlordMessagesLoadingMessages")}</span>
+                  <span>{t('landlordMessagesLoadingMessages')}</span>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-2">
                   <MessageSquare className="w-10 h-10 mx-auto text-zinc-300 stroke-1" />
-                  <p>{t("landlordMessagesEmptyChatTitle")}</p>
+                  <p>{t('landlordMessagesEmptyChatTitle')}</p>
                   <p className="text-[11px] font-semibold text-zinc-400">
-                    {t("landlordMessagesEmptyChatDesc")}
+                    {t('landlordMessagesEmptyChatDesc')}
                   </p>
                 </div>
               ) : (
                 messages.map((msg, idx) => {
-                  const isMe = msg.senderId === user?.id || msg.senderId !== activeChat.participant.id;
+                  const isMe =
+                    msg.senderId === user?.id || msg.senderId !== activeChat.participant.id
                   const isSystemAlert =
-                    msg.content.startsWith("📌 THÔNG BÁO") || msg.content.startsWith("💳 THÔNG BÁO");
+                    msg.content.startsWith('📌 THÔNG BÁO') || msg.content.startsWith('💳 THÔNG BÁO')
 
                   if (isSystemAlert) {
                     return (
@@ -945,7 +997,7 @@ function MessagesContent() {
                         className="max-w-md mx-auto my-3 p-3.5 bg-white border border-[#2AC1BC]/30 rounded-2xl shadow-2xs text-center space-y-2"
                       >
                         <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#2AC1BC]">
-                          <Sparkles className="w-4 h-4" /> {t("landlordMessagesSystemNoticeBadge")}
+                          <Sparkles className="w-4 h-4" /> {t('landlordMessagesSystemNoticeBadge')}
                         </div>
                         <p className="text-xs text-zinc-700 font-semibold leading-relaxed">
                           {msg.content}
@@ -954,19 +1006,20 @@ function MessagesContent() {
                           {formatMessageTime(msg.sentAt)}
                         </div>
                       </div>
-                    );
+                    )
                   }
 
                   return (
                     <div
                       key={`msg-${msg.id}-${idx}`}
-                      className={`flex flex-col ${isMe ? "items-end" : "items-start"} space-y-1`}
+                      className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`}
                     >
                       <div
-                        className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${isMe
-                            ? "bg-[#2AC1BC] text-white rounded-br-xs font-medium"
-                            : "bg-white border border-zinc-200/80 text-zinc-900 rounded-bl-xs font-medium"
-                          }`}
+                        className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${
+                          isMe
+                            ? 'bg-[#2AC1BC] text-white rounded-br-xs font-medium'
+                            : 'bg-white border border-zinc-200/80 text-zinc-900 rounded-bl-xs font-medium'
+                        }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
 
@@ -974,7 +1027,7 @@ function MessagesContent() {
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div className="mt-2 space-y-1.5">
                             {msg.attachments.map((att, attIdx) => {
-                              if (att.type === "image") {
+                              if (att.type === 'image') {
                                 return (
                                   <div
                                     key={`att-img-${att.id || att.url}-${attIdx}`}
@@ -983,11 +1036,11 @@ function MessagesContent() {
                                   >
                                     <img
                                       src={att.url}
-                                      alt={t("landlordMessagesAttachmentAlt")}
+                                      alt={t('landlordMessagesAttachmentAlt')}
                                       className="w-full max-h-60 object-cover"
                                     />
                                   </div>
-                                );
+                                )
                               }
                               return (
                                 <a
@@ -995,39 +1048,49 @@ function MessagesContent() {
                                   href={att.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold transition-colors ${isMe
-                                      ? "bg-white/20 text-white hover:bg-white/30"
-                                      : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200"
-                                    }`}
+                                  className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold transition-colors ${
+                                    isMe
+                                      ? 'bg-white/20 text-white hover:bg-white/30'
+                                      : 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200'
+                                  }`}
                                 >
                                   <File className="w-4 h-4 shrink-0" />
                                   <span className="truncate flex-1">
-                                    {att.url.split("/").pop() || t("landlordMessagesDefaultAttachment")}
+                                    {att.url.split('/').pop() ||
+                                      t('landlordMessagesDefaultAttachment')}
                                   </span>
                                   <Download className="w-3.5 h-3.5 shrink-0" />
                                 </a>
-                              );
+                              )
                             })}
                           </div>
                         )}
                       </div>
 
                       <div
-                        className={`flex items-center gap-1 text-[10px] font-bold ${isMe ? "text-zinc-400" : "text-zinc-400"
-                          }`}
+                        className={`flex items-center gap-1 text-[10px] font-bold ${
+                          isMe ? 'text-zinc-400' : 'text-zinc-400'
+                        }`}
                       >
                         <span>{formatMessageTime(msg.sentAt)}</span>
                         {isMe && (
-                          <span title={msg.readAt ? t("landlordMessagesStatusSeen") : t("landlordMessagesStatusSent")}>
+                          <span
+                            title={
+                              msg.readAt
+                                ? t('landlordMessagesStatusSeen')
+                                : t('landlordMessagesStatusSent')
+                            }
+                          >
                             <CheckCheck
-                              className={`w-3 h-3 ${msg.readAt ? "text-[#2AC1BC]" : "text-zinc-300"
-                                }`}
+                              className={`w-3 h-3 ${
+                                msg.readAt ? 'text-[#2AC1BC]' : 'text-zinc-300'
+                              }`}
                             />
                           </span>
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })
               )}
               <div ref={messagesEndRef} />
@@ -1037,7 +1100,7 @@ function MessagesContent() {
             <div className="px-4 py-2 bg-zinc-100/80 border-t border-zinc-200/80 flex items-center gap-2 overflow-x-auto custom-scrollbar">
               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-[#2AC1BC]" />
-                {t("landlordMessagesQuickRepliesTitle")}:
+                {t('landlordMessagesQuickRepliesTitle')}:
               </span>
               {quickReplies.map((reply, idx) => (
                 <button
@@ -1056,15 +1119,22 @@ function MessagesContent() {
             {pendingAttachments.length > 0 && (
               <div className="px-4 py-2 bg-zinc-50 border-t border-zinc-200 flex items-center gap-2 overflow-x-auto">
                 <span className="text-[10px] font-extrabold text-zinc-500 uppercase shrink-0">
-                  {t("landlordMessagesAttachmentsCount").replace("{count}", String(pendingAttachments.length))}
+                  {t('landlordMessagesAttachmentsCount').replace(
+                    '{count}',
+                    String(pendingAttachments.length),
+                  )}
                 </span>
                 {pendingAttachments.map((att, index) => (
                   <div
                     key={index}
                     className="relative group bg-white border border-zinc-200 rounded-xl p-1.5 flex items-center gap-2 text-xs shrink-0"
                   >
-                    {att.type === "image" ? (
-                      <img src={att.url} alt={att.name} className="w-8 h-8 rounded-lg object-cover" />
+                    {att.type === 'image' ? (
+                      <img
+                        src={att.url}
+                        alt={att.name}
+                        className="w-8 h-8 rounded-lg object-cover"
+                      />
                     ) : (
                       <File className="w-5 h-5 text-[#2AC1BC]" />
                     )}
@@ -1074,7 +1144,7 @@ function MessagesContent() {
                     <button
                       type="button"
                       onClick={() =>
-                        setPendingAttachments((prev) => prev.filter((_, i) => i !== index))
+                        setPendingAttachments(prev => prev.filter((_, i) => i !== index))
                       }
                       className="text-zinc-400 hover:text-rose-500 p-0.5 cursor-pointer"
                     >
@@ -1088,9 +1158,9 @@ function MessagesContent() {
             {/* Message Input Bar reusing Base Components */}
             <div className="p-3 sm:p-4 bg-white border-t border-zinc-200/80">
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSendMessage();
+                onSubmit={e => {
+                  e.preventDefault()
+                  handleSendMessage()
                 }}
                 className="flex items-center gap-2"
               >
@@ -1099,21 +1169,21 @@ function MessagesContent() {
                   type="file"
                   ref={fileInputRef}
                   className="hidden"
-                  onChange={(e) => handleFileUpload(e, "file")}
+                  onChange={e => handleFileUpload(e, 'file')}
                 />
                 <input
                   type="file"
                   accept="image/*"
                   ref={imageInputRef}
                   className="hidden"
-                  onChange={(e) => handleFileUpload(e, "image")}
+                  onChange={e => handleFileUpload(e, 'image')}
                 />
 
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-                  title={t("landlordMessagesTooltipAttachFile")}
+                  title={t('landlordMessagesTooltipAttachFile')}
                 >
                   <Paperclip className="w-4.5 h-4.5" />
                 </button>
@@ -1121,18 +1191,18 @@ function MessagesContent() {
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-                  title={t("landlordMessagesTooltipSendImage")}
+                  title={t('landlordMessagesTooltipSendImage')}
                 >
                   <ImageIcon className="w-4.5 h-4.5" />
                 </button>
 
                 <TextInput
-                  placeholder={t("landlordMessagesComposePlaceholder").replace(
-                    "{name}",
-                    activeChat.participant.roomName || activeChat.participant.fullName
+                  placeholder={t('landlordMessagesComposePlaceholder').replace(
+                    '{name}',
+                    activeChat.participant.roomName || activeChat.participant.fullName,
                   )}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={e => setInputMessage(e.target.value)}
                   disabled={isSending}
                   className="py-2.5 text-xs sm:text-sm font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
                   containerClassName="flex-1"
@@ -1155,16 +1225,14 @@ function MessagesContent() {
                   rightIcon={<Send className="w-3.5 h-3.5" />}
                   className="px-4 py-2.5 rounded-xl shrink-0"
                 >
-                  {t("landlordMessagesSendBtn")}
+                  {t('landlordMessagesSendBtn')}
                 </Button>
               </form>
             </div>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center p-8 text-center">
-            <p className="text-sm font-medium text-zinc-400">
-              {t("landlordMessagesSelectPrompt")}
-            </p>
+            <p className="text-sm font-medium text-zinc-400">{t('landlordMessagesSelectPrompt')}</p>
           </div>
         )}
       </div>
@@ -1183,7 +1251,7 @@ function MessagesContent() {
           {/* Panel Header */}
           <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
             <h3 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesDrawerTitle")}
+              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordMessagesDrawerTitle')}
             </h3>
             <button
               type="button"
@@ -1199,21 +1267,24 @@ function MessagesContent() {
             <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl text-center space-y-2">
               <div
                 className={`w-14 h-14 rounded-2xl ${getAvatarBg(
-                  activeChat.participant.id || activeChat.participant.fullName
+                  activeChat.participant.id || activeChat.participant.fullName,
                 )} text-white font-black text-xl flex items-center justify-center mx-auto shadow-sm`}
               >
                 {activeChat.participant.fullName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h4 className="font-black text-sm text-zinc-900">{activeChat.participant.fullName}</h4>
+                <h4 className="font-black text-sm text-zinc-900">
+                  {activeChat.participant.fullName}
+                </h4>
                 <p className="text-zinc-500 text-[11px] font-semibold mt-0.5">
-                  {activeChat.participant.phoneNumber || t("landlordMessagesNoPhone")}
+                  {activeChat.participant.phoneNumber || t('landlordMessagesNoPhone')}
                 </p>
               </div>
 
               <div className="pt-2 flex justify-center">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" /> {t("landlordMessagesDormioAccount")}
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" />{' '}
+                  {t('landlordMessagesDormioAccount')}
                 </span>
               </div>
             </div>
@@ -1222,18 +1293,24 @@ function MessagesContent() {
             <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl space-y-3 shadow-2xs">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
                 <span className="font-extrabold text-sm text-[#2AC1BC]">
-                  {activeChat.participant.roomName || t("landlordMessagesNoRoom")}
+                  {activeChat.participant.roomName || t('landlordMessagesNoRoom')}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100">
-                  {activeChat.participant.boardingHouseName || activeBuilding?.name || t("landlordMessagesDefaultBuilding")}
+                  {activeChat.participant.boardingHouseName ||
+                    activeBuilding?.name ||
+                    t('landlordMessagesDefaultBuilding')}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 font-semibold">{t("landlordMessagesRoleLabel")}</span>
+                  <span className="text-zinc-500 font-semibold">
+                    {t('landlordMessagesRoleLabel')}
+                  </span>
                   <span className="font-extrabold text-zinc-900">
-                    {activeChat.participant.role === "tenant" ? t("landlordMessagesRoleTenant") : t("landlordMessagesRoleProspect")}
+                    {activeChat.participant.role === 'tenant'
+                      ? t('landlordMessagesRoleTenant')
+                      : t('landlordMessagesRoleProspect')}
                   </span>
                 </div>
               </div>
@@ -1245,13 +1322,17 @@ function MessagesContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    const roomNo = activeChat.participant.roomName?.replace("Phòng ", "") || "";
-                    router.push(`/landlord/rooms?search=${encodeURIComponent(roomNo)}`);
+                    const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
+                    router.push(`/landlord/rooms?search=${encodeURIComponent(roomNo)}`)
                   }}
                   className="w-full p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
                 >
                   <span className="flex items-center gap-2">
-                    <DoorOpen className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesViewRoomDetail").replace("{room}", activeChat.participant.roomName || "")}
+                    <DoorOpen className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                    {t('landlordMessagesViewRoomDetail').replace(
+                      '{room}',
+                      activeChat.participant.roomName || '',
+                    )}
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
                 </button>
@@ -1259,13 +1340,17 @@ function MessagesContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    const roomNo = activeChat.participant.roomName?.replace("Phòng ", "") || "";
-                    router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`);
+                    const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
+                    router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
                   }}
                   className="w-full p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
                 >
                   <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesViewContract").replace("{room}", activeChat.participant.roomName || "")}
+                    <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                    {t('landlordMessagesViewContract').replace(
+                      '{room}',
+                      activeChat.participant.roomName || '',
+                    )}
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
                 </button>
@@ -1276,7 +1361,8 @@ function MessagesContent() {
             <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl space-y-3 shadow-2xs">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
                 <span className="font-extrabold text-xs text-zinc-900 flex items-center gap-1.5">
-                  <FileImage className="w-4 h-4 text-[#2AC1BC]" /> {t("landlordMessagesMediaStorageTitle")}
+                  <FileImage className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                  {t('landlordMessagesMediaStorageTitle')}
                 </span>
                 <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-zinc-100 text-zinc-600 rounded-md">
                   {activeChatMedia.total}
@@ -1318,7 +1404,9 @@ function MessagesContent() {
                           <div className="flex items-center gap-2 min-w-0">
                             <File className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-[11px] font-bold text-zinc-900 truncate">{file.name}</p>
+                              <p className="text-[11px] font-bold text-zinc-900 truncate">
+                                {file.name}
+                              </p>
                               <p className="text-[9px] text-zinc-400 font-medium">
                                 {file.size} • {file.time}
                               </p>
@@ -1340,7 +1428,7 @@ function MessagesContent() {
               ) : (
                 <div className="py-4 text-center text-[11px] font-bold text-zinc-400 space-y-1">
                   <FileImage className="w-6 h-6 mx-auto text-zinc-300 stroke-1" />
-                  <p>{t("landlordMessagesNoMedia")}</p>
+                  <p>{t('landlordMessagesNoMedia')}</p>
                 </div>
               )}
             </div>
@@ -1352,17 +1440,17 @@ function MessagesContent() {
       {showNewChatModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) handleCloseNewChatModal();
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) handleCloseNewChatModal()
           }}
         >
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[85vh]">
             <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between">
               <div>
-                <h3 className="font-extrabold text-sm text-zinc-900">{t("landlordMessagesNewModalTitle")}</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  {t("landlordMessagesNewModalSub")}
-                </p>
+                <h3 className="font-extrabold text-sm text-zinc-900">
+                  {t('landlordMessagesNewModalTitle')}
+                </h3>
+                <p className="text-xs text-zinc-500 mt-0.5">{t('landlordMessagesNewModalSub')}</p>
               </div>
               <button
                 type="button"
@@ -1375,9 +1463,9 @@ function MessagesContent() {
 
             <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
               <TextInput
-                placeholder={t("landlordMessagesNewModalSearch")}
+                placeholder={t('landlordMessagesNewModalSearch')}
                 value={newChatSearch}
-                onChange={(e) => setNewChatSearch(e.target.value)}
+                onChange={e => setNewChatSearch(e.target.value)}
                 leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
                 className="py-2 text-xs font-semibold bg-white border-zinc-200 rounded-xl"
               />
@@ -1387,15 +1475,13 @@ function MessagesContent() {
               {isCreatingChat ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
-                  <span>{t("landlordMessagesOpeningChat")}</span>
+                  <span>{t('landlordMessagesOpeningChat')}</span>
                 </div>
               ) : filteredContacts.length === 0 ? (
                 <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-1">
                   <User className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
-                  <p>{t("landlordMessagesNoContactsTitle")}</p>
-                  <p className="text-[10px] text-zinc-400">
-                    {t("landlordMessagesNoContactsDesc")}
-                  </p>
+                  <p>{t('landlordMessagesNoContactsTitle')}</p>
+                  <p className="text-[10px] text-zinc-400">{t('landlordMessagesNoContactsDesc')}</p>
                 </div>
               ) : (
                 filteredContacts.map((contact, contactIdx) => (
@@ -1407,7 +1493,7 @@ function MessagesContent() {
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-10 h-10 rounded-2xl ${getAvatarBg(
-                          contact.id
+                          contact.id,
                         )} text-white font-black text-sm flex items-center justify-center shrink-0 shadow-2xs`}
                       >
                         {contact.fullName.charAt(0).toUpperCase()}
@@ -1424,7 +1510,8 @@ function MessagesContent() {
                           )}
                         </div>
                         <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
-                          {contact.phoneNumber || t("landlordDepositsNoPhoneShort")} • {contact.boardingHouseName || t("landlordMessagesDefaultBuilding")}
+                          {contact.phoneNumber || t('landlordDepositsNoPhoneShort')} •{' '}
+                          {contact.boardingHouseName || t('landlordMessagesDefaultBuilding')}
                         </p>
                       </div>
                     </div>
@@ -1451,10 +1538,12 @@ function MessagesContent() {
               <div className="p-2 bg-amber-50 rounded-xl">
                 <AlertCircle className="w-5 h-5" />
               </div>
-              <h4 className="font-extrabold text-sm text-zinc-900">{t("landlordMessagesConfirmCloseTitle")}</h4>
+              <h4 className="font-extrabold text-sm text-zinc-900">
+                {t('landlordMessagesConfirmCloseTitle')}
+              </h4>
             </div>
             <p className="text-xs text-zinc-600 leading-relaxed">
-              {t("landlordMessagesConfirmCloseDesc")}
+              {t('landlordMessagesConfirmCloseDesc')}
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
@@ -1463,19 +1552,19 @@ function MessagesContent() {
                 onClick={() => setShowCloseModalConfirm(false)}
                 className="rounded-xl font-bold"
               >
-                {t("landlordMessagesConfirmCloseKeep")}
+                {t('landlordMessagesConfirmCloseKeep')}
               </Button>
               <Button
                 variant="danger"
                 size="sm"
                 onClick={() => {
-                  setShowCloseModalConfirm(false);
-                  setShowNewChatModal(false);
-                  setNewChatSearch("");
+                  setShowCloseModalConfirm(false)
+                  setShowNewChatModal(false)
+                  setNewChatSearch('')
                 }}
                 className="rounded-xl font-bold"
               >
-                {t("landlordMessagesConfirmCloseDiscard")}
+                {t('landlordMessagesConfirmCloseDiscard')}
               </Button>
             </div>
           </div>
@@ -1486,8 +1575,8 @@ function MessagesContent() {
       {previewImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setPreviewImage(null);
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) setPreviewImage(null)
           }}
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
@@ -1500,23 +1589,23 @@ function MessagesContent() {
             </button>
             <img
               src={previewImage}
-              alt={t("landlordMessagesImagePreviewAlt")}
+              alt={t('landlordMessagesImagePreviewAlt')}
               className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
             />
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function LandlordMessagesFallback() {
-  const t = useTranslations("landlord");
+  const t = useTranslations('landlord')
   return (
     <div className="p-8 text-center text-xs font-bold text-zinc-400">
-      {t("landlordMessagesLoadingMessages")}
+      {t('landlordMessagesLoadingMessages')}
     </div>
-  );
+  )
 }
 
 export default function LandlordMessagesPage() {
@@ -1524,5 +1613,5 @@ export default function LandlordMessagesPage() {
     <Suspense fallback={<LandlordMessagesFallback />}>
       <MessagesContent />
     </Suspense>
-  );
+  )
 }

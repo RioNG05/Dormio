@@ -1,2 +1,2 @@
-export * from "@/components/Logo";
-export { default } from "@/components/Logo";
+export * from '@/components/Logo'
+export { default } from '@/components/Logo'

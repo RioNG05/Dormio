@@ -5,38 +5,38 @@ import {
   Logger,
   NotFoundException,
   UnprocessableEntityException,
-} from '@nestjs/common';
-import { Prisma, SubscriptionPackage, SubscriptionStatus, UserRole } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto';
-import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto';
-import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto';
+} from '@nestjs/common'
+import { Prisma, SubscriptionPackage, SubscriptionStatus, UserRole } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto'
+import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto'
+import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto'
 import {
   MultiPropertyOverviewResponseDto,
   PropertyBreakdownDto,
-} from './dto/multi-property-overview-response.dto';
-import { AiStrategyResponseDto } from './dto/ai-strategy-response.dto';
+} from './dto/multi-property-overview-response.dto'
+import { AiStrategyResponseDto } from './dto/ai-strategy-response.dto'
 import {
   BoardingHouseListResponseDto,
   BoardingHouseResponseDto,
   BoardingHouseRoomTypeResponseDto,
   BoardingHouseServiceResponseDto,
   SetupBoardingHouseResponseDto,
-} from './dto/boarding-house-response.dto';
+} from './dto/boarding-house-response.dto'
 
 /** Default maxRoom quota for users with no active subscription (free tier). */
-const FREE_TIER_MAX_ROOM = 10;
+const FREE_TIER_MAX_ROOM = 10
 
 /** Max boarding houses per subscription tier. */
 const MAX_BOARDING_HOUSES: Record<SubscriptionPackage, number> = {
   [SubscriptionPackage.free]: 1,
   [SubscriptionPackage.plus]: 3,
   [SubscriptionPackage.pro]: 10,
-};
+}
 
 @Injectable()
 export class BoardingHousesService {
-  private readonly logger = new Logger(BoardingHousesService.name);
+  private readonly logger = new Logger(BoardingHousesService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -46,39 +46,37 @@ export class BoardingHousesService {
     userId: string,
     dto: SetupBoardingHouseDto,
   ): Promise<SetupBoardingHouseResponseDto> {
-    this.logger.log(
-      `Setting up boarding house for user ${userId} via 3-step wizard`,
-    );
+    this.logger.log(`Setting up boarding house for user ${userId} via 3-step wizard`)
 
     // Enforce per-tier boarding house creation limit
-    await this.enforceMaxBoardingHousesQuota(userId);
+    await this.enforceMaxBoardingHousesQuota(userId)
 
     // Resolve subscription quota before entering the transaction
-    const maxRoom = await this.resolveMaxRoom(userId);
-    const roomsToCreate = dto.rooms.floorCount * dto.rooms.roomsPerFloor;
+    const maxRoom = await this.resolveMaxRoom(userId)
+    const roomsToCreate = dto.rooms.floorCount * dto.rooms.roomsPerFloor
 
     if (roomsToCreate > maxRoom) {
       throw new UnprocessableEntityException(
         `Gói đăng ký hiện tại chỉ cho phép tối đa ${maxRoom} phòng. Bạn đang cố tạo ${roomsToCreate} phòng. Vui lòng nâng cấp gói hoặc giảm số phòng.`,
-      );
+      )
     }
 
     // Validate roomTypeIndex and serviceIndices are in bounds
     if (dto.rooms.roomTypeIndex >= dto.roomTypes.length) {
       throw new BadRequestException(
         `roomTypeIndex ${dto.rooms.roomTypeIndex} is out of bounds — only ${dto.roomTypes.length} room type(s) provided`,
-      );
+      )
     }
     const outOfBoundsService = (dto.rooms.serviceIndices ?? []).find(
-      (idx) => idx >= (dto.services ?? []).length,
-    );
+      idx => idx >= (dto.services ?? []).length,
+    )
     if (outOfBoundsService !== undefined) {
       throw new BadRequestException(
         `serviceIndex ${outOfBoundsService} is out of bounds — only ${(dto.services ?? []).length} service(s) provided`,
-      );
+      )
     }
 
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async tx => {
       // Step 1 — INSERT BoardingHouse
       const boardingHouse = await tx.boardingHouse.create({
         data: {
@@ -98,13 +96,11 @@ export class BoardingHousesService {
           status: 'active',
           deletedAt: new Date('2099-12-31T00:00:00.000Z'),
         },
-      });
+      })
 
       // Step 2 — INSERT Service[] → build index → UUID map
-      const serviceIds: string[] = [];
-      const createdServices: Awaited<
-        ReturnType<typeof tx.service.create>
-      >[] = [];
+      const serviceIds: string[] = []
+      const createdServices: Awaited<ReturnType<typeof tx.service.create>>[] = []
 
       for (const svc of dto.services ?? []) {
         const created = await tx.service.create({
@@ -117,16 +113,14 @@ export class BoardingHousesService {
             autoApplied: svc.autoApplied,
             status: 'active',
           },
-        });
-        serviceIds.push(created.id);
-        createdServices.push(created);
+        })
+        serviceIds.push(created.id)
+        createdServices.push(created)
       }
 
       // Step 3 — INSERT RoomType[] → build index → UUID map
-      const roomTypeIds: string[] = [];
-      const createdRoomTypes: Awaited<
-        ReturnType<typeof tx.roomType.create>
-      >[] = [];
+      const roomTypeIds: string[] = []
+      const createdRoomTypes: Awaited<ReturnType<typeof tx.roomType.create>>[] = []
 
       for (const rt of dto.roomTypes) {
         const created = await tx.roomType.create({
@@ -135,56 +129,52 @@ export class BoardingHousesService {
             name: rt.name.trim(),
             description: rt.description?.trim() ?? null,
           },
-        });
-        roomTypeIds.push(created.id);
-        createdRoomTypes.push(created);
+        })
+        roomTypeIds.push(created.id)
+        createdRoomTypes.push(created)
       }
 
       // Step 4 — Quota already validated above; recorded here for audit clarity
 
       // Step 5 — Resolve indices to real UUIDs
-      const resolvedRoomTypeId = roomTypeIds[dto.rooms.roomTypeIndex];
-      const resolvedServiceIds = (dto.rooms.serviceIndices ?? []).map(
-        (idx) => serviceIds[idx],
-      );
+      const resolvedRoomTypeId = roomTypeIds[dto.rooms.roomTypeIndex]
+      const resolvedServiceIds = (dto.rooms.serviceIndices ?? []).map(idx => serviceIds[idx])
 
       // Step 6 — Generate room name from template
       const renderName = (floor: number, index: number): string => {
         return dto.rooms.nameFormat
           .replace(/\{floor\}/g, String(floor))
-          .replace(/\{index\}/g, String(index));
-      };
+          .replace(/\{index\}/g, String(index))
+      }
 
       // Step 7 — INSERT Room[] + RoomService[]
-      let roomsCreated = 0;
+      let roomsCreated = 0
       for (let floor = 1; floor <= dto.rooms.floorCount; floor++) {
         for (let index = 1; index <= dto.rooms.roomsPerFloor; index++) {
-          const roomNumber = renderName(floor, index);
+          const roomNumber = renderName(floor, index)
           const room = await tx.room.create({
             data: {
               boardingHouseId: boardingHouse.id,
               roomNumber,
               floor,
               roomTypeId: resolvedRoomTypeId,
-              area: dto.rooms.area
-                ? new Prisma.Decimal(dto.rooms.area)
-                : null,
+              area: dto.rooms.area ? new Prisma.Decimal(dto.rooms.area) : null,
               maxOccupants: dto.rooms.maxOccupants ?? null,
               status: 'available',
             },
-          });
+          })
 
           // Step 7b — INSERT RoomService[] for each resolved service
           if (resolvedServiceIds.length > 0) {
             await tx.roomService.createMany({
-              data: resolvedServiceIds.map((serviceId) => ({
+              data: resolvedServiceIds.map(serviceId => ({
                 roomId: room.id,
                 serviceId,
               })),
-            });
+            })
           }
 
-          roomsCreated++;
+          roomsCreated++
         }
       }
 
@@ -192,7 +182,7 @@ export class BoardingHousesService {
       await tx.user.update({
         where: { id: userId },
         data: { role: UserRole.landlord },
-      });
+      })
 
       // Step 9 — Upsert bank account if provided
       if (dto.bankAccount) {
@@ -209,7 +199,7 @@ export class BoardingHousesService {
             accountNumber: dto.bankAccount.accountNumber.trim(),
             accountName: dto.bankAccount.accountName.trim().toUpperCase(),
           },
-        });
+        })
       }
 
       return {
@@ -219,8 +209,8 @@ export class BoardingHousesService {
           roomTypes: createdRoomTypes,
         },
         roomsCreated,
-      };
-    });
+      }
+    })
 
     return {
       success: true,
@@ -230,7 +220,7 @@ export class BoardingHousesService {
         result.boardingHouse.roomTypes,
       ),
       roomsCreated: result.roomsCreated,
-    };
+    }
   }
 
   // ─── Legacy create (kept for any other usage) ────────────────────────────
@@ -239,12 +229,12 @@ export class BoardingHousesService {
     userId: string,
     dto: CreateBoardingHouseDto,
   ): Promise<BoardingHouseResponseDto> {
-    this.logger.log(`Creating initial property profile for user ${userId}`);
+    this.logger.log(`Creating initial property profile for user ${userId}`)
 
     // Enforce per-tier boarding house creation limit
-    await this.enforceMaxBoardingHousesQuota(userId);
+    await this.enforceMaxBoardingHousesQuota(userId)
 
-    const boardingHouse = await this.prisma.$transaction(async (tx) => {
+    const boardingHouse = await this.prisma.$transaction(async tx => {
       const createdBoardingHouse = await tx.boardingHouse.create({
         data: {
           ownerId: userId,
@@ -262,7 +252,7 @@ export class BoardingHousesService {
           status: 'active',
           deletedAt: new Date('2099-12-31T00:00:00.000Z'),
           services: {
-            create: (dto.services ?? []).map((service) => ({
+            create: (dto.services ?? []).map(service => ({
               name: service.name.trim(),
               unit: service.unit.trim(),
               price: new Prisma.Decimal(service.price),
@@ -270,7 +260,7 @@ export class BoardingHousesService {
             })),
           },
           roomTypes: {
-            create: (dto.roomTypes ?? []).map((roomType) => ({
+            create: (dto.roomTypes ?? []).map(roomType => ({
               name: roomType.name.trim(),
               description: roomType.description?.trim() || null,
             })),
@@ -280,27 +270,27 @@ export class BoardingHousesService {
           services: true,
           roomTypes: true,
         },
-      });
+      })
 
       await tx.user.update({
         where: { id: userId },
         data: { role: UserRole.landlord },
-      });
+      })
 
-      return createdBoardingHouse;
-    });
+      return createdBoardingHouse
+    })
 
     return this.mapBoardingHouseResponse(
       boardingHouse,
       boardingHouse.services,
       boardingHouse.roomTypes,
-    );
+    )
   }
 
   // ─── UC-L-01 context: List properties ────────────────────────────────────
 
   async listMyProperties(userId: string): Promise<BoardingHouseListResponseDto> {
-    this.logger.log(`Listing all boarding houses for user ${userId}`);
+    this.logger.log(`Listing all boarding houses for user ${userId}`)
 
     const houses = await this.prisma.boardingHouse.findMany({
       where: { ownerId: userId },
@@ -314,11 +304,11 @@ export class BoardingHousesService {
           },
         },
       },
-    });
+    })
 
     return {
       success: true,
-      data: houses.map((house) => ({
+      data: houses.map(house => ({
         id: house.id,
         name: house.name,
         description: house.description,
@@ -334,40 +324,36 @@ export class BoardingHousesService {
         status: house.status,
         thumbnail: house.thumbnail ?? null,
         totalRooms: house._count.rooms,
-        services: house.services.map(
-          (service): BoardingHouseServiceResponseDto => ({
-            id: service.id,
-            name: service.name,
-            unit: service.unit,
-            price: this.formatMoney(service.price),
-            isMetered: service.isMetered,
-            autoApplied: service.autoApplied,
-          }),
-        ),
-        roomTypes: house.roomTypes.map(
-          (roomType): BoardingHouseRoomTypeResponseDto => ({
-            id: roomType.id,
-            name: roomType.name,
-            description: roomType.description,
-          }),
-        ),
+        services: house.services.map((service): BoardingHouseServiceResponseDto => ({
+          id: service.id,
+          name: service.name,
+          unit: service.unit,
+          price: this.formatMoney(service.price),
+          isMetered: service.isMetered,
+          autoApplied: service.autoApplied,
+        })),
+        roomTypes: house.roomTypes.map((roomType): BoardingHouseRoomTypeResponseDto => ({
+          id: roomType.id,
+          name: roomType.name,
+          description: roomType.description,
+        })),
       })),
-    };
+    }
   }
 
   // ─── UC-L-08: In-Memory Cache (Periodic Caching per Spec) ────────────────
   private readonly overviewCache = new Map<
     string,
     { data: BoardingHouseOverviewResponseDto; expiresAt: number }
-  >();
-  private readonly CACHE_TTL_MS = 60 * 1000; // 60s TTL per UC-L-08
+  >()
+  private readonly CACHE_TTL_MS = 60 * 1000 // 60s TTL per UC-L-08
 
   /** Invalidate overview cache for a specific boarding house or all */
   public invalidateOverviewCache(boardingHouseId?: string): void {
     if (boardingHouseId) {
-      this.overviewCache.delete(boardingHouseId);
+      this.overviewCache.delete(boardingHouseId)
     } else {
-      this.overviewCache.clear();
+      this.overviewCache.clear()
     }
   }
 
@@ -380,23 +366,23 @@ export class BoardingHousesService {
   ): Promise<BoardingHouseOverviewResponseDto> {
     this.logger.log(
       `Fetching dashboard overview for user ${userId} and house ${boardingHouseId} (forceRefresh=${forceRefresh})`,
-    );
+    )
 
     // Check in-memory periodic cache (UC-L-08 spec requirement)
     if (!forceRefresh) {
-      const cached = this.overviewCache.get(boardingHouseId);
+      const cached = this.overviewCache.get(boardingHouseId)
       if (cached && cached.expiresAt > Date.now()) {
-        this.logger.log(`Returning cached overview for house ${boardingHouseId}`);
-        return cached.data;
+        this.logger.log(`Returning cached overview for house ${boardingHouseId}`)
+        return cached.data
       }
     }
 
     const house = await this.prisma.boardingHouse.findFirst({
       where: { id: boardingHouseId, ownerId: userId },
-    });
+    })
 
     if (!house) {
-      throw new NotFoundException('Boarding house not found or unauthorized');
+      throw new NotFoundException('Boarding house not found or unauthorized')
     }
 
     // 1. Room statistics (UC-L-08: Occupancy = COUNT(Room occupied) / COUNT(Room))
@@ -407,25 +393,15 @@ export class BoardingHousesService {
         this.prisma.room.count({ where: { boardingHouseId, status: 'available' } }),
         this.prisma.room.count({ where: { boardingHouseId, status: 'deposited' } }),
         this.prisma.room.count({ where: { boardingHouseId, status: 'maintainace' } }),
-      ]);
+      ])
 
     const occupancyRate =
-      totalRooms > 0
-        ? `${Math.round((occupiedRooms / totalRooms) * 100)}%`
-        : '0%';
+      totalRooms > 0 ? `${Math.round((occupiedRooms / totalRooms) * 100)}%` : '0%'
 
     // 2. Financial metrics & Revenue (UC-L-08: Revenue = SUM(Payment.amount) WHERE type='charge' AND status='success')
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
 
     const [currentMonthPayments, unpaidInvoices, paidInvoicesCount, currentPeriodInvoices] =
       await Promise.all([
@@ -466,42 +442,39 @@ export class BoardingHousesService {
             dueDate: true,
           },
         }),
-      ]);
+      ])
 
     // 3. Collection status: Invoice grouped by status for current period (UC-L-08)
-    let paidCount = 0;
-    let paidAmount = 0;
-    let unpaidCount = 0;
-    let unpaidAmount = 0;
-    let overdueCount = 0;
-    let overdueAmount = 0;
+    let paidCount = 0
+    let paidAmount = 0
+    let unpaidCount = 0
+    let unpaidAmount = 0
+    let overdueCount = 0
+    let overdueAmount = 0
 
     for (const inv of currentPeriodInvoices) {
-      const amt = Number(inv.totalAmount);
+      const amt = Number(inv.totalAmount)
       const isOverdue =
-        inv.status === 'overdue' ||
-        (inv.status === 'unpaid' && new Date(inv.dueDate) < now);
+        inv.status === 'overdue' || (inv.status === 'unpaid' && new Date(inv.dueDate) < now)
 
       if (inv.status === 'paid') {
-        paidCount++;
-        paidAmount += amt;
+        paidCount++
+        paidAmount += amt
       } else if (isOverdue) {
-        overdueCount++;
-        overdueAmount += amt;
+        overdueCount++
+        overdueAmount += amt
       } else {
-        unpaidCount++;
-        unpaidAmount += amt;
+        unpaidCount++
+        unpaidAmount += amt
       }
     }
 
-    const totalBilled = paidAmount + unpaidAmount + overdueAmount;
+    const totalBilled = paidAmount + unpaidAmount + overdueAmount
     const collectionRate =
-      totalBilled > 0
-        ? `${Math.round((paidAmount / totalBilled) * 1000) / 10}%`
-        : '0%';
+      totalBilled > 0 ? `${Math.round((paidAmount / totalBilled) * 1000) / 10}%` : '0%'
 
     // 4. Expiring contracts within next 30 days (UC-L-08: endDate BETWEEN NOW() AND NOW() + 30 days)
-    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
     const expiringContractsRaw = await this.prisma.contract.findMany({
       where: {
         room: { boardingHouseId },
@@ -516,14 +489,14 @@ export class BoardingHousesService {
       },
       orderBy: { endDate: 'asc' },
       take: 10,
-    });
+    })
 
-    const expiringContracts = expiringContractsRaw.map((c) => {
-      const tenant = c.tenantContracts[0]?.tenant;
+    const expiringContracts = expiringContractsRaw.map(c => {
+      const tenant = c.tenantContracts[0]?.tenant
       const daysLeft = Math.max(
         0,
         Math.ceil((c.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
-      );
+      )
       return {
         id: c.id,
         room: `P.${c.room.roomNumber}`,
@@ -531,8 +504,8 @@ export class BoardingHousesService {
         phone: tenant?.phoneNumber || '',
         daysLeft,
         endDate: c.endDate.toLocaleDateString('vi-VN'),
-      };
-    });
+      }
+    })
 
     // 5. Deposits
     const depositsRaw = await this.prisma.deposit.findMany({
@@ -551,10 +524,10 @@ export class BoardingHousesService {
       },
       orderBy: { createdAt: 'desc' },
       take: 10,
-    });
+    })
 
-    const depositNotifications = depositsRaw.map((d) => {
-      const tenant = d.contract?.tenantContracts[0]?.tenant;
+    const depositNotifications = depositsRaw.map(d => {
+      const tenant = d.contract?.tenantContracts[0]?.tenant
       return {
         id: d.id,
         room: `P.${d.room.roomNumber}`,
@@ -563,8 +536,8 @@ export class BoardingHousesService {
         date: d.createdAt.toLocaleDateString('vi-VN'),
         type: d.type === 'platform' ? 'Cọc Escrow Dormio' : 'Cọc giữ phòng',
         status: d.status,
-      };
-    });
+      }
+    })
 
     // 6. Maintenance requests (Grievances)
     const grievancesRaw = await this.prisma.grievance.findMany({
@@ -578,9 +551,9 @@ export class BoardingHousesService {
       },
       orderBy: { createdAt: 'desc' },
       take: 10,
-    });
+    })
 
-    const maintenanceRequests = grievancesRaw.map((g) => ({
+    const maintenanceRequests = grievancesRaw.map(g => ({
       id: g.id,
       room: g.room ? `P.${g.room.roomNumber}` : 'Chung',
       issue: g.title,
@@ -588,15 +561,15 @@ export class BoardingHousesService {
       reporter: g.tenant?.username || g.tenant?.phoneNumber || 'Người thuê',
       date: g.createdAt.toLocaleDateString('vi-VN'),
       status: g.status,
-    }));
+    }))
 
     // 7. Monthly revenue history (past 6 months) with type='charge' & status='success'
-    const monthlyRevenue: Array<{ month: string; val: number; fullAmount: string }> = [];
+    const monthlyRevenue: Array<{ month: string; val: number; fullAmount: string }> = []
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
-      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`;
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const mStart = new Date(d.getFullYear(), d.getMonth(), 1)
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`
 
       const mPayments = await this.prisma.payment.aggregate({
         where: {
@@ -606,25 +579,26 @@ export class BoardingHousesService {
           paidAt: { gte: mStart, lte: mEnd },
         },
         _sum: { amount: true },
-      });
+      })
 
-      const totalNum = Number(mPayments._sum.amount ?? 0);
+      const totalNum = Number(mPayments._sum.amount ?? 0)
       monthlyRevenue.push({
         month: monthLabel,
         val: Math.round((totalNum / 1000000) * 10) / 10,
         fullAmount: this.formatMoney(mPayments._sum.amount ?? 0),
-      });
+      })
     }
 
-    const hasAnyRevenue = monthlyRevenue.some((m) => m.val > 0);
-    const revenueChart = hasAnyRevenue ? monthlyRevenue : [];
+    const hasAnyRevenue = monthlyRevenue.some(m => m.val > 0)
+    const revenueChart = hasAnyRevenue ? monthlyRevenue : []
 
     // 8. Monthly occupancy history (past 6 months)
-    const occupancyChart: Array<{ month: string; occupied: number; total: number; count: number }> = [];
+    const occupancyChart: Array<{ month: string; occupied: number; total: number; count: number }> =
+      []
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`;
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`
 
       const activeContracts = await this.prisma.contract.count({
         where: {
@@ -633,15 +607,16 @@ export class BoardingHousesService {
           startDate: { lte: mEnd },
           endDate: { gte: d },
         },
-      });
+      })
 
-      const occRateNum = totalRooms > 0 ? Math.min(100, Math.round((activeContracts / totalRooms) * 100)) : 0;
+      const occRateNum =
+        totalRooms > 0 ? Math.min(100, Math.round((activeContracts / totalRooms) * 100)) : 0
       occupancyChart.push({
         month: monthLabel,
         occupied: occRateNum,
         total: totalRooms,
         count: activeContracts,
-      });
+      })
     }
 
     const result: BoardingHouseOverviewResponseDto = {
@@ -674,15 +649,15 @@ export class BoardingHousesService {
       depositNotifications,
       maintenanceRequests,
       expiringContracts,
-    };
+    }
 
     // Save in cache (60s TTL)
     this.overviewCache.set(boardingHouseId, {
       data: result,
       expiresAt: Date.now() + this.CACHE_TTL_MS,
-    });
+    })
 
-    return result;
+    return result
   }
 
   // ─── UC-L-24: Advanced Multi-Property Reports & AI Strategy ───────────────
@@ -691,22 +666,12 @@ export class BoardingHousesService {
    * UC-L-24: Advanced Multi-Property Reports
    * Aggregated across all BoardingHouse WHERE ownerId = current_user.id
    */
-  async getMultiPropertyOverview(
-    userId: string,
-  ): Promise<MultiPropertyOverviewResponseDto> {
-    this.logger.log(`getMultiPropertyOverview called for user ${userId}`);
+  async getMultiPropertyOverview(userId: string): Promise<MultiPropertyOverviewResponseDto> {
+    this.logger.log(`getMultiPropertyOverview called for user ${userId}`)
 
-    const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
+    const now = new Date()
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
 
     const houses = await this.prisma.boardingHouse.findMany({
       where: {
@@ -717,7 +682,7 @@ export class BoardingHousesService {
         rooms: true,
       },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
     if (houses.length === 0) {
       return {
@@ -741,30 +706,28 @@ export class BoardingHousesService {
         revenueChart: [],
         occupancyChart: [],
         expiringContracts: [],
-      };
+      }
     }
 
-    const houseIds = houses.map((h) => h.id);
+    const houseIds = houses.map(h => h.id)
 
     // 1. Aggregated Rooms
-    let totalRooms = 0;
-    let occupiedRooms = 0;
-    let vacantRooms = 0;
-    let depositRooms = 0;
-    let maintenanceRooms = 0;
+    let totalRooms = 0
+    let occupiedRooms = 0
+    let vacantRooms = 0
+    let depositRooms = 0
+    let maintenanceRooms = 0
 
     for (const h of houses) {
-      totalRooms += h.rooms.length;
-      occupiedRooms += h.rooms.filter((r) => r.status === 'occupied').length;
-      vacantRooms += h.rooms.filter((r) => r.status === 'available').length;
-      depositRooms += h.rooms.filter((r) => r.status === 'deposited').length;
-      maintenanceRooms += h.rooms.filter((r) => r.status === 'maintainace').length;
+      totalRooms += h.rooms.length
+      occupiedRooms += h.rooms.filter(r => r.status === 'occupied').length
+      vacantRooms += h.rooms.filter(r => r.status === 'available').length
+      depositRooms += h.rooms.filter(r => r.status === 'deposited').length
+      maintenanceRooms += h.rooms.filter(r => r.status === 'maintainace').length
     }
 
     const occupancyRate =
-      totalRooms > 0
-        ? `${Math.round((occupiedRooms / totalRooms) * 1000) / 10}%`
-        : '0%';
+      totalRooms > 0 ? `${Math.round((occupiedRooms / totalRooms) * 1000) / 10}%` : '0%'
 
     // 2. Financial Aggregations across all properties
     const [currentMonthPayments, currentMonthExpenses, unpaidInvoices, paidInvoicesCount] =
@@ -801,11 +764,11 @@ export class BoardingHousesService {
             createdAt: { gte: currentMonthStart, lte: currentMonthEnd },
           },
         }),
-      ]);
+      ])
 
-    const totalRevenueNum = Number(currentMonthPayments._sum.amount ?? 0);
-    const totalExpensesNum = Number(currentMonthExpenses._sum.amount ?? 0);
-    const netProfitNum = totalRevenueNum - totalExpensesNum;
+    const totalRevenueNum = Number(currentMonthPayments._sum.amount ?? 0)
+    const totalExpensesNum = Number(currentMonthExpenses._sum.amount ?? 0)
+    const netProfitNum = totalRevenueNum - totalExpensesNum
 
     // 3. Collection Status across all properties
     const currentPeriodInvoices = await this.prisma.invoice.findMany({
@@ -814,41 +777,38 @@ export class BoardingHousesService {
         createdAt: { gte: currentMonthStart, lte: currentMonthEnd },
       },
       select: { totalAmount: true, status: true, dueDate: true },
-    });
+    })
 
-    let paidCount = 0;
-    let paidAmount = 0;
-    let unpaidCount = 0;
-    let unpaidAmount = 0;
-    let overdueCount = 0;
-    let overdueAmount = 0;
+    let paidCount = 0
+    let paidAmount = 0
+    let unpaidCount = 0
+    let unpaidAmount = 0
+    let overdueCount = 0
+    let overdueAmount = 0
 
     for (const inv of currentPeriodInvoices) {
-      const amt = Number(inv.totalAmount);
+      const amt = Number(inv.totalAmount)
       const isOverdue =
-        inv.status === 'overdue' ||
-        (inv.status === 'unpaid' && new Date(inv.dueDate) < now);
+        inv.status === 'overdue' || (inv.status === 'unpaid' && new Date(inv.dueDate) < now)
 
       if (inv.status === 'paid') {
-        paidCount++;
-        paidAmount += amt;
+        paidCount++
+        paidAmount += amt
       } else if (isOverdue) {
-        overdueCount++;
-        overdueAmount += amt;
+        overdueCount++
+        overdueAmount += amt
       } else {
-        unpaidCount++;
-        unpaidAmount += amt;
+        unpaidCount++
+        unpaidAmount += amt
       }
     }
 
-    const totalBilled = paidAmount + unpaidAmount + overdueAmount;
+    const totalBilled = paidAmount + unpaidAmount + overdueAmount
     const collectionRate =
-      totalBilled > 0
-        ? `${Math.round((paidAmount / totalBilled) * 1000) / 10}%`
-        : '0%';
+      totalBilled > 0 ? `${Math.round((paidAmount / totalBilled) * 1000) / 10}%` : '0%'
 
     // 4. Expiring contracts across all properties in next 30 days
-    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
     const expiringContractsRaw = await this.prisma.contract.findMany({
       where: {
         room: { boardingHouseId: { in: houseIds } },
@@ -865,14 +825,14 @@ export class BoardingHousesService {
       },
       orderBy: { endDate: 'asc' },
       take: 10,
-    });
+    })
 
-    const expiringContracts = expiringContractsRaw.map((c) => {
-      const tenant = c.tenantContracts[0]?.tenant;
+    const expiringContracts = expiringContractsRaw.map(c => {
+      const tenant = c.tenantContracts[0]?.tenant
       const daysLeft = Math.max(
         0,
         Math.ceil((c.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
-      );
+      )
       return {
         id: c.id,
         propertyName: c.room.boardingHouse.name,
@@ -881,19 +841,17 @@ export class BoardingHousesService {
         phone: tenant?.phoneNumber || '',
         daysLeft,
         endDate: c.endDate.toLocaleDateString('vi-VN'),
-      };
-    });
+      }
+    })
 
     // 5. Per-Property Comparison Breakdown
-    const propertiesBreakdown: PropertyBreakdownDto[] = [];
+    const propertiesBreakdown: PropertyBreakdownDto[] = []
     for (const h of houses) {
-      const hTotalRooms = h.rooms.length;
-      const hOccupied = h.rooms.filter((r) => r.status === 'occupied').length;
-      const hVacant = h.rooms.filter((r) => r.status === 'available').length;
+      const hTotalRooms = h.rooms.length
+      const hOccupied = h.rooms.filter(r => r.status === 'occupied').length
+      const hVacant = h.rooms.filter(r => r.status === 'available').length
       const hOccRate =
-        hTotalRooms > 0
-          ? `${Math.round((hOccupied / hTotalRooms) * 1000) / 10}%`
-          : '0%';
+        hTotalRooms > 0 ? `${Math.round((hOccupied / hTotalRooms) * 1000) / 10}%` : '0%'
 
       const [hRev, hExp, hDebt, hExpiringCount] = await Promise.all([
         this.prisma.payment.aggregate({
@@ -928,11 +886,11 @@ export class BoardingHousesService {
             endDate: { gte: now, lte: in30Days },
           },
         }),
-      ]);
+      ])
 
-      const hRevNum = Number(hRev._sum.amount ?? 0);
-      const hExpNum = Number(hExp._sum.amount ?? 0);
-      const hNetNum = hRevNum - hExpNum;
+      const hRevNum = Number(hRev._sum.amount ?? 0)
+      const hExpNum = Number(hExp._sum.amount ?? 0)
+      const hNetNum = hRevNum - hExpNum
 
       propertiesBreakdown.push({
         id: h.id,
@@ -948,16 +906,16 @@ export class BoardingHousesService {
         unpaidDebt: this.formatMoney(hDebt._sum.totalAmount ?? 0),
         unpaidInvoicesCount: hDebt._count.id ?? 0,
         expiringContractsCount: hExpiringCount,
-      });
+      })
     }
 
     // 6. Combined Past 6 Months Revenue History
-    const monthlyRevenue: Array<{ month: string; val: number; fullAmount: string }> = [];
+    const monthlyRevenue: Array<{ month: string; val: number; fullAmount: string }> = []
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
-      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`;
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const mStart = new Date(d.getFullYear(), d.getMonth(), 1)
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`
 
       const mPayments = await this.prisma.payment.aggregate({
         where: {
@@ -967,22 +925,23 @@ export class BoardingHousesService {
           paidAt: { gte: mStart, lte: mEnd },
         },
         _sum: { amount: true },
-      });
+      })
 
-      const totalNum = Number(mPayments._sum.amount ?? 0);
+      const totalNum = Number(mPayments._sum.amount ?? 0)
       monthlyRevenue.push({
         month: monthLabel,
         val: Math.round((totalNum / 1000000) * 10) / 10,
         fullAmount: this.formatMoney(totalNum),
-      });
+      })
     }
 
     // 7. Combined Past 6 Months Occupancy History
-    const occupancyChart: Array<{ month: string; occupied: number; total: number; count: number }> = [];
+    const occupancyChart: Array<{ month: string; occupied: number; total: number; count: number }> =
+      []
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`;
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+      const monthLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`
 
       const activeContracts = await this.prisma.contract.count({
         where: {
@@ -991,15 +950,16 @@ export class BoardingHousesService {
           startDate: { lte: mEnd },
           endDate: { gte: d },
         },
-      });
+      })
 
-      const occRateNum = totalRooms > 0 ? Math.min(100, Math.round((activeContracts / totalRooms) * 100)) : 0;
+      const occRateNum =
+        totalRooms > 0 ? Math.min(100, Math.round((activeContracts / totalRooms) * 100)) : 0
       occupancyChart.push({
         month: monthLabel,
         occupied: occRateNum,
         total: totalRooms,
         count: activeContracts,
-      });
+      })
     }
 
     return {
@@ -1023,48 +983,46 @@ export class BoardingHousesService {
       revenueChart: monthlyRevenue,
       occupancyChart,
       expiringContracts,
-    };
+    }
   }
 
   /**
    * UC-L-24 & UC-L-12: Generate AI Marketing Strategy across all properties
    * Reuses AiConversation & AiMessage pattern with aggregated portfolio metrics.
    */
-  async generateMultiPropertyAiStrategy(
-    userId: string,
-  ): Promise<AiStrategyResponseDto> {
-    this.logger.log(`generateMultiPropertyAiStrategy called for user ${userId}`);
+  async generateMultiPropertyAiStrategy(userId: string): Promise<AiStrategyResponseDto> {
+    this.logger.log(`generateMultiPropertyAiStrategy called for user ${userId}`)
 
-    const overview = await this.getMultiPropertyOverview(userId);
-    const { portfolioSummary, propertiesBreakdown } = overview;
+    const overview = await this.getMultiPropertyOverview(userId)
+    const { portfolioSummary, propertiesBreakdown } = overview
 
     // Find first boarding house for conversation relation constraint
     const firstHouse = await this.prisma.boardingHouse.findFirst({
       where: { ownerId: userId, deletedAt: { gt: new Date() } },
-    });
+    })
 
     if (!firstHouse) {
-      throw new BadRequestException('Bạn chưa có nhà trọ nào để tạo chiến lược tiếp thị');
+      throw new BadRequestException('Bạn chưa có nhà trọ nào để tạo chiến lược tiếp thị')
     }
 
     const underperforming = propertiesBreakdown.filter(
-      (p) => parseFloat(p.occupancyRate) < 80 || p.unpaidInvoicesCount > 2,
-    );
+      p => parseFloat(p.occupancyRate) < 80 || p.unpaidInvoicesCount > 2,
+    )
 
-    const vacantTotal = portfolioSummary.vacantRooms;
-    const occRate = portfolioSummary.occupancyRate;
+    const vacantTotal = portfolioSummary.vacantRooms
+    const occRate = portfolioSummary.occupancyRate
 
     const executiveSummary =
       portfolioSummary.totalProperties > 1
         ? `Hệ thống đang vận hành ${portfolioSummary.totalProperties} cơ sở với tổng cộng ${portfolioSummary.totalRooms} phòng. Tỷ lệ lấp đầy đạt ${occRate}, hiện còn ${vacantTotal} phòng trống cần khai thác. Doanh thu thuần tháng này ước đạt ${portfolioSummary.netProfit} VNĐ sau khi trừ chi phí vận hành.`
-        : `Cơ sở hiện có ${portfolioSummary.totalRooms} phòng, đạt tỷ lệ lấp đầy ${occRate} với ${vacantTotal} phòng trống. Cần đẩy mạnh tiếp thị để đạt tỷ lệ tối ưu trên 90%.`;
+        : `Cơ sở hiện có ${portfolioSummary.totalRooms} phòng, đạt tỷ lệ lấp đầy ${occRate} với ${vacantTotal} phòng trống. Cần đẩy mạnh tiếp thị để đạt tỷ lệ tối ưu trên 90%.`
 
     const pricingRecommendations = [
       vacantTotal > 0
         ? `Áp dụng chính sách giá linh hoạt: Giảm 5% – 8% giá thuê tháng đầu tiên cho khách ký hợp đồng từ 6 tháng trở lên cho ${vacantTotal} phòng đang trống.`
         : 'Tỷ lệ phòng trống thấp: Cân nhắc tăng nhẹ 3% – 5% giá thuê đối với các hợp đồng ký mới hoặc khi gia hạn để tối đa hóa biên lợi nhuận.',
       'Cơ cấu lại phí dịch vụ (xe máy, wifi, vệ sinh) thành gói combo trọn gói nhằm gia tăng giá trị cảm nhận cho khách thuê trẻ tuổi.',
-    ];
+    ]
 
     const marketingCampaigns = [
       'Đẩy mạnh tin đăng nổi bật trên nền tảng tìm trọ Dormio BHRP vào khung giờ vàng (11:00 - 13:00 và 19:00 - 21:00).',
@@ -1072,12 +1030,12 @@ export class BoardingHousesService {
         ? `Tập trung chiến dịch thu hút khách cho cơ sở "${underperforming[0].name}" qua nhóm sinh viên và cư dân văn phòng trong bán kính 3km.`
         : 'Triển khai chương trình giới thiệu: Tặng 200.000đ trừ vào tiền phòng tháng kế tiếp cho người thuê hiện tại khi giới thiệu bạn bè thành công.',
       'Chụp lại ảnh phòng với góc rộng, ánh sáng tự nhiên và bổ sung video ngắn 360 độ khu vực hành lang, tiện ích chung.',
-    ];
+    ]
 
     const operationalOptimizations = [
       `Kiểm soát chi phí: Chi phí vận hành tháng này chiếm tỷ trọng đáng kể (${portfolioSummary.currentMonthExpenses} VNĐ). Cần rà soát các khoản điện nước chung và vật tư bảo trì.`,
       `Công nợ tồn đọng: Tổng tiền chưa thu là ${portfolioSummary.unpaidDebt} VNĐ trên ${portfolioSummary.unpaidInvoicesCount} hóa đơn. Nên gửi thông báo nhắc lịch tự động trước 3 ngày qua Zalo/SMS.`,
-    ];
+    ]
 
     const actionPlan30Days = [
       {
@@ -1088,25 +1046,28 @@ export class BoardingHousesService {
       {
         dayRange: 'Tuần 2 (Ngày 8 - 15)',
         title: 'Kích hoạt chính sách ưu đãi cọc & Đăng tin tiếp thị',
-        description: 'Bật chiến dịch ưu đãi cọc linh hoạt 0.5 tháng và chia sẻ bài đăng vào các hội đồng hương sinh viên.',
+        description:
+          'Bật chiến dịch ưu đãi cọc linh hoạt 0.5 tháng và chia sẻ bài đăng vào các hội đồng hương sinh viên.',
       },
       {
         dayRange: 'Tuần 3 (Ngày 16 - 23)',
         title: 'Chăm sóc khách thuê hiện tại & Thu hồi công nợ',
-        description: 'Gửi khảo sát nhanh về chất lượng phòng và đôn đốc xử lý các hóa đơn trễ hạn theo quy trình tự động.',
+        description:
+          'Gửi khảo sát nhanh về chất lượng phòng và đôn đốc xử lý các hóa đơn trễ hạn theo quy trình tự động.',
       },
       {
         dayRange: 'Tuần 4 (Ngày 24 - 30)',
         title: 'Đánh giá tỷ lệ chuyển đổi & Tái cân bằng ngân sách',
-        description: 'Tổng kết số lượng khách đã chốt cọc trong tháng, điều chỉnh giá cho các phòng còn lại và lập dự trù chi phí tháng tới.',
+        description:
+          'Tổng kết số lượng khách đã chốt cọc trong tháng, điều chỉnh giá cho các phòng còn lại và lập dự trù chi phí tháng tới.',
       },
-    ];
+    ]
 
     // Persist in AiConversation and AiMessage per UC-L-24
     try {
       let conversation = await this.prisma.aiConversation.findFirst({
         where: { userId, boardingHouseId: firstHouse.id },
-      });
+      })
 
       if (!conversation) {
         conversation = await this.prisma.aiConversation.create({
@@ -1114,7 +1075,7 @@ export class BoardingHousesService {
             userId,
             boardingHouseId: firstHouse.id,
           },
-        });
+        })
       }
 
       await this.prisma.aiMessage.create({
@@ -1124,7 +1085,7 @@ export class BoardingHousesService {
           content: `Yêu cầu phân tích hiệu quả kinh doanh ${portfolioSummary.totalProperties} cơ sở, tỷ lệ lấp đầy ${occRate}, doanh thu ${portfolioSummary.currentMonthRevenue} VNĐ.`,
           model: 'dormio-gpt-pro',
         },
-      });
+      })
 
       await this.prisma.aiMessage.create({
         data: {
@@ -1133,9 +1094,9 @@ export class BoardingHousesService {
           content: executiveSummary,
           model: 'dormio-gpt-pro',
         },
-      });
+      })
     } catch (dbErr) {
-      this.logger.warn(`Failed to persist AI messages: ${dbErr}`);
+      this.logger.warn(`Failed to persist AI messages: ${dbErr}`)
     }
 
     return {
@@ -1146,7 +1107,7 @@ export class BoardingHousesService {
       operationalOptimizations,
       actionPlan30Days,
       createdAt: new Date().toISOString(),
-    };
+    }
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -1156,7 +1117,7 @@ export class BoardingHousesService {
    * Falls back to free if no active subscription exists.
    */
   private async resolveCurrentTier(userId: string): Promise<SubscriptionPackage> {
-    const now = new Date();
+    const now = new Date()
     const activeSub = await this.prisma.userSubscription.findFirst({
       where: {
         userId,
@@ -1166,8 +1127,8 @@ export class BoardingHousesService {
       },
       orderBy: { createdAt: 'desc' },
       select: { planName: true },
-    });
-    return activeSub?.planName ?? SubscriptionPackage.free;
+    })
+    return activeSub?.planName ?? SubscriptionPackage.free
   }
 
   /**
@@ -1175,14 +1136,14 @@ export class BoardingHousesService {
    * Throws ForbiddenException if the limit is already reached.
    */
   private async enforceMaxBoardingHousesQuota(userId: string): Promise<void> {
-    const tier = await this.resolveCurrentTier(userId);
-    const maxHouses = MAX_BOARDING_HOUSES[tier];
+    const tier = await this.resolveCurrentTier(userId)
+    const maxHouses = MAX_BOARDING_HOUSES[tier]
 
     const existingCount = await this.prisma.boardingHouse.count({
       where: {
         ownerId: userId,
       },
-    });
+    })
 
     if (existingCount >= maxHouses) {
       throw new ForbiddenException({
@@ -1194,7 +1155,7 @@ export class BoardingHousesService {
         maxAllowed: maxHouses,
         currentCount: existingCount,
         upgradeUrl: '/pricing',
-      });
+      })
     }
   }
 
@@ -1213,40 +1174,40 @@ export class BoardingHousesService {
         subscriptionPlan: true,
       },
       orderBy: { endDate: 'desc' },
-    });
+    })
 
-    return activeSub?.subscriptionPlan.maxRoom ?? FREE_TIER_MAX_ROOM;
+    return activeSub?.subscriptionPlan.maxRoom ?? FREE_TIER_MAX_ROOM
   }
 
   private mapBoardingHouseResponse(
     boardingHouse: {
-      id: string;
-      name: string;
-      description: string | null;
-      country: string;
-      province: string;
-      city?: string | null;
-      ward: string;
-      district: string;
-      street: string;
-      houseNumber: string;
-      totalFloor: number | null;
-      builtAt: Date;
-      status: string;
-      thumbnail?: string | null;
+      id: string
+      name: string
+      description: string | null
+      country: string
+      province: string
+      city?: string | null
+      ward: string
+      district: string
+      street: string
+      houseNumber: string
+      totalFloor: number | null
+      builtAt: Date
+      status: string
+      thumbnail?: string | null
     },
     services: Array<{
-      id: string;
-      name: string;
-      unit: string;
-      price: unknown;
-      isMetered: boolean;
-      autoApplied: boolean;
+      id: string
+      name: string
+      unit: string
+      price: unknown
+      isMetered: boolean
+      autoApplied: boolean
     }>,
     roomTypes: Array<{
-      id: string;
-      name: string;
-      description: string | null;
+      id: string
+      name: string
+      description: string | null
     }>,
   ): BoardingHouseResponseDto {
     return {
@@ -1264,7 +1225,7 @@ export class BoardingHousesService {
       builtAt: boardingHouse.builtAt.toISOString(),
       status: boardingHouse.status,
       thumbnail: boardingHouse.thumbnail ?? null,
-      services: services.map((s) => ({
+      services: services.map(s => ({
         id: s.id,
         name: s.name,
         unit: s.unit,
@@ -1272,25 +1233,26 @@ export class BoardingHousesService {
         isMetered: s.isMetered,
         autoApplied: s.autoApplied,
       })),
-      roomTypes: roomTypes.map((rt) => ({
+      roomTypes: roomTypes.map(rt => ({
         id: rt.id,
         name: rt.name,
         description: rt.description,
       })),
-    };
+    }
   }
 
   private formatMoney(value: unknown): string {
-    const [integerPart, decimalPart = ''] = String(value).split('.');
-    return `${integerPart}.${decimalPart.padEnd(2, '0').slice(0, 2)}`;
+    const [integerPart, decimalPart = ''] = String(value).split('.')
+    return `${integerPart}.${decimalPart.padEnd(2, '0').slice(0, 2)}`
   }
 
   /**
    * Get full boarding house details for admin inspection (House info, owner, services, room types, grievances)
    */
   async getBoardingHouseDetails(id: string) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-    let house: any = null;
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+    let house: any = null
 
     if (isUuid) {
       house = await this.prisma.boardingHouse.findUnique({
@@ -1346,14 +1308,14 @@ export class BoardingHousesService {
             orderBy: { createdAt: 'desc' },
           },
         },
-      });
+      })
     }
 
     if (house) {
-      const totalRooms = house.rooms.length;
-      const occupiedRooms = house.rooms.filter((r: any) => r.status === 'occupied').length;
-      const vacantRooms = house.rooms.filter((r: any) => r.status === 'available').length;
-      const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+      const totalRooms = house.rooms.length
+      const occupiedRooms = house.rooms.filter((r: any) => r.status === 'occupied').length
+      const vacantRooms = house.rooms.filter((r: any) => r.status === 'available').length
+      const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0
 
       return {
         id: house.id,
@@ -1433,21 +1395,40 @@ export class BoardingHousesService {
             idCardNumber: '079302008192',
           },
         })),
-      };
+      }
     }
 
-    return this.getMockBoardingHouseDetails(id);
+    return this.getMockBoardingHouseDetails(id)
   }
 
   private getMockBoardingHouseDetails(id: string) {
-    const isLocked = id === 'BH-1004';
-    const isReported = id === 'BH-1001' || id === 'BH-1005';
+    const isLocked = id === 'BH-1004'
+    const isReported = id === 'BH-1001' || id === 'BH-1005'
 
     return {
       id,
-      name: id === 'BH-1001' ? 'Dormio Signature Premium Q1' : id === 'BH-1002' ? 'Nhà Trọ Hưng Thịnh Thủ Đức' : id === 'BH-1003' ? 'Ký Túc Xá Sinh Viên Xanh Cầu Giấy' : id === 'BH-1004' ? 'Tòa Nhà Cho Thuê Bình Thạnh 18' : 'Dormio Eco House Tân Bình',
-      description: 'Tòa nhà căn hộ dịch vụ cao cấp, đầy đủ tiện nghi, camera an ninh 24/7, thang máy tốc độ cao, bãi đỗ xe rộng rãi có bảo vệ quản lý.',
-      address: id === 'BH-1001' ? '128 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM' : id === 'BH-1002' ? '45 Đường D1, Phường Tăng Nhơn Phú A, TP. Thủ Đức' : id === 'BH-1003' ? '88 Trần Thái Tông, Dịch Vọng Hậu, Cầu Giấy, Hà Nội' : id === 'BH-1004' ? '220/15 Xô Viết Nghệ Tĩnh, Phường 21, Bình Thạnh, TP.HCM' : '52 Bạch Đằng, Phường 2, Tân Bình, TP.HCM',
+      name:
+        id === 'BH-1001'
+          ? 'Dormio Signature Premium Q1'
+          : id === 'BH-1002'
+            ? 'Nhà Trọ Hưng Thịnh Thủ Đức'
+            : id === 'BH-1003'
+              ? 'Ký Túc Xá Sinh Viên Xanh Cầu Giấy'
+              : id === 'BH-1004'
+                ? 'Tòa Nhà Cho Thuê Bình Thạnh 18'
+                : 'Dormio Eco House Tân Bình',
+      description:
+        'Tòa nhà căn hộ dịch vụ cao cấp, đầy đủ tiện nghi, camera an ninh 24/7, thang máy tốc độ cao, bãi đỗ xe rộng rãi có bảo vệ quản lý.',
+      address:
+        id === 'BH-1001'
+          ? '128 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM'
+          : id === 'BH-1002'
+            ? '45 Đường D1, Phường Tăng Nhơn Phú A, TP. Thủ Đức'
+            : id === 'BH-1003'
+              ? '88 Trần Thái Tông, Dịch Vọng Hậu, Cầu Giấy, Hà Nội'
+              : id === 'BH-1004'
+                ? '220/15 Xô Viết Nghệ Tĩnh, Phường 21, Bình Thạnh, TP.HCM'
+                : '52 Bạch Đằng, Phường 2, Tân Bình, TP.HCM',
       rawAddress: {
         houseNumber: '128',
         street: 'Nguyễn Trãi',
@@ -1471,8 +1452,18 @@ export class BoardingHousesService {
       },
       owner: {
         id: 'owner-uuid-101',
-        name: id === 'BH-1001' ? 'Lê Minh Tuấn' : id === 'BH-1002' ? 'Nguyễn Văn Hùng' : 'Phạm Thu Thảo',
-        username: id === 'BH-1001' ? 'Lê Minh Tuấn' : id === 'BH-1002' ? 'Nguyễn Văn Hùng' : 'Phạm Thu Thảo',
+        name:
+          id === 'BH-1001'
+            ? 'Lê Minh Tuấn'
+            : id === 'BH-1002'
+              ? 'Nguyễn Văn Hùng'
+              : 'Phạm Thu Thảo',
+        username:
+          id === 'BH-1001'
+            ? 'Lê Minh Tuấn'
+            : id === 'BH-1002'
+              ? 'Nguyễn Văn Hùng'
+              : 'Phạm Thu Thảo',
         email: id === 'BH-1001' ? 'tuan.le@gmail.com' : 'hung.nguyen@yahoo.com',
         phoneNumber: '0901.234.567',
         avatarUrl: '/avatar-placeholder.png',
@@ -1484,22 +1475,82 @@ export class BoardingHousesService {
         totalProperties: 3,
       },
       services: [
-        { id: 'srv-1', name: 'Điện sinh hoạt', price: 3500, unit: 'kWh', autoApplied: true, isMetered: true },
-        { id: 'srv-2', name: 'Nước máy sinh hoạt', price: 20000, unit: 'khối', autoApplied: true, isMetered: true },
-        { id: 'srv-3', name: 'Internet WiFi tốc độ cao', price: 100000, unit: 'phòng/tháng', autoApplied: true, isMetered: false },
-        { id: 'srv-4', name: 'Vệ sinh hành lang & rác thải', price: 50000, unit: 'phòng/tháng', autoApplied: true, isMetered: false },
-        { id: 'srv-5', name: 'Giữ xe máy có thẻ từ', price: 120000, unit: 'xe/tháng', autoApplied: false, isMetered: false },
+        {
+          id: 'srv-1',
+          name: 'Điện sinh hoạt',
+          price: 3500,
+          unit: 'kWh',
+          autoApplied: true,
+          isMetered: true,
+        },
+        {
+          id: 'srv-2',
+          name: 'Nước máy sinh hoạt',
+          price: 20000,
+          unit: 'khối',
+          autoApplied: true,
+          isMetered: true,
+        },
+        {
+          id: 'srv-3',
+          name: 'Internet WiFi tốc độ cao',
+          price: 100000,
+          unit: 'phòng/tháng',
+          autoApplied: true,
+          isMetered: false,
+        },
+        {
+          id: 'srv-4',
+          name: 'Vệ sinh hành lang & rác thải',
+          price: 50000,
+          unit: 'phòng/tháng',
+          autoApplied: true,
+          isMetered: false,
+        },
+        {
+          id: 'srv-5',
+          name: 'Giữ xe máy có thẻ từ',
+          price: 120000,
+          unit: 'xe/tháng',
+          autoApplied: false,
+          isMetered: false,
+        },
       ],
       roomTypes: [
-        { id: 'rt-1', name: 'Phòng Duplex Ban Công Riêng', description: 'Gác lửng đúc kiên cố, ban công thoáng mát đón nắng, bếp riêng, máy giặt riêng.', area: 35, basePrice: 6500000, roomsCount: 8 },
-        { id: 'rt-2', name: 'Phòng Studio Full Nội Thất', description: 'Không gian mở hiện đại, giường nệm cao cấp, tủ lạnh inverter, điều hòa 1.5HP.', area: 28, basePrice: 5200000, roomsCount: 7 },
-        { id: 'rt-3', name: 'Phòng Gác Lửng Hiện Đại', description: 'Tiết kiệm diện tích, bàn học làm việc tiện lợi, nhà vệ sinh khép kín sạch sẽ.', area: 22, basePrice: 4000000, roomsCount: 5 },
+        {
+          id: 'rt-1',
+          name: 'Phòng Duplex Ban Công Riêng',
+          description:
+            'Gác lửng đúc kiên cố, ban công thoáng mát đón nắng, bếp riêng, máy giặt riêng.',
+          area: 35,
+          basePrice: 6500000,
+          roomsCount: 8,
+        },
+        {
+          id: 'rt-2',
+          name: 'Phòng Studio Full Nội Thất',
+          description:
+            'Không gian mở hiện đại, giường nệm cao cấp, tủ lạnh inverter, điều hòa 1.5HP.',
+          area: 28,
+          basePrice: 5200000,
+          roomsCount: 7,
+        },
+        {
+          id: 'rt-3',
+          name: 'Phòng Gác Lửng Hiện Đại',
+          description:
+            'Tiết kiệm diện tích, bàn học làm việc tiện lợi, nhà vệ sinh khép kín sạch sẽ.',
+          area: 22,
+          basePrice: 4000000,
+          roomsCount: 5,
+        },
       ],
       grievances: [
         {
           id: 'grv-1',
           title: 'Tự ý thu tiền điện 5.000đ/kWh trái thỏa thuận hợp đồng',
-          description: 'Hợp đồng thuê ký rõ tiền điện là 3.500đ/kWh, tuy nhiên tháng này chủ trọ đơn phương xuất hóa đơn tính 5.000đ/kWh và đe dọa cắt điện nếu không đóng đúng hạn.',
+          description:
+            'Hợp đồng thuê ký rõ tiền điện là 3.500đ/kWh, tuy nhiên tháng này chủ trọ đơn phương xuất hóa đơn tính 5.000đ/kWh và đe dọa cắt điện nếu không đóng đúng hạn.',
           priority: 'high',
           status: 'pending',
           createdAt: '2026-09-10T14:30:00.000Z',
@@ -1521,7 +1572,8 @@ export class BoardingHousesService {
         {
           id: 'grv-2',
           title: 'Thấm dột nhà vệ sinh kéo dài không khắc phục',
-          description: 'Nhà vệ sinh phòng 205 bị rò rỉ nước từ tầng trên xuống suốt 2 tuần qua, sàn nhà luôn ẩm ướt gây trơn trượt nguy hiểm. Đã báo quản lý 3 lần nhưng không có người sửa.',
+          description:
+            'Nhà vệ sinh phòng 205 bị rò rỉ nước từ tầng trên xuống suốt 2 tuần qua, sàn nhà luôn ẩm ướt gây trơn trượt nguy hiểm. Đã báo quản lý 3 lần nhưng không có người sửa.',
           priority: 'medium',
           status: 'in_progress',
           createdAt: '2026-09-08T09:15:00.000Z',
@@ -1544,7 +1596,8 @@ export class BoardingHousesService {
         {
           id: 'grv-3',
           title: 'Mất nước sinh hoạt đột ngột không thông báo trước',
-          description: 'Tòa nhà cúp nước liên tục vào khung giờ cao điểm sáng sớm 6h-8h khiến người thuê không thể sinh hoạt, không hề có thông báo trước trong nhóm cư dân.',
+          description:
+            'Tòa nhà cúp nước liên tục vào khung giờ cao điểm sáng sớm 6h-8h khiến người thuê không thể sinh hoạt, không hề có thông báo trước trong nhóm cư dân.',
           priority: 'high',
           status: 'resolved',
           createdAt: '2026-09-02T07:45:00.000Z',
@@ -1566,6 +1619,6 @@ export class BoardingHousesService {
           },
         },
       ],
-    };
+    }
   }
 }

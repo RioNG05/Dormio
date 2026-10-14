@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { AssignmentStatus } from '@prisma';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { AssignmentStatus } from '@prisma'
 
 export class UpdateStaffStatusDto {
   @ApiProperty({
@@ -10,7 +10,7 @@ export class UpdateStaffStatusDto {
   })
   @IsEnum(AssignmentStatus)
   @IsNotEmpty()
-  status: AssignmentStatus;
+  status: AssignmentStatus
 
   @ApiPropertyOptional({
     description: 'Optional update to job position ID',
@@ -18,5 +18,5 @@ export class UpdateStaffStatusDto {
   })
   @IsOptional()
   @IsString()
-  positionId?: string;
+  positionId?: string
 }

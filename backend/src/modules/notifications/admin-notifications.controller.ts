@@ -8,7 +8,7 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -17,20 +17,20 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
-} from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { UserRole } from '@prisma';
-import { JwtPayload } from '../auth/types/jwt-payload.type';
+} from '@nestjs/swagger'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { Roles } from '../../common/decorators/roles.decorator'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { RolesGuard } from '../../common/guards/roles.guard'
+import { UserRole } from '@prisma'
+import { JwtPayload } from '../auth/types/jwt-payload.type'
 import {
   CreateMassNotificationDto,
   MassNotificationItemDto,
   MassNotificationListResponseDto,
   MassNotificationQueryDto,
-} from './dto/admin-mass-notification.dto';
-import { NotificationsService } from './notifications.service';
+} from './dto/admin-mass-notification.dto'
+import { NotificationsService } from './notifications.service'
 
 @ApiTags('Admin Mass Notifications')
 @ApiBearerAuth()
@@ -38,7 +38,7 @@ import { NotificationsService } from './notifications.service';
 @Roles(UserRole.admin)
 @Controller('admin/notifications')
 export class AdminNotificationsController {
-  private readonly logger = new Logger(AdminNotificationsController.name);
+  private readonly logger = new Logger(AdminNotificationsController.name)
 
   constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -60,11 +60,11 @@ export class AdminNotificationsController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateMassNotificationDto,
   ): Promise<MassNotificationItemDto> {
-    const adminId = user?.id || 'system-admin';
+    const adminId = user?.id || 'system-admin'
     this.logger.log(
       `POST /api/v1/admin/notifications/mass invoked by admin=${adminId} for channel=${dto.channel}`,
-    );
-    return this.notificationsService.createMassNotification(adminId, dto);
+    )
+    return this.notificationsService.createMassNotification(adminId, dto)
   }
 
   // ─── GET /api/v1/admin/notifications/mass ──────────────────────────────────
@@ -85,11 +85,11 @@ export class AdminNotificationsController {
     @CurrentUser() user: JwtPayload,
     @Query() query: MassNotificationQueryDto,
   ): Promise<MassNotificationListResponseDto> {
-    const adminId = user?.id || 'system-admin';
+    const adminId = user?.id || 'system-admin'
     this.logger.log(
       `GET /api/v1/admin/notifications/mass invoked by admin=${adminId} page=${query.page} limit=${query.limit}`,
-    );
-    return this.notificationsService.getMassNotificationJobs(query);
+    )
+    return this.notificationsService.getMassNotificationJobs(query)
   }
 
   // ─── GET /api/v1/admin/notifications/mass/:id ──────────────────────────────
@@ -110,11 +110,9 @@ export class AdminNotificationsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<MassNotificationItemDto> {
-    const adminId = user?.id || 'system-admin';
-    this.logger.log(
-      `GET /api/v1/admin/notifications/mass/${id} invoked by admin=${adminId}`,
-    );
-    return this.notificationsService.getMassNotificationJobById(id);
+    const adminId = user?.id || 'system-admin'
+    this.logger.log(`GET /api/v1/admin/notifications/mass/${id} invoked by admin=${adminId}`)
+    return this.notificationsService.getMassNotificationJobById(id)
   }
 
   // ─── POST /api/v1/admin/notifications/mass/:id/retry ───────────────────────
@@ -135,10 +133,8 @@ export class AdminNotificationsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<MassNotificationItemDto> {
-    const adminId = user?.id || 'system-admin';
-    this.logger.log(
-      `POST /api/v1/admin/notifications/mass/${id}/retry invoked by admin=${adminId}`,
-    );
-    return this.notificationsService.retryMassNotification(adminId, id);
+    const adminId = user?.id || 'system-admin'
+    this.logger.log(`POST /api/v1/admin/notifications/mass/${id}/retry invoked by admin=${adminId}`)
+    return this.notificationsService.retryMassNotification(adminId, id)
   }
 }

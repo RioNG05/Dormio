@@ -1,13 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsUUID,
-  IsOptional,
-  IsString,
-  IsNumber,
-  IsEnum,
-  Min,
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsUUID, IsOptional, IsString, IsNumber, IsEnum, Min } from 'class-validator'
 
 export enum PaymentMethodEnum {
   banking = 'banking',
@@ -21,7 +13,7 @@ export class ConfirmPaymentDto {
   })
   @IsNotEmpty({ message: 'Mã hóa đơn không được để trống' })
   @IsUUID('4', { message: 'Mã hóa đơn phải là UUID hợp lệ' })
-  invoiceId: string;
+  invoiceId: string
 
   @ApiPropertyOptional({
     example: 5200000,
@@ -30,7 +22,7 @@ export class ConfirmPaymentDto {
   @IsOptional()
   @IsNumber({}, { message: 'Số tiền phải là số' })
   @Min(1000, { message: 'Số tiền tối thiểu là 1.000 VNĐ' })
-  amount?: number;
+  amount?: number
 
   @ApiPropertyOptional({
     example: 'MB9823471029',
@@ -38,7 +30,7 @@ export class ConfirmPaymentDto {
   })
   @IsOptional()
   @IsString({ message: 'Mã giao dịch phải là chuỗi ký tự' })
-  transactionRef?: string;
+  transactionRef?: string
 
   @ApiPropertyOptional({
     enum: PaymentMethodEnum,
@@ -49,7 +41,7 @@ export class ConfirmPaymentDto {
   @IsEnum(PaymentMethodEnum, {
     message: 'Phương thức thanh toán phải là banking hoặc cash',
   })
-  method?: PaymentMethodEnum;
+  method?: PaymentMethodEnum
 }
 
 export class VietQrWebhookDto {
@@ -59,7 +51,7 @@ export class VietQrWebhookDto {
   })
   @IsNotEmpty({ message: 'transactionRef không được để trống' })
   @IsString()
-  transactionRef: string;
+  transactionRef: string
 
   @ApiProperty({
     example: 5200000,
@@ -67,7 +59,7 @@ export class VietQrWebhookDto {
   })
   @IsNotEmpty({ message: 'amount không được để trống' })
   @IsNumber()
-  amount: number;
+  amount: number
 
   @ApiProperty({
     example: 'TT TRO P101 T09/2026',
@@ -75,7 +67,7 @@ export class VietQrWebhookDto {
   })
   @IsNotEmpty({ message: 'transferContent không được để trống' })
   @IsString()
-  transferContent: string;
+  transferContent: string
 
   @ApiPropertyOptional({
     example: '970422',
@@ -83,7 +75,7 @@ export class VietQrWebhookDto {
   })
   @IsOptional()
   @IsString()
-  bankCode?: string;
+  bankCode?: string
 
   @ApiPropertyOptional({
     example: '2026-09-01T08:30:00.000Z',
@@ -91,40 +83,40 @@ export class VietQrWebhookDto {
   })
   @IsOptional()
   @IsString()
-  transactionDate?: string;
+  transactionDate?: string
 }
 
 export class PaymentExecutionResultDto {
   @ApiProperty({ example: true })
-  success: boolean;
+  success: boolean
 
   @ApiProperty({ example: 'pay-uuid-1', description: 'Mã thanh toán (Payment ID)' })
-  paymentId: string;
+  paymentId: string
 
   @ApiProperty({ example: 'inv-uuid-1', description: 'Mã hóa đơn' })
-  invoiceId: string;
+  invoiceId: string
 
   @ApiProperty({
     example: 'REC-202609-001',
     description: 'Số biên nhận điện tử',
   })
-  receiptNumber: string;
+  receiptNumber: string
 
   @ApiProperty({
     example: 'paid',
     description: 'Trạng thái hóa đơn sau khi thanh toán',
   })
-  invoiceStatus: string;
+  invoiceStatus: string
 
   @ApiProperty({
     example: '2026-09-01T08:30:00.000Z',
     description: 'Thời điểm thanh toán',
   })
-  paidAt: string;
+  paidAt: string
 
   @ApiProperty({
     example: 'Thanh toán hóa đơn thành công',
     description: 'Thông báo kết quả',
   })
-  message: string;
+  message: string
 }

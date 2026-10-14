@@ -3,18 +3,18 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { QueryMessagesDto } from './dto/query-messages.dto';
+} from '@nestjs/common'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { CreateMessageDto } from './dto/create-message.dto'
+import { QueryMessagesDto } from './dto/query-messages.dto'
 import {
   ConversationResponseDto,
   MessageResponseDto,
   ParticipantDto,
   AttachmentDto,
   ContactDto,
-} from './dto/conversation-response.dto';
-import { UserRole } from '@prisma';
+} from './dto/conversation-response.dto'
+import { UserRole } from '@prisma'
 
 @Injectable()
 export class MessagesService {
@@ -24,7 +24,7 @@ export class MessagesService {
    * Normalizes participant IDs (lexicographical order) to avoid duplicate conversation rows.
    */
   private normalizeParticipants(user1Id: string, user2Id: string): [string, string] {
-    return [user1Id, user2Id].sort() as [string, string];
+    return [user1Id, user2Id].sort() as [string, string]
   }
 
   /**
@@ -48,7 +48,7 @@ export class MessagesService {
             sortOrder: att.sortOrder,
           }))
         : [],
-    };
+    }
   }
 
   // ─── UC-L-11 / UC-PU-05: Get or Create Conversation ────────────────────────
@@ -67,7 +67,7 @@ export class MessagesService {
     initialMessage?: string,
   ): Promise<ConversationResponseDto> {
     if (currentUserId === otherUserId) {
-      throw new BadRequestException('Không thể tạo cuộc trò chuyện với chính mình.');
+      throw new BadRequestException('Không thể tạo cuộc trò chuyện với chính mình.')
     }
 
     // 1. Fetch both users to enforce admin gate (Rule 4 of UC-L-11)
@@ -87,21 +87,21 @@ export class MessagesService {
           userIdentification: { select: { fullName: true } },
         },
       }),
-    ]);
+    ])
 
     if (!user1 || !user2) {
-      throw new NotFoundException('Người dùng không tồn tại.');
+      throw new NotFoundException('Người dùng không tồn tại.')
     }
 
     // Gate: Neither participant may have role='admin'
     if (user1.role === UserRole.admin || user2.role === UserRole.admin) {
       throw new ForbiddenException(
         'Không hỗ trợ nhắn tin trực tiếp với quản trị viên qua kênh này.',
-      );
+      )
     }
 
     // 2. Normalize user IDs pair
-    const [normU1, normU2] = this.normalizeParticipants(currentUserId, otherUserId);
+    const [normU1, normU2] = this.normalizeParticipants(currentUserId, otherUserId)
 
     // 3. Find existing conversation
     let conversation = await this.prisma.conversation.findFirst({
@@ -117,11 +117,11 @@ export class MessagesService {
           include: { attachments: true },
         },
       },
-    });
+    })
 
     // 4. Create if not found
     if (!conversation) {
-      const convName = `${normU1}_${normU2}`;
+      const convName = `${normU1}_${normU2}`
       conversation = await this.prisma.conversation.create({
         data: {
           name: convName,
@@ -135,17 +135,17 @@ export class MessagesService {
             include: { attachments: true },
           },
         },
-      });
+      })
     }
 
     // 5. Send initial message if provided
-    let latestMsg = conversation.messages[0] ? this.formatMessage(conversation.messages[0]) : null;
+    let latestMsg = conversation.messages[0] ? this.formatMessage(conversation.messages[0]) : null
 
     if (initialMessage && initialMessage.trim()) {
       const sent = await this.sendMessage(conversation.id, currentUserId, {
         content: initialMessage.trim(),
-      });
-      latestMsg = sent;
+      })
+      latestMsg = sent
     }
 
     // Unread count
@@ -155,10 +155,10 @@ export class MessagesService {
         senderId: otherUserId,
         readAt: null,
       },
-    });
+    })
 
     // Check tenancy room context if tenant of this landlord
-    const tenancyContext = await this.getTenantRoomContext(otherUserId, currentUserId);
+    const tenancyContext = await this.getTenantRoomContext(otherUserId, currentUserId)
 
     const participant: ParticipantDto = {
       id: user2.id,
@@ -169,7 +169,7 @@ export class MessagesService {
       role: user2.role,
       roomName: tenancyContext?.roomName || null,
       boardingHouseName: tenancyContext?.boardingHouseName || null,
-    };
+    }
 
     return {
       id: conversation.id,
@@ -179,7 +179,7 @@ export class MessagesService {
       participant,
       lastMessage: latestMsg,
       unreadCount,
-    };
+    }
   }
 
   // ─── List User Conversations ───────────────────────────────────────────────
@@ -201,12 +201,12 @@ export class MessagesService {
         },
       },
       orderBy: { updatedAt: 'desc' },
-    });
+    })
 
-    const result: ConversationResponseDto[] = [];
+    const result: ConversationResponseDto[] = []
 
     for (const conv of rawConversations) {
-      const otherUserId = conv.user1Id === userId ? conv.user2Id : conv.user1Id;
+      const otherUserId = conv.user1Id === userId ? conv.user2Id : conv.user1Id
 
       const otherUser = await this.prisma.user.findUnique({
         where: { id: otherUserId },
@@ -218,9 +218,9 @@ export class MessagesService {
           role: true,
           userIdentification: { select: { fullName: true } },
         },
-      });
+      })
 
-      if (!otherUser) continue;
+      if (!otherUser) continue
 
       const unreadCount = await this.prisma.message.count({
         where: {
@@ -228,9 +228,9 @@ export class MessagesService {
           senderId: otherUserId,
           readAt: null,
         },
-      });
+      })
 
-      const tenancyContext = await this.getTenantRoomContext(otherUserId, userId);
+      const tenancyContext = await this.getTenantRoomContext(otherUserId, userId)
 
       const participant: ParticipantDto = {
         id: otherUser.id,
@@ -241,9 +241,9 @@ export class MessagesService {
         role: otherUser.role,
         roomName: tenancyContext?.roomName || null,
         boardingHouseName: tenancyContext?.boardingHouseName || null,
-      };
+      }
 
-      const lastMsg = conv.messages[0] ? this.formatMessage(conv.messages[0]) : null;
+      const lastMsg = conv.messages[0] ? this.formatMessage(conv.messages[0]) : null
 
       result.push({
         id: conv.id,
@@ -253,10 +253,10 @@ export class MessagesService {
         participant,
         lastMessage: lastMsg,
         unreadCount,
-      });
+      })
     }
 
-    return result;
+    return result
   }
 
   // ─── Get Conversation Messages ─────────────────────────────────────────────
@@ -271,22 +271,22 @@ export class MessagesService {
   ): Promise<MessageResponseDto[]> {
     const conv = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
-    });
+    })
 
     if (!conv || conv.deletedAt) {
-      throw new NotFoundException('Cuộc trò chuyện không tồn tại.');
+      throw new NotFoundException('Cuộc trò chuyện không tồn tại.')
     }
 
     // Access check: User must be user1 or user2
     if (conv.user1Id !== userId && conv.user2Id !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xem cuộc trò chuyện này.');
+      throw new ForbiddenException('Bạn không có quyền xem cuộc trò chuyện này.')
     }
 
-    const limit = Math.min(100, Math.max(1, Number(query?.limit) || 50));
-    const whereClause: any = { conversationId };
+    const limit = Math.min(100, Math.max(1, Number(query?.limit) || 50))
+    const whereClause: any = { conversationId }
 
     if (query?.before) {
-      whereClause.sentAt = { lt: new Date(query.before) };
+      whereClause.sentAt = { lt: new Date(query.before) }
     }
 
     const messages = await this.prisma.message.findMany({
@@ -298,9 +298,9 @@ export class MessagesService {
       },
       orderBy: { sentAt: 'asc' },
       take: limit,
-    });
+    })
 
-    return messages.map((m) => this.formatMessage(m));
+    return messages.map(m => this.formatMessage(m))
   }
 
   // ─── Send Message ──────────────────────────────────────────────────────────
@@ -315,20 +315,20 @@ export class MessagesService {
   ): Promise<MessageResponseDto> {
     const conv = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
-    });
+    })
 
     if (!conv || conv.deletedAt) {
-      throw new NotFoundException('Cuộc trò chuyện không tồn tại.');
+      throw new NotFoundException('Cuộc trò chuyện không tồn tại.')
     }
 
     // Membership verification
     if (conv.user1Id !== senderId && conv.user2Id !== senderId) {
-      throw new ForbiddenException('Bạn không phải thành viên của cuộc trò chuyện này.');
+      throw new ForbiddenException('Bạn không phải thành viên của cuộc trò chuyện này.')
     }
 
-    const now = new Date();
+    const now = new Date()
 
-    const created = await this.prisma.$transaction(async (tx) => {
+    const created = await this.prisma.$transaction(async tx => {
       const msg = await tx.message.create({
         data: {
           conversationId,
@@ -351,18 +351,18 @@ export class MessagesService {
             orderBy: { sortOrder: 'asc' },
           },
         },
-      });
+      })
 
       // Update conversation timestamp
       await tx.conversation.update({
         where: { id: conversationId },
         data: { updatedAt: now },
-      });
+      })
 
-      return msg;
-    });
+      return msg
+    })
 
-    return this.formatMessage(created);
+    return this.formatMessage(created)
   }
 
   // ─── Mark Conversation As Read ─────────────────────────────────────────────
@@ -376,14 +376,14 @@ export class MessagesService {
   ): Promise<{ success: boolean; count: number }> {
     const conv = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
-    });
+    })
 
     if (!conv || conv.deletedAt) {
-      throw new NotFoundException('Cuộc trò chuyện không tồn tại.');
+      throw new NotFoundException('Cuộc trò chuyện không tồn tại.')
     }
 
     if (conv.user1Id !== userId && conv.user2Id !== userId) {
-      throw new ForbiddenException('Bạn không có quyền thao tác trên cuộc trò chuyện này.');
+      throw new ForbiddenException('Bạn không có quyền thao tác trên cuộc trò chuyện này.')
     }
 
     const result = await this.prisma.message.updateMany({
@@ -395,9 +395,9 @@ export class MessagesService {
       data: {
         readAt: new Date(),
       },
-    });
+    })
 
-    return { success: true, count: result.count };
+    return { success: true, count: result.count }
   }
 
   // ─── Helper: Get Room Context ──────────────────────────────────────────────
@@ -433,7 +433,7 @@ export class MessagesService {
           },
         },
       },
-    });
+    })
 
     // 2. Check if userB is tenant of userA
     if (!tenantContract) {
@@ -460,19 +460,18 @@ export class MessagesService {
             },
           },
         },
-      });
+      })
     }
 
     if (tenantContract?.contract?.room) {
       return {
         roomName: `Phòng ${tenantContract.contract.room.roomNumber}`,
         boardingHouseName: tenantContract.contract.room.boardingHouse.name,
-      };
+      }
     }
 
-    return null;
+    return null
   }
-
 
   // ─── Contact Directory ─────────────────────────────────────────────────────
 
@@ -483,10 +482,10 @@ export class MessagesService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { role: true },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException('Người dùng không tồn tại.');
+      throw new NotFoundException('Người dùng không tồn tại.')
     }
 
     if (user.role === UserRole.landlord) {
@@ -522,12 +521,12 @@ export class MessagesService {
             },
           },
         },
-      });
+      })
 
-      const contactsMap = new Map<string, ContactDto>();
+      const contactsMap = new Map<string, ContactDto>()
 
       for (const tc of tenantContracts) {
-        if (!tc.tenant || tc.tenant.role === UserRole.admin) continue;
+        if (!tc.tenant || tc.tenant.role === UserRole.admin) continue
         if (!contactsMap.has(tc.tenant.id)) {
           contactsMap.set(tc.tenant.id, {
             id: tc.tenant.id,
@@ -537,11 +536,11 @@ export class MessagesService {
             role: tc.tenant.role,
             roomName: `Phòng ${tc.contract.room.roomNumber}`,
             boardingHouseName: tc.contract.room.boardingHouse.name,
-          });
+          })
         }
       }
 
-      return Array.from(contactsMap.values());
+      return Array.from(contactsMap.values())
     }
 
     if (user.role === UserRole.tenant) {
@@ -574,12 +573,12 @@ export class MessagesService {
             },
           },
         },
-      });
+      })
 
-      const contactsMap = new Map<string, ContactDto>();
+      const contactsMap = new Map<string, ContactDto>()
       for (const tc of tenantContracts) {
-        const owner = tc.contract.room.boardingHouse.owner;
-        if (!owner || owner.role === UserRole.admin) continue;
+        const owner = tc.contract.room.boardingHouse.owner
+        if (!owner || owner.role === UserRole.admin) continue
         if (!contactsMap.has(owner.id)) {
           contactsMap.set(owner.id, {
             id: owner.id,
@@ -589,14 +588,13 @@ export class MessagesService {
             role: owner.role,
             roomName: `Phòng ${tc.contract.room.roomNumber}`,
             boardingHouseName: tc.contract.room.boardingHouse.name,
-          });
+          })
         }
       }
 
-      return Array.from(contactsMap.values());
+      return Array.from(contactsMap.values())
     }
 
-    return [];
+    return []
   }
 }
-

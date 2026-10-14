@@ -4,15 +4,15 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-} from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
-import { AssignmentStatus, AuditLogAction, UserRole } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { AssignRoleDto } from './dto/assign-role.dto';
-import { CreatePositionDto } from './dto/create-position.dto';
-import { OnboardStaffDto } from './dto/onboard-staff.dto';
-import { QueryStaffDto } from './dto/query-staff.dto';
+} from '@nestjs/common'
+import * as bcrypt from 'bcrypt'
+import * as crypto from 'crypto'
+import { AssignmentStatus, AuditLogAction, UserRole } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { AssignRoleDto } from './dto/assign-role.dto'
+import { CreatePositionDto } from './dto/create-position.dto'
+import { OnboardStaffDto } from './dto/onboard-staff.dto'
+import { QueryStaffDto } from './dto/query-staff.dto'
 import {
   JobPositionDto,
   OnboardStaffResponseDto,
@@ -20,11 +20,11 @@ import {
   StaffItemDto,
   StaffListResponseDto,
   StaffSummaryDto,
-} from './dto/staff-response.dto';
-import { UpdatePositionDto } from './dto/update-position.dto';
-import { UpdateStaffStatusDto } from './dto/update-staff-status.dto';
+} from './dto/staff-response.dto'
+import { UpdatePositionDto } from './dto/update-position.dto'
+import { UpdateStaffStatusDto } from './dto/update-staff-status.dto'
 
-const BCRYPT_ROUNDS = 10;
+const BCRYPT_ROUNDS = 10
 
 /** Default seed positions for any boarding house that doesn't have positions yet */
 const DEFAULT_POSITIONS = [
@@ -44,32 +44,26 @@ const DEFAULT_POSITIONS = [
     name: 'Kỹ thuật / Bảo trì',
     description: 'Sửa chữa và bảo dưỡng hệ thống điện nước, thiết bị phòng trọ',
   },
-];
+]
 
 @Injectable()
 export class EmployeesService {
-  private readonly logger = new Logger(EmployeesService.name);
+  private readonly logger = new Logger(EmployeesService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Search user by phone number or username (UC-L-19 Step 1)
    */
-  async searchUser(
-    query: string,
-    boardingHouseId: string,
-  ): Promise<SearchUserResponseDto> {
-    const trimmed = (query || '').trim();
+  async searchUser(query: string, boardingHouseId: string): Promise<SearchUserResponseDto> {
+    const trimmed = (query || '').trim()
     if (!trimmed) {
-      return { success: true, found: false, user: null };
+      return { success: true, found: false, user: null }
     }
 
     const user = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { phoneNumber: trimmed },
-          { username: { contains: trimmed, mode: 'insensitive' } },
-        ],
+        OR: [{ phoneNumber: trimmed }, { username: { contains: trimmed, mode: 'insensitive' } }],
       },
       select: {
         id: true,
@@ -91,14 +85,13 @@ export class EmployeesService {
           },
         },
       },
-    });
+    })
 
     if (!user) {
-      return { success: true, found: false, user: null };
+      return { success: true, found: false, user: null }
     }
 
-    const isAlreadyStaffAtThisHouse =
-      (user.employee?.employeeAssignments?.length ?? 0) > 0;
+    const isAlreadyStaffAtThisHouse = (user.employee?.employeeAssignments?.length ?? 0) > 0
 
     return {
       success: true,
@@ -112,7 +105,7 @@ export class EmployeesService {
         role: user.role,
         isAlreadyStaffAtThisHouse,
       },
-    };
+    }
   }
 
   /**
@@ -131,17 +124,17 @@ export class EmployeesService {
         },
       },
       orderBy: { createdAt: 'asc' },
-    });
+    })
 
     // Seed defaults if boarding house currently has no positions configured
     if (positions.length === 0) {
       await this.prisma.jobPosition.createMany({
-        data: DEFAULT_POSITIONS.map((p) => ({
+        data: DEFAULT_POSITIONS.map(p => ({
           boardingHouseId,
           name: p.name,
           description: p.description,
         })),
-      });
+      })
 
       positions = await this.prisma.jobPosition.findMany({
         where: { boardingHouseId },
@@ -155,16 +148,16 @@ export class EmployeesService {
           },
         },
         orderBy: { createdAt: 'asc' },
-      });
+      })
     }
 
-    return positions.map((p) => ({
+    return positions.map(p => ({
       id: p.id,
       name: p.name,
       description: p.description,
       staffCount: p._count.employeeAssignments,
       createdAt: p.createdAt,
-    }));
+    }))
   }
 
   /**
@@ -174,9 +167,9 @@ export class EmployeesService {
     boardingHouseId: string,
     dto: CreatePositionDto,
   ): Promise<JobPositionDto> {
-    const trimmedName = dto.name.trim();
+    const trimmedName = dto.name.trim()
     if (!trimmedName) {
-      throw new BadRequestException('Tên vị trí công việc không được để trống');
+      throw new BadRequestException('Tên vị trí công việc không được để trống')
     }
 
     const existing = await this.prisma.jobPosition.findFirst({
@@ -184,12 +177,10 @@ export class EmployeesService {
         boardingHouseId,
         name: { equals: trimmedName, mode: 'insensitive' },
       },
-    });
+    })
 
     if (existing) {
-      throw new ConflictException(
-        `Vị trí công việc "${trimmedName}" đã tồn tại tại nhà trọ này`,
-      );
+      throw new ConflictException(`Vị trí công việc "${trimmedName}" đã tồn tại tại nhà trọ này`)
     }
 
     const created = await this.prisma.jobPosition.create({
@@ -198,7 +189,7 @@ export class EmployeesService {
         name: trimmedName,
         description: dto.description?.trim() || null,
       },
-    });
+    })
 
     return {
       id: created.id,
@@ -206,34 +197,31 @@ export class EmployeesService {
       description: created.description,
       staffCount: 0,
       createdAt: created.createdAt,
-    };
+    }
   }
 
   /**
    * List paginated staff assignments with summary counters
    */
-  async getStaffList(
-    boardingHouseId: string,
-    query: QueryStaffDto,
-  ): Promise<StaffListResponseDto> {
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
-    const skip = (page - 1) * limit;
+  async getStaffList(boardingHouseId: string, query: QueryStaffDto): Promise<StaffListResponseDto> {
+    const page = query.page && query.page > 0 ? query.page : 1
+    const limit = query.limit && query.limit > 0 ? query.limit : 10
+    const skip = (page - 1) * limit
 
     const whereClause: any = {
       boardingHouseId,
-    };
+    }
 
     if (query.status) {
-      whereClause.status = query.status;
+      whereClause.status = query.status
     }
 
     if (query.positionId) {
-      whereClause.positionId = query.positionId;
+      whereClause.positionId = query.positionId
     }
 
     if (query.search) {
-      const search = query.search.trim();
+      const search = query.search.trim()
       whereClause.OR = [
         {
           employee: {
@@ -254,68 +242,67 @@ export class EmployeesService {
             name: { contains: search, mode: 'insensitive' },
           },
         },
-      ];
+      ]
     }
 
     // Determine sort order
-    let orderBy: any = { joinedAt: query.sortOrder || 'desc' };
+    let orderBy: any = { joinedAt: query.sortOrder || 'desc' }
     if (query.sortBy === 'name') {
-      orderBy = { employee: { user: { username: query.sortOrder || 'asc' } } };
+      orderBy = { employee: { user: { username: query.sortOrder || 'asc' } } }
     } else if (query.sortBy === 'status') {
-      orderBy = { status: query.sortOrder || 'asc' };
+      orderBy = { status: query.sortOrder || 'asc' }
     }
 
-    const [assignments, total, allAssignmentsForHouse, positionsCount] =
-      await Promise.all([
-        this.prisma.employeeAssignment.findMany({
-          where: whereClause,
-          include: {
-            position: true,
-            employee: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    username: true,
-                    phoneNumber: true,
-                    email: true,
-                    avatarUrl: true,
-                    role: true,
-                    mustChangePassword: true,
-                  },
+    const [assignments, total, allAssignmentsForHouse, positionsCount] = await Promise.all([
+      this.prisma.employeeAssignment.findMany({
+        where: whereClause,
+        include: {
+          position: true,
+          employee: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  phoneNumber: true,
+                  email: true,
+                  avatarUrl: true,
+                  role: true,
+                  mustChangePassword: true,
                 },
               },
             },
           },
-          skip,
-          take: limit,
-          orderBy,
-        }),
-        this.prisma.employeeAssignment.count({ where: whereClause }),
-        this.prisma.employeeAssignment.findMany({
-          where: { boardingHouseId },
-          select: { status: true },
-        }),
-        this.prisma.jobPosition.count({
-          where: { boardingHouseId },
-        }),
-      ]);
+        },
+        skip,
+        take: limit,
+        orderBy,
+      }),
+      this.prisma.employeeAssignment.count({ where: whereClause }),
+      this.prisma.employeeAssignment.findMany({
+        where: { boardingHouseId },
+        select: { status: true },
+      }),
+      this.prisma.jobPosition.count({
+        where: { boardingHouseId },
+      }),
+    ])
 
     const activeStaff = allAssignmentsForHouse.filter(
-      (a) => a.status === AssignmentStatus.active,
-    ).length;
+      a => a.status === AssignmentStatus.active,
+    ).length
     const inactiveStaff = allAssignmentsForHouse.filter(
-      (a) => a.status === AssignmentStatus.inactive,
-    ).length;
+      a => a.status === AssignmentStatus.inactive,
+    ).length
 
     const summary: StaffSummaryDto = {
       totalStaff: allAssignmentsForHouse.length,
       activeStaff,
       inactiveStaff,
       positionsCount,
-    };
+    }
 
-    const data: StaffItemDto[] = assignments.map((a) => ({
+    const data: StaffItemDto[] = assignments.map(a => ({
       assignmentId: a.id,
       employeeId: a.employeeId,
       userId: a.employee.user.id,
@@ -332,7 +319,7 @@ export class EmployeesService {
       createdAt: a.createdAt,
       userRole: a.employee.user.role,
       mustChangePassword: a.employee.user.mustChangePassword,
-    }));
+    }))
 
     return {
       success: true,
@@ -344,7 +331,7 @@ export class EmployeesService {
         total,
         totalPages: Math.ceil(total / limit) || 1,
       },
-    };
+    }
   }
 
   /**
@@ -356,67 +343,66 @@ export class EmployeesService {
     dto: OnboardStaffDto,
     ipAddress = '127.0.0.1',
   ): Promise<OnboardStaffResponseDto> {
-    const normalizedPhone = dto.phoneNumber.trim();
+    const normalizedPhone = dto.phoneNumber.trim()
 
     // 1. Resolve JobPosition
-    let positionId = dto.positionId;
+    let positionId = dto.positionId
     if (!positionId && dto.newPositionName?.trim()) {
       const createdPos = await this.createJobPosition(boardingHouseId, {
         name: dto.newPositionName.trim(),
         description: dto.newPositionDescription?.trim(),
-      });
-      positionId = createdPos.id;
+      })
+      positionId = createdPos.id
     } else if (!positionId) {
       // Fall back to first available position or default
-      const positions = await this.getJobPositions(boardingHouseId);
-      positionId = positions[0].id;
+      const positions = await this.getJobPositions(boardingHouseId)
+      positionId = positions[0].id
     }
 
     // Verify position belongs to boardingHouseId
     const targetPosition = await this.prisma.jobPosition.findFirst({
       where: { id: positionId, boardingHouseId },
-    });
+    })
     if (!targetPosition) {
-      throw new BadRequestException('Vị trí công việc không hợp lệ cho nhà trọ này');
+      throw new BadRequestException('Vị trí công việc không hợp lệ cho nhà trọ này')
     }
 
     // 2. Check if user already exists
     let user = await this.prisma.user.findUnique({
       where: { phoneNumber: normalizedPhone },
       include: { employee: true },
-    });
+    })
 
-    let isNewUser = false;
-    let generatedPassword: string | undefined = undefined;
+    let isNewUser = false
+    let generatedPassword: string | undefined = undefined
 
     if (user) {
       // Check if user already has an active assignment for this boarding house
       if (user.employee) {
-        const existingActiveAssignment =
-          await this.prisma.employeeAssignment.findFirst({
-            where: {
-              employeeId: user.employee.id,
-              boardingHouseId,
-              status: AssignmentStatus.active,
-            },
-          });
+        const existingActiveAssignment = await this.prisma.employeeAssignment.findFirst({
+          where: {
+            employeeId: user.employee.id,
+            boardingHouseId,
+            status: AssignmentStatus.active,
+          },
+        })
 
         if (existingActiveAssignment) {
           throw new ConflictException(
             `Nhân viên có số điện thoại ${normalizedPhone} đã đang làm việc tại nhà trọ này.`,
-          );
+          )
         }
       }
     } else {
       // User doesn't exist yet -> generate random password per UC-AUTH-03
       if (!dto.fullName?.trim()) {
-        throw new BadRequestException('Vui lòng nhập họ và tên cho nhân viên mới');
+        throw new BadRequestException('Vui lòng nhập họ và tên cho nhân viên mới')
       }
 
-      isNewUser = true;
+      isNewUser = true
       // Generate 8-character random password
-      generatedPassword = crypto.randomBytes(4).toString('hex').toUpperCase();
-      const hashedPassword = await bcrypt.hash(generatedPassword, BCRYPT_ROUNDS);
+      generatedPassword = crypto.randomBytes(4).toString('hex').toUpperCase()
+      const hashedPassword = await bcrypt.hash(generatedPassword, BCRYPT_ROUNDS)
 
       user = await this.prisma.user.create({
         data: {
@@ -427,18 +413,18 @@ export class EmployeesService {
           role: UserRole.leasing_agent,
         },
         include: { employee: true },
-      });
+      })
     }
 
     // 3. Ensure Employee profile exists
-    let employeeId = user.employee?.id;
+    let employeeId = user.employee?.id
     if (!employeeId) {
       const createdEmployee = await this.prisma.employee.create({
         data: {
           userId: user.id,
         },
-      });
-      employeeId = createdEmployee.id;
+      })
+      employeeId = createdEmployee.id
     }
 
     // 4. Role bump per 07-auth_roles.md: if current role is leasing_agent, bump to employee
@@ -446,13 +432,13 @@ export class EmployeesService {
       await this.prisma.user.update({
         where: { id: user.id },
         data: { role: UserRole.employee },
-      });
+      })
     }
 
     // 5. Execute Assignment creation and AuditLog in same atomic transaction
-    const joinedAt = dto.joinedAt ? new Date(dto.joinedAt) : new Date();
+    const joinedAt = dto.joinedAt ? new Date(dto.joinedAt) : new Date()
 
-    const assignment = await this.prisma.$transaction(async (tx) => {
+    const assignment = await this.prisma.$transaction(async tx => {
       const createdAssignment = await tx.employeeAssignment.create({
         data: {
           employeeId,
@@ -469,7 +455,7 @@ export class EmployeesService {
             },
           },
         },
-      });
+      })
 
       // AuditLog (Rule 4)
       await tx.auditLog.create({
@@ -492,14 +478,14 @@ export class EmployeesService {
           },
           ipAddress,
         },
-      });
+      })
 
-      return createdAssignment;
-    });
+      return createdAssignment
+    })
 
     this.logger.log(
       `Staff onboarded: assignment=${assignment.id} employee=${employeeId} house=${boardingHouseId} isNewUser=${isNewUser}`,
-    );
+    )
 
     const staffItem: StaffItemDto = {
       assignmentId: assignment.id,
@@ -518,7 +504,7 @@ export class EmployeesService {
       createdAt: assignment.createdAt,
       userRole: assignment.employee.user.role,
       mustChangePassword: assignment.employee.user.mustChangePassword,
-    };
+    }
 
     return {
       success: true,
@@ -528,7 +514,7 @@ export class EmployeesService {
       message: isNewUser
         ? 'Tạo tài khoản và thêm nhân viên mới thành công'
         : 'Thêm nhân viên vào nhà trọ thành công',
-    };
+    }
   }
 
   /**
@@ -554,25 +540,25 @@ export class EmployeesService {
           },
         },
       },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên');
+      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên')
     }
 
     if (dto.positionId && dto.positionId !== existing.positionId) {
       const pos = await this.prisma.jobPosition.findFirst({
         where: { id: dto.positionId, boardingHouseId },
-      });
+      })
       if (!pos) {
-        throw new BadRequestException('Vị trí công việc không tồn tại tại nhà trọ này');
+        throw new BadRequestException('Vị trí công việc không tồn tại tại nhà trọ này')
       }
     }
 
-    const newStatus = dto.status;
-    const leftAt = newStatus === AssignmentStatus.inactive ? new Date() : null;
+    const newStatus = dto.status
+    const leftAt = newStatus === AssignmentStatus.inactive ? new Date() : null
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async tx => {
       const res = await tx.employeeAssignment.update({
         where: { id: assignmentId },
         data: {
@@ -588,12 +574,12 @@ export class EmployeesService {
             },
           },
         },
-      });
+      })
 
       // If status becomes inactive, cancel future scheduled shifts per UC-L-20 Step 4
       if (newStatus === AssignmentStatus.inactive) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
 
         await tx.workSchedule.updateMany({
           where: {
@@ -605,7 +591,7 @@ export class EmployeesService {
           data: {
             status: 'canceled',
           },
-        });
+        })
       }
 
       // AuditLog (Rule 4)
@@ -628,14 +614,14 @@ export class EmployeesService {
           },
           ipAddress,
         },
-      });
+      })
 
-      return res;
-    });
+      return res
+    })
 
     this.logger.log(
       `Updated staff assignment ${assignmentId}: status=${newStatus} house=${boardingHouseId}`,
-    );
+    )
 
     return {
       assignmentId: updated.id,
@@ -654,16 +640,13 @@ export class EmployeesService {
       createdAt: updated.createdAt,
       userRole: updated.employee.user.role,
       mustChangePassword: updated.employee.user.mustChangePassword,
-    };
+    }
   }
 
   /**
    * UC-L-20: Get single staff assignment details
    */
-  async getStaffDetail(
-    boardingHouseId: string,
-    assignmentId: string,
-  ): Promise<StaffItemDto> {
+  async getStaffDetail(boardingHouseId: string, assignmentId: string): Promise<StaffItemDto> {
     const assignment = await this.prisma.employeeAssignment.findFirst({
       where: {
         id: assignmentId,
@@ -687,10 +670,10 @@ export class EmployeesService {
           },
         },
       },
-    });
+    })
 
     if (!assignment) {
-      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên');
+      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên')
     }
 
     return {
@@ -710,7 +693,7 @@ export class EmployeesService {
       createdAt: assignment.createdAt,
       userRole: assignment.employee.user.role,
       mustChangePassword: assignment.employee.user.mustChangePassword,
-    };
+    }
   }
 
   /**
@@ -731,25 +714,25 @@ export class EmployeesService {
       include: {
         position: true,
       },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên');
+      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên')
     }
 
-    let targetPositionId = dto.positionId;
+    let targetPositionId = dto.positionId
 
     // Inline position creation if requested
     if (!targetPositionId && dto.newPositionName?.trim()) {
       const createdPos = await this.createJobPosition(boardingHouseId, {
         name: dto.newPositionName.trim(),
         description: dto.newPositionDescription?.trim(),
-      });
-      targetPositionId = createdPos.id;
+      })
+      targetPositionId = createdPos.id
     }
 
     if (!targetPositionId) {
-      throw new BadRequestException('Vui lòng chọn hoặc nhập tên vị trí công việc mới');
+      throw new BadRequestException('Vui lòng chọn hoặc nhập tên vị trí công việc mới')
     }
 
     const targetPosition = await this.prisma.jobPosition.findFirst({
@@ -757,13 +740,13 @@ export class EmployeesService {
         id: targetPositionId,
         boardingHouseId,
       },
-    });
+    })
 
     if (!targetPosition) {
-      throw new BadRequestException('Vị trí công việc không hợp lệ cho nhà trọ này');
+      throw new BadRequestException('Vị trí công việc không hợp lệ cho nhà trọ này')
     }
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async tx => {
       const res = await tx.employeeAssignment.update({
         where: { id: assignmentId },
         data: {
@@ -777,7 +760,7 @@ export class EmployeesService {
             },
           },
         },
-      });
+      })
 
       // AuditLog (Rule 4)
       await tx.auditLog.create({
@@ -797,14 +780,14 @@ export class EmployeesService {
           },
           ipAddress,
         },
-      });
+      })
 
-      return res;
-    });
+      return res
+    })
 
     this.logger.log(
       `Re-assigned role for staff assignment ${assignmentId}: newPosition=${targetPosition.name}`,
-    );
+    )
 
     return {
       assignmentId: updated.id,
@@ -823,7 +806,7 @@ export class EmployeesService {
       createdAt: updated.createdAt,
       userRole: updated.employee.user.role,
       mustChangePassword: updated.employee.user.mustChangePassword,
-    };
+    }
   }
 
   /**
@@ -839,10 +822,10 @@ export class EmployeesService {
         id: positionId,
         boardingHouseId,
       },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy vị trí công việc này');
+      throw new NotFoundException('Không tìm thấy vị trí công việc này')
     }
 
     if (dto.name && dto.name.trim() !== existing.name) {
@@ -852,11 +835,11 @@ export class EmployeesService {
           name: { equals: dto.name.trim(), mode: 'insensitive' },
           id: { not: positionId },
         },
-      });
+      })
       if (duplicate) {
         throw new ConflictException(
           `Vị trí công việc "${dto.name.trim()}" đã tồn tại tại nhà trọ này`,
-        );
+        )
       }
     }
 
@@ -865,9 +848,7 @@ export class EmployeesService {
       data: {
         name: dto.name?.trim() || existing.name,
         description:
-          dto.description !== undefined
-            ? dto.description?.trim() || null
-            : existing.description,
+          dto.description !== undefined ? dto.description?.trim() || null : existing.description,
       },
       include: {
         _count: {
@@ -878,9 +859,9 @@ export class EmployeesService {
           },
         },
       },
-    });
+    })
 
-    this.logger.log(`Updated job position ${positionId} for house ${boardingHouseId}`);
+    this.logger.log(`Updated job position ${positionId} for house ${boardingHouseId}`)
 
     return {
       id: updated.id,
@@ -888,7 +869,7 @@ export class EmployeesService {
       description: updated.description,
       staffCount: updated._count.employeeAssignments,
       createdAt: updated.createdAt,
-    };
+    }
   }
 
   /**
@@ -912,28 +893,27 @@ export class EmployeesService {
           },
         },
       },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy vị trí công việc này');
+      throw new NotFoundException('Không tìm thấy vị trí công việc này')
     }
 
     if (existing._count.employeeAssignments > 0) {
       throw new BadRequestException(
         `Không thể xóa vị trí "${existing.name}" vì đang có ${existing._count.employeeAssignments} nhân viên đảm nhận. Vui lòng chuyển vị trí của nhân viên trước.`,
-      );
+      )
     }
 
     await this.prisma.jobPosition.delete({
       where: { id: positionId },
-    });
+    })
 
-    this.logger.log(`Deleted job position ${positionId} from house ${boardingHouseId}`);
+    this.logger.log(`Deleted job position ${positionId} from house ${boardingHouseId}`)
 
     return {
       success: true,
       message: `Đã xóa vị trí công việc "${existing.name}" thành công`,
-    };
+    }
   }
 }
-

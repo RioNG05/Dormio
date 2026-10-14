@@ -1,17 +1,12 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { CreateGrievanceDto } from './dto/create-grievance.dto';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { CreateGrievanceDto } from './dto/create-grievance.dto'
 import {
   GrievanceDto,
   GrievanceListResponseDto,
   GrievanceDetailResponseDto,
   GrievanceImageDto,
-} from './dto/grievance-response.dto';
+} from './dto/grievance-response.dto'
 import {
   AdminGrievanceQueryDto,
   AdminGrievanceListResponseDto,
@@ -20,13 +15,13 @@ import {
   RejectGrievanceDto,
   GrievanceStatusFilter,
   GrievancePriorityFilter,
-} from './dto/admin-grievance.dto';
-import { GrievenceStatus, GrievencePriority } from '@prisma';
-import { UploadService } from '../upload/upload.service';
+} from './dto/admin-grievance.dto'
+import { GrievenceStatus, GrievencePriority } from '@prisma'
+import { UploadService } from '../upload/upload.service'
 
 @Injectable()
 export class GrievancesService {
-  private readonly logger = new Logger(GrievancesService.name);
+  private readonly logger = new Logger(GrievancesService.name)
 
   constructor(
     private readonly prisma: PrismaService,
@@ -55,9 +50,9 @@ export class GrievancesService {
           },
         },
       },
-    });
+    })
 
-    return tenantContract?.contract || null;
+    return tenantContract?.contract || null
   }
 
   /**
@@ -68,7 +63,7 @@ export class GrievancesService {
       id: img.id,
       url: img.url,
       createdAt: img.createdAt.toISOString(),
-    }));
+    }))
 
     return {
       id: g.id,
@@ -85,7 +80,7 @@ export class GrievancesService {
       images,
       createdAt: g.createdAt.toISOString(),
       updatedAt: g.updatedAt ? g.updatedAt.toISOString() : g.createdAt.toISOString(),
-    };
+    }
   }
 
   /**
@@ -95,37 +90,37 @@ export class GrievancesService {
     tenantId: string,
     dto: CreateGrievanceDto,
   ): Promise<GrievanceDetailResponseDto> {
-    this.logger.log(`User ${tenantId} creating grievance (${dto.type}): "${dto.title}"`);
-    const contract = await this.findActiveTenantContract(tenantId);
+    this.logger.log(`User ${tenantId} creating grievance (${dto.type}): "${dto.title}"`)
+    const contract = await this.findActiveTenantContract(tenantId)
 
-    const boardingHouseId = contract?.room?.boardingHouseId || null;
-    const roomId = contract?.roomId || null;
+    const boardingHouseId = contract?.room?.boardingHouseId || null
+    const roomId = contract?.roomId || null
 
     // Ensure all evidence images are uploaded to Cloudinary with folder /dormio/application-images
-    const resolvedImageUrls: string[] = [];
+    const resolvedImageUrls: string[] = []
     if (dto.imageUrls && dto.imageUrls.length > 0) {
       for (const rawImage of dto.imageUrls) {
         try {
           const cloudinaryUrl = await this.uploadService.ensureCloudinaryUrl(
             rawImage,
             'dormio/application-images',
-          );
+          )
           if (cloudinaryUrl) {
-            resolvedImageUrls.push(cloudinaryUrl);
+            resolvedImageUrls.push(cloudinaryUrl)
           }
         } catch (uploadErr) {
-          this.logger.error(`Failed to upload application image to Cloudinary: ${uploadErr}`);
+          this.logger.error(`Failed to upload application image to Cloudinary: ${uploadErr}`)
           // If upload fails, still retain if it's already an HTTP URL, otherwise rethrow or continue
           if (rawImage.startsWith('http://') || rawImage.startsWith('https://')) {
-            resolvedImageUrls.push(rawImage);
+            resolvedImageUrls.push(rawImage)
           } else {
-            throw uploadErr;
+            throw uploadErr
           }
         }
       }
     }
 
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async tx => {
       const grievance = await tx.grievance.create({
         data: {
           tenantId,
@@ -137,15 +132,15 @@ export class GrievancesService {
           priority: dto.priority || 'medium',
           status: 'pending',
         },
-      });
+      })
 
       if (resolvedImageUrls.length > 0) {
         await tx.grievanceImage.createMany({
-          data: resolvedImageUrls.map((url) => ({
+          data: resolvedImageUrls.map(url => ({
             grievanceId: grievance.id,
             url,
           })),
-        });
+        })
       }
 
       // AuditLog creation
@@ -164,7 +159,7 @@ export class GrievancesService {
             imageCount: resolvedImageUrls.length,
           },
         },
-      });
+      })
 
       // Fetch full grievance with relations
       const fullGrievance = await tx.grievance.findUnique({
@@ -175,26 +170,24 @@ export class GrievancesService {
           images: true,
           resolvedByUser: true,
         },
-      });
+      })
 
-      return fullGrievance;
-    });
+      return fullGrievance
+    })
 
-    this.logger.log(`Grievance ${result?.id} created successfully for user ${tenantId}`);
+    this.logger.log(`Grievance ${result?.id} created successfully for user ${tenantId}`)
 
     return {
       success: true,
       data: this.mapToGrievanceDto(result),
-    };
+    }
   }
 
   /**
    * UC-T-07: Get all grievances submitted by tenant
    */
-  async getTenantGrievances(
-    tenantId: string,
-  ): Promise<GrievanceListResponseDto> {
-    this.logger.log(`Fetching grievances history for tenant ${tenantId}`);
+  async getTenantGrievances(tenantId: string): Promise<GrievanceListResponseDto> {
+    this.logger.log(`Fetching grievances history for tenant ${tenantId}`)
 
     const grievances = await this.prisma.grievance.findMany({
       where: {
@@ -207,22 +200,19 @@ export class GrievancesService {
         resolvedByUser: true,
       },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
     return {
       success: true,
-      data: grievances.map((g) => this.mapToGrievanceDto(g)),
-    };
+      data: grievances.map(g => this.mapToGrievanceDto(g)),
+    }
   }
 
   /**
    * UC-T-07: Get single grievance detail
    */
-  async getTenantGrievanceById(
-    tenantId: string,
-    id: string,
-  ): Promise<GrievanceDetailResponseDto> {
-    this.logger.log(`Fetching grievance detail ${id} for tenant ${tenantId}`);
+  async getTenantGrievanceById(tenantId: string, id: string): Promise<GrievanceDetailResponseDto> {
+    this.logger.log(`Fetching grievance detail ${id} for tenant ${tenantId}`)
 
     const grievance = await this.prisma.grievance.findFirst({
       where: {
@@ -235,18 +225,16 @@ export class GrievancesService {
         images: true,
         resolvedByUser: true,
       },
-    });
+    })
 
     if (!grievance) {
-      throw new NotFoundException(
-        'Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.',
-      );
+      throw new NotFoundException('Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.')
     }
 
     return {
       success: true,
       data: this.mapToGrievanceDto(grievance),
-    };
+    }
   }
 
   /**
@@ -257,17 +245,14 @@ export class GrievancesService {
       id: img.id,
       url: img.url,
       createdAt: img.createdAt.toISOString(),
-    }));
+    }))
 
-    const tenantName =
-      g.tenant?.userIdentification?.fullName ||
-      g.tenant?.username ||
-      'Khách thuê';
+    const tenantName = g.tenant?.userIdentification?.fullName || g.tenant?.username || 'Khách thuê'
 
     const landlordName =
       g.boardingHouse?.owner?.userIdentification?.fullName ||
       g.boardingHouse?.owner?.username ||
-      null;
+      null
 
     return {
       id: g.id,
@@ -291,10 +276,8 @@ export class GrievancesService {
       resolvedByName: g.resolvedByUser?.username || null,
       images,
       createdAt: g.createdAt.toISOString(),
-      updatedAt: g.updatedAt
-        ? g.updatedAt.toISOString()
-        : g.createdAt.toISOString(),
-    };
+      updatedAt: g.updatedAt ? g.updatedAt.toISOString() : g.createdAt.toISOString(),
+    }
   }
 
   /**
@@ -306,28 +289,28 @@ export class GrievancesService {
   ): Promise<AdminGrievanceListResponseDto> {
     this.logger.log(
       `Admin fetching grievances queue: type=${query.type}, status=${query.status}, priority=${query.priority}, page=${query.page}`,
-    );
+    )
 
-    const page = query.page || 1;
-    const limit = query.limit || 10;
-    const skip = (page - 1) * limit;
+    const page = query.page || 1
+    const limit = query.limit || 10
+    const skip = (page - 1) * limit
 
-    const where: any = {};
+    const where: any = {}
 
     if (query.type && query.type !== ('all' as any)) {
-      where.type = query.type;
+      where.type = query.type
     }
 
     if (query.status && query.status !== GrievanceStatusFilter.ALL) {
-      where.status = query.status as GrievenceStatus;
+      where.status = query.status as GrievenceStatus
     }
 
     if (query.priority && query.priority !== GrievancePriorityFilter.ALL) {
-      where.priority = query.priority as GrievencePriority;
+      where.priority = query.priority as GrievencePriority
     }
 
     if (query.search && query.search.trim()) {
-      const s = query.search.trim();
+      const s = query.search.trim()
       where.OR = [
         { title: { contains: s, mode: 'insensitive' } },
         { description: { contains: s, mode: 'insensitive' } },
@@ -335,14 +318,14 @@ export class GrievancesService {
         { tenant: { phoneNumber: { contains: s } } },
         { boardingHouse: { name: { contains: s, mode: 'insensitive' } } },
         { room: { roomNumber: { contains: s } } },
-      ];
+      ]
     }
 
     // Determine ordering
     // Spec rule: for pending queue, order by priority desc, createdAt asc
-    let orderBy: any = [{ updatedAt: 'desc' }, { createdAt: 'desc' }];
+    let orderBy: any = [{ updatedAt: 'desc' }, { createdAt: 'desc' }]
     if (query.status === GrievanceStatusFilter.PENDING || (!query.status && !where.status)) {
-      orderBy = [{ priority: 'desc' }, { createdAt: 'asc' }];
+      orderBy = [{ priority: 'desc' }, { createdAt: 'asc' }]
     }
 
     const [items, total, pendingCount, inProgressCount, resolvedCount, rejectedCount, urgentCount] =
@@ -379,13 +362,13 @@ export class GrievancesService {
             status: { in: ['pending', 'in_progress'] },
           },
         }),
-      ]);
+      ])
 
-    const totalPages = Math.ceil(total / limit) || 1;
+    const totalPages = Math.ceil(total / limit) || 1
 
     return {
       success: true,
-      items: items.map((g) => this.mapToAdminGrievanceDto(g)),
+      items: items.map(g => this.mapToAdminGrievanceDto(g)),
       total,
       page,
       limit,
@@ -397,14 +380,14 @@ export class GrievancesService {
         rejected: rejectedCount,
         urgent: urgentCount,
       },
-    };
+    }
   }
 
   /**
    * UC-A-04: Get single grievance detail for admin
    */
   async getAdminGrievanceById(id: string): Promise<AdminGrievanceItemDto> {
-    this.logger.log(`Admin fetching grievance detail ${id}`);
+    this.logger.log(`Admin fetching grievance detail ${id}`)
 
     const grievance = await this.prisma.grievance.findUnique({
       where: { id },
@@ -423,13 +406,13 @@ export class GrievancesService {
         images: true,
         resolvedByUser: true,
       },
-    });
+    })
 
     if (!grievance) {
-      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`)
     }
 
-    return this.mapToAdminGrievanceDto(grievance);
+    return this.mapToAdminGrievanceDto(grievance)
   }
 
   /**
@@ -439,23 +422,23 @@ export class GrievancesService {
     adminId: string,
     id: string,
   ): Promise<AdminGrievanceItemDto> {
-    this.logger.log(`Admin ${adminId} moving grievance ${id} to in_progress`);
+    this.logger.log(`Admin ${adminId} moving grievance ${id} to in_progress`)
 
     const existing = await this.prisma.grievance.findUnique({
       where: { id },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`)
     }
 
     if (existing.status === 'resolved' || existing.status === 'rejected') {
       throw new BadRequestException(
         'Cannot transition resolved or rejected grievance back to in-progress.',
-      );
+      )
     }
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async tx => {
       const g = await tx.grievance.update({
         where: { id },
         data: {
@@ -470,7 +453,7 @@ export class GrievancesService {
           images: true,
           resolvedByUser: true,
         },
-      });
+      })
 
       await tx.auditLog.create({
         data: {
@@ -482,12 +465,12 @@ export class GrievancesService {
           oldValue: { status: existing.status },
           newValue: { status: 'in_progress' },
         },
-      });
+      })
 
-      return g;
-    });
+      return g
+    })
 
-    return this.mapToAdminGrievanceDto(updated);
+    return this.mapToAdminGrievanceDto(updated)
   }
 
   /**
@@ -498,19 +481,19 @@ export class GrievancesService {
     id: string,
     dto: ResolveGrievanceDto,
   ): Promise<AdminGrievanceItemDto> {
-    this.logger.log(`Admin ${adminId} resolving grievance ${id}`);
+    this.logger.log(`Admin ${adminId} resolving grievance ${id}`)
 
     const existing = await this.prisma.grievance.findUnique({
       where: { id },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`)
     }
 
-    const resolutionNote = dto.resolutionNote.trim();
+    const resolutionNote = dto.resolutionNote.trim()
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async tx => {
       const g = await tx.grievance.update({
         where: { id },
         data: {
@@ -528,7 +511,7 @@ export class GrievancesService {
           images: true,
           resolvedByUser: true,
         },
-      });
+      })
 
       // Audit log
       await tx.auditLog.create({
@@ -545,7 +528,7 @@ export class GrievancesService {
             escalateLockLandlord: dto.escalateLockLandlord || false,
           },
         },
-      });
+      })
 
       // Dispatch notification to tenant
       await tx.notification.create({
@@ -556,12 +539,12 @@ export class GrievancesService {
           isRead: false,
           content: `Đơn khiếu nại "${existing.title}" của bạn đã được giải quyết: ${resolutionNote}`,
         },
-      });
+      })
 
-      return g;
-    });
+      return g
+    })
 
-    return this.mapToAdminGrievanceDto(updated);
+    return this.mapToAdminGrievanceDto(updated)
   }
 
   /**
@@ -572,19 +555,19 @@ export class GrievancesService {
     id: string,
     dto: RejectGrievanceDto,
   ): Promise<AdminGrievanceItemDto> {
-    this.logger.log(`Admin ${adminId} rejecting grievance ${id}`);
+    this.logger.log(`Admin ${adminId} rejecting grievance ${id}`)
 
     const existing = await this.prisma.grievance.findUnique({
       where: { id },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`)
     }
 
-    const resolutionNote = dto.resolutionNote.trim();
+    const resolutionNote = dto.resolutionNote.trim()
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async tx => {
       const g = await tx.grievance.update({
         where: { id },
         data: {
@@ -602,7 +585,7 @@ export class GrievancesService {
           images: true,
           resolvedByUser: true,
         },
-      });
+      })
 
       // Audit log
       await tx.auditLog.create({
@@ -615,7 +598,7 @@ export class GrievancesService {
           oldValue: { status: existing.status },
           newValue: { status: 'rejected', resolutionNote },
         },
-      });
+      })
 
       // Dispatch notification to tenant
       await tx.notification.create({
@@ -626,11 +609,11 @@ export class GrievancesService {
           isRead: false,
           content: `Đơn khiếu nại "${existing.title}" của bạn đã bị từ chối: ${resolutionNote}`,
         },
-      });
+      })
 
-      return g;
-    });
+      return g
+    })
 
-    return this.mapToAdminGrievanceDto(updated);
+    return this.mapToAdminGrievanceDto(updated)
   }
 }

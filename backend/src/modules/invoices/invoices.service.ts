@@ -4,38 +4,38 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
+} from '@nestjs/common'
+import { Prisma } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
 import {
   TenantInvoiceDto,
   TenantInvoicesListResponseDto,
   InvoiceItemDetailDto,
   MeterReadingSummaryDto,
-} from './dto/tenant-invoices-response.dto';
+} from './dto/tenant-invoices-response.dto'
 import {
   TenantUsageAnalyticsResponseDto,
   UtilityConsumptionDataPointDto,
   UsageAnalyticsSummaryDto,
-} from './dto/usage-analytics-response.dto';
+} from './dto/usage-analytics-response.dto'
 import {
   PaymentHistoryResponseDto,
   PaymentHistoryRecordDto,
   PaymentHistorySummaryDto,
   PaymentBreakdownItemDto,
-} from './dto/payment-history-response.dto';
-import { QueryLandlordInvoicesDto } from './dto/query-landlord-invoices.dto';
-import { CreateManualInvoiceDto } from './dto/create-manual-invoice.dto';
-import { ManualPaymentDto } from './dto/manual-payment.dto';
+} from './dto/payment-history-response.dto'
+import { QueryLandlordInvoicesDto } from './dto/query-landlord-invoices.dto'
+import { CreateManualInvoiceDto } from './dto/create-manual-invoice.dto'
+import { ManualPaymentDto } from './dto/manual-payment.dto'
 import {
   LandlordInvoicesListResponseDto,
   LandlordInvoiceItemDto,
   LandlordInvoicesSummaryDto,
   ServiceFeeBreakdownDto,
   LandlordMeterReadingDto,
-} from './dto/landlord-invoices-response.dto';
-import { NotificationsService } from '../notifications/notifications.service';
-import { QueryLandlordDebtsDto } from './dto/query-landlord-debts.dto';
+} from './dto/landlord-invoices-response.dto'
+import { NotificationsService } from '../notifications/notifications.service'
+import { QueryLandlordDebtsDto } from './dto/query-landlord-debts.dto'
 import {
   LandlordDebtsResponseDto,
   RoomDebtItemDto,
@@ -43,11 +43,11 @@ import {
   SendDebtReminderDto,
   DebtReminderResponseDto,
   LandlordDebtsSummaryDto,
-} from './dto/landlord-debts-response.dto';
+} from './dto/landlord-debts-response.dto'
 
 @Injectable()
 export class InvoicesService {
-  private readonly logger = new Logger(InvoicesService.name);
+  private readonly logger = new Logger(InvoicesService.name)
 
   constructor(
     private readonly prisma: PrismaService,
@@ -76,23 +76,21 @@ export class InvoicesService {
           },
         },
       },
-    });
+    })
 
     if (!tenantContract || !tenantContract.contract) {
-      throw new NotFoundException(
-        'Không tìm thấy hợp đồng thuê phòng đang có hiệu lực của bạn.',
-      );
+      throw new NotFoundException('Không tìm thấy hợp đồng thuê phòng đang có hiệu lực của bạn.')
     }
 
-    return tenantContract.contract;
+    return tenantContract.contract
   }
 
   /**
    * UC-T-05: Query all invoices and item details for the tenant's active room
    */
   async getTenantInvoices(userId: string): Promise<TenantInvoicesListResponseDto> {
-    this.logger.log(`Fetching invoices for tenant user ${userId}`);
-    const contract = await this.resolveActiveTenantContract(userId);
+    this.logger.log(`Fetching invoices for tenant user ${userId}`)
+    const contract = await this.resolveActiveTenantContract(userId)
 
     const invoices = await this.prisma.invoice.findMany({
       where: {
@@ -112,38 +110,38 @@ export class InvoicesService {
         },
       },
       orderBy: [{ dueDate: 'desc' }, { createdAt: 'desc' }],
-    });
+    })
 
-    const now = new Date();
+    const now = new Date()
 
-    const data: TenantInvoiceDto[] = invoices.map((inv) => {
-      const dueDate = new Date(inv.dueDate);
-      const period = `Tháng ${String(dueDate.getMonth() + 1).padStart(2, '0')}/${dueDate.getFullYear()}`;
+    const data: TenantInvoiceDto[] = invoices.map(inv => {
+      const dueDate = new Date(inv.dueDate)
+      const period = `Tháng ${String(dueDate.getMonth() + 1).padStart(2, '0')}/${dueDate.getFullYear()}`
 
-      let displayStatus: 'paid' | 'unpaid' | 'overdue' = 'unpaid';
+      let displayStatus: 'paid' | 'unpaid' | 'overdue' = 'unpaid'
       if (inv.status === 'paid') {
-        displayStatus = 'paid';
+        displayStatus = 'paid'
       } else if (dueDate < now) {
-        displayStatus = 'overdue';
+        displayStatus = 'overdue'
       } else {
-        displayStatus = 'unpaid';
+        displayStatus = 'unpaid'
       }
 
       // Map line item details
-      const details: InvoiceItemDetailDto[] = inv.invoiceItems.map((item) => {
-        let name = item.service?.name || 'Tiền phòng';
-        const isMetered = item.service?.isMetered ?? false;
-        let unit = item.service?.unit || 'tháng';
+      const details: InvoiceItemDetailDto[] = inv.invoiceItems.map(item => {
+        let name = item.service?.name || 'Tiền phòng'
+        const isMetered = item.service?.isMetered ?? false
+        let unit = item.service?.unit || 'tháng'
 
         if (!item.serviceId) {
-          name = 'Tiền phòng';
-          unit = 'tháng';
+          name = 'Tiền phòng'
+          unit = 'tháng'
         } else if (name.toLowerCase().includes('điện')) {
-          name = 'Tiền điện';
-          unit = 'kWh';
+          name = 'Tiền điện'
+          unit = 'kWh'
         } else if (name.toLowerCase().includes('nước')) {
-          name = 'Tiền nước';
-          unit = 'm³';
+          name = 'Tiền nước'
+          unit = 'm³'
         }
 
         return {
@@ -153,20 +151,18 @@ export class InvoicesService {
           unit,
           unitPrice: Number(item.unitPrice),
           isMetered,
-        };
-      });
+        }
+      })
 
       // Map meter readings
-      const meterReadings: MeterReadingSummaryDto[] = inv.meterReadings.map(
-        (mr) => ({
-          serviceId: mr.serviceId,
-          serviceName: mr.service.name,
-          unit: mr.service.unit,
-          readingValue: mr.readingValue !== null ? Number(mr.readingValue) : null,
-          imageUrl: mr.imageUrl,
-          recordedAt: mr.createdAt.toISOString(),
-        }),
-      );
+      const meterReadings: MeterReadingSummaryDto[] = inv.meterReadings.map(mr => ({
+        serviceId: mr.serviceId,
+        serviceName: mr.service.name,
+        unit: mr.service.unit,
+        readingValue: mr.readingValue !== null ? Number(mr.readingValue) : null,
+        imageUrl: mr.imageUrl,
+        recordedAt: mr.createdAt.toISOString(),
+      }))
 
       return {
         id: inv.id,
@@ -175,44 +171,37 @@ export class InvoicesService {
         status: displayStatus,
         dueDate: inv.dueDate.toISOString(),
         createdDate: inv.createdAt.toISOString(),
-        paidDate: inv.payment?.createdAt
-          ? inv.payment.createdAt.toISOString()
-          : null,
+        paidDate: inv.payment?.createdAt ? inv.payment.createdAt.toISOString() : null,
         details,
         meterReadings,
-      };
-    });
+      }
+    })
 
     return {
       success: true,
       data,
-    };
+    }
   }
 
   /**
    * UC-T-05: Query single invoice details for tenant
    */
-  async getTenantInvoiceById(
-    userId: string,
-    invoiceId: string,
-  ): Promise<TenantInvoiceDto> {
-    this.logger.log(`Fetching invoice ${invoiceId} for tenant user ${userId}`);
-    const invoicesList = await this.getTenantInvoices(userId);
-    const invoice = invoicesList.data.find((i) => i.id === invoiceId);
+  async getTenantInvoiceById(userId: string, invoiceId: string): Promise<TenantInvoiceDto> {
+    this.logger.log(`Fetching invoice ${invoiceId} for tenant user ${userId}`)
+    const invoicesList = await this.getTenantInvoices(userId)
+    const invoice = invoicesList.data.find(i => i.id === invoiceId)
     if (!invoice) {
-      throw new NotFoundException('Không tìm thấy thông tin hóa đơn.');
+      throw new NotFoundException('Không tìm thấy thông tin hóa đơn.')
     }
-    return invoice;
+    return invoice
   }
 
   /**
    * UC-T-05: Query and aggregate utility usage analytics and month-over-month trends
    */
-  async getTenantUsageAnalytics(
-    userId: string,
-  ): Promise<TenantUsageAnalyticsResponseDto> {
-    this.logger.log(`Generating usage analytics for tenant user ${userId}`);
-    const contract = await this.resolveActiveTenantContract(userId);
+  async getTenantUsageAnalytics(userId: string): Promise<TenantUsageAnalyticsResponseDto> {
+    this.logger.log(`Generating usage analytics for tenant user ${userId}`)
+    const contract = await this.resolveActiveTenantContract(userId)
 
     const invoices = await this.prisma.invoice.findMany({
       where: {
@@ -226,7 +215,7 @@ export class InvoicesService {
         },
       },
       orderBy: { dueDate: 'asc' }, // chronological for time series charts
-    });
+    })
 
     if (invoices.length === 0) {
       return {
@@ -242,34 +231,34 @@ export class InvoicesService {
           nextDueDate: null,
         },
         chartData: [],
-      };
+      }
     }
 
-    const chartData: UtilityConsumptionDataPointDto[] = invoices.map((inv) => {
-      const dueDate = new Date(inv.dueDate);
-      const period = `T${dueDate.getMonth() + 1}/${dueDate.getFullYear().toString().slice(2)}`;
+    const chartData: UtilityConsumptionDataPointDto[] = invoices.map(inv => {
+      const dueDate = new Date(inv.dueDate)
+      const period = `T${dueDate.getMonth() + 1}/${dueDate.getFullYear().toString().slice(2)}`
 
-      let electricityKwh = 0;
-      let waterM3 = 0;
-      let roomRent = 0;
-      let electricityAmount = 0;
-      let waterAmount = 0;
-      let otherServicesAmount = 0;
+      let electricityKwh = 0
+      let waterM3 = 0
+      let roomRent = 0
+      let electricityAmount = 0
+      let waterAmount = 0
+      let otherServicesAmount = 0
 
       for (const item of inv.invoiceItems) {
-        const sName = item.service?.name?.toLowerCase() || '';
-        const amt = Number(item.amount);
+        const sName = item.service?.name?.toLowerCase() || ''
+        const amt = Number(item.amount)
 
         if (!item.serviceId || sName.includes('phòng')) {
-          roomRent += amt;
+          roomRent += amt
         } else if (sName.includes('điện')) {
-          electricityKwh += item.quantity;
-          electricityAmount += amt;
+          electricityKwh += item.quantity
+          electricityAmount += amt
         } else if (sName.includes('nước')) {
-          waterM3 += item.quantity;
-          waterAmount += amt;
+          waterM3 += item.quantity
+          waterAmount += amt
         } else {
-          otherServicesAmount += amt;
+          otherServicesAmount += amt
         }
       }
 
@@ -283,46 +272,42 @@ export class InvoicesService {
         waterAmount,
         otherServicesAmount,
         totalAmount: Number(inv.totalAmount),
-      };
-    });
+      }
+    })
 
     // Compute Summary Statistics
-    const totalCount = chartData.length;
-    const sumSpend = chartData.reduce((acc, c) => acc + c.totalAmount, 0);
-    const sumElec = chartData.reduce((acc, c) => acc + c.electricityKwh, 0);
-    const sumWater = chartData.reduce((acc, c) => acc + c.waterM3, 0);
+    const totalCount = chartData.length
+    const sumSpend = chartData.reduce((acc, c) => acc + c.totalAmount, 0)
+    const sumElec = chartData.reduce((acc, c) => acc + c.electricityKwh, 0)
+    const sumWater = chartData.reduce((acc, c) => acc + c.waterM3, 0)
 
-    const averageMonthlySpend = Math.round(sumSpend / totalCount);
-    const averageElectricityKwh = Math.round(sumElec / totalCount);
-    const averageWaterM3 = Math.round((sumWater / totalCount) * 10) / 10;
+    const averageMonthlySpend = Math.round(sumSpend / totalCount)
+    const averageElectricityKwh = Math.round(sumElec / totalCount)
+    const averageWaterM3 = Math.round((sumWater / totalCount) * 10) / 10
 
     // Latest cycle and previous cycle MoM
-    const latest = chartData[totalCount - 1];
-    const prev = totalCount > 1 ? chartData[totalCount - 2] : null;
+    const latest = chartData[totalCount - 1]
+    const prev = totalCount > 1 ? chartData[totalCount - 2] : null
 
-    let momChangeAmount = 0;
-    let momChangePercent = 0;
-    let isUp = false;
+    let momChangeAmount = 0
+    let momChangePercent = 0
+    let isUp = false
 
     if (prev && prev.totalAmount > 0) {
-      const diff = latest.totalAmount - prev.totalAmount;
-      momChangeAmount = Math.abs(diff);
-      momChangePercent = Number(((diff / prev.totalAmount) * 100).toFixed(1));
-      isUp = diff >= 0;
+      const diff = latest.totalAmount - prev.totalAmount
+      momChangeAmount = Math.abs(diff)
+      momChangePercent = Number(((diff / prev.totalAmount) * 100).toFixed(1))
+      isUp = diff >= 0
     }
 
     // Find unpaid invoice due date
     const unpaidInvoice = invoices
-      .filter((i) => i.status === 'unpaid')
-      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
+      .filter(i => i.status === 'unpaid')
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
 
-    const currentCycleDue = unpaidInvoice
-      ? Number(unpaidInvoice.totalAmount)
-      : 0;
+    const currentCycleDue = unpaidInvoice ? Number(unpaidInvoice.totalAmount) : 0
 
-    const nextDueDate = unpaidInvoice
-      ? unpaidInvoice.dueDate.toISOString()
-      : null;
+    const nextDueDate = unpaidInvoice ? unpaidInvoice.dueDate.toISOString() : null
 
     const summary: UsageAnalyticsSummaryDto = {
       currentCycleDue,
@@ -333,22 +318,20 @@ export class InvoicesService {
       momChangeAmount,
       isUp,
       nextDueDate,
-    };
+    }
 
     return {
       success: true,
       summary,
       chartData,
-    };
+    }
   }
 
   /**
    * UC-T-08: Query full payment history across all contracts (past & active)
    */
-  async getTenantPaymentHistory(
-    userId: string,
-  ): Promise<PaymentHistoryResponseDto> {
-    this.logger.log(`Fetching lifetime payment history for tenant user ${userId}`);
+  async getTenantPaymentHistory(userId: string): Promise<PaymentHistoryResponseDto> {
+    this.logger.log(`Fetching lifetime payment history for tenant user ${userId}`)
 
     // 1. Resolve every Contract this tenant has ever been party to (active + ended)
     const tenantContracts = await this.prisma.tenantContract.findMany({
@@ -364,11 +347,11 @@ export class InvoicesService {
           },
         },
       },
-    });
+    })
 
     const contractIds = tenantContracts
-      .map((tc) => tc.contractId)
-      .filter((id): id is string => Boolean(id));
+      .map(tc => tc.contractId)
+      .filter((id): id is string => Boolean(id))
 
     // 2. Fetch all Invoices tied to these contracts
     const invoices =
@@ -398,7 +381,7 @@ export class InvoicesService {
               dueDate: 'desc',
             },
           })
-        : [];
+        : []
 
     // 3. Fetch standalone payments (e.g. upfront rent without invoice)
     const standalonePayments = await this.prisma.payment.findMany({
@@ -412,31 +395,28 @@ export class InvoicesService {
       orderBy: {
         paidAt: 'desc',
       },
-    });
+    })
 
     // 4. Map Invoices to standard PaymentHistoryRecordDto
-    const invoiceRecords: PaymentHistoryRecordDto[] = invoices.map((inv) => {
-      const d = new Date(inv.dueDate);
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      const period = `T${month}/${year}`;
+    const invoiceRecords: PaymentHistoryRecordDto[] = invoices.map(inv => {
+      const d = new Date(inv.dueDate)
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const year = d.getFullYear()
+      const period = `T${month}/${year}`
 
-      const breakdown: PaymentBreakdownItemDto[] = inv.invoiceItems.map(
-        (item) => ({
-          label: item.service?.name || 'Tiền thuê phòng',
-          amount: Number(item.amount),
-          quantity: item.quantity,
-          unitPrice: Number(item.unitPrice),
-          type: item.service ? (item.service.isMetered ? 'metered' : 'service') : 'room',
-        }),
-      );
+      const breakdown: PaymentBreakdownItemDto[] = inv.invoiceItems.map(item => ({
+        label: item.service?.name || 'Tiền thuê phòng',
+        amount: Number(item.amount),
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        type: item.service ? (item.service.isMetered ? 'metered' : 'service') : 'room',
+      }))
 
       return {
         id: inv.id,
         source: 'monthly_invoice',
         contractId: inv.contractId,
-        boardingHouseName:
-          inv.contract?.room?.boardingHouse?.name || 'Nhà trọ Dormio',
+        boardingHouseName: inv.contract?.room?.boardingHouse?.name || 'Nhà trọ Dormio',
         roomNumber: inv.contract?.room?.roomNumber || '-',
         totalAmount: Number(inv.totalAmount),
         paidAt: inv.payment?.paidAt ? inv.payment.paidAt.toISOString() : null,
@@ -449,88 +429,84 @@ export class InvoicesService {
         qrCodeUrl: inv.payment?.qrCodeUrl || null,
         breakdown,
         createdAt: inv.createdAt.toISOString(),
-      };
-    });
+      }
+    })
 
     // 5. Map Standalone / Upfront payments
-    const upfrontRecords: PaymentHistoryRecordDto[] = standalonePayments.map(
-      (p) => {
-        const paymentDate = p.paidAt || p.createdAt;
-        const d = new Date(paymentDate);
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        const period = `T${month}/${year}`;
+    const upfrontRecords: PaymentHistoryRecordDto[] = standalonePayments.map(p => {
+      const paymentDate = p.paidAt || p.createdAt
+      const d = new Date(paymentDate)
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const year = d.getFullYear()
+      const period = `T${month}/${year}`
 
-        const breakdown: PaymentBreakdownItemDto[] = [
-          {
-            label: p.depositId ? 'Tiền cọc giữ phòng' : 'Tiền trọ trọn gói',
-            amount: Number(p.amount),
-            quantity: 1,
-            unitPrice: Number(p.amount),
-            type: p.depositId ? 'deposit' : 'room',
-          },
-        ];
+      const breakdown: PaymentBreakdownItemDto[] = [
+        {
+          label: p.depositId ? 'Tiền cọc giữ phòng' : 'Tiền trọ trọn gói',
+          amount: Number(p.amount),
+          quantity: 1,
+          unitPrice: Number(p.amount),
+          type: p.depositId ? 'deposit' : 'room',
+        },
+      ]
 
-        return {
-          id: p.id,
-          source: 'upfront_rent',
-          contractId: null,
-          boardingHouseName: 'Dormio System',
-          roomNumber: '-',
-          totalAmount: Number(p.amount),
-          paidAt: p.paidAt ? p.paidAt.toISOString() : null,
-          dueDate: (p.paidAt || p.createdAt).toISOString(),
-          period,
-          status: p.status === 'success' ? 'paid' : p.status,
-          paymentMethod: (p.method as 'cash' | 'banking') || null,
-          transactionRef: p.transactionRef || null,
-          receiptNumber: p.receiptNumber || null,
-          qrCodeUrl: p.qrCodeUrl || null,
-          breakdown,
-          createdAt: p.createdAt.toISOString(),
-        };
-      },
-    );
+      return {
+        id: p.id,
+        source: 'upfront_rent',
+        contractId: null,
+        boardingHouseName: 'Dormio System',
+        roomNumber: '-',
+        totalAmount: Number(p.amount),
+        paidAt: p.paidAt ? p.paidAt.toISOString() : null,
+        dueDate: (p.paidAt || p.createdAt).toISOString(),
+        period,
+        status: p.status === 'success' ? 'paid' : p.status,
+        paymentMethod: p.method || null,
+        transactionRef: p.transactionRef || null,
+        receiptNumber: p.receiptNumber || null,
+        qrCodeUrl: p.qrCodeUrl || null,
+        breakdown,
+        createdAt: p.createdAt.toISOString(),
+      }
+    })
 
     // Merge and sort chronologically by date descending
     const allRecords = [...invoiceRecords, ...upfrontRecords].sort(
       (a, b) =>
-        new Date(b.paidAt || b.dueDate).getTime() -
-        new Date(a.paidAt || a.dueDate).getTime(),
-    );
+        new Date(b.paidAt || b.dueDate).getTime() - new Date(a.paidAt || a.dueDate).getTime(),
+    )
 
     // 6. Compute summary metrics
     const totalPaidAmount = allRecords
-      .filter((r) => r.status === 'paid' || r.status === 'success')
-      .reduce((sum, r) => sum + r.totalAmount, 0);
+      .filter(r => r.status === 'paid' || r.status === 'success')
+      .reduce((sum, r) => sum + r.totalAmount, 0)
 
     const totalPendingAmount = allRecords
-      .filter((r) => r.status === 'unpaid' || r.status === 'overdue' || r.status === 'pending')
-      .reduce((sum, r) => sum + r.totalAmount, 0);
+      .filter(r => r.status === 'unpaid' || r.status === 'overdue' || r.status === 'pending')
+      .reduce((sum, r) => sum + r.totalAmount, 0)
 
-    const paidRecords = allRecords.filter((r) => Boolean(r.paidAt));
-    const lastPaymentDate =
-      paidRecords.length > 0 ? paidRecords[0].paidAt : null;
+    const paidRecords = allRecords.filter(r => Boolean(r.paidAt))
+    const lastPaymentDate = paidRecords.length > 0 ? paidRecords[0].paidAt : null
 
     const summary: PaymentHistorySummaryDto = {
       totalPaidAmount,
       totalPendingAmount,
       totalTransactions: allRecords.length,
       lastPaymentDate,
-    };
+    }
 
     return {
       success: true,
       summary,
       data: allRecords,
-    };
+    }
   }
 
   // ─── Landlord Invoices Management (UC-L-06) ──────────────────────────────────
 
-  private readonly DEFAULT_BANK_CODE = '970422'; // MB Bank
-  private readonly DEFAULT_ACCOUNT_NUMBER = '0988123456';
-  private readonly DEFAULT_ACCOUNT_NAME = 'DORMIO BHMS';
+  private readonly DEFAULT_BANK_CODE = '970422' // MB Bank
+  private readonly DEFAULT_ACCOUNT_NUMBER = '0988123456'
+  private readonly DEFAULT_ACCOUNT_NAME = 'DORMIO BHMS'
 
   /**
    * Generates a standard VietQR image URL with locked amount and transfer memo
@@ -541,10 +517,10 @@ export class InvoicesService {
     amount: number,
     period: string,
   ): string {
-    const memo = `TT TRO P${roomNumber.replace(/\s+/g, '')} ${period.replace('/', '')}`;
+    const memo = `TT TRO P${roomNumber.replace(/\s+/g, '')} ${period.replace('/', '')}`
     return `https://img.vietqr.io/image/${this.DEFAULT_BANK_CODE}-${this.DEFAULT_ACCOUNT_NUMBER}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
       memo,
-    )}&accountName=${encodeURIComponent(this.DEFAULT_ACCOUNT_NAME)}`;
+    )}&accountName=${encodeURIComponent(this.DEFAULT_ACCOUNT_NAME)}`
   }
 
   /**
@@ -557,47 +533,49 @@ export class InvoicesService {
   ): Promise<LandlordInvoicesListResponseDto> {
     this.logger.log(
       `Landlord ${landlordId} querying invoices for house ${boardingHouseId} (page=${query.page}, status=${query.status})`,
-    );
+    )
 
-    const now = new Date();
-    const page = Math.max(1, query.page || 1);
-    const limit = Math.max(1, query.limit || 10);
-    const skip = (page - 1) * limit;
+    const now = new Date()
+    const page = Math.max(1, query.page || 1)
+    const limit = Math.max(1, query.limit || 10)
+    const skip = (page - 1) * limit
 
     // 1. Base house scope filter
     const baseHouseWhere: Prisma.InvoiceWhereInput = {
       room: {
         boardingHouseId,
       },
-    };
+    }
 
     // 2. Date range filter based on month and year
-    let dateFilter: Prisma.DateTimeFilter | undefined;
-    const selectedYear = query.year && query.year !== 'all' ? Number(query.year) : null;
-    const selectedMonth = query.month && query.month !== 'all' ? Number(query.month) : null;
+    let dateFilter: Prisma.DateTimeFilter | undefined
+    const selectedYear = query.year && query.year !== 'all' ? Number(query.year) : null
+    const selectedMonth = query.month && query.month !== 'all' ? Number(query.month) : null
 
     if (selectedYear && selectedMonth) {
-      const start = new Date(selectedYear, selectedMonth - 1, 1);
-      const end = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999);
-      dateFilter = { gte: start, lte: end };
+      const start = new Date(selectedYear, selectedMonth - 1, 1)
+      const end = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999)
+      dateFilter = { gte: start, lte: end }
     } else if (selectedYear) {
-      const start = new Date(selectedYear, 0, 1);
-      const end = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
-      dateFilter = { gte: start, lte: end };
+      const start = new Date(selectedYear, 0, 1)
+      const end = new Date(selectedYear, 11, 31, 23, 59, 59, 999)
+      dateFilter = { gte: start, lte: end }
     }
 
     const periodWhere: Prisma.InvoiceWhereInput = {
       ...baseHouseWhere,
       ...(dateFilter ? { dueDate: dateFilter } : {}),
-    };
+    }
 
     // 3. Search filter
-    let searchWhere: Prisma.InvoiceWhereInput = {};
+    let searchWhere: Prisma.InvoiceWhereInput = {}
     if (query.search && query.search.trim()) {
-      const term = query.search.trim();
+      const term = query.search.trim()
       searchWhere = {
         OR: [
-          ...(term.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) ? [{ id: term }] : []),
+          ...(term.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+            ? [{ id: term }]
+            : []),
           { room: { roomNumber: { contains: term, mode: 'insensitive' } } },
           {
             contract: {
@@ -619,22 +597,19 @@ export class InvoicesService {
             },
           },
         ],
-      };
+      }
     }
 
     // 4. Status filter
-    let statusWhere: Prisma.InvoiceWhereInput = {};
+    let statusWhere: Prisma.InvoiceWhereInput = {}
     if (query.status === 'paid') {
-      statusWhere = { status: 'paid' };
+      statusWhere = { status: 'paid' }
     } else if (query.status === 'unpaid') {
-      statusWhere = { status: 'unpaid', dueDate: { gte: now } };
+      statusWhere = { status: 'unpaid', dueDate: { gte: now } }
     } else if (query.status === 'overdue') {
       statusWhere = {
-        OR: [
-          { status: 'overdue' },
-          { status: 'unpaid', dueDate: { lt: now } },
-        ],
-      };
+        OR: [{ status: 'overdue' }, { status: 'unpaid', dueDate: { lt: now } }],
+      }
     }
 
     // Combine for items query
@@ -642,7 +617,7 @@ export class InvoicesService {
       ...periodWhere,
       ...searchWhere,
       ...statusWhere,
-    };
+    }
 
     // 5. Query period invoices for Summary Metrics (unpaginated, matching house & period)
     const periodInvoices = await this.prisma.invoice.findMany({
@@ -653,27 +628,27 @@ export class InvoicesService {
         dueDate: true,
         totalAmount: true,
       },
-    });
+    })
 
-    let paidCount = 0;
-    let unpaidCount = 0;
-    let overdueCount = 0;
-    let totalPaidAmount = 0;
-    let totalUnpaidAmount = 0;
+    let paidCount = 0
+    let unpaidCount = 0
+    let overdueCount = 0
+    let totalPaidAmount = 0
+    let totalUnpaidAmount = 0
 
     for (const inv of periodInvoices) {
-      const amt = Number(inv.totalAmount);
-      const isDuePast = new Date(inv.dueDate) < now;
+      const amt = Number(inv.totalAmount)
+      const isDuePast = new Date(inv.dueDate) < now
 
       if (inv.status === 'paid') {
-        paidCount++;
-        totalPaidAmount += amt;
+        paidCount++
+        totalPaidAmount += amt
       } else if (inv.status === 'overdue' || isDuePast) {
-        overdueCount++;
-        totalUnpaidAmount += amt;
+        overdueCount++
+        totalUnpaidAmount += amt
       } else {
-        unpaidCount++;
-        totalUnpaidAmount += amt;
+        unpaidCount++
+        totalUnpaidAmount += amt
       }
     }
 
@@ -684,7 +659,7 @@ export class InvoicesService {
       overdueCount,
       totalPaidAmount,
       totalUnpaidAmount,
-    };
+    }
 
     // 6. Query paginated records with complete joins
     const [total, invoices] = await Promise.all([
@@ -728,87 +703,84 @@ export class InvoicesService {
         skip,
         take: limit,
       }),
-    ]);
+    ])
 
     // 7. Map database records to response DTO
-    const data: LandlordInvoiceItemDto[] = invoices.map((inv) => {
-      const primaryTenant =
-        inv.contract?.tenantContracts[0]?.tenant || null;
+    const data: LandlordInvoiceItemDto[] = invoices.map(inv => {
+      const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || null
       const tenantName =
         primaryTenant?.userIdentification?.fullName ||
         primaryTenant?.username ||
-        'Chưa có người thuê';
-      const tenantPhone = primaryTenant?.phoneNumber || '';
+        'Chưa có người thuê'
+      const tenantPhone = primaryTenant?.phoneNumber || ''
 
-      const dueDateObj = new Date(inv.dueDate);
-      const period = `Tháng ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`;
-      const periodShort = `${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`;
+      const dueDateObj = new Date(inv.dueDate)
+      const period = `Tháng ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
+      const periodShort = `${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
 
-      let displayStatus: 'Đã thu' | 'Chưa thu' | 'Quá hạn' = 'Chưa thu';
-      let rawStatus: 'paid' | 'unpaid' | 'overdue' | 'cancelled' = inv.status;
+      let displayStatus: 'Đã thu' | 'Chưa thu' | 'Quá hạn' = 'Chưa thu'
+      let rawStatus: 'paid' | 'unpaid' | 'overdue' | 'cancelled' = inv.status
 
       if (inv.status === 'paid') {
-        displayStatus = 'Đã thu';
-        rawStatus = 'paid';
+        displayStatus = 'Đã thu'
+        rawStatus = 'paid'
       } else if (dueDateObj < now || inv.status === 'overdue') {
-        displayStatus = 'Quá hạn';
-        rawStatus = 'overdue';
+        displayStatus = 'Quá hạn'
+        rawStatus = 'overdue'
       } else {
-        displayStatus = 'Chưa thu';
-        rawStatus = 'unpaid';
+        displayStatus = 'Chưa thu'
+        rawStatus = 'unpaid'
       }
 
       // Breakdown line items
-      let rentAmount = 0;
-      let elecRate = 3500;
-      let elecNew = 0;
-      let elecOld = 0;
-      let waterRate = 15000;
-      let waterNew = 0;
-      let waterOld = 0;
-      const serviceFees: ServiceFeeBreakdownDto[] = [];
+      let rentAmount = 0
+      let elecRate = 3500
+      let elecNew = 0
+      const elecOld = 0
+      let waterRate = 15000
+      let waterNew = 0
+      const waterOld = 0
+      const serviceFees: ServiceFeeBreakdownDto[] = []
 
       for (const item of inv.invoiceItems) {
-        const sName = (item.service?.name || '').toLowerCase();
-        const amt = Number(item.amount);
+        const sName = (item.service?.name || '').toLowerCase()
+        const amt = Number(item.amount)
 
         if (!item.serviceId || sName.includes('phòng')) {
-          rentAmount += amt;
+          rentAmount += amt
         } else if (sName.includes('điện')) {
-          elecRate = Number(item.unitPrice) || elecRate;
-          elecNew = item.quantity;
+          elecRate = Number(item.unitPrice) || elecRate
+          elecNew = item.quantity
         } else if (sName.includes('nước')) {
-          waterRate = Number(item.unitPrice) || waterRate;
-          waterNew = item.quantity;
+          waterRate = Number(item.unitPrice) || waterRate
+          waterNew = item.quantity
         } else {
           serviceFees.push({
             name: item.service?.name || 'Phí dịch vụ',
             amount: amt,
-          });
+          })
         }
       }
 
       // Check attached meter readings for dial images & values
-      const meterReadings: LandlordMeterReadingDto[] = inv.meterReadings.map(
-        (mr) => ({
-          serviceId: mr.serviceId,
-          serviceName: mr.service.name,
-          unit: mr.service.unit,
-          readingValue: mr.readingValue !== null ? Number(mr.readingValue) : null,
-          imageUrl: mr.imageUrl,
-          recordedAt: mr.createdAt.toISOString(),
-        }),
-      );
+      const meterReadings: LandlordMeterReadingDto[] = inv.meterReadings.map(mr => ({
+        serviceId: mr.serviceId,
+        serviceName: mr.service.name,
+        unit: mr.service.unit,
+        readingValue: mr.readingValue !== null ? Number(mr.readingValue) : null,
+        imageUrl: mr.imageUrl,
+        recordedAt: mr.createdAt.toISOString(),
+      }))
 
-      const ocrReading = inv.meterReadings.find((mr) => Boolean(mr.imageUrl));
-      const ocrMeterImage = ocrReading?.imageUrl || undefined;
+      const ocrReading = inv.meterReadings.find(mr => Boolean(mr.imageUrl))
+      const ocrMeterImage = ocrReading?.imageUrl || undefined
 
       const vietQrUrl = this.buildVietQrUrl(
         inv.id,
         inv.room.roomNumber,
         Number(inv.totalAmount),
         periodShort,
-      );
+      )
 
       return {
         id: inv.id,
@@ -837,15 +809,15 @@ export class InvoicesService {
           inv.payment?.method === 'banking'
             ? 'Chuyển khoản VietQR'
             : inv.payment?.method === 'cash'
-            ? 'Tiền mặt'
-            : undefined,
+              ? 'Tiền mặt'
+              : undefined,
         vietQrUrl,
         ocrMeterImage,
         meterReadings,
-      };
-    });
+      }
+    })
 
-    const totalPages = Math.ceil(total / limit) || 1;
+    const totalPages = Math.ceil(total / limit) || 1
 
     return {
       success: true,
@@ -857,7 +829,7 @@ export class InvoicesService {
         totalPages,
       },
       summary,
-    };
+    }
   }
 
   /**
@@ -867,7 +839,7 @@ export class InvoicesService {
     boardingHouseId: string,
     invoiceId: string,
   ): Promise<LandlordInvoiceItemDto> {
-    this.logger.log(`Fetching landlord invoice detail for ${invoiceId}`);
+    this.logger.log(`Fetching landlord invoice detail for ${invoiceId}`)
 
     const inv = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
@@ -904,86 +876,82 @@ export class InvoicesService {
           orderBy: { createdAt: 'desc' },
         },
       },
-    });
+    })
 
     if (!inv || inv.room.boardingHouseId !== boardingHouseId) {
-      throw new NotFoundException('Không tìm thấy hóa đơn cần xem chi tiết');
+      throw new NotFoundException('Không tìm thấy hóa đơn cần xem chi tiết')
     }
 
-    const now = new Date();
-    const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || null;
+    const now = new Date()
+    const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || null
     const tenantName =
-      primaryTenant?.userIdentification?.fullName ||
-      primaryTenant?.username ||
-      'Chưa có người thuê';
-    const tenantPhone = primaryTenant?.phoneNumber || '';
+      primaryTenant?.userIdentification?.fullName || primaryTenant?.username || 'Chưa có người thuê'
+    const tenantPhone = primaryTenant?.phoneNumber || ''
 
-    const dueDateObj = new Date(inv.dueDate);
-    const periodShort = `${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`;
+    const dueDateObj = new Date(inv.dueDate)
+    const periodShort = `${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
 
-    let displayStatus: 'Đã thu' | 'Chưa thu' | 'Quá hạn' = 'Chưa thu';
-    let rawStatus: 'paid' | 'unpaid' | 'overdue' | 'cancelled' = inv.status;
+    let displayStatus: 'Đã thu' | 'Chưa thu' | 'Quá hạn' = 'Chưa thu'
+    let rawStatus: 'paid' | 'unpaid' | 'overdue' | 'cancelled' = inv.status
 
     if (inv.status === 'paid') {
-      displayStatus = 'Đã thu';
-      rawStatus = 'paid';
+      displayStatus = 'Đã thu'
+      rawStatus = 'paid'
     } else if (dueDateObj < now || inv.status === 'overdue') {
-      displayStatus = 'Quá hạn';
-      rawStatus = 'overdue';
+      displayStatus = 'Quá hạn'
+      rawStatus = 'overdue'
     } else {
-      displayStatus = 'Chưa thu';
-      rawStatus = 'unpaid';
+      displayStatus = 'Chưa thu'
+      rawStatus = 'unpaid'
     }
 
-    let rentAmount = 0;
-    let elecRate = 3500;
-    let elecNew = 0;
-    let elecOld = 0;
-    let waterRate = 15000;
-    let waterNew = 0;
-    let waterOld = 0;
-    const serviceFees: ServiceFeeBreakdownDto[] = [];
+    let rentAmount = 0
+    let elecRate = 3500
+    let elecNew = 0
+    const elecOld = 0
+    let waterRate = 15000
+    let waterNew = 0
+    const waterOld = 0
+    const serviceFees: ServiceFeeBreakdownDto[] = []
 
     for (const item of inv.invoiceItems) {
-      const sName = (item.service?.name || '').toLowerCase();
-      const amt = Number(item.amount);
+      const sName = (item.service?.name || '').toLowerCase()
+      const amt = Number(item.amount)
 
       if (!item.serviceId || sName.includes('phòng')) {
-        rentAmount += amt;
+        rentAmount += amt
       } else if (sName.includes('điện')) {
-        elecRate = Number(item.unitPrice) || elecRate;
-        elecNew = item.quantity;
+        elecRate = Number(item.unitPrice) || elecRate
+        elecNew = item.quantity
       } else if (sName.includes('nước')) {
-        waterRate = Number(item.unitPrice) || waterRate;
-        waterNew = item.quantity;
+        waterRate = Number(item.unitPrice) || waterRate
+        waterNew = item.quantity
       } else {
         serviceFees.push({
           name: item.service?.name || 'Phí dịch vụ',
           amount: amt,
-        });
+        })
       }
     }
 
-    const meterReadings: LandlordMeterReadingDto[] = inv.meterReadings.map(
-      (mr) => ({
-        serviceId: mr.serviceId,
-        serviceName: mr.service.name,
-        unit: mr.service.unit,
-        readingValue: mr.readingValue !== null ? Number(mr.readingValue) : null,
-        imageUrl: mr.imageUrl,
-        recordedAt: mr.createdAt.toISOString(),
-      }),
-    );
+    const meterReadings: LandlordMeterReadingDto[] = inv.meterReadings.map(mr => ({
+      serviceId: mr.serviceId,
+      serviceName: mr.service.name,
+      unit: mr.service.unit,
+      readingValue: mr.readingValue !== null ? Number(mr.readingValue) : null,
+      imageUrl: mr.imageUrl,
+      recordedAt: mr.createdAt.toISOString(),
+    }))
 
-    const ocrReading = inv.meterReadings.find((mr) => Boolean(mr.imageUrl));
-    const ocrMeterImage = ocrReading?.imageUrl || undefined;
+    const ocrReading = inv.meterReadings.find(mr => Boolean(mr.imageUrl))
+    const ocrMeterImage = ocrReading?.imageUrl || undefined
 
     const vietQrUrl = this.buildVietQrUrl(
       inv.id,
       inv.room.roomNumber,
       Number(inv.totalAmount),
       periodShort,
-    );
+    )
 
     return {
       id: inv.id,
@@ -1012,12 +980,12 @@ export class InvoicesService {
         inv.payment?.method === 'banking'
           ? 'Chuyển khoản VietQR'
           : inv.payment?.method === 'cash'
-          ? 'Tiền mặt'
-          : undefined,
+            ? 'Tiền mặt'
+            : undefined,
       vietQrUrl,
       ocrMeterImage,
       meterReadings,
-    };
+    }
   }
 
   /**
@@ -1030,7 +998,7 @@ export class InvoicesService {
   ): Promise<LandlordInvoiceItemDto> {
     this.logger.log(
       `Landlord ${landlordId} creating manual invoice for room ${dto.roomId} in house ${boardingHouseId}`,
-    );
+    )
 
     // 1. Verify room exists and belongs to this property
     const room = await this.prisma.room.findFirst({
@@ -1061,84 +1029,68 @@ export class InvoicesService {
           },
         },
       },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException(
-        'Không tìm thấy phòng tương ứng trong khu trọ này',
-      );
+      throw new NotFoundException('Không tìm thấy phòng tương ứng trong khu trọ này')
     }
 
-    const activeContract = room.contracts[0] || null;
+    const activeContract = room.contracts[0] || null
 
     // 2. Resolve electricity & water metered services for this room if available
     const elecService =
       room.roomServices.find(
-        (rs) =>
-          rs.service.isMetered &&
-          rs.service.name.toLowerCase().includes('điện'),
-      )?.service || null;
+        rs => rs.service.isMetered && rs.service.name.toLowerCase().includes('điện'),
+      )?.service || null
 
     const waterService =
       room.roomServices.find(
-        (rs) =>
-          rs.service.isMetered &&
-          rs.service.name.toLowerCase().includes('nước'),
-      )?.service || null;
+        rs => rs.service.isMetered && rs.service.name.toLowerCase().includes('nước'),
+      )?.service || null
 
     // 3. Compute cost breakdown
-    const rentAmount = Math.max(0, dto.rentAmount);
+    const rentAmount = Math.max(0, dto.rentAmount)
 
-    let elecDelta = 0;
-    let elecCost = 0;
-    const elecRate =
-      dto.elecRate || (elecService ? Number(elecService.price) : 3500);
-    if (
-      dto.elecNew !== undefined &&
-      dto.elecOld !== undefined &&
-      dto.elecNew >= dto.elecOld
-    ) {
-      elecDelta = dto.elecNew - dto.elecOld;
-      elecCost = Math.round(elecDelta * elecRate);
+    let elecDelta = 0
+    let elecCost = 0
+    const elecRate = dto.elecRate || (elecService ? Number(elecService.price) : 3500)
+    if (dto.elecNew !== undefined && dto.elecOld !== undefined && dto.elecNew >= dto.elecOld) {
+      elecDelta = dto.elecNew - dto.elecOld
+      elecCost = Math.round(elecDelta * elecRate)
     }
 
-    let waterDelta = 0;
-    let waterCost = 0;
-    const waterRate =
-      dto.waterRate || (waterService ? Number(waterService.price) : 15000);
-    if (
-      dto.waterNew !== undefined &&
-      dto.waterOld !== undefined &&
-      dto.waterNew >= dto.waterOld
-    ) {
-      waterDelta = dto.waterNew - dto.waterOld;
-      waterCost = Math.round(waterDelta * waterRate);
+    let waterDelta = 0
+    let waterCost = 0
+    const waterRate = dto.waterRate || (waterService ? Number(waterService.price) : 15000)
+    if (dto.waterNew !== undefined && dto.waterOld !== undefined && dto.waterNew >= dto.waterOld) {
+      waterDelta = dto.waterNew - dto.waterOld
+      waterCost = Math.round(waterDelta * waterRate)
     }
 
-    let flatServicesTotal = 0;
-    const serviceFeesToCreate: Array<{ name: string; amount: number }> = [];
+    let flatServicesTotal = 0
+    const serviceFeesToCreate: Array<{ name: string; amount: number }> = []
     if (dto.serviceFees && dto.serviceFees.length > 0) {
       for (const fee of dto.serviceFees) {
         if (fee.amount > 0) {
-          flatServicesTotal += Math.round(fee.amount);
+          flatServicesTotal += Math.round(fee.amount)
           serviceFeesToCreate.push({
             name: fee.name,
             amount: Math.round(fee.amount),
-          });
+          })
         }
       }
     }
 
-    const discount = Math.max(0, dto.discount || 0);
+    const discount = Math.max(0, dto.discount || 0)
     const totalAmount = Math.max(
       0,
       rentAmount + elecCost + waterCost + flatServicesTotal - discount,
-    );
+    )
 
-    const dueDate = new Date(dto.dueDate);
+    const dueDate = new Date(dto.dueDate)
 
     // 4. Atomic Database Transaction: Invoice + Items + MeterReadings + AuditLog
-    const createdInvoice = await this.prisma.$transaction(async (tx) => {
+    const createdInvoice = await this.prisma.$transaction(async tx => {
       // 4a. Create Invoice
       const invoice = await tx.invoice.create({
         data: {
@@ -1148,7 +1100,7 @@ export class InvoicesService {
           status: 'unpaid',
           dueDate,
         },
-      });
+      })
 
       // 4b. Create Rent InvoiceItem
       await tx.invoiceItem.create({
@@ -1159,7 +1111,7 @@ export class InvoicesService {
           unitPrice: new Prisma.Decimal(rentAmount),
           amount: Math.round(rentAmount),
         },
-      });
+      })
 
       // 4c. Create Electricity Item & MeterReading if provided
       if (elecDelta > 0 || dto.elecNew !== undefined) {
@@ -1171,7 +1123,7 @@ export class InvoicesService {
             unitPrice: new Prisma.Decimal(elecRate),
             amount: Math.round(elecCost),
           },
-        });
+        })
 
         if (elecService && dto.elecNew !== undefined) {
           await tx.meterReading.create({
@@ -1181,7 +1133,7 @@ export class InvoicesService {
               readingValue: new Prisma.Decimal(dto.elecNew),
               invoiceId: invoice.id,
             },
-          });
+          })
         }
       }
 
@@ -1195,7 +1147,7 @@ export class InvoicesService {
             unitPrice: new Prisma.Decimal(waterRate),
             amount: Math.round(waterCost),
           },
-        });
+        })
 
         if (waterService && dto.waterNew !== undefined) {
           await tx.meterReading.create({
@@ -1205,7 +1157,7 @@ export class InvoicesService {
               readingValue: new Prisma.Decimal(dto.waterNew),
               invoiceId: invoice.id,
             },
-          });
+          })
         }
       }
 
@@ -1219,7 +1171,7 @@ export class InvoicesService {
             unitPrice: new Prisma.Decimal(fee.amount),
             amount: Math.round(fee.amount),
           },
-        });
+        })
       }
 
       // 4f. AuditLog inside same transaction (Rule 4)
@@ -1243,12 +1195,12 @@ export class InvoicesService {
             period: dto.period,
           },
         },
-      });
+      })
 
-      return invoice;
-    });
+      return invoice
+    })
 
-    return this.getLandlordInvoiceDetail(boardingHouseId, createdInvoice.id);
+    return this.getLandlordInvoiceDetail(boardingHouseId, createdInvoice.id)
   }
 
   /**
@@ -1260,9 +1212,7 @@ export class InvoicesService {
     invoiceId: string,
     dto: ManualPaymentDto,
   ): Promise<{ success: boolean; message: string; paymentId: string }> {
-    this.logger.log(
-      `Landlord ${landlordId} recording manual payment for invoice ${invoiceId}`,
-    );
+    this.logger.log(`Landlord ${landlordId} recording manual payment for invoice ${invoiceId}`)
 
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
@@ -1281,36 +1231,34 @@ export class InvoicesService {
         },
         payment: true,
       },
-    });
+    })
 
     if (!invoice || invoice.room.boardingHouseId !== boardingHouseId) {
-      throw new NotFoundException('Không tìm thấy hóa đơn cần xác nhận thanh toán');
+      throw new NotFoundException('Không tìm thấy hóa đơn cần xác nhận thanh toán')
     }
 
     // Idempotency: If invoice is already paid and payment exists, return successfully
     if (invoice.status === 'paid' && invoice.payment) {
-      this.logger.log(
-        `Invoice ${invoice.id} already paid (Payment ID: ${invoice.payment.id})`,
-      );
+      this.logger.log(`Invoice ${invoice.id} already paid (Payment ID: ${invoice.payment.id})`)
       return {
         success: true,
         message: 'Hóa đơn đã được ghi nhận thanh toán trước đó.',
         paymentId: invoice.payment.id,
-      };
+      }
     }
 
-    const primaryTenantId =
-      invoice.contract?.tenantContracts[0]?.tenantId || null;
+    const primaryTenantId = invoice.contract?.tenantContracts[0]?.tenantId || null
     const transactionRef =
-      dto.transactionRef || `MANUAL-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const d = new Date(invoice.dueDate);
-    const receiptNumber = `REC-${d.getFullYear()}${String(
-      d.getMonth() + 1,
-    ).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const periodShort = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      dto.transactionRef || `MANUAL-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+    const d = new Date(invoice.dueDate)
+    const receiptNumber = `REC-${d.getFullYear()}${String(d.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-${Math.floor(1000 + Math.random() * 9000)}`
+    const periodShort = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 
     // Execute atomic payment + invoice update + AuditLog
-    const payment = await this.prisma.$transaction(async (tx) => {
+    const payment = await this.prisma.$transaction(async tx => {
       const createdPayment = await tx.payment.create({
         data: {
           invoiceId: invoice.id,
@@ -1329,14 +1277,14 @@ export class InvoicesService {
             periodShort,
           ),
         },
-      });
+      })
 
       await tx.invoice.update({
         where: { id: invoice.id },
         data: {
           status: 'paid',
         },
-      });
+      })
 
       // AuditLog for PAYMENT creation (Rule 4)
       await tx.auditLog.create({
@@ -1356,7 +1304,7 @@ export class InvoicesService {
             note: dto.note || 'Thanh toán trực tiếp ghi nhận bởi chủ trọ',
           },
         },
-      });
+      })
 
       // AuditLog for INVOICE status transition (Rule 4)
       await tx.auditLog.create({
@@ -1370,29 +1318,26 @@ export class InvoicesService {
           oldValue: { status: invoice.status },
           newValue: { status: 'paid', paymentId: createdPayment.id },
         },
-      });
+      })
 
-      return createdPayment;
-    });
+      return createdPayment
+    })
 
     return {
       success: true,
       message: 'Ghi nhận thanh toán thành công.',
       paymentId: payment.id,
-    };
+    }
   }
 
   /**
    * UC-L-06 Part 1 Step 3 / Part 3:
    * Automated flat-rate invoice generation on billing day for rooms with NO metered services
    */
-  async generateFlatRateInvoice(
-    contractId: string,
-    dueDate: Date,
-  ): Promise<any> {
+  async generateFlatRateInvoice(contractId: string, dueDate: Date): Promise<any> {
     this.logger.log(
       `[BillingCron] Generating automated flat-rate invoice for contract ${contractId}`,
-    );
+    )
 
     const contract = await this.prisma.contract.findUnique({
       where: { id: contractId },
@@ -1412,40 +1357,40 @@ export class InvoicesService {
           },
         },
       },
-    });
+    })
 
     if (!contract || contract.status !== 'active') {
-      return null;
+      return null
     }
 
     // Idempotency: verify if an invoice was already generated for this cycle
-    const startOfDay = new Date(dueDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(dueDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    const startOfDay = new Date(dueDate)
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(dueDate)
+    endOfDay.setHours(23, 59, 59, 999)
 
     const existingInvoice = await this.prisma.invoice.findFirst({
       where: {
         contractId: contract.id,
         dueDate: { gte: startOfDay, lte: endOfDay },
       },
-    });
+    })
 
     if (existingInvoice) {
       this.logger.log(
         `[BillingCron] Invoice already exists for contract ${contract.id} on ${dueDate.toISOString()}`,
-      );
-      return existingInvoice;
+      )
+      return existingInvoice
     }
 
-    const rentPriceNum = Number(contract.rentPrice);
-    let totalAmount = rentPriceNum;
+    const rentPriceNum = Number(contract.rentPrice)
+    let totalAmount = rentPriceNum
 
     const lineItemsToCreate: Array<{
-      serviceId: string | null;
-      quantity: number;
-      unitPrice: Prisma.Decimal;
-      amount: number;
+      serviceId: string | null
+      quantity: number
+      unitPrice: Prisma.Decimal
+      amount: number
     }> = [
       {
         serviceId: null,
@@ -1453,20 +1398,20 @@ export class InvoicesService {
         unitPrice: contract.rentPrice,
         amount: Math.round(rentPriceNum),
       },
-    ];
+    ]
 
     for (const rs of contract.room.roomServices) {
-      const priceNum = Number(rs.service.price);
-      totalAmount += priceNum;
+      const priceNum = Number(rs.service.price)
+      totalAmount += priceNum
       lineItemsToCreate.push({
         serviceId: rs.serviceId,
         quantity: 1,
         unitPrice: rs.service.price,
         amount: Math.round(priceNum),
-      });
+      })
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async tx => {
       const invoice = await tx.invoice.create({
         data: {
           roomId: contract.roomId,
@@ -1475,7 +1420,7 @@ export class InvoicesService {
           status: 'unpaid',
           dueDate,
         },
-      });
+      })
 
       for (const item of lineItemsToCreate) {
         await tx.invoiceItem.create({
@@ -1486,7 +1431,7 @@ export class InvoicesService {
             unitPrice: item.unitPrice,
             amount: item.amount,
           },
-        });
+        })
       }
 
       await tx.auditLog.create({
@@ -1504,10 +1449,10 @@ export class InvoicesService {
             dueDate: dueDate.toISOString(),
           },
         },
-      });
+      })
 
-      return invoice;
-    });
+      return invoice
+    })
   }
 
   /**
@@ -1517,13 +1462,10 @@ export class InvoicesService {
    * plus any recorded meter readings.
    * Idempotent: prevents duplicate invoices for the same contract and billing month.
    */
-  async generateMonthlyDraftInvoice(
-    contractId: string,
-    dueDate: Date,
-  ): Promise<any> {
+  async generateMonthlyDraftInvoice(contractId: string, dueDate: Date): Promise<any> {
     this.logger.log(
       `[BillingCron] Generating automated monthly draft invoice for contract ${contractId} with dueDate ${dueDate.toISOString()}`,
-    );
+    )
 
     const contract = await this.prisma.contract.findUnique({
       where: { id: contractId },
@@ -1542,17 +1484,17 @@ export class InvoicesService {
           },
         },
       },
-    });
+    })
 
     if (!contract || contract.status !== 'active') {
-      return null;
+      return null
     }
 
     // Idempotency: verify if an invoice was already generated for this billing cycle (same month and year)
-    const targetMonth = dueDate.getMonth();
-    const targetYear = dueDate.getFullYear();
-    const startOfMonth = new Date(targetYear, targetMonth, 1, 0, 0, 0, 0);
-    const endOfMonth = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
+    const targetMonth = dueDate.getMonth()
+    const targetYear = dueDate.getFullYear()
+    const startOfMonth = new Date(targetYear, targetMonth, 1, 0, 0, 0, 0)
+    const endOfMonth = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999)
 
     const existingInvoice = await this.prisma.invoice.findFirst({
       where: {
@@ -1562,23 +1504,23 @@ export class InvoicesService {
       include: {
         invoiceItems: true,
       },
-    });
+    })
 
     if (existingInvoice) {
       this.logger.log(
         `[BillingCron] Monthly invoice already exists for contract ${contract.id} in cycle ${targetMonth + 1}/${targetYear}`,
-      );
-      return existingInvoice;
+      )
+      return existingInvoice
     }
 
-    const rentPriceNum = Number(contract.rentPrice);
-    let totalAmount = rentPriceNum;
+    const rentPriceNum = Number(contract.rentPrice)
+    let totalAmount = rentPriceNum
 
     const lineItemsToCreate: Array<{
-      serviceId: string | null;
-      quantity: number;
-      unitPrice: Prisma.Decimal;
-      amount: number;
+      serviceId: string | null
+      quantity: number
+      unitPrice: Prisma.Decimal
+      amount: number
     }> = [
       {
         serviceId: null,
@@ -1586,28 +1528,24 @@ export class InvoicesService {
         unitPrice: contract.rentPrice,
         amount: Math.round(rentPriceNum),
       },
-    ];
+    ]
 
-    const flatServices = contract.room.roomServices.filter(
-      (rs) => !rs.service.isMetered,
-    );
-    const meteredServices = contract.room.roomServices.filter(
-      (rs) => rs.service.isMetered,
-    );
+    const flatServices = contract.room.roomServices.filter(rs => !rs.service.isMetered)
+    const meteredServices = contract.room.roomServices.filter(rs => rs.service.isMetered)
 
     for (const rs of flatServices) {
-      const priceNum = Number(rs.service.price);
-      totalAmount += priceNum;
+      const priceNum = Number(rs.service.price)
+      totalAmount += priceNum
       lineItemsToCreate.push({
         serviceId: rs.serviceId,
         quantity: 1,
         unitPrice: rs.service.price,
         amount: Math.round(priceNum),
-      });
+      })
     }
 
     // Check if any unbilled readings already exist for metered services
-    const consumedReadingIds: string[] = [];
+    const consumedReadingIds: string[] = []
     for (const rs of meteredServices) {
       const unbilledReading = await this.prisma.meterReading.findFirst({
         where: {
@@ -1616,7 +1554,7 @@ export class InvoicesService {
           invoiceId: null,
         },
         orderBy: { createdAt: 'desc' },
-      });
+      })
 
       if (unbilledReading && unbilledReading.readingValue !== null) {
         const previousReading = await this.prisma.meterReading.findFirst({
@@ -1626,34 +1564,31 @@ export class InvoicesService {
             invoiceId: { not: null },
           },
           orderBy: { createdAt: 'desc' },
-        });
+        })
 
-        const currentVal = Number(unbilledReading.readingValue);
+        const currentVal = Number(unbilledReading.readingValue)
         const prevVal =
           previousReading && previousReading.readingValue !== null
             ? Number(previousReading.readingValue)
-            : 0;
+            : 0
 
-        const consumption =
-          currentVal >= prevVal && prevVal > 0
-            ? currentVal - prevVal
-            : currentVal;
-        const unitPriceNum = Number(rs.service.price);
-        const amount = Math.round(consumption * unitPriceNum);
+        const consumption = currentVal >= prevVal && prevVal > 0 ? currentVal - prevVal : currentVal
+        const unitPriceNum = Number(rs.service.price)
+        const amount = Math.round(consumption * unitPriceNum)
 
-        totalAmount += amount;
-        consumedReadingIds.push(unbilledReading.id);
+        totalAmount += amount
+        consumedReadingIds.push(unbilledReading.id)
 
         lineItemsToCreate.push({
           serviceId: rs.serviceId,
           quantity: Math.max(1, Math.round(consumption)),
           unitPrice: rs.service.price,
           amount,
-        });
+        })
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async tx => {
       const invoice = await tx.invoice.create({
         data: {
           roomId: contract.roomId,
@@ -1662,7 +1597,7 @@ export class InvoicesService {
           status: 'unpaid',
           dueDate,
         },
-      });
+      })
 
       for (const item of lineItemsToCreate) {
         await tx.invoiceItem.create({
@@ -1673,14 +1608,14 @@ export class InvoicesService {
             unitPrice: item.unitPrice,
             amount: item.amount,
           },
-        });
+        })
       }
 
       if (consumedReadingIds.length > 0) {
         await tx.meterReading.updateMany({
           where: { id: { in: consumedReadingIds } },
           data: { invoiceId: invoice.id },
-        });
+        })
       }
 
       await tx.auditLog.create({
@@ -1699,10 +1634,10 @@ export class InvoicesService {
             dueDate: dueDate.toISOString(),
           },
         },
-      });
+      })
 
-      return invoice;
-    });
+      return invoice
+    })
   }
 
   // ─── UC-L-16: Debt Tracking ──────────────────────────────────────────────────
@@ -1712,30 +1647,27 @@ export class InvoicesService {
    * without a matching paid Payment record.
    */
   async flipOverdueInvoices(boardingHouseId?: string): Promise<{ count: number }> {
-    const now = new Date();
+    const now = new Date()
 
     const where: Prisma.InvoiceWhereInput = {
       status: 'unpaid',
       dueDate: { lt: now },
-      OR: [
-        { payment: null },
-        { payment: { status: { not: 'success' } } },
-      ],
+      OR: [{ payment: null }, { payment: { status: { not: 'success' } } }],
       ...(boardingHouseId ? { room: { boardingHouseId } } : {}),
-    };
+    }
 
     const updateResult = await this.prisma.invoice.updateMany({
       where,
       data: {
         status: 'overdue',
       },
-    });
+    })
 
     this.logger.log(
       `[flipOverdueInvoices] Flipped ${updateResult.count} unpaid invoice(s) to overdue (boardingHouseId=${boardingHouseId || 'all'})`,
-    );
+    )
 
-    return { count: updateResult.count };
+    return { count: updateResult.count }
   }
 
   /**
@@ -1752,12 +1684,12 @@ export class InvoicesService {
   ): Promise<LandlordDebtsResponseDto> {
     this.logger.log(
       `Landlord ${landlordId} querying debts for house ${boardingHouseId} (duration=${query.duration}, search=${query.search}, page=${query.page})`,
-    );
+    )
 
     // 1. Ensure any unpaid invoices past due date are updated to overdue
-    await this.flipOverdueInvoices(boardingHouseId);
+    await this.flipOverdueInvoices(boardingHouseId)
 
-    const now = new Date();
+    const now = new Date()
 
     // 2. Fetch all unpaid and overdue invoices for the boarding house
     const invoices = await this.prisma.invoice.findMany({
@@ -1794,41 +1726,40 @@ export class InvoicesService {
         },
       },
       orderBy: { dueDate: 'asc' },
-    });
+    })
 
     // 3. Group by room
     const roomMap = new Map<
       string,
       {
-        roomId: string;
-        roomNumber: string;
-        floor: number | null;
-        buildingName: string;
-        tenant: { id: string; name: string; phone: string; email?: string } | null;
-        contractId: string | null;
+        roomId: string
+        roomNumber: string
+        floor: number | null
+        buildingName: string
+        tenant: { id: string; name: string; phone: string; email?: string } | null
+        contractId: string | null
         invoices: Array<{
-          id: string;
-          period: string;
-          totalAmount: number;
-          status: 'unpaid' | 'overdue';
-          dueDate: string;
-          dueDateObj: Date;
-          agingDays: number;
-        }>;
+          id: string
+          period: string
+          totalAmount: number
+          status: 'unpaid' | 'overdue'
+          dueDate: string
+          dueDateObj: Date
+          agingDays: number
+        }>
       }
-    >();
+    >()
 
     for (const inv of invoices) {
-      const roomId = inv.roomId;
+      const roomId = inv.roomId
       if (!roomMap.has(roomId)) {
-        const primaryTenant =
-          inv.contract?.tenantContracts[0]?.tenant || null;
+        const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || null
         const tenantName =
           primaryTenant?.userIdentification?.fullName ||
           primaryTenant?.username ||
-          'Chưa có thông tin';
-        const tenantPhone = primaryTenant?.phoneNumber || '';
-        const tenantEmail = primaryTenant?.email || undefined;
+          'Chưa có thông tin'
+        const tenantPhone = primaryTenant?.phoneNumber || ''
+        const tenantEmail = primaryTenant?.email || undefined
 
         roomMap.set(roomId, {
           roomId,
@@ -1845,13 +1776,13 @@ export class InvoicesService {
             : null,
           contractId: inv.contractId ?? null,
           invoices: [],
-        });
+        })
       }
 
-      const dueDateObj = new Date(inv.dueDate);
-      const diffMs = now.getTime() - dueDateObj.getTime();
-      const agingDays = diffMs > 0 ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
-      const period = `Tháng ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`;
+      const dueDateObj = new Date(inv.dueDate)
+      const diffMs = now.getTime() - dueDateObj.getTime()
+      const agingDays = diffMs > 0 ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0
+      const period = `Tháng ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
 
       roomMap.get(roomId)!.invoices.push({
         id: inv.id,
@@ -1861,102 +1792,97 @@ export class InvoicesService {
         dueDate: inv.dueDate.toISOString(),
         dueDateObj,
         agingDays,
-      });
+      })
     }
 
     // 4. Transform room groups into RoomDebtItemDto
-    const allRoomDebts: RoomDebtItemDto[] = Array.from(roomMap.values()).map(
-      (entry) => {
-        let totalDebtAmount = 0;
-        let unpaidAmount = 0;
-        let overdueAmount = 0;
-        let maxAgingDays = 0;
-        let oldestDueDateObj: Date = new Date();
+    const allRoomDebts: RoomDebtItemDto[] = Array.from(roomMap.values()).map(entry => {
+      let totalDebtAmount = 0
+      let unpaidAmount = 0
+      let overdueAmount = 0
+      let maxAgingDays = 0
+      let oldestDueDateObj: Date = new Date()
 
-        entry.invoices.forEach((inv, index) => {
-          totalDebtAmount += inv.totalAmount;
-          if (inv.status === 'overdue' || inv.dueDateObj < now) {
-            overdueAmount += inv.totalAmount;
-          } else {
-            unpaidAmount += inv.totalAmount;
-          }
-
-          if (inv.agingDays > maxAgingDays) {
-            maxAgingDays = inv.agingDays;
-          }
-
-          if (index === 0 || inv.dueDateObj < oldestDueDateObj) {
-            oldestDueDateObj = inv.dueDateObj;
-          }
-        });
-
-        let agingCategory: 'current' | '1_month' | '2_months' | 'bad_debt' =
-          'current';
-        if (maxAgingDays > 60) {
-          agingCategory = 'bad_debt';
-        } else if (maxAgingDays > 30) {
-          agingCategory = '2_months';
-        } else if (maxAgingDays > 0) {
-          agingCategory = '1_month';
+      entry.invoices.forEach((inv, index) => {
+        totalDebtAmount += inv.totalAmount
+        if (inv.status === 'overdue' || inv.dueDateObj < now) {
+          overdueAmount += inv.totalAmount
         } else {
-          agingCategory = 'current';
+          unpaidAmount += inv.totalAmount
         }
 
-        const formattedInvoices: DebtInvoiceSummaryDto[] = entry.invoices.map(
-          (i) => ({
-            id: i.id,
-            period: i.period,
-            totalAmount: i.totalAmount,
-            status: i.status,
-            dueDate: i.dueDate,
-            agingDays: i.agingDays,
-          }),
-        );
+        if (inv.agingDays > maxAgingDays) {
+          maxAgingDays = inv.agingDays
+        }
 
-        return {
-          roomId: entry.roomId,
-          roomNumber: entry.roomNumber,
-          floor: entry.floor,
-          buildingName: entry.buildingName,
-          tenant: entry.tenant,
-          contractId: entry.contractId,
-          totalDebtAmount,
-          unpaidAmount,
-          overdueAmount,
-          oldestDueDate: oldestDueDateObj.toISOString(),
-          maxAgingDays,
-          agingCategory,
-          invoicesCount: entry.invoices.length,
-          invoices: formattedInvoices,
-        };
-      },
-    );
+        if (index === 0 || inv.dueDateObj < oldestDueDateObj) {
+          oldestDueDateObj = inv.dueDateObj
+        }
+      })
+
+      let agingCategory: 'current' | '1_month' | '2_months' | 'bad_debt' = 'current'
+      if (maxAgingDays > 60) {
+        agingCategory = 'bad_debt'
+      } else if (maxAgingDays > 30) {
+        agingCategory = '2_months'
+      } else if (maxAgingDays > 0) {
+        agingCategory = '1_month'
+      } else {
+        agingCategory = 'current'
+      }
+
+      const formattedInvoices: DebtInvoiceSummaryDto[] = entry.invoices.map(i => ({
+        id: i.id,
+        period: i.period,
+        totalAmount: i.totalAmount,
+        status: i.status,
+        dueDate: i.dueDate,
+        agingDays: i.agingDays,
+      }))
+
+      return {
+        roomId: entry.roomId,
+        roomNumber: entry.roomNumber,
+        floor: entry.floor,
+        buildingName: entry.buildingName,
+        tenant: entry.tenant,
+        contractId: entry.contractId,
+        totalDebtAmount,
+        unpaidAmount,
+        overdueAmount,
+        oldestDueDate: oldestDueDateObj.toISOString(),
+        maxAgingDays,
+        agingCategory,
+        invoicesCount: entry.invoices.length,
+        invoices: formattedInvoices,
+      }
+    })
 
     // 5. Compute global summary metrics across ALL indebted rooms
-    let globalTotalDebt = 0;
-    let globalOverdueDebt = 0;
-    let globalBadDebt = 0;
-    let under30Count = 0;
-    let under30Amount = 0;
-    let from31To60Count = 0;
-    let from31To60Amount = 0;
-    let over60Count = 0;
-    let over60Amount = 0;
+    let globalTotalDebt = 0
+    let globalOverdueDebt = 0
+    let globalBadDebt = 0
+    let under30Count = 0
+    let under30Amount = 0
+    let from31To60Count = 0
+    let from31To60Amount = 0
+    let over60Count = 0
+    let over60Amount = 0
 
     for (const r of allRoomDebts) {
-      globalTotalDebt += r.totalDebtAmount;
-      globalOverdueDebt += r.overdueAmount;
+      globalTotalDebt += r.totalDebtAmount
+      globalOverdueDebt += r.overdueAmount
 
       if (r.agingCategory === 'bad_debt') {
-        globalBadDebt += r.totalDebtAmount;
-        over60Count++;
-        over60Amount += r.totalDebtAmount;
+        globalBadDebt += r.totalDebtAmount
+        over60Count++
+        over60Amount += r.totalDebtAmount
       } else if (r.agingCategory === '2_months') {
-        from31To60Count++;
-        from31To60Amount += r.totalDebtAmount;
+        from31To60Count++
+        from31To60Amount += r.totalDebtAmount
       } else {
-        under30Count++;
-        under30Amount += r.totalDebtAmount;
+        under30Count++
+        under30Amount += r.totalDebtAmount
       }
     }
 
@@ -1974,54 +1900,54 @@ export class InvoicesService {
         over60Days: over60Count,
         over60DaysAmount: over60Amount,
       },
-    };
+    }
 
     // 6. Apply Duration / Aging Filter
-    let filteredRooms = allRoomDebts;
+    let filteredRooms = allRoomDebts
     if (query.duration && query.duration !== 'all') {
       if (query.duration === 'current') {
-        filteredRooms = filteredRooms.filter((r) => r.agingCategory === 'current');
+        filteredRooms = filteredRooms.filter(r => r.agingCategory === 'current')
       } else if (query.duration === 'overdue') {
-        filteredRooms = filteredRooms.filter((r) => r.maxAgingDays > 0);
+        filteredRooms = filteredRooms.filter(r => r.maxAgingDays > 0)
       } else if (query.duration === '1_month') {
-        filteredRooms = filteredRooms.filter((r) => r.agingCategory === '1_month');
+        filteredRooms = filteredRooms.filter(r => r.agingCategory === '1_month')
       } else if (query.duration === '2_months') {
-        filteredRooms = filteredRooms.filter((r) => r.agingCategory === '2_months');
+        filteredRooms = filteredRooms.filter(r => r.agingCategory === '2_months')
       } else if (query.duration === 'bad_debt') {
-        filteredRooms = filteredRooms.filter((r) => r.agingCategory === 'bad_debt');
+        filteredRooms = filteredRooms.filter(r => r.agingCategory === 'bad_debt')
       }
     }
 
     // 7. Apply Search Filter
     if (query.search && query.search.trim()) {
-      const term = query.search.trim().toLowerCase();
+      const term = query.search.trim().toLowerCase()
       filteredRooms = filteredRooms.filter(
-        (r) =>
+        r =>
           r.roomNumber.toLowerCase().includes(term) ||
           (r.tenant?.name && r.tenant.name.toLowerCase().includes(term)) ||
           (r.tenant?.phone && r.tenant.phone.includes(term)),
-      );
+      )
     }
 
     // 8. Sorting
     filteredRooms.sort((a, b) => {
       if (query.sortBy === 'aging_desc') {
-        return b.maxAgingDays - a.maxAgingDays || b.totalDebtAmount - a.totalDebtAmount;
+        return b.maxAgingDays - a.maxAgingDays || b.totalDebtAmount - a.totalDebtAmount
       }
       if (query.sortBy === 'room_asc') {
-        return a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true });
+        return a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true })
       }
       // default: debt_desc
-      return b.totalDebtAmount - a.totalDebtAmount;
-    });
+      return b.totalDebtAmount - a.totalDebtAmount
+    })
 
     // 9. Pagination (Rule #9)
-    const page = Math.max(1, query.page || 1);
-    const limit = Math.max(1, query.limit || 6);
-    const total = filteredRooms.length;
-    const totalPages = Math.ceil(total / limit) || 1;
-    const skip = (page - 1) * limit;
-    const paginatedRooms = filteredRooms.slice(skip, skip + limit);
+    const page = Math.max(1, query.page || 1)
+    const limit = Math.max(1, query.limit || 6)
+    const total = filteredRooms.length
+    const totalPages = Math.ceil(total / limit) || 1
+    const skip = (page - 1) * limit
+    const paginatedRooms = filteredRooms.slice(skip, skip + limit)
 
     return {
       success: true,
@@ -2033,7 +1959,7 @@ export class InvoicesService {
         totalPages,
       },
       summary,
-    };
+    }
   }
 
   /**
@@ -2044,7 +1970,7 @@ export class InvoicesService {
     landlordId: string,
     dto: SendDebtReminderDto,
   ): Promise<DebtReminderResponseDto> {
-    const { roomId, note } = dto;
+    const { roomId, note } = dto
 
     const room = await this.prisma.room.findFirst({
       where: {
@@ -2069,15 +1995,15 @@ export class InvoicesService {
           },
         },
       },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException('Không tìm thấy phòng trong nhà trọ này.');
+      throw new NotFoundException('Không tìm thấy phòng trong nhà trọ này.')
     }
 
-    const primaryTenant = room.contracts[0]?.tenantContracts[0]?.tenant;
+    const primaryTenant = room.contracts[0]?.tenantContracts[0]?.tenant
     if (!primaryTenant) {
-      throw new BadRequestException('Phòng này hiện chưa có hợp đồng thuê hoặc người thuê chính.');
+      throw new BadRequestException('Phòng này hiện chưa có hợp đồng thuê hoặc người thuê chính.')
     }
 
     const invoices = await this.prisma.invoice.findMany({
@@ -2086,16 +2012,16 @@ export class InvoicesService {
         status: { in: ['unpaid', 'overdue'] },
       },
       orderBy: { dueDate: 'asc' },
-    });
+    })
 
     if (invoices.length === 0) {
-      throw new BadRequestException('Phòng này hiện không có khoản nợ nào cần thanh toán.');
+      throw new BadRequestException('Phòng này hiện không có khoản nợ nào cần thanh toán.')
     }
 
-    const totalDebt = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
+    const totalDebt = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0)
     const tenantName =
-      primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê';
-    const tenantPhone = primaryTenant.phoneNumber;
+      primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê'
+    const tenantPhone = primaryTenant.phoneNumber
 
     // Dispatch in-app notification & BullMQ job
     await this.notificationsService.createDebtReminderNotification({
@@ -2106,10 +2032,10 @@ export class InvoicesService {
       roomNumber: room.roomNumber,
       totalDebtAmount: totalDebt,
       customNote: note,
-    });
+    })
 
     // Formatted copy text for Zalo / SMS
-    const reminderText = `[Dormio - ${room.boardingHouse.name}]\nKính gửi anh/chị ${tenantName} (Phòng ${room.roomNumber}),\nHệ thống xin thông báo hiện tại phòng còn khoản nợ tiền trọ/dịch vụ chưa thanh toán: ${totalDebt.toLocaleString('vi-VN')} ₫ (${invoices.length} kỳ hóa đơn).\n${note ? `Ghi chú từ chủ trọ: "${note}"\n` : ''}Kính mong anh/chị thu xếp thanh toán sớm qua ứng dụng Dormio hoặc liên hệ chủ trọ. Trân trọng!`;
+    const reminderText = `[Dormio - ${room.boardingHouse.name}]\nKính gửi anh/chị ${tenantName} (Phòng ${room.roomNumber}),\nHệ thống xin thông báo hiện tại phòng còn khoản nợ tiền trọ/dịch vụ chưa thanh toán: ${totalDebt.toLocaleString('vi-VN')} ₫ (${invoices.length} kỳ hóa đơn).\n${note ? `Ghi chú từ chủ trọ: "${note}"\n` : ''}Kính mong anh/chị thu xếp thanh toán sớm qua ứng dụng Dormio hoặc liên hệ chủ trọ. Trân trọng!`
 
     return {
       success: true,
@@ -2119,8 +2045,6 @@ export class InvoicesService {
       roomNumber: room.roomNumber,
       totalDebtAmount: totalDebt,
       reminderText,
-    };
+    }
   }
 }
-
-

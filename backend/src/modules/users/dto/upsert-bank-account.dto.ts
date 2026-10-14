@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsString, IsNotEmpty, MaxLength, MinLength } from 'class-validator'
 
 export class UpsertBankAccountDto {
   @ApiProperty({
@@ -10,7 +10,7 @@ export class UpsertBankAccountDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  bankName: string;
+  bankName: string
 
   @ApiProperty({
     description: 'Bank account number',
@@ -22,7 +22,7 @@ export class UpsertBankAccountDto {
   @IsNotEmpty()
   @MinLength(6)
   @MaxLength(50)
-  accountNumber: string;
+  accountNumber: string
 
   @ApiProperty({
     description: 'Account holder name (as printed on card, uppercase)',
@@ -32,5 +32,5 @@ export class UpsertBankAccountDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  accountName: string;
+  accountName: string
 }

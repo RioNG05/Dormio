@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsUUID,
   IsNotEmpty,
@@ -12,9 +12,9 @@ import {
   IsEnum,
   ValidateNested,
   IsEmail,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { Gender } from '@prisma';
+} from 'class-validator'
+import { Type } from 'class-transformer'
+import { Gender } from '@prisma'
 
 /**
  * Tenant Identification Details DTO (CCCD/CMND)
@@ -26,7 +26,7 @@ export class TenantIdentificationDto {
   })
   @IsString()
   @IsNotEmpty()
-  identityNumber: string;
+  identityNumber: string
 
   @ApiProperty({
     description: 'Full legal name on citizen ID',
@@ -34,7 +34,7 @@ export class TenantIdentificationDto {
   })
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  fullName: string
 
   @ApiProperty({
     description: 'Date of birth (ISO 8601 string)',
@@ -42,7 +42,7 @@ export class TenantIdentificationDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  dateOfBirth: string;
+  dateOfBirth: string
 
   @ApiProperty({
     description: 'Gender',
@@ -51,7 +51,7 @@ export class TenantIdentificationDto {
   })
   @IsEnum(Gender)
   @IsNotEmpty()
-  gender: Gender;
+  gender: Gender
 
   @ApiPropertyOptional({
     description: 'Nationality (default: Việt Nam)',
@@ -60,21 +60,21 @@ export class TenantIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  nationality?: string;
+  nationality?: string
 
   @ApiPropertyOptional({
     description: 'Place of origin (quê quán)',
     example: { province: 'Hà Nội', district: 'Đan Phượng' },
   })
   @IsOptional()
-  placeOfOrigin?: any;
+  placeOfOrigin?: any
 
   @ApiPropertyOptional({
     description: 'Place of residence (hộ khẩu thường trú)',
     example: { address: 'Số 12 ngõ 45 Cầu Giấy, Hà Nội' },
   })
   @IsOptional()
-  placeOfResidence?: any;
+  placeOfResidence?: any
 
   @ApiPropertyOptional({
     description: 'Issue date of citizen ID',
@@ -82,7 +82,7 @@ export class TenantIdentificationDto {
   })
   @IsOptional()
   @IsDateString()
-  issueDate?: string;
+  issueDate?: string
 
   @ApiPropertyOptional({
     description: 'Expiry date of citizen ID',
@@ -90,7 +90,7 @@ export class TenantIdentificationDto {
   })
   @IsOptional()
   @IsDateString()
-  expiryDate?: string;
+  expiryDate?: string
 
   @ApiPropertyOptional({
     description: 'Optional identification note or characteristics',
@@ -98,7 +98,7 @@ export class TenantIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 
   @ApiPropertyOptional({
     description: 'Front image URL or S3 storage key of citizen ID',
@@ -106,7 +106,7 @@ export class TenantIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  cardFrontUrl?: string;
+  cardFrontUrl?: string
 
   @ApiPropertyOptional({
     description: 'Back image URL or S3 storage key of citizen ID',
@@ -114,7 +114,7 @@ export class TenantIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  cardBackUrl?: string;
+  cardBackUrl?: string
 }
 
 /**
@@ -127,7 +127,7 @@ export class CreateContractDirectDto {
   })
   @IsUUID('4')
   @IsNotEmpty()
-  roomId: string;
+  roomId: string
 
   @ApiProperty({
     description: 'Tenant Vietnamese phone number (10 digits starting with 0)',
@@ -138,7 +138,7 @@ export class CreateContractDirectDto {
     message: 'tenantPhoneNumber must be a valid 10-digit Vietnamese phone number starting with 0',
   })
   @IsNotEmpty()
-  tenantPhoneNumber: string;
+  tenantPhoneNumber: string
 
   @ApiProperty({
     description: 'Tenant full name',
@@ -146,7 +146,7 @@ export class CreateContractDirectDto {
   })
   @IsString()
   @IsNotEmpty()
-  tenantFullName: string;
+  tenantFullName: string
 
   @ApiPropertyOptional({
     description: 'Tenant email address',
@@ -154,7 +154,7 @@ export class CreateContractDirectDto {
   })
   @IsOptional()
   @IsEmail()
-  tenantEmail?: string;
+  tenantEmail?: string
 
   @ApiPropertyOptional({
     description:
@@ -164,7 +164,7 @@ export class CreateContractDirectDto {
   @IsOptional()
   @ValidateNested()
   @Type(() => TenantIdentificationDto)
-  identification?: TenantIdentificationDto;
+  identification?: TenantIdentificationDto
 
   @ApiProperty({
     description: 'Contract start date (ISO 8601 string)',
@@ -172,7 +172,7 @@ export class CreateContractDirectDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  startDate: string;
+  startDate: string
 
   @ApiProperty({
     description: 'Contract end date (ISO 8601 string)',
@@ -180,7 +180,7 @@ export class CreateContractDirectDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  endDate: string;
+  endDate: string
 
   @ApiProperty({
     description: 'Monthly rent price in VND (DECIMAL(12,2))',
@@ -189,7 +189,7 @@ export class CreateContractDirectDto {
   })
   @IsNumber()
   @Min(0)
-  rentPrice: number;
+  rentPrice: number
 
   @ApiProperty({
     description: 'Deposit amount recorded manually in VND (>= 0)',
@@ -198,7 +198,7 @@ export class CreateContractDirectDto {
   })
   @IsNumber()
   @Min(0)
-  depositAmount: number;
+  depositAmount: number
 
   @ApiProperty({
     description: 'Day of the month when rent is due (1 to 31)',
@@ -209,7 +209,7 @@ export class CreateContractDirectDto {
   @IsNumber()
   @Min(1)
   @Max(31)
-  monthlyPaymentDate: number;
+  monthlyPaymentDate: number
 
   @ApiPropertyOptional({
     description: 'Billing cycle interval in months (e.g. 1, 3, 6, 12). Default is 1.',
@@ -219,7 +219,7 @@ export class CreateContractDirectDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  rentPaymentCycle?: number;
+  rentPaymentCycle?: number
 
   @ApiPropertyOptional({
     description: 'Additional notes or contract terms',
@@ -227,5 +227,5 @@ export class CreateContractDirectDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

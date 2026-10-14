@@ -1,16 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AttendanceStatus } from '@prisma';
-import { StaffAttendanceController } from './staff-attendance.controller';
-import { AttendanceService } from './attendance.service';
+import { Test, TestingModule } from '@nestjs/testing'
+import { AttendanceStatus } from '@prisma'
+import { StaffAttendanceController } from './staff-attendance.controller'
+import { AttendanceService } from './attendance.service'
 
 describe('StaffAttendanceController', () => {
-  let controller: StaffAttendanceController;
-  let service: any;
+  let controller: StaffAttendanceController
+  let service: any
 
   const mockUser = {
     id: 'user-123',
     role: 'employee' as any,
-  };
+  }
 
   const mockOverviewResponse = {
     employeeId: 'emp-123',
@@ -53,7 +53,7 @@ describe('StaffAttendanceController', () => {
       totalHours: 0,
       editedByLandlord: false,
     },
-  };
+  }
 
   beforeEach(async () => {
     service = {
@@ -61,7 +61,7 @@ describe('StaffAttendanceController', () => {
       staffCheckIn: jest.fn().mockResolvedValue(mockOverviewResponse),
       staffCheckOut: jest.fn().mockResolvedValue(mockOverviewResponse),
       saveStaffDutyProof: jest.fn().mockResolvedValue(mockOverviewResponse),
-    };
+    }
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StaffAttendanceController],
@@ -71,60 +71,60 @@ describe('StaffAttendanceController', () => {
           useValue: service,
         },
       ],
-    }).compile();
+    }).compile()
 
-    controller = module.get<StaffAttendanceController>(StaffAttendanceController);
-  });
+    controller = module.get<StaffAttendanceController>(StaffAttendanceController)
+  })
 
   it('should get today overview', async () => {
-    const res = await controller.getTodayOverview(mockUser);
-    expect(service.getTodayStaffAttendance).toHaveBeenCalledWith('user-123');
-    expect(res).toEqual(mockOverviewResponse);
-  });
+    const res = await controller.getTodayOverview(mockUser)
+    expect(service.getTodayStaffAttendance).toHaveBeenCalledWith('user-123')
+    expect(res).toEqual(mockOverviewResponse)
+  })
 
   it('should delegate checkIn to service', async () => {
     const req = {
       headers: {},
       socket: { remoteAddress: '127.0.0.1' },
-    } as any;
+    } as any
 
     const dto = {
       workScheduleId: 'ws-123',
       capturedTime: '06:55',
-    };
+    }
 
-    const res = await controller.checkIn(mockUser, dto, req);
-    expect(service.staffCheckIn).toHaveBeenCalledWith('user-123', dto, '127.0.0.1');
-    expect(res).toEqual(mockOverviewResponse);
-  });
+    const res = await controller.checkIn(mockUser, dto, req)
+    expect(service.staffCheckIn).toHaveBeenCalledWith('user-123', dto, '127.0.0.1')
+    expect(res).toEqual(mockOverviewResponse)
+  })
 
   it('should delegate checkOut to service', async () => {
     const req = {
       headers: {},
       socket: { remoteAddress: '127.0.0.1' },
-    } as any;
+    } as any
 
     const dto = {
       workScheduleId: 'ws-123',
       capturedTime: '15:05',
-    };
+    }
 
-    const res = await controller.checkOut(mockUser, dto, req);
-    expect(service.staffCheckOut).toHaveBeenCalledWith('user-123', dto, '127.0.0.1');
-    expect(res).toEqual(mockOverviewResponse);
-  });
+    const res = await controller.checkOut(mockUser, dto, req)
+    expect(service.staffCheckOut).toHaveBeenCalledWith('user-123', dto, '127.0.0.1')
+    expect(res).toEqual(mockOverviewResponse)
+  })
 
   it('should delegate saveDutyProof to service', async () => {
     const dto = {
       workScheduleId: 'ws-123',
       dutyId: 'duty-1',
       markCompleted: true,
-    };
+    }
 
-    const res = await controller.saveDutyProof(mockUser, dto);
-    expect(service.saveStaffDutyProof).toHaveBeenCalledWith('user-123', dto);
-    expect(res).toEqual(mockOverviewResponse);
-  });
+    const res = await controller.saveDutyProof(mockUser, dto)
+    expect(service.saveStaffDutyProof).toHaveBeenCalledWith('user-123', dto)
+    expect(res).toEqual(mockOverviewResponse)
+  })
 
   it('should delegate getMonthlySummary to service', async () => {
     const mockMonthly = {
@@ -135,13 +135,13 @@ describe('StaffAttendanceController', () => {
       onTimeCount: 7,
       lateCount: 1,
       earlyCount: 0,
-    };
-    service.getStaffMonthlySummary = jest.fn().mockResolvedValue(mockMonthly);
+    }
+    service.getStaffMonthlySummary = jest.fn().mockResolvedValue(mockMonthly)
 
-    const res = await controller.getMonthlySummary(mockUser, { month: '2026-09' });
-    expect(service.getStaffMonthlySummary).toHaveBeenCalledWith('user-123', '2026-09');
-    expect(res).toEqual(mockMonthly);
-  });
+    const res = await controller.getMonthlySummary(mockUser, { month: '2026-09' })
+    expect(service.getStaffMonthlySummary).toHaveBeenCalledWith('user-123', '2026-09')
+    expect(res).toEqual(mockMonthly)
+  })
 
   it('should delegate getHistory to service', async () => {
     const mockHistory = {
@@ -179,24 +179,21 @@ describe('StaffAttendanceController', () => {
       limit: 10,
       total: 1,
       totalPages: 1,
-    };
-    service.getStaffAttendanceHistory = jest.fn().mockResolvedValue(mockHistory);
+    }
+    service.getStaffAttendanceHistory = jest.fn().mockResolvedValue(mockHistory)
 
-    const query = { page: 1, limit: 10, status: 'all' as any, search: 'Ca Sáng' };
-    const res = await controller.getHistory(mockUser, query);
-    expect(service.getStaffAttendanceHistory).toHaveBeenCalledWith('user-123', query);
-    expect(res).toEqual(mockHistory);
-  });
+    const query = { page: 1, limit: 10, status: 'all' as any, search: 'Ca Sáng' }
+    const res = await controller.getHistory(mockUser, query)
+    expect(service.getStaffAttendanceHistory).toHaveBeenCalledWith('user-123', query)
+    expect(res).toEqual(mockHistory)
+  })
 
   it('getShifts should return list of available shift types', async () => {
-    const mockShifts = [
-      { id: 'shift-1', name: 'Ca Sáng', startTime: '07:00', endTime: '15:00' },
-    ];
-    service.getStaffShifts = jest.fn().mockResolvedValue(mockShifts);
+    const mockShifts = [{ id: 'shift-1', name: 'Ca Sáng', startTime: '07:00', endTime: '15:00' }]
+    service.getStaffShifts = jest.fn().mockResolvedValue(mockShifts)
 
-    const res = await controller.getShifts(mockUser);
-    expect(service.getStaffShifts).toHaveBeenCalledWith('user-123');
-    expect(res).toEqual(mockShifts);
-  });
-});
-
+    const res = await controller.getShifts(mockUser)
+    expect(service.getStaffShifts).toHaveBeenCalledWith('user-123')
+    expect(res).toEqual(mockShifts)
+  })
+})

@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class ExtractIdCardDto {
   @ApiProperty({
@@ -8,7 +8,7 @@ export class ExtractIdCardDto {
   })
   @IsString()
   @IsNotEmpty()
-  imageUrl: string;
+  imageUrl: string
 
   @ApiProperty({
     description: 'Side of the CCCD/ID card (front or back)',
@@ -18,37 +18,49 @@ export class ExtractIdCardDto {
   })
   @IsString()
   @IsOptional()
-  side?: 'front' | 'back';
+  side?: 'front' | 'back'
 }
 
 export class IdCardOcrResponseDto {
   @ApiProperty({ description: '12-digit citizen identification number', example: '001202012345' })
-  identityNumber: string;
+  identityNumber: string
 
   @ApiProperty({ description: 'Full name on identification card', example: 'NGUYEN VAN A' })
-  fullName: string;
+  fullName: string
 
-  @ApiProperty({ description: 'Date of birth (DD/MM/YYYY)', example: '15/08/1998', required: false })
-  dateOfBirth?: string;
+  @ApiProperty({
+    description: 'Date of birth (DD/MM/YYYY)',
+    example: '15/08/1998',
+    required: false,
+  })
+  dateOfBirth?: string
 
   @ApiProperty({ description: 'Gender', example: 'Nam', required: false })
-  gender?: string;
+  gender?: string
 
   @ApiProperty({ description: 'Place of origin / hometown', example: 'Hà Nội', required: false })
-  hometown?: string;
+  hometown?: string
 
-  @ApiProperty({ description: 'Permanent address', example: 'Số 10 Tràng Thi, Hoàn Kiếm, Hà Nội', required: false })
-  permanentAddress?: string;
+  @ApiProperty({
+    description: 'Permanent address',
+    example: 'Số 10 Tràng Thi, Hoàn Kiếm, Hà Nội',
+    required: false,
+  })
+  permanentAddress?: string
 
   @ApiProperty({ description: 'Date of issue', example: '10/05/2021', required: false })
-  issueDate?: string;
+  issueDate?: string
 
   @ApiProperty({ description: 'Expiration date', example: '15/08/2038', required: false })
-  expiryDate?: string;
+  expiryDate?: string
 
   @ApiProperty({ description: 'Confidence score', example: 0.96 })
-  confidence: number;
+  confidence: number
 
-  @ApiProperty({ description: 'Notes or warnings', example: 'Clear photo without glare', required: false })
-  notes?: string;
+  @ApiProperty({
+    description: 'Notes or warnings',
+    example: 'Clear photo without glare',
+    required: false,
+  })
+  notes?: string
 }

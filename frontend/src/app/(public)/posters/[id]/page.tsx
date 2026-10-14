@@ -1,1 +1,1 @@
-export { default } from "../../landlords/[id]/page";
+export { default } from '../../landlords/[id]/page'

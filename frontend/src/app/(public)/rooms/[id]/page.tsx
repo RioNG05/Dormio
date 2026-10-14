@@ -1,42 +1,66 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter, redirect } from "next/navigation";
-import { FEATURE_FLAGS } from "@/config/features";
-import Link from "next/link";
+import React, { useState, useEffect, useCallback } from 'react'
+import { useParams, useRouter, redirect } from 'next/navigation'
+import { FEATURE_FLAGS } from '@/config/features'
+import Link from 'next/link'
 import {
-  ArrowLeft, MapPin, Minimize2,
-  Phone, QrCode, CheckCircle2, AlertCircle, Info, X, Sparkles, Lock, Calculator,
-  Heart, Share2, Copy, Check, ExternalLink, User, Building2,
-  ChevronLeft, ChevronRight, ImageIcon, MessageSquare, Loader2,
-  ShieldCheck, AlertTriangle, FileText, CreditCard, UserCheck, ArrowRight,
-} from "lucide-react";
-import { formatCurrency } from "@/utils";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
-import {
-  postService,
-  type PublicPostListing,
-} from "@/services/post.service";
-import { getOrCreateConversation } from "@/services/message.service";
+  ArrowLeft,
+  MapPin,
+  Minimize2,
+  Phone,
+  QrCode,
+  CheckCircle2,
+  AlertCircle,
+  Info,
+  X,
+  Sparkles,
+  Lock,
+  Calculator,
+  Heart,
+  Share2,
+  Copy,
+  Check,
+  ExternalLink,
+  User,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  MessageSquare,
+  Loader2,
+  ShieldCheck,
+  AlertTriangle,
+  FileText,
+  CreditCard,
+  UserCheck,
+  ArrowRight,
+} from 'lucide-react'
+import { formatCurrency } from '@/utils'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
+import { postService, type PublicPostListing } from '@/services/post.service'
+import { getOrCreateConversation } from '@/services/message.service'
 
-const DEFAULT_ROOM_IMAGE = "/house-placeholder.jpg";
+const DEFAULT_ROOM_IMAGE = '/house-placeholder.jpg'
 
 // ─── Helper: build full address string from structured fields ─────────────────
 function buildAddressString(listing: PublicPostListing): string {
-  const addr = listing.address;
-  if (!addr) return listing.room?.boardingHouseName ?? "";
-  const parts = [addr.houseNumber, addr.street, addr.ward, addr.district, addr.province].filter(Boolean);
-  return parts.join(", ");
+  const addr = listing.address
+  if (!addr) return listing.room?.boardingHouseName ?? ''
+  const parts = [addr.houseNumber, addr.street, addr.ward, addr.district, addr.province].filter(
+    Boolean,
+  )
+  return parts.join(', ')
 }
 
 // ─── Image Gallery Component ──────────────────────────────────────────────────
 function ImageGallery({ images, title }: { images: { id: string; url: string }[]; title: string }) {
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(0)
 
-  const allImages = images.length > 0 ? images : [{ id: "placeholder", url: DEFAULT_ROOM_IMAGE }];
-  const mainImg = allImages[activeIdx] ?? allImages[0];
+  const allImages = images.length > 0 ? images : [{ id: 'placeholder', url: DEFAULT_ROOM_IMAGE }]
+  const mainImg = allImages[activeIdx] ?? allImages[0]
 
   return (
     <div className="space-y-3">
@@ -45,7 +69,9 @@ function ImageGallery({ images, title }: { images: { id: string; url: string }[]
         <img
           src={mainImg.url}
           alt={title}
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE; }}
+          onError={e => {
+            ;(e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE
+          }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <span className="absolute top-4 left-4 px-3 py-1 bg-[#2AC1BC] text-white text-xs font-black rounded-full shadow-md">
@@ -54,14 +80,14 @@ function ImageGallery({ images, title }: { images: { id: string; url: string }[]
         {allImages.length > 1 && (
           <>
             <button
-              onClick={() => setActiveIdx((i) => Math.max(0, i - 1))}
+              onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
               disabled={activeIdx === 0}
               className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md disabled:opacity-30 cursor-pointer transition-all"
             >
               <ChevronLeft className="w-4 h-4 text-zinc-800" />
             </button>
             <button
-              onClick={() => setActiveIdx((i) => Math.min(allImages.length - 1, i + 1))}
+              onClick={() => setActiveIdx(i => Math.min(allImages.length - 1, i + 1))}
               disabled={activeIdx === allImages.length - 1}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md disabled:opacity-30 cursor-pointer transition-all"
             >
@@ -78,13 +104,17 @@ function ImageGallery({ images, title }: { images: { id: string; url: string }[]
               key={img.id}
               onClick={() => setActiveIdx(idx)}
               className={`shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                idx === activeIdx ? "border-[#2AC1BC] shadow-md" : "border-zinc-200 hover:border-zinc-400"
+                idx === activeIdx
+                  ? 'border-[#2AC1BC] shadow-md'
+                  : 'border-zinc-200 hover:border-zinc-400'
               }`}
             >
               <img
                 src={img.url}
                 alt={`Thumbnail ${idx + 1}`}
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE; }}
+                onError={e => {
+                  ;(e.currentTarget as HTMLImageElement).src = DEFAULT_ROOM_IMAGE
+                }}
                 className="w-full h-full object-cover"
               />
             </button>
@@ -92,7 +122,7 @@ function ImageGallery({ images, title }: { images: { id: string; url: string }[]
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // ─── Skeleton loader ──────────────────────────────────────────────────────────
@@ -114,190 +144,180 @@ function SkeletonDetail() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function RoomDetailPage() {
   if (!FEATURE_FLAGS.ENABLE_BHRP) {
-    redirect("/");
+    redirect('/')
   }
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const { currentLocale } = useLanguage();
-  const { isLoggedIn, user } = useAuth();
-  const tGuest = useTranslations("guest");
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const { currentLocale } = useLanguage()
+  const { isLoggedIn, user } = useAuth()
+  const tGuest = useTranslations('guest')
 
   // Data state
-  const [post, setPost] = useState<PublicPostListing | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [post, setPost] = useState<PublicPostListing | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-
-
-  const { toast } = useToast();
-  const [isSaved, setIsSaved] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [isStartingChat, setIsStartingChat] = useState(false);
+  const { toast } = useToast()
+  const [isSaved, setIsSaved] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [isStartingChat, setIsStartingChat] = useState(false)
 
   // Utility Calculator State
-  const [peopleCount, setPeopleCount] = useState(1);
-  const [electricityKwh, setElectricityKwh] = useState(0);
-  const [waterM3, setWaterM3] = useState(0);
-  const [isCalcOpen, setIsCalcOpen] = useState(false);
+  const [peopleCount, setPeopleCount] = useState(1)
+  const [electricityKwh, setElectricityKwh] = useState(0)
+  const [waterM3, setWaterM3] = useState(0)
+  const [isCalcOpen, setIsCalcOpen] = useState(false)
 
   // Load bookmark status for authenticated user
   useEffect(() => {
     if (!id || !isLoggedIn) {
-      setIsSaved(false);
-      return;
+      setIsSaved(false)
+      return
     }
-    let isMounted = true;
+    let isMounted = true
     postService
       .isPostSaved(id)
-      .then((saved) => {
-        if (isMounted) setIsSaved(saved);
+      .then(saved => {
+        if (isMounted) setIsSaved(saved)
       })
-      .catch(() => {});
+      .catch(() => {})
     return () => {
-      isMounted = false;
-    };
-  }, [id, isLoggedIn]);
+      isMounted = false
+    }
+  }, [id, isLoggedIn])
 
   // Fetch post data
   const fetchPost = useCallback(async () => {
-    if (!id) return;
-    setIsLoading(true);
-    setError(null);
+    if (!id) return
+    setIsLoading(true)
+    setError(null)
     try {
-      const data = await postService.getPublicPostById(id);
-      setPost(data);
+      const data = await postService.getPublicPostById(id)
+      setPost(data)
     } catch {
-      setError(tGuest("guestRoomsErrorFetch"));
+      setError(tGuest('guestRoomsErrorFetch'))
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [id, tGuest]);
+  }, [id, tGuest])
 
   useEffect(() => {
-    fetchPost();
-  }, [fetchPost]);
+    fetchPost()
+  }, [fetchPost])
 
   const handleCopyLink = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
-  };
+  }
 
   const handleStartChat = async () => {
     if (!isLoggedIn) {
-      router.push(`/login?redirect=/rooms/${id}`);
-      return;
+      router.push(`/login?redirect=/rooms/${id}`)
+      return
     }
-    if (!post?.poster) return;
+    if (!post?.poster) return
 
     if (user?.id === post.poster.id) {
-      toast.error(tGuest("guestRoomDetailCannotMessageSelf"));
-      return;
+      toast.error(tGuest('guestRoomDetailCannotMessageSelf'))
+      return
     }
 
     try {
-      setIsStartingChat(true);
-      const initialMessage = `Xin chào, tôi quan tâm đến bài đăng "${post.title}". Phòng này còn trống không ạ?`;
-      const conv = await getOrCreateConversation(post.poster.id, initialMessage);
-      const convId = conv?.id;
+      setIsStartingChat(true)
+      const initialMessage = `Xin chào, tôi quan tâm đến bài đăng "${post.title}". Phòng này còn trống không ạ?`
+      const conv = await getOrCreateConversation(post.poster.id, initialMessage)
+      const convId = conv?.id
       if (convId) {
-        router.push(`/messages?conversationId=${convId}`);
+        router.push(`/messages?conversationId=${convId}`)
       } else {
-        router.push("/messages");
+        router.push('/messages')
       }
     } catch (err: any) {
-      const errMsg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Không thể tạo cuộc trò chuyện";
-      toast.error(errMsg);
+      const errMsg = err?.response?.data?.message || err?.message || 'Không thể tạo cuộc trò chuyện'
+      toast.error(errMsg)
     } finally {
-      setIsStartingChat(false);
+      setIsStartingChat(false)
     }
-  };
+  }
 
   const handleToggleSave = async () => {
     if (!isLoggedIn) {
-      toast.info(tGuest("guestRoomDetailSaveLoginRequired"));
+      toast.info(tGuest('guestRoomDetailSaveLoginRequired'))
       setTimeout(() => {
-        router.push("/login");
-      }, 1500);
-      return;
+        router.push('/login')
+      }, 1500)
+      return
     }
-    if (!post) return;
+    if (!post) return
 
-    const nextSaved = !isSaved;
-    setIsSaved(nextSaved);
+    const nextSaved = !isSaved
+    setIsSaved(nextSaved)
     // Optimistic saved count update
-    setPost((prev) =>
+    setPost(prev =>
       prev
         ? {
             ...prev,
             savedCount: Math.max(0, prev.savedCount + (nextSaved ? 1 : -1)),
           }
-        : null
-    );
+        : null,
+    )
 
     try {
       const res = nextSaved
         ? await postService.savePost(post.id)
-        : await postService.unsavePost(post.id);
-      setPost((prev) =>
-        prev ? { ...prev, savedCount: res.savedCount } : null
-      );
+        : await postService.unsavePost(post.id)
+      setPost(prev => (prev ? { ...prev, savedCount: res.savedCount } : null))
       toast.success(
-        nextSaved
-          ? tGuest("guestRoomDetailSaveSuccess")
-          : tGuest("guestRoomDetailUnsaveSuccess")
-      );
+        nextSaved ? tGuest('guestRoomDetailSaveSuccess') : tGuest('guestRoomDetailUnsaveSuccess'),
+      )
     } catch (err: any) {
       // Revert optimistic update
-      setIsSaved(!nextSaved);
-      setPost((prev) =>
+      setIsSaved(!nextSaved)
+      setPost(prev =>
         prev
           ? {
               ...prev,
               savedCount: Math.max(0, prev.savedCount + (nextSaved ? -1 : 1)),
             }
-          : null
-      );
+          : null,
+      )
       const isAuthError =
-        err?.message?.includes("401") ||
-        err?.message?.includes("expired") ||
-        err?.message?.includes("log in");
+        err?.message?.includes('401') ||
+        err?.message?.includes('expired') ||
+        err?.message?.includes('log in')
       if (isAuthError) {
-        toast.info(tGuest("guestRoomDetailSessionExpired"));
+        toast.info(tGuest('guestRoomDetailSessionExpired'))
         setTimeout(() => {
-          router.push("/login");
-        }, 1500);
+          router.push('/login')
+        }, 1500)
       } else {
-        toast.error(err?.message || tGuest("guestRoomDetailSaveError"));
+        toast.error(err?.message || tGuest('guestRoomDetailSaveError'))
       }
     }
-  };
-
-
+  }
 
   // Utility Cost Calculator Math (defaults use 3800/kWh, 25000/m³, 150000 service/person)
-  const electricityRate = 3800;
-  const waterRate = 25000;
-  const serviceFee = 150000;
-  const depositAmount = Number(post?.depositAmount ?? 0);
-  const totalElectricityCost = electricityKwh * electricityRate;
-  const totalWaterCost = waterM3 * waterRate;
-  const totalServiceCost = peopleCount * serviceFee;
-  const totalEstimatedMonthly = depositAmount + totalElectricityCost + totalWaterCost + totalServiceCost;
+  const electricityRate = 3800
+  const waterRate = 25000
+  const serviceFee = 150000
+  const depositAmount = Number(post?.depositAmount ?? 0)
+  const totalElectricityCost = electricityKwh * electricityRate
+  const totalWaterCost = waterM3 * waterRate
+  const totalServiceCost = peopleCount * serviceFee
+  const totalEstimatedMonthly =
+    depositAmount + totalElectricityCost + totalWaterCost + totalServiceCost
 
-  if (isLoading) return <SkeletonDetail />;
+  if (isLoading) return <SkeletonDetail />
 
   if (error || !post) {
     return (
@@ -306,49 +326,48 @@ export default function RoomDetailPage() {
           <ImageIcon className="w-8 h-8 text-zinc-400" />
         </div>
         <h2 className="font-extrabold text-zinc-900 text-xl">
-          {error ?? tGuest("guestRoomsEmptyTitle")}
+          {error ?? tGuest('guestRoomsEmptyTitle')}
         </h2>
         <Link href="/rooms">
           <button className="px-5 py-2.5 bg-[#2AC1BC] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer">
-            {tGuest("guestRoomDetailBackToList")}
+            {tGuest('guestRoomDetailBackToList')}
           </button>
         </Link>
       </div>
-    );
+    )
   }
 
-  const address = buildAddressString(post);
-  const posterInitial = post.poster?.username?.charAt(0)?.toUpperCase() ?? "P";
+  const address = buildAddressString(post)
+  const posterInitial = post.poster?.username?.charAt(0)?.toUpperCase() ?? 'P'
 
   return (
     <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 w-full space-y-6">
-
         {/* Top Header Trail & Action Bar */}
         <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
           <Link
             href="/rooms"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" /> {tGuest("guestRoomDetailBackToList")}
+            <ArrowLeft className="h-4 w-4" /> {tGuest('guestRoomDetailBackToList')}
           </Link>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handleToggleSave}
               className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
-                isSaved ? "bg-rose-500 text-white" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                isSaved ? 'bg-rose-500 text-white' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
               }`}
             >
-              <Heart className={`w-3.5 h-3.5 ${isSaved ? "fill-white" : ""}`} />
-              {isSaved ? tGuest("guestRoomDetailSaved") : tGuest("guestRoomDetailSave")}
+              <Heart className={`w-3.5 h-3.5 ${isSaved ? 'fill-white' : ''}`} />
+              {isSaved ? tGuest('guestRoomDetailSaved') : tGuest('guestRoomDetailSave')}
             </button>
 
             <button
               onClick={() => setIsShareOpen(true)}
               className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
-              <Share2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {tGuest("guestRoomDetailShare")}
+              <Share2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {tGuest('guestRoomDetailShare')}
             </button>
           </div>
         </div>
@@ -362,7 +381,7 @@ export default function RoomDetailPage() {
               </span>
             )}
             <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
-              {tGuest("guestRoomDetailVerifiedBadge")}
+              {tGuest('guestRoomDetailVerifiedBadge')}
             </span>
             {post.room?.boardingHouseName && (
               <span className="px-3 py-1 bg-zinc-200/80 text-zinc-700 text-xs font-extrabold rounded-full flex items-center gap-1">
@@ -383,26 +402,28 @@ export default function RoomDetailPage() {
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 text-zinc-800 font-bold hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors group"
-                title={tGuest("guestContactMaps")}
+                title={tGuest('guestContactMaps')}
               >
                 <MapPin className="h-4 w-4 text-[#2AC1BC]" />
                 <span>{address}</span>
                 <ExternalLink className="w-3 h-3 text-zinc-400 group-hover:text-[#2AC1BC]" />
               </a>
             ) : (
-              <span className="text-zinc-400 italic">{tGuest("guestRoomsDefaultLandlord")}</span>
+              <span className="text-zinc-400 italic">{tGuest('guestRoomsDefaultLandlord')}</span>
             )}
 
             {post.room?.area && (
               <div className="flex items-center gap-1 text-zinc-700">
                 <Minimize2 className="h-4 w-4 text-zinc-400" />
-                <span>{tGuest("guestRoomDetailAreaLabel")}: <strong>{post.room.area} m²</strong></span>
+                <span>
+                  {tGuest('guestRoomDetailAreaLabel')}: <strong>{post.room.area} m²</strong>
+                </span>
               </div>
             )}
 
             {post.room?.floor && (
               <span className="text-zinc-600 font-bold">
-                {tGuest("guestRoomDetailFloorLabel")}: {post.room.floor}
+                {tGuest('guestRoomDetailFloorLabel')}: {post.room.floor}
               </span>
             )}
           </div>
@@ -410,25 +431,27 @@ export default function RoomDetailPage() {
 
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-2">
-
           {/* Left Main Content */}
           <div className="lg:col-span-8 space-y-8">
-
             {/* Image Gallery */}
             <ImageGallery images={post.images} title={post.title} />
 
             {/* 1. Description Section */}
             <div className="space-y-3">
-              <h2 className="text-xl font-extrabold text-zinc-900">{tGuest("guestRoomDetailDescTitle")}</h2>
+              <h2 className="text-xl font-extrabold text-zinc-900">
+                {tGuest('guestRoomDetailDescTitle')}
+              </h2>
               <div className="text-zinc-600 leading-relaxed whitespace-pre-line text-xs font-medium bg-zinc-50 p-6 rounded-3xl border border-zinc-200/80">
-                {post.content || tGuest("guestRoomsEmptyDesc")}
+                {post.content || tGuest('guestRoomsEmptyDesc')}
               </div>
             </div>
 
             {/* 2. Room details chips */}
             {post.room && (
               <div className="space-y-4">
-                <h2 className="text-xl font-extrabold text-zinc-900">{tGuest("guestRoomDetailFacilitiesTitle")}</h2>
+                <h2 className="text-xl font-extrabold text-zinc-900">
+                  {tGuest('guestRoomDetailFacilitiesTitle')}
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {post.room.roomTypeName && (
                     <div className="flex items-center gap-2.5 p-3.5 bg-white border border-zinc-200/80 rounded-2xl text-xs font-bold text-zinc-800 shadow-xs">
@@ -445,7 +468,9 @@ export default function RoomDetailPage() {
                   {post.room.floor && (
                     <div className="flex items-center gap-2.5 p-3.5 bg-white border border-zinc-200/80 rounded-2xl text-xs font-bold text-zinc-800 shadow-xs">
                       <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                      <span>{tGuest("guestRoomDetailFloorLabel")}: {post.room.floor}</span>
+                      <span>
+                        {tGuest('guestRoomDetailFloorLabel')}: {post.room.floor}
+                      </span>
                     </div>
                   )}
                   {post.room.boardingHouseName && (
@@ -461,26 +486,44 @@ export default function RoomDetailPage() {
             {/* 3. Escrow Deposit Process Guarantee Box */}
             <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 p-6 rounded-3xl text-white space-y-4 shadow-xl border border-zinc-800">
               <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider block">
-                {tGuest("guestRoomDetailEscrowTitle")}
+                {tGuest('guestRoomDetailEscrowTitle')}
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
-                  <span className="w-6 h-6 rounded-full bg-[#2AC1BC] text-white font-black text-xs inline-flex items-center justify-center">1</span>
-                  <h4 className="font-extrabold text-xs text-white">{tGuest("guestRoomDetailEscrowStep1Title")}</h4>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">{tGuest("guestRoomDetailEscrowStep1Desc")}</p>
+                  <span className="w-6 h-6 rounded-full bg-[#2AC1BC] text-white font-black text-xs inline-flex items-center justify-center">
+                    1
+                  </span>
+                  <h4 className="font-extrabold text-xs text-white">
+                    {tGuest('guestRoomDetailEscrowStep1Title')}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    {tGuest('guestRoomDetailEscrowStep1Desc')}
+                  </p>
                 </div>
 
                 <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
-                  <span className="w-6 h-6 rounded-full bg-amber-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">2</span>
-                  <h4 className="font-extrabold text-xs text-white">{tGuest("guestRoomDetailEscrowStep2Title")}</h4>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">{tGuest("guestRoomDetailEscrowStep2Desc")}</p>
+                  <span className="w-6 h-6 rounded-full bg-amber-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">
+                    2
+                  </span>
+                  <h4 className="font-extrabold text-xs text-white">
+                    {tGuest('guestRoomDetailEscrowStep2Title')}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    {tGuest('guestRoomDetailEscrowStep2Desc')}
+                  </p>
                 </div>
 
                 <div className="bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700/60 space-y-1.5">
-                  <span className="w-6 h-6 rounded-full bg-emerald-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">3</span>
-                  <h4 className="font-extrabold text-xs text-white">{tGuest("guestRoomDetailEscrowStep3Title")}</h4>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">{tGuest("guestRoomDetailEscrowStep3Desc")}</p>
+                  <span className="w-6 h-6 rounded-full bg-emerald-400 text-zinc-900 font-black text-xs inline-flex items-center justify-center">
+                    3
+                  </span>
+                  <h4 className="font-extrabold text-xs text-white">
+                    {tGuest('guestRoomDetailEscrowStep3Title')}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    {tGuest('guestRoomDetailEscrowStep3Desc')}
+                  </p>
                 </div>
               </div>
             </div>
@@ -490,17 +533,20 @@ export default function RoomDetailPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
                 <div>
                   <h3 className="text-lg font-black text-zinc-900 flex items-center gap-2">
-                    <Calculator className="w-5 h-5 text-[#2AC1BC]" /> {tGuest("guestRoomDetailCalcTitle")}
+                    <Calculator className="w-5 h-5 text-[#2AC1BC]" />{' '}
+                    {tGuest('guestRoomDetailCalcTitle')}
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium mt-0.5">
-                    {tGuest("guestRoomDetailCalcSub")}
+                    {tGuest('guestRoomDetailCalcSub')}
                   </p>
                 </div>
                 <button
                   onClick={() => setIsCalcOpen(!isCalcOpen)}
                   className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer hover:bg-[#22a9a4] transition-colors shrink-0"
                 >
-                  {isCalcOpen ? tGuest("guestRoomDetailCalcClose") : tGuest("guestRoomDetailCalcOpen")}
+                  {isCalcOpen
+                    ? tGuest('guestRoomDetailCalcClose')
+                    : tGuest('guestRoomDetailCalcOpen')}
                 </button>
               </div>
 
@@ -508,46 +554,65 @@ export default function RoomDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
                   <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-zinc-500">{tGuest("guestRoomDetailPeopleCountLabel")}</span>
-                      <span className="text-[#2AC1BC] font-black">{peopleCount} {tGuest("guestRoomDetailPeopleUnit")}</span>
+                      <span className="text-zinc-500">
+                        {tGuest('guestRoomDetailPeopleCountLabel')}
+                      </span>
+                      <span className="text-[#2AC1BC] font-black">
+                        {peopleCount} {tGuest('guestRoomDetailPeopleUnit')}
+                      </span>
                     </div>
                     <input
-                      type="range" min="1" max="4" value={peopleCount}
-                      onChange={(e) => setPeopleCount(Number(e.target.value))}
+                      type="range"
+                      min="1"
+                      max="4"
+                      value={peopleCount}
+                      onChange={e => setPeopleCount(Number(e.target.value))}
                       className="w-full accent-[#2AC1BC] cursor-pointer"
                     />
                     <span className="text-[10px] text-zinc-400 block">
-                      {tGuest("guestRoomDetailServiceNote")} {formatCurrency(totalServiceCost, currentLocale)}
+                      {tGuest('guestRoomDetailServiceNote')}{' '}
+                      {formatCurrency(totalServiceCost, currentLocale)}
                     </span>
                   </div>
 
                   <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-zinc-500">{tGuest("guestRoomDetailElectricityLabel")}</span>
+                      <span className="text-zinc-500">
+                        {tGuest('guestRoomDetailElectricityLabel')}
+                      </span>
                       <span className="text-amber-600 font-black">{electricityKwh} kWh</span>
                     </div>
                     <input
-                      type="range" min="0" max="300" step="10" value={electricityKwh}
-                      onChange={(e) => setElectricityKwh(Number(e.target.value))}
+                      type="range"
+                      min="0"
+                      max="300"
+                      step="10"
+                      value={electricityKwh}
+                      onChange={e => setElectricityKwh(Number(e.target.value))}
                       className="w-full accent-amber-500 cursor-pointer"
                     />
                     <span className="text-[10px] text-zinc-400 block">
-                      {tGuest("guestRoomDetailElectricityNote")} ({formatCurrency(totalElectricityCost, currentLocale)})
+                      {tGuest('guestRoomDetailElectricityNote')} (
+                      {formatCurrency(totalElectricityCost, currentLocale)})
                     </span>
                   </div>
 
                   <div className="space-y-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-zinc-500">{tGuest("guestRoomDetailWaterLabel")}</span>
+                      <span className="text-zinc-500">{tGuest('guestRoomDetailWaterLabel')}</span>
                       <span className="text-cyan-600 font-black">{waterM3} m³</span>
                     </div>
                     <input
-                      type="range" min="0" max="20" value={waterM3}
-                      onChange={(e) => setWaterM3(Number(e.target.value))}
+                      type="range"
+                      min="0"
+                      max="20"
+                      value={waterM3}
+                      onChange={e => setWaterM3(Number(e.target.value))}
                       className="w-full accent-cyan-500 cursor-pointer"
                     />
                     <span className="text-[10px] text-zinc-400 block">
-                      {tGuest("guestRoomDetailWaterNote")} ({formatCurrency(totalWaterCost, currentLocale)})
+                      {tGuest('guestRoomDetailWaterNote')} (
+                      {formatCurrency(totalWaterCost, currentLocale)})
                     </span>
                   </div>
                 </div>
@@ -556,65 +621,83 @@ export default function RoomDetailPage() {
               {/* Total Summary Breakdown Box */}
               <div className="p-5 bg-zinc-900 rounded-2xl text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs text-zinc-400 font-semibold block">{tGuest("guestRoomDetailTotalCalcTitle")}</span>
-                  <span className="text-3xl font-black text-rose-500">{formatCurrency(totalEstimatedMonthly, currentLocale)}</span>
+                  <span className="text-xs text-zinc-400 font-semibold block">
+                    {tGuest('guestRoomDetailTotalCalcTitle')}
+                  </span>
+                  <span className="text-3xl font-black text-rose-500">
+                    {formatCurrency(totalEstimatedMonthly, currentLocale)}
+                  </span>
                 </div>
                 <div className="text-xs text-zinc-400 font-medium space-y-0.5">
-                  <div>• {tGuest("guestRoomDetailRentPart")} <strong className="text-white">{formatCurrency(depositAmount, currentLocale)}</strong></div>
-                  <div>• {tGuest("guestRoomDetailUtilPart")} <strong className="text-[#2AC1BC]">{formatCurrency(totalElectricityCost + totalWaterCost + totalServiceCost, currentLocale)}</strong></div>
+                  <div>
+                    • {tGuest('guestRoomDetailRentPart')}{' '}
+                    <strong className="text-white">
+                      {formatCurrency(depositAmount, currentLocale)}
+                    </strong>
+                  </div>
+                  <div>
+                    • {tGuest('guestRoomDetailUtilPart')}{' '}
+                    <strong className="text-[#2AC1BC]">
+                      {formatCurrency(
+                        totalElectricityCost + totalWaterCost + totalServiceCost,
+                        currentLocale,
+                      )}
+                    </strong>
+                  </div>
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* Right Sidebar Card: Booking & Poster Info */}
           <div className="lg:col-span-4 space-y-6 sticky top-24">
-
             {/* Price & Deposit Action Box */}
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-zinc-200/80 shadow-xl space-y-6">
               <div className="space-y-1">
                 <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider block">
-                  {tGuest("guestRoomDetailListedPriceLabel")}
+                  {tGuest('guestRoomDetailListedPriceLabel')}
                 </span>
                 <div className="text-3xl font-black text-rose-500">
-                  {formatCurrency(depositAmount, currentLocale)}{" "}
-                  <span className="text-xs text-zinc-400 font-normal">{tGuest("guestRoomDetailMonth")}</span>
+                  {formatCurrency(depositAmount, currentLocale)}{' '}
+                  <span className="text-xs text-zinc-400 font-normal">
+                    {tGuest('guestRoomDetailMonth')}
+                  </span>
                 </div>
                 {depositAmount > 0 && (
                   <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 text-xs text-rose-700 font-bold mt-2">
-                    {tGuest("guestRoomDetailDepositLabel")} {formatCurrency(depositAmount, currentLocale)}
+                    {tGuest('guestRoomDetailDepositLabel')}{' '}
+                    {formatCurrency(depositAmount, currentLocale)}
                   </div>
                 )}
               </div>
 
               <div className="space-y-3 pt-2">
-                {post.room?.status === "deposited" ? (
+                {post.room?.status === 'deposited' ? (
                   <div className="w-full py-3.5 px-4 bg-amber-50 border border-amber-200 text-amber-800 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 text-center">
                     <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>{tGuest("guestRoomDetailRoomDeposited")}</span>
+                    <span>{tGuest('guestRoomDetailRoomDeposited')}</span>
                   </div>
-                ) : post.room?.status === "occupied" ? (
+                ) : post.room?.status === 'occupied' ? (
                   <div className="w-full py-3.5 px-4 bg-zinc-100 border border-zinc-200 text-zinc-500 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 text-center">
                     <Lock className="w-4 h-4 text-zinc-400 shrink-0" />
-                    <span>{tGuest("guestRoomDetailRoomOccupied")}</span>
+                    <span>{tGuest('guestRoomDetailRoomOccupied')}</span>
                   </div>
                 ) : !post.room ? (
                   <button
                     onClick={() => {
-                      toast.info(tGuest("guestRoomDetailUnlinkedInfo"));
+                      toast.info(tGuest('guestRoomDetailUnlinkedInfo'))
                     }}
                     className="w-full py-3.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                    <span>{tGuest("guestRoomDetailContactLandlord")}</span>
+                    <span>{tGuest('guestRoomDetailContactLandlord')}</span>
                   </button>
                 ) : (
                   <Link
                     href={`/rooms/${id}/deposit`}
                     className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#FF6B35]/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4" /> {tGuest("guestRoomDetailDepositBtn")}
+                    <Sparkles className="w-4 h-4" /> {tGuest('guestRoomDetailDepositBtn')}
                   </Link>
                 )}
 
@@ -629,16 +712,16 @@ export default function RoomDetailPage() {
                     ) : (
                       <MessageSquare className="w-4 h-4" />
                     )}
-                    {tGuest("guestRoomDetailChatBtn")}
+                    {tGuest('guestRoomDetailChatBtn')}
                   </button>
                 )}
 
                 {post.poster && (
                   <button
-                    onClick={() => alert(tGuest("guestRoomDetailCallBtn"))}
+                    onClick={() => alert(tGuest('guestRoomDetailCallBtn'))}
                     className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Phone className="w-4 h-4 text-[#2AC1BC]" /> {tGuest("guestRoomDetailCallBtn")}
+                    <Phone className="w-4 h-4 text-[#2AC1BC]" /> {tGuest('guestRoomDetailCallBtn')}
                   </button>
                 )}
               </div>
@@ -647,7 +730,7 @@ export default function RoomDetailPage() {
               {post.poster && (
                 <div className="pt-6 border-t border-zinc-100 space-y-3">
                   <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider block">
-                    {tGuest("guestRoomDetailLandlordTitle")}
+                    {tGuest('guestRoomDetailLandlordTitle')}
                   </span>
                   <Link
                     href={`/landlords/${post.poster.id}`}
@@ -657,7 +740,7 @@ export default function RoomDetailPage() {
                     {post.poster.avatarUrl ? (
                       <img
                         src={post.poster.avatarUrl}
-                        alt={post.poster.username ?? ""}
+                        alt={post.poster.username ?? ''}
                         className="w-12 h-12 rounded-full object-cover border border-zinc-200 group-hover:scale-105 transition-transform"
                       />
                     ) : (
@@ -667,10 +750,10 @@ export default function RoomDetailPage() {
                     )}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-extrabold text-sm text-zinc-900 group-hover:text-[#2AC1BC] transition-colors truncate">
-                        {post.poster.username ?? tGuest("guestRoomsDefaultLandlord")}
+                        {post.poster.username ?? tGuest('guestRoomsDefaultLandlord')}
                       </h4>
                       <span className="text-xs font-semibold text-zinc-500 block">
-                        {tGuest("guestRoomDetailVerifiedBadge")}
+                        {tGuest('guestRoomDetailVerifiedBadge')}
                       </span>
                     </div>
                   </Link>
@@ -681,30 +764,40 @@ export default function RoomDetailPage() {
             {/* Post stats */}
             <div className="bg-zinc-50 rounded-2xl border border-zinc-200/80 p-4 space-y-2">
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-500 font-semibold">{tGuest("guestRoomDetailViewsLabel")}</span>
-                <span className="font-extrabold text-zinc-900">{post.viewsCount.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-500 font-semibold">{tGuest("guestRoomDetailSavedCountLabel")}</span>
-                <span className="font-extrabold text-zinc-900">{post.savedCount.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-500 font-semibold">{tGuest("guestRoomDetailPostedDateLabel")}</span>
+                <span className="text-zinc-500 font-semibold">
+                  {tGuest('guestRoomDetailViewsLabel')}
+                </span>
                 <span className="font-extrabold text-zinc-900">
-                  {new Date(post.createdAt).toLocaleDateString("vi-VN")}
+                  {post.viewsCount.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-500 font-semibold">
+                  {tGuest('guestRoomDetailSavedCountLabel')}
+                </span>
+                <span className="font-extrabold text-zinc-900">
+                  {post.savedCount.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-500 font-semibold">
+                  {tGuest('guestRoomDetailPostedDateLabel')}
+                </span>
+                <span className="font-extrabold text-zinc-900">
+                  {new Date(post.createdAt).toLocaleDateString('vi-VN')}
                 </span>
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
 
       {/* Share Modal */}
       {isShareOpen && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setIsShareOpen(false); }}
+          onClick={e => {
+            if (e.target === e.currentTarget) setIsShareOpen(false)
+          }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-zinc-100 relative cursor-default">
@@ -716,14 +809,15 @@ export default function RoomDetailPage() {
             </button>
 
             <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {tGuest("guestRoomDetailShareTitle")}
+              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {tGuest('guestRoomDetailShareTitle')}
             </h3>
             <p className="text-xs text-zinc-500 font-medium line-clamp-1">{post.title}</p>
 
             <div className="flex items-center gap-2 p-2 bg-zinc-50 rounded-2xl border border-zinc-200">
               <input
-                type="text" readOnly
-                value={typeof window !== "undefined" ? window.location.href : ""}
+                type="text"
+                readOnly
+                value={typeof window !== 'undefined' ? window.location.href : ''}
                 className="w-full text-xs font-semibold text-zinc-600 bg-transparent px-2 focus:outline-none truncate"
               />
               <button
@@ -731,13 +825,12 @@ export default function RoomDetailPage() {
                 className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? tGuest("guestRoomDetailCopied") : tGuest("guestRoomDetailCopy")}
+                {copied ? tGuest('guestRoomDetailCopied') : tGuest('guestRoomDetailCopy')}
               </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
-  );
+  )
 }

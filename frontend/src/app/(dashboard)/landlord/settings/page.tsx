@@ -1,5 +1,5 @@
-import React from "react";
-import { Save, User, Building, Lock } from "lucide-react";
+import React from 'react'
+import { Save, User, Building, Lock } from 'lucide-react'
 
 export default function SettingsPage() {
   return (
@@ -26,19 +26,37 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-bold text-zinc-700">Tên thương hiệu / Nhà trọ</label>
-              <input type="text" defaultValue="Dormio Apartments" className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              <input
+                type="text"
+                defaultValue="Dormio Apartments"
+                className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-zinc-700">Số điện thoại liên hệ</label>
-              <input type="text" defaultValue="0988777666" className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              <input
+                type="text"
+                defaultValue="0988777666"
+                className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
             </div>
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-bold text-zinc-700">Địa chỉ trụ sở chính</label>
-              <input type="text" defaultValue="123 Nguyễn Văn Linh, Đà Nẵng" className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              <input
+                type="text"
+                defaultValue="123 Nguyễn Văn Linh, Đà Nẵng"
+                className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
             </div>
             <div className="space-y-2 md:col-span-2 border-t border-zinc-200 pt-6">
-              <label className="text-sm font-bold text-zinc-700">Thông tin chuyển khoản (In trên hóa đơn)</label>
-              <textarea rows={3} defaultValue="Ngân hàng Vietcombank&#13;&#10;STK: 0123456789&#13;&#10;Chủ TK: Nguyễn Văn Rio" className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+              <label className="text-sm font-bold text-zinc-700">
+                Thông tin chuyển khoản (In trên hóa đơn)
+              </label>
+              <textarea
+                rows={3}
+                defaultValue="Ngân hàng Vietcombank&#13;&#10;STK: 0123456789&#13;&#10;Chủ TK: Nguyễn Văn Rio"
+                className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              ></textarea>
             </div>
           </div>
 
@@ -50,5 +68,5 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

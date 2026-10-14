@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, Min, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsNumber, Min, IsOptional, IsString, IsUUID } from 'class-validator'
 
 export class UpdateLandlordMeterReadingDto {
   @ApiProperty({
@@ -9,7 +9,7 @@ export class UpdateLandlordMeterReadingDto {
   @IsNumber()
   @Min(0)
   @IsNotEmpty()
-  readingValue: number;
+  readingValue: number
 
   @ApiPropertyOptional({
     description: 'Optional updated photo URL',
@@ -17,7 +17,7 @@ export class UpdateLandlordMeterReadingDto {
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string
 
   @ApiProperty({
     description: 'Reason for manual correction (audit log)',
@@ -25,7 +25,7 @@ export class UpdateLandlordMeterReadingDto {
   })
   @IsString()
   @IsNotEmpty()
-  reason: string;
+  reason: string
 
   @ApiPropertyOptional({
     description: 'Shared action UUID to group batch corrections in a single edit action',
@@ -33,5 +33,5 @@ export class UpdateLandlordMeterReadingDto {
   })
   @IsOptional()
   @IsUUID()
-  actionId?: string;
+  actionId?: string
 }

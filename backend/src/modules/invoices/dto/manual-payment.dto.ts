@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsIn } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsIn } from 'class-validator'
 
 export class ManualPaymentDto {
   @ApiPropertyOptional({
@@ -10,7 +10,7 @@ export class ManualPaymentDto {
   })
   @IsOptional()
   @IsIn(['banking', 'cash'])
-  method?: 'banking' | 'cash' = 'cash';
+  method?: 'banking' | 'cash' = 'cash'
 
   @ApiPropertyOptional({
     description: 'Landlord transaction memo or note',
@@ -18,7 +18,7 @@ export class ManualPaymentDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 
   @ApiPropertyOptional({
     description: 'External bank transaction reference or receipt code',
@@ -26,5 +26,5 @@ export class ManualPaymentDto {
   })
   @IsOptional()
   @IsString()
-  transactionRef?: string;
+  transactionRef?: string
 }

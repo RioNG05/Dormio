@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ScheduleStatus } from '@prisma';
-import { IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { ScheduleStatus } from '@prisma'
+import { IsEnum, IsOptional, IsUUID } from 'class-validator'
 
 export class UpdateRecurrenceDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class UpdateRecurrenceDto {
   })
   @IsOptional()
   @IsUUID('4', { message: 'ID ca làm việc không hợp lệ' })
-  shiftId?: string;
+  shiftId?: string
 
   @ApiPropertyOptional({
     description: 'Updated status for all forward occurrences',
@@ -18,5 +18,5 @@ export class UpdateRecurrenceDto {
   })
   @IsOptional()
   @IsEnum(ScheduleStatus, { message: 'Trạng thái ca làm việc không hợp lệ' })
-  status?: ScheduleStatus;
+  status?: ScheduleStatus
 }

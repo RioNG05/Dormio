@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
-import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, Suspense } from 'react'
+import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Send,
   Search,
@@ -13,9 +13,9 @@ import {
   Lock,
   Loader2,
   MessageSquare,
-} from "lucide-react";
-import { useLanguage, useTranslations } from "@/context/LanguageContext";
-import { useAuth } from "@/context/AuthContext";
+} from 'lucide-react'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import {
   ConversationItem,
   MessageItem,
@@ -24,265 +24,247 @@ import {
   sendMessage,
   markAsRead,
   initMessagesSocket,
-} from "@/services/message.service";
+} from '@/services/message.service'
 
 function formatMessageTime(isoString: string): string {
   try {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const d = new Date(isoString)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   } catch {
-    return "";
+    return ''
   }
 }
 
 function formatConversationTime(isoString?: string): string {
-  if (!isoString) return "";
+  if (!isoString) return ''
   try {
-    const d = new Date(isoString);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
+    const d = new Date(isoString)
+    const now = new Date()
+    const isToday = d.toDateString() === now.toDateString()
     if (isToday) {
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
-    return d.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
+    return d.toLocaleDateString([], { day: '2-digit', month: '2-digit' })
   } catch {
-    return "";
+    return ''
   }
 }
 
-function appendOrUpdateMessage(
-  list: MessageItem[],
-  newMsg: MessageItem
-): MessageItem[] {
-  const index = list.findIndex((m) => m.id === newMsg.id);
+function appendOrUpdateMessage(list: MessageItem[], newMsg: MessageItem): MessageItem[] {
+  const index = list.findIndex(m => m.id === newMsg.id)
   if (index >= 0) {
-    const updated = [...list];
-    updated[index] = newMsg;
-    return updated;
+    const updated = [...list]
+    updated[index] = newMsg
+    return updated
   }
-  return [...list, newMsg];
+  return [...list, newMsg]
 }
 
 function GuestMessagesContent() {
-  const t = useTranslations("guest");
-  const { currentLocale } = useLanguage();
-  const isEn = currentLocale === "en";
-  const { isLoggedIn, user } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const targetConvId = searchParams.get("conversationId");
+  const t = useTranslations('guest')
+  const { currentLocale } = useLanguage()
+  const isEn = currentLocale === 'en'
+  const { isLoggedIn, user } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const targetConvId = searchParams.get('conversationId')
 
-  const [conversations, setConversations] = useState<ConversationItem[]>([]);
-  const [activeChat, setActiveChat] = useState<ConversationItem | null>(null);
-  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [conversations, setConversations] = useState<ConversationItem[]>([])
+  const [activeChat, setActiveChat] = useState<ConversationItem | null>(null)
+  const [messages, setMessages] = useState<MessageItem[]>([])
 
-  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [messageInput, setMessageInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [messageInput, setMessageInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const activeChatRef = useRef<ConversationItem | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const socketRef = useRef<any>(null);
+  const activeChatRef = useRef<ConversationItem | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const socketRef = useRef<any>(null)
 
   useEffect(() => {
-    activeChatRef.current = activeChat;
-  }, [activeChat]);
+    activeChatRef.current = activeChat
+  }, [activeChat])
 
   // 1. Load initial user conversations
   useEffect(() => {
     if (!isLoggedIn) {
-      setIsLoadingConversations(false);
-      return;
+      setIsLoadingConversations(false)
+      return
     }
 
-    let isMounted = true;
-    setIsLoadingConversations(true);
+    let isMounted = true
+    setIsLoadingConversations(true)
 
     getConversations()
-      .then((list) => {
-        if (!isMounted) return;
-        setConversations(list);
+      .then(list => {
+        if (!isMounted) return
+        setConversations(list)
 
         if (targetConvId) {
-          const match = list.find((c) => c.id === targetConvId);
+          const match = list.find(c => c.id === targetConvId)
           if (match) {
-            setActiveChat(match);
+            setActiveChat(match)
           } else if (list.length > 0) {
-            setActiveChat(list[0]);
+            setActiveChat(list[0])
           }
         } else if (list.length > 0) {
-          setActiveChat(list[0]);
+          setActiveChat(list[0])
         }
       })
-      .catch((err) => {
-        console.error("Failed to load conversations:", err);
+      .catch(err => {
+        console.error('Failed to load conversations:', err)
       })
       .finally(() => {
         if (isMounted) {
-          setIsLoadingConversations(false);
+          setIsLoadingConversations(false)
         }
-      });
+      })
 
     return () => {
-      isMounted = false;
-    };
-  }, [isLoggedIn, targetConvId]);
+      isMounted = false
+    }
+  }, [isLoggedIn, targetConvId])
 
   // 2. Setup WebSocket connection for real-time messaging
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) return
 
-    const socket = initMessagesSocket();
-    if (!socket) return;
-    socketRef.current = socket;
+    const socket = initMessagesSocket()
+    if (!socket) return
+    socketRef.current = socket
 
-    socket.on("connect", () => {
+    socket.on('connect', () => {
       if (activeChatRef.current) {
-        socket.emit("join_conversation", {
+        socket.emit('join_conversation', {
           conversationId: activeChatRef.current.id,
-        });
+        })
       }
-    });
+    })
 
-    socket.on("new_message", (newMsg: MessageItem) => {
-      if (
-        activeChatRef.current &&
-        activeChatRef.current.id === newMsg.conversationId
-      ) {
-        setMessages((prev) => appendOrUpdateMessage(prev, newMsg));
+    socket.on('new_message', (newMsg: MessageItem) => {
+      if (activeChatRef.current && activeChatRef.current.id === newMsg.conversationId) {
+        setMessages(prev => appendOrUpdateMessage(prev, newMsg))
         if (newMsg.senderId !== user?.id) {
-          markAsRead(activeChatRef.current.id).catch(() => { });
+          markAsRead(activeChatRef.current.id).catch(() => {})
         }
       }
 
       // Update conversation list item
-      setConversations((prev) =>
-        prev.map((c) => {
+      setConversations(prev =>
+        prev.map(c => {
           if (c.id === newMsg.conversationId) {
-            const isActive = activeChatRef.current?.id === c.id;
+            const isActive = activeChatRef.current?.id === c.id
             return {
               ...c,
               lastMessage: newMsg,
               updatedAt: newMsg.sentAt,
-              unreadCount:
-                isActive || newMsg.senderId === user?.id
-                  ? 0
-                  : (c.unreadCount || 0) + 1,
-            };
+              unreadCount: isActive || newMsg.senderId === user?.id ? 0 : (c.unreadCount || 0) + 1,
+            }
           }
-          return c;
-        })
-      );
-    });
+          return c
+        }),
+      )
+    })
 
     socket.on(
-      "messages_read",
+      'messages_read',
       ({ conversationId }: { conversationId: string; readerId: string }) => {
-        if (
-          activeChatRef.current &&
-          activeChatRef.current.id === conversationId
-        ) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.readAt ? m : { ...m, readAt: new Date().toISOString() }
-            )
-          );
+        if (activeChatRef.current && activeChatRef.current.id === conversationId) {
+          setMessages(prev =>
+            prev.map(m => (m.readAt ? m : { ...m, readAt: new Date().toISOString() })),
+          )
         }
-      }
-    );
+      },
+    )
 
     return () => {
       if (socket) {
-        socket.disconnect();
+        socket.disconnect()
       }
-    };
-  }, [isLoggedIn, user?.id]);
+    }
+  }, [isLoggedIn, user?.id])
 
   // 3. Load messages when active chat changes & join socket room
   useEffect(() => {
     if (!activeChat) {
-      setMessages([]);
-      return;
+      setMessages([])
+      return
     }
 
-    let isCancelled = false;
-    setIsLoadingMessages(true);
+    let isCancelled = false
+    setIsLoadingMessages(true)
 
     if (socketRef.current) {
-      socketRef.current.emit("join_conversation", {
+      socketRef.current.emit('join_conversation', {
         conversationId: activeChat.id,
-      });
+      })
     }
 
     getConversationMessages(activeChat.id)
-      .then((msgs) => {
+      .then(msgs => {
         if (!isCancelled) {
-          const uniqueMap = new Map<string, MessageItem>();
-          msgs.forEach((m) => uniqueMap.set(m.id, m));
-          setMessages(Array.from(uniqueMap.values()));
+          const uniqueMap = new Map<string, MessageItem>()
+          msgs.forEach(m => uniqueMap.set(m.id, m))
+          setMessages(Array.from(uniqueMap.values()))
         }
       })
-      .catch((err) => {
-        console.error("Failed to load messages:", err);
+      .catch(err => {
+        console.error('Failed to load messages:', err)
       })
       .finally(() => {
         if (!isCancelled) {
-          setIsLoadingMessages(false);
+          setIsLoadingMessages(false)
         }
-      });
+      })
 
     // Mark as read
     if (activeChat.unreadCount > 0) {
-      markAsRead(activeChat.id).catch(() => { });
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeChat.id ? { ...c, unreadCount: 0 } : c
-        )
-      );
+      markAsRead(activeChat.id).catch(() => {})
+      setConversations(prev =>
+        prev.map(c => (c.id === activeChat.id ? { ...c, unreadCount: 0 } : c)),
+      )
     }
 
     return () => {
-      isCancelled = true;
+      isCancelled = true
       if (socketRef.current && activeChat) {
-        socketRef.current.emit("leave_conversation", {
+        socketRef.current.emit('leave_conversation', {
           conversationId: activeChat.id,
-        });
+        })
       }
-    };
-  }, [activeChat?.id]);
+    }
+  }, [activeChat?.id])
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   // 4. Send message handler
   const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!messageInput.trim() || !activeChat || isSending) return;
+    e.preventDefault()
+    if (!messageInput.trim() || !activeChat || isSending) return
 
-    const content = messageInput.trim();
-    setMessageInput("");
-    setIsSending(true);
+    const content = messageInput.trim()
+    setMessageInput('')
+    setIsSending(true)
 
     try {
-      const sentMsg = await sendMessage(activeChat.id, { content });
-      setMessages((prev) => appendOrUpdateMessage(prev, sentMsg));
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeChat.id
-            ? { ...c, lastMessage: sentMsg, updatedAt: sentMsg.sentAt }
-            : c
-        )
-      );
+      const sentMsg = await sendMessage(activeChat.id, { content })
+      setMessages(prev => appendOrUpdateMessage(prev, sentMsg))
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === activeChat.id ? { ...c, lastMessage: sentMsg, updatedAt: sentMsg.sentAt } : c,
+        ),
+      )
     } catch (err) {
-      console.error("Failed to send message:", err);
+      console.error('Failed to send message:', err)
     } finally {
-      setIsSending(false);
+      setIsSending(false)
     }
-  };
+  }
 
   // Auth lock screen
   if (!isLoggedIn) {
@@ -291,29 +273,25 @@ function GuestMessagesContent() {
         <div className="w-20 h-20 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-6 shadow-inner border border-[#2AC1BC]/20">
           <Lock className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-black text-zinc-900 mb-2">
-          {t("guestMessagesLockTitle")}
-        </h2>
+        <h2 className="text-2xl font-black text-zinc-900 mb-2">{t('guestMessagesLockTitle')}</h2>
         <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-md mx-auto mb-6">
-          {t("guestMessagesLockDesc")}
+          {t('guestMessagesLockDesc')}
         </p>
         <Link href="/login?redirect=/messages">
           <button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all cursor-pointer hover:scale-105">
-            {t("guestMessagesLoginBtn")} &rarr;
+            {t('guestMessagesLoginBtn')} &rarr;
           </button>
         </Link>
       </div>
-    );
+    )
   }
 
-  const filteredConversations = conversations.filter((conv) => {
-    const q = searchQuery.toLowerCase();
-    const name = conv.participant?.fullName || conv.participant?.username || "";
-    const lastContent = conv.lastMessage?.content || "";
-    return (
-      name.toLowerCase().includes(q) || lastContent.toLowerCase().includes(q)
-    );
-  });
+  const filteredConversations = conversations.filter(conv => {
+    const q = searchQuery.toLowerCase()
+    const name = conv.participant?.fullName || conv.participant?.username || ''
+    const lastContent = conv.lastMessage?.content || ''
+    return name.toLowerCase().includes(q) || lastContent.toLowerCase().includes(q)
+  })
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -326,9 +304,9 @@ function GuestMessagesContent() {
         </Link>
         <div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
-            {t("guestMessagesTitle")}
+            {t('guestMessagesTitle')}
           </h1>
-          <p className="text-xs text-zinc-500">{t("guestMessagesSubtitle")}</p>
+          <p className="text-xs text-zinc-500">{t('guestMessagesSubtitle')}</p>
         </div>
       </div>
 
@@ -342,9 +320,9 @@ function GuestMessagesContent() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder={t("guestMessagesSearchPlaceholder")}
+                placeholder={t('guestMessagesSearchPlaceholder')}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all bg-zinc-50"
               />
             </div>
@@ -361,33 +339,30 @@ function GuestMessagesContent() {
               <div className="p-8 text-center space-y-2">
                 <MessageSquare className="w-8 h-8 text-zinc-300 mx-auto" />
                 <h4 className="text-xs font-extrabold text-zinc-700">
-                  {t("guestMessagesEmptyList")}
+                  {t('guestMessagesEmptyList')}
                 </h4>
                 <p className="text-[11px] text-zinc-400 font-medium">
-                  {t("guestMessagesEmptyListSub")}
+                  {t('guestMessagesEmptyListSub')}
                 </p>
               </div>
             ) : (
-              filteredConversations.map((conv) => {
-                const isSelected = activeChat?.id === conv.id;
+              filteredConversations.map(conv => {
+                const isSelected = activeChat?.id === conv.id
                 const participantName =
-                  conv.participant?.fullName ||
-                  conv.participant?.username ||
-                  "Chủ nhà";
-                const initial = participantName.charAt(0).toUpperCase();
-                const lastMsg = conv.lastMessage?.content || "";
-                const timeStr = formatConversationTime(
-                  conv.lastMessage?.sentAt || conv.updatedAt
-                );
+                  conv.participant?.fullName || conv.participant?.username || 'Chủ nhà'
+                const initial = participantName.charAt(0).toUpperCase()
+                const lastMsg = conv.lastMessage?.content || ''
+                const timeStr = formatConversationTime(conv.lastMessage?.sentAt || conv.updatedAt)
 
                 return (
                   <button
                     key={conv.id}
                     onClick={() => setActiveChat(conv)}
-                    className={`w-full text-left p-4 flex gap-3 transition-all cursor-pointer ${isSelected
-                        ? "bg-white shadow-xs border-l-4 border-l-[#2ac1bc]"
-                        : "hover:bg-zinc-100/60"
-                      }`}
+                    className={`w-full text-left p-4 flex gap-3 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white shadow-xs border-l-4 border-l-[#2ac1bc]'
+                        : 'hover:bg-zinc-100/60'
+                    }`}
                   >
                     {conv.participant?.avatarUrl ? (
                       <img
@@ -405,9 +380,7 @@ function GuestMessagesContent() {
                         <h3 className="font-extrabold text-zinc-900 text-xs truncate">
                           {participantName}
                         </h3>
-                        <span className="text-[10px] text-zinc-400 font-semibold">
-                          {timeStr}
-                        </span>
+                        <span className="text-[10px] text-zinc-400 font-semibold">{timeStr}</span>
                       </div>
                       {conv.participant?.boardingHouseName && (
                         <p className="text-[11px] text-[#2ac1bc] font-bold truncate mb-0.5">
@@ -422,7 +395,7 @@ function GuestMessagesContent() {
                       </span>
                     )}
                   </button>
-                );
+                )
               })
             )}
           </div>
@@ -434,7 +407,7 @@ function GuestMessagesContent() {
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400">
               <MessageSquare className="w-12 h-12 text-zinc-300 mb-3" />
               <h3 className="font-extrabold text-sm text-zinc-700">
-                {t("guestMessagesSelectToChat")}
+                {t('guestMessagesSelectToChat')}
               </h3>
             </div>
           ) : (
@@ -445,31 +418,26 @@ function GuestMessagesContent() {
                   {activeChat.participant?.avatarUrl ? (
                     <img
                       src={activeChat.participant.avatarUrl}
-                      alt={activeChat.participant.fullName || "User"}
+                      alt={activeChat.participant.fullName || 'User'}
                       className="w-10 h-10 rounded-xl object-cover border border-zinc-200"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white font-black flex items-center justify-center text-sm">
-                      {(
-                        activeChat.participant?.fullName ||
-                        activeChat.participant?.username ||
-                        "P"
-                      )
+                      {(activeChat.participant?.fullName || activeChat.participant?.username || 'P')
                         .charAt(0)
                         .toUpperCase()}
                     </div>
                   )}
                   <div>
                     <h3 className="font-extrabold text-zinc-900 text-sm flex items-center gap-1.5">
-                      {activeChat.participant?.fullName ||
-                        activeChat.participant?.username}
+                      {activeChat.participant?.fullName || activeChat.participant?.username}
                       <ShieldCheck className="w-4 h-4 text-[#2ac1bc]" />
                     </h3>
                     <p className="text-xs text-zinc-500 font-medium truncate max-w-xs">
                       {activeChat.participant?.boardingHouseName ||
-                        (activeChat.participant?.role === "landlord"
-                          ? "Chủ nhà trọ chính chủ"
-                          : "Đối tác Dormio")}
+                        (activeChat.participant?.role === 'landlord'
+                          ? 'Chủ nhà trọ chính chủ'
+                          : 'Đối tác Dormio')}
                     </p>
                   </div>
                 </div>
@@ -480,9 +448,7 @@ function GuestMessagesContent() {
                     className="p-2 hover:bg-zinc-100 rounded-xl transition-colors text-zinc-600 flex items-center gap-1.5 text-xs font-bold"
                   >
                     <Phone className="w-4 h-4 text-[#2AC1BC]" />
-                    <span className="hidden sm:inline">
-                      {activeChat.participant.phoneNumber}
-                    </span>
+                    <span className="hidden sm:inline">{activeChat.participant.phoneNumber}</span>
                   </a>
                 )}
               </div>
@@ -500,21 +466,21 @@ function GuestMessagesContent() {
                     </p>
                   </div>
                 ) : (
-                  messages.map((msg) => {
-                    const isMe = msg.senderId === user?.id;
-                    const time = formatMessageTime(msg.sentAt);
+                  messages.map(msg => {
+                    const isMe = msg.senderId === user?.id
+                    const time = formatMessageTime(msg.sentAt)
 
                     return (
                       <div
                         key={msg.id}
-                        className={`flex flex-col ${isMe ? "items-end" : "items-start"
-                          }`}
+                        className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
                         <div
-                          className={`max-w-md px-4 py-3 rounded-2xl text-xs leading-relaxed font-medium ${isMe
-                              ? "bg-zinc-900 text-white rounded-br-none shadow-md"
-                              : "bg-white border border-zinc-200 text-zinc-800 rounded-bl-none shadow-xs"
-                            }`}
+                          className={`max-w-md px-4 py-3 rounded-2xl text-xs leading-relaxed font-medium ${
+                            isMe
+                              ? 'bg-zinc-900 text-white rounded-br-none shadow-md'
+                              : 'bg-white border border-zinc-200 text-zinc-800 rounded-bl-none shadow-xs'
+                          }`}
                         >
                           {msg.content}
                         </div>
@@ -522,13 +488,14 @@ function GuestMessagesContent() {
                           <span>{time}</span>
                           {isMe && (
                             <CheckCheck
-                              className={`w-3 h-3 ${msg.readAt ? "text-[#2AC1BC]" : "text-zinc-300"
-                                }`}
+                              className={`w-3 h-3 ${
+                                msg.readAt ? 'text-[#2AC1BC]' : 'text-zinc-300'
+                              }`}
                             />
                           )}
                         </div>
                       </div>
-                    );
+                    )
                   })
                 )}
                 <div ref={messagesEndRef} />
@@ -541,9 +508,9 @@ function GuestMessagesContent() {
               >
                 <input
                   type="text"
-                  placeholder={t("guestMessagesInputPlaceholder")}
+                  placeholder={t('guestMessagesInputPlaceholder')}
                   value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
+                  onChange={e => setMessageInput(e.target.value)}
                   className="flex-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all bg-zinc-50"
                 />
                 <button
@@ -555,8 +522,7 @@ function GuestMessagesContent() {
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <>
-                      {t("guestMessagesSend")}{" "}
-                      <Send className="w-3.5 h-3.5" />
+                      {t('guestMessagesSend')} <Send className="w-3.5 h-3.5" />
                     </>
                   )}
                 </button>
@@ -566,7 +532,7 @@ function GuestMessagesContent() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default function GuestMessagesPage() {
@@ -580,5 +546,5 @@ export default function GuestMessagesPage() {
     >
       <GuestMessagesContent />
     </Suspense>
-  );
+  )
 }

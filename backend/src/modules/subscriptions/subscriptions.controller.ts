@@ -9,7 +9,7 @@ import {
   Logger,
   HttpStatus,
   ParseIntPipe,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -17,20 +17,20 @@ import {
   ApiOkResponse,
   ApiResponse,
   ApiParam,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { SubscriptionsService } from './subscriptions.service';
-import { CheckoutSubscriptionDto } from './dto/checkout-subscription.dto';
-import { TierStatusResponseDto } from './dto/tier-status-response.dto';
-import { SubscriptionCheckoutResponseDto } from './dto/subscription-checkout-response.dto';
-import { SubscriptionPlanItemDto } from './dto/subscription-plan-response.dto';
+} from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { SubscriptionsService } from './subscriptions.service'
+import { CheckoutSubscriptionDto } from './dto/checkout-subscription.dto'
+import { TierStatusResponseDto } from './dto/tier-status-response.dto'
+import { SubscriptionCheckoutResponseDto } from './dto/subscription-checkout-response.dto'
+import { SubscriptionPlanItemDto } from './dto/subscription-plan-response.dto'
 
 @ApiTags('Landlord Subscriptions')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('landlord/subscriptions')
 export class SubscriptionsController {
-  private readonly logger = new Logger(SubscriptionsController.name);
+  private readonly logger = new Logger(SubscriptionsController.name)
 
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
@@ -45,9 +45,9 @@ export class SubscriptionsController {
     type: [SubscriptionPlanItemDto],
   })
   async getPlans(@Request() req: any): Promise<SubscriptionPlanItemDto[]> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(`GET /api/v1/landlord/subscriptions/plans called by user ${userId}`);
-    return this.subscriptionsService.getPlans();
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/landlord/subscriptions/plans called by user ${userId}`)
+    return this.subscriptionsService.getPlans()
   }
 
   @Get('tier-status/:planName')
@@ -69,11 +69,11 @@ export class SubscriptionsController {
     @Request() req: any,
     @Param('planName') planName: string,
   ): Promise<TierStatusResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
+    const userId = req.user?.id || req.user?.sub
     this.logger.log(
       `GET /api/v1/landlord/subscriptions/tier-status/${planName} called by user ${userId}`,
-    );
-    return this.subscriptionsService.getTierStatus(userId, planName);
+    )
+    return this.subscriptionsService.getTierStatus(userId, planName)
   }
 
   @Post('checkout')
@@ -98,11 +98,11 @@ export class SubscriptionsController {
     @Request() req: any,
     @Body() dto: CheckoutSubscriptionDto,
   ): Promise<SubscriptionCheckoutResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
+    const userId = req.user?.id || req.user?.sub
     this.logger.log(
       `POST /api/v1/landlord/subscriptions/checkout called by user ${userId} for ${dto.planName}`,
-    );
-    return this.subscriptionsService.createCheckout(userId, dto);
+    )
+    return this.subscriptionsService.createCheckout(userId, dto)
   }
 
   @Get('order-status/:orderCode')
@@ -130,15 +130,15 @@ export class SubscriptionsController {
     @Request() req: any,
     @Param('orderCode', ParseIntPipe) orderCode: number,
   ): Promise<{
-    orderCode: number;
-    status: string;
-    isPaid: boolean;
-    paidAt?: string;
+    orderCode: number
+    status: string
+    isPaid: boolean
+    paidAt?: string
   }> {
-    const userId = req.user?.id || req.user?.sub;
+    const userId = req.user?.id || req.user?.sub
     this.logger.log(
       `GET /api/v1/landlord/subscriptions/order-status/${orderCode} called by user ${userId}`,
-    );
-    return this.subscriptionsService.getOrderStatus(userId, orderCode);
+    )
+    return this.subscriptionsService.getOrderStatus(userId, orderCode)
   }
 }

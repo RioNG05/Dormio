@@ -1,75 +1,75 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class LandlordAnnouncementItemDto {
   @ApiProperty({ format: 'uuid', example: 'd3b07384-d113-4045-9273-04285b7b6c5a' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'Thông báo cúp điện bảo trì lưới điện' })
-  title: string;
+  title: string
 
   @ApiProperty({ example: 'Điện lực khu vực sẽ tiến hành bảo trì lưới điện...' })
-  content: string;
+  content: string
 
   @ApiProperty({ example: 'Điện nước' })
-  category: string;
+  category: string
 
   @ApiProperty({ example: 'Toàn bộ tòa nhà' })
-  targetScope: string;
+  targetScope: string
 
   @ApiProperty({ example: '2026-08-28 09:15' })
-  sentAt: string;
+  sentAt: string
 
   @ApiProperty({ example: 'BQL Tòa nhà' })
-  sender: string;
+  sender: string
 
   @ApiProperty({ example: 45 })
-  readCount: number;
+  readCount: number
 
   @ApiProperty({ example: 50 })
-  totalTarget: number;
+  totalTarget: number
 
   @ApiProperty({ example: 'Thông báo hệ thống' })
-  channel: string;
+  channel: string
 
   @ApiProperty({ example: '2026-08-28T09:15:00.000Z' })
-  createdAt: Date;
+  createdAt: Date
 }
 
 export class AnnouncementPaginationMetaDto {
   @ApiProperty({ example: 25 })
-  total: number;
+  total: number
 
   @ApiProperty({ example: 1 })
-  page: number;
+  page: number
 
   @ApiProperty({ example: 10 })
-  limit: number;
+  limit: number
 
   @ApiProperty({ example: 3 })
-  totalPages: number;
+  totalPages: number
 }
 
 export class LandlordAnnouncementsSummaryDto {
   @ApiProperty({ example: 12 })
-  totalAnnouncements: number;
+  totalAnnouncements: number
 
   @ApiProperty({ example: 48 })
-  totalTargetTenants: number;
+  totalTargetTenants: number
 
   @ApiProperty({ example: 3 })
-  emergencyCount: number;
+  emergencyCount: number
 }
 
 export class LandlordAnnouncementsResponseDto {
   @ApiProperty({ example: true })
-  success: boolean;
+  success: boolean
 
   @ApiProperty({ type: [LandlordAnnouncementItemDto] })
-  data: LandlordAnnouncementItemDto[];
+  data: LandlordAnnouncementItemDto[]
 
   @ApiProperty({ type: AnnouncementPaginationMetaDto })
-  meta: AnnouncementPaginationMetaDto;
+  meta: AnnouncementPaginationMetaDto
 
   @ApiProperty({ type: LandlordAnnouncementsSummaryDto })
-  summary: LandlordAnnouncementsSummaryDto;
+  summary: LandlordAnnouncementsSummaryDto
 }

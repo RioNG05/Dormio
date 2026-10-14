@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsUUID } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsDateString, IsOptional, IsUUID } from 'class-validator'
 
 export class QueryStaffSchedulesDto {
   @ApiPropertyOptional({
@@ -8,7 +8,7 @@ export class QueryStaffSchedulesDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'startDate must be a valid date string (YYYY-MM-DD)' })
-  startDate?: string;
+  startDate?: string
 
   @ApiPropertyOptional({
     description: 'End date filter for schedule roster window (YYYY-MM-DD)',
@@ -16,7 +16,7 @@ export class QueryStaffSchedulesDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'endDate must be a valid date string (YYYY-MM-DD)' })
-  endDate?: string;
+  endDate?: string
 
   @ApiPropertyOptional({
     description: 'Optional boarding house UUID to filter schedules by specific property',
@@ -24,6 +24,5 @@ export class QueryStaffSchedulesDto {
   })
   @IsOptional()
   @IsUUID('4', { message: 'boardingHouseId must be a valid UUID' })
-  boardingHouseId?: string;
+  boardingHouseId?: string
 }
-

@@ -1,24 +1,19 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import { Prisma, ServiceStatus } from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { CreateServiceDto } from './dto/create-service.dto';
-import { QueryServicesDto } from './dto/query-services.dto';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { Prisma, ServiceStatus } from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { CreateServiceDto } from './dto/create-service.dto'
+import { QueryServicesDto } from './dto/query-services.dto'
 import {
   ServiceItemDto,
   ServiceRoomsResponseDto,
   ServicesListResponseDto,
   ServicesSummaryDto,
-} from './dto/service-response.dto';
-import { UpdateServiceDto } from './dto/update-service.dto';
+} from './dto/service-response.dto'
+import { UpdateServiceDto } from './dto/update-service.dto'
 
 @Injectable()
 export class ServicesService {
-  private readonly logger = new Logger(ServicesService.name);
+  private readonly logger = new Logger(ServicesService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -31,7 +26,7 @@ export class ServicesService {
   ): Promise<ServicesListResponseDto> {
     this.logger.log(
       `Fetching services for boarding house ${boardingHouseId} with query: ${JSON.stringify(query)}`,
-    );
+    )
 
     const {
       search,
@@ -42,31 +37,31 @@ export class ServicesService {
       sortOrder = 'desc',
       page = 1,
       limit = 10,
-    } = query;
+    } = query
 
     // Base filter scoped to boardingHouseId
     const where: Prisma.ServiceWhereInput = {
       boardingHouseId,
-    };
+    }
 
     if (search && search.trim() !== '') {
-      const searchTerm = search.trim();
+      const searchTerm = search.trim()
       where.OR = [
         { name: { contains: searchTerm, mode: 'insensitive' } },
         { unit: { contains: searchTerm, mode: 'insensitive' } },
-      ];
+      ]
     }
 
     if (typeof isMetered === 'boolean') {
-      where.isMetered = isMetered;
+      where.isMetered = isMetered
     }
 
     if (status) {
-      where.status = status;
+      where.status = status
     }
 
     if (typeof autoApplied === 'boolean') {
-      where.autoApplied = autoApplied;
+      where.autoApplied = autoApplied
     }
 
     // 1. Calculate unpaginated summary metrics across all services of this property
@@ -78,35 +73,31 @@ export class ServicesService {
         isMetered: true,
         status: true,
       },
-    });
+    })
 
     const summary: ServicesSummaryDto = {
       totalServices: allServices.length,
-      meteredCount: allServices.filter((s) => s.isMetered).length,
+      meteredCount: allServices.filter(s => s.isMetered).length,
       roomFixedCount: allServices.filter(
-        (s) =>
+        s =>
           !s.isMetered &&
-          (s.unit.toLowerCase().includes('phòng') ||
-            s.unit.toLowerCase().includes('phong')),
+          (s.unit.toLowerCase().includes('phòng') || s.unit.toLowerCase().includes('phong')),
       ).length,
       otherCount: allServices.filter(
-        (s) =>
+        s =>
           !s.isMetered &&
           !s.unit.toLowerCase().includes('phòng') &&
           !s.unit.toLowerCase().includes('phong'),
       ).length,
-      activeCount: allServices.filter((s) => s.status === ServiceStatus.active)
-        .length,
-      inactiveCount: allServices.filter(
-        (s) => s.status === ServiceStatus.inactive,
-      ).length,
-    };
+      activeCount: allServices.filter(s => s.status === ServiceStatus.active).length,
+      inactiveCount: allServices.filter(s => s.status === ServiceStatus.inactive).length,
+    }
 
     // 2. Count matching filtered records for pagination
-    const total = await this.prisma.service.count({ where });
+    const total = await this.prisma.service.count({ where })
 
     // 3. Query paginated records
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit
     const services = await this.prisma.service.findMany({
       where,
       include: {
@@ -119,9 +110,9 @@ export class ServicesService {
       },
       skip,
       take: limit,
-    });
+    })
 
-    const items = services.map((s) => this.mapToItemDto(s, s._count.roomServices));
+    const items = services.map(s => this.mapToItemDto(s, s._count.roomServices))
 
     return {
       success: true,
@@ -133,7 +124,7 @@ export class ServicesService {
         total,
         totalPages: Math.ceil(total / limit) || 1,
       },
-    };
+    }
   }
 
   /**
@@ -146,7 +137,7 @@ export class ServicesService {
   ): Promise<ServiceItemDto> {
     this.logger.log(
       `Creating service '${dto.name}' for boarding house ${boardingHouseId} by landlord ${landlordId}`,
-    );
+    )
 
     // Validate roomIds if provided
     if (dto.roomIds && dto.roomIds.length > 0) {
@@ -156,18 +147,16 @@ export class ServicesService {
           boardingHouseId,
         },
         select: { id: true },
-      });
+      })
 
       if (validRooms.length !== dto.roomIds.length) {
-        throw new NotFoundException(
-          'Một hoặc nhiều phòng được chọn không thuộc tòa nhà này',
-        );
+        throw new NotFoundException('Một hoặc nhiều phòng được chọn không thuộc tòa nhà này')
       }
     }
 
-    const priceDecimal = new Prisma.Decimal(dto.price);
+    const priceDecimal = new Prisma.Decimal(dto.price)
 
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async tx => {
       const service = await tx.service.create({
         data: {
           boardingHouseId,
@@ -178,34 +167,31 @@ export class ServicesService {
           autoApplied: dto.autoApplied ?? true,
           status: dto.status ?? ServiceStatus.active,
         },
-      });
+      })
 
-      let appliedRoomsCount = 0;
+      let appliedRoomsCount = 0
 
       if (dto.roomIds && dto.roomIds.length > 0) {
         await tx.roomService.createMany({
-          data: dto.roomIds.map((roomId) => ({
+          data: dto.roomIds.map(roomId => ({
             roomId,
             serviceId: service.id,
           })),
-        });
-        appliedRoomsCount = dto.roomIds.length;
+        })
+        appliedRoomsCount = dto.roomIds.length
       }
 
-      return { service, appliedRoomsCount };
-    });
+      return { service, appliedRoomsCount }
+    })
 
-    return this.mapToItemDto(result.service, result.appliedRoomsCount);
+    return this.mapToItemDto(result.service, result.appliedRoomsCount)
   }
 
   /**
    * UC-L-18: Get single service details
    */
-  async getServiceDetail(
-    boardingHouseId: string,
-    serviceId: string,
-  ): Promise<ServiceItemDto> {
-    this.logger.log(`Fetching service ${serviceId} for house ${boardingHouseId}`);
+  async getServiceDetail(boardingHouseId: string, serviceId: string): Promise<ServiceItemDto> {
+    this.logger.log(`Fetching service ${serviceId} for house ${boardingHouseId}`)
 
     const service = await this.prisma.service.findFirst({
       where: {
@@ -217,13 +203,13 @@ export class ServicesService {
           select: { roomServices: true },
         },
       },
-    });
+    })
 
     if (!service) {
-      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này');
+      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này')
     }
 
-    return this.mapToItemDto(service, service._count.roomServices);
+    return this.mapToItemDto(service, service._count.roomServices)
   }
 
   /**
@@ -234,7 +220,7 @@ export class ServicesService {
     serviceId: string,
     dto: UpdateServiceDto,
   ): Promise<ServiceItemDto> {
-    this.logger.log(`Updating service ${serviceId} for house ${boardingHouseId}`);
+    this.logger.log(`Updating service ${serviceId} for house ${boardingHouseId}`)
 
     const existingService = await this.prisma.service.findFirst({
       where: { id: serviceId, boardingHouseId },
@@ -243,10 +229,10 @@ export class ServicesService {
           select: { roomServices: true },
         },
       },
-    });
+    })
 
     if (!existingService) {
-      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này');
+      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này')
     }
 
     // Validate roomIds if provided
@@ -258,37 +244,37 @@ export class ServicesService {
             boardingHouseId,
           },
           select: { id: true },
-        });
+        })
 
         if (validRooms.length !== dto.roomIds.length) {
-          throw new NotFoundException('Một hoặc nhiều phòng được chọn không thuộc tòa nhà này');
+          throw new NotFoundException('Một hoặc nhiều phòng được chọn không thuộc tòa nhà này')
         }
       }
     }
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async tx => {
       // Sync room services if roomIds explicitly provided
       if (dto.roomIds !== undefined) {
         await tx.roomService.deleteMany({
           where: { serviceId },
-        });
+        })
         if (dto.roomIds.length > 0) {
           await tx.roomService.createMany({
-            data: dto.roomIds.map((roomId) => ({
+            data: dto.roomIds.map(roomId => ({
               roomId,
               serviceId,
             })),
-          });
+          })
         }
       }
 
-      const updateData: Prisma.ServiceUpdateInput = {};
-      if (dto.name !== undefined) updateData.name = dto.name.trim();
-      if (dto.price !== undefined) updateData.price = new Prisma.Decimal(dto.price);
-      if (dto.unit !== undefined) updateData.unit = dto.unit.trim();
-      if (dto.isMetered !== undefined) updateData.isMetered = dto.isMetered;
-      if (dto.autoApplied !== undefined) updateData.autoApplied = dto.autoApplied;
-      if (dto.status !== undefined) updateData.status = dto.status;
+      const updateData: Prisma.ServiceUpdateInput = {}
+      if (dto.name !== undefined) updateData.name = dto.name.trim()
+      if (dto.price !== undefined) updateData.price = new Prisma.Decimal(dto.price)
+      if (dto.unit !== undefined) updateData.unit = dto.unit.trim()
+      if (dto.isMetered !== undefined) updateData.isMetered = dto.isMetered
+      if (dto.autoApplied !== undefined) updateData.autoApplied = dto.autoApplied
+      if (dto.status !== undefined) updateData.status = dto.status
 
       const service = await tx.service.update({
         where: { id: serviceId },
@@ -298,12 +284,12 @@ export class ServicesService {
             select: { roomServices: true },
           },
         },
-      });
+      })
 
-      return service;
-    });
+      return service
+    })
 
-    return this.mapToItemDto(updated, updated._count.roomServices);
+    return this.mapToItemDto(updated, updated._count.roomServices)
   }
 
   /**
@@ -313,43 +299,43 @@ export class ServicesService {
     boardingHouseId: string,
     serviceId: string,
   ): Promise<{ success: boolean; message: string }> {
-    this.logger.log(`Deleting service ${serviceId} for house ${boardingHouseId}`);
+    this.logger.log(`Deleting service ${serviceId} for house ${boardingHouseId}`)
 
     const service = await this.prisma.service.findFirst({
       where: { id: serviceId, boardingHouseId },
-    });
+    })
 
     if (!service) {
-      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này');
+      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này')
     }
 
     // Check if referenced by meter readings or invoices
     const [readingCount, invoiceItemCount] = await Promise.all([
       this.prisma.meterReading.count({ where: { serviceId } }),
       this.prisma.invoiceItem.count({ where: { serviceId } }),
-    ]);
+    ])
 
     if (readingCount > 0 || invoiceItemCount > 0) {
       throw new BadRequestException(
         'Không thể xóa dịch vụ đã phát sinh chỉ số đồng hồ hoặc hóa đơn thanh toán. Vui lòng chuyển trạng thái sang Tạm dừng.',
-      );
+      )
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       // Clean up room services first
       await tx.roomService.deleteMany({
         where: { serviceId },
-      });
+      })
 
       await tx.service.delete({
         where: { id: serviceId },
-      });
-    });
+      })
+    })
 
     return {
       success: true,
       message: 'Đã xóa dịch vụ thành công',
-    };
+    }
   }
 
   /**
@@ -359,14 +345,14 @@ export class ServicesService {
     boardingHouseId: string,
     serviceId: string,
   ): Promise<ServiceRoomsResponseDto> {
-    this.logger.log(`Fetching rooms assigned to service ${serviceId}`);
+    this.logger.log(`Fetching rooms assigned to service ${serviceId}`)
 
     const service = await this.prisma.service.findFirst({
       where: { id: serviceId, boardingHouseId },
-    });
+    })
 
     if (!service) {
-      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này');
+      throw new NotFoundException('Không tìm thấy dịch vụ hoặc dịch vụ không thuộc tòa nhà này')
     }
 
     const roomServices = await this.prisma.roomService.findMany({
@@ -381,18 +367,15 @@ export class ServicesService {
           },
         },
       },
-      orderBy: [
-        { room: { floor: 'asc' } },
-        { room: { roomNumber: 'asc' } },
-      ],
-    });
+      orderBy: [{ room: { floor: 'asc' } }, { room: { roomNumber: 'asc' } }],
+    })
 
-    const rooms = roomServices.map((rs) => ({
+    const rooms = roomServices.map(rs => ({
       id: rs.room.id,
       roomNumber: rs.room.roomNumber,
       floor: rs.room.floor,
       status: String(rs.room.status),
-    }));
+    }))
 
     return {
       success: true,
@@ -402,7 +385,7 @@ export class ServicesService {
         appliedRoomsCount: rooms.length,
         rooms,
       },
-    };
+    }
   }
 
   /**
@@ -410,20 +393,20 @@ export class ServicesService {
    */
   private mapToItemDto(
     service: {
-      id: string;
-      boardingHouseId: string;
-      name: string;
-      price: Prisma.Decimal;
-      unit: string;
-      isMetered: boolean;
-      autoApplied: boolean;
-      status: ServiceStatus;
-      createdAt: Date;
-      updatedAt?: Date | null;
+      id: string
+      boardingHouseId: string
+      name: string
+      price: Prisma.Decimal
+      unit: string
+      isMetered: boolean
+      autoApplied: boolean
+      status: ServiceStatus
+      createdAt: Date
+      updatedAt?: Date | null
     },
     appliedRoomsCount: number,
   ): ServiceItemDto {
-    const priceDecimal = new Prisma.Decimal(service.price);
+    const priceDecimal = new Prisma.Decimal(service.price)
     return {
       id: service.id,
       boardingHouseId: service.boardingHouseId,
@@ -437,6 +420,6 @@ export class ServicesService {
       appliedRoomsCount,
       createdAt: service.createdAt.toISOString(),
       updatedAt: service.updatedAt ? service.updatedAt.toISOString() : null,
-    };
+    }
   }
 }

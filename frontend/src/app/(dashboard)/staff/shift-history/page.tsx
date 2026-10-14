@@ -1,83 +1,102 @@
-"use client";
+'use client'
 
-import React, { useState, useMemo, useEffect, useCallback, Suspense } from "react";
-import Link from "next/link";
+import React, { useState, useMemo, useEffect, useCallback, Suspense } from 'react'
+import Link from 'next/link'
 import {
-  Calendar, Clock, Building2, Shield, Users,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Info, X, CheckCircle2, AlertTriangle, XCircle,
-  Phone, ArrowLeft, Search,
-  Camera, Eye, ShieldCheck, ArrowRight, FileText,
-  Loader2, Filter, RotateCcw
-} from "lucide-react";
+  Calendar,
+  Clock,
+  Building2,
+  Shield,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Info,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Phone,
+  ArrowLeft,
+  Search,
+  Camera,
+  Eye,
+  ShieldCheck,
+  ArrowRight,
+  FileText,
+  Loader2,
+  Filter,
+  RotateCcw,
+} from 'lucide-react'
 import {
   AttendanceRecord,
   AttendanceWatermark,
   getLocalizedPlace,
   getLocalizedStaffName,
-  getLocalizedExplanation
-} from "../data";
-import { useTranslations, useLanguage } from "@/context/LanguageContext";
+  getLocalizedExplanation,
+} from '../data'
+import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
   StaffShiftType,
-} from "@/services/staff-attendance.service";
+} from '@/services/staff-attendance.service'
 
 function StaffShiftHistoryContent() {
-  const t = useTranslations("staffPortal");
-  const { locale } = useLanguage();
-  const isEn = locale === "en";
+  const t = useTranslations('staffPortal')
+  const { locale } = useLanguage()
+  const isEn = locale === 'en'
 
   // Dynamic Shift Types fetched from Backend (no hardcoded data)
-  const [availableShifts, setAvailableShifts] = useState<StaffShiftType[]>([]);
-  const [isShiftsLoading, setIsShiftsLoading] = useState<boolean>(false);
+  const [availableShifts, setAvailableShifts] = useState<StaffShiftType[]>([])
+  const [isShiftsLoading, setIsShiftsLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    let mounted = true;
-    setIsShiftsLoading(true);
+    let mounted = true
+    setIsShiftsLoading(true)
     staffAttendanceService
       .getShifts()
-      .then((shifts) => {
-        if (mounted) setAvailableShifts(shifts);
+      .then(shifts => {
+        if (mounted) setAvailableShifts(shifts)
       })
-      .catch((err) => {
-        console.error("Failed to load shift types from backend:", err);
-        if (mounted) setAvailableShifts([]);
+      .catch(err => {
+        console.error('Failed to load shift types from backend:', err)
+        if (mounted) setAvailableShifts([])
       })
       .finally(() => {
-        if (mounted) setIsShiftsLoading(false);
-      });
+        if (mounted) setIsShiftsLoading(false)
+      })
 
     return () => {
-      mounted = false;
-    };
-  }, []);
+      mounted = false
+    }
+  }, [])
 
   // Filter Modal & Rule #10 Unsaved Confirmation States
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
-  const [showConfirmCloseModal, setShowConfirmCloseModal] = useState<boolean>(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false)
+  const [showConfirmCloseModal, setShowConfirmCloseModal] = useState<boolean>(false)
 
   // Modal Draft States (edited by user inside the filter modal)
-  const [modalStartDate, setModalStartDate] = useState<string>("");
-  const [modalEndDate, setModalEndDate] = useState<string>("");
-  const [modalShift, setModalShift] = useState<string>("all");
-  const [modalStatus, setModalStatus] = useState<"all" | "on_time" | "late" | "absent">("all");
+  const [modalStartDate, setModalStartDate] = useState<string>('')
+  const [modalEndDate, setModalEndDate] = useState<string>('')
+  const [modalShift, setModalShift] = useState<string>('all')
+  const [modalStatus, setModalStatus] = useState<'all' | 'on_time' | 'late' | 'absent'>('all')
 
   // Applied Filter States (active filters applied to backend query)
-  const [appliedStartDate, setAppliedStartDate] = useState<string>("");
-  const [appliedEndDate, setAppliedEndDate] = useState<string>("");
-  const [appliedShift, setAppliedShift] = useState<string>("all");
-  const [appliedStatus, setAppliedStatus] = useState<"all" | "on_time" | "late" | "absent">("all");
+  const [appliedStartDate, setAppliedStartDate] = useState<string>('')
+  const [appliedEndDate, setAppliedEndDate] = useState<string>('')
+  const [appliedShift, setAppliedShift] = useState<string>('all')
+  const [appliedStatus, setAppliedStatus] = useState<'all' | 'on_time' | 'late' | 'absent'>('all')
 
   const hasAnyAppliedFilter = useMemo(() => {
     return (
-      appliedStartDate !== "" ||
-      appliedEndDate !== "" ||
-      appliedShift !== "all" ||
-      appliedStatus !== "all"
-    );
-  }, [appliedStartDate, appliedEndDate, appliedShift, appliedStatus]);
+      appliedStartDate !== '' ||
+      appliedEndDate !== '' ||
+      appliedShift !== 'all' ||
+      appliedStatus !== 'all'
+    )
+  }, [appliedStartDate, appliedEndDate, appliedShift, appliedStatus])
 
   // Check if draft in modal differs from currently applied values (Rule #10)
   const hasModalChanges = useMemo(() => {
@@ -86,166 +105,175 @@ function StaffShiftHistoryContent() {
       modalEndDate !== appliedEndDate ||
       modalShift !== appliedShift ||
       modalStatus !== appliedStatus
-    );
-  }, [modalStartDate, modalEndDate, modalShift, modalStatus, appliedStartDate, appliedEndDate, appliedShift, appliedStatus]);
+    )
+  }, [
+    modalStartDate,
+    modalEndDate,
+    modalShift,
+    modalStatus,
+    appliedStartDate,
+    appliedEndDate,
+    appliedShift,
+    appliedStatus,
+  ])
 
   const handleOpenFilterModal = () => {
-    setModalStartDate(appliedStartDate);
-    setModalEndDate(appliedEndDate);
-    setModalShift(appliedShift);
-    setModalStatus(appliedStatus);
-    setIsFilterModalOpen(true);
-  };
+    setModalStartDate(appliedStartDate)
+    setModalEndDate(appliedEndDate)
+    setModalShift(appliedShift)
+    setModalStatus(appliedStatus)
+    setIsFilterModalOpen(true)
+  }
 
   const handleRequestCloseFilterModal = () => {
     if (hasModalChanges) {
-      setShowConfirmCloseModal(true);
+      setShowConfirmCloseModal(true)
     } else {
-      setIsFilterModalOpen(false);
+      setIsFilterModalOpen(false)
     }
-  };
+  }
 
   const handleConfirmDiscardAndClose = () => {
-    setModalStartDate(appliedStartDate);
-    setModalEndDate(appliedEndDate);
-    setModalShift(appliedShift);
-    setModalStatus(appliedStatus);
-    setShowConfirmCloseModal(false);
-    setIsFilterModalOpen(false);
-  };
+    setModalStartDate(appliedStartDate)
+    setModalEndDate(appliedEndDate)
+    setModalShift(appliedShift)
+    setModalStatus(appliedStatus)
+    setShowConfirmCloseModal(false)
+    setIsFilterModalOpen(false)
+  }
 
   const handleApplyModalFilter = () => {
-    setAppliedStartDate(modalStartDate);
-    setAppliedEndDate(modalEndDate);
-    setAppliedShift(modalShift);
-    setAppliedStatus(modalStatus);
-    setCurrentPage(1);
-    setWindowStart(1);
-    setIsFilterModalOpen(false);
-  };
+    setAppliedStartDate(modalStartDate)
+    setAppliedEndDate(modalEndDate)
+    setAppliedShift(modalShift)
+    setAppliedStatus(modalStatus)
+    setCurrentPage(1)
+    setWindowStart(1)
+    setIsFilterModalOpen(false)
+  }
 
   const handleResetModalDrafts = () => {
-    setModalStartDate("");
-    setModalEndDate("");
-    setModalShift("all");
-    setModalStatus("all");
-  };
+    setModalStartDate('')
+    setModalEndDate('')
+    setModalShift('all')
+    setModalStatus('all')
+  }
 
   const handleClearAllFilters = () => {
-    setAppliedStartDate("");
-    setAppliedEndDate("");
-    setAppliedShift("all");
-    setAppliedStatus("all");
-    setModalStartDate("");
-    setModalEndDate("");
-    setModalShift("all");
-    setModalStatus("all");
-    setCurrentPage(1);
-    setWindowStart(1);
-  };
+    setAppliedStartDate('')
+    setAppliedEndDate('')
+    setAppliedShift('all')
+    setAppliedStatus('all')
+    setModalStartDate('')
+    setModalEndDate('')
+    setModalShift('all')
+    setModalStatus('all')
+    setCurrentPage(1)
+    setWindowStart(1)
+  }
 
   // Data & loading state
-  const [attendances, setAttendances] = useState<AttendanceRecord[]>([]);
+  const [attendances, setAttendances] = useState<AttendanceRecord[]>([])
   const [summary, setSummary] = useState<StaffAttendanceHistorySummary>({
     total: 0,
     onTime: 0,
     late: 0,
     absent: 0,
-    hours: "0.0",
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+    hours: '0.0',
+  })
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   // Pagination states (Table view: default 10)
-  const [pageSizeInput, setPageSizeInput] = useState<number>(10);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalItems, setTotalItems] = useState<number>(0);
-  const [windowStart, setWindowStart] = useState<number>(1);
+  const [pageSizeInput, setPageSizeInput] = useState<number>(10)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [totalPages, setTotalPages] = useState<number>(1)
+  const [totalItems, setTotalItems] = useState<number>(0)
+  const [windowStart, setWindowStart] = useState<number>(1)
 
   // Preview watermark photo modal
   const [previewImageModal, setPreviewImageModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    imageUrl: string;
-    watermark?: AttendanceWatermark;
-    note?: string;
-  } | null>(null);
+    isOpen: boolean
+    title: string
+    imageUrl: string
+    watermark?: AttendanceWatermark
+    note?: string
+  } | null>(null)
 
   const getShiftName = (name: string) => {
-    if (name.includes("Sáng")) return `${t("shiftMorning")} (07:00 - 15:00)`;
-    if (name.includes("Chiều")) return `${t("shiftAfternoon")} (15:00 - 23:00)`;
-    if (name.includes("Đêm")) return `${t("shiftNight")} (23:00 - 07:00)`;
-    return name;
-  };
+    if (name.includes('Sáng')) return `${t('shiftMorning')} (07:00 - 15:00)`
+    if (name.includes('Chiều')) return `${t('shiftAfternoon')} (15:00 - 23:00)`
+    if (name.includes('Đêm')) return `${t('shiftNight')} (23:00 - 07:00)`
+    return name
+  }
 
   // Fetch paginated history from backend API
   const fetchHistory = useCallback(async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const validPageSize = Math.max(1, pageSizeInput || 10);
+      const validPageSize = Math.max(1, pageSizeInput || 10)
       const res = await staffAttendanceService.getHistory({
         page: currentPage,
         limit: validPageSize,
-        status: appliedStatus !== "all" ? appliedStatus : undefined,
+        status: appliedStatus !== 'all' ? appliedStatus : undefined,
         startDate: appliedStartDate || undefined,
         endDate: appliedEndDate || undefined,
-        shiftName: appliedShift !== "all" ? appliedShift : undefined,
-      });
+        shiftName: appliedShift !== 'all' ? appliedShift : undefined,
+      })
 
-      setAttendances(res.data);
-      setSummary(res.summary);
-      setTotalItems(res.total);
-      setTotalPages(res.totalPages);
+      setAttendances(res.data)
+      setSummary(res.summary)
+      setTotalItems(res.total)
+      setTotalPages(res.totalPages)
     } catch (err) {
-      console.error("Failed to fetch staff attendance history:", err);
-      setAttendances([]);
+      console.error('Failed to fetch staff attendance history:', err)
+      setAttendances([])
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [currentPage, pageSizeInput, appliedStatus, appliedStartDate, appliedEndDate, appliedShift]);
+  }, [currentPage, pageSizeInput, appliedStatus, appliedStartDate, appliedEndDate, appliedShift])
 
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    fetchHistory()
+  }, [fetchHistory])
 
   // Sync with check-in / check-out updates
   useEffect(() => {
     const handleSync = () => {
-      fetchHistory();
-    };
-    window.addEventListener("dormio_attendance_updated", handleSync);
-    window.addEventListener("storage", handleSync);
+      fetchHistory()
+    }
+    window.addEventListener('dormio_attendance_updated', handleSync)
+    window.addEventListener('storage', handleSync)
     return () => {
-      window.removeEventListener("dormio_attendance_updated", handleSync);
-      window.removeEventListener("storage", handleSync);
-    };
-  }, [fetchHistory]);
+      window.removeEventListener('dormio_attendance_updated', handleSync)
+      window.removeEventListener('storage', handleSync)
+    }
+  }, [fetchHistory])
 
   // Pagination window helpers (Rule #9: 5-page window jumping)
-  const validPageSize = Math.max(1, pageSizeInput || 10);
-  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
-  const startIndex = (safeCurrentPage - 1) * validPageSize;
-  const endIndex = Math.min(startIndex + validPageSize, totalItems);
+  const validPageSize = Math.max(1, pageSizeInput || 10)
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
+  const startIndex = (safeCurrentPage - 1) * validPageSize
+  const endIndex = Math.min(startIndex + validPageSize, totalItems)
 
-  const windowEnd = Math.min(windowStart + 4, totalPages);
-  const pageNumbers: number[] = [];
+  const windowEnd = Math.min(windowStart + 4, totalPages)
+  const pageNumbers: number[] = []
   for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i);
+    pageNumbers.push(i)
   }
 
   const handleNextWindow = () => {
-    const nextStart = windowStart + 5;
+    const nextStart = windowStart + 5
     if (nextStart <= totalPages) {
-      setWindowStart(nextStart);
-      setCurrentPage(nextStart);
+      setWindowStart(nextStart)
+      setCurrentPage(nextStart)
     }
-  };
+  }
 
   const handlePrevWindow = () => {
-    const prevStart = Math.max(1, windowStart - 5);
-    setWindowStart(prevStart);
-    setCurrentPage(prevStart);
-  };
+    const prevStart = Math.max(1, windowStart - 5)
+    setWindowStart(prevStart)
+    setCurrentPage(prevStart)
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -256,20 +284,18 @@ function StaffShiftHistoryContent() {
             <Link
               href="/staff"
               className="p-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors"
-              title={t("btnBackToOverview")}
+              title={t('btnBackToOverview')}
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
-              {t("attHistoryTag")}
+              {t('attHistoryTag')}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t("attHistoryTitle")}
+            {t('attHistoryTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium">
-            {t("attHistorySubtitle")}
-          </p>
+          <p className="text-xs sm:text-sm text-zinc-500 font-medium">{t('attHistorySubtitle')}</p>
         </div>
 
         {/* Action Link to Work Schedule */}
@@ -279,7 +305,7 @@ function StaffShiftHistoryContent() {
             className="px-4 py-2.5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-zinc-200/80 cursor-pointer"
           >
             <Calendar className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t("btnViewWorkSchedule")}</span>
+            <span>{t('btnViewWorkSchedule')}</span>
             <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
           </Link>
         </div>
@@ -304,51 +330,51 @@ function StaffShiftHistoryContent() {
           <>
             <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                {t("metricTotalShifts")}
+                {t('metricTotalShifts')}
               </span>
               <div className="text-2xl font-black text-zinc-900">{summary.total}</div>
               <span className="text-[10px] font-semibold text-zinc-500 block">
-                {t("metricMonthSub")}
+                {t('metricMonthSub')}
               </span>
             </div>
 
             <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                {t("metricOnTime")}
+                {t('metricOnTime')}
               </span>
               <div className="text-2xl font-black text-[#2AC1BC]">{summary.onTime}</div>
               <span className="text-[10px] font-bold text-emerald-600 block">
-                {t("metricOnTimeSub")}
+                {t('metricOnTimeSub')}
               </span>
             </div>
 
             <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                {t("metricLate")}
+                {t('metricLate')}
               </span>
               <div className="text-2xl font-black text-amber-600">{summary.late}</div>
               <span className="text-[10px] font-medium text-amber-600 block">
-                {t("metricLateSub")}
+                {t('metricLateSub')}
               </span>
             </div>
 
             <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                {t("metricAbsent")}
+                {t('metricAbsent')}
               </span>
               <div className="text-2xl font-black text-zinc-400">{summary.absent}</div>
               <span className="text-[10px] font-medium text-zinc-400 block">
-                {t("metricAbsentSub")}
+                {t('metricAbsentSub')}
               </span>
             </div>
 
             <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                {t("metricHours")}
+                {t('metricHours')}
               </span>
               <div className="text-2xl font-black text-purple-600">{summary.hours}h</div>
               <span className="text-[10px] font-bold text-zinc-500 block">
-                {t("metricHoursSub")}
+                {t('metricHoursSub')}
               </span>
             </div>
           </>
@@ -363,10 +389,10 @@ function StaffShiftHistoryContent() {
             type="button"
             onClick={handleOpenFilterModal}
             className="px-4 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-95"
-            title={t("titleFilterOpen")}
+            title={t('titleFilterOpen')}
           >
             <Filter className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>{t("btnUseFilters")}</span>
+            <span>{t('btnUseFilters')}</span>
             {hasAnyAppliedFilter && (
               <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
             )}
@@ -383,19 +409,19 @@ function StaffShiftHistoryContent() {
                     {appliedStartDate && appliedEndDate
                       ? `${appliedStartDate} → ${appliedEndDate}`
                       : appliedStartDate
-                        ? t("filterDateFrom", { date: appliedStartDate })
-                        : t("filterDateTo", { date: appliedEndDate })}
+                        ? t('filterDateFrom', { date: appliedStartDate })
+                        : t('filterDateTo', { date: appliedEndDate })}
                   </span>
                   <button
                     type="button"
                     onClick={() => {
-                      setAppliedStartDate("");
-                      setAppliedEndDate("");
-                      setCurrentPage(1);
-                      setWindowStart(1);
+                      setAppliedStartDate('')
+                      setAppliedEndDate('')
+                      setCurrentPage(1)
+                      setWindowStart(1)
                     }}
                     className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
-                    title={t("titleRemoveDateFilter")}
+                    title={t('titleRemoveDateFilter')}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -403,19 +429,19 @@ function StaffShiftHistoryContent() {
               )}
 
               {/* Shift Chip */}
-              {appliedShift !== "all" && (
+              {appliedShift !== 'all' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
                   <Clock className="w-3 h-3 text-[#2AC1BC]" />
                   <span>{getShiftName(appliedShift)}</span>
                   <button
                     type="button"
                     onClick={() => {
-                      setAppliedShift("all");
-                      setCurrentPage(1);
-                      setWindowStart(1);
+                      setAppliedShift('all')
+                      setCurrentPage(1)
+                      setWindowStart(1)
                     }}
                     className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
-                    title={t("titleRemoveShiftFilter")}
+                    title={t('titleRemoveShiftFilter')}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -423,23 +449,23 @@ function StaffShiftHistoryContent() {
               )}
 
               {/* Status Chip */}
-              {appliedStatus !== "all" && (
+              {appliedStatus !== 'all' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
                   <ShieldCheck className="w-3 h-3 text-[#2AC1BC]" />
                   <span>
-                    {appliedStatus === "on_time" && t("tableStatusOnTime")}
-                    {appliedStatus === "late" && t("tableStatusLate")}
-                    {appliedStatus === "absent" && t("tableStatusAbsent")}
+                    {appliedStatus === 'on_time' && t('tableStatusOnTime')}
+                    {appliedStatus === 'late' && t('tableStatusLate')}
+                    {appliedStatus === 'absent' && t('tableStatusAbsent')}
                   </span>
                   <button
                     type="button"
                     onClick={() => {
-                      setAppliedStatus("all");
-                      setCurrentPage(1);
-                      setWindowStart(1);
+                      setAppliedStatus('all')
+                      setCurrentPage(1)
+                      setWindowStart(1)
                     }}
                     className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
-                    title={t("titleRemoveStatusFilter")}
+                    title={t('titleRemoveStatusFilter')}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -452,19 +478,17 @@ function StaffShiftHistoryContent() {
                 onClick={handleClearAllFilters}
                 className="text-xs text-red-600 hover:text-red-700 font-bold ml-1 hover:underline cursor-pointer"
               >
-                {t("btnClearAll")}
+                {t('btnClearAll')}
               </button>
             </div>
           ) : (
-            <span className="text-xs text-zinc-400 font-medium italic">
-              {t("noActiveFilters")}
-            </span>
+            <span className="text-xs text-zinc-400 font-medium italic">{t('noActiveFilters')}</span>
           )}
         </div>
 
         {/* Total records count */}
         <div className="text-xs text-zinc-500 font-medium self-start md:self-center">
-          {t("totalRecords")} <strong className="text-zinc-900 font-bold">{totalItems}</strong>
+          {t('totalRecords')} <strong className="text-zinc-900 font-bold">{totalItems}</strong>
         </div>
       </div>
 
@@ -474,14 +498,14 @@ function StaffShiftHistoryContent() {
           <table className="w-full text-left text-xs">
             <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
               <tr>
-                <th className="py-3.5 px-4">{t("tableColDate")}</th>
-                <th className="py-3.5 px-3">{t("tableColShift")}</th>
-                <th className="py-3.5 px-3">{t("tableColCheckIn")}</th>
-                <th className="py-3.5 px-3">{t("tableColCheckOut")}</th>
-                <th className="py-3.5 px-3">{t("tableColStatus")}</th>
-                <th className="py-3.5 px-3">{t("tableColHours")}</th>
-                <th className="py-3.5 px-3">{t("tableColNote")}</th>
-                <th className="py-3.5 px-3 text-center">{t("tableColAction")}</th>
+                <th className="py-3.5 px-4">{t('tableColDate')}</th>
+                <th className="py-3.5 px-3">{t('tableColShift')}</th>
+                <th className="py-3.5 px-3">{t('tableColCheckIn')}</th>
+                <th className="py-3.5 px-3">{t('tableColCheckOut')}</th>
+                <th className="py-3.5 px-3">{t('tableColStatus')}</th>
+                <th className="py-3.5 px-3">{t('tableColHours')}</th>
+                <th className="py-3.5 px-3">{t('tableColNote')}</th>
+                <th className="py-3.5 px-3 text-center">{t('tableColAction')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
@@ -489,52 +513,69 @@ function StaffShiftHistoryContent() {
                 <>
                   {[...Array(5)].map((_, idx) => (
                     <tr key={idx} className="animate-pulse">
-                      <td className="py-4 px-3"><div className="h-4 w-20 bg-zinc-200 rounded" /></td>
-                      <td className="py-4 px-3"><div className="h-4 w-28 bg-zinc-200 rounded" /></td>
-                      <td className="py-4 px-3"><div className="h-4 w-16 bg-zinc-200 rounded" /></td>
-                      <td className="py-4 px-3"><div className="h-4 w-16 bg-zinc-200 rounded" /></td>
-                      <td className="py-4 px-3"><div className="h-5 w-18 bg-zinc-100 rounded-lg" /></td>
-                      <td className="py-4 px-3"><div className="h-4 w-10 bg-zinc-200 rounded" /></td>
-                      <td className="py-4 px-3"><div className="h-4 w-36 bg-zinc-100 rounded" /></td>
-                      <td className="py-4 px-3 text-center"><div className="h-6 w-10 bg-zinc-100 rounded-lg mx-auto" /></td>
+                      <td className="py-4 px-3">
+                        <div className="h-4 w-20 bg-zinc-200 rounded" />
+                      </td>
+                      <td className="py-4 px-3">
+                        <div className="h-4 w-28 bg-zinc-200 rounded" />
+                      </td>
+                      <td className="py-4 px-3">
+                        <div className="h-4 w-16 bg-zinc-200 rounded" />
+                      </td>
+                      <td className="py-4 px-3">
+                        <div className="h-4 w-16 bg-zinc-200 rounded" />
+                      </td>
+                      <td className="py-4 px-3">
+                        <div className="h-5 w-18 bg-zinc-100 rounded-lg" />
+                      </td>
+                      <td className="py-4 px-3">
+                        <div className="h-4 w-10 bg-zinc-200 rounded" />
+                      </td>
+                      <td className="py-4 px-3">
+                        <div className="h-4 w-36 bg-zinc-100 rounded" />
+                      </td>
+                      <td className="py-4 px-3 text-center">
+                        <div className="h-6 w-10 bg-zinc-100 rounded-lg mx-auto" />
+                      </td>
                     </tr>
                   ))}
                 </>
               ) : attendances.length > 0 ? (
-                attendances.map((item) => (
+                attendances.map(item => (
                   <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="py-4 px-3 font-bold text-zinc-900 whitespace-nowrap">
                       {item.workDate}
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap font-bold">
                       <div>{getShiftName(item.shiftName)}</div>
-                      <div className="text-[10px] text-zinc-400 font-normal">
-                        {item.shiftTime}
-                      </div>
+                      <div className="text-[10px] text-zinc-400 font-normal">{item.shiftTime}</div>
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <span>{item.checkIn || "--:--"}</span>
+                        <span>{item.checkIn || '--:--'}</span>
                         {item.checkInPhoto && (
                           <button
                             type="button"
                             onClick={() =>
                               setPreviewImageModal({
                                 isOpen: true,
-                                title: `${t("tableColCheckIn")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                title: `${t('tableColCheckIn')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
                                 imageUrl: item.checkInPhoto!,
                                 watermark: item.checkInWatermark
                                   ? {
                                       ...item.checkInWatermark,
                                       place: getLocalizedPlace(item.checkInWatermark.place, isEn),
-                                      staffName: getLocalizedStaffName(item.checkInWatermark.staffName, isEn),
+                                      staffName: getLocalizedStaffName(
+                                        item.checkInWatermark.staffName,
+                                        isEn,
+                                      ),
                                     }
                                   : undefined,
                                 note: getLocalizedExplanation(item.checkInExplanation, isEn),
                               })
                             }
                             className="p-1 rounded-md text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
-                            title={t("viewWatermarkCheckIn")}
+                            title={t('viewWatermarkCheckIn')}
                           >
                             <Camera className="w-3.5 h-3.5" />
                           </button>
@@ -543,27 +584,30 @@ function StaffShiftHistoryContent() {
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <span>{item.checkOut || "--:--"}</span>
+                        <span>{item.checkOut || '--:--'}</span>
                         {item.checkOutPhoto && (
                           <button
                             type="button"
                             onClick={() =>
                               setPreviewImageModal({
                                 isOpen: true,
-                                title: `${t("tableColCheckOut")}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                title: `${t('tableColCheckOut')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
                                 imageUrl: item.checkOutPhoto!,
                                 watermark: item.checkOutWatermark
                                   ? {
                                       ...item.checkOutWatermark,
                                       place: getLocalizedPlace(item.checkOutWatermark.place, isEn),
-                                      staffName: getLocalizedStaffName(item.checkOutWatermark.staffName, isEn),
+                                      staffName: getLocalizedStaffName(
+                                        item.checkOutWatermark.staffName,
+                                        isEn,
+                                      ),
                                     }
                                   : undefined,
                                 note: getLocalizedExplanation(item.checkOutExplanation, isEn),
                               })
                             }
                             className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
-                            title={t("viewWatermarkCheckOut")}
+                            title={t('viewWatermarkCheckOut')}
                           >
                             <Camera className="w-3.5 h-3.5" />
                           </button>
@@ -571,24 +615,24 @@ function StaffShiftHistoryContent() {
                       </div>
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
-                      {item.status === "on_time" && (
+                      {item.status === 'on_time' && (
                         <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {item.isEarlyCheckOut ? t("tableStatusEarly") : t("tableStatusOnTime")}
+                          {item.isEarlyCheckOut ? t('tableStatusEarly') : t('tableStatusOnTime')}
                         </span>
                       )}
-                      {item.status === "late" && (
+                      {item.status === 'late' && (
                         <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200">
-                          {t("tableStatusLate")}
+                          {t('tableStatusLate')}
                         </span>
                       )}
-                      {item.status === "absent" && (
+                      {item.status === 'absent' && (
                         <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-700 border border-red-200">
-                          {t("tableStatusAbsent")}
+                          {t('tableStatusAbsent')}
                         </span>
                       )}
-                      {item.status === "not_yet" && (
+                      {item.status === 'not_yet' && (
                         <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-zinc-100 text-zinc-600">
-                          {t("statusNotYet")}
+                          {t('statusNotYet')}
                         </span>
                       )}
                     </td>
@@ -599,7 +643,7 @@ function StaffShiftHistoryContent() {
                           className="text-amber-800 font-medium truncate"
                           title={getLocalizedExplanation(item.checkInExplanation, isEn)}
                         >
-                          <span className="font-bold">{t("tableLateShort")}</span> &quot;
+                          <span className="font-bold">{t('tableLateShort')}</span> &quot;
                           {getLocalizedExplanation(item.checkInExplanation, isEn)}&quot;
                         </div>
                       ) : item.checkOutExplanation ? (
@@ -607,15 +651,15 @@ function StaffShiftHistoryContent() {
                           className="text-amber-800 font-medium truncate"
                           title={getLocalizedExplanation(item.checkOutExplanation, isEn)}
                         >
-                          <span className="font-bold">{t("tableEarlyShort")}</span> &quot;
+                          <span className="font-bold">{t('tableEarlyShort')}</span> &quot;
                           {getLocalizedExplanation(item.checkOutExplanation, isEn)}&quot;
                         </div>
                       ) : item.editedByLandlord ? (
                         <span className="text-blue-600 font-semibold flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> {t("tableManualApproved")}
+                          <ShieldCheck className="w-3 h-3" /> {t('tableManualApproved')}
                         </span>
                       ) : (
-                        getLocalizedExplanation(item.note, isEn) || "--"
+                        getLocalizedExplanation(item.note, isEn) || '--'
                       )}
                     </td>
                     <td className="py-4 px-3 text-center whitespace-nowrap">
@@ -631,14 +675,20 @@ function StaffShiftHistoryContent() {
                                 ? {
                                     ...item.checkInWatermark,
                                     place: getLocalizedPlace(item.checkInWatermark.place, isEn),
-                                    staffName: getLocalizedStaffName(item.checkInWatermark.staffName, isEn),
+                                    staffName: getLocalizedStaffName(
+                                      item.checkInWatermark.staffName,
+                                      isEn,
+                                    ),
                                   }
                                 : undefined,
-                              note: getLocalizedExplanation(item.checkInExplanation || item.checkOutExplanation || item.note, isEn),
+                              note: getLocalizedExplanation(
+                                item.checkInExplanation || item.checkOutExplanation || item.note,
+                                isEn,
+                              ),
                             })
                           }
                           className="p-1.5 rounded-xl bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-600 hover:text-[#2AC1BC] transition-colors inline-flex items-center gap-1 cursor-pointer"
-                          title={t("viewPhotoProof")}
+                          title={t('viewPhotoProof')}
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -660,12 +710,8 @@ function StaffShiftHistoryContent() {
           <div className="w-10 h-10 mx-auto rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400">
             <Clock className="w-5 h-5" />
           </div>
-          <p className="text-xs font-bold text-zinc-700">
-            {t("emptyHistoryTitle")}
-          </p>
-          <p className="text-[11px] text-zinc-400">
-            {t("emptyHistoryDesc")}
-          </p>
+          <p className="text-xs font-bold text-zinc-700">{t('emptyHistoryTitle')}</p>
+          <p className="text-[11px] text-zinc-400">{t('emptyHistoryDesc')}</p>
           {hasAnyAppliedFilter && (
             <div className="pt-1">
               <button
@@ -674,7 +720,7 @@ function StaffShiftHistoryContent() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
-                <span>{t("btnResetFilters")}</span>
+                <span>{t('btnResetFilters')}</span>
               </button>
             </div>
           )}
@@ -685,27 +731,28 @@ function StaffShiftHistoryContent() {
       <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 text-xs text-zinc-600 font-medium">
           <div className="flex items-center gap-1.5">
-            <span>{t("paginationShowing")}</span>
+            <span>{t('paginationShowing')}</span>
             <input
               type="number"
               min={1}
               max={100}
               value={pageSizeInput}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                setPageSizeInput(isNaN(val) ? 0 : val);
-                setCurrentPage(1);
-                setWindowStart(1);
+              onChange={e => {
+                const val = parseInt(e.target.value, 10)
+                setPageSizeInput(isNaN(val) ? 0 : val)
+                setCurrentPage(1)
+                setWindowStart(1)
               }}
               className="w-14 px-2 py-1 text-center font-bold text-zinc-900 border border-zinc-200 rounded-lg focus:outline-none focus:border-[#2AC1BC]"
             />
-            <span>{t("paginationPerPage")}</span>
+            <span>{t('paginationPerPage')}</span>
           </div>
 
           <span className="text-zinc-300">|</span>
 
           <span>
-            {totalItems > 0 ? startIndex + 1 : 0}-{endIndex} {t("paginationOf")} {totalItems} {t("paginationItems")}
+            {totalItems > 0 ? startIndex + 1 : 0}-{endIndex} {t('paginationOf')} {totalItems}{' '}
+            {t('paginationItems')}
           </span>
         </div>
 
@@ -715,30 +762,30 @@ function StaffShiftHistoryContent() {
             onClick={handlePrevWindow}
             disabled={windowStart === 1}
             className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t("paginationJumpBack5")}
+            title={t('paginationJumpBack5')}
           >
             <ChevronsLeft className="w-4 h-4 text-zinc-600" />
           </button>
 
           <button
             type="button"
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={safeCurrentPage === 1}
             className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t("paginationPrev")}
+            title={t('paginationPrev')}
           >
             <ChevronLeft className="w-4 h-4 text-zinc-600" />
           </button>
 
-          {pageNumbers.map((num) => (
+          {pageNumbers.map(num => (
             <button
               key={num}
               type="button"
               onClick={() => setCurrentPage(num)}
               className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 safeCurrentPage === num
-                  ? "bg-[#2AC1BC] text-white shadow-2xs"
-                  : "text-zinc-600 hover:bg-zinc-100"
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  : 'text-zinc-600 hover:bg-zinc-100'
               }`}
             >
               {num}
@@ -747,10 +794,10 @@ function StaffShiftHistoryContent() {
 
           <button
             type="button"
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={safeCurrentPage >= totalPages}
             className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t("paginationNext")}
+            title={t('paginationNext')}
           >
             <ChevronRight className="w-4 h-4 text-zinc-600" />
           </button>
@@ -760,7 +807,7 @@ function StaffShiftHistoryContent() {
             onClick={handleNextWindow}
             disabled={windowStart + 5 > totalPages}
             className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t("paginationJumpForward5")}
+            title={t('paginationJumpForward5')}
           >
             <ChevronsRight className="w-4 h-4 text-zinc-600" />
           </button>
@@ -774,7 +821,7 @@ function StaffShiftHistoryContent() {
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200"
           >
             <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
@@ -813,7 +860,8 @@ function StaffShiftHistoryContent() {
                   📍 {previewImageModal.watermark.place}
                 </div>
                 <div className="text-zinc-400 font-sans text-[11px]">
-                  👤 {previewImageModal.watermark.staffName} • GPS: {previewImageModal.watermark.coordinates}
+                  👤 {previewImageModal.watermark.staffName} • GPS:{' '}
+                  {previewImageModal.watermark.coordinates}
                 </div>
               </div>
             )}
@@ -822,7 +870,7 @@ function StaffShiftHistoryContent() {
               <div className="p-4 bg-amber-50 border-t border-amber-200/80 text-xs text-amber-900 space-y-1">
                 <span className="font-bold flex items-center gap-1 text-amber-800">
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                  {t("explanationNoteTitle")}
+                  {t('explanationNoteTitle')}
                 </span>
                 <p className="italic text-zinc-800 font-medium">
                   &quot;{previewImageModal.note}&quot;
@@ -836,7 +884,7 @@ function StaffShiftHistoryContent() {
                 onClick={() => setPreviewImageModal(null)}
                 className="px-4 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                {t("btnClose")}
+                {t('btnClose')}
               </button>
             </div>
           </div>
@@ -850,7 +898,7 @@ function StaffShiftHistoryContent() {
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200 animate-in zoom-in-95 duration-200"
           >
             {/* Header */}
@@ -860,19 +908,15 @@ function StaffShiftHistoryContent() {
                   <Filter className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-zinc-900">
-                    {t("titleFilterModal")}
-                  </h3>
-                  <p className="text-[11px] text-zinc-500 font-medium">
-                    {t("descFilterModal")}
-                  </p>
+                  <h3 className="text-sm font-black text-zinc-900">{t('titleFilterModal')}</h3>
+                  <p className="text-[11px] text-zinc-500 font-medium">{t('descFilterModal')}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={handleRequestCloseFilterModal}
                 className="p-1.5 rounded-lg hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
-                title={t("btnClose")}
+                title={t('btnClose')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -885,42 +929,42 @@ function StaffShiftHistoryContent() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                    <span>{t("filterDateRange")}</span>
+                    <span>{t('filterDateRange')}</span>
                   </label>
                   {(modalStartDate || modalEndDate) && (
                     <button
                       type="button"
                       onClick={() => {
-                        setModalStartDate("");
-                        setModalEndDate("");
+                        setModalStartDate('')
+                        setModalEndDate('')
                       }}
                       className="text-[11px] text-zinc-400 hover:text-red-500 font-semibold cursor-pointer"
                     >
-                      {t("filterClearDates")}
+                      {t('filterClearDates')}
                     </button>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <span className="text-[10px] font-bold text-zinc-400 block mb-1">
-                      {t("filterFromDate")}
+                      {t('filterFromDate')}
                     </span>
                     <input
                       type="date"
                       value={modalStartDate}
-                      onChange={(e) => setModalStartDate(e.target.value)}
+                      onChange={e => setModalStartDate(e.target.value)}
                       className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                     />
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-zinc-400 block mb-1">
-                      {t("filterToDate")}
+                      {t('filterToDate')}
                     </span>
                     <input
                       type="date"
                       value={modalEndDate}
                       min={modalStartDate || undefined}
-                      onChange={(e) => setModalEndDate(e.target.value)}
+                      onChange={e => setModalEndDate(e.target.value)}
                       className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                     />
                   </div>
@@ -931,19 +975,17 @@ function StaffShiftHistoryContent() {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{t("filterShiftType")}</span>
+                  <span>{t('filterShiftType')}</span>
                 </label>
                 <div className="relative">
                   <select
                     value={modalShift}
-                    onChange={(e) => setModalShift(e.target.value)}
+                    onChange={e => setModalShift(e.target.value)}
                     disabled={isShiftsLoading}
                     className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
                   >
-                    <option value="all">
-                      {t("filterAllShifts")}
-                    </option>
-                    {availableShifts.map((s) => (
+                    <option value="all">{t('filterAllShifts')}</option>
+                    {availableShifts.map(s => (
                       <option key={s.id} value={s.name}>
                         {getShiftName(s.name)} ({s.startTime} - {s.endTime})
                       </option>
@@ -961,23 +1003,19 @@ function StaffShiftHistoryContent() {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{t("filterStatus")}</span>
+                  <span>{t('filterStatus')}</span>
                 </label>
                 <select
                   value={modalStatus}
-                  onChange={(e) =>
-                    setModalStatus(
-                      e.target.value as "all" | "on_time" | "late" | "absent"
-                    )
+                  onChange={e =>
+                    setModalStatus(e.target.value as 'all' | 'on_time' | 'late' | 'absent')
                   }
                   className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                 >
-                  <option value="all">
-                    {t("filterAllStatuses")}
-                  </option>
-                  <option value="on_time">{t("tableStatusOnTime")}</option>
-                  <option value="late">{t("tableStatusLate")}</option>
-                  <option value="absent">{t("tableStatusAbsent")}</option>
+                  <option value="all">{t('filterAllStatuses')}</option>
+                  <option value="on_time">{t('tableStatusOnTime')}</option>
+                  <option value="late">{t('tableStatusLate')}</option>
+                  <option value="absent">{t('tableStatusAbsent')}</option>
                 </select>
               </div>
             </div>
@@ -988,10 +1026,10 @@ function StaffShiftHistoryContent() {
                 type="button"
                 onClick={handleResetModalDrafts}
                 className="px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-                title={t("titleResetDialog")}
+                title={t('titleResetDialog')}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t("btnReset")}</span>
+                <span>{t('btnReset')}</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -1000,14 +1038,14 @@ function StaffShiftHistoryContent() {
                   onClick={handleRequestCloseFilterModal}
                   className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
                 >
-                  {t("btnCancel")}
+                  {t('btnCancel')}
                 </button>
                 <button
                   type="button"
                   onClick={handleApplyModalFilter}
                   className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#22a8a4] rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
                 >
-                  {t("btnApplyFilters")}
+                  {t('btnApplyFilters')}
                 </button>
               </div>
             </div>
@@ -1019,19 +1057,15 @@ function StaffShiftHistoryContent() {
       {showConfirmCloseModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-xs animate-in fade-in duration-150">
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100"
           >
             <div className="p-6">
               <div className="flex items-center gap-2.5 mb-2 text-amber-600">
                 <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                <h3 className="text-base font-bold text-zinc-900">
-                  {t("confirmCloseTitle")}
-                </h3>
+                <h3 className="text-base font-bold text-zinc-900">{t('confirmCloseTitle')}</h3>
               </div>
-              <p className="text-xs text-zinc-600 leading-relaxed">
-                {t("filterConfirmCloseDesc")}
-              </p>
+              <p className="text-xs text-zinc-600 leading-relaxed">{t('filterConfirmCloseDesc')}</p>
             </div>
             <div className="flex items-center gap-3 px-6 pb-6">
               <button
@@ -1039,33 +1073,29 @@ function StaffShiftHistoryContent() {
                 onClick={() => setShowConfirmCloseModal(false)}
                 className="flex-1 px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
-                {t("btnContinueEditing")}
+                {t('btnContinueEditing')}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDiscardAndClose}
                 className="flex-1 px-4 py-2 text-xs font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors cursor-pointer shadow-2xs"
               >
-                {t("btnDiscardAndClose")}
+                {t('btnDiscardAndClose')}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export default function StaffShiftHistoryPage() {
   return (
     <Suspense
-      fallback={
-        <div className="p-8 text-center text-xs text-zinc-400 font-bold">
-          Loading...
-        </div>
-      }
+      fallback={<div className="p-8 text-center text-xs text-zinc-400 font-bold">Loading...</div>}
     >
       <StaffShiftHistoryContent />
     </Suspense>
-  );
+  )
 }

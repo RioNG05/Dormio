@@ -11,7 +11,7 @@ import {
   HttpCode,
   Logger,
   ParseUUIDPipe,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -20,34 +20,34 @@ import {
   ApiBearerAuth,
   ApiHeader,
   ApiResponse,
-} from '@nestjs/swagger';
-import { InvoicesService } from './invoices.service';
-import { QueryLandlordInvoicesDto } from './dto/query-landlord-invoices.dto';
-import { CreateManualInvoiceDto } from './dto/create-manual-invoice.dto';
-import { ManualPaymentDto } from './dto/manual-payment.dto';
+} from '@nestjs/swagger'
+import { InvoicesService } from './invoices.service'
+import { QueryLandlordInvoicesDto } from './dto/query-landlord-invoices.dto'
+import { CreateManualInvoiceDto } from './dto/create-manual-invoice.dto'
+import { ManualPaymentDto } from './dto/manual-payment.dto'
 import {
   LandlordInvoicesListResponseDto,
   LandlordInvoiceItemDto,
-} from './dto/landlord-invoices-response.dto';
-import { QueryLandlordDebtsDto } from './dto/query-landlord-debts.dto';
+} from './dto/landlord-invoices-response.dto'
+import { QueryLandlordDebtsDto } from './dto/query-landlord-debts.dto'
 import {
   LandlordDebtsResponseDto,
   SendDebtReminderDto,
   DebtReminderResponseDto,
-} from './dto/landlord-debts-response.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { SubscriptionPackage } from '@prisma';
+} from './dto/landlord-debts-response.dto'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
 
 @ApiTags('Landlord Invoices')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('landlord/invoices')
 export class LandlordInvoicesController {
-  private readonly logger = new Logger(LandlordInvoicesController.name);
+  private readonly logger = new Logger(LandlordInvoicesController.name)
 
   constructor(private readonly invoicesService: InvoicesService) {}
 
@@ -81,12 +81,8 @@ export class LandlordInvoicesController {
   ): Promise<LandlordInvoicesListResponseDto> {
     this.logger.log(
       `GET /landlord/invoices called by user ${user?.id} for house ${boardingHouseId} (page=${query.page}, status=${query.status})`,
-    );
-    return this.invoicesService.getLandlordInvoices(
-      boardingHouseId,
-      query,
-      user.id,
-    );
+    )
+    return this.invoicesService.getLandlordInvoices(boardingHouseId, query, user.id)
   }
 
   // ─── GET /api/v1/landlord/invoices/debts ────────────────────────────────────
@@ -119,12 +115,8 @@ export class LandlordInvoicesController {
   ): Promise<LandlordDebtsResponseDto> {
     this.logger.log(
       `GET /landlord/invoices/debts called by user ${user?.id} for house ${boardingHouseId} (duration=${query.duration}, search=${query.search}, page=${query.page})`,
-    );
-    return this.invoicesService.getLandlordDebts(
-      boardingHouseId,
-      query,
-      user.id,
-    );
+    )
+    return this.invoicesService.getLandlordDebts(boardingHouseId, query, user.id)
   }
 
   // ─── POST /api/v1/landlord/invoices/debts/flip-overdue ──────────────────────
@@ -152,9 +144,9 @@ export class LandlordInvoicesController {
   ): Promise<{ success: boolean; updatedCount: number }> {
     this.logger.log(
       `POST /landlord/invoices/debts/flip-overdue called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    const result = await this.invoicesService.flipOverdueInvoices(boardingHouseId);
-    return { success: true, updatedCount: result.count };
+    )
+    const result = await this.invoicesService.flipOverdueInvoices(boardingHouseId)
+    return { success: true, updatedCount: result.count }
   }
 
   // ─── POST /api/v1/landlord/invoices/debts/remind ────────────────────────────
@@ -188,12 +180,8 @@ export class LandlordInvoicesController {
   ): Promise<DebtReminderResponseDto> {
     this.logger.log(
       `POST /landlord/invoices/debts/remind called by user ${user?.id} for room ${dto.roomId} in house ${boardingHouseId}`,
-    );
-    return this.invoicesService.sendDebtReminder(
-      boardingHouseId,
-      user.id,
-      dto,
-    );
+    )
+    return this.invoicesService.sendDebtReminder(boardingHouseId, user.id, dto)
   }
 
   // ─── GET /api/v1/landlord/invoices/:id ──────────────────────────────────────
@@ -226,12 +214,9 @@ export class LandlordInvoicesController {
   ): Promise<{ success: boolean; data: LandlordInvoiceItemDto }> {
     this.logger.log(
       `GET /landlord/invoices/${id} called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    const data = await this.invoicesService.getLandlordInvoiceDetail(
-      boardingHouseId,
-      id,
-    );
-    return { success: true, data };
+    )
+    const data = await this.invoicesService.getLandlordInvoiceDetail(boardingHouseId, id)
+    return { success: true, data }
   }
 
   // ─── POST /api/v1/landlord/invoices/manual ──────────────────────────────────
@@ -265,13 +250,9 @@ export class LandlordInvoicesController {
   ): Promise<{ success: boolean; data: LandlordInvoiceItemDto }> {
     this.logger.log(
       `POST /landlord/invoices/manual called by user ${user?.id} for room ${dto.roomId} in house ${boardingHouseId}`,
-    );
-    const data = await this.invoicesService.createManualInvoice(
-      user.id,
-      boardingHouseId,
-      dto,
-    );
-    return { success: true, data };
+    )
+    const data = await this.invoicesService.createManualInvoice(user.id, boardingHouseId, dto)
+    return { success: true, data }
   }
 
   // ─── POST /api/v1/landlord/invoices/:id/pay ─────────────────────────────────
@@ -305,12 +286,7 @@ export class LandlordInvoicesController {
   ) {
     this.logger.log(
       `POST /landlord/invoices/${id}/pay called by user ${user?.id} for house ${boardingHouseId}`,
-    );
-    return this.invoicesService.recordLandlordManualPayment(
-      user.id,
-      boardingHouseId,
-      id,
-      dto,
-    );
+    )
+    return this.invoicesService.recordLandlordManualPayment(user.id, boardingHouseId, id, dto)
   }
 }

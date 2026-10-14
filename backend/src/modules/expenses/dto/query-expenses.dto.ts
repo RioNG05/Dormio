@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class QueryExpensesDto {
   @ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class QueryExpensesDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Filter by expense category',
@@ -17,7 +17,7 @@ export class QueryExpensesDto {
   })
   @IsOptional()
   @IsString()
-  category?: string;
+  category?: string
 
   @ApiPropertyOptional({
     description: 'Filter by payment status',
@@ -26,7 +26,7 @@ export class QueryExpensesDto {
   })
   @IsOptional()
   @IsIn(['all', 'paid', 'pending', 'canceled'])
-  status?: 'all' | 'paid' | 'pending' | 'canceled' = 'all';
+  status?: 'all' | 'paid' | 'pending' | 'canceled' = 'all'
 
   @ApiPropertyOptional({
     description: 'Filter by room: "all", "property_wide", or a specific room UUID',
@@ -34,7 +34,7 @@ export class QueryExpensesDto {
   })
   @IsOptional()
   @IsString()
-  roomId?: string;
+  roomId?: string
 
   @ApiPropertyOptional({
     description: 'Filter by month (1-12 or "all")',
@@ -43,7 +43,7 @@ export class QueryExpensesDto {
   })
   @IsOptional()
   @IsString()
-  month?: string = 'all';
+  month?: string = 'all'
 
   @ApiPropertyOptional({
     description: 'Filter by year (e.g. 2026 or "all")',
@@ -52,7 +52,7 @@ export class QueryExpensesDto {
   })
   @IsOptional()
   @IsString()
-  year?: string = 'all';
+  year?: string = 'all'
 
   @ApiPropertyOptional({
     description: 'Sort criteria for expenses list',
@@ -61,7 +61,7 @@ export class QueryExpensesDto {
   })
   @IsOptional()
   @IsIn(['date_desc', 'date_asc', 'amount_desc', 'amount_asc'])
-  sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc' = 'date_desc';
+  sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc' = 'date_desc'
 
   @ApiPropertyOptional({
     description: 'Page number (default: 1)',
@@ -72,7 +72,7 @@ export class QueryExpensesDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page (default: 6 for grid, 10 for table)',
@@ -84,5 +84,5 @@ export class QueryExpensesDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 6;
+  limit?: number = 6
 }

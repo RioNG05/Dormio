@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class UploadImageDto {
   @ApiProperty({
@@ -8,7 +8,7 @@ export class UploadImageDto {
   })
   @IsString()
   @IsNotEmpty()
-  image!: string;
+  image!: string
 
   @ApiPropertyOptional({
     description: 'Target Cloudinary folder for organization',
@@ -17,5 +17,5 @@ export class UploadImageDto {
   })
   @IsOptional()
   @IsString()
-  folder?: string;
+  folder?: string
 }

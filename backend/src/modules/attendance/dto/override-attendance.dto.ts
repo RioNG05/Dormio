@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AttendanceStatus } from '@prisma';
-import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { AttendanceStatus } from '@prisma'
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
 
 export class OverrideAttendanceDto {
   @ApiProperty({
@@ -9,7 +9,7 @@ export class OverrideAttendanceDto {
   })
   @IsUUID('4', { message: 'ID lịch làm việc không hợp lệ' })
   @IsNotEmpty({ message: 'workScheduleId không được để trống' })
-  workScheduleId: string;
+  workScheduleId: string
 
   @ApiProperty({
     description: 'Overridden attendance status',
@@ -17,7 +17,7 @@ export class OverrideAttendanceDto {
     example: AttendanceStatus.on_time,
   })
   @IsEnum(AttendanceStatus, { message: 'Trạng thái chấm công không hợp lệ' })
-  status: AttendanceStatus;
+  status: AttendanceStatus
 
   @ApiPropertyOptional({
     description: 'Check-in timestamp (ISO string)',
@@ -25,7 +25,7 @@ export class OverrideAttendanceDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'Giờ check-in không hợp lệ' })
-  checkIn?: string;
+  checkIn?: string
 
   @ApiPropertyOptional({
     description: 'Check-out timestamp (ISO string)',
@@ -33,7 +33,7 @@ export class OverrideAttendanceDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'Giờ check-out không hợp lệ' })
-  checkOut?: string;
+  checkOut?: string
 
   @ApiPropertyOptional({
     description: 'Landlord adjustment note or reason',
@@ -41,5 +41,5 @@ export class OverrideAttendanceDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

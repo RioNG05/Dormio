@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class AssignRoleDto {
   @ApiPropertyOptional({
@@ -8,7 +8,7 @@ export class AssignRoleDto {
   })
   @IsOptional()
   @IsString()
-  positionId?: string;
+  positionId?: string
 
   @ApiPropertyOptional({
     description: 'Inline creation of a new job position name if positionId is not supplied',
@@ -17,7 +17,7 @@ export class AssignRoleDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  newPositionName?: string;
+  newPositionName?: string
 
   @ApiPropertyOptional({
     description: 'Duty description / task list for inline position creation',
@@ -25,5 +25,5 @@ export class AssignRoleDto {
   })
   @IsOptional()
   @IsString()
-  newPositionDescription?: string;
+  newPositionDescription?: string
 }

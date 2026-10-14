@@ -9,7 +9,7 @@ import {
   Logger,
   HttpStatus,
   ParseIntPipe,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -17,29 +17,27 @@ import {
   ApiResponse,
   ApiOkResponse,
   ApiParam,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { Public } from '../../common/decorators/public.decorator';
-import { PaymentsService } from './payments.service';
-import {
-  VietQrPaymentInstructionDto,
-} from './dto/initiate-payment.dto';
+} from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { Public } from '../../common/decorators/public.decorator'
+import { PaymentsService } from './payments.service'
+import { VietQrPaymentInstructionDto } from './dto/initiate-payment.dto'
 import {
   ConfirmPaymentDto,
   PaymentExecutionResultDto,
   VietQrWebhookDto,
-} from './dto/confirm-payment.dto';
+} from './dto/confirm-payment.dto'
 import {
   InvoicePayOsCheckoutResponseDto,
   InvoicePaymentStatusResponseDto,
-} from './dto/invoice-payos-checkout.dto';
+} from './dto/invoice-payos-checkout.dto'
 
 @ApiTags('Payments & VietQR')
 @Controller()
 export class PaymentsController {
-  private readonly logger = new Logger(PaymentsController.name);
+  private readonly logger = new Logger(PaymentsController.name)
 
-  constructor(private readonly paymentsService: PaymentsService) { }
+  constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('tenant/payments/payos-checkout/:invoiceId')
   @ApiBearerAuth('JWT')
@@ -66,11 +64,9 @@ export class PaymentsController {
     @Request() req: any,
     @Param('invoiceId') invoiceId: string,
   ): Promise<InvoicePayOsCheckoutResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(
-      `POST /api/v1/tenant/payments/payos-checkout/${invoiceId} by user ${userId}`,
-    );
-    return this.paymentsService.createInvoicePayOsCheckout(userId, invoiceId);
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`POST /api/v1/tenant/payments/payos-checkout/${invoiceId} by user ${userId}`)
+    return this.paymentsService.createInvoicePayOsCheckout(userId, invoiceId)
   }
 
   @Get('tenant/payments/order-status/:orderCode')
@@ -98,11 +94,9 @@ export class PaymentsController {
     @Request() req: any,
     @Param('orderCode', ParseIntPipe) orderCode: number,
   ): Promise<InvoicePaymentStatusResponseDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(
-      `GET /api/v1/tenant/payments/order-status/${orderCode} by user ${userId}`,
-    );
-    return this.paymentsService.getInvoicePaymentStatus(userId, orderCode);
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/payments/order-status/${orderCode} by user ${userId}`)
+    return this.paymentsService.getInvoicePaymentStatus(userId, orderCode)
   }
 
   @Get('tenant/payments/instruction/:invoiceId')
@@ -130,11 +124,9 @@ export class PaymentsController {
     @Request() req: any,
     @Param('invoiceId') invoiceId: string,
   ): Promise<VietQrPaymentInstructionDto> {
-    const userId = req.user?.id || req.user?.sub;
-    this.logger.log(
-      `GET /api/v1/tenant/payments/instruction/${invoiceId} by user ${userId}`,
-    );
-    return this.paymentsService.getVietQrInstruction(userId, invoiceId);
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/tenant/payments/instruction/${invoiceId} by user ${userId}`)
+    return this.paymentsService.getVietQrInstruction(userId, invoiceId)
   }
 
   @Post('tenant/payments/confirm')
@@ -161,11 +153,11 @@ export class PaymentsController {
     @Request() req: any,
     @Body() dto: ConfirmPaymentDto,
   ): Promise<PaymentExecutionResultDto> {
-    const userId = req.user?.id || req.user?.sub;
+    const userId = req.user?.id || req.user?.sub
     this.logger.log(
       `POST /api/v1/tenant/payments/confirm for invoice ${dto.invoiceId} by user ${userId}`,
-    );
-    return this.paymentsService.confirmInvoicePayment(userId, dto);
+    )
+    return this.paymentsService.confirmInvoicePayment(userId, dto)
   }
 
   @Public()
@@ -187,10 +179,8 @@ export class PaymentsController {
   async handleVietQrWebhook(
     @Body() dto: VietQrWebhookDto,
   ): Promise<{ success: boolean; message: string }> {
-    this.logger.log(
-      `POST /api/v1/payments/webhook/vietqr received ref: ${dto.transactionRef}`,
-    );
-    return this.paymentsService.handleVietQrWebhook(dto);
+    this.logger.log(`POST /api/v1/payments/webhook/vietqr received ref: ${dto.transactionRef}`)
+    return this.paymentsService.handleVietQrWebhook(dto)
   }
 
   @Public()
@@ -209,10 +199,8 @@ export class PaymentsController {
       },
     },
   })
-  async handlePayOsWebhook(
-    @Body() body: any,
-  ): Promise<{ success: boolean; message: string }> {
-    this.logger.log('POST /api/v1/payments/webhook/payos received payload');
-    return this.paymentsService.handlePayOsWebhook(body);
+  async handlePayOsWebhook(@Body() body: any): Promise<{ success: boolean; message: string }> {
+    this.logger.log('POST /api/v1/payments/webhook/payos received payload')
+    return this.paymentsService.handlePayOsWebhook(body)
   }
 }

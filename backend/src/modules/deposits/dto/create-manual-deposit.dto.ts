@@ -1,14 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsUUID,
-  IsNotEmpty,
-  IsNumber,
-  Min,
-  IsOptional,
-  IsString,
-  Matches,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsUUID, IsNotEmpty, IsNumber, Min, IsOptional, IsString, Matches } from 'class-validator'
+import { Type } from 'class-transformer'
 
 /**
  * DTO for UC-L-10: Manual Deposit Entry
@@ -21,7 +13,7 @@ export class CreateManualDepositDto {
   })
   @IsUUID('4', { message: 'Mã phòng phải là định dạng UUID hợp lệ' })
   @IsNotEmpty({ message: 'Mã phòng không được để trống' })
-  roomId: string;
+  roomId: string
 
   @ApiProperty({
     description: 'Deposit amount in VND',
@@ -31,7 +23,7 @@ export class CreateManualDepositDto {
   @Type(() => Number)
   @IsNumber({}, { message: 'Tiền cọc phải là số hợp lệ' })
   @Min(1, { message: 'Tiền cọc phải lớn hơn 0' })
-  amount: number;
+  amount: number
 
   @ApiPropertyOptional({
     description: 'Full name of the prospective tenant holding the room',
@@ -39,7 +31,7 @@ export class CreateManualDepositDto {
   })
   @IsOptional()
   @IsString({ message: 'Tên người đặt cọc phải là chuỗi ký tự' })
-  tenantName?: string;
+  tenantName?: string
 
   @ApiPropertyOptional({
     description: 'Vietnamese phone number of the prospective tenant (10 digits starting with 0)',
@@ -50,7 +42,7 @@ export class CreateManualDepositDto {
   @Matches(/^(0[3|5|7|8|9])[0-9]{8}$/, {
     message: 'Số điện thoại phải là số di động Việt Nam hợp lệ (10 chữ số)',
   })
-  tenantPhone?: string;
+  tenantPhone?: string
 
   @ApiPropertyOptional({
     description: 'Holding expiry date / deadline to finalize contract (YYYY-MM-DD or ISO string)',
@@ -58,7 +50,7 @@ export class CreateManualDepositDto {
   })
   @IsOptional()
   @IsString()
-  expiryDate?: string;
+  expiryDate?: string
 
   @ApiPropertyOptional({
     description: 'Landlord note or remarks about the deposit',
@@ -66,5 +58,5 @@ export class CreateManualDepositDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

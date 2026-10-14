@@ -1,15 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { AttendanceStatus } from '@prisma';
-import { Type } from 'class-transformer';
-import {
-  IsDateString,
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Min,
-} from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { AttendanceStatus } from '@prisma'
+import { Type } from 'class-transformer'
+import { IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator'
 
 export class QueryAttendanceDto {
   @ApiPropertyOptional({
@@ -18,7 +10,7 @@ export class QueryAttendanceDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'startDate phải có định dạng YYYY-MM-DD' })
-  startDate?: string;
+  startDate?: string
 
   @ApiPropertyOptional({
     description: 'End date filter (YYYY-MM-DD)',
@@ -26,7 +18,7 @@ export class QueryAttendanceDto {
   })
   @IsOptional()
   @IsDateString({}, { message: 'endDate phải có định dạng YYYY-MM-DD' })
-  endDate?: string;
+  endDate?: string
 
   @ApiPropertyOptional({
     description: 'Filter by employee UUID',
@@ -34,7 +26,7 @@ export class QueryAttendanceDto {
   })
   @IsOptional()
   @IsUUID('4', { message: 'ID nhân viên không hợp lệ' })
-  employeeId?: string;
+  employeeId?: string
 
   @ApiPropertyOptional({
     description: 'Filter by shift UUID',
@@ -42,7 +34,7 @@ export class QueryAttendanceDto {
   })
   @IsOptional()
   @IsUUID('4', { message: 'ID ca làm việc không hợp lệ' })
-  shiftId?: string;
+  shiftId?: string
 
   @ApiPropertyOptional({
     description: 'Filter by attendance status',
@@ -51,7 +43,7 @@ export class QueryAttendanceDto {
   })
   @IsOptional()
   @IsEnum(AttendanceStatus, { message: 'Trạng thái chấm công không hợp lệ' })
-  status?: AttendanceStatus;
+  status?: AttendanceStatus
 
   @ApiPropertyOptional({
     description: 'Filter search query (employee name or phone)',
@@ -59,7 +51,7 @@ export class QueryAttendanceDto {
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string
 
   @ApiPropertyOptional({
     description: 'Page number for list view pagination',
@@ -70,7 +62,7 @@ export class QueryAttendanceDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = 1
 
   @ApiPropertyOptional({
     description: 'Items per page for list view pagination',
@@ -81,5 +73,5 @@ export class QueryAttendanceDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit?: number = 10
 }

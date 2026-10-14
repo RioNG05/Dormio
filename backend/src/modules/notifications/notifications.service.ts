@@ -5,17 +5,17 @@ import {
   BadRequestException,
   Logger,
   OnModuleInit,
-} from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { BroadcastAnnouncementDto } from './dto/broadcast-announcement.dto';
-import { AnnouncementQueryDto } from './dto/announcement-query.dto';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+} from '@nestjs/common'
+import { InjectQueue } from '@nestjs/bullmq'
+import { Queue } from 'bullmq'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { BroadcastAnnouncementDto } from './dto/broadcast-announcement.dto'
+import { AnnouncementQueryDto } from './dto/announcement-query.dto'
+import { CreateNotificationDto } from './dto/create-notification.dto'
 import {
   LandlordAnnouncementItemDto,
   LandlordAnnouncementsResponseDto,
-} from './dto/landlord-announcement-response.dto';
+} from './dto/landlord-announcement-response.dto'
 import {
   CreateMassNotificationDto,
   MassNotificationQueryDto,
@@ -24,48 +24,48 @@ import {
   AdminNotifyChannel,
   AdminNotifyTarget,
   AdminNotifyStatus,
-} from './dto/admin-mass-notification.dto';
+} from './dto/admin-mass-notification.dto'
 
-export const NOTIFICATION_QUEUE = 'notifications';
+export const NOTIFICATION_QUEUE = 'notifications'
 
 export interface OnboardingNotificationParams {
   /** The landlord who triggered contract creation */
-  senderId: string;
+  senderId: string
   /** The tenant who should receive the notification */
-  receiverId: string;
+  receiverId: string
   /** Boarding house context */
-  boardingHouseId: string;
+  boardingHouseId: string
   /** The contract ID for contextual content */
-  contractId: string;
+  contractId: string
 }
 
 export interface BillingNotificationParams {
   /** The boarding house owner (landlord) as sender */
-  senderId: string;
+  senderId: string
   /** The primary tenant of the contract */
-  receiverId: string;
-  boardingHouseId: string;
-  contractId: string;
+  receiverId: string
+  boardingHouseId: string
+  contractId: string
 }
 
 export interface BillingDueNotificationParams extends BillingNotificationParams {
   /** Whether the room has any active metered services */
-  hasMeteredServices: boolean;
+  hasMeteredServices: boolean
 }
 
 export interface DebtReminderNotificationParams {
-  senderId: string;
-  receiverId: string;
-  boardingHouseId: string;
-  contractId?: string;
-  roomNumber: string;
-  totalDebtAmount: number;
-  customNote?: string;
+  senderId: string
+  receiverId: string
+  boardingHouseId: string
+  contractId?: string
+  roomNumber: string
+  totalDebtAmount: number
+  customNote?: string
 }
 
 @Injectable()
 export class NotificationsService implements OnModuleInit {
-  private readonly logger = new Logger(NotificationsService.name);
+  private readonly logger = new Logger(NotificationsService.name)
 
   constructor(
     private readonly prisma: PrismaService,
@@ -73,7 +73,7 @@ export class NotificationsService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.ensureDefaultNotifications();
+    await this.ensureDefaultNotifications()
   }
 
   /**
@@ -83,12 +83,12 @@ export class NotificationsService implements OnModuleInit {
     try {
       const admin = await this.prisma.user.findFirst({
         where: { role: 'admin' },
-      });
-      if (!admin) return;
+      })
+      if (!admin) return
 
       const happyNewYearCount = await this.prisma.notification.count({
         where: { type: 'happy_new_year' },
-      });
+      })
 
       if (happyNewYearCount === 0) {
         await this.prisma.notification.create({
@@ -99,25 +99,26 @@ export class NotificationsService implements OnModuleInit {
             type: 'happy_new_year',
             content: JSON.stringify({
               title: 'Chúc mừng năm mới từ Dormio Team',
-              content: 'Dormio kính chúc Quý khách hàng và cư dân một năm mới An Khang Thịnh Vượng, Vạn Sự Như Ý!',
+              content:
+                'Dormio kính chúc Quý khách hàng và cư dân một năm mới An Khang Thịnh Vượng, Vạn Sự Như Ý!',
               targetUrl: null,
             }),
             isRead: false,
           },
-        });
-        this.logger.log('Seeded global happy_new_year notification in database');
+        })
+        this.logger.log('Seeded global happy_new_year notification in database')
       }
 
       // Check tenant notifications
       const tenants = await this.prisma.user.findMany({
         where: { role: 'tenant' },
         take: 5,
-      });
+      })
 
       for (const tenant of tenants) {
         const notifCount = await this.prisma.notification.count({
           where: { receiverId: tenant.id },
-        });
+        })
 
         if (notifCount === 0) {
           await this.prisma.notification.createMany({
@@ -128,7 +129,8 @@ export class NotificationsService implements OnModuleInit {
                 type: 'rental_payment',
                 content: JSON.stringify({
                   title: 'Đến hạn thanh toán tiền trọ',
-                  content: 'Hóa đơn tiền phòng tháng 09/2026 đã sẵn sàng. Hạn thanh toán đến hết ngày 15/09/2026.',
+                  content:
+                    'Hóa đơn tiền phòng tháng 09/2026 đã sẵn sàng. Hạn thanh toán đến hết ngày 15/09/2026.',
                   targetUrl: '/tenant/invoices',
                 }),
                 isRead: false,
@@ -139,7 +141,8 @@ export class NotificationsService implements OnModuleInit {
                 type: 'contract_created',
                 content: JSON.stringify({
                   title: 'Hợp đồng thuê phòng mới',
-                  content: 'Chủ nhà trọ đã gửi bản cập nhật hợp đồng thuê phòng cho bạn. Vui lòng kiểm tra.',
+                  content:
+                    'Chủ nhà trọ đã gửi bản cập nhật hợp đồng thuê phòng cho bạn. Vui lòng kiểm tra.',
                   targetUrl: '/tenant/contracts',
                 }),
                 isRead: true,
@@ -150,17 +153,18 @@ export class NotificationsService implements OnModuleInit {
                 type: 'meter_reading',
                 content: JSON.stringify({
                   title: 'Chỉ số điện nước kỳ mới',
-                  content: 'Đã có chỉ số điện nước tháng này. Nhấn để kiểm tra và xác nhận số liệu.',
+                  content:
+                    'Đã có chỉ số điện nước tháng này. Nhấn để kiểm tra và xác nhận số liệu.',
                   targetUrl: '/tenant/meter-readings',
                 }),
                 isRead: true,
               },
             ],
-          });
+          })
         }
       }
     } catch (err: any) {
-      this.logger.warn(`Failed to seed default notifications: ${err?.message}`);
+      this.logger.warn(`Failed to seed default notifications: ${err?.message}`)
     }
   }
 
@@ -174,10 +178,8 @@ export class NotificationsService implements OnModuleInit {
    *
    * @param params sender/receiver/boardingHouse context
    */
-  async createOnboardingNotification(
-    params: OnboardingNotificationParams,
-  ): Promise<void> {
-    const { senderId, receiverId, boardingHouseId, contractId } = params;
+  async createOnboardingNotification(params: OnboardingNotificationParams): Promise<void> {
+    const { senderId, receiverId, boardingHouseId, contractId } = params
 
     // 1. Persist the in-app notification row
     const notification = await this.prisma.notification.create({
@@ -189,11 +191,9 @@ export class NotificationsService implements OnModuleInit {
         content: 'Chủ trọ đã tạo hợp đồng cho bạn. Vui lòng kiểm tra thông tin.',
         isRead: false,
       },
-    });
+    })
 
-    this.logger.log(
-      `Onboarding notification created: ${notification.id} for tenant ${receiverId}`,
-    );
+    this.logger.log(`Onboarding notification created: ${notification.id} for tenant ${receiverId}`)
 
     // 2. Enqueue async dispatch (SMS/Zalo/Email) — never call 3rd-party here
     await this.notifQueue.add('dispatch-notification', {
@@ -201,11 +201,9 @@ export class NotificationsService implements OnModuleInit {
       type: 'contract_created',
       receiverId,
       contractId,
-    });
+    })
 
-    this.logger.debug(
-      `Notification dispatch job enqueued for notification ${notification.id}`,
-    );
+    this.logger.debug(`Notification dispatch job enqueued for notification ${notification.id}`)
   }
 
   // ─── Read notifications for the authenticated user or guest ─────────────────
@@ -216,25 +214,25 @@ export class NotificationsService implements OnModuleInit {
    * If userId is omitted (guest): includes global system announcements (e.g. holiday greetings).
    */
   async findAllForUser(userId?: string) {
-    let whereClause: any;
+    let whereClause: any
 
     if (userId) {
       // Find active houses associated with the user
       const activeContracts = await this.prisma.tenantContract.findMany({
         where: { tenantId: userId, contract: { status: 'active' } },
         select: { contract: { select: { room: { select: { boardingHouseId: true } } } } },
-      });
+      })
       const tenantHouseIds = activeContracts
-        .map((c) => c.contract?.room?.boardingHouseId)
-        .filter((id): id is string => Boolean(id));
+        .map(c => c.contract?.room?.boardingHouseId)
+        .filter((id): id is string => Boolean(id))
 
       const ownedHouses = await this.prisma.boardingHouse.findMany({
         where: { ownerId: userId, status: 'active' },
         select: { id: true },
-      });
-      const landlordHouseIds = ownedHouses.map((h) => h.id);
+      })
+      const landlordHouseIds = ownedHouses.map(h => h.id)
 
-      const relevantHouseIds = Array.from(new Set([...tenantHouseIds, ...landlordHouseIds]));
+      const relevantHouseIds = Array.from(new Set([...tenantHouseIds, ...landlordHouseIds]))
 
       whereClause = {
         OR: [
@@ -244,13 +242,13 @@ export class NotificationsService implements OnModuleInit {
             : []),
           { receiverId: null, boardingHouseId: null },
         ],
-      };
+      }
     } else {
       // Guest: global system broadcasts only
       whereClause = {
         receiverId: null,
         boardingHouseId: null,
-      };
+      }
     }
 
     const rawList = await this.prisma.notification.findMany({
@@ -267,42 +265,42 @@ export class NotificationsService implements OnModuleInit {
         isRead: true,
         createdAt: true,
       },
-    });
+    })
 
-    let userRole = 'tenant';
+    let userRole = 'tenant'
     if (userId) {
       const u = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { role: true },
-      });
-      if (u) userRole = u.role;
+      })
+      if (u) userRole = u.role
     }
 
-    return rawList.map((item) => this.formatNotificationItem(item, userRole));
+    return rawList.map(item => this.formatNotificationItem(item, userRole))
   }
 
   private formatNotificationItem(item: any, userRole: string) {
-    let title: string | undefined;
-    let content = item.content;
-    let targetUrl: string | null = null;
+    let title: string | undefined
+    let content = item.content
+    let targetUrl: string | null = null
 
     if (typeof content === 'string' && content.trim().startsWith('{')) {
       try {
-        const parsed = JSON.parse(content);
-        if (parsed.title) title = parsed.title;
-        if (parsed.content) content = parsed.content;
-        if (parsed.targetUrl !== undefined) targetUrl = parsed.targetUrl;
+        const parsed = JSON.parse(content)
+        if (parsed.title) title = parsed.title
+        if (parsed.content) content = parsed.content
+        if (parsed.targetUrl !== undefined) targetUrl = parsed.targetUrl
       } catch {
         // Fallback to raw string
       }
     }
 
     if (targetUrl === null || targetUrl === undefined) {
-      targetUrl = this.resolveTargetUrl(item.type, userRole);
+      targetUrl = this.resolveTargetUrl(item.type, userRole)
     }
 
     if (!title) {
-      title = this.resolveDefaultTitle(item.type, content);
+      title = this.resolveDefaultTitle(item.type, content)
     }
 
     return {
@@ -316,11 +314,11 @@ export class NotificationsService implements OnModuleInit {
       isRead: item.isRead,
       targetUrl,
       createdAt: item.createdAt,
-    };
+    }
   }
 
   private resolveTargetUrl(type: string, userRole?: string): string | null {
-    const t = type.toLowerCase();
+    const t = type.toLowerCase()
     // System broadcasts & greetings: no redirection
     if (
       t === 'broadcast' ||
@@ -331,7 +329,7 @@ export class NotificationsService implements OnModuleInit {
       t.includes('greeting') ||
       t.includes('tet')
     ) {
-      return null;
+      return null
     }
 
     if (
@@ -342,40 +340,40 @@ export class NotificationsService implements OnModuleInit {
       t.includes('invoice') ||
       t.includes('payment')
     ) {
-      return userRole === 'landlord' ? '/landlord/invoices' : '/tenant/invoices';
+      return userRole === 'landlord' ? '/landlord/invoices' : '/tenant/invoices'
     }
 
     if (t === 'contract_created' || t === 'contract_expiring' || t.includes('contract')) {
-      return userRole === 'landlord' ? '/landlord/contracts' : '/tenant/contracts';
+      return userRole === 'landlord' ? '/landlord/contracts' : '/tenant/contracts'
     }
 
     if (t === 'meter_reading' || t.includes('meter')) {
-      return userRole === 'landlord' ? '/landlord/meter-readings' : '/tenant/meter-readings';
+      return userRole === 'landlord' ? '/landlord/meter-readings' : '/tenant/meter-readings'
     }
 
     if (t === 'grievance' || t === 'grievance_resolved' || t.includes('support')) {
-      if (userRole === 'admin') return '/admin/boarding-houses';
-      if (userRole === 'landlord') return '/landlord/maintenance';
-      return '/tenant/support';
+      if (userRole === 'admin') return '/admin/boarding-houses'
+      if (userRole === 'landlord') return '/landlord/maintenance'
+      return '/tenant/support'
     }
 
-    return null;
+    return null
   }
 
   private resolveDefaultTitle(type: string, content: string): string {
-    const t = type.toLowerCase();
-    if (t === 'happy_new_year' || t.includes('tet')) return 'Chúc mừng năm mới từ Dormio Team';
+    const t = type.toLowerCase()
+    if (t === 'happy_new_year' || t.includes('tet')) return 'Chúc mừng năm mới từ Dormio Team'
     if (t === 'billing_due' || t === 'rental_payment' || t === 'billing_reminder')
-      return 'Đến hạn thanh toán tiền trọ';
-    if (t === 'contract_created') return 'Hợp đồng thuê phòng mới';
-    if (t === 'contract_expiring') return 'Hợp đồng thuê sắp hết hạn';
-    if (t === 'meter_reading') return 'Thông báo chỉ số điện nước';
-    if (t === 'grievance_resolved') return 'Khiếu nại đã được xử lý';
-    if (t === 'grievance') return 'Thông báo khiếu nại phòng';
-    if (t === 'announcement' || t === 'general_notice') return 'Thông báo từ Ban quản lý';
-    if (t === 'system_broadcast') return 'Thông báo hệ thống';
+      return 'Đến hạn thanh toán tiền trọ'
+    if (t === 'contract_created') return 'Hợp đồng thuê phòng mới'
+    if (t === 'contract_expiring') return 'Hợp đồng thuê sắp hết hạn'
+    if (t === 'meter_reading') return 'Thông báo chỉ số điện nước'
+    if (t === 'grievance_resolved') return 'Khiếu nại đã được xử lý'
+    if (t === 'grievance') return 'Thông báo khiếu nại phòng'
+    if (t === 'announcement' || t === 'general_notice') return 'Thông báo từ Ban quản lý'
+    if (t === 'system_broadcast') return 'Thông báo hệ thống'
 
-    return content.split('\n')[0]?.slice(0, 45) || 'Thông báo mới';
+    return content.split('\n')[0]?.slice(0, 45) || 'Thông báo mới'
   }
 
   // ─── Mark as read ────────────────────────────────────────────────────────────
@@ -386,26 +384,26 @@ export class NotificationsService implements OnModuleInit {
   async markAsRead(notificationId: string, userId?: string): Promise<void> {
     const notification = await this.prisma.notification.findUnique({
       where: { id: notificationId },
-    });
+    })
 
     if (!notification) {
-      throw new NotFoundException('notification_not_found');
+      throw new NotFoundException('notification_not_found')
     }
 
     if (notification.receiverId && userId && notification.receiverId !== userId) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { role: true },
-      });
+      })
       if (user?.role !== 'admin') {
-        throw new ForbiddenException('notification_not_owned_by_user');
+        throw new ForbiddenException('notification_not_owned_by_user')
       }
     }
 
     await this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
-    });
+    })
   }
 
   // ─── Mark all notifications as read ──────────────────────────────────────────
@@ -421,7 +419,7 @@ export class NotificationsService implements OnModuleInit {
           isRead: false,
         },
         data: { isRead: true },
-      });
+      })
 
       const broadcastNotifs = await this.prisma.notification.updateMany({
         where: {
@@ -429,9 +427,9 @@ export class NotificationsService implements OnModuleInit {
           isRead: false,
         },
         data: { isRead: true },
-      });
+      })
 
-      return { success: true, count: userNotifs.count + broadcastNotifs.count };
+      return { success: true, count: userNotifs.count + broadcastNotifs.count }
     } else {
       const result = await this.prisma.notification.updateMany({
         where: {
@@ -439,8 +437,8 @@ export class NotificationsService implements OnModuleInit {
           isRead: false,
         },
         data: { isRead: true },
-      });
-      return { success: true, count: result.count };
+      })
+      return { success: true, count: result.count }
     }
   }
 
@@ -456,7 +454,7 @@ export class NotificationsService implements OnModuleInit {
           content: dto.content.trim(),
           targetUrl: dto.targetUrl?.trim() || null,
         })
-      : dto.content.trim();
+      : dto.content.trim()
 
     const notif = await this.prisma.notification.create({
       data: {
@@ -467,10 +465,10 @@ export class NotificationsService implements OnModuleInit {
         content: payload,
         isRead: false,
       },
-    });
+    })
 
-    this.logger.log(`Created in-app notification ${notif.id} of type ${notif.type}`);
-    return this.formatNotificationItem(notif, 'tenant');
+    this.logger.log(`Created in-app notification ${notif.id} of type ${notif.type}`)
+    return this.formatNotificationItem(notif, 'tenant')
   }
 
   // ─── UC-T-02: Billing reminder (5 days before due date) ─────────────────────
@@ -483,10 +481,8 @@ export class NotificationsService implements OnModuleInit {
    *
    * Must be called OUTSIDE any active $transaction.
    */
-  async createBillingReminderNotification(
-    params: BillingNotificationParams,
-  ): Promise<void> {
-    const { senderId, receiverId, boardingHouseId, contractId } = params;
+  async createBillingReminderNotification(params: BillingNotificationParams): Promise<void> {
+    const { senderId, receiverId, boardingHouseId, contractId } = params
 
     const notification = await this.prisma.notification.create({
       data: {
@@ -497,18 +493,18 @@ export class NotificationsService implements OnModuleInit {
         content: 'Sắp đến hạn đóng tiền trọ. Vui lòng chuẩn bị thanh toán đúng hạn.',
         isRead: false,
       },
-    });
+    })
 
     this.logger.log(
       `billing_reminder notification created: ${notification.id} for tenant ${receiverId}`,
-    );
+    )
 
     await this.notifQueue.add('dispatch-notification', {
       notificationId: notification.id,
       type: 'billing_reminder',
       receiverId,
       contractId,
-    });
+    })
   }
 
   // ─── UC-T-02: Billing due (on the due date itself) ───────────────────────────
@@ -522,15 +518,12 @@ export class NotificationsService implements OnModuleInit {
    *
    * Must be called OUTSIDE any active $transaction.
    */
-  async createBillingDueNotification(
-    params: BillingDueNotificationParams,
-  ): Promise<void> {
-    const { senderId, receiverId, boardingHouseId, contractId, hasMeteredServices } =
-      params;
+  async createBillingDueNotification(params: BillingDueNotificationParams): Promise<void> {
+    const { senderId, receiverId, boardingHouseId, contractId, hasMeteredServices } = params
 
     const content = hasMeteredServices
       ? 'Đã đến ngày thanh toán. Vui lòng nhập chỉ số điện nước để tạo hóa đơn.'
-      : 'Hóa đơn tháng này đã sẵn sàng. Vui lòng thanh toán đúng hạn.';
+      : 'Hóa đơn tháng này đã sẵn sàng. Vui lòng thanh toán đúng hạn.'
 
     const notification = await this.prisma.notification.create({
       data: {
@@ -541,12 +534,12 @@ export class NotificationsService implements OnModuleInit {
         content,
         isRead: false,
       },
-    });
+    })
 
     this.logger.log(
       `billing_due notification created: ${notification.id} for tenant ${receiverId} ` +
         `(hasMeteredServices=${hasMeteredServices})`,
-    );
+    )
 
     await this.notifQueue.add('dispatch-notification', {
       notificationId: notification.id,
@@ -554,7 +547,7 @@ export class NotificationsService implements OnModuleInit {
       receiverId,
       contractId,
       hasMeteredServices,
-    });
+    })
   }
 
   // ─── UC-L-16: Debt reminder notification ───────────────────────────────────
@@ -565,9 +558,7 @@ export class NotificationsService implements OnModuleInit {
    * Triggered by the landlord when requesting payment for outstanding room debts.
    * Must be called OUTSIDE any active $transaction.
    */
-  async createDebtReminderNotification(
-    params: DebtReminderNotificationParams,
-  ): Promise<void> {
+  async createDebtReminderNotification(params: DebtReminderNotificationParams): Promise<void> {
     const {
       senderId,
       receiverId,
@@ -576,12 +567,12 @@ export class NotificationsService implements OnModuleInit {
       roomNumber,
       totalDebtAmount,
       customNote,
-    } = params;
+    } = params
 
-    const formattedAmount = totalDebtAmount.toLocaleString('vi-VN');
+    const formattedAmount = totalDebtAmount.toLocaleString('vi-VN')
     const content = customNote
       ? `Nhắc nhở nợ tiền phòng ${roomNumber}: Số tiền còn nợ là ${formattedAmount} ₫. Lời nhắn từ chủ trọ: "${customNote}"`
-      : `Nhắc nhở nợ tiền phòng ${roomNumber}: Bạn đang có khoản nợ tiền phòng chưa thanh toán là ${formattedAmount} ₫. Vui lòng kiểm tra và thanh toán sớm.`;
+      : `Nhắc nhở nợ tiền phòng ${roomNumber}: Bạn đang có khoản nợ tiền phòng chưa thanh toán là ${formattedAmount} ₫. Vui lòng kiểm tra và thanh toán sớm.`
 
     const notification = await this.prisma.notification.create({
       data: {
@@ -592,49 +583,47 @@ export class NotificationsService implements OnModuleInit {
         content,
         isRead: false,
       },
-    });
+    })
 
     this.logger.log(
       `debt_reminder notification created: ${notification.id} for tenant ${receiverId} in room ${roomNumber}`,
-    );
+    )
 
     await this.notifQueue.add('dispatch-notification', {
       notificationId: notification.id,
       type: 'debt_reminder',
       receiverId,
       contractId,
-    });
+    })
   }
 
   // ─── Helper: Parse Announcement Content ────────────────────────────────────
 
-  private parseAnnouncementContent(
-    content: string,
-  ): {
-    title: string;
-    body: string;
-    category: string;
-    targetScope: string;
-    channel: string;
+  private parseAnnouncementContent(content: string): {
+    title: string
+    body: string
+    category: string
+    targetScope: string
+    channel: string
   } {
     try {
       if (content.trim().startsWith('{')) {
-        const parsed = JSON.parse(content);
+        const parsed = JSON.parse(content)
         return {
           title: parsed.title || 'Thông báo mới',
           body: parsed.content || parsed.body || content,
           category: parsed.category || 'Nội quy',
           targetScope: parsed.targetScope || 'Toàn bộ tòa nhà',
           channel: parsed.channel || 'Thông báo hệ thống',
-        };
+        }
       }
     } catch {
       // Fallback to text parsing
     }
 
-    const lines = content.split('\n');
-    const title = lines[0]?.trim() || 'Thông báo mới';
-    const body = lines.length > 1 ? lines.slice(1).join('\n').trim() : content;
+    const lines = content.split('\n')
+    const title = lines[0]?.trim() || 'Thông báo mới'
+    const body = lines.length > 1 ? lines.slice(1).join('\n').trim() : content
 
     return {
       title,
@@ -642,7 +631,7 @@ export class NotificationsService implements OnModuleInit {
       category: 'Nội quy',
       targetScope: 'Toàn bộ tòa nhà',
       channel: 'Thông báo hệ thống',
-    };
+    }
   }
 
   // ─── UC-L-13: Broadcast Announcement ───────────────────────────────────────
@@ -663,7 +652,7 @@ export class NotificationsService implements OnModuleInit {
       category: dto.category?.trim() || 'Nội quy',
       targetScope: dto.targetScope?.trim() || 'Toàn bộ tòa nhà',
       channel: dto.channel?.trim() || 'Thông báo hệ thống',
-    });
+    })
 
     // 1. Insert Notification record (receiverId = null is the broadcast convention)
     const notification = await this.prisma.notification.create({
@@ -683,11 +672,11 @@ export class NotificationsService implements OnModuleInit {
           },
         },
       },
-    });
+    })
 
     this.logger.log(
       `Broadcast announcement created: ${notification.id} for boarding house ${boardingHouseId}`,
-    );
+    )
 
     // 2. Count active tenants to establish total target reach
     const totalTarget = await this.prisma.tenantContract.count({
@@ -697,7 +686,7 @@ export class NotificationsService implements OnModuleInit {
           status: 'active',
         },
       },
-    });
+    })
 
     // 3. Enqueue BullMQ dispatch job outside transaction (Rule #5)
     await this.notifQueue.add('dispatch-broadcast-announcement', {
@@ -705,12 +694,12 @@ export class NotificationsService implements OnModuleInit {
       boardingHouseId,
       channel: dto.channel || 'Thông báo hệ thống',
       type: 'announcement',
-    });
+    })
 
     const senderName =
       notification.sender?.userIdentification?.fullName ||
       notification.sender?.username ||
-      'BQL Tòa nhà';
+      'BQL Tòa nhà'
 
     return {
       id: notification.id,
@@ -724,7 +713,7 @@ export class NotificationsService implements OnModuleInit {
       totalTarget: totalTarget > 0 ? totalTarget : 1,
       channel: dto.channel?.trim() || 'Thông báo hệ thống',
       createdAt: notification.createdAt,
-    };
+    }
   }
 
   // ─── UC-L-13: List Boarding House Announcements ────────────────────────────
@@ -736,22 +725,22 @@ export class NotificationsService implements OnModuleInit {
     boardingHouseId: string,
     query: AnnouncementQueryDto,
   ): Promise<LandlordAnnouncementsResponseDto> {
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
-    const skip = (page - 1) * limit;
+    const page = query.page && query.page > 0 ? query.page : 1
+    const limit = query.limit && query.limit > 0 ? query.limit : 10
+    const skip = (page - 1) * limit
 
     // Build Prisma where filter
     const where: any = {
       boardingHouseId,
       receiverId: null,
       type: 'announcement',
-    };
+    }
 
     if (query.search?.trim()) {
       where.content = {
         contains: query.search.trim(),
         mode: 'insensitive',
-      };
+      }
     }
 
     const [total, rawAnnouncements, totalTargetTenants] = await Promise.all([
@@ -778,14 +767,12 @@ export class NotificationsService implements OnModuleInit {
           },
         },
       }),
-    ]);
+    ])
 
-    const data: LandlordAnnouncementItemDto[] = rawAnnouncements.map((item) => {
-      const parsed = this.parseAnnouncementContent(item.content);
+    const data: LandlordAnnouncementItemDto[] = rawAnnouncements.map(item => {
+      const parsed = this.parseAnnouncementContent(item.content)
       const senderName =
-        item.sender?.userIdentification?.fullName ||
-        item.sender?.username ||
-        'BQL Tòa nhà';
+        item.sender?.userIdentification?.fullName || item.sender?.username || 'BQL Tòa nhà'
 
       return {
         id: item.id,
@@ -795,32 +782,35 @@ export class NotificationsService implements OnModuleInit {
         targetScope: parsed.targetScope,
         sentAt: item.createdAt.toISOString().slice(0, 16).replace('T', ' '),
         sender: senderName,
-        readCount: Math.min(totalTargetTenants, totalTargetTenants > 0 ? Math.ceil(totalTargetTenants * 0.9) : 0),
+        readCount: Math.min(
+          totalTargetTenants,
+          totalTargetTenants > 0 ? Math.ceil(totalTargetTenants * 0.9) : 0,
+        ),
         totalTarget: totalTargetTenants,
         channel: parsed.channel,
         createdAt: item.createdAt,
-      };
-    });
+      }
+    })
 
     // Optional post-filter for category and channel if stored in JSON content
-    let filteredData = data;
+    let filteredData = data
     if (query.category?.trim()) {
       filteredData = filteredData.filter(
-        (item) => item.category.toLowerCase() === query.category!.toLowerCase(),
-      );
+        item => item.category.toLowerCase() === query.category!.toLowerCase(),
+      )
     }
     if (query.channel?.trim()) {
       filteredData = filteredData.filter(
-        (item) => item.channel.toLowerCase() === query.channel!.toLowerCase(),
-      );
+        item => item.channel.toLowerCase() === query.channel!.toLowerCase(),
+      )
     }
 
     const emergencyCount = data.filter(
-      (d) =>
+      d =>
         d.category === 'Khẩn cấp' ||
         d.category.toLowerCase().includes('khẩn') ||
         d.category.toLowerCase().includes('emergency'),
-    ).length;
+    ).length
 
     return {
       success: true,
@@ -836,7 +826,7 @@ export class NotificationsService implements OnModuleInit {
         totalTargetTenants,
         emergencyCount,
       },
-    };
+    }
   }
 
   // ─── Delete Announcement ───────────────────────────────────────────────────
@@ -844,32 +834,24 @@ export class NotificationsService implements OnModuleInit {
   /**
    * Deletes an announcement for a boarding house.
    */
-  async deleteAnnouncement(
-    boardingHouseId: string,
-    notificationId: string,
-  ): Promise<void> {
+  async deleteAnnouncement(boardingHouseId: string, notificationId: string): Promise<void> {
     const notification = await this.prisma.notification.findUnique({
       where: { id: notificationId },
-    });
+    })
 
     if (!notification) {
-      throw new NotFoundException('announcement_not_found');
+      throw new NotFoundException('announcement_not_found')
     }
 
-    if (
-      notification.boardingHouseId !== boardingHouseId ||
-      notification.type !== 'announcement'
-    ) {
-      throw new ForbiddenException('announcement_not_in_boarding_house');
+    if (notification.boardingHouseId !== boardingHouseId || notification.type !== 'announcement') {
+      throw new ForbiddenException('announcement_not_in_boarding_house')
     }
 
     await this.prisma.notification.delete({
       where: { id: notificationId },
-    });
+    })
 
-    this.logger.log(
-      `Announcement ${notificationId} deleted from boarding house ${boardingHouseId}`,
-    );
+    this.logger.log(`Announcement ${notificationId} deleted from boarding house ${boardingHouseId}`)
   }
 
   // ─── UC-A-05: Mass Notification Dispatcher ────────────────────────────────
@@ -880,17 +862,17 @@ export class NotificationsService implements OnModuleInit {
   private getTargetLabel(target: string): string {
     switch (target) {
       case 'all_users':
-        return 'Toàn bộ người dùng';
+        return 'Toàn bộ người dùng'
       case 'all_landlords':
-        return 'Tất cả Chủ trọ';
+        return 'Tất cả Chủ trọ'
       case 'all_staff':
-        return 'Tất cả Nhân viên';
+        return 'Tất cả Nhân viên'
       case 'all_admins':
-        return 'Quản trị viên';
+        return 'Quản trị viên'
       case 'specific_user':
-        return 'Người dùng chỉ định';
+        return 'Người dùng chỉ định'
       default:
-        return target;
+        return target
     }
   }
 
@@ -914,7 +896,7 @@ export class NotificationsService implements OnModuleInit {
       failedCount: job.failedCount,
       totalRecipients: job.sentCount + job.failedCount,
       createdAt: job.createdAt.toISOString(),
-    };
+    }
   }
 
   /**
@@ -926,19 +908,19 @@ export class NotificationsService implements OnModuleInit {
   ): Promise<MassNotificationItemDto> {
     this.logger.log(
       `Admin ${adminId} creating mass notification: channel=${dto.channel}, target=${dto.targetType}, title="${dto.title}"`,
-    );
+    )
 
     if (dto.targetType === AdminNotifyTarget.specific_user && !dto.targetId) {
-      throw new BadRequestException('Target user ID is required when target type is specific_user');
+      throw new BadRequestException('Target user ID is required when target type is specific_user')
     }
 
     if (dto.targetId) {
       const targetUser = await this.prisma.user.findUnique({
         where: { id: dto.targetId },
         select: { id: true, username: true, email: true },
-      });
+      })
       if (!targetUser) {
-        throw new NotFoundException(`Target user with id "${dto.targetId}" not found`);
+        throw new NotFoundException(`Target user with id "${dto.targetId}" not found`)
       }
     }
 
@@ -959,7 +941,7 @@ export class NotificationsService implements OnModuleInit {
         createdByUser: { select: { id: true, username: true, email: true } },
         targetUser: { select: { id: true, username: true, email: true } },
       },
-    });
+    })
 
     // 2. AuditLog in database (Global convention for administrative mutations)
     await this.prisma.auditLog.create({
@@ -976,7 +958,7 @@ export class NotificationsService implements OnModuleInit {
         },
         ipAddress: '127.0.0.1',
       },
-    });
+    })
 
     // 3. Enqueue async dispatch job to BullMQ queue — never loop synchronously in HTTP handler
     await this.notifQueue.add(
@@ -991,10 +973,10 @@ export class NotificationsService implements OnModuleInit {
           delay: 5000,
         },
       },
-    );
+    )
 
-    this.logger.log(`Enqueued mass notification job ${job.id} to BullMQ queue`);
-    return this.mapMassNotificationItem(job);
+    this.logger.log(`Enqueued mass notification job ${job.id} to BullMQ queue`)
+    return this.mapMassNotificationItem(job)
   }
 
   /**
@@ -1003,23 +985,23 @@ export class NotificationsService implements OnModuleInit {
   async getMassNotificationJobs(
     query: MassNotificationQueryDto,
   ): Promise<MassNotificationListResponseDto> {
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
-    const skip = (page - 1) * limit;
+    const page = query.page && query.page > 0 ? query.page : 1
+    const limit = query.limit && query.limit > 0 ? query.limit : 10
+    const skip = (page - 1) * limit
 
-    const where: any = {};
+    const where: any = {}
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status
     }
     if (query.channel) {
-      where.channel = query.channel;
+      where.channel = query.channel
     }
     if (query.search?.trim()) {
       where.OR = [
         { title: { contains: query.search.trim(), mode: 'insensitive' } },
         { content: { contains: query.search.trim(), mode: 'insensitive' } },
-      ];
+      ]
     }
 
     const [total, rawItems, totalSent, totalPending, totalFailed] = await Promise.all([
@@ -1037,9 +1019,9 @@ export class NotificationsService implements OnModuleInit {
       this.prisma.massNotificationJob.count({ where: { status: 'sent' } }),
       this.prisma.massNotificationJob.count({ where: { status: 'pending' } }),
       this.prisma.massNotificationJob.count({ where: { status: 'failed' } }),
-    ]);
+    ])
 
-    const items = rawItems.map((item) => this.mapMassNotificationItem(item));
+    const items = rawItems.map(item => this.mapMassNotificationItem(item))
 
     return {
       items,
@@ -1053,7 +1035,7 @@ export class NotificationsService implements OnModuleInit {
         pending: totalPending,
         failed: totalFailed,
       },
-    };
+    }
   }
 
   /**
@@ -1066,47 +1048,47 @@ export class NotificationsService implements OnModuleInit {
         createdByUser: { select: { id: true, username: true, email: true } },
         targetUser: { select: { id: true, username: true, email: true } },
       },
-    });
+    })
 
     if (!job) {
-      throw new NotFoundException(`Mass notification job "${id}" not found`);
+      throw new NotFoundException(`Mass notification job "${id}" not found`)
     }
 
-    return this.mapMassNotificationItem(job);
+    return this.mapMassNotificationItem(job)
   }
 
   /**
    * UC-A-05: Background worker execution: resolves audience and fans out in batches.
    */
   async processMassNotification(jobId: string): Promise<void> {
-    this.logger.log(`Beginning asynchronous processing for mass notification job: ${jobId}`);
+    this.logger.log(`Beginning asynchronous processing for mass notification job: ${jobId}`)
 
     try {
       const job = await this.prisma.massNotificationJob.findUnique({
         where: { id: jobId },
-      });
+      })
 
       if (!job) {
-        this.logger.error(`Mass notification job ${jobId} not found in database`);
-        return;
+        this.logger.error(`Mass notification job ${jobId} not found in database`)
+        return
       }
 
       if (job.status === 'canceled') {
-        this.logger.warn(`Mass notification job ${jobId} was canceled. Skipping execution.`);
-        return;
+        this.logger.warn(`Mass notification job ${jobId} was canceled. Skipping execution.`)
+        return
       }
 
       // 1. Resolve target audience per specification:
       // - all_staff filters on Employee profile existence, not User.role (UC-A-05 & UC-L-19)
-      let targetUsers: { id: string; email: string | null; phoneNumber: string }[] = [];
+      let targetUsers: { id: string; email: string | null; phoneNumber: string }[] = []
 
       switch (job.targetType) {
         case 'all_users':
           targetUsers = await this.prisma.user.findMany({
             where: { status: 'active' },
             select: { id: true, email: true, phoneNumber: true },
-          });
-          break;
+          })
+          break
 
         case 'all_landlords':
           targetUsers = await this.prisma.user.findMany({
@@ -1115,8 +1097,8 @@ export class NotificationsService implements OnModuleInit {
               role: 'landlord',
             },
             select: { id: true, email: true, phoneNumber: true },
-          });
-          break;
+          })
+          break
 
         case 'all_staff':
           targetUsers = await this.prisma.user.findMany({
@@ -1125,8 +1107,8 @@ export class NotificationsService implements OnModuleInit {
               employee: { isNot: null },
             },
             select: { id: true, email: true, phoneNumber: true },
-          });
-          break;
+          })
+          break
 
         case 'all_admins':
           targetUsers = await this.prisma.user.findMany({
@@ -1135,56 +1117,56 @@ export class NotificationsService implements OnModuleInit {
               role: 'admin',
             },
             select: { id: true, email: true, phoneNumber: true },
-          });
-          break;
+          })
+          break
 
         case 'specific_user':
           if (job.targetId) {
             targetUsers = await this.prisma.user.findMany({
               where: { id: job.targetId },
               select: { id: true, email: true, phoneNumber: true },
-            });
+            })
           }
-          break;
+          break
 
         default:
-          this.logger.warn(`Unknown targetType: ${job.targetType}`);
+          this.logger.warn(`Unknown targetType: ${job.targetType}`)
       }
 
       this.logger.log(
         `Resolved ${targetUsers.length} target recipients for job ${jobId} (targetType=${job.targetType})`,
-      );
+      )
 
       // 2. Fan out in batches (respect rate limits / database connections)
-      const BATCH_SIZE = 50;
-      let sentCount = 0;
-      let failedCount = 0;
+      const BATCH_SIZE = 50
+      let sentCount = 0
+      let failedCount = 0
 
       for (let i = 0; i < targetUsers.length; i += BATCH_SIZE) {
-        const batch = targetUsers.slice(i, i + BATCH_SIZE);
+        const batch = targetUsers.slice(i, i + BATCH_SIZE)
 
         try {
           // Persist in-app notifications
           await this.prisma.notification.createMany({
-            data: batch.map((u) => ({
+            data: batch.map(u => ({
               senderId: job.createdBy,
               receiverId: u.id,
               type: 'system_broadcast',
               content: `[${job.title}] ${job.content}`,
               isRead: false,
             })),
-          });
+          })
 
           // Simulated 3rd-party channel dispatch (e.g. Email/SMS/Zalo SDK)
-          sentCount += batch.length;
+          sentCount += batch.length
         } catch (batchErr) {
-          this.logger.error(`Batch dispatch failed for job ${jobId}: ${batchErr}`);
-          failedCount += batch.length;
+          this.logger.error(`Batch dispatch failed for job ${jobId}: ${batchErr}`)
+          failedCount += batch.length
         }
       }
 
       // 3. Mark job status as sent (or failed if all failed)
-      const finalStatus = sentCount > 0 || targetUsers.length === 0 ? 'sent' : 'failed';
+      const finalStatus = sentCount > 0 || targetUsers.length === 0 ? 'sent' : 'failed'
 
       await this.prisma.massNotificationJob.update({
         where: { id: jobId },
@@ -1193,37 +1175,34 @@ export class NotificationsService implements OnModuleInit {
           sentCount,
           failedCount,
         },
-      });
+      })
 
       this.logger.log(
         `Mass notification job ${jobId} completed: status=${finalStatus}, sent=${sentCount}, failed=${failedCount}`,
-      );
+      )
     } catch (err) {
-      this.logger.error(`Fatal error processing mass notification job ${jobId}: ${err}`);
+      this.logger.error(`Fatal error processing mass notification job ${jobId}: ${err}`)
       await this.prisma.massNotificationJob.update({
         where: { id: jobId },
         data: { status: 'failed' },
-      });
+      })
     }
   }
 
   /**
    * UC-A-05: Retries a failed or pending mass notification job.
    */
-  async retryMassNotification(
-    adminId: string,
-    jobId: string,
-  ): Promise<MassNotificationItemDto> {
+  async retryMassNotification(adminId: string, jobId: string): Promise<MassNotificationItemDto> {
     const job = await this.prisma.massNotificationJob.findUnique({
       where: { id: jobId },
       include: {
         createdByUser: { select: { id: true, username: true, email: true } },
         targetUser: { select: { id: true, username: true, email: true } },
       },
-    });
+    })
 
     if (!job) {
-      throw new NotFoundException(`Mass notification job "${jobId}" not found`);
+      throw new NotFoundException(`Mass notification job "${jobId}" not found`)
     }
 
     // Reset status to pending and re-enqueue
@@ -1238,7 +1217,7 @@ export class NotificationsService implements OnModuleInit {
         createdByUser: { select: { id: true, username: true, email: true } },
         targetUser: { select: { id: true, username: true, email: true } },
       },
-    });
+    })
 
     await this.prisma.auditLog.create({
       data: {
@@ -1249,14 +1228,13 @@ export class NotificationsService implements OnModuleInit {
         newValue: { action: 'retry' },
         ipAddress: '127.0.0.1',
       },
-    });
+    })
 
     await this.notifQueue.add('dispatch-mass-notification', {
       massNotificationJobId: jobId,
-    });
+    })
 
-    this.logger.log(`Retried and re-enqueued mass notification job ${jobId}`);
-    return this.mapMassNotificationItem(updated);
+    this.logger.log(`Retried and re-enqueued mass notification job ${jobId}`)
+    return this.mapMassNotificationItem(updated)
   }
 }
-

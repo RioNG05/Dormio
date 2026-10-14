@@ -13,7 +13,7 @@ import {
   Logger,
   ParseUUIDPipe,
   Req,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -22,23 +22,20 @@ import {
   ApiBearerAuth,
   ApiHeader,
   ApiResponse,
-} from '@nestjs/swagger';
-import type { Request } from 'express';
-import { DepositsService } from './deposits.service';
-import { CreateManualDepositDto } from './dto/create-manual-deposit.dto';
-import { QueryDepositsDto } from './dto/query-deposits.dto';
-import { RefundDepositDto } from './dto/refund-deposit.dto';
-import { ForfeitDepositDto } from './dto/forfeit-deposit.dto';
-import {
-  DepositResponseDto,
-  PaginatedDepositsResponseDto,
-} from './dto/deposit-response.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { RequireTier } from '../../common/decorators/require-tier.decorator';
-import { SubscriptionPackage } from '@prisma';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+} from '@nestjs/swagger'
+import type { Request } from 'express'
+import { DepositsService } from './deposits.service'
+import { CreateManualDepositDto } from './dto/create-manual-deposit.dto'
+import { QueryDepositsDto } from './dto/query-deposits.dto'
+import { RefundDepositDto } from './dto/refund-deposit.dto'
+import { ForfeitDepositDto } from './dto/forfeit-deposit.dto'
+import { DepositResponseDto, PaginatedDepositsResponseDto } from './dto/deposit-response.dto'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
+import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Landlord Deposits')
 @ApiBearerAuth('JWT')
@@ -50,7 +47,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 @Controller('landlord/deposits')
 export class DepositsController {
-  private readonly logger = new Logger(DepositsController.name);
+  private readonly logger = new Logger(DepositsController.name)
 
   constructor(private readonly depositsService: DepositsService) {}
 
@@ -82,17 +79,12 @@ export class DepositsController {
     @Body() dto: CreateManualDepositDto,
     @Req() req: Request,
   ): Promise<DepositResponseDto> {
-    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1';
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1'
     this.logger.log(
       `POST /landlord/deposits called by user ${user.id} for boardingHouse ${boardingHouseId} (roomId: ${dto.roomId}, amount: ${dto.amount})`,
-    );
+    )
 
-    return this.depositsService.createManualDeposit(
-      boardingHouseId,
-      user.id,
-      dto,
-      ipAddress,
-    );
+    return this.depositsService.createManualDeposit(boardingHouseId, user.id, dto, ipAddress)
   }
 
   // ─── GET /api/v1/landlord/deposits ─────────────────────────────────────────
@@ -115,9 +107,9 @@ export class DepositsController {
   ): Promise<PaginatedDepositsResponseDto> {
     this.logger.log(
       `GET /landlord/deposits called by user ${user.id} for boardingHouse ${boardingHouseId} with query: ${JSON.stringify(query)}`,
-    );
+    )
 
-    return this.depositsService.getDeposits(boardingHouseId, query);
+    return this.depositsService.getDeposits(boardingHouseId, query)
   }
 
   // ─── GET /api/v1/landlord/deposits/:id ─────────────────────────────────────
@@ -126,7 +118,8 @@ export class DepositsController {
   @RequireTier(SubscriptionPackage.plus)
   @ApiOperation({
     summary: 'Get Deposit Details',
-    description: 'Retrieves single deposit details with room, contract, tenant, and payment relations.',
+    description:
+      'Retrieves single deposit details with room, contract, tenant, and payment relations.',
   })
   @ApiOkResponse({
     description: 'Deposit details',
@@ -143,9 +136,9 @@ export class DepositsController {
   ): Promise<DepositResponseDto> {
     this.logger.log(
       `GET /landlord/deposits/${depositId} called by user ${user.id} for boardingHouse ${boardingHouseId}`,
-    );
+    )
 
-    return this.depositsService.getDepositById(boardingHouseId, depositId);
+    return this.depositsService.getDepositById(boardingHouseId, depositId)
   }
 
   // ─── PATCH /api/v1/landlord/deposits/:id/refund ────────────────────────────
@@ -168,18 +161,12 @@ export class DepositsController {
     @Body() dto: RefundDepositDto,
     @Req() req: Request,
   ): Promise<DepositResponseDto> {
-    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1';
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1'
     this.logger.log(
       `PATCH /landlord/deposits/${depositId}/refund called by user ${user.id} (deducted: ${dto.deductedAmount})`,
-    );
+    )
 
-    return this.depositsService.refundDeposit(
-      boardingHouseId,
-      user.id,
-      depositId,
-      dto,
-      ipAddress,
-    );
+    return this.depositsService.refundDeposit(boardingHouseId, user.id, depositId, dto, ipAddress)
   }
 
   // ─── PATCH /api/v1/landlord/deposits/:id/forfeit ───────────────────────────
@@ -202,17 +189,9 @@ export class DepositsController {
     @Body() dto: ForfeitDepositDto,
     @Req() req: Request,
   ): Promise<DepositResponseDto> {
-    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1';
-    this.logger.log(
-      `PATCH /landlord/deposits/${depositId}/forfeit called by user ${user.id}`,
-    );
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1'
+    this.logger.log(`PATCH /landlord/deposits/${depositId}/forfeit called by user ${user.id}`)
 
-    return this.depositsService.forfeitDeposit(
-      boardingHouseId,
-      user.id,
-      depositId,
-      dto,
-      ipAddress,
-    );
+    return this.depositsService.forfeitDeposit(boardingHouseId, user.id, depositId, dto, ipAddress)
   }
 }

@@ -4,38 +4,38 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ContractStatus,
   Prisma,
   RoomStatus,
   SubscriptionPackage,
   SubscriptionStatus,
-} from '@prisma';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto';
-import { CreateRoomDto } from './dto/create-room.dto';
+} from '@prisma'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto'
+import { CreateRoomDto } from './dto/create-room.dto'
 import {
   RoomDashboardContractDto,
   RoomDashboardResponseDto,
-} from './dto/room-dashboard-response.dto';
-import { RoomQueryDto } from './dto/room-query.dto';
+} from './dto/room-dashboard-response.dto'
+import { RoomQueryDto } from './dto/room-query.dto'
 import {
   BulkGenerateRoomsResponseDto,
   RoomListResponseDto,
   RoomMetadataResponseDto,
   RoomResponseDto,
-} from './dto/room-response.dto';
-import { UpdateRoomDto } from './dto/update-room.dto';
+} from './dto/room-response.dto'
+import { UpdateRoomDto } from './dto/update-room.dto'
 
 interface PlannedRoom {
-  floor: number;
-  roomNumber: string;
+  floor: number
+  roomNumber: string
 }
 
 @Injectable()
 export class RoomsService {
-  private readonly logger = new Logger(RoomsService.name);
+  private readonly logger = new Logger(RoomsService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -49,61 +49,61 @@ export class RoomsService {
   ): Promise<BulkGenerateRoomsResponseDto> {
     this.logger.log(
       `Bulk generating rooms for boarding house ${boardingHouseId} by landlord ${landlordId}`,
-    );
+    )
 
     // 1. Verify RoomType exists and belongs to this property
     const roomType = await this.prisma.roomType.findFirst({
       where: { id: dto.roomTypeId, boardingHouseId },
-    });
+    })
     if (!roomType) {
       throw new NotFoundException(
         `RoomType with ID ${dto.roomTypeId} was not found for this property`,
-      );
+      )
     }
 
     // 2. Verify Services belong to this property if supplied
-    const serviceIds = dto.serviceIds ?? [];
+    const serviceIds = dto.serviceIds ?? []
     if (serviceIds.length > 0) {
       const validServices = await this.prisma.service.findMany({
         where: { id: { in: serviceIds }, boardingHouseId },
         select: { id: true },
-      });
+      })
       if (validServices.length !== serviceIds.length) {
         throw new BadRequestException(
           'One or more selected serviceIds are invalid or do not belong to this property',
-        );
+        )
       }
     }
 
     // 3. Check Subscription Plan Room Limit (UC-L-02 Step 2)
-    const maxRoom = await this.resolveMaxRoomLimit(landlordId);
+    const maxRoom = await this.resolveMaxRoomLimit(landlordId)
     const currentRoomCount = await this.prisma.room.count({
       where: { boardingHouseId },
-    });
+    })
 
-    const totalToGenerate = dto.floorCount * dto.roomsPerFloor;
+    const totalToGenerate = dto.floorCount * dto.roomsPerFloor
     if (currentRoomCount + totalToGenerate > maxRoom) {
       throw new BadRequestException(
         `Cannot generate ${totalToGenerate} rooms. Your active subscription allows a maximum of ${maxRoom} rooms for this property (currently ${currentRoomCount}/${maxRoom}). Please upgrade your plan.`,
-      );
+      )
     }
 
     // 4. Generate room numbers according to template
-    const plannedRooms: PlannedRoom[] = [];
-    const generatedNumberSet = new Set<string>();
+    const plannedRooms: PlannedRoom[] = []
+    const generatedNumberSet = new Set<string>()
 
     for (let floor = 1; floor <= dto.floorCount; floor++) {
       for (let index = 1; index <= dto.roomsPerFloor; index++) {
-        const roomNumber = this.renderRoomNumber(dto.nameFormat, floor, index);
+        const roomNumber = this.renderRoomNumber(dto.nameFormat, floor, index)
 
         if (generatedNumberSet.has(roomNumber)) {
           throw new BadRequestException(
             `The nameFormat template produces duplicate room number '${roomNumber}' in the current batch. Please adjust the template.`,
-          );
+          )
         }
 
-        generatedNumberSet.add(roomNumber);
-        plannedRooms.push({ floor, roomNumber });
+        generatedNumberSet.add(roomNumber)
+        plannedRooms.push({ floor, roomNumber })
       }
     }
 
@@ -114,29 +114,27 @@ export class RoomsService {
         roomNumber: { in: Array.from(generatedNumberSet) },
       },
       select: { roomNumber: true },
-    });
+    })
 
     if (existingCollisions.length > 0) {
-      const collisionList = existingCollisions.map((r) => r.roomNumber).join(', ');
-      throw new ConflictException(
-        `Room number(s) already exist in this property: ${collisionList}`,
-      );
+      const collisionList = existingCollisions.map(r => r.roomNumber).join(', ')
+      throw new ConflictException(`Room number(s) already exist in this property: ${collisionList}`)
     }
 
     type CreatedRoomWithRelations = Prisma.RoomGetPayload<{
       include: {
-        roomType: true;
+        roomType: true
         roomServices: {
           include: {
-            service: true;
-          };
-        };
-      };
-    }>;
+            service: true
+          }
+        }
+      }
+    }>
 
     // 6. Bulk insert in a single transaction
-    const createdRooms = await this.prisma.$transaction(async (tx) => {
-      const rooms: CreatedRoomWithRelations[] = [];
+    const createdRooms = await this.prisma.$transaction(async tx => {
+      const rooms: CreatedRoomWithRelations[] = []
       for (const planned of plannedRooms) {
         const room = await tx.room.create({
           data: {
@@ -148,7 +146,7 @@ export class RoomsService {
             roomTypeId: dto.roomTypeId,
             status: RoomStatus.available,
             roomServices: {
-              create: serviceIds.map((serviceId) => ({
+              create: serviceIds.map(serviceId => ({
                 serviceId,
               })),
             },
@@ -161,17 +159,17 @@ export class RoomsService {
               },
             },
           },
-        });
-        rooms.push(room);
+        })
+        rooms.push(room)
       }
-      return rooms;
-    });
+      return rooms
+    })
 
     return {
       success: true,
       count: createdRooms.length,
-      data: createdRooms.map((room) => this.mapRoomToDto(room)),
-    };
+      data: createdRooms.map(room => this.mapRoomToDto(room)),
+    }
   }
 
   /**
@@ -181,7 +179,7 @@ export class RoomsService {
     landlordId: string,
     boardingHouseId: string,
   ): Promise<RoomMetadataResponseDto> {
-    this.logger.log(`Fetching room metadata for boarding house ${boardingHouseId}`);
+    this.logger.log(`Fetching room metadata for boarding house ${boardingHouseId}`)
 
     const [roomTypes, services, maxRoom, currentRoomCount] = await Promise.all([
       this.prisma.roomType.findMany({
@@ -196,15 +194,15 @@ export class RoomsService {
       this.prisma.room.count({
         where: { boardingHouseId },
       }),
-    ]);
+    ])
 
     return {
-      roomTypes: roomTypes.map((rt) => ({
+      roomTypes: roomTypes.map(rt => ({
         id: rt.id,
         name: rt.name,
         description: rt.description,
       })),
-      services: services.map((s) => ({
+      services: services.map(s => ({
         id: s.id,
         name: s.name,
         price: String(s.price),
@@ -213,19 +211,16 @@ export class RoomsService {
       })),
       maxRoom,
       currentRoomCount,
-    };
+    }
   }
 
   /**
    * Query rooms with pagination & filters
    */
-  async getRooms(
-    boardingHouseId: string,
-    query: RoomQueryDto,
-  ): Promise<RoomListResponseDto> {
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
-    const skip = (page - 1) * limit;
+  async getRooms(boardingHouseId: string, query: RoomQueryDto): Promise<RoomListResponseDto> {
+    const page = query.page && query.page > 0 ? query.page : 1
+    const limit = query.limit && query.limit > 0 ? query.limit : 10
+    const skip = (page - 1) * limit
 
     const where: Prisma.RoomWhereInput = {
       boardingHouseId,
@@ -239,7 +234,7 @@ export class RoomsService {
             },
           }
         : {}),
-    };
+    }
 
     const [total, rooms] = await Promise.all([
       this.prisma.room.count({ where }),
@@ -257,17 +252,17 @@ export class RoomsService {
           },
         },
       }),
-    ]);
+    ])
 
     return {
-      data: rooms.map((room) => this.mapRoomToDto(room)),
+      data: rooms.map(room => this.mapRoomToDto(room)),
       meta: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit) || 1,
       },
-    };
+    }
   }
 
   /**
@@ -280,28 +275,28 @@ export class RoomsService {
   ): Promise<RoomResponseDto> {
     this.logger.log(
       `Creating single room '${dto.roomNumber}' for boarding house ${boardingHouseId} by landlord ${landlordId}`,
-    );
+    )
 
     // 1. Subscription Plan Room Limit check (UC-L-03)
-    const maxRoom = await this.resolveMaxRoomLimit(landlordId);
+    const maxRoom = await this.resolveMaxRoomLimit(landlordId)
     const currentRoomCount = await this.prisma.room.count({
       where: { boardingHouseId },
-    });
+    })
 
     if (currentRoomCount + 1 > maxRoom) {
       throw new BadRequestException(
         `Cannot create room. Your active subscription allows a maximum of ${maxRoom} rooms for this property (currently ${currentRoomCount}/${maxRoom}). Please upgrade your plan.`,
-      );
+      )
     }
 
     // 2. RoomType check
     const roomType = await this.prisma.roomType.findFirst({
       where: { id: dto.roomTypeId, boardingHouseId },
-    });
+    })
     if (!roomType) {
       throw new NotFoundException(
         `RoomType with ID ${dto.roomTypeId} was not found for this property`,
-      );
+      )
     }
 
     // 3. Room number collision check within this boarding house
@@ -310,26 +305,26 @@ export class RoomsService {
         boardingHouseId,
         roomNumber: dto.roomNumber.trim(),
       },
-    });
+    })
     if (existingRoom) {
       throw new ConflictException(
         `Room number '${dto.roomNumber.trim()}' already exists in this property`,
-      );
+      )
     }
 
     // 4. Resolve services to attach
-    let serviceIdsToAttach: string[] = [];
+    let serviceIdsToAttach: string[] = []
     if (dto.serviceIds && dto.serviceIds.length > 0) {
       const validServices = await this.prisma.service.findMany({
         where: { id: { in: dto.serviceIds }, boardingHouseId },
         select: { id: true },
-      });
+      })
       if (validServices.length !== dto.serviceIds.length) {
         throw new BadRequestException(
           'One or more selected serviceIds are invalid or do not belong to this property',
-        );
+        )
       }
-      serviceIdsToAttach = dto.serviceIds;
+      serviceIdsToAttach = dto.serviceIds
     } else {
       // Auto-attach active autoApplied services for this property (spec requirement)
       const autoServices = await this.prisma.service.findMany({
@@ -339,12 +334,12 @@ export class RoomsService {
           autoApplied: true,
         },
         select: { id: true },
-      });
-      serviceIdsToAttach = autoServices.map((s) => s.id);
+      })
+      serviceIdsToAttach = autoServices.map(s => s.id)
     }
 
     // 5. Create room and attached services in a transaction
-    const created = await this.prisma.$transaction(async (tx) => {
+    const created = await this.prisma.$transaction(async tx => {
       return tx.room.create({
         data: {
           boardingHouseId,
@@ -356,7 +351,7 @@ export class RoomsService {
           status: dto.status ?? RoomStatus.available,
           image_url: dto.imageUrl ?? null,
           roomServices: {
-            create: serviceIdsToAttach.map((serviceId) => ({ serviceId })),
+            create: serviceIdsToAttach.map(serviceId => ({ serviceId })),
           },
         },
         include: {
@@ -367,19 +362,16 @@ export class RoomsService {
             },
           },
         },
-      });
-    });
+      })
+    })
 
-    return this.mapRoomToDto(created);
+    return this.mapRoomToDto(created)
   }
 
   /**
    * UC-L-03/05: Get single room details with joined relations
    */
-  async getRoomById(
-    boardingHouseId: string,
-    roomId: string,
-  ): Promise<RoomResponseDto> {
+  async getRoomById(boardingHouseId: string, roomId: string): Promise<RoomResponseDto> {
     const room = await this.prisma.room.findFirst({
       where: { id: roomId, boardingHouseId },
       include: {
@@ -390,13 +382,13 @@ export class RoomsService {
           },
         },
       },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`);
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`)
     }
 
-    return this.mapRoomToDto(room);
+    return this.mapRoomToDto(room)
   }
 
   /**
@@ -413,7 +405,7 @@ export class RoomsService {
   ): Promise<RoomDashboardResponseDto> {
     this.logger.log(
       `Fetching room dashboard for room ${roomId} in boarding house ${boardingHouseId}`,
-    );
+    )
 
     const room = await this.prisma.room.findFirst({
       where: { id: roomId, boardingHouseId },
@@ -457,29 +449,23 @@ export class RoomsService {
           },
         },
       },
-    });
+    })
 
     if (!room) {
-      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`);
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`)
     }
 
     // Identify current active contract (if any)
-    const activeContract = room.contracts.find(
-      (c) => c.status === ContractStatus.active,
-    );
+    const activeContract = room.contracts.find(c => c.status === ContractStatus.active)
 
-    let currentContractDto: RoomDashboardContractDto | null = null;
+    let currentContractDto: RoomDashboardContractDto | null = null
     if (activeContract) {
-      const tenants = activeContract.tenantContracts.map((tc) => {
-        const tenant = tc.tenant;
-        const ident = tenant.userIdentification;
+      const tenants = activeContract.tenantContracts.map(tc => {
+        const tenant = tc.tenant
+        const ident = tenant.userIdentification
         return {
           id: tenant.id,
-          fullName:
-            ident?.fullName ||
-            tenant.username ||
-            tenant.phoneNumber ||
-            'Khách thuê',
+          fullName: ident?.fullName || tenant.username || tenant.phoneNumber || 'Khách thuê',
           phoneNumber: tenant.phoneNumber,
           email: tenant.email,
           avatarUrl: tenant.avatarUrl,
@@ -488,8 +474,8 @@ export class RoomsService {
           identityNumber: ident?.identityNumber ?? null,
           dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
           gender: ident?.gender ?? null,
-        };
-      });
+        }
+      })
 
       currentContractDto = {
         id: activeContract.id,
@@ -508,25 +494,25 @@ export class RoomsService {
             }
           : null,
         tenants,
-        documents: activeContract.contractDocuments.map((doc) => ({
+        documents: activeContract.contractDocuments.map(doc => ({
           id: doc.id,
           url: doc.url,
           createdAt: doc.createdAt.toISOString(),
         })),
-      };
+      }
     }
 
     // Map rental history from all contracts
-    const rentalHistory = room.contracts.map((c) => {
+    const rentalHistory = room.contracts.map(c => {
       const primaryTenantContract =
-        c.tenantContracts.find((tc) => tc.isPrimary) ?? c.tenantContracts[0];
-      const primaryTenant = primaryTenantContract?.tenant;
+        c.tenantContracts.find(tc => tc.isPrimary) ?? c.tenantContracts[0]
+      const primaryTenant = primaryTenantContract?.tenant
       const primaryTenantName =
         primaryTenant?.userIdentification?.fullName ||
         primaryTenant?.username ||
         primaryTenant?.phoneNumber ||
-        'Chưa cập nhật';
-      const primaryTenantPhone = primaryTenant?.phoneNumber || '';
+        'Chưa cập nhật'
+      const primaryTenantPhone = primaryTenant?.phoneNumber || ''
 
       return {
         id: c.id,
@@ -537,11 +523,11 @@ export class RoomsService {
         primaryTenantName,
         primaryTenantPhone,
         tenantsCount: c.tenantContracts.length,
-      };
-    });
+      }
+    })
 
     // Map invoices
-    const invoices = room.invoices.map((inv) => ({
+    const invoices = room.invoices.map(inv => ({
       id: inv.id,
       totalAmount: String(inv.totalAmount),
       status: inv.status,
@@ -549,26 +535,26 @@ export class RoomsService {
       createdAt: inv.createdAt.toISOString(),
       paymentStatus: inv.payment?.status ?? null,
       paymentMethod: inv.payment?.method ?? null,
-    }));
+    }))
 
     // Map meter readings
-    const meterReadings = room.meterReadings.map((mr) => ({
+    const meterReadings = room.meterReadings.map(mr => ({
       id: mr.id,
       serviceId: mr.serviceId,
       serviceName: mr.service.name,
       readingValue: mr.readingValue !== null ? String(mr.readingValue) : null,
       imageUrl: mr.imageUrl,
       createdAt: mr.createdAt.toISOString(),
-    }));
+    }))
 
     // Map room services
-    const services = room.roomServices.map((rs) => ({
+    const services = room.roomServices.map(rs => ({
       id: rs.service.id,
       name: rs.service.name,
       price: String(rs.service.price),
       unit: rs.service.unit,
       isMetered: rs.service.isMetered,
-    }));
+    }))
 
     return {
       room: {
@@ -593,7 +579,7 @@ export class RoomsService {
       rentalHistory,
       invoices,
       meterReadings,
-    };
+    }
   }
 
   /**
@@ -604,13 +590,13 @@ export class RoomsService {
     roomId: string,
     dto: UpdateRoomDto,
   ): Promise<RoomResponseDto> {
-    this.logger.log(`Updating room ${roomId} in boarding house ${boardingHouseId}`);
+    this.logger.log(`Updating room ${roomId} in boarding house ${boardingHouseId}`)
 
     const existingRoom = await this.prisma.room.findFirst({
       where: { id: roomId, boardingHouseId },
-    });
+    })
     if (!existingRoom) {
-      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`);
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`)
     }
 
     if (dto.roomNumber && dto.roomNumber !== existingRoom.roomNumber) {
@@ -620,22 +606,22 @@ export class RoomsService {
           roomNumber: dto.roomNumber.trim(),
           id: { not: roomId },
         },
-      });
+      })
       if (collision) {
         throw new ConflictException(
           `Room number '${dto.roomNumber.trim()}' already exists in this property`,
-        );
+        )
       }
     }
 
     if (dto.roomTypeId) {
       const roomType = await this.prisma.roomType.findFirst({
         where: { id: dto.roomTypeId, boardingHouseId },
-      });
+      })
       if (!roomType) {
         throw new NotFoundException(
           `RoomType with ID ${dto.roomTypeId} was not found for this property`,
-        );
+        )
       }
     }
 
@@ -644,40 +630,38 @@ export class RoomsService {
       const validServices = await this.prisma.service.findMany({
         where: { id: { in: dto.serviceIds }, boardingHouseId },
         select: { id: true },
-      });
+      })
       if (validServices.length !== dto.serviceIds.length) {
         throw new BadRequestException(
           'One or more selected serviceIds are invalid or do not belong to this property',
-        );
+        )
       }
     }
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async tx => {
       // Synchronize services if serviceIds array is provided
       if (dto.serviceIds !== undefined) {
         const existingRoomServices = await tx.roomService.findMany({
           where: { roomId },
           select: { id: true, serviceId: true },
-        });
+        })
 
-        const currentServiceIdSet = new Set(existingRoomServices.map((rs) => rs.serviceId));
-        const targetServiceIdSet = new Set(dto.serviceIds);
+        const currentServiceIdSet = new Set(existingRoomServices.map(rs => rs.serviceId))
+        const targetServiceIdSet = new Set(dto.serviceIds)
 
-        const toRemove = existingRoomServices.filter(
-          (rs) => !targetServiceIdSet.has(rs.serviceId),
-        );
-        const toAdd = dto.serviceIds.filter((id) => !currentServiceIdSet.has(id));
+        const toRemove = existingRoomServices.filter(rs => !targetServiceIdSet.has(rs.serviceId))
+        const toAdd = dto.serviceIds.filter(id => !currentServiceIdSet.has(id))
 
         if (toRemove.length > 0) {
           await tx.roomService.deleteMany({
-            where: { id: { in: toRemove.map((rs) => rs.id) } },
-          });
+            where: { id: { in: toRemove.map(rs => rs.id) } },
+          })
         }
 
         if (toAdd.length > 0) {
           await tx.roomService.createMany({
-            data: toAdd.map((serviceId) => ({ roomId, serviceId })),
-          });
+            data: toAdd.map(serviceId => ({ roomId, serviceId })),
+          })
         }
       }
 
@@ -700,17 +684,17 @@ export class RoomsService {
             },
           },
         },
-      });
-    });
+      })
+    })
 
-    return this.mapRoomToDto(updated);
+    return this.mapRoomToDto(updated)
   }
 
   /**
    * Helper to resolve active subscription max room limit or free tier fallback
    */
   private async resolveMaxRoomLimit(landlordId: string): Promise<number> {
-    const now = new Date();
+    const now = new Date()
     const activeSub = await this.prisma.userSubscription.findFirst({
       where: {
         userId: landlordId,
@@ -721,17 +705,17 @@ export class RoomsService {
       include: {
         subscriptionPlan: true,
       },
-    });
+    })
 
     if (activeSub?.subscriptionPlan?.maxRoom) {
-      return activeSub.subscriptionPlan.maxRoom;
+      return activeSub.subscriptionPlan.maxRoom
     }
 
     const freePlan = await this.prisma.subscriptionPlan.findUnique({
       where: { planName: SubscriptionPackage.free },
-    });
+    })
 
-    return freePlan?.maxRoom ?? 10;
+    return freePlan?.maxRoom ?? 10
   }
 
   /**
@@ -744,7 +728,7 @@ export class RoomsService {
       .replace(/\{floor\}/g, String(floor))
       .replace(/\{index:0?2\}/g, String(index).padStart(2, '0'))
       .replace(/\{index\}/g, String(index))
-      .trim();
+      .trim()
   }
 
   /**
@@ -753,13 +737,13 @@ export class RoomsService {
   private mapRoomToDto(
     room: Prisma.RoomGetPayload<{
       include: {
-        roomType: true;
+        roomType: true
         roomServices: {
           include: {
-            service: true;
-          };
-        };
-      };
+            service: true
+          }
+        }
+      }
     }>,
   ): RoomResponseDto {
     return {
@@ -776,7 +760,7 @@ export class RoomsService {
         name: room.roomType.name,
         description: room.roomType.description,
       },
-      services: room.roomServices.map((rs) => ({
+      services: room.roomServices.map(rs => ({
         id: rs.service.id,
         name: rs.service.name,
         price: String(rs.service.price),
@@ -785,6 +769,6 @@ export class RoomsService {
       })),
       createdAt: room.createdAt.toISOString(),
       updatedAt: room.updatedAt?.toISOString() ?? null,
-    };
+    }
   }
 }

@@ -7,26 +7,26 @@ import {
   Logger,
   Request,
   BadRequestException,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
   ApiBearerAuth,
   ApiBadRequestResponse,
-} from '@nestjs/swagger';
-import { VisionService } from './vision.service';
-import { AiService } from './ai.service';
-import { ExtractMeterReadingDto, MeterOcrResponseDto } from './dto/meter-ocr.dto';
-import { ExtractIdCardDto, IdCardOcrResponseDto } from './dto/id-card-ocr.dto';
-import { AiChatDto, AiChatResponseDto } from './dto/ai-chat.dto';
-import { Public } from '../../common/decorators/public.decorator';
+} from '@nestjs/swagger'
+import { VisionService } from './vision.service'
+import { AiService } from './ai.service'
+import { ExtractMeterReadingDto, MeterOcrResponseDto } from './dto/meter-ocr.dto'
+import { ExtractIdCardDto, IdCardOcrResponseDto } from './dto/id-card-ocr.dto'
+import { AiChatDto, AiChatResponseDto } from './dto/ai-chat.dto'
+import { Public } from '../../common/decorators/public.decorator'
 
 @ApiTags('AI Engine')
 @ApiBearerAuth()
 @Controller('ai')
 export class AiController {
-  private readonly logger = new Logger(AiController.name);
+  private readonly logger = new Logger(AiController.name)
 
   constructor(
     private readonly visionService: VisionService,
@@ -47,15 +47,18 @@ export class AiController {
   })
   @ApiBadRequestResponse({ description: 'Dữ liệu ảnh không hợp lệ' })
   async extractMeterReading(@Body() dto: ExtractMeterReadingDto) {
-    this.logger.log(`POST /api/v1/ai/vision/meter-reading called for serviceType: ${dto.serviceType || 'general'}`);
-    const data = await this.visionService.extractMeterReading(dto.imageUrl, dto.serviceType);
+    this.logger.log(
+      `POST /api/v1/ai/vision/meter-reading called for serviceType: ${dto.serviceType || 'general'}`,
+    )
+    const data = await this.visionService.extractMeterReading(dto.imageUrl, dto.serviceType)
     return {
       success: data.isValid,
       data,
       message: data.isValid
         ? 'Nhận diện chỉ số đồng hồ thành công'
-        : (data.errorMessage || 'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể đọc được chỉ số'),
-    };
+        : data.errorMessage ||
+          'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể đọc được chỉ số',
+    }
   }
 
   @Public()
@@ -72,13 +75,13 @@ export class AiController {
   })
   @ApiBadRequestResponse({ description: 'Ảnh không hợp lệ hoặc không rõ' })
   async extractIdCard(@Body() dto: ExtractIdCardDto) {
-    this.logger.log(`POST /api/v1/ai/vision/id-card called for side: ${dto.side || 'front'}`);
-    const data = await this.visionService.extractIdCard(dto.imageUrl, dto.side);
+    this.logger.log(`POST /api/v1/ai/vision/id-card called for side: ${dto.side || 'front'}`)
+    const data = await this.visionService.extractIdCard(dto.imageUrl, dto.side)
     return {
       success: true,
       data,
       message: 'Bóc tách thông tin CCCD thành công',
-    };
+    }
   }
 
   @Public()
@@ -94,11 +97,11 @@ export class AiController {
     type: AiChatResponseDto,
   })
   async chat(@Request() req: any, @Body() dto: AiChatDto) {
-    this.logger.log(`POST /api/v1/ai/chat called by user: ${req.user?.id || 'guest'}`);
-    const data = await this.aiService.chat(dto, req.user?.id);
+    this.logger.log(`POST /api/v1/ai/chat called by user: ${req.user?.id || 'guest'}`)
+    const data = await this.aiService.chat(dto, req.user?.id)
     return {
       success: true,
       data,
-    };
+    }
   }
 }

@@ -5,41 +5,39 @@ import {
   ForbiddenException,
   BadRequestException,
   Optional,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import {
-  VietQrPaymentInstructionDto,
-} from './dto/initiate-payment.dto';
+} from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { PrismaService } from '../../common/prisma/prisma.service'
+import { VietQrPaymentInstructionDto } from './dto/initiate-payment.dto'
 import {
   ConfirmPaymentDto,
   PaymentExecutionResultDto,
   VietQrWebhookDto,
-} from './dto/confirm-payment.dto';
+} from './dto/confirm-payment.dto'
 import {
   InvoicePayOsCheckoutResponseDto,
   InvoicePaymentStatusResponseDto,
-} from './dto/invoice-payos-checkout.dto';
-import { Prisma } from '@prisma';
-import { QueryLandlordPaymentsDto } from './dto/query-landlord-payments.dto';
+} from './dto/invoice-payos-checkout.dto'
+import { Prisma } from '@prisma'
+import { QueryLandlordPaymentsDto } from './dto/query-landlord-payments.dto'
 import {
   LandlordPaymentsResponseDto,
   LandlordPaymentItemDto,
   PaymentInvoiceItemDto,
   PaymentMeterReadingDto,
-} from './dto/landlord-payments-response.dto';
+} from './dto/landlord-payments-response.dto'
 
-import { PayOsService } from './payos.service';
+import { PayOsService } from './payos.service'
 
 @Injectable()
 export class PaymentsService {
-  private readonly logger = new Logger(PaymentsService.name);
+  private readonly logger = new Logger(PaymentsService.name)
 
   // System VietQR Default Beneficiary Bank
-  private readonly DEFAULT_BANK_CODE = '970422'; // MB Bank
-  private readonly DEFAULT_BANK_NAME = 'MB Bank (Quân Đội)';
-  private readonly DEFAULT_ACCOUNT_NUMBER = '0912345678';
-  private readonly DEFAULT_ACCOUNT_NAME = 'DORMIO MANAGEMENT';
+  private readonly DEFAULT_BANK_CODE = '970422' // MB Bank
+  private readonly DEFAULT_BANK_NAME = 'MB Bank (Quân Đội)'
+  private readonly DEFAULT_ACCOUNT_NUMBER = '0912345678'
+  private readonly DEFAULT_ACCOUNT_NAME = 'DORMIO MANAGEMENT'
 
   constructor(
     private readonly prisma: PrismaService,
@@ -51,9 +49,9 @@ export class PaymentsService {
    * Helper to format period string from date
    */
   private formatPeriod(date: Date): string {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `T${month}/${year}`;
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `T${month}/${year}`
   }
 
   /**
@@ -63,9 +61,7 @@ export class PaymentsService {
     userId: string,
     invoiceId: string,
   ): Promise<VietQrPaymentInstructionDto> {
-    this.logger.log(
-      `Generating VietQR instruction for invoice ${invoiceId} by user ${userId}`,
-    );
+    this.logger.log(`Generating VietQR instruction for invoice ${invoiceId} by user ${userId}`)
 
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
@@ -81,33 +77,27 @@ export class PaymentsService {
           },
         },
       },
-    });
+    })
 
     if (!invoice || !invoice.contract) {
-      throw new NotFoundException(
-        'Không tìm thấy hóa đơn hoặc hợp đồng liên quan.',
-      );
+      throw new NotFoundException('Không tìm thấy hóa đơn hoặc hợp đồng liên quan.')
     }
 
     // Verify tenant ownership scoping
-    const isTenantParty = invoice.contract.tenantContracts.some(
-      (tc) => tc.tenantId === userId,
-    );
+    const isTenantParty = invoice.contract.tenantContracts.some(tc => tc.tenantId === userId)
     if (!isTenantParty) {
-      throw new ForbiddenException(
-        'Bạn không có quyền truy cập hoặc thanh toán hóa đơn này.',
-      );
+      throw new ForbiddenException('Bạn không có quyền truy cập hoặc thanh toán hóa đơn này.')
     }
 
-    const roomNumber = invoice.contract.room.roomNumber;
-    const boardingHouseName = invoice.contract.room.boardingHouse.name;
-    const period = this.formatPeriod(invoice.dueDate);
-    const amount = Number(invoice.totalAmount);
-    const transferSyntax = `TT TRO P${roomNumber} ${period}`;
+    const roomNumber = invoice.contract.room.roomNumber
+    const boardingHouseName = invoice.contract.room.boardingHouse.name
+    const period = this.formatPeriod(invoice.dueDate)
+    const amount = Number(invoice.totalAmount)
+    const transferSyntax = `TT TRO P${roomNumber} ${period}`
 
     const qrCodeUrl = `https://api.vietqr.io/image/${this.DEFAULT_BANK_CODE}-${this.DEFAULT_ACCOUNT_NUMBER}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
       transferSyntax,
-    )}&accountName=${encodeURIComponent(this.DEFAULT_ACCOUNT_NAME)}`;
+    )}&accountName=${encodeURIComponent(this.DEFAULT_ACCOUNT_NAME)}`
 
     return {
       invoiceId: invoice.id,
@@ -122,7 +112,7 @@ export class PaymentsService {
       roomNumber,
       boardingHouseName,
       dueDate: invoice.dueDate.toISOString(),
-    };
+    }
   }
 
   /**
@@ -132,9 +122,7 @@ export class PaymentsService {
     userId: string,
     invoiceId: string,
   ): Promise<InvoicePayOsCheckoutResponseDto> {
-    this.logger.log(
-      `Creating PayOS checkout session for invoice ${invoiceId} by user ${userId}`,
-    );
+    this.logger.log(`Creating PayOS checkout session for invoice ${invoiceId} by user ${userId}`)
 
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
@@ -151,22 +139,20 @@ export class PaymentsService {
           },
         },
       },
-    });
+    })
 
     if (!invoice || !invoice.contract) {
-      throw new NotFoundException('Không tìm thấy hóa đơn cần thanh toán.');
+      throw new NotFoundException('Không tìm thấy hóa đơn cần thanh toán.')
     }
 
     // Verify tenant scoping
-    const isTenantParty = invoice.contract.tenantContracts.some(
-      (tc) => tc.tenantId === userId,
-    );
+    const isTenantParty = invoice.contract.tenantContracts.some(tc => tc.tenantId === userId)
     if (!isTenantParty) {
-      throw new ForbiddenException('Bạn không có quyền thanh toán hóa đơn này.');
+      throw new ForbiddenException('Bạn không có quyền thanh toán hóa đơn này.')
     }
 
     if (invoice.status === 'paid') {
-      throw new BadRequestException('Hóa đơn này đã được thanh toán trước đó.');
+      throw new BadRequestException('Hóa đơn này đã được thanh toán trước đó.')
     }
 
     // Sync any unbilled meter readings submitted for this invoice's room
@@ -178,10 +164,10 @@ export class PaymentsService {
           readingValue: { not: null },
         },
         include: { service: true },
-      });
+      })
 
       if (unbilledReadings.length > 0) {
-        const readingsToLink: string[] = [];
+        const readingsToLink: string[] = []
 
         for (const reading of unbilledReadings) {
           const prevReading = await this.prisma.meterReading.findFirst({
@@ -191,27 +177,23 @@ export class PaymentsService {
               invoiceId: { not: null, notIn: [invoice.id] },
             },
             orderBy: { createdAt: 'desc' },
-          });
+          })
 
-          const currentVal = Number(reading.readingValue);
+          const currentVal = Number(reading.readingValue)
           const prevVal =
-            prevReading && prevReading.readingValue !== null
-              ? Number(prevReading.readingValue)
-              : 0;
+            prevReading && prevReading.readingValue !== null ? Number(prevReading.readingValue) : 0
 
           const consumption =
-            currentVal >= prevVal && prevVal > 0
-              ? currentVal - prevVal
-              : currentVal;
-          const unitPriceNum = Number(reading.service.price);
-          const itemAmount = Math.round(consumption * unitPriceNum);
+            currentVal >= prevVal && prevVal > 0 ? currentVal - prevVal : currentVal
+          const unitPriceNum = Number(reading.service.price)
+          const itemAmount = Math.round(consumption * unitPriceNum)
 
           const existingItem = await this.prisma.invoiceItem.findFirst({
             where: {
               invoiceId: invoice.id,
               serviceId: reading.serviceId,
             },
-          });
+          })
 
           if (existingItem) {
             await this.prisma.invoiceItem.update({
@@ -221,7 +203,7 @@ export class PaymentsService {
                 unitPrice: reading.service.price,
                 amount: itemAmount,
               },
-            });
+            })
           } else {
             await this.prisma.invoiceItem.create({
               data: {
@@ -231,44 +213,41 @@ export class PaymentsService {
                 unitPrice: reading.service.price,
                 amount: itemAmount,
               },
-            });
+            })
           }
 
-          readingsToLink.push(reading.id);
+          readingsToLink.push(reading.id)
         }
 
         if (readingsToLink.length > 0) {
           await this.prisma.meterReading.updateMany({
             where: { id: { in: readingsToLink } },
             data: { invoiceId: invoice.id },
-          });
+          })
         }
 
         // Recalculate totalAmount from all invoice items
         const allItems = await this.prisma.invoiceItem.findMany({
           where: { invoiceId: invoice.id },
-        });
-        const newTotal = allItems.reduce(
-          (sum, it) => sum + Number(it.amount),
-          0,
-        );
+        })
+        const newTotal = allItems.reduce((sum, it) => sum + Number(it.amount), 0)
 
         await this.prisma.invoice.update({
           where: { id: invoice.id },
           data: { totalAmount: new Prisma.Decimal(newTotal) },
-        });
+        })
 
-        invoice.totalAmount = new Prisma.Decimal(newTotal);
+        invoice.totalAmount = new Prisma.Decimal(newTotal)
       }
     }
 
-    const amount = Number(invoice.totalAmount);
+    const amount = Number(invoice.totalAmount)
     if (amount <= 0) {
-      throw new BadRequestException('Số tiền thanh toán hóa đơn không hợp lệ.');
+      throw new BadRequestException('Số tiền thanh toán hóa đơn không hợp lệ.')
     }
 
-    const now = new Date();
-    const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    const now = new Date()
+    const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000)
 
     // 1. Check for existing reusable pending payment session (< 15 mins) matching the exact amount
     const existingPendingPayment = await this.prisma.payment.findFirst({
@@ -280,50 +259,49 @@ export class PaymentsService {
         amount: new Prisma.Decimal(amount),
       },
       orderBy: { createdAt: 'desc' },
-    });
+    })
 
     if (
       existingPendingPayment &&
       existingPendingPayment.orderCode &&
       existingPendingPayment.qrCodeUrl
     ) {
-      const elapsedMs = now.getTime() - existingPendingPayment.createdAt.getTime();
-      const remainingSecs = Math.max(30, Math.floor((15 * 60 * 1000 - elapsedMs) / 1000));
+      const elapsedMs = now.getTime() - existingPendingPayment.createdAt.getTime()
+      const remainingSecs = Math.max(30, Math.floor((15 * 60 * 1000 - elapsedMs) / 1000))
 
       this.logger.log(
         `Reusing existing pending PayOS payment session (OrderCode: ${existingPendingPayment.orderCode}) for invoice ${invoice.id}`,
-      );
+      )
 
-      let bin = this.DEFAULT_BANK_CODE;
-      let accountNumber = this.DEFAULT_ACCOUNT_NUMBER;
-      let accountName = this.DEFAULT_ACCOUNT_NAME;
-      let checkoutUrl = existingPendingPayment.qrCodeUrl;
+      let bin = this.DEFAULT_BANK_CODE
+      let accountNumber = this.DEFAULT_ACCOUNT_NUMBER
+      let accountName = this.DEFAULT_ACCOUNT_NAME
+      let checkoutUrl = existingPendingPayment.qrCodeUrl
 
       try {
         const linkInfo = await this.payOsService.getPaymentLinkInformation(
           Number(existingPendingPayment.orderCode),
-        );
+        )
         if (linkInfo) {
-          bin = linkInfo.bin || bin;
-          accountNumber = linkInfo.accountNumber || accountNumber;
-          accountName = linkInfo.accountName || accountName;
-          checkoutUrl = linkInfo.checkoutUrl || checkoutUrl;
+          bin = linkInfo.bin || bin
+          accountNumber = linkInfo.accountNumber || accountNumber
+          accountName = linkInfo.accountName || accountName
+          checkoutUrl = linkInfo.checkoutUrl || checkoutUrl
         }
       } catch (err: any) {
         this.logger.warn(
           `Could not fetch PayOS link info for order ${existingPendingPayment.orderCode}: ${err.message}`,
-        );
+        )
       }
 
-      const roomNumber = invoice.contract.room.roomNumber;
-      const period = this.formatPeriod(invoice.dueDate);
-      const syntax = `INV P${roomNumber} ${period}`.substring(0, 25);
+      const roomNumber = invoice.contract.room.roomNumber
+      const period = this.formatPeriod(invoice.dueDate)
+      const syntax = `INV P${roomNumber} ${period}`.substring(0, 25)
 
       return {
         orderCode: Number(existingPendingPayment.orderCode),
         paymentLinkId:
-          existingPendingPayment.paymentLinkId ||
-          `link-${existingPendingPayment.orderCode}`,
+          existingPendingPayment.paymentLinkId || `link-${existingPendingPayment.orderCode}`,
         checkoutUrl,
         qrCode: existingPendingPayment.qrCodeUrl,
         accountNumber,
@@ -334,27 +312,27 @@ export class PaymentsService {
         expiresIn: remainingSecs,
         invoiceId: invoice.id,
         isReused: true,
-      };
+      }
     }
 
     // 2. Generate unique numeric order code (8 digits timestamp + 3 random digits)
     const orderCode = Number(
       `${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`,
-    );
+    )
 
-    const roomNumber = invoice.contract.room.roomNumber;
-    const period = this.formatPeriod(invoice.dueDate);
-    const syntax = `INV P${roomNumber} ${period}`.substring(0, 25); // PayOS max 25 chars
+    const roomNumber = invoice.contract.room.roomNumber
+    const period = this.formatPeriod(invoice.dueDate)
+    const syntax = `INV P${roomNumber} ${period}`.substring(0, 25) // PayOS max 25 chars
 
     const appUrl =
       this.configService?.get<string>('FRONTEND_URL') ||
       process.env.FRONTEND_URL ||
-      'http://localhost:3000';
-    const cancelUrl = `${appUrl}/tenant/invoices?canceled=true`;
-    const returnUrl = `${appUrl}/tenant/invoices?success=true&orderCode=${orderCode}`;
+      'http://localhost:3000'
+    const cancelUrl = `${appUrl}/tenant/invoices?canceled=true`
+    const returnUrl = `${appUrl}/tenant/invoices?success=true&orderCode=${orderCode}`
 
     // 3. Create PayOS payment link with 15 minutes expiration
-    const expiredAt = Math.floor(now.getTime() / 1000) + 15 * 60;
+    const expiredAt = Math.floor(now.getTime() / 1000) + 15 * 60
     const linkResult = await this.payOsService.createPaymentLink({
       orderCode,
       amount,
@@ -369,13 +347,13 @@ export class PaymentsService {
         },
       ],
       expiredAt,
-    });
+    })
 
     // 4. Save or update Payment record in DB
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       const oldPayment = await tx.payment.findUnique({
         where: { invoiceId: invoice.id },
-      });
+      })
 
       if (oldPayment) {
         await tx.payment.update({
@@ -392,7 +370,7 @@ export class PaymentsService {
             paidAt: null,
             createdAt: now,
           },
-        });
+        })
       } else {
         await tx.payment.create({
           data: {
@@ -406,9 +384,9 @@ export class PaymentsService {
             paymentLinkId: linkResult.paymentLinkId,
             qrCodeUrl: linkResult.qrCode,
           },
-        });
+        })
       }
-    });
+    })
 
     return {
       orderCode,
@@ -423,7 +401,7 @@ export class PaymentsService {
       expiresIn: 15 * 60,
       invoiceId: invoice.id,
       isReused: false,
-    };
+    }
   }
 
   /**
@@ -433,31 +411,25 @@ export class PaymentsService {
     userId: string,
     orderCode: number,
   ): Promise<InvoicePaymentStatusResponseDto> {
-    this.logger.log(
-      `Checking invoice payment status for orderCode ${orderCode} by user ${userId}`,
-    );
+    this.logger.log(`Checking invoice payment status for orderCode ${orderCode} by user ${userId}`)
 
     const payment = await this.prisma.payment.findFirst({
       where: { orderCode: BigInt(orderCode) },
       include: { invoice: true },
-    });
+    })
 
     if (!payment) {
-      throw new NotFoundException(
-        `Không tìm thấy đơn thanh toán có mã ${orderCode}`,
-      );
+      throw new NotFoundException(`Không tìm thấy đơn thanh toán có mã ${orderCode}`)
     }
 
     // Verify user is payer or tenant party
     if (payment.payerId && payment.payerId !== userId) {
-      throw new ForbiddenException(
-        'Bạn không có quyền xem trạng thái đơn thanh toán này.',
-      );
+      throw new ForbiddenException('Bạn không có quyền xem trạng thái đơn thanh toán này.')
     }
 
     const isPaid =
       payment.status === 'success' ||
-      (payment.invoice !== null && payment.invoice.status === 'paid');
+      (payment.invoice !== null && payment.invoice.status === 'paid')
 
     return {
       orderCode,
@@ -465,7 +437,7 @@ export class PaymentsService {
       isPaid,
       invoiceId: payment.invoiceId || undefined,
       paidAt: payment.paidAt ? payment.paidAt.toISOString() : undefined,
-    };
+    }
   }
 
   /**
@@ -475,9 +447,7 @@ export class PaymentsService {
     userId: string,
     dto: ConfirmPaymentDto,
   ): Promise<PaymentExecutionResultDto> {
-    this.logger.log(
-      `Confirming payment for invoice ${dto.invoiceId} by user ${userId}`,
-    );
+    this.logger.log(`Confirming payment for invoice ${dto.invoiceId} by user ${userId}`)
 
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: dto.invoiceId },
@@ -494,71 +464,70 @@ export class PaymentsService {
           },
         },
       },
-    });
+    })
 
     if (!invoice || !invoice.contract) {
-      throw new NotFoundException('Không tìm thấy hóa đơn cần thanh toán.');
+      throw new NotFoundException('Không tìm thấy hóa đơn cần thanh toán.')
     }
 
     // Tenant scoping validation
-    const isTenantParty = invoice.contract.tenantContracts.some(
-      (tc) => tc.tenantId === userId,
-    );
+    const isTenantParty = invoice.contract.tenantContracts.some(tc => tc.tenantId === userId)
     if (!isTenantParty) {
-      throw new ForbiddenException(
-        'Bạn không có quyền thanh toán hóa đơn này.',
-      );
+      throw new ForbiddenException('Bạn không có quyền thanh toán hóa đơn này.')
     }
 
     // 1. Idempotency check: Already paid
     if (invoice.status === 'paid' && invoice.payment) {
       this.logger.log(
         `Invoice ${invoice.id} already marked paid (Payment ID: ${invoice.payment.id})`,
-      );
+      )
       return {
         success: true,
         paymentId: invoice.payment.id,
         invoiceId: invoice.id,
         receiptNumber: invoice.payment.receiptNumber || 'REC-PAID',
         invoiceStatus: 'paid',
-        paidAt: invoice.payment.paidAt ? invoice.payment.paidAt.toISOString() : new Date().toISOString(),
+        paidAt: invoice.payment.paidAt
+          ? invoice.payment.paidAt.toISOString()
+          : new Date().toISOString(),
         message: 'Hóa đơn đã được thanh toán thành công trước đó.',
-      };
+      }
     }
 
     const transactionRef =
-      dto.transactionRef || `TXN-VQR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      dto.transactionRef || `TXN-VQR-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
     // 2. Idempotency check on transactionRef
     const existingPaymentByRef = await this.prisma.payment.findFirst({
       where: { transactionRef },
-    });
+    })
     if (existingPaymentByRef) {
-      this.logger.log(
-        `Payment with transactionRef ${transactionRef} already exists`,
-      );
+      this.logger.log(`Payment with transactionRef ${transactionRef} already exists`)
       return {
         success: true,
         paymentId: existingPaymentByRef.id,
         invoiceId: invoice.id,
         receiptNumber: existingPaymentByRef.receiptNumber || 'REC-PROCESSED',
         invoiceStatus: 'paid',
-        paidAt: existingPaymentByRef.paidAt ? existingPaymentByRef.paidAt.toISOString() : new Date().toISOString(),
+        paidAt: existingPaymentByRef.paidAt
+          ? existingPaymentByRef.paidAt.toISOString()
+          : new Date().toISOString(),
         message: 'Giao dịch đã được ghi nhận thành công.',
-      };
+      }
     }
 
-    const d = new Date(invoice.dueDate);
-    const receiptNumber = `REC-${d.getFullYear()}${String(
-      d.getMonth() + 1,
-    ).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const paidAtDate = new Date();
-    const period = this.formatPeriod(invoice.dueDate);
-    const roomNumber = invoice.contract.room.roomNumber;
-    const boardingHouseId = invoice.contract.room.boardingHouseId;
+    const d = new Date(invoice.dueDate)
+    const receiptNumber = `REC-${d.getFullYear()}${String(d.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-${Math.floor(1000 + Math.random() * 9000)}`
+    const paidAtDate = new Date()
+    const period = this.formatPeriod(invoice.dueDate)
+    const roomNumber = invoice.contract.room.roomNumber
+    const boardingHouseId = invoice.contract.room.boardingHouseId
 
     // 3. Execute DB Transaction
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async tx => {
       // Create Payment
       const payment = await tx.payment.create({
         data: {
@@ -573,11 +542,9 @@ export class PaymentsService {
           paidAt: paidAtDate,
           qrCodeUrl: `https://api.vietqr.io/image/${this.DEFAULT_BANK_CODE}-${this.DEFAULT_ACCOUNT_NUMBER}-compact2.png?amount=${Number(
             invoice.totalAmount,
-          )}&addInfo=${encodeURIComponent(
-            `TT TRO P${roomNumber} ${period}`,
-          )}`,
+          )}&addInfo=${encodeURIComponent(`TT TRO P${roomNumber} ${period}`)}`,
         },
-      });
+      })
 
       // Update Invoice status to paid
       await tx.invoice.update({
@@ -585,7 +552,7 @@ export class PaymentsService {
         data: {
           status: 'paid',
         },
-      });
+      })
 
       // AuditLog for PAYMENT creation
       await tx.auditLog.create({
@@ -604,7 +571,7 @@ export class PaymentsService {
             receiptNumber,
           },
         },
-      });
+      })
 
       // AuditLog for INVOICE status change
       await tx.auditLog.create({
@@ -618,7 +585,7 @@ export class PaymentsService {
           oldValue: { status: invoice.status },
           newValue: { status: 'paid', paymentId: payment.id },
         },
-      });
+      })
 
       // Create success notification for tenant
       await tx.notification.create({
@@ -632,14 +599,14 @@ export class PaymentsService {
           ).format(Number(invoice.totalAmount))} đ). Mã biên nhận: ${receiptNumber}`,
           isRead: false,
         },
-      });
+      })
 
-      return payment;
-    });
+      return payment
+    })
 
     this.logger.log(
       `Payment ${result.id} recorded successfully. Invoice ${invoice.id} marked as PAID.`,
-    );
+    )
 
     return {
       success: true,
@@ -649,26 +616,22 @@ export class PaymentsService {
       invoiceStatus: 'paid',
       paidAt: paidAtDate.toISOString(),
       message: 'Thanh toán hóa đơn thành công.',
-    };
+    }
   }
 
   /**
    * UC-L-06 Part 3: Webhook handler from banking partner (VietQR / bank gateway)
    */
-  async handleVietQrWebhook(
-    dto: VietQrWebhookDto,
-  ): Promise<{ success: boolean; message: string }> {
-    this.logger.log(`Received VietQR Webhook: ${JSON.stringify(dto)}`);
+  async handleVietQrWebhook(dto: VietQrWebhookDto): Promise<{ success: boolean; message: string }> {
+    this.logger.log(`Received VietQR Webhook: ${JSON.stringify(dto)}`)
 
     // 1. Check idempotency on transactionRef
     const existingPayment = await this.prisma.payment.findFirst({
       where: { transactionRef: dto.transactionRef },
-    });
+    })
     if (existingPayment) {
-      this.logger.log(
-        `Webhook transactionRef ${dto.transactionRef} already processed`,
-      );
-      return { success: true, message: 'Transaction already processed' };
+      this.logger.log(`Webhook transactionRef ${dto.transactionRef} already processed`)
+      return { success: true, message: 'Transaction already processed' }
     }
 
     // 2. Parse transferContent to find room number and invoice
@@ -689,35 +652,33 @@ export class PaymentsService {
           },
         },
       },
-    });
+    })
 
     // Match invoice by transfer content
-    const matchedInvoice = invoices.find((inv) => {
-      const roomNum = inv.contract?.room?.roomNumber;
-      const period = this.formatPeriod(inv.dueDate);
-      const syntax = `TT TRO P${roomNum} ${period}`.toUpperCase();
-      const content = dto.transferContent.toUpperCase();
+    const matchedInvoice = invoices.find(inv => {
+      const roomNum = inv.contract?.room?.roomNumber
+      const period = this.formatPeriod(inv.dueDate)
+      const syntax = `TT TRO P${roomNum} ${period}`.toUpperCase()
+      const content = dto.transferContent.toUpperCase()
       return (
         content.includes(syntax) ||
         (roomNum && content.includes(`P${roomNum.toUpperCase()}`) && content.includes(period)) ||
         content.includes(inv.id.toUpperCase())
-      );
-    });
+      )
+    })
 
     if (!matchedInvoice) {
-      this.logger.warn(
-        `No unpaid invoice matched for webhook content: "${dto.transferContent}"`,
-      );
+      this.logger.warn(`No unpaid invoice matched for webhook content: "${dto.transferContent}"`)
       throw new NotFoundException(
         'Không tìm thấy hóa đơn chưa thanh toán phù hợp với nội dung chuyển khoản.',
-      );
+      )
     }
 
     const primaryTenant =
-      matchedInvoice.contract?.tenantContracts.find((tc) => tc.isPrimary) ||
-      matchedInvoice.contract?.tenantContracts[0];
+      matchedInvoice.contract?.tenantContracts.find(tc => tc.isPrimary) ||
+      matchedInvoice.contract?.tenantContracts[0]
 
-    const payerId = primaryTenant?.tenantId || null;
+    const payerId = primaryTenant?.tenantId || null
 
     // Process payment
     await this.confirmInvoicePayment(payerId || '00000000-0000-0000-0000-000000000000', {
@@ -725,12 +686,12 @@ export class PaymentsService {
       amount: dto.amount,
       transactionRef: dto.transactionRef,
       method: 'banking' as any,
-    });
+    })
 
     return {
       success: true,
       message: `Hóa đơn ${matchedInvoice.id} đã được quyết toán tự động qua VietQR.`,
-    };
+    }
   }
 
   /**
@@ -739,51 +700,40 @@ export class PaymentsService {
   private mapPaymentToDto(payment: any): LandlordPaymentItemDto {
     const primaryTenant =
       payment.invoice?.contract?.tenantContracts?.find((tc: any) => tc.isPrimary) ||
-      payment.invoice?.contract?.tenantContracts?.[0];
+      payment.invoice?.contract?.tenantContracts?.[0]
 
     const payerName =
       payment.payer?.userIdentification?.fullName ||
       payment.payer?.username ||
       primaryTenant?.tenant?.userIdentification?.fullName ||
       primaryTenant?.tenant?.username ||
-      'Khách thuê';
+      'Khách thuê'
 
-    const payerPhone =
-      payment.payer?.phoneNumber ||
-      primaryTenant?.tenant?.phoneNumber ||
-      null;
+    const payerPhone = payment.payer?.phoneNumber || primaryTenant?.tenant?.phoneNumber || null
 
-    const period = payment.invoice?.dueDate
-      ? this.formatPeriod(payment.invoice.dueDate)
-      : 'N/A';
+    const period = payment.invoice?.dueDate ? this.formatPeriod(payment.invoice.dueDate) : 'N/A'
 
     return {
       id: payment.id,
-      receiptNumber:
-        payment.receiptNumber || `REC-${payment.id.substring(0, 8).toUpperCase()}`,
+      receiptNumber: payment.receiptNumber || `REC-${payment.id.substring(0, 8).toUpperCase()}`,
       transactionRef: payment.transactionRef || null,
       amount: Number(payment.amount),
       method: payment.method,
       status: payment.status,
-      paidAt: payment.paidAt
-        ? payment.paidAt.toISOString()
-        : payment.createdAt.toISOString(),
+      paidAt: payment.paidAt ? payment.paidAt.toISOString() : payment.createdAt.toISOString(),
       payerId: payment.payerId || primaryTenant?.tenantId || null,
       payerName,
       payerPhone,
       invoiceId: payment.invoiceId || '',
       period,
-      invoiceTotal: payment.invoice
-        ? Number(payment.invoice.totalAmount)
-        : Number(payment.amount),
+      invoiceTotal: payment.invoice ? Number(payment.invoice.totalAmount) : Number(payment.amount),
       roomId: payment.invoice?.roomId || '',
       roomNumber: payment.invoice?.room?.roomNumber || 'P.---',
       roomTypeName: payment.invoice?.room?.roomType?.name || null,
       items: (payment.invoice?.invoiceItems || []).map((item: any) => ({
         id: item.id,
         serviceId: item.serviceId || null,
-        serviceName:
-          item.service?.name || (item.serviceId ? 'Dịch vụ' : 'Tiền phòng'),
+        serviceName: item.service?.name || (item.serviceId ? 'Dịch vụ' : 'Tiền phòng'),
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
         amount: item.amount,
@@ -796,7 +746,7 @@ export class PaymentsService {
         imageUrl: mr.imageUrl || null,
         createdAt: mr.createdAt.toISOString(),
       })),
-    };
+    }
   }
 
   /**
@@ -807,51 +757,47 @@ export class PaymentsService {
     query: QueryLandlordPaymentsDto,
     landlordId: string,
   ): Promise<LandlordPaymentsResponseDto> {
-    this.logger.log(
-      `Landlord ${landlordId} querying payment history for house ${boardingHouseId}`,
-    );
+    this.logger.log(`Landlord ${landlordId} querying payment history for house ${boardingHouseId}`)
 
     // 1. Verify landlord ownership
     const boardingHouse = await this.prisma.boardingHouse.findUnique({
       where: { id: boardingHouseId },
-    });
-    const isOwner = boardingHouse && (boardingHouse.ownerId === landlordId || (boardingHouse as any).landlordId === landlordId);
+    })
+    const isOwner =
+      boardingHouse &&
+      (boardingHouse.ownerId === landlordId || (boardingHouse as any).landlordId === landlordId)
     if (!isOwner) {
       throw new ForbiddenException(
         'Bạn không có quyền truy cập dữ liệu thanh toán của nhà trọ này.',
-      );
+      )
     }
 
-    const page = Math.max(1, Number(query.page) || 1);
-    const limit = Math.max(1, Number(query.limit) || 10);
-    const skip = (page - 1) * limit;
+    const page = Math.max(1, Number(query.page) || 1)
+    const limit = Math.max(1, Number(query.limit) || 10)
+    const skip = (page - 1) * limit
 
     // 2. Date filtering
-    let dateFilter: Prisma.DateTimeFilter | undefined;
-    const selectedYear =
-      query.year && query.year !== 'all' ? Number(query.year) : null;
-    const selectedMonth =
-      query.month && query.month !== 'all' ? Number(query.month) : null;
+    let dateFilter: Prisma.DateTimeFilter | undefined
+    const selectedYear = query.year && query.year !== 'all' ? Number(query.year) : null
+    const selectedMonth = query.month && query.month !== 'all' ? Number(query.month) : null
 
     if (selectedYear && selectedMonth) {
-      const start = new Date(selectedYear, selectedMonth - 1, 1);
-      const end = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999);
-      dateFilter = { gte: start, lte: end };
+      const start = new Date(selectedYear, selectedMonth - 1, 1)
+      const end = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999)
+      dateFilter = { gte: start, lte: end }
     } else if (selectedYear) {
-      const start = new Date(selectedYear, 0, 1);
-      const end = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
-      dateFilter = { gte: start, lte: end };
+      const start = new Date(selectedYear, 0, 1)
+      const end = new Date(selectedYear, 11, 31, 23, 59, 59, 999)
+      dateFilter = { gte: start, lte: end }
     }
 
     // 3. Search filter
     const isUuid = (val: string) =>
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        val,
-      );
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val)
 
-    let searchConditions: Prisma.PaymentWhereInput[] | undefined = undefined;
+    let searchConditions: Prisma.PaymentWhereInput[] | undefined = undefined
     if (query.search && query.search.trim()) {
-      const term = query.search.trim();
+      const term = query.search.trim()
       searchConditions = [
         { receiptNumber: { contains: term, mode: 'insensitive' } },
         { transactionRef: { contains: term, mode: 'insensitive' } },
@@ -896,10 +842,10 @@ export class PaymentsService {
             },
           },
         },
-      ];
+      ]
 
       if (isUuid(term)) {
-        searchConditions.push({ id: term });
+        searchConditions.push({ id: term })
       }
     }
 
@@ -910,17 +856,13 @@ export class PaymentsService {
       invoice: {
         room: {
           boardingHouseId,
-          ...(query.roomId && query.roomId !== 'all'
-            ? { id: query.roomId }
-            : {}),
+          ...(query.roomId && query.roomId !== 'all' ? { id: query.roomId } : {}),
         },
       },
-      ...(query.method && query.method !== 'all'
-        ? { method: query.method as any }
-        : {}),
+      ...(query.method && query.method !== 'all' ? { method: query.method as any } : {}),
       ...(dateFilter ? { paidAt: dateFilter } : {}),
       ...(searchConditions ? { OR: searchConditions } : {}),
-    };
+    }
 
     // 5. Aggregate metrics
     const allFilteredPayments = await this.prisma.payment.findMany({
@@ -929,21 +871,18 @@ export class PaymentsService {
         amount: true,
         method: true,
       },
-    });
+    })
 
-    const totalRevenue = allFilteredPayments.reduce(
-      (acc, p) => acc + Number(p.amount),
-      0,
-    );
-    const totalTransactions = allFilteredPayments.length;
+    const totalRevenue = allFilteredPayments.reduce((acc, p) => acc + Number(p.amount), 0)
+    const totalTransactions = allFilteredPayments.length
     const bankingRevenue = allFilteredPayments
-      .filter((p) => p.method === 'banking')
-      .reduce((acc, p) => acc + Number(p.amount), 0);
+      .filter(p => p.method === 'banking')
+      .reduce((acc, p) => acc + Number(p.amount), 0)
     const cashRevenue = allFilteredPayments
-      .filter((p) => p.method === 'cash')
-      .reduce((acc, p) => acc + Number(p.amount), 0);
+      .filter(p => p.method === 'cash')
+      .reduce((acc, p) => acc + Number(p.amount), 0)
 
-    const totalPages = Math.ceil(totalTransactions / limit) || 1;
+    const totalPages = Math.ceil(totalTransactions / limit) || 1
 
     // 6. Fetch paginated payments with all joins
     const payments = await this.prisma.payment.findMany({
@@ -990,7 +929,7 @@ export class PaymentsService {
       orderBy: { paidAt: 'desc' },
       skip,
       take: limit,
-    });
+    })
 
     return {
       summary: {
@@ -1005,8 +944,8 @@ export class PaymentsService {
         limit,
         totalPages,
       },
-      payments: payments.map((p) => this.mapPaymentToDto(p)),
-    };
+      payments: payments.map(p => this.mapPaymentToDto(p)),
+    }
   }
 
   /**
@@ -1017,9 +956,7 @@ export class PaymentsService {
     paymentId: string,
     landlordId?: string,
   ): Promise<LandlordPaymentItemDto> {
-    this.logger.log(
-      `Querying payment detail for ${paymentId} in house ${boardingHouseId}`,
-    );
+    this.logger.log(`Querying payment detail for ${paymentId} in house ${boardingHouseId}`)
 
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
@@ -1063,14 +1000,10 @@ export class PaymentsService {
           },
         },
       },
-    });
+    })
 
-    if (
-      !payment ||
-      !payment.invoice ||
-      payment.invoice.room.boardingHouseId !== boardingHouseId
-    ) {
-      throw new NotFoundException('Không tìm thấy bản ghi thanh toán.');
+    if (!payment || !payment.invoice || payment.invoice.room.boardingHouseId !== boardingHouseId) {
+      throw new NotFoundException('Không tìm thấy bản ghi thanh toán.')
     }
 
     if (
@@ -1078,33 +1011,29 @@ export class PaymentsService {
       payment.invoice.room.boardingHouse.ownerId !== landlordId &&
       (payment.invoice.room.boardingHouse as any).landlordId !== landlordId
     ) {
-      throw new ForbiddenException(
-        'Bạn không có quyền truy cập thanh toán này.',
-      );
+      throw new ForbiddenException('Bạn không có quyền truy cập thanh toán này.')
     }
 
-    return this.mapPaymentToDto(payment);
+    return this.mapPaymentToDto(payment)
   }
 
   /**
    * Process PayOS Webhook notification and update Payment, Subscription, or Invoice
    */
-  async handlePayOsWebhook(
-    body: any,
-  ): Promise<{ success: boolean; message: string }> {
-    this.logger.log('Processing PayOS webhook...');
+  async handlePayOsWebhook(body: any): Promise<{ success: boolean; message: string }> {
+    this.logger.log('Processing PayOS webhook...')
 
-    let webhookData: any;
+    let webhookData: any
     try {
-      webhookData = await this.payOsService.verifyWebhook(body);
+      webhookData = await this.payOsService.verifyWebhook(body)
     } catch (err: any) {
-      this.logger.error(`PayOS webhook verification failed: ${err.message}`);
-      return { success: false, message: 'Invalid webhook signature' };
+      this.logger.error(`PayOS webhook verification failed: ${err.message}`)
+      return { success: false, message: 'Invalid webhook signature' }
     }
 
-    const orderCode = webhookData.orderCode;
+    const orderCode = webhookData.orderCode
     if (!orderCode) {
-      return { success: false, message: 'Missing orderCode in webhook data' };
+      return { success: false, message: 'Missing orderCode in webhook data' }
     }
 
     const payment = await this.prisma.payment.findFirst({
@@ -1120,28 +1049,25 @@ export class PaymentsService {
           },
         },
       },
-    });
+    })
 
     if (!payment) {
-      this.logger.warn(`No payment record found for orderCode: ${orderCode}`);
-      return { success: false, message: 'Payment record not found' };
+      this.logger.warn(`No payment record found for orderCode: ${orderCode}`)
+      return { success: false, message: 'Payment record not found' }
     }
 
     // Idempotency: already marked as success
     if (payment.status === 'success') {
-      this.logger.log(
-        `Payment for orderCode ${orderCode} already marked as success`,
-      );
-      return { success: true, message: 'Payment already processed' };
+      this.logger.log(`Payment for orderCode ${orderCode} already marked as success`)
+      return { success: true, message: 'Payment already processed' }
     }
 
     const paidAtDate = webhookData.transactionDateTime
       ? new Date(webhookData.transactionDateTime)
-      : new Date();
-    const transactionRef =
-      webhookData.reference || `TXN-PAYOS-${orderCode}-${Date.now()}`;
+      : new Date()
+    const transactionRef = webhookData.reference || `TXN-PAYOS-${orderCode}-${Date.now()}`
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       // 1. Update Payment status
       await tx.payment.update({
         where: { id: payment.id },
@@ -1150,14 +1076,14 @@ export class PaymentsService {
           paidAt: paidAtDate,
           transactionRef,
         },
-      });
+      })
 
       // 2. If this is a Landlord Subscription payment
       if (payment.subscriptionId && payment.subscription) {
         await tx.userSubscription.update({
           where: { id: payment.subscriptionId },
           data: { status: 'active' },
-        });
+        })
 
         await tx.auditLog.create({
           data: {
@@ -1174,10 +1100,10 @@ export class PaymentsService {
               paidAt: paidAtDate.toISOString(),
             },
           },
-        });
+        })
         this.logger.log(
           `Activated subscription ${payment.subscriptionId} for user ${payment.payerId}`,
-        );
+        )
       }
 
       // 3. If this is a Tenant Invoice payment
@@ -1185,7 +1111,7 @@ export class PaymentsService {
         await tx.invoice.update({
           where: { id: payment.invoiceId },
           data: { status: 'paid' },
-        });
+        })
 
         await tx.auditLog.create({
           data: {
@@ -1201,8 +1127,8 @@ export class PaymentsService {
               paidAt: paidAtDate.toISOString(),
             },
           },
-        });
-        this.logger.log(`Marked invoice ${payment.invoiceId} as paid via PayOS`);
+        })
+        this.logger.log(`Marked invoice ${payment.invoiceId} as paid via PayOS`)
       }
 
       // 4. If this is a Platform Deposit payment (UC-PU-04 Step 5)
@@ -1210,12 +1136,12 @@ export class PaymentsService {
         await tx.deposit.update({
           where: { id: payment.depositId },
           data: { status: 'paid' },
-        });
+        })
 
         await tx.room.update({
           where: { id: payment.deposit.roomId },
           data: { status: 'deposited' },
-        });
+        })
 
         await tx.auditLog.create({
           data: {
@@ -1232,13 +1158,11 @@ export class PaymentsService {
               paidAt: paidAtDate.toISOString(),
             },
           },
-        });
+        })
 
-        const recipientId =
-          payment.deposit.boardingHouse?.ownerId ||
-          payment.deposit.post?.postedBy;
+        const recipientId = payment.deposit.boardingHouse?.ownerId || payment.deposit.post?.postedBy
         if (recipientId) {
-          const roomNumber = payment.deposit.room?.roomNumber || '';
+          const roomNumber = payment.deposit.room?.roomNumber || ''
           await tx.notification.create({
             data: {
               receiverId: recipientId,
@@ -1248,18 +1172,17 @@ export class PaymentsService {
               content: `Phòng ${roomNumber} vừa nhận được tiền đặt cọc giữ chỗ ${Number(payment.amount).toLocaleString('vi-VN')} đ qua sàn Dormio. Vui lòng kiểm tra và tạo hợp đồng cho khách thuê.`,
               isRead: false,
             },
-          });
+          })
         }
         this.logger.log(
           `Processed platform deposit ${payment.depositId} for room ${payment.deposit.roomId} via PayOS`,
-        );
+        )
       }
-    });
+    })
 
     return {
       success: true,
       message: 'PayOS webhook processed successfully',
-    };
+    }
   }
 }
-

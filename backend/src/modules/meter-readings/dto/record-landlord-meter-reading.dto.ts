@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsUUID,
   IsNotEmpty,
@@ -11,8 +11,8 @@ import {
   IsDateString,
   IsInt,
   Max,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class RecordLandlordMeterReadingItemDto {
   @ApiProperty({
@@ -21,7 +21,7 @@ export class RecordLandlordMeterReadingItemDto {
   })
   @IsUUID()
   @IsNotEmpty()
-  serviceId: string;
+  serviceId: string
 
   @ApiProperty({
     description: 'Numerical reading value from the utility meter dial',
@@ -29,7 +29,7 @@ export class RecordLandlordMeterReadingItemDto {
   })
   @IsNumber()
   @Min(0)
-  readingValue: number;
+  readingValue: number
 
   @ApiPropertyOptional({
     description: 'Optional proof photo image URL',
@@ -37,7 +37,7 @@ export class RecordLandlordMeterReadingItemDto {
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string
 }
 
 export class RecordLandlordMeterReadingDto {
@@ -47,7 +47,7 @@ export class RecordLandlordMeterReadingDto {
   })
   @IsUUID()
   @IsNotEmpty()
-  roomId: string;
+  roomId: string
 
   @ApiProperty({
     description: 'List of metered service readings for the room',
@@ -56,7 +56,7 @@ export class RecordLandlordMeterReadingDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => RecordLandlordMeterReadingItemDto)
-  readings: RecordLandlordMeterReadingItemDto[];
+  readings: RecordLandlordMeterReadingItemDto[]
 
   @ApiPropertyOptional({
     description: 'Optional timestamp when the reading was physically logged (defaults to now)',
@@ -64,7 +64,7 @@ export class RecordLandlordMeterReadingDto {
   })
   @IsOptional()
   @IsDateString()
-  recordedAt?: string;
+  recordedAt?: string
 
   @ApiPropertyOptional({
     description: 'Billing month (1 to 12)',
@@ -74,7 +74,7 @@ export class RecordLandlordMeterReadingDto {
   @IsInt()
   @Min(1)
   @Max(12)
-  month?: number;
+  month?: number
 
   @ApiPropertyOptional({
     description: 'Billing year',
@@ -82,7 +82,7 @@ export class RecordLandlordMeterReadingDto {
   })
   @IsOptional()
   @IsInt()
-  year?: number;
+  year?: number
 
   @ApiPropertyOptional({
     description: 'Optional note or reason for recording/adjusting meter readings',
@@ -90,5 +90,5 @@ export class RecordLandlordMeterReadingDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

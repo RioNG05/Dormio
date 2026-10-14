@@ -1,151 +1,151 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class PortfolioSummaryDto {
   @ApiProperty({ example: 3 })
-  totalProperties: number;
+  totalProperties: number
 
   @ApiProperty({ example: 45 })
-  totalRooms: number;
+  totalRooms: number
 
   @ApiProperty({ example: 38 })
-  occupiedRooms: number;
+  occupiedRooms: number
 
   @ApiProperty({ example: 5 })
-  vacantRooms: number;
+  vacantRooms: number
 
   @ApiProperty({ example: 2 })
-  depositRooms: number;
+  depositRooms: number
 
   @ApiProperty({ example: 0 })
-  maintenanceRooms: number;
+  maintenanceRooms: number
 
   @ApiProperty({ example: '84.4%' })
-  occupancyRate: string;
+  occupancyRate: string
 
   @ApiProperty({ example: '125,500,000' })
-  currentMonthRevenue: string;
+  currentMonthRevenue: string
 
   @ApiProperty({ example: '18,200,000' })
-  currentMonthExpenses: string;
+  currentMonthExpenses: string
 
   @ApiProperty({ example: '107,300,000' })
-  netProfit: string;
+  netProfit: string
 
   @ApiProperty({ example: '12,000,000' })
-  unpaidDebt: string;
+  unpaidDebt: string
 
   @ApiProperty({ example: 4 })
-  unpaidInvoicesCount: number;
+  unpaidInvoicesCount: number
 
   @ApiProperty({ example: 32 })
-  paidInvoicesCount: number;
+  paidInvoicesCount: number
 
   @ApiProperty({ example: '91.3%' })
-  collectionRate: string;
+  collectionRate: string
 }
 
 export class PropertyBreakdownDto {
   @ApiProperty({ example: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'Nhà trọ Cầu Giấy' })
-  name: string;
+  name: string
 
   @ApiProperty({ example: '123 Cầu Giấy, Dịch Vọng, Hà Nội' })
-  address: string;
+  address: string
 
   @ApiProperty({ example: 20 })
-  totalRooms: number;
+  totalRooms: number
 
   @ApiProperty({ example: 18 })
-  occupiedRooms: number;
+  occupiedRooms: number
 
   @ApiProperty({ example: 2 })
-  vacantRooms: number;
+  vacantRooms: number
 
   @ApiProperty({ example: '90.0%' })
-  occupancyRate: string;
+  occupancyRate: string
 
   @ApiProperty({ example: '58,000,000' })
-  currentMonthRevenue: string;
+  currentMonthRevenue: string
 
   @ApiProperty({ example: '8,000,000' })
-  currentMonthExpenses: string;
+  currentMonthExpenses: string
 
   @ApiProperty({ example: '50,000,000' })
-  netProfit: string;
+  netProfit: string
 
   @ApiProperty({ example: '4,000,000' })
-  unpaidDebt: string;
+  unpaidDebt: string
 
   @ApiProperty({ example: 1 })
-  unpaidInvoicesCount: number;
+  unpaidInvoicesCount: number
 
   @ApiProperty({ example: 2 })
-  expiringContractsCount: number;
+  expiringContractsCount: number
 }
 
 export class MonthlyChartPointDto {
   @ApiProperty({ example: '09/26' })
-  month: string;
+  month: string
 
   @ApiProperty({ example: 125.5 })
-  val: number; // in millions VND
+  val: number // in millions VND
 
   @ApiProperty({ example: '125,500,000' })
-  fullAmount: string;
+  fullAmount: string
 }
 
 export class MonthlyOccupancyPointDto {
   @ApiProperty({ example: '09/26' })
-  month: string;
+  month: string
 
   @ApiProperty({ example: 84 })
-  occupied: number; // percentage
+  occupied: number // percentage
 
   @ApiProperty({ example: 45 })
-  total: number;
+  total: number
 
   @ApiProperty({ example: 38 })
-  count: number;
+  count: number
 }
 
 export class MultiPropertyExpiringContractDto {
   @ApiProperty({ example: 'c1' })
-  id: string;
+  id: string
 
   @ApiProperty({ example: 'Nhà trọ Cầu Giấy' })
-  propertyName: string;
+  propertyName: string
 
   @ApiProperty({ example: 'P.201' })
-  room: string;
+  room: string
 
   @ApiProperty({ example: 'Nguyễn Văn A' })
-  tenant: string;
+  tenant: string
 
   @ApiProperty({ example: '0901234567' })
-  phone: string;
+  phone: string
 
   @ApiProperty({ example: 12 })
-  daysLeft: number;
+  daysLeft: number
 
   @ApiProperty({ example: '24/09/2026' })
-  endDate: string;
+  endDate: string
 }
 
 export class MultiPropertyOverviewResponseDto {
   @ApiProperty({ type: PortfolioSummaryDto })
-  portfolioSummary: PortfolioSummaryDto;
+  portfolioSummary: PortfolioSummaryDto
 
   @ApiProperty({ type: [PropertyBreakdownDto] })
-  propertiesBreakdown: PropertyBreakdownDto[];
+  propertiesBreakdown: PropertyBreakdownDto[]
 
   @ApiProperty({ type: [MonthlyChartPointDto] })
-  revenueChart: MonthlyChartPointDto[];
+  revenueChart: MonthlyChartPointDto[]
 
   @ApiProperty({ type: [MonthlyOccupancyPointDto] })
-  occupancyChart: MonthlyOccupancyPointDto[];
+  occupancyChart: MonthlyOccupancyPointDto[]
 
   @ApiProperty({ type: [MultiPropertyExpiringContractDto] })
-  expiringContracts: MultiPropertyExpiringContractDto[];
+  expiringContracts: MultiPropertyExpiringContractDto[]
 }

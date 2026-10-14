@@ -1,13 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsDateString,
-  IsEnum,
-  IsOptional,
-  Matches,
-} from 'class-validator';
-import { Gender } from '@prisma';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNotEmpty, IsString, IsDateString, IsEnum, IsOptional, Matches } from 'class-validator'
+import { Gender } from '@prisma'
 
 export class UpsertUserIdentificationDto {
   @ApiProperty({
@@ -19,7 +12,7 @@ export class UpsertUserIdentificationDto {
   @Matches(/^[0-9]{12}$/, {
     message: 'Identity number (CCCD) must contain exactly 12 digits',
   })
-  identityNumber: string;
+  identityNumber: string
 
   @ApiProperty({
     description: 'Full name as printed on ID card',
@@ -27,7 +20,7 @@ export class UpsertUserIdentificationDto {
   })
   @IsString()
   @IsNotEmpty({ message: 'Full name is required' })
-  fullName: string;
+  fullName: string
 
   @ApiProperty({
     description: 'Date of birth (ISO 8601 or YYYY-MM-DD)',
@@ -35,7 +28,7 @@ export class UpsertUserIdentificationDto {
   })
   @IsDateString({}, { message: 'Date of birth must be a valid date' })
   @IsNotEmpty({ message: 'Date of birth is required' })
-  dateOfBirth: string;
+  dateOfBirth: string
 
   @ApiProperty({
     description: 'Gender',
@@ -43,7 +36,7 @@ export class UpsertUserIdentificationDto {
     example: Gender.male,
   })
   @IsEnum(Gender, { message: 'Gender must be male or female' })
-  gender: Gender;
+  gender: Gender
 
   @ApiPropertyOptional({
     description: 'Nationality',
@@ -52,21 +45,21 @@ export class UpsertUserIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  nationality?: string;
+  nationality?: string
 
   @ApiPropertyOptional({
     description: 'Place of origin (quê quán) as string or structured JSON',
     example: 'Hà Nội',
   })
   @IsOptional()
-  placeOfOrigin?: any;
+  placeOfOrigin?: any
 
   @ApiPropertyOptional({
     description: 'Place of residence (nơi thường trú) as string or structured JSON',
     example: 'TP. Hồ Chí Minh',
   })
   @IsOptional()
-  placeOfResidence?: any;
+  placeOfResidence?: any
 
   @ApiPropertyOptional({
     description: 'Issue date (ngày cấp)',
@@ -74,7 +67,7 @@ export class UpsertUserIdentificationDto {
   })
   @IsOptional()
   @IsDateString()
-  issueDate?: string;
+  issueDate?: string
 
   @ApiPropertyOptional({
     description: 'Expiry date (ngày hết hạn)',
@@ -82,7 +75,7 @@ export class UpsertUserIdentificationDto {
   })
   @IsOptional()
   @IsDateString()
-  expiryDate?: string;
+  expiryDate?: string
 
   @ApiPropertyOptional({
     description: 'URL of ID card front image',
@@ -90,7 +83,7 @@ export class UpsertUserIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  cardFrontUrl?: string;
+  cardFrontUrl?: string
 
   @ApiPropertyOptional({
     description: 'URL of ID card back image',
@@ -98,7 +91,7 @@ export class UpsertUserIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  cardBackUrl?: string;
+  cardBackUrl?: string
 
   @ApiPropertyOptional({
     description: 'Additional notes',
@@ -106,5 +99,5 @@ export class UpsertUserIdentificationDto {
   })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string
 }

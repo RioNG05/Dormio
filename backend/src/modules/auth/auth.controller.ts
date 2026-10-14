@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Patch,
-  Body,
-  HttpCode,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Post, Patch, Body, HttpCode, HttpStatus, Logger } from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -15,27 +7,27 @@ import {
   ApiConflictResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+} from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
+import { AuthService } from './auth.service'
+import { RegisterDto } from './dto/register.dto'
+import { LoginDto } from './dto/login.dto'
+import { ChangePasswordDto } from './dto/change-password.dto'
 import {
   RegisterResponseDto,
   LoginResponseDto,
   ChangePasswordResponseDto,
-} from './dto/auth-response.dto';
-import { ApiAuth } from '../../common/swagger';
-import { ApiSuccessResponse, ApiErrorResponse } from '../../common/swagger';
-import { Public } from '../../common/decorators/public.decorator';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import type { JwtPayload } from './types/jwt-payload.type';
+} from './dto/auth-response.dto'
+import { ApiAuth } from '../../common/swagger'
+import { ApiSuccessResponse, ApiErrorResponse } from '../../common/swagger'
+import { Public } from '../../common/decorators/public.decorator'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import type { JwtPayload } from './types/jwt-payload.type'
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
+  private readonly logger = new Logger(AuthController.name)
 
   constructor(private readonly authService: AuthService) {}
 
@@ -59,8 +51,8 @@ export class AuthController {
     type: ApiErrorResponse,
   })
   async register(@Body() dto: RegisterDto) {
-    this.logger.log(`POST /auth/register called with phoneNumber: ${dto.phoneNumber}`);
-    return this.authService.register(dto);
+    this.logger.log(`POST /auth/register called with phoneNumber: ${dto.phoneNumber}`)
+    return this.authService.register(dto)
   }
 
   // ─── Login ─────────────────────────────────────────────────────────────────
@@ -85,8 +77,8 @@ export class AuthController {
     type: ApiErrorResponse,
   })
   async login(@Body() dto: LoginDto) {
-    this.logger.log(`POST /auth/login called with identifier: ${dto.identifier}`);
-    return this.authService.login(dto);
+    this.logger.log(`POST /auth/login called with identifier: ${dto.identifier}`)
+    return this.authService.login(dto)
   }
 
   // ─── Change Password ────────────────────────────────────────────────────────
@@ -104,16 +96,12 @@ export class AuthController {
     type: ApiSuccessResponse(ChangePasswordResponseDto),
   })
   @ApiBadRequestResponse({
-    description:
-      '`current_password_incorrect` or `new_password_must_differ`',
+    description: '`current_password_incorrect` or `new_password_must_differ`',
     type: ApiErrorResponse,
   })
-  async changePassword(
-    @Body() dto: ChangePasswordDto,
-    @CurrentUser() user: JwtPayload,
-  ) {
-    this.logger.log(`PATCH /auth/change-password called by user: ${user?.id}`);
-    await this.authService.changePassword(user.id, dto);
-    return { message: 'Password changed successfully' };
+  async changePassword(@Body() dto: ChangePasswordDto, @CurrentUser() user: JwtPayload) {
+    this.logger.log(`PATCH /auth/change-password called by user: ${user?.id}`)
+    await this.authService.changePassword(user.id, dto)
+    return { message: 'Password changed successfully' }
   }
 }
