@@ -53,7 +53,10 @@ export class BoardingHousesService {
 
     // Resolve subscription quota before entering the transaction
     const maxRoom = await this.resolveMaxRoom(userId)
-    const roomsToCreate = dto.rooms.floorCount * dto.rooms.roomsPerFloor
+    const hasCustomRooms = Boolean(dto.rooms.customRooms && dto.rooms.customRooms.length > 0)
+    const roomsToCreate = hasCustomRooms
+      ? dto.rooms.customRooms!.length
+      : dto.rooms.floorCount * dto.rooms.roomsPerFloor
 
     if (roomsToCreate > maxRoom) {
       throw new UnprocessableEntityException(
@@ -74,6 +77,28 @@ export class BoardingHousesService {
       throw new BadRequestException(
         `serviceIndex ${outOfBoundsService} is out of bounds — only ${(dto.services ?? []).length} service(s) provided`,
       )
+    }
+
+    if (hasCustomRooms) {
+      for (const cr of dto.rooms.customRooms!) {
+        if (
+          cr.roomTypeIndex !== undefined &&
+          cr.roomTypeIndex !== null &&
+          cr.roomTypeIndex >= dto.roomTypes.length
+        ) {
+          throw new BadRequestException(
+            `customRoom roomTypeIndex ${cr.roomTypeIndex} is out of bounds — only ${dto.roomTypes.length} room type(s) provided`,
+          )
+        }
+        const outOfBoundsCrService = (cr.serviceIndices ?? []).find(
+          idx => idx >= (dto.services ?? []).length,
+        )
+        if (outOfBoundsCrService !== undefined) {
+          throw new BadRequestException(
+            `customRoom serviceIndex ${outOfBoundsCrService} is out of bounds — only ${(dto.services ?? []).length} service(s) provided`,
+          )
+        }
+      }
     }
 
     const result = await this.prisma.$transaction(async tx => {
@@ -149,25 +174,39 @@ export class BoardingHousesService {
 
       // Step 7 — INSERT Room[] + RoomService[]
       let roomsCreated = 0
-      for (let floor = 1; floor <= dto.rooms.floorCount; floor++) {
-        for (let index = 1; index <= dto.rooms.roomsPerFloor; index++) {
-          const roomNumber = renderName(floor, index)
+      if (hasCustomRooms) {
+        for (const cr of dto.rooms.customRooms!) {
+          const roomTypeId =
+            cr.roomTypeIndex !== undefined && cr.roomTypeIndex !== null
+              ? (roomTypeIds[cr.roomTypeIndex] ?? resolvedRoomTypeId)
+              : resolvedRoomTypeId
+
+          const area = cr.area
+            ? new Prisma.Decimal(cr.area)
+            : dto.rooms.area
+              ? new Prisma.Decimal(dto.rooms.area)
+              : null
+
+          const maxOccupants = cr.maxOccupants ?? dto.rooms.maxOccupants ?? null
+
           const room = await tx.room.create({
             data: {
               boardingHouseId: boardingHouse.id,
-              roomNumber,
-              floor,
-              roomTypeId: resolvedRoomTypeId,
-              area: dto.rooms.area ? new Prisma.Decimal(dto.rooms.area) : null,
-              maxOccupants: dto.rooms.maxOccupants ?? null,
+              roomNumber: cr.roomNumber.trim(),
+              floor: cr.floor,
+              roomTypeId,
+              area,
+              maxOccupants,
               status: 'available',
             },
           })
 
-          // Step 7b — INSERT RoomService[] for each resolved service
-          if (resolvedServiceIds.length > 0) {
+          const roomServiceIndices = cr.serviceIndices ?? dto.rooms.serviceIndices ?? []
+          const roomServiceIds = roomServiceIndices.map(idx => serviceIds[idx]).filter(Boolean)
+
+          if (roomServiceIds.length > 0) {
             await tx.roomService.createMany({
-              data: resolvedServiceIds.map(serviceId => ({
+              data: roomServiceIds.map(serviceId => ({
                 roomId: room.id,
                 serviceId,
               })),
@@ -175,6 +214,35 @@ export class BoardingHousesService {
           }
 
           roomsCreated++
+        }
+      } else {
+        for (let floor = 1; floor <= dto.rooms.floorCount; floor++) {
+          for (let index = 1; index <= dto.rooms.roomsPerFloor; index++) {
+            const roomNumber = renderName(floor, index)
+            const room = await tx.room.create({
+              data: {
+                boardingHouseId: boardingHouse.id,
+                roomNumber,
+                floor,
+                roomTypeId: resolvedRoomTypeId,
+                area: dto.rooms.area ? new Prisma.Decimal(dto.rooms.area) : null,
+                maxOccupants: dto.rooms.maxOccupants ?? null,
+                status: 'available',
+              },
+            })
+
+            // Step 7b — INSERT RoomService[] for each resolved service
+            if (resolvedServiceIds.length > 0) {
+              await tx.roomService.createMany({
+                data: resolvedServiceIds.map(serviceId => ({
+                  roomId: room.id,
+                  serviceId,
+                })),
+              })
+            }
+
+            roomsCreated++
+          }
         }
       }
 

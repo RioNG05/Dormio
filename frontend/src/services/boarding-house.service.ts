@@ -77,6 +77,16 @@ export interface SetupRoomTypePayload {
   description?: string
 }
 
+export interface SetupCustomRoomPayload {
+  floor: number
+  index: number
+  roomNumber: string
+  area?: string
+  maxOccupants?: number
+  roomTypeIndex?: number
+  serviceIndices?: number[]
+}
+
 export interface SetupRoomsPayload {
   floorCount: number
   roomsPerFloor: number
@@ -85,6 +95,7 @@ export interface SetupRoomsPayload {
   maxOccupants?: number
   roomTypeIndex: number
   serviceIndices?: number[]
+  customRooms?: SetupCustomRoomPayload[]
 }
 
 export interface SetupBoardingHousePayload {
