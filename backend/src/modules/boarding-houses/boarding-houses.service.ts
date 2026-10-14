@@ -10,6 +10,7 @@ import { Prisma, SubscriptionPackage, SubscriptionStatus, UserRole } from '@pris
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto'
 import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto'
+import { UpdateBoardingHouseDto } from './dto/update-boarding-house.dto'
 import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto'
 import {
   MultiPropertyOverviewResponseDto,
@@ -407,6 +408,77 @@ export class BoardingHousesService {
         })),
       })),
     }
+  }
+
+  // ─── UC-L-01: Get Single Boarding House Details ──────────────────────────
+
+  async getBoardingHouseById(
+    userId: string,
+    boardingHouseId: string,
+  ): Promise<BoardingHouseResponseDto> {
+    this.logger.log(`Fetching boarding house ${boardingHouseId} for user ${userId}`)
+
+    const house = await this.prisma.boardingHouse.findFirst({
+      where: { id: boardingHouseId, ownerId: userId },
+      include: {
+        services: true,
+        roomTypes: true,
+      },
+    })
+
+    if (!house) {
+      throw new NotFoundException(
+        'Boarding house not found or you do not have permission to access it',
+      )
+    }
+
+    return this.mapBoardingHouseResponse(house, house.services, house.roomTypes)
+  }
+
+  // ─── UC-L-01: Update Boarding House Information ──────────────────────────
+
+  async updateBoardingHouse(
+    userId: string,
+    boardingHouseId: string,
+    dto: UpdateBoardingHouseDto,
+  ): Promise<BoardingHouseResponseDto> {
+    this.logger.log(`Updating boarding house ${boardingHouseId} for user ${userId}`)
+
+    const existing = await this.prisma.boardingHouse.findFirst({
+      where: { id: boardingHouseId, ownerId: userId },
+    })
+
+    if (!existing) {
+      throw new NotFoundException(
+        'Boarding house not found or you do not have permission to access it',
+      )
+    }
+
+    const updated = await this.prisma.boardingHouse.update({
+      where: { id: boardingHouseId },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name.trim() }),
+        ...(dto.description !== undefined && { description: dto.description.trim() || null }),
+        ...(dto.thumbnail !== undefined && { thumbnail: dto.thumbnail }),
+        ...(dto.country !== undefined && { country: dto.country.trim() }),
+        ...(dto.province !== undefined && { province: dto.province.trim() }),
+        ...(dto.city !== undefined && { city: dto.city.trim() }),
+        ...(dto.district !== undefined && { district: dto.district.trim() }),
+        ...(dto.ward !== undefined && { ward: dto.ward.trim() }),
+        ...(dto.street !== undefined && { street: dto.street.trim() }),
+        ...(dto.houseNumber !== undefined && { houseNumber: dto.houseNumber.trim() }),
+        ...(dto.totalFloor !== undefined && { totalFloor: dto.totalFloor }),
+        ...(dto.builtAt !== undefined && { builtAt: new Date(dto.builtAt) }),
+      },
+      include: {
+        services: true,
+        roomTypes: true,
+      },
+    })
+
+    this.invalidateOverviewCache(boardingHouseId)
+
+    return this.mapBoardingHouseResponse(updated, updated.services, updated.roomTypes)
   }
 
   // ─── UC-L-08: In-Memory Cache (Periodic Caching per Spec) ────────────────
