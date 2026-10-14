@@ -75,13 +75,26 @@ export function proxy(request: NextRequest) {
   }
 
   let capabilities: CookieCapabilities = {};
+  let hasCapCookie = false;
   try {
     const capCookie = request.cookies.get('dormio_user_capabilities')?.value;
     if (capCookie) {
       capabilities = JSON.parse(decodeURIComponent(capCookie));
+      hasCapCookie = true;
     }
   } catch {
     // Ignore invalid JSON in cookie
+  }
+
+  // 0. Superuser inspection: Admin has universal access across all dashboard portals
+  if (role === 'admin' || capabilities.isAdmin) {
+    return NextResponse.next();
+  }
+
+  // If capabilities cookie has not been synced yet, let client-side AuthGuard hydrate
+  // and resolve capabilities from localStorage or API instead of prematurely rejecting
+  if (!hasCapCookie) {
+    return NextResponse.next();
   }
 
   // 1. System admin area: only admin or users with isAdmin capability

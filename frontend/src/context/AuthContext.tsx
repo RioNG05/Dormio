@@ -154,8 +154,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // No active building until API loads real data
   const [activeBuildingId, setActiveBuildingId] = useState<string>("");
 
-  // Live multi-role capabilities — fetched from backend after every login
-  const [capabilities, setCapabilities] = useState<UserCapabilities>(DEFAULT_CAPABILITIES);
+  // Live multi-role capabilities — initialized from localStorage cache if available
+  const [capabilities, setCapabilities] = useState<UserCapabilities>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("dormio_user_capabilities");
+        if (saved) return JSON.parse(saved);
+      } catch {
+        // ignore parse error
+      }
+    }
+    return DEFAULT_CAPABILITIES;
+  });
 
   /**
    * Fetch live multi-role capabilities from `GET /v1/users/me/capabilities`.
@@ -174,10 +184,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = (res as any)?.data ?? res;
       if (data?.capabilities) {
         setCapabilities(data.capabilities);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("dormio_user_capabilities", JSON.stringify(data.capabilities));
+        }
         syncAuthCookies(undefined, undefined, data.capabilities);
       }
     } catch {
-      // Silently fail — capabilities will remain at DEFAULT_CAPABILITIES
+      // Silently fail — capabilities will remain at current or cached state
     }
   }, []);
 
@@ -250,6 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedEmail = typeof window !== "undefined" ? localStorage.getItem("dormio_user_email") : null;
     const savedPhone = typeof window !== "undefined" ? localStorage.getItem("dormio_user_phone") : null;
     const savedId = typeof window !== "undefined" ? localStorage.getItem("dormio_user_id") : null;
+    const savedCapsStr = typeof window !== "undefined" ? localStorage.getItem("dormio_user_capabilities") : null;
 
     if (savedState === "true" && savedToken) {
       const resolvedRole = savedRole || "tenant";
@@ -269,9 +283,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setActiveBuildingId(savedBuildingId);
       }
 
-      // Hydration complete — user state is resolved from localStorage
+      let parsedCaps: UserCapabilities | null = null;
+      if (savedCapsStr) {
+        try {
+          parsedCaps = JSON.parse(savedCapsStr);
+          if (parsedCaps && typeof parsedCaps === "object") {
+            setCapabilities(parsedCaps);
+          }
+        } catch {
+          parsedCaps = null;
+        }
+      }
+
+      // If no valid cached capabilities exist, establish baseline from resolved role
+      if (!parsedCaps) {
+        const baselineCaps: UserCapabilities = {
+          isLandlord: resolvedRole === "landlord",
+          isTenant: resolvedRole === "tenant",
+          isEmployee: resolvedRole === "employee",
+          isAdmin: resolvedRole === "admin",
+        };
+        setCapabilities(baselineCaps);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("dormio_user_capabilities", JSON.stringify(baselineCaps));
+        }
+        parsedCaps = baselineCaps;
+      }
+
+      // Hydration complete — user state and capabilities are resolved from localStorage
       setIsHydrating(false);
-      syncAuthCookies(resolvedRole, savedToken);
+      syncAuthCookies(resolvedRole, savedToken, parsedCaps);
       loadBuildingsFromApi();
       loadCapabilitiesFromApi();
     } else {
@@ -281,6 +322,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setBuildings([]);
       setActiveBuildingId("");
       setIsBuildingsLoading(false);
+      setCapabilities(DEFAULT_CAPABILITIES);
       setIsHydrating(false);
       syncAuthCookies(null, null, null);
     }
@@ -303,11 +345,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       houseName: userData?.houseName,
       houseAddress: userData?.houseAddress,
     };
+    const initialCaps: UserCapabilities = {
+      isLandlord: role === "landlord",
+      isTenant: role === "tenant",
+      isEmployee: role === "employee",
+      isAdmin: role === "admin",
+    };
     setIsLoggedIn(true);
     setUser(updatedUser);
+    setCapabilities(initialCaps);
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", updatedUser.role);
-    syncAuthCookies(updatedUser.role);
+    localStorage.setItem("dormio_user_capabilities", JSON.stringify(initialCaps));
+    syncAuthCookies(updatedUser.role, undefined, initialCaps);
     if (updatedUser.id) localStorage.setItem("dormio_user_id", updatedUser.id);
     if (updatedUser.name) localStorage.setItem("dormio_user_name", updatedUser.name);
     if (updatedUser.email) localStorage.setItem("dormio_user_email", updatedUser.email);
@@ -328,12 +378,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       houseAddress: userData.houseAddress,
       mustChangePassword: userData.mustChangePassword,
     };
+    const initialCaps: UserCapabilities = {
+      isLandlord: resolvedRole === "landlord",
+      isTenant: resolvedRole === "tenant",
+      isEmployee: resolvedRole === "employee",
+      isAdmin: resolvedRole === "admin",
+    };
     setIsLoggedIn(true);
     setUser(updatedUser);
+    setCapabilities(initialCaps);
     localStorage.setItem("auth_token", token);
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", resolvedRole);
-    syncAuthCookies(resolvedRole, token);
+    localStorage.setItem("dormio_user_capabilities", JSON.stringify(initialCaps));
+    syncAuthCookies(resolvedRole, token, initialCaps);
     if (userData.id) localStorage.setItem("dormio_user_id", userData.id);
     if (userData.name) localStorage.setItem("dormio_user_name", userData.name);
     if (userData.email) localStorage.setItem("dormio_user_email", userData.email);
@@ -359,8 +417,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       houseName: houseDetails.houseName,
       houseAddress: houseDetails.houseAddress,
     };
+    const updatedCaps: UserCapabilities = {
+      ...capabilities,
+      isLandlord: true,
+    };
     setIsLoggedIn(true);
     setUser(updatedUser);
+    setCapabilities(updatedCaps);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("dormio_user_capabilities", JSON.stringify(updatedCaps));
+    }
 
     // Reload buildings + capabilities from API after profile upgrade
     loadBuildingsFromApi();
@@ -368,7 +434,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.setItem("dormio_logged_in", "true");
     localStorage.setItem("dormio_user_role", "landlord");
-    syncAuthCookies("landlord");
+    syncAuthCookies("landlord", undefined, updatedCaps);
     localStorage.setItem("dormio_house_name", houseDetails.houseName);
     localStorage.setItem("dormio_house_address", houseDetails.houseAddress);
   };
