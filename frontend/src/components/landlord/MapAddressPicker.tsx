@@ -12,6 +12,7 @@ import {
   Minimize2,
 } from 'lucide-react'
 import { Province, matchProvince } from '@/services/vietnam-address.service'
+import { mapService, type MapsConfig } from '@/services/map.service'
 
 export interface SelectedMapAddress {
   province: string
@@ -51,8 +52,25 @@ export function MapAddressPicker({
   const [resolvedAddress, setResolvedAddress] = useState<SelectedMapAddress | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  const isGoogleAvailable = Boolean(apiKey && apiKey.trim() !== '')
+  const [mapConfig, setMapConfig] = useState<MapsConfig>({
+    apiKey: null,
+    isGoogleAvailable: false,
+    provider: 'osm',
+  })
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    mapService.getMapsConfig().then(cfg => {
+      if (isMounted) {
+        setMapConfig(cfg)
+        setIsConfigLoaded(true)
+      }
+    })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Default coordinates: Ho Chi Minh City center
   const defaultCoords = { lat: 10.7769, lng: 106.7009 }
@@ -155,7 +173,11 @@ export function MapAddressPicker({
 
   // Initialize Map
   useEffect(() => {
+    if (!isConfigLoaded) return
     let isMounted = true
+
+    const isGoogleAvailable = mapConfig.isGoogleAvailable && Boolean(mapConfig.apiKey)
+    const apiKey = mapConfig.apiKey
 
     if (isGoogleAvailable) {
       // 1. Load Google Maps API
@@ -312,7 +334,7 @@ export function MapAddressPicker({
         mapInstanceRef.current = null
       }
     }
-  }, [isGoogleAvailable, apiKey])
+  }, [isConfigLoaded, mapConfig])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -350,7 +372,11 @@ export function MapAddressPicker({
             <h4 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
               Chọn địa chỉ từ bản đồ
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2AC1BC]/10 text-[#2AC1BC]">
-                {isGoogleAvailable ? 'Google Maps' : 'Interactive Map'}
+                {!isConfigLoaded
+                  ? 'Đang tải bản đồ...'
+                  : mapConfig.isGoogleAvailable && mapConfig.apiKey
+                    ? 'Google Maps'
+                    : 'Interactive Map'}
               </span>
             </h4>
             <p className="text-xs text-zinc-500">
