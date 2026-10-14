@@ -423,6 +423,11 @@ export class BoardingHousesService {
       include: {
         services: true,
         roomTypes: true,
+        _count: {
+          select: {
+            rooms: true,
+          },
+        },
       },
     })
 
@@ -473,6 +478,11 @@ export class BoardingHousesService {
       include: {
         services: true,
         roomTypes: true,
+        _count: {
+          select: {
+            rooms: true,
+          },
+        },
       },
     })
 
@@ -1335,6 +1345,8 @@ export class BoardingHousesService {
       builtAt: Date
       status: string
       thumbnail?: string | null
+      _count?: { rooms?: number }
+      totalRooms?: number
     },
     services: Array<{
       id: string
@@ -1365,6 +1377,7 @@ export class BoardingHousesService {
       builtAt: boardingHouse.builtAt.toISOString(),
       status: boardingHouse.status,
       thumbnail: boardingHouse.thumbnail ?? null,
+      totalRooms: boardingHouse._count?.rooms ?? boardingHouse.totalRooms ?? 0,
       services: services.map(s => ({
         id: s.id,
         name: s.name,

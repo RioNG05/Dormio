@@ -36,15 +36,15 @@ export class PropertyOwnershipGuard implements CanActivate {
       boardingHouse?: { id: string; name: string }
     }>()
 
-    // Check header first (standard BHMS context), then fallback to route params or query
-    const headerId = req.headers['x-boarding-house-id']
+    // Check route params first if route specifies the property ID, then fallback to header or query
     const paramId = req.params?.boardingHouseId || req.params?.id
+    const headerId = req.headers['x-boarding-house-id']
     const queryId = req.query?.boardingHouseId
 
-    let rawId = (headerId || paramId || queryId)?.trim()
+    let rawId = (paramId || headerId || queryId)?.trim()
 
     if (!rawId) {
-      throw new BadRequestException('X-Boarding-House-Id header is required')
+      throw new BadRequestException('Boarding house ID is required')
     }
 
     // In case multiple headers were joined into a comma-separated string by Node.js, take the first value
