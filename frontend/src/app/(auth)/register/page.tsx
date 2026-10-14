@@ -192,14 +192,15 @@ export default function RegisterPage() {
           onChange={e => setPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
           rightIcon={
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors p-1"
+              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            </Button>
           }
           className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
         />
@@ -215,14 +216,15 @@ export default function RegisterPage() {
           onChange={e => setConfirmPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
           rightIcon={
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors p-1"
+              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            </Button>
           }
           className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
         />
