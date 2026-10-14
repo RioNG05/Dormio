@@ -462,10 +462,10 @@ export default function TenantMessagesPage() {
   }
 
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] bg-white border-y border-zinc-200/80 overflow-hidden flex relative animate-in fade-in duration-300">
+    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-[100dvh] lg:h-screen bg-white border-y border-zinc-200/80 overflow-hidden flex relative animate-in fade-in duration-300">
       {/* PANE 1: Left Conversation List */}
       <div
-        className={`w-full md:w-80 lg:w-88 border-r border-zinc-200/80 flex flex-col bg-zinc-50/50 shrink-0 ${
+        className={`w-full md:w-80 lg:w-88 border-r border-zinc-200/80 flex flex-col bg-zinc-50/50 shrink-0 h-full ${
           mobileShowChat ? 'hidden md:flex' : 'flex'
         }`}
       >
@@ -978,7 +978,7 @@ export default function TenantMessagesPage() {
           />
 
           {/* Side Panel Content */}
-          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-88 lg:static lg:z-auto lg:w-80 xl:w-88 border-l border-zinc-200/80 bg-zinc-50 flex flex-col overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
+          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-88 lg:static lg:z-auto lg:h-full lg:w-80 xl:w-88 border-l border-zinc-200/80 bg-zinc-50 flex flex-col overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
             {/* Header on mobile */}
             <div className="flex lg:hidden items-center justify-between pb-3 border-b border-zinc-200">
               <span className="text-xs font-black text-zinc-900 uppercase">
