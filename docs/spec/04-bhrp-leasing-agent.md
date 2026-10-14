@@ -4,6 +4,9 @@
 >
 > **Note on the actor name:** `leasing_agent` is a value in `UserRole` (`leasing_agent | tenant | employee | landlord | admin`) — this is the role every user starts with on registration (see `07-auth-and-roles.md` UC-AUTH-01). A `landlord` is a `User` who additionally owns at least one `BoardingHouse`; they retain full leasing-agent posting capability plus the room-linking upgrade described below. Every `postedBy` reference is simply a `User.id` — there is no separate table per role.
 
+> **Phase 1 Status — Frontend Temporarily Gated:**
+> To focus product adoption on core property management (BHMS), all frontend UI for rental listing publication, quota purchases, and post analytics is hidden via `FEATURE_FLAGS.ENABLE_BHRP = false`. Backend logic, endpoints, and schemas are retained unchanged. These features will be reactivated on the frontend once the platform reaches a critical mass of active landlords and properties.
+
 ---
 
 ### UC-P-01 — Publish Rental Listing

@@ -1,6 +1,9 @@
 # Module 2 — BHRP (Rental Platform) · Actor: Platform User / Prospective Tenant
 
 > See `00-overview-and-conventions.md` for global rules.
+>
+> **Phase 1 Status — Frontend Temporarily Gated:**
+> All frontend interfaces for prospective tenant room browsing, filters, saved posts, room comparison, and online escrow deposits are hidden via `FEATURE_FLAGS.ENABLE_BHRP = false`. Backend logic, endpoints, and schemas are retained unchanged. These interfaces will be re-enabled on the frontend once the platform achieves a sufficient volume of registered boarding houses and active rooms.
 
 ---
 
