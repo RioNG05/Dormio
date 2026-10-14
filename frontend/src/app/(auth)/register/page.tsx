@@ -9,6 +9,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
 import { getHighestRoleRedirect } from '@/utils'
 import { TextInput, Button, Checkbox } from '@/components/ui'
+import { Text } from '@/components/ui/Text'
 
 export default function RegisterPage() {
   const t = useTranslations('auth')
@@ -98,15 +99,14 @@ export default function RegisterPage() {
         throw new Error(t('authRegisterErrCannotCreate'))
       }
 
-      // Determine highest achieved role and target redirect path:
-      // guest (/) -> leasing agent (/) -> tenant (/tenant) -> staff (/staff) -> landlord (/landlord) -> admin (/admin)
+      // Determine highest achieved role and target redirect path
       const { role: displayRole, redirectPath } = getHighestRoleRedirect(user)
 
       loginWithToken(token, {
         id: user.id,
-        name: user.username || fullName.trim() || trimmedPhone,
+        name: user.username || fullName || trimmedPhone,
         email: user.email || trimmedEmail || '',
-        phone: user.phoneNumber || trimmedPhone,
+        phone: user.phoneNumber,
         role: displayRole,
         mustChangePassword: false,
       })
@@ -114,9 +114,12 @@ export default function RegisterPage() {
       router.push(redirectPath)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('authLoginErrGeneric')
-      if (message.includes('phone_number_already_exists')) {
+      if (message.includes('phone') && (message.includes('exist') || message.includes('409'))) {
         setError(t('authRegisterErrPhoneExists'))
-      } else if (message.includes('email_already_exists')) {
+      } else if (
+        message.includes('email') &&
+        (message.includes('exist') || message.includes('409'))
+      ) {
         setError(t('authRegisterErrEmailExists'))
       } else {
         setError(message)
@@ -130,12 +133,12 @@ export default function RegisterPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
           {t('authRegisterTitle')}
-        </h1>
-        <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+        </Text>
+        <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
           {t('authRegisterSubtitle')}
-        </p>
+        </Text>
       </div>
 
       {/* Main Registration Form reusing Base Components */}
@@ -225,7 +228,7 @@ export default function RegisterPage() {
           className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
         />
 
-        {/* 6. Terms Checkbox using Base Checkbox Component */}
+        {/* 6. Terms Checkbox using Base Checkbox & Text Component */}
         <div className="pt-1">
           <Checkbox
             id="register-terms"
@@ -233,17 +236,17 @@ export default function RegisterPage() {
             checked={agreed}
             onChange={e => setAgreed(e.target.checked)}
             label={
-              <span className="text-xs text-zinc-600 font-medium">
+              <Text variant="body" size="xs" color="secondary" className="select-none font-medium">
                 {t('authRegisterTermsAgree')}{' '}
-                <Link href="/policy" className="font-extrabold text-[#2AC1BC] hover:underline">
+                <Link href="/terms" className="font-extrabold text-[#2AC1BC] hover:underline">
                   {t('authRegisterTermsLink')}
                 </Link>{' '}
                 {t('authRegisterTermsAnd')}{' '}
-                <Link href="/policy" className="font-extrabold text-[#2AC1BC] hover:underline">
+                <Link href="/privacy" className="font-extrabold text-[#2AC1BC] hover:underline">
                   {t('authRegisterPrivacyLink')}
                 </Link>{' '}
                 {t('authRegisterTermsSuffix')}
-              </span>
+              </Text>
             }
           />
         </div>
@@ -270,11 +273,13 @@ export default function RegisterPage() {
       </form>
 
       {/* Bottom Auth Navigation Link */}
-      <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-        {t('authRegisterAlreadyAccount')}{' '}
-        <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
-          {t('authRegisterLoginLink')}
-        </Link>
+      <div className="text-center pt-2">
+        <Text variant="body" size="xs" color="subtle">
+          {t('authRegisterAlreadyAccount')}{' '}
+          <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
+            {t('authRegisterLoginLink')}
+          </Link>
+        </Text>
       </div>
     </div>
   )

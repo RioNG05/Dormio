@@ -9,6 +9,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
 import { getHighestRoleRedirect } from '@/utils'
 import { TextInput, Button, Checkbox } from '@/components/ui'
+import { Text } from '@/components/ui/Text'
 
 export default function LoginPage() {
   const t = useTranslations('auth')
@@ -46,7 +47,6 @@ export default function LoginPage() {
       }
 
       // Determine highest achieved role and target redirect path:
-      // guest (/) -> leasing agent (/) -> tenant (/tenant) -> staff (/staff) -> landlord (/landlord) -> admin (/admin)
       const { role: displayRole, redirectPath } = getHighestRoleRedirect(user)
 
       loginWithToken(token, {
@@ -84,48 +84,54 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Top Header & Badge */}
+      {/* Top Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
           {t('authLoginWelcomeTitle')}
-        </h1>
-        <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+        </Text>
+        <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
           {t('authLoginWelcomeDesc')}
-        </p>
+        </Text>
       </div>
 
-      {/* Input Method Selector Tabs (Phone vs Email) */}
-      <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60">
-        <button
+      {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
+      <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60 gap-1">
+        <Button
           type="button"
+          variant={method === 'phone' ? 'primary' : 'ghost'}
+          size="sm"
           onClick={() => {
             setMethod('phone')
             setAccountIdentifier('')
             setError(null)
           }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+          leftIcon={<Phone className="w-3.5 h-3.5" />}
+          className={`flex-1 rounded-xl text-xs font-extrabold ${
             method === 'phone'
-              ? 'bg-white text-[#2AC1BC] shadow-xs'
+              ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
               : 'text-zinc-500 hover:text-zinc-800'
           }`}
         >
-          <Phone className="w-3.5 h-3.5" /> {t('authLoginMethodPhone')}
-        </button>
-        <button
+          {t('authLoginMethodPhone')}
+        </Button>
+        <Button
           type="button"
+          variant={method === 'email' ? 'primary' : 'ghost'}
+          size="sm"
           onClick={() => {
             setMethod('email')
             setAccountIdentifier('')
             setError(null)
           }}
-          className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+          leftIcon={<Mail className="w-3.5 h-3.5" />}
+          className={`flex-1 rounded-xl text-xs font-extrabold ${
             method === 'email'
-              ? 'bg-white text-[#2AC1BC] shadow-xs'
+              ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
               : 'text-zinc-500 hover:text-zinc-800'
           }`}
         >
-          <Mail className="w-3.5 h-3.5" /> {t('authLoginMethodEmail')}
-        </button>
+          {t('authLoginMethodEmail')}
+        </Button>
       </div>
 
       {/* Login Form reusing Base Components */}
@@ -189,7 +195,11 @@ export default function LoginPage() {
             id="remember-me"
             checked={rememberMe}
             onChange={e => setRememberMe(e.target.checked)}
-            label={<span className="text-xs font-medium text-zinc-600">{t('authRememberMe')}</span>}
+            label={
+              <Text variant="body" size="xs" color="secondary">
+                {t('authRememberMe')}
+              </Text>
+            }
           />
         </div>
 
@@ -214,11 +224,13 @@ export default function LoginPage() {
       </form>
 
       {/* Bottom Auth Navigation Link */}
-      <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-        {t('authNoAccount')}{' '}
-        <Link href="/register" className="font-extrabold text-[#2AC1BC] hover:underline">
-          {t('authRegisterNow')}
-        </Link>
+      <div className="text-center pt-2">
+        <Text variant="body" size="xs" color="subtle">
+          {t('authNoAccount')}{' '}
+          <Link href="/register" className="font-extrabold text-[#2AC1BC] hover:underline">
+            {t('authRegisterNow')}
+          </Link>
+        </Text>
       </div>
     </div>
   )

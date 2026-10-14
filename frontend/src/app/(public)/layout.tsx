@@ -792,6 +792,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 </Link>
               </li>
               <li>
+                <Link href="/terms" className="hover:text-white transition-colors">
+                  {tFooter('terms')}
+                </Link>
+              </li>
+              <li>
                 <Link href="/privacy" className="hover:text-white transition-colors">
                   {tFooter('privacy')}
                 </Link>
