@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { useTranslations } from "@/context/LanguageContext";
+import { FEATURE_FLAGS } from "@/config/features";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const tNav = useTranslations("nav");
@@ -52,7 +53,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const adminMenus = [
         { name: tNav("adminOverview"), href: "/admin", icon: LayoutDashboard },
         { name: tNav("adminAnalytics"), href: "/admin/analytics", icon: BarChart2 },
-        { name: tNav("adminPostModeration"), href: "/admin/blogs", icon: ShieldCheck },
+        ...(FEATURE_FLAGS.ENABLE_BHRP
+            ? [{ name: tNav("adminPostModeration"), href: "/admin/blogs", icon: ShieldCheck }]
+            : []),
         { name: tNav("adminHouseModeration"), href: "/admin/houses", icon: Building2 },
         { name: tNav("adminGrievances"), href: "/admin/grievances", icon: AlertTriangle },
         { name: tNav("adminNotifications"), href: "/admin/notifications", icon: Megaphone },
@@ -87,7 +90,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             group: tNav("business"),
             key: "kinh-doanh",
             items: [
-                { name: tNav("listings"), href: "/landlord/listings", icon: Globe },
+                ...(FEATURE_FLAGS.ENABLE_BHRP
+                    ? [{ name: tNav("listings"), href: "/landlord/listings", icon: Globe }]
+                    : []),
                 { name: tNav("reports"), href: "/landlord/reports", icon: BarChart2 },
             ]
         },
