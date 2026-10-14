@@ -6,3 +6,5 @@ export * from "./SelectInput";
 export * from "./TextareaInput";
 export * from "./Toast";
 export * from "./Checkbox";
+export * from "./Form";
+export * from "./Text";
