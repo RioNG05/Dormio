@@ -82,4 +82,21 @@ export const userService = {
       bankAccount: resData?.bankAccount ?? null,
     };
   },
+
+  /**
+   * Change account password for authenticated user
+   */
+  async changePassword(data: ChangePasswordPayload): Promise<ChangePasswordResponse> {
+    const res = await api.patch<any>("/v1/auth/change-password", data);
+    return res?.data ?? res;
+  },
 };
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
+}
