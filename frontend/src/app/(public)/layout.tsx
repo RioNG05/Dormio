@@ -815,7 +815,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             </p>
             <p className="text-xs text-zinc-400 font-medium">
               <a
-                href="mailto:ngquanghuy.work@gmail.com"
+                href="mailto:contact@dormio.site"
                 className="hover:text-[#2AC1BC] transition-colors"
               >
                 {tFooter('email')}

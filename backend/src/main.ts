@@ -72,7 +72,7 @@ async function bootstrap() {
           `Errors return \`{ success: false, statusCode, error, path, timestamp }\`.`,
       )
       .setVersion('1.0')
-      .setContact('Dormio Team', '', 'support@dormio.vn')
+      .setContact('Dormio Team', '', 'contact@dormio.site')
       .setLicense('Private', '')
       .addBearerAuth(
         {

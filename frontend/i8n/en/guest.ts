@@ -98,7 +98,7 @@ export const enGuest = {
     guestContactHotlineTitle: "Emergency Hotline & Zalo OA",
     guestContactHours: "Dormio customer support operates 08:00 - 21:00 every day of the week.",
     guestContactMaps: "Open Google Maps for directions",
-    guestContactOfficeAddress: "FPT University Hanoi, Hoa Lac Hi-Tech Park, Km29 Thang Long Boulevard, Thach That, Hanoi",
+    guestContactOfficeAddress: "Hoa Lac, Thach That, Hanoi",
     guestContactOfficeTitle: "Dormio Headquarters Office",
     guestContactPhoneLabel: "Contact Phone",
     guestContactPhonePlaceholder: "Enter your phone number...",

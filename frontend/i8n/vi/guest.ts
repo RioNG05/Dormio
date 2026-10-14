@@ -98,7 +98,7 @@ export const viGuest = {
     guestContactHotlineTitle: "Hotline & Zalo OA Khẩn Cấp",
     guestContactHours: "Đội ngũ CSKH Dormio làm việc từ 08:00 - 21:00 tất cả các ngày trong tuần.",
     guestContactMaps: "Mở Google Maps chỉ đường",
-    guestContactOfficeAddress: "Trường Đại học FPT Hà Nội, Khu Công Nghệ Cao Hòa Lạc, Km29 Đại lộ Thăng Long, Thạch Thất, Hà Nội",
+    guestContactOfficeAddress: "Hoà Lạc, Thạch Thất, Hà Nội",
     guestContactOfficeTitle: "Văn Phòng Trụ Sở Dormio",
     guestContactPhoneLabel: "Số điện thoại liên hệ",
     guestContactPhonePlaceholder: "Nhập số điện thoại...",

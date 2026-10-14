@@ -9,7 +9,7 @@ export const siteConfig = {
     facebook: 'https://facebook.com/dormio',
   },
   contact: {
-    email: '[EMAIL_ADDRESS]',
+    email: 'contact@dormio.site',
     phone: '0859722619',
   },
 }
