@@ -2,7 +2,8 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import {
   Mail,
   Phone,
@@ -53,6 +54,9 @@ export default function LandlordProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/");
+  }
   const resolvedParams = use(params);
   const posterId = resolvedParams.id;
 

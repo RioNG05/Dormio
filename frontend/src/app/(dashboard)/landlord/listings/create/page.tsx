@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import {
  Check,
  ChevronLeft,
@@ -931,6 +932,9 @@ function CreateListingForm() {
 }
 
 export default function CreateListingPage() {
+ if (!FEATURE_FLAGS.ENABLE_BHRP) {
+   redirect("/landlord");
+ }
  const t = useTranslations("landlord");
  return (
  <Suspense

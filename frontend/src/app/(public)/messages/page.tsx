@@ -319,7 +319,7 @@ function GuestMessagesContent() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       {/* Top Header Trail */}
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/rooms">
+        <Link href="/">
           <button className="p-2 hover:bg-zinc-100 rounded-xl transition-colors text-zinc-500 cursor-pointer">
             <ChevronLeft className="w-5 h-5" />
           </button>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import {
   Search,
   MapPin,
@@ -1314,6 +1315,9 @@ function RoomsContent() {
 }
 
 export default function RoomsPage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/");
+  }
   return (
     <Suspense fallback={<RoomsPageSkeleton />}>
       <RoomsContent />

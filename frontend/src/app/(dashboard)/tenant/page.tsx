@@ -38,6 +38,7 @@ import { useTranslations, useLanguage } from "@/context/LanguageContext";
 import { formatCurrency } from "@/utils";
 import { api } from "@/services/api";
 import { tenantInvoiceService, TenantInvoice } from "@/services/tenant-invoice.service";
+import { FEATURE_FLAGS } from "@/config/features";
 
 interface TenancyApiResponse {
   success: boolean;
@@ -555,13 +556,15 @@ export default function TenantOverviewPage() {
             <p className="text-xs text-zinc-500 max-w-md mx-auto">
               {t("noActiveContractDesc")}
             </p>
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <Link href="/rooms">
-                <Button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer">
-                  {t("exploreHousesBtn")}
-                </Button>
-              </Link>
-            </div>
+            {FEATURE_FLAGS.ENABLE_BHRP && (
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Link href="/rooms">
+                  <Button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer">
+                    {t("exploreHousesBtn")}
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         )}
 

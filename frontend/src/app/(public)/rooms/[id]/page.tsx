@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import Link from "next/link";
 import {
   ArrowLeft, MapPin, Minimize2,
@@ -118,6 +119,9 @@ function SkeletonDetail() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function RoomDetailPage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/");
+  }
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { currentLocale } = useLanguage();

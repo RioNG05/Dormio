@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useLanguage, useTranslations } from "@/context/LanguageContext";
+import { redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import { postService, PublicPostListing } from "@/services/post.service";
 import {
   ShieldAlert, Plus, Search, Eye, Edit3, Trash2,
@@ -15,6 +17,9 @@ import {
 const HOUSE_PLACEHOLDER = "/house-placeholder.jpg";
 
 export default function AdminPostModerationPage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/admin");
+  }
   const { locale } = useLanguage();
   const t = useTranslations("admin");
 

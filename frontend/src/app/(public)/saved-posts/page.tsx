@@ -26,12 +26,17 @@ import { useAuth } from "@/context/AuthContext";
 import { useLanguage, useTranslations } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
 import { formatCurrency } from "@/utils";
+import { redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 import { postService, type PublicPostListing } from "@/services/post.service";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80";
 
 export default function SavedPostsPage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/");
+  }
   const t = useTranslations("guest");
   const { currentLocale } = useLanguage();
   const isEn = currentLocale === "en";

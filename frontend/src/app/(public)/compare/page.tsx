@@ -5,8 +5,13 @@ import Link from "next/link";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { formatCurrency } from "@/utils";
 import { useTranslations, useLanguage } from "@/context/LanguageContext";
+import { redirect } from "next/navigation";
+import { FEATURE_FLAGS } from "@/config/features";
 
 export default function CompareRoomsPage() {
+  if (!FEATURE_FLAGS.ENABLE_BHRP) {
+    redirect("/");
+  }
   const { currentLocale } = useLanguage();
   const t = useTranslations("guest");
 
