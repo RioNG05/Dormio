@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { Building2, CheckCircle2, Star } from 'lucide-react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
@@ -13,34 +14,39 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const { currentLocale } = useLanguage()
 
   return (
-    <div className="flex min-h-screen bg-white">
-      {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding) */}
-      <div className="flex flex-1 flex-col justify-between px-4 py-8 sm:px-8 lg:px-14 xl:px-16 bg-white z-10 max-w-xl mx-auto w-full lg:max-w-2xl">
-        {/* Header Brand Logo */}
-        <div className="flex items-center justify-between pb-6">
+    <div className="flex h-screen max-h-screen overflow-hidden bg-white">
+      {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding, cố định layout, chỉ cuộn nội dung form/chính sách) */}
+      <div className="flex flex-1 flex-col justify-between h-full max-h-full overflow-hidden px-4 py-5 sm:px-8 sm:py-6 lg:px-12 xl:px-14 bg-white z-10 max-w-xl mx-auto w-full lg:max-w-2xl min-h-0">
+        {/* Header Brand Logo & Language Switcher */}
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 shrink-0">
           <Logo size="lg" />
 
-          <Link
-            href="/"
-            className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
-          >
-            {t('authLayoutBackHome')}
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <Link
+              href="/"
+              className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
+            >
+              {t('authLayoutBackHome')}
+            </Link>
+          </div>
         </div>
 
-        {/* Dynamic Form Content */}
-        <div className="py-4">{children}</div>
+        {/* Dynamic Form Content: Có scroll nội bộ, không làm phình vỡ layout trang */}
+        <div className="flex-1 overflow-y-auto min-h-0 py-3 pr-0.5 custom-scrollbar">
+          {children}
+        </div>
 
         {/* Footer Legal Note */}
-        <div className="pt-6 border-t border-zinc-100 text-center sm:text-left">
+        <div className="pt-3 border-t border-zinc-100 text-center sm:text-left shrink-0">
           <Text variant="caption" size="2xs" color="subtle">
             {t('authLayoutFooterLegal', { year: new Date().getFullYear() })}
           </Text>
         </div>
       </div>
 
-      {/* Cột Phải: Visual Interactive Dashboard Mockup Showcase (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-1 bg-[#090d12] relative flex-col items-center justify-center p-12 overflow-hidden border-l border-zinc-800">
+      {/* Cột Phải: Visual Interactive Dashboard Mockup Showcase (Cố định toàn màn hình, không bị kéo dài) */}
+      <div className="hidden lg:flex flex-1 bg-[#090d12] relative flex-col items-center justify-center p-12 overflow-hidden border-l border-zinc-800 h-full max-h-full">
         {/* Ambient Glowing Orbs */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#2AC1BC]/15 rounded-full blur-[130px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF6B35]/15 rounded-full blur-[130px] pointer-events-none" />
