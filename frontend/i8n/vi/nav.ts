@@ -9,6 +9,8 @@ export const viNav = {
     adminHouseModeration: "Kiểm duyệt nhà trọ",
     adminNotifications: "Gửi thông báo",
     adminOverview: "Tổng quan Quản trị",
+    adminUsers: "Quản trị người dùng",
+    adminTitleUsers: "Quản Trị Người Dùng Hệ Thống — Dormio Admin",
     adminRole: "Quản trị viên",
     adminTag: "QUẢN TRỊ VIÊN HỆ THỐNG",
     adminTitleAnalytics: "Báo Cáo Thống Kê Nền Tảng — Dormio Admin",

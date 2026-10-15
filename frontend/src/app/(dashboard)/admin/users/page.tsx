@@ -1,0 +1,1669 @@
+'use client'
+
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import {
+  adminUsersService,
+  AdminUserItem,
+  AdminUserDetail,
+  AdminUsersSummary,
+} from '@/services/admin-users.service'
+import {
+  Users,
+  Search,
+  ShieldCheck,
+  Shield,
+  Home,
+  UserCheck,
+  UserX,
+  Clock,
+  Calendar,
+  Phone,
+  Mail,
+  Building2,
+  KeyRound,
+  CheckCircle2,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  X,
+  RefreshCw,
+  LayoutGrid,
+  List,
+  Eye,
+  Activity,
+  UserCog,
+} from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { Text } from '@/components/ui/Text'
+import { Form } from '@/components/ui/Form'
+import { TextInput } from '@/components/ui/TextInput'
+import { SelectInput } from '@/components/ui/SelectInput'
+import { TextareaInput } from '@/components/ui/TextareaInput'
+import { Checkbox } from '@/components/ui/Checkbox'
+
+export default function AdminUsersManagementPage() {
+  const { locale } = useLanguage()
+  const t = useTranslations('admin')
+
+  // Data state
+  const [users, setUsers] = useState<AdminUserItem[]>([])
+  const [summary, setSummary] = useState<AdminUsersSummary>({
+    totalUsers: 0,
+    activeUsers: 0,
+    bannedUsers: 0,
+    inactiveUsers: 0,
+    landlordsCount: 0,
+    tenantsCount: 0,
+    employeesCount: 0,
+  })
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [errorKey, setErrorKey] = useState<string | null>(null)
+  const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; textKey?: string; text?: string } | null>(null)
+
+  // View mode (Rule 9: Grid view as default)
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+
+  // Pagination state (Rule 9: Grid=6, Table=10 default, 5-page window jumping)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(viewMode === 'grid' ? 6 : 10)
+  const [totalItems, setTotalItems] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageInput, setPageInput] = useState(String(viewMode === 'grid' ? 6 : 10))
+
+  // Filter state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+
+  // Debounced search query
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 350)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Adjust pageSize when view mode changes
+  const handleViewModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode)
+    const newSize = mode === 'grid' ? 6 : 10
+    setPageSize(newSize)
+    setPageInput(String(newSize))
+    setCurrentPage(1)
+  }
+
+  // Fetch users from API (Notice: does NOT depend on `t` so language change does not trigger unnecessary refetch)
+  const fetchUsers = useCallback(
+    async (isManualRefresh = false) => {
+      if (isManualRefresh) setRefreshing(true)
+      else setLoading(true)
+      setErrorKey(null)
+
+      try {
+        const res = await adminUsersService.getUsers({
+          page: currentPage,
+          limit: pageSize,
+          query: debouncedSearch.trim() || undefined,
+          role: roleFilter !== 'all' ? roleFilter : undefined,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+        })
+
+        setUsers(res.items || [])
+        setTotalItems(res.total || 0)
+        setTotalPages(res.totalPages || 1)
+        if (res.summary) {
+          setSummary(res.summary)
+        }
+      } catch (err: any) {
+        console.error('Failed to load users:', err)
+        setErrorKey('adminUsersActionError')
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [currentPage, pageSize, debouncedSearch, roleFilter, statusFilter],
+  )
+
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
+
+  // Toast auto-dismiss
+  useEffect(() => {
+    if (toastMsg) {
+      const timer = setTimeout(() => setToastMsg(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [toastMsg])
+
+  // Detail Modal State
+  const [selectedUser, setSelectedUser] = useState<AdminUserDetail | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [modalTab, setModalTab] = useState<'profile' | 'activity' | 'actions'>('profile')
+
+  // Admin Action Modal States
+  const [actionType, setActionType] = useState<'ban' | 'unban' | 'role' | 'reset-password' | null>(null)
+  const [actionTargetUser, setActionTargetUser] = useState<AdminUserItem | null>(null)
+  const [actionReason, setActionReason] = useState('')
+  const [newRole, setNewRole] = useState<string>('tenant')
+  const [tempPassword, setTempPassword] = useState('Dormio@2026')
+  const [forceChangePassword, setForceChangePassword] = useState(true)
+  const [actionSubmitting, setActionSubmitting] = useState(false)
+
+  // Unsaved changes confirmation modal state (Rule 10)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
+  const [pendingCloseTarget, setPendingCloseTarget] = useState<'detail' | 'action' | null>(null)
+
+  // Open user detail
+  const handleOpenDetail = async (user: AdminUserItem, defaultTab: 'profile' | 'activity' | 'actions' = 'profile') => {
+    setModalTab(defaultTab)
+    setDetailLoading(true)
+    setSelectedUser(null)
+    try {
+      const data = await adminUsersService.getUserDetail(user.id)
+      setSelectedUser(data)
+    } catch (err) {
+      console.error('Failed to fetch user detail:', err)
+      setToastMsg({ type: 'error', textKey: 'adminUsersActionError' })
+    } finally {
+      setDetailLoading(false)
+    }
+  }
+
+  // Open action modal
+  const handleOpenAction = (user: AdminUserItem, type: 'ban' | 'unban' | 'role' | 'reset-password') => {
+    setActionTargetUser(user)
+    setActionType(type)
+    setActionReason('')
+    setNewRole(user.role)
+    setTempPassword('Dormio@2026')
+    setForceChangePassword(true)
+  }
+
+  // Check if form is dirty before closing (Rule 10)
+  const isActionDirty = useMemo(() => {
+    return (
+      actionReason.trim().length > 0 ||
+      (actionType === 'role' && actionTargetUser && newRole !== actionTargetUser.role) ||
+      (actionType === 'reset-password' && tempPassword !== 'Dormio@2026')
+    )
+  }, [actionReason, actionType, actionTargetUser, newRole, tempPassword])
+
+  const requestCloseActionModal = () => {
+    if (isActionDirty) {
+      setPendingCloseTarget('action')
+      setShowDiscardConfirm(true)
+    } else {
+      setActionType(null)
+      setActionTargetUser(null)
+    }
+  }
+
+  const requestCloseDetailModal = () => {
+    setSelectedUser(null)
+  }
+
+  const handleConfirmDiscard = () => {
+    setShowDiscardConfirm(false)
+    if (pendingCloseTarget === 'action') {
+      setActionType(null)
+      setActionTargetUser(null)
+      setActionReason('')
+    }
+    setPendingCloseTarget(null)
+  }
+
+  // Execute admin action
+  const handleExecuteAction = async () => {
+    if (!actionTargetUser || !actionType) return
+    setActionSubmitting(true)
+    try {
+      if (actionType === 'ban') {
+        await adminUsersService.updateUserStatus(actionTargetUser.id, {
+          status: 'banned',
+          reason: actionReason.trim() || undefined,
+        })
+        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
+      } else if (actionType === 'unban') {
+        await adminUsersService.updateUserStatus(actionTargetUser.id, {
+          status: 'active',
+          reason: actionReason.trim() || undefined,
+        })
+        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
+      } else if (actionType === 'role') {
+        await adminUsersService.updateUserRole(actionTargetUser.id, {
+          role: newRole,
+          reason: actionReason.trim() || undefined,
+        })
+        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
+      } else if (actionType === 'reset-password') {
+        await adminUsersService.resetUserPassword(actionTargetUser.id, {
+          temporaryPassword: tempPassword,
+          mustChangePassword: forceChangePassword,
+        })
+        setToastMsg({
+          type: 'success',
+          text: `${t('adminUsersActionSuccess')} (${tempPassword})`,
+        })
+      }
+
+      // Close modal and refresh data
+      setActionType(null)
+      setActionTargetUser(null)
+      setActionReason('')
+      fetchUsers()
+
+      // If user detail is also open, update it
+      if (selectedUser && selectedUser.id === actionTargetUser.id) {
+        handleOpenDetail(actionTargetUser, modalTab)
+      }
+    } catch (err) {
+      console.error('Action failed:', err)
+      setToastMsg({ type: 'error', textKey: 'adminUsersActionError' })
+    } finally {
+      setActionSubmitting(false)
+    }
+  }
+
+  // Formatting helpers
+  const formatJoinedDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr)
+      return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(d)
+    } catch {
+      return dateStr
+    }
+  }
+
+  const getRelativeTime = (dateStr: string) => {
+    try {
+      const diffMs = Date.now() - new Date(dateStr).getTime()
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+      if (diffDays <= 0) return t('adminUsersTimeToday')
+      if (diffDays === 1) return t('adminUsersTimeYesterday')
+      if (diffDays < 30) return t('adminUsersTimeDaysAgo', { count: diffDays })
+      const diffMonths = Math.floor(diffDays / 30)
+      if (diffMonths < 12) return t('adminUsersTimeMonthsAgo', { count: diffMonths })
+      const diffYears = Math.floor(diffMonths / 12)
+      return t('adminUsersTimeYearsAgo', { count: diffYears })
+    } catch {
+      return ''
+    }
+  }
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'landlord':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30">
+            <Building2 className="w-3 h-3" />
+            {t('adminUsersRoleLandlord')}
+          </span>
+        )
+      case 'tenant':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200">
+            <Home className="w-3 h-3" />
+            {t('adminUsersRoleTenant')}
+          </span>
+        )
+      case 'employee':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            <UserCheck className="w-3 h-3" />
+            {t('adminUsersRoleStaff')}
+          </span>
+        )
+      case 'leasing_agent':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+            <UserCog className="w-3 h-3" />
+            {t('adminUsersRoleAgent')}
+          </span>
+        )
+      case 'admin':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+            <Shield className="w-3 h-3" />
+            {t('adminUsersRoleAdmin')}
+          </span>
+        )
+      default:
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-zinc-100 text-zinc-700">
+            {role}
+          </span>
+        )
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            {t('adminUsersStatusActive')}
+          </span>
+        )
+      case 'banned':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+            <UserX className="w-3 h-3" />
+            {t('adminUsersStatusBanned')}
+          </span>
+        )
+      case 'inactive':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-600 border border-zinc-200">
+            <Clock className="w-3 h-3" />
+            {t('adminUsersStatusInactive')}
+          </span>
+        )
+      default:
+        return <span className="text-xs text-zinc-500">{status}</span>
+    }
+  }
+
+  // Pagination Window (Rule 9: 5-page window jumping)
+  const paginationRange = useMemo(() => {
+    const windowSize = 5
+    const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
+    const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
+    const pages: number[] = []
+    for (let i = windowStart; i <= windowEnd; i++) {
+      pages.push(i)
+    }
+    return { pages, windowStart, windowEnd }
+  }, [currentPage, totalPages])
+
+  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const endIndex = Math.min(currentPage * pageSize, totalItems)
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-3 duration-300">
+          <div
+            className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border ${
+              toastMsg.type === 'success'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}
+          >
+            {toastMsg.type === 'success' ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            )}
+            <Text as="span" size="sm" weight="bold">
+              {toastMsg.textKey ? t(toastMsg.textKey) : toastMsg.text}
+            </Text>
+          </div>
+        </div>
+      )}
+
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-zinc-200/80 shadow-xs">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-orange-50 text-orange-600 border border-orange-200/80">
+              <Shield className="w-3.5 h-3.5" />
+              {t('adminUsersBadge')}
+            </span>
+            <Text as="span" variant="caption" size="2xs" color="subtle">
+              • {t('adminUsersLiveDb')}
+            </Text>
+          </div>
+          <Text as="h1" variant="heading" size="xl" className="text-zinc-900 font-black tracking-tight">
+            {t('adminUsersTitle')}
+          </Text>
+          <Text variant="caption" size="xs" color="subtle" className="max-w-2xl">
+            {t('adminUsersSubtitle')}
+          </Text>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fetchUsers(true)}
+          disabled={refreshing}
+          leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#2AC1BC]' : ''}`} />}
+          className="rounded-2xl border-zinc-200 text-zinc-700 hover:bg-zinc-50 shrink-0 font-bold"
+        >
+          {t('adminUsersRefresh')}
+        </Button>
+      </div>
+
+      {/* KPI Cards Grid using Form.Grid */}
+      <Form.Grid cols={5} gap="sm" className="grid-cols-2 lg:grid-cols-5">
+        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-zinc-500">
+            <Text as="span" size="xs" weight="bold" color="secondary">
+              {t('adminUsersKpiTotal')}
+            </Text>
+            <div className="p-2 rounded-xl bg-zinc-100 text-zinc-700">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <Text as="p" variant="heading" size="2xl" weight="black" className="text-zinc-900">
+            {summary.totalUsers.toLocaleString()}
+          </Text>
+          <Text as="p" size="2xs" weight="bold" color="success">
+            {summary.activeUsers} {t('adminUsersStatusActive').toLowerCase()}
+          </Text>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-zinc-500">
+            <Text as="span" size="xs" weight="bold" color="secondary">
+              {t('adminUsersKpiLandlords')}
+            </Text>
+            <div className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+              <Building2 className="w-4 h-4" />
+            </div>
+          </div>
+          <Text as="p" variant="heading" size="2xl" weight="black" className="text-[#2AC1BC]">
+            {summary.landlordsCount.toLocaleString()}
+          </Text>
+          <Text as="p" size="2xs" color="subtle">
+            {summary.totalUsers > 0 ? Math.round((summary.landlordsCount / summary.totalUsers) * 100) : 0}% platform
+          </Text>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-zinc-500">
+            <Text as="span" size="xs" weight="bold" color="secondary">
+              {t('adminUsersKpiTenants')}
+            </Text>
+            <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+              <Home className="w-4 h-4" />
+            </div>
+          </div>
+          <Text as="p" variant="heading" size="2xl" weight="black" className="text-blue-600">
+            {summary.tenantsCount.toLocaleString()}
+          </Text>
+          <Text as="p" size="2xs" color="subtle">
+            {summary.totalUsers > 0 ? Math.round((summary.tenantsCount / summary.totalUsers) * 100) : 0}% platform
+          </Text>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-zinc-500">
+            <Text as="span" size="xs" weight="bold" color="secondary">
+              {t('adminUsersKpiStaff')}
+            </Text>
+            <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
+              <UserCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <Text as="p" variant="heading" size="2xl" weight="black" className="text-amber-600">
+            {summary.employeesCount.toLocaleString()}
+          </Text>
+          <Text as="p" size="2xs" color="subtle">
+            Operations staff
+          </Text>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1 col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between text-zinc-500">
+            <Text as="span" size="xs" weight="bold" color="secondary">
+              {t('adminUsersKpiBanned')}
+            </Text>
+            <div className="p-2 rounded-xl bg-rose-50 text-rose-600">
+              <UserX className="w-4 h-4" />
+            </div>
+          </div>
+          <Text as="p" variant="heading" size="2xl" weight="black" className="text-rose-600">
+            {summary.bannedUsers.toLocaleString()}
+          </Text>
+          <Text as="p" size="2xs" color="subtle">
+            {summary.inactiveUsers} {t('adminUsersStatusInactive').toLowerCase()}
+          </Text>
+        </div>
+      </Form.Grid>
+
+      {/* Filter and View Mode Toolbar using TextInput, SelectInput, Button */}
+      <div className="bg-white p-4 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+        {/* Reusing TextInput base component for search */}
+        <TextInput
+          value={searchQuery}
+          onChange={e => {
+            setSearchQuery(e.target.value)
+            setCurrentPage(1)
+          }}
+          placeholder={t('adminUsersSearchPlaceholder')}
+          leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+          rightIcon={
+            searchQuery ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('')
+                  setCurrentPage(1)
+                }}
+                className="h-6 w-6 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-transparent"
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            ) : null
+          }
+          containerClassName="w-full md:w-80"
+          className="rounded-2xl py-2 bg-zinc-50/50 text-xs font-semibold"
+        />
+
+        {/* Reusing SelectInput and Button base components */}
+        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end flex-wrap">
+          {/* Role Filter using SelectInput */}
+          <SelectInput
+            value={roleFilter}
+            onChange={e => {
+              setRoleFilter(e.target.value)
+              setCurrentPage(1)
+            }}
+            options={[
+              { value: 'all', label: t('adminUsersRoleAll') },
+              { value: 'landlord', label: t('adminUsersRoleLandlord') },
+              { value: 'tenant', label: t('adminUsersRoleTenant') },
+              { value: 'employee', label: t('adminUsersRoleStaff') },
+              { value: 'leasing_agent', label: t('adminUsersRoleAgent') },
+              { value: 'admin', label: t('adminUsersRoleAdmin') },
+            ]}
+            containerClassName="w-full sm:w-40"
+            className="rounded-2xl py-2 text-xs font-bold"
+          />
+
+          {/* Status Filter using SelectInput */}
+          <SelectInput
+            value={statusFilter}
+            onChange={e => {
+              setStatusFilter(e.target.value)
+              setCurrentPage(1)
+            }}
+            options={[
+              { value: 'all', label: t('adminUsersStatusAll') },
+              { value: 'active', label: t('adminUsersStatusActive') },
+              { value: 'inactive', label: t('adminUsersStatusInactive') },
+              { value: 'banned', label: t('adminUsersStatusBanned') },
+            ]}
+            containerClassName="w-full sm:w-40"
+            className="rounded-2xl py-2 text-xs font-bold"
+          />
+
+          {/* View Mode Toggle using Button base components */}
+          <div className="flex items-center bg-zinc-100 p-1 rounded-2xl border border-zinc-200/80">
+            <Button
+              type="button"
+              variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => handleViewModeChange('grid')}
+              title={t('adminUsersGridView')}
+              className={`h-8 w-8 p-0 rounded-xl ${
+                viewMode === 'grid' ? 'shadow-xs' : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === 'table' ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => handleViewModeChange('table')}
+              title={t('adminUsersTableView')}
+              className={`h-8 w-8 p-0 rounded-xl ${
+                viewMode === 'table' ? 'shadow-xs' : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
+              }`}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Section: Loading / Error / Empty / Grid / Table */}
+      {loading ? (
+        <div className="bg-white p-12 rounded-3xl border border-zinc-200/80 text-center space-y-3 shadow-xs">
+          <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto" />
+          <Text variant="body" size="sm" weight="bold" color="secondary">
+            {t('adminUsersLoading')}
+          </Text>
+        </div>
+      ) : errorKey ? (
+        <Form.Alert
+          variant="error"
+          title={t(errorKey)}
+          className="rounded-3xl p-6"
+        >
+          <div className="pt-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => fetchUsers()}>
+              {t('adminUsersRefresh')}
+            </Button>
+          </div>
+        </Form.Alert>
+      ) : users.length === 0 ? (
+        <div className="bg-white p-12 rounded-3xl border border-zinc-200/80 text-center space-y-2 shadow-xs">
+          <UserX className="w-10 h-10 text-zinc-300 mx-auto" />
+          <Text variant="heading" size="base" className="text-zinc-800">
+            {t('adminUsersNoResults')}
+          </Text>
+          <Text variant="caption" size="xs" color="subtle">
+            {t('adminUsersNoResultsDesc')}
+          </Text>
+        </div>
+      ) : viewMode === 'grid' ? (
+        /* GRID VIEW (Rule 9: Default view) */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {users.map(user => {
+            const initial = (user.fullName || user.username || user.phoneNumber).charAt(0).toUpperCase()
+            return (
+              <div
+                key={user.id}
+                className="bg-white rounded-3xl border border-zinc-200/80 hover:border-[#2AC1BC]/40 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 group"
+              >
+                {/* Header: Avatar, Name, Role & Status */}
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#2AC1BC]/20 to-[#FF6B35]/20 text-[#2AC1BC] flex items-center justify-center font-black text-base shrink-0 border border-zinc-100 group-hover:scale-105 transition-transform">
+                        {user.avatarUrl ? (
+                          <img
+                            src={user.avatarUrl}
+                            alt=""
+                            className="w-full h-full object-cover rounded-2xl"
+                          />
+                        ) : (
+                          initial
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Text
+                            as="h3"
+                            variant="heading"
+                            size="sm"
+                            className="text-zinc-900 font-extrabold truncate"
+                          >
+                            {user.fullName || user.username || t('adminUsersUnidentified')}
+                          </Text>
+                          {user.isIdentityVerified && (
+                            <span title={t('adminUsersVerified')}>
+                              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                            </span>
+                          )}
+                        </div>
+                        <Text variant="caption" size="2xs" color="subtle" className="truncate font-mono">
+                          @{user.username || user.phoneNumber}
+                        </Text>
+                      </div>
+                    </div>
+                    {getStatusBadge(user.status)}
+                  </div>
+
+                  {/* Role and Verified Tags */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {getRoleBadge(user.role)}
+                    {user.subscriptionPackage && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+                        {user.subscriptionPackage}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="space-y-1.5 pt-1 text-xs text-zinc-600">
+                    <div className="flex items-center gap-2 truncate">
+                      <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                        {user.phoneNumber}
+                      </Text>
+                    </div>
+                    <div className="flex items-center gap-2 truncate">
+                      <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <Text as="span" size="xs" color="secondary" truncate>
+                        {user.email || t('adminUsersNoEmail')}
+                      </Text>
+                    </div>
+                  </div>
+
+                  {/* Registration Time & Activity */}
+                  <div className="p-2.5 rounded-2xl bg-zinc-50 border border-zinc-200/60 space-y-1 text-[11px]">
+                    <div className="flex items-center justify-between text-zinc-500">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-zinc-400" />
+                        {t('adminUsersColJoined')}:
+                      </span>
+                      <Text as="span" size="2xs" weight="bold" className="text-zinc-700">
+                        {formatJoinedDate(user.createdAt)}
+                      </Text>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <Text as="span" size="3xs" color="subtle">
+                        {getRelativeTime(user.createdAt)}
+                      </Text>
+                      {user.lastActiveAt && (
+                        <Text as="span" size="3xs" weight="semibold" color="brand" className="flex items-center gap-1">
+                          <Activity className="w-3 h-3" />
+                          {getRelativeTime(user.lastActiveAt)}
+                        </Text>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Summary Counters */}
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-500 pt-1">
+                    {user.role === 'landlord' && (
+                      <Text as="span" size="2xs" weight="bold" className="text-zinc-700">
+                        {t('adminUsersHousesCount', { count: user.housesCount })}
+                      </Text>
+                    )}
+                    {user.role === 'tenant' && (
+                      <Text as="span" size="2xs" weight="bold" className="text-zinc-700">
+                        {t('adminUsersContractsCount', { count: user.contractsCount })}
+                      </Text>
+                    )}
+                    {user.postsCount > 0 && (
+                      <Text as="span" size="2xs" color="subtle">
+                        • {t('adminUsersPostsCount', { count: user.postsCount })}
+                      </Text>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Actions using Button */}
+                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleOpenDetail(user, 'profile')}
+                    leftIcon={<Eye className="w-3.5 h-3.5" />}
+                    className="flex-1 text-xs font-bold rounded-xl"
+                  >
+                    {t('adminUsersBtnDetail')}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenDetail(user, 'actions')}
+                    title={t('adminUsersTabActions')}
+                    className="px-2.5 rounded-xl border-zinc-200 hover:bg-zinc-100 text-zinc-700"
+                  >
+                    <UserCog className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        /* TABLE VIEW (Rule 9: Parallel support) */
+        <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
+                <tr>
+                  <th className="py-3.5 px-4">{t('adminUsersColUser')}</th>
+                  <th className="py-3.5 px-4">{t('adminUsersColContact')}</th>
+                  <th className="py-3.5 px-4">{t('adminUsersColRole')}</th>
+                  <th className="py-3.5 px-4">{t('adminUsersColStatus')}</th>
+                  <th className="py-3.5 px-4">{t('adminUsersColJoined')}</th>
+                  <th className="py-3.5 px-4 text-right">{t('adminUsersColActions')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 text-zinc-700">
+                {users.map(user => {
+                  const initial = (user.fullName || user.username || user.phoneNumber).charAt(0).toUpperCase()
+                  return (
+                    <tr key={user.id} className="hover:bg-zinc-50/60 transition-colors group">
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2AC1BC]/15 to-[#FF6B35]/15 text-[#2AC1BC] flex items-center justify-center font-bold text-sm shrink-0 border border-zinc-100">
+                            {user.avatarUrl ? (
+                              <img src={user.avatarUrl} alt="" className="w-full h-full object-cover rounded-xl" />
+                            ) : (
+                              initial
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <Text as="span" size="xs" weight="extrabold" className="text-zinc-900">
+                                {user.fullName || user.username || t('adminUsersUnidentified')}
+                              </Text>
+                              {user.isIdentityVerified && (
+                                <span title={t('adminUsersVerified')}>
+                                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                </span>
+                              )}
+                            </div>
+                            <Text as="span" variant="caption" size="2xs" color="subtle" className="font-mono block">
+                              @{user.username || user.phoneNumber}
+                            </Text>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-0.5">
+                          <Text as="p" size="xs" weight="semibold" className="text-zinc-800">
+                            {user.phoneNumber}
+                          </Text>
+                          <Text as="p" size="2xs" color="subtle" truncate className="max-w-[180px]">
+                            {user.email || '—'}
+                          </Text>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {getRoleBadge(user.role)}
+                          {user.subscriptionPackage && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200">
+                              {user.subscriptionPackage}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">{getStatusBadge(user.status)}</td>
+                      <td className="py-3.5 px-4">
+                        <div>
+                          <Text as="p" size="xs" weight="semibold" className="text-zinc-800">
+                            {formatJoinedDate(user.createdAt)}
+                          </Text>
+                          <Text as="p" size="2xs" color="subtle">
+                            {getRelativeTime(user.createdAt)}
+                          </Text>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenDetail(user, 'profile')}
+                            leftIcon={<Eye className="w-3.5 h-3.5" />}
+                            className="rounded-xl text-xs font-bold"
+                          >
+                            {t('adminUsersBtnDetail')}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenDetail(user, 'actions')}
+                            className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-800"
+                            title={t('adminUsersTabActions')}
+                          >
+                            <UserCog className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Standardized Pagination Bar using Button base component */}
+      {totalPages > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-zinc-200 text-xs text-zinc-600 bg-white p-4 rounded-3xl shadow-xs">
+          {/* Left: Hiển thị [<input>] / trang | X-Y trên Z người dùng */}
+          <div className="flex items-center gap-2 font-medium">
+            <Text as="span" size="xs">
+              {t('adminUsersShowing')}
+            </Text>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={pageInput}
+              onChange={e => setPageInput(e.target.value)}
+              onBlur={() => {
+                const val = parseInt(pageInput, 10)
+                if (!isNaN(val) && val >= 1 && val <= 100) {
+                  setPageSize(val)
+                  setCurrentPage(1)
+                } else {
+                  setPageInput(String(pageSize))
+                }
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  const val = parseInt(pageInput, 10)
+                  if (!isNaN(val) && val >= 1 && val <= 100) {
+                    setPageSize(val)
+                    setCurrentPage(1)
+                  } else {
+                    setPageInput(String(pageSize))
+                  }
+                }
+              }}
+              className="w-14 px-2 py-1 text-center font-bold text-zinc-800 border border-zinc-300 rounded-xl focus:border-[#2AC1BC] focus:outline-none"
+            />
+            <Text as="span" size="xs">
+              {t('adminUsersPerPage')}
+            </Text>
+            <span className="text-zinc-300">|</span>
+            <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+              {startIndex}-{endIndex} {t('adminUsersOf')} {totalItems} {t('adminUsersItems')}
+            </Text>
+          </div>
+
+          {/* Right: 5-page window jumping with Button base components */}
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0 rounded-xl"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 5))}
+              disabled={currentPage <= 5}
+              className="h-8 w-8 p-0 rounded-xl"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+
+            {/* Window Page Numbers */}
+            {paginationRange.pages.map(page => (
+              <Button
+                key={page}
+                type="button"
+                variant={currentPage === page ? 'primary' : 'ghost'}
+                size="sm"
+                onClick={() => setCurrentPage(page)}
+                className={`h-8 w-8 p-0 rounded-xl text-xs font-black ${
+                  currentPage === page ? 'shadow-xs' : 'text-zinc-600 hover:bg-zinc-100'
+                }`}
+              >
+                {page}
+              </Button>
+            ))}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 5))}
+              disabled={currentPage + 5 > totalPages}
+              className="h-8 w-8 p-0 rounded-xl"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0 rounded-xl"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* USER DETAIL MODAL (Tabs: Profile, Activity History, Admin Actions) */}
+      {(selectedUser || detailLoading) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl border border-zinc-200 flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <Text as="h2" variant="heading" size="base" className="font-extrabold text-zinc-900">
+                    {selectedUser
+                      ? t('adminUsersModalTitle', {
+                          name: selectedUser.fullName || selectedUser.username || selectedUser.phoneNumber,
+                        })
+                      : t('adminUsersLoadingProfile')}
+                  </Text>
+                  {selectedUser && (
+                    <Text variant="caption" size="2xs" color="subtle">
+                      ID: {selectedUser.id}
+                    </Text>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={requestCloseDetailModal}
+                className="h-8 w-8 p-0 rounded-xl text-zinc-400 hover:text-zinc-700"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Modal Tab Switcher using Button components */}
+            {selectedUser && (
+              <div className="flex border-b border-zinc-200 bg-zinc-100/50 px-5 gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant={modalTab === 'profile' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setModalTab('profile')}
+                  leftIcon={<Users className="w-3.5 h-3.5" />}
+                  className={`rounded-xl text-xs font-bold ${
+                    modalTab === 'profile' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
+                  }`}
+                >
+                  {t('adminUsersTabProfile')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={modalTab === 'activity' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setModalTab('activity')}
+                  leftIcon={<Activity className="w-3.5 h-3.5" />}
+                  className={`rounded-xl text-xs font-bold ${
+                    modalTab === 'activity' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
+                  }`}
+                >
+                  {t('adminUsersTabActivity')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={modalTab === 'actions' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setModalTab('actions')}
+                  leftIcon={<UserCog className="w-3.5 h-3.5" />}
+                  className={`rounded-xl text-xs font-bold ${
+                    modalTab === 'actions' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
+                  }`}
+                >
+                  {t('adminUsersTabActions')}
+                </Button>
+              </div>
+            )}
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar">
+              {detailLoading || !selectedUser ? (
+                <div className="py-16 text-center space-y-3">
+                  <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto" />
+                  <Text variant="body" size="sm" weight="bold" color="secondary">
+                    {t('adminUsersRetrieving')}
+                  </Text>
+                </div>
+              ) : modalTab === 'profile' ? (
+                /* TAB 1: Profile & KYC Details using Form.Grid */
+                <div className="space-y-6">
+                  {/* Account Overview Card */}
+                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getRoleBadge(selectedUser.role)}
+                        {getStatusBadge(selectedUser.status)}
+                      </div>
+                      <Text as="span" size="xs" weight="semibold" color="secondary">
+                        {t('adminUsersLabelJoinedDate')}: {formatJoinedDate(selectedUser.createdAt)} (
+                        {getRelativeTime(selectedUser.createdAt)})
+                      </Text>
+                    </div>
+
+                    <Form.Grid cols={2} gap="sm" className="text-xs">
+                      <div>
+                        <Text as="span" size="2xs" color="subtle" className="block">
+                          {t('adminUsersUsernameLabel')}
+                        </Text>
+                        <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                          @{selectedUser.username || '—'}
+                        </Text>
+                      </div>
+                      <div>
+                        <Text as="span" size="2xs" color="subtle" className="block">
+                          {t('adminUsersPhoneLabel')}
+                        </Text>
+                        <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                          {selectedUser.phoneNumber}
+                        </Text>
+                      </div>
+                      <div>
+                        <Text as="span" size="2xs" color="subtle" className="block">
+                          Email
+                        </Text>
+                        <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                          {selectedUser.email || '—'}
+                        </Text>
+                      </div>
+                      <div>
+                        <Text as="span" size="2xs" color="subtle" className="block">
+                          {t('adminUsersLabelSubscription')}
+                        </Text>
+                        <Text as="span" size="xs" weight="black" className="text-purple-700 uppercase">
+                          {selectedUser.subscriptionPackage || 'Free'}
+                        </Text>
+                      </div>
+                    </Form.Grid>
+                  </div>
+
+                  {/* Citizen Identification (CCCD / KYC) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                        {t('adminUsersTabProfile')}
+                      </Text>
+                      {selectedUser.isIdentityVerified ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          {t('adminUsersVerified')}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-full">
+                          {t('adminUsersUnverified')}
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedUser.identification ? (
+                      <div className="p-4 rounded-2xl border border-zinc-200/80 space-y-3 text-xs">
+                        <Form.Grid cols={2} gap="sm">
+                          <div>
+                            <Text as="span" size="2xs" color="subtle" className="block">
+                              {t('adminUsersLabelFullName')}
+                            </Text>
+                            <Text as="span" size="xs" weight="bold" className="text-zinc-900">
+                              {selectedUser.identification.fullName}
+                            </Text>
+                          </div>
+                          <div>
+                            <Text as="span" size="2xs" color="subtle" className="block">
+                              {t('adminUsersLabelCitizenId')}
+                            </Text>
+                            <Text as="span" size="xs" weight="bold" className="font-mono text-zinc-900">
+                              {selectedUser.identification.identityNumber}
+                            </Text>
+                          </div>
+                          <div>
+                            <Text as="span" size="2xs" color="subtle" className="block">
+                              {t('adminUsersLabelDob')}
+                            </Text>
+                            <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                              {new Date(selectedUser.identification.dateOfBirth).toLocaleDateString(
+                                locale === 'en' ? 'en-US' : 'vi-VN',
+                              )}
+                            </Text>
+                          </div>
+                          <div>
+                            <Text as="span" size="2xs" color="subtle" className="block">
+                              {t('adminUsersLabelGender')}
+                            </Text>
+                            <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                              {selectedUser.identification.gender === 'male'
+                                ? t('adminUsersLabelGenderMale')
+                                : t('adminUsersLabelGenderFemale')}
+                            </Text>
+                          </div>
+                          <div className="col-span-full">
+                            <Text as="span" size="2xs" color="subtle" className="block">
+                              {t('adminUsersLabelResidence')}
+                            </Text>
+                            <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                              {typeof selectedUser.identification.placeOfResidence === 'object'
+                                ? JSON.stringify(selectedUser.identification.placeOfResidence)
+                                : String(selectedUser.identification.placeOfResidence || '—')}
+                            </Text>
+                          </div>
+                        </Form.Grid>
+
+                        {/* Card Front/Back Images if present */}
+                        {(selectedUser.identification.cardFrontUrl || selectedUser.identification.cardBackUrl) && (
+                          <div className="pt-2 border-t border-zinc-100 space-y-2">
+                            <Text as="span" size="2xs" weight="bold" color="secondary" className="uppercase block">
+                              {t('adminUsersLabelCardPhotos')}
+                            </Text>
+                            <Form.Grid cols={2} gap="sm">
+                              {selectedUser.identification.cardFrontUrl && (
+                                <a
+                                  href={selectedUser.identification.cardFrontUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="group relative block rounded-xl overflow-hidden border border-zinc-200"
+                                >
+                                  <img
+                                    src={selectedUser.identification.cardFrontUrl}
+                                    alt="CCCD Front"
+                                    className="w-full h-28 object-cover group-hover:scale-105 transition-transform"
+                                  />
+                                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded font-bold">
+                                    {t('adminUsersLabelFront')}
+                                  </span>
+                                </a>
+                              )}
+                              {selectedUser.identification.cardBackUrl && (
+                                <a
+                                  href={selectedUser.identification.cardBackUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="group relative block rounded-xl overflow-hidden border border-zinc-200"
+                                >
+                                  <img
+                                    src={selectedUser.identification.cardBackUrl}
+                                    alt="CCCD Back"
+                                    className="w-full h-28 object-cover group-hover:scale-105 transition-transform"
+                                  />
+                                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded font-bold">
+                                    {t('adminUsersLabelBack')}
+                                  </span>
+                                </a>
+                              )}
+                            </Form.Grid>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-center text-xs text-zinc-400">
+                        {t('adminUsersNoKycDesc')}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bank Account Details using Form.Grid */}
+                  {selectedUser.bankAccount && (
+                    <div className="space-y-2">
+                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                        {t('adminUsersLabelBank')}
+                      </Text>
+                      <Form.Grid cols={3} gap="sm" className="p-4 rounded-2xl border border-zinc-200/80 text-xs">
+                        <div>
+                          <Text as="span" size="2xs" color="subtle" className="block">
+                            {t('adminUsersBankLabel')}
+                          </Text>
+                          <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                            {selectedUser.bankAccount.bankName}
+                          </Text>
+                        </div>
+                        <div>
+                          <Text as="span" size="2xs" color="subtle" className="block">
+                            {t('adminUsersAccountNoLabel')}
+                          </Text>
+                          <Text as="span" size="xs" weight="bold" className="font-mono text-zinc-900">
+                            {selectedUser.bankAccount.accountNumber}
+                          </Text>
+                        </div>
+                        <div>
+                          <Text as="span" size="2xs" color="subtle" className="block">
+                            {t('adminUsersAccountNameLabel')}
+                          </Text>
+                          <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                            {selectedUser.bankAccount.accountName}
+                          </Text>
+                        </div>
+                      </Form.Grid>
+                    </div>
+                  )}
+
+                  {/* Properties Owned if landlord */}
+                  {selectedUser.houseNames.length > 0 && (
+                    <div className="space-y-2">
+                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                        {t('adminUsersManagedHouses', { count: selectedUser.houseNames.length })}
+                      </Text>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedUser.houseNames.map((name, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30"
+                          >
+                            <Building2 className="w-3.5 h-3.5" />
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : modalTab === 'activity' ? (
+                /* TAB 2: System Activity Logs */
+                <div className="space-y-4">
+                  <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                    {t('adminUsersTabActivity')}
+                  </Text>
+
+                  {selectedUser.recentActivities.length === 0 ? (
+                    <div className="p-8 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-center space-y-2">
+                      <Activity className="w-8 h-8 text-zinc-300 mx-auto" />
+                      <Text as="p" size="xs" weight="semibold" color="secondary">
+                        {t('adminUsersNoActivity')}
+                      </Text>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {selectedUser.recentActivities.map(act => (
+                        <div
+                          key={act.id}
+                          className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/70 space-y-1.5 text-xs hover:bg-zinc-100/50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-zinc-900 text-white">
+                                {act.action}
+                              </span>
+                              <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                                {t('adminUsersTargetEntity')}: {act.entityType} ({act.entityId.slice(0, 8)}...)
+                              </Text>
+                            </div>
+                            <span className="text-[11px] font-mono text-zinc-400">
+                              {formatJoinedDate(act.createdAt)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] text-zinc-500">
+                            <span>
+                              {t('adminUsersIpAddress')}: <span className="font-mono">{act.ipAddress}</span>
+                            </span>
+                            <span>{getRelativeTime(act.createdAt)}</span>
+                          </div>
+
+                          {act.newValue && (
+                            <pre className="p-2 rounded-xl bg-white border border-zinc-200/80 text-[10px] font-mono text-zinc-700 overflow-x-auto max-h-24">
+                              {JSON.stringify(act.newValue, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* TAB 3: Admin Actions using Form.Grid */
+                <div className="space-y-4">
+                  <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                    {t('adminUsersTabActions')}
+                  </Text>
+                  <Text as="p" size="xs" color="subtle">
+                    {t('adminUsersActionNotice')}
+                  </Text>
+
+                  <Form.Grid cols={2} gap="md" className="pt-2">
+                    {/* Choice 1: Ban or Unban */}
+                    {selectedUser.status === 'banned' ? (
+                      <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 space-y-2">
+                        <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-sm">
+                          <UserCheck className="w-4 h-4" />
+                          <Text as="span" size="sm" weight="extrabold" color="inherit">
+                            {t('adminUsersBtnUnban')}
+                          </Text>
+                        </div>
+                        <Text as="p" size="xs" color="secondary" className="leading-relaxed">
+                          {t('adminUsersUnbanDesc')}
+                        </Text>
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleOpenAction(selectedUser, 'unban')}
+                          className="w-full text-xs font-bold rounded-xl mt-1"
+                        >
+                          {t('adminUsersBtnUnban')}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-2xl border border-rose-200 bg-rose-50/40 space-y-2">
+                        <div className="flex items-center gap-2 text-rose-800 font-extrabold text-sm">
+                          <UserX className="w-4 h-4" />
+                          <Text as="span" size="sm" weight="extrabold" color="inherit">
+                            {t('adminUsersBtnBan')}
+                          </Text>
+                        </div>
+                        <Text as="p" size="xs" color="secondary" className="leading-relaxed">
+                          {t('adminUsersBanDesc')}
+                        </Text>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleOpenAction(selectedUser, 'ban')}
+                          className="w-full text-xs font-bold rounded-xl mt-1"
+                        >
+                          {t('adminUsersBtnBan')}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Choice 2: Change Role */}
+                    <div className="p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 space-y-2">
+                      <div className="flex items-center gap-2 text-zinc-800 font-extrabold text-sm">
+                        <UserCog className="w-4 h-4 text-[#2AC1BC]" />
+                        <Text as="span" size="sm" weight="extrabold" color="inherit">
+                          {t('adminUsersBtnChangeRole')}
+                        </Text>
+                      </div>
+                      <Text as="p" size="xs" color="secondary" className="leading-relaxed">
+                        {t('adminUsersRoleDesc')}
+                      </Text>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenAction(selectedUser, 'role')}
+                        className="w-full text-xs font-bold rounded-xl mt-1"
+                      >
+                        {t('adminUsersBtnChangeRole')}
+                      </Button>
+                    </div>
+
+                    {/* Choice 3: Reset Password */}
+                    <div className="p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 space-y-2 sm:col-span-2">
+                      <div className="flex items-center gap-2 text-zinc-800 font-extrabold text-sm">
+                        <KeyRound className="w-4 h-4 text-orange-500" />
+                        <Text as="span" size="sm" weight="extrabold" color="inherit">
+                          {t('adminUsersBtnResetPassword')}
+                        </Text>
+                      </div>
+                      <Text as="p" size="xs" color="secondary" className="leading-relaxed">
+                        {t('adminUsersResetPwdDesc')}
+                      </Text>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenAction(selectedUser, 'reset-password')}
+                        className="text-xs font-bold rounded-xl"
+                      >
+                        {t('adminUsersBtnResetPassword')}
+                      </Button>
+                    </div>
+                  </Form.Grid>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer using Form.Actions */}
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50">
+              <Form.Actions align="end">
+                <Button type="button" variant="outline" size="sm" onClick={requestCloseDetailModal} className="rounded-xl font-bold">
+                  {t('adminUsersClose')}
+                </Button>
+              </Form.Actions>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN ACTION EXECUTION MODAL using Form root, SelectInput, TextInput, TextareaInput, Checkbox */}
+      {actionType && actionTargetUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden p-6">
+            <Form variant="modal" autoPreventDefault onSubmit={handleExecuteAction}>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <Text as="h3" variant="heading" size="base" className="font-black text-zinc-900">
+                    {actionType === 'ban' && t('adminUsersModalBanTitle')}
+                    {actionType === 'unban' && t('adminUsersModalUnbanTitle')}
+                    {actionType === 'role' && t('adminUsersModalRoleTitle')}
+                    {actionType === 'reset-password' && t('adminUsersModalResetPassTitle')}
+                  </Text>
+                  <Text variant="caption" size="xs" color="subtle">
+                    {actionType === 'ban' && t('adminUsersModalBanDesc')}
+                    {actionType === 'unban' && t('adminUsersModalUnbanDesc')}
+                    {actionType === 'role' && t('adminUsersModalRoleDesc')}
+                    {actionType === 'reset-password' && t('adminUsersModalResetPassDesc')}
+                  </Text>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={requestCloseActionModal}
+                  className="h-8 w-8 p-0 rounded-xl text-zinc-400 hover:text-zinc-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {/* Target user recap */}
+              <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-zinc-200 flex items-center justify-center font-bold text-zinc-700">
+                  {actionTargetUser.username?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <Text as="p" size="xs" weight="bold" className="text-zinc-900">
+                    {actionTargetUser.fullName || actionTargetUser.username || actionTargetUser.phoneNumber}
+                  </Text>
+                  <Text as="p" variant="caption" size="2xs" color="subtle">
+                    {actionTargetUser.phoneNumber}
+                  </Text>
+                </div>
+              </div>
+
+              {/* Reusing SelectInput for role change */}
+              {actionType === 'role' && (
+                <SelectInput
+                  label={t('adminUsersSelectNewRole')}
+                  value={newRole}
+                  onChange={e => setNewRole(e.target.value)}
+                  options={[
+                    { value: 'tenant', label: t('adminUsersRoleTenant') },
+                    { value: 'landlord', label: t('adminUsersRoleLandlord') },
+                    { value: 'employee', label: t('adminUsersRoleStaff') },
+                    { value: 'leasing_agent', label: t('adminUsersRoleAgent') },
+                    { value: 'admin', label: t('adminUsersRoleAdmin') },
+                  ]}
+                  className="rounded-2xl"
+                />
+              )}
+
+              {/* Reusing TextInput & Checkbox for password reset */}
+              {actionType === 'reset-password' && (
+                <div className="space-y-3">
+                  <TextInput
+                    label={t('adminUsersTempPassLabel')}
+                    value={tempPassword}
+                    onChange={e => setTempPassword(e.target.value)}
+                    className="font-mono font-bold rounded-2xl"
+                  />
+                  <Checkbox
+                    checked={forceChangePassword}
+                    onChange={e => setForceChangePassword(e.target.checked)}
+                    label={t('adminUsersForceChangeLabel')}
+                    size="sm"
+                  />
+                </div>
+              )}
+
+              {/* Reusing TextareaInput for justification reason */}
+              <TextareaInput
+                label={t('adminUsersReasonLabel')}
+                rows={2}
+                value={actionReason}
+                onChange={e => setActionReason(e.target.value)}
+                placeholder={t('adminUsersReasonPlaceholder')}
+                className="rounded-2xl resize-none text-xs"
+              />
+
+              {/* Reusing Form.Actions base component */}
+              <Form.Actions align="end" className="pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={requestCloseActionModal} disabled={actionSubmitting}>
+                  {t('adminUsersCancelBtn')}
+                </Button>
+                <Button
+                  type="submit"
+                  variant={actionType === 'ban' ? 'danger' : 'primary'}
+                  size="sm"
+                  disabled={actionSubmitting}
+                  className="font-bold"
+                >
+                  {actionSubmitting ? t('adminUsersProcessing') : t('adminUsersConfirmActionBtn')}
+                </Button>
+              </Form.Actions>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRMATION POP-UP MODAL (Rule 10: "Xác nhận đóng form" when unsaved changes exist) */}
+      {showDiscardConfirm && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-zinc-200 p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200/80">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1">
+              <Text as="h3" variant="heading" size="base" className="font-black text-zinc-900">
+                {t('adminUsersConfirmCloseTitle')}
+              </Text>
+              <Text variant="caption" size="xs" color="subtle">
+                {t('adminUsersConfirmCloseDesc')}
+              </Text>
+            </div>
+
+            <Form.Actions stackedOnMobile={false} className="gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDiscardConfirm(false)}
+                className="flex-1 font-bold text-xs rounded-xl"
+              >
+                {t('adminUsersKeepEditing')}
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={handleConfirmDiscard}
+                className="flex-1 font-bold text-xs rounded-xl"
+              >
+                {t('adminUsersDiscardAndClose')}
+              </Button>
+            </Form.Actions>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -9,6 +9,8 @@ export const enNav = {
     adminHouseModeration: "Boarding House Moderation",
     adminNotifications: "Notifications",
     adminOverview: "Admin Overview",
+    adminUsers: "User Management",
+    adminTitleUsers: "System User Management — Dormio Admin",
     adminRole: "System Admin",
     adminTag: "SYSTEM ADMINISTRATOR",
     adminTitleAnalytics: "Platform Statistical Reports — Dormio Admin",
