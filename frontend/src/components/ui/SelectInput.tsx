@@ -13,6 +13,23 @@ function normalizeVi(str: string): string {
     .trim()
 }
 
+function extractTextFromChildren(children: React.ReactNode): string {
+  if (children === null || children === undefined || typeof children === 'boolean') {
+    return ''
+  }
+  if (typeof children === 'string' || typeof children === 'number') {
+    return String(children)
+  }
+  if (Array.isArray(children)) {
+    return children.map(extractTextFromChildren).join('')
+  }
+  if (React.isValidElement(children)) {
+    const props = children.props as { children?: React.ReactNode }
+    return extractTextFromChildren(props.children)
+  }
+  return ''
+}
+
 export interface SelectOption {
   value: string | number
   label: string
@@ -94,10 +111,13 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
           }
 
           let optLabel = ''
-          if (typeof childProps.children === 'string' || typeof childProps.children === 'number') {
-            optLabel = String(childProps.children)
-          } else if (childProps.label) {
+          if (childProps.label) {
             optLabel = childProps.label
+          } else if (childProps.children !== undefined && childProps.children !== null) {
+            optLabel = extractTextFromChildren(childProps.children)
+            if (!optLabel.trim() && optVal) {
+              optLabel = String(optVal)
+            }
           } else {
             optLabel = String(optVal)
           }
