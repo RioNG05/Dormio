@@ -1,18 +1,15 @@
 'use client'
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
-import { useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import {
   Megaphone,
   Bell,
   Mail,
   MessageSquare,
   Send,
-  CheckCircle2,
-  Clock,
   AlertCircle,
   Search,
-  Filter,
   LayoutGrid,
   Table as TableIcon,
   ChevronLeft,
@@ -21,11 +18,8 @@ import {
   ChevronsRight,
   X,
   Plus,
-  Users,
   Smartphone,
   Eye,
-  Calendar,
-  Sparkles,
   AlertTriangle,
   RefreshCw,
   RotateCcw,
@@ -34,6 +28,11 @@ import {
   adminNotificationService,
   MassNotificationStatusCounts,
 } from '@/services/admin-notification.service'
+import { Button } from '@/components/ui/Button'
+import { Checkbox } from '@/components/ui/Checkbox'
+import { TextInput } from '@/components/ui/TextInput'
+import { TextareaInput } from '@/components/ui/TextareaInput'
+import { SelectInput } from '@/components/ui/SelectInput'
 
 interface NotificationCampaign {
   id: string
@@ -41,7 +40,12 @@ interface NotificationCampaign {
   title: string
   content: string
   targetGroup:
-    'all_users' | 'all_landlords' | 'all_tenants' | 'all_staff' | 'all_admins' | 'specific_user'
+    | 'all_users'
+    | 'all_landlords'
+    | 'all_tenants'
+    | 'all_staff'
+    | 'all_admins'
+    | 'specific_user'
   targetLabel: string
   targetId?: string
   channels: ('in_app' | 'email' | 'sms' | 'zalo')[]
@@ -55,8 +59,7 @@ interface NotificationCampaign {
 }
 
 export default function AdminNotificationsPage() {
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
+  const t = useTranslations('admin')
 
   // Rule #9: Standardized View & Pagination
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid') // Grid is ALWAYS default
@@ -105,94 +108,9 @@ export default function AdminNotificationsPage() {
     onDiscard: () => void
   }>({ isOpen: false, onDiscard: () => {} })
 
-  // Initial Campaigns Data
-  const [campaigns, setCampaigns] = useState<NotificationCampaign[]>([
-    {
-      id: 'CMP-401',
-      name: isEn ? 'System Maintenance Window Sept 10' : 'Thông báo bảo trì hệ thống định kỳ 10/09',
-      title: isEn
-        ? 'Scheduled Platform Maintenance from 01:00 to 04:00 AM'
-        : 'Bảo trì nâng cấp hạ tầng máy chủ từ 01:00 đến 04:00 sáng 10/09',
-      content: isEn
-        ? 'Dormio will undergo scheduled maintenance to upgrade database read replicas. Services may be intermittently interrupted. Invoices and contracts will resume normally after 04:00 AM.'
-        : 'Hệ thống Dormio sẽ tiến hành nâng cấp hạ tầng máy chủ và tối ưu hóa cổng thanh toán VietQR vào rạng sáng 10/09. Mọi hoạt động quản lý phòng và thanh toán sẽ hoạt động trở lại bình thường sau 04:00 sáng.',
-      targetGroup: 'all_users',
-      targetLabel: isEn ? 'All Users' : 'Toàn bộ người dùng',
-      channels: ['in_app', 'email', 'zalo'],
-      status: 'sent',
-      totalRecipients: 12480,
-      sentCount: 12450,
-      failedCount: 30,
-      createdAt: '2026-09-07 15:30',
-      createdBy: 'Admin Quản Trị',
-    },
-    {
-      id: 'CMP-402',
-      name: isEn
-        ? 'Fire Safety Compliance Reminder for Landlords'
-        : 'Nhắc nhở tuân thủ quy chuẩn PCCC đối với Chủ trọ',
-      title: isEn
-        ? 'Mandatory: Review Fire Safety Protocols & Emergency Exits'
-        : 'Khẩn: Tự kiểm tra trang thiết bị PCCC & Lối thoát hiểm nhà trọ',
-      content: isEn
-        ? 'In accordance with local regulations, landlords are requested to inspect smoke detectors, fire extinguishers, and clear emergency exit corridors across all boarding house properties.'
-        : 'Thực hiện theo chỉ đạo của cơ quan chức năng, kính đề nghị các Quý Chủ trọ tiến hành rà soát bình chữa cháy, kiểm tra hệ thống chuông báo khói và đảm bảo hành lang thoát hiểm không bị cản trở.',
-      targetGroup: 'all_landlords',
-      targetLabel: isEn ? 'All Landlords' : 'Tất cả Chủ trọ',
-      channels: ['in_app', 'email', 'sms'],
-      status: 'sent',
-      totalRecipients: 3140,
-      sentCount: 3125,
-      failedCount: 15,
-      createdAt: '2026-09-05 10:00',
-      createdBy: 'Admin Quản Trị',
-    },
-    {
-      id: 'CMP-403',
-      name: isEn
-        ? 'Autumn Student Rental Promotion: Zero Fee Escrow'
-        : 'Ưu đãi mùa tựu trường: Miễn phí giữ chỗ phòng trọ',
-      title: isEn
-        ? 'Exclusive: 0% Escrow deposit fee for university students'
-        : 'Đặc quyền sinh viên: Miễn phí 100% phí bảo lãnh cọc giữ chỗ',
-      content: isEn
-        ? 'Welcome back to school! All verified students booking rooms on Dormio BHRP enjoy 100% deposit protection guarantee with zero transaction fee until October 31.'
-        : 'Chào đón tân sinh viên! Giữ chỗ phòng trọ an toàn 100% qua Dormio được bảo lãnh hoàn tiền nếu phòng không đúng thực tế, hoàn toàn không thu phí trung gian đến hết ngày 31/10.',
-      targetGroup: 'all_tenants',
-      targetLabel: isEn ? 'All Tenants' : 'Tất cả Khách thuê',
-      channels: ['in_app', 'zalo'],
-      status: 'pending',
-      totalRecipients: 8920,
-      sentCount: 6840,
-      failedCount: 12,
-      createdAt: '2026-09-08 08:00',
-      createdBy: 'Admin Quản Trị',
-    },
-    {
-      id: 'CMP-404',
-      name: isEn
-        ? 'Upcoming: New Staff Shift Attendance Guide'
-        : 'Thông báo cập nhật quy trình chấm công GPS nhân viên',
-      title: isEn
-        ? 'New: GPS Radius check-in window starts next Monday'
-        : 'Cập nhật tính năng: Bán kính chấm công GPS có hiệu lực từ Thứ Hai',
-      content: isEn
-        ? 'Staff members can now check-in to cleaning and security shifts using the updated GPS boundary feature on mobile.'
-        : 'Nhân viên vận hành và bảo vệ chú ý: Tính năng chấm công theo bán kính GPS tòa nhà sẽ chính thức kích hoạt từ tuần tới. Vui lòng bật định vị khi vào ca.',
-      targetGroup: 'all_staff',
-      targetLabel: isEn ? 'All Staff' : 'Tất cả Nhân viên',
-      channels: ['in_app'],
-      status: 'pending',
-      totalRecipients: 420,
-      sentCount: 0,
-      failedCount: 0,
-      createdAt: '2026-09-08 11:30',
-      scheduledFor: '2026-09-11 08:00',
-      createdBy: 'Admin Quản Trị',
-    },
-  ])
-
-  const [loading, setLoading] = useState(false)
+  // Live Campaigns Data
+  const [campaigns, setCampaigns] = useState<NotificationCampaign[]>([])
+  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [liveCounts, setLiveCounts] = useState<MassNotificationStatusCounts | null>(null)
 
@@ -219,27 +137,30 @@ export default function AdminNotificationsPage() {
             title: item.title,
             content: item.content,
             targetGroup: item.targetType as any,
-            targetLabel: item.targetLabel,
+            targetLabel: item.targetLabel || item.targetType,
             targetId: item.targetId,
             channels: [item.channel as any],
             status: item.status,
-            totalRecipients: item.totalRecipients,
-            sentCount: item.sentCount,
-            failedCount: item.failedCount,
+            totalRecipients: item.totalRecipients || 0,
+            sentCount: item.sentCount || 0,
+            failedCount: item.failedCount || 0,
             createdAt: item.createdAt ? item.createdAt.replace('T', ' ').substring(0, 16) : '',
-            createdBy: item.creatorName || 'Admin Quản Trị',
+            createdBy: item.creatorName || t('adminBlogsAdminAuthor'),
           }))
           setCampaigns(mapped)
           if (res.counts) setLiveCounts(res.counts)
+        } else {
+          setCampaigns([])
         }
       } catch (err) {
-        console.warn('Failed to fetch live mass notifications, keeping fallback:', err)
+        console.warn('Failed to fetch live mass notifications:', err)
+        setCampaigns([])
       } finally {
         setLoading(false)
         setRefreshing(false)
       }
     },
-    [statusFilter, channelFilter, searchQuery],
+    [statusFilter, channelFilter, searchQuery, t],
   )
 
   useEffect(() => {
@@ -258,7 +179,6 @@ export default function AdminNotificationsPage() {
         item.content.toLowerCase().includes(q)
 
       const matchStatus = statusFilter === 'all' || item.status === statusFilter
-
       const matchChannel = channelFilter === 'all' || item.channels.includes(channelFilter as any)
 
       return matchSearch && matchStatus && matchChannel
@@ -368,63 +288,40 @@ export default function AdminNotificationsPage() {
       scheduleTime?: string
     } = {}
 
-    // 1. Channel validation: @IsEnum(AdminNotifyChannel), @IsNotEmpty
     if (!composeChannels || composeChannels.length === 0) {
-      errors.channels = isEn
-        ? 'Please select at least one delivery channel (In-App, Email, SMS, or Zalo).'
-        : 'Vui lòng chọn ít nhất một kênh phát thông báo (In-App, Email, SMS hoặc Zalo).'
+      errors.channels = t('adminNotifyErrorChannelRequired')
     }
 
-    // 2. Title validation: @IsString(), @IsNotEmpty(), @MinLength(3)
     const trimmedTitle = composeTitle.trim()
     if (!trimmedTitle) {
-      errors.title = isEn
-        ? 'Notification title is required.'
-        : 'Tiêu đề thông báo không được để trống.'
+      errors.title = t('adminNotifyErrorTitleRequired')
     } else if (trimmedTitle.length < 3) {
-      errors.title = isEn
-        ? 'Notification title must be at least 3 characters long.'
-        : 'Tiêu đề thông báo phải có ít nhất 3 ký tự.'
+      errors.title = t('adminNotifyErrorTitleMin')
     }
 
-    // 3. Content validation: @IsString(), @IsNotEmpty(), @MinLength(5)
     const trimmedContent = composeContent.trim()
     if (!trimmedContent) {
-      errors.content = isEn
-        ? 'Message content is required.'
-        : 'Nội dung thông báo không được để trống.'
+      errors.content = t('adminNotifyErrorContentRequired')
     } else if (trimmedContent.length < 5) {
-      errors.content = isEn
-        ? 'Message content must be at least 5 characters long.'
-        : 'Nội dung thông báo phải có ít nhất 5 ký tự.'
+      errors.content = t('adminNotifyErrorContentMin')
     }
 
-    // 4. Target validation: specific_user requires targetId & @IsUUID('4')
     if (composeTarget === 'specific_user') {
       const trimmedId = specificUserId.trim()
       if (!trimmedId) {
-        errors.targetId = isEn
-          ? 'Target user ID is required when target type is specific_user.'
-          : 'Mã User UUID người nhận là bắt buộc khi chọn đối tượng là người dùng cụ thể.'
+        errors.targetId = t('adminNotifyErrorTargetIdRequired')
       } else if (!UUID_V4_REGEX.test(trimmedId)) {
-        errors.targetId = isEn
-          ? 'Target user ID must be a valid UUID format (e.g., 123e4567-e89b-12d3-a456-426614174000).'
-          : 'Mã User ID phải đúng định dạng UUID chuẩn (ví dụ: 123e4567-e89b-12d3-a456-426614174000).'
+        errors.targetId = t('adminNotifyErrorTargetIdUuid')
       }
     }
 
-    // 5. Schedule time validation (if scheduling for later)
     if (composeScheduleType === 'later') {
       if (!composeScheduleTime) {
-        errors.scheduleTime = isEn
-          ? 'Please select a scheduled delivery date and time.'
-          : 'Vui lòng chọn thời gian lên lịch phát thông báo.'
+        errors.scheduleTime = t('adminNotifyErrorScheduleTimeRequired')
       } else {
         const scheduleTimestamp = new Date(composeScheduleTime).getTime()
         if (isNaN(scheduleTimestamp) || scheduleTimestamp <= Date.now()) {
-          errors.scheduleTime = isEn
-            ? 'Scheduled time must be a valid date/time in the future.'
-            : 'Thời gian lên lịch phát thông báo phải ở tương lai.'
+          errors.scheduleTime = t('adminNotifyErrorScheduleTimeFuture')
         }
       }
     }
@@ -432,11 +329,7 @@ export default function AdminNotificationsPage() {
     setFieldErrors(errors)
 
     if (Object.keys(errors).length > 0) {
-      setFormError(
-        isEn
-          ? 'Please resolve all validation errors below before dispatching the campaign.'
-          : 'Vui lòng kiểm tra và sửa các lỗi bên dưới trước khi phát lệnh gửi.',
-      )
+      setFormError(t('adminNotifyErrorCreate'))
       return false
     }
 
@@ -472,11 +365,7 @@ export default function AdminNotificationsPage() {
       resetComposer()
     } catch (err: any) {
       console.error('Failed to create mass notification on backend:', err)
-      const apiErrorMessage =
-        err?.message ||
-        (isEn
-          ? 'Failed to dispatch campaign to backend. Please verify your inputs.'
-          : 'Gửi chiến dịch thất bại. Vui lòng kiểm tra lại các trường dữ liệu.')
+      const apiErrorMessage = err?.message || t('adminNotifyErrorCreate')
       setFormError(apiErrorMessage)
     } finally {
       setIsSubmitting(false)
@@ -551,27 +440,46 @@ export default function AdminNotificationsPage() {
       case 'sent':
         return (
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-            {isEn ? 'SENT' : 'ĐÃ GỬI'}
+            {t('adminNotifyStatusSent')}
           </span>
         )
       case 'pending':
         return (
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-800 border border-blue-200">
-            {isEn ? 'PENDING' : 'CHỜ XỬ LÝ'}
+            {t('adminNotifyStatusPending')}
           </span>
         )
       case 'failed':
         return (
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-100 text-red-800 border border-red-200">
-            {isEn ? 'FAILED' : 'THẤT BẠI'}
+            {t('adminNotifyStatusFailed')}
           </span>
         )
       case 'canceled':
         return (
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-zinc-100 text-zinc-600 border border-zinc-200">
-            {isEn ? 'CANCELED' : 'ĐÃ HỦY'}
+            {t('adminNotifyStatusCanceled')}
           </span>
         )
+    }
+  }
+
+  const getTargetLabel = (target: NotificationCampaign['targetGroup']) => {
+    switch (target) {
+      case 'all_users':
+        return t('adminNotifyTargetAllUsers')
+      case 'all_landlords':
+        return t('adminNotifyTargetAllLandlords')
+      case 'all_tenants':
+        return t('adminNotifyTargetAllTenants')
+      case 'all_staff':
+        return t('adminNotifyTargetAllStaff')
+      case 'all_admins':
+        return t('adminNotifyTargetAllAdmins')
+      case 'specific_user':
+        return t('adminNotifyTargetSpecificUser')
+      default:
+        return target
     }
   }
 
@@ -583,65 +491,74 @@ export default function AdminNotificationsPage() {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
               <Megaphone className="w-3.5 h-3.5" />
-              {isEn ? 'Mass Dispatcher' : 'Gửi Thông Báo Hàng Loạt'}
+              {t('adminNotifyBadge')}
             </span>
             <span className="text-xs font-semibold text-zinc-400">
-              •{' '}
-              {isEn
-                ? 'Multi-channel broadcast campaign engine'
-                : 'Động cơ thông báo đa kênh toàn quốc'}
+              • {t('adminNotifySubbadge')}
             </span>
           </div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-1">
-            {isEn ? 'Mass Notification Dispatcher' : 'Chiến Dịch Gửi Thông Báo Đa Kênh'}
+            {t('adminNotifyTitle')}
           </h1>
           <p className="text-xs text-zinc-500 mt-0.5">
-            {isEn
-              ? 'Broadcast system notices, maintenance alerts, and marketing offers across In-App, Email, SMS, and Zalo ZNS.'
-              : 'Phát thông báo bảo trì, cảnh báo an ninh PCCC, hoặc tin tức cập nhật đến từng nhóm đối tượng qua App, Email, SMS Brandname và Zalo.'}
+            {t('adminNotifySubtitle')}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Live KPI summary */}
+          {/* Live KPI summary with skeleton placeholders during loading */}
           <div className="hidden md:flex items-center gap-2">
-            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800">
+            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 min-w-[70px]">
               <span className="text-[10px] font-bold uppercase tracking-wider block text-emerald-600">
-                {isEn ? 'Sent' : 'Đã gửi'}
+                {t('adminNotifySent')}
               </span>
-              <span className="text-sm font-black leading-tight block">
-                {liveCounts ? liveCounts.sent : campaigns.filter(c => c.status === 'sent').length}
-              </span>
+              {loading ? (
+                <div className="h-4 w-10 bg-emerald-200/60 rounded animate-pulse my-0.5" />
+              ) : (
+                <span className="text-sm font-black leading-tight block">
+                  {liveCounts ? liveCounts.sent : campaigns.filter(c => c.status === 'sent').length}
+                </span>
+              )}
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800">
+            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 min-w-[70px]">
               <span className="text-[10px] font-bold uppercase tracking-wider block text-blue-600">
-                {isEn ? 'Pending' : 'Chờ xử lý'}
+                {t('adminNotifyPending')}
               </span>
-              <span className="text-sm font-black leading-tight block">
-                {liveCounts
-                  ? liveCounts.pending
-                  : campaigns.filter(c => c.status === 'pending').length}
-              </span>
+              {loading ? (
+                <div className="h-4 w-10 bg-blue-200/60 rounded animate-pulse my-0.5" />
+              ) : (
+                <span className="text-sm font-black leading-tight block">
+                  {liveCounts
+                    ? liveCounts.pending
+                    : campaigns.filter(c => c.status === 'pending').length}
+                </span>
+              )}
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800">
+            <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 min-w-[70px]">
               <span className="text-[10px] font-bold uppercase tracking-wider block text-rose-600">
-                {isEn ? 'Failed' : 'Thất bại'}
+                {t('adminNotifyFailed')}
               </span>
-              <span className="text-sm font-black leading-tight block">
-                {liveCounts
-                  ? liveCounts.failed
-                  : campaigns.filter(c => c.status === 'failed').length}
-              </span>
+              {loading ? (
+                <div className="h-4 w-10 bg-rose-200/60 rounded animate-pulse my-0.5" />
+              ) : (
+                <span className="text-sm font-black leading-tight block">
+                  {liveCounts
+                    ? liveCounts.failed
+                    : campaigns.filter(c => c.status === 'failed').length}
+                </span>
+              )}
             </div>
           </div>
 
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setIsComposeOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-all shadow-sm cursor-pointer self-start sm:self-auto"
+            leftIcon={<Plus className="w-4 h-4" />}
+            className="self-start sm:self-auto"
           >
-            <Plus className="w-4 h-4" />
-            <span>{isEn ? 'Compose Campaign' : 'Tạo Chiến Dịch Mới'}</span>
-          </button>
+            {t('adminNotifyComposeCampaign')}
+          </Button>
         </div>
       </div>
 
@@ -657,32 +574,28 @@ export default function AdminNotificationsPage() {
                 setSearchQuery(e.target.value)
                 setCurrentPage(1)
               }}
-              placeholder={
-                isEn
-                  ? 'Search campaign name, title, text...'
-                  : 'Tìm tên chiến dịch, tiêu đề thông báo...'
-              }
-              className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+              placeholder={t('adminNotifySearchPlaceholder')}
+              className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Status chips aligned with Prisma NotifyStatus */}
+          {/* Status chips */}
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
             {(
               [
-                { id: 'all', label: isEn ? 'All' : 'Tất cả' },
-                { id: 'sent', label: isEn ? 'Sent' : 'Đã gửi' },
-                { id: 'pending', label: isEn ? 'Pending' : 'Chờ xử lý' },
-                { id: 'failed', label: isEn ? 'Failed' : 'Thất bại' },
-                { id: 'canceled', label: isEn ? 'Canceled' : 'Đã hủy' },
+                { id: 'all', label: t('adminNotifyAllStatus') },
+                { id: 'sent', label: t('adminNotifyStatusSent') },
+                { id: 'pending', label: t('adminNotifyStatusPending') },
+                { id: 'failed', label: t('adminNotifyStatusFailed') },
+                { id: 'canceled', label: t('adminNotifyStatusCanceled') },
               ] as const
             ).map(chip => (
               <button
@@ -709,29 +622,29 @@ export default function AdminNotificationsPage() {
               setChannelFilter(e.target.value)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-700 cursor-pointer focus:outline-none focus:border-orange-500"
+            className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-700 cursor-pointer focus:outline-hidden focus:border-orange-500"
           >
-            <option value="all">{isEn ? 'All Channels' : 'Mọi kênh gửi'}</option>
-            <option value="in_app">In-App Notification</option>
-            <option value="email">Email Broadcast</option>
-            <option value="sms">SMS Brandname</option>
-            <option value="zalo">Zalo ZNS</option>
+            <option value="all">{t('adminNotifyAllChannels')}</option>
+            <option value="in_app">{t('adminNotifyChannelInApp')}</option>
+            <option value="email">{t('adminNotifyChannelEmail')}</option>
+            <option value="sms">{t('adminNotifyChannelSms')}</option>
+            <option value="zalo">{t('adminNotifyChannelZalo')}</option>
           </select>
         </div>
 
         {/* View Mode (Rule #9) & Refresh */}
         <div className="flex items-center gap-2.5 self-end lg:self-auto">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => fetchLiveCampaigns(true)}
-            disabled={refreshing || loading}
-            className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold disabled:opacity-50"
-            title={isEn ? 'Refresh queue' : 'Làm mới danh sách'}
+            isLoading={refreshing}
+            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />}
+            title={t('adminNotifyRefreshTooltip')}
           >
-            <RefreshCw
-              className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-orange-600' : ''}`}
-            />
-            <span className="hidden sm:inline">{isEn ? 'Refresh' : 'Làm mới'}</span>
-          </button>
+            <span className="hidden sm:inline">{t('adminNotifyRefresh')}</span>
+          </Button>
+
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
             <button
               onClick={() => handleViewModeChange('grid')}
@@ -740,7 +653,7 @@ export default function AdminNotificationsPage() {
                   ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
-              title={isEn ? 'Grid View (Default)' : 'Chế độ Lưới (Mặc định)'}
+              title={t('adminNotifyGridViewTooltip')}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -751,7 +664,7 @@ export default function AdminNotificationsPage() {
                   ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
-              title={isEn ? 'Table View' : 'Chế độ Bảng'}
+              title={t('adminNotifyTableViewTooltip')}
             >
               <TableIcon className="w-4 h-4" />
             </button>
@@ -760,38 +673,59 @@ export default function AdminNotificationsPage() {
       </div>
 
       {/* Select All on Current Page Bar */}
-      {paginatedItems.length > 0 && (
+      {!loading && paginatedItems.length > 0 && (
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-zinc-500">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={isAllCurrentSelected}
-              onChange={toggleSelectAllCurrent}
-              className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-            />
-            <span>{isEn ? 'Select all on this page' : 'Chọn tất cả trên trang này'}</span>
-          </label>
+          <Checkbox
+            checked={isAllCurrentSelected}
+            onChange={toggleSelectAllCurrent}
+            label={t('adminNotifySelectAllPage')}
+            size="sm"
+          />
           <span>
-            {isEn
-              ? `Showing ${paginatedItems.length} of ${totalItems} campaigns`
-              : `Hiển thị ${paginatedItems.length} trên ${totalItems} chiến dịch`}
+            {t('adminNotifyShowingOf', {
+              showing: paginatedItems.length,
+              total: totalItems,
+            })}
           </span>
         </div>
       )}
 
       {/* Main Content */}
-      {paginatedItems.length === 0 ? (
+      {loading ? (
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-zinc-200 p-5 space-y-4 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="h-4 bg-zinc-100 rounded-md w-20" />
+                  <div className="h-4 bg-zinc-100 rounded-md w-16" />
+                </div>
+                <div className="h-5 bg-zinc-100 rounded-md w-3/4" />
+                <div className="h-12 bg-zinc-100 rounded-md w-full" />
+                <div className="h-16 bg-zinc-50 rounded-xl" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-2xs animate-pulse p-4 space-y-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="h-12 bg-zinc-100 rounded-xl w-full" />
+            ))}
+          </div>
+        )
+      ) : paginatedItems.length === 0 ? (
         <div className="bg-white rounded-3xl border border-zinc-200 p-12 text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
             <Megaphone className="w-6 h-6" />
           </div>
           <h3 className="text-base font-bold text-zinc-800">
-            {isEn ? 'No campaigns found' : 'Không tìm thấy chiến dịch nào'}
+            {t('adminNotifyNoCampaigns')}
           </h3>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-            {isEn
-              ? 'Try adjusting filters or compose a new broadcast campaign.'
-              : 'Thử thay đổi bộ lọc hoặc tạo một chiến dịch phát thông báo mới.'}
+            {t('adminNotifyNoCampaignsDesc')}
           </p>
         </div>
       ) : viewMode === 'grid' ? (
@@ -814,96 +748,89 @@ export default function AdminNotificationsPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={isSelected}
                         onChange={() => toggleSelectItem(item.id)}
-                        className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                        size="sm"
                       />
                       <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md">
                         {item.id}
                       </span>
                     </div>
-
                     {renderStatusBadge(item.status)}
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-black text-zinc-900 line-clamp-1 hover:text-orange-600 transition-colors">
+                    <h3 className="text-sm font-black text-zinc-900 line-clamp-1">{item.name}</h3>
+                    <p className="text-xs font-bold text-orange-600 mt-0.5 line-clamp-1">
                       {item.title}
-                    </h3>
-                    <p className="text-xs text-zinc-400 mt-0.5 font-medium">{item.name}</p>
+                    </p>
                   </div>
 
-                  {renderChannelBadges(item.channels)}
-
-                  <p className="text-xs text-zinc-600 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
                     {item.content}
                   </p>
-
-                  {/* Delivery progress bar */}
-                  <div className="space-y-1.5 p-3 rounded-xl bg-zinc-50 border border-zinc-100">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-zinc-700">
-                        {isEn ? 'Audience:' : 'Đối tượng:'}{' '}
-                        <span className="text-orange-600">{item.targetLabel}</span>
-                      </span>
-                      <span className="font-bold text-zinc-900">{percent}%</span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-zinc-200 overflow-hidden">
-                      <div
-                        className="h-full bg-linear-to-r from-orange-500 to-emerald-500 transition-all duration-500"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400">
-                      <span>
-                        {item.sentCount.toLocaleString()} / {item.totalRecipients.toLocaleString()}
-                      </span>
-                      {item.failedCount > 0 && (
-                        <span className="text-orange-600 font-bold">
-                          {item.failedCount} {isEn ? 'failed' : 'lỗi'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
                 </div>
 
-                {/* Footer action */}
-                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-                  <span className="text-zinc-400 text-[11px]">{item.createdAt}</span>
-                  <button
-                    onClick={() => setInspectCampaign(item)}
-                    className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>{isEn ? 'View Report' : 'Xem báo cáo'}</span>
-                  </button>
+                <div className="pt-3 border-t border-zinc-100 space-y-3 text-xs">
+                  {/* Target & Channels */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md">
+                      {getTargetLabel(item.targetGroup)}
+                    </span>
+                    {renderChannelBadges(item.channels)}
+                  </div>
+
+                  {/* Dispatch Stats Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className="text-zinc-500">
+                        {item.sentCount.toLocaleString()} / {item.totalRecipients.toLocaleString()}{' '}
+                        {t('adminNotifyRecipientsUnit')}
+                      </span>
+                      <span className="text-emerald-600">{percent}%</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
+                    </div>
+                  </div>
+
+                  {/* Actions & Created Date */}
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
+                    <span>{item.createdAt}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInspectCampaign(item)}
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                    >
+                      {t('adminNotifyDetailsBtn')}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )
           })}
         </div>
       ) : (
-        /* TABLE VIEW (Rule #9: Default 10 items) */
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse min-w-[850px]">
+        /* TABLE VIEW */
+        <div className="bg-white rounded-2xl border border-zinc-200/90 overflow-hidden shadow-2xs">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-50/70 text-zinc-500 uppercase tracking-wider font-bold">
+              <tr className="bg-zinc-50 border-b border-zinc-200 font-bold text-zinc-600">
                 <th className="p-3.5 w-10">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={isAllCurrentSelected}
                     onChange={toggleSelectAllCurrent}
-                    className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                    size="sm"
                   />
                 </th>
-                <th className="p-3.5">{isEn ? 'Campaign & Title' : 'Chiến dịch & Tiêu đề'}</th>
-                <th className="p-3.5">{isEn ? 'Channels' : 'Kênh gửi'}</th>
-                <th className="p-3.5">{isEn ? 'Target Audience' : 'Nhóm đối tượng'}</th>
-                <th className="p-3.5">{isEn ? 'Progress' : 'Tiến độ gửi'}</th>
-                <th className="p-3.5">{isEn ? 'Status' : 'Trạng thái'}</th>
-                <th className="p-3.5 text-right">{isEn ? 'Actions' : 'Hành động'}</th>
+                <th className="p-3.5">{t('adminNotifyThIdName')}</th>
+                <th className="p-3.5">{t('adminNotifyThTargetChannels')}</th>
+                <th className="p-3.5">{t('adminNotifyThContent')}</th>
+                <th className="p-3.5">{t('adminNotifyThProgress')}</th>
+                <th className="p-3.5">{t('adminNotifyThStatus')}</th>
+                <th className="p-3.5 text-right">{t('adminNotifyThActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -922,27 +849,31 @@ export default function AdminNotificationsPage() {
                     }`}
                   >
                     <td className="p-3.5">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={isSelected}
                         onChange={() => toggleSelectItem(item.id)}
-                        className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                        size="sm"
                       />
                     </td>
 
-                    <td className="p-3.5 space-y-0.5 max-w-xs">
-                      <div className="font-mono text-[10px] text-zinc-400 font-bold">{item.id}</div>
-                      <div className="font-bold text-zinc-900 line-clamp-1">{item.title}</div>
-                      <div className="text-[11px] text-zinc-500 line-clamp-1">{item.name}</div>
+                    <td className="p-3.5 space-y-0.5">
+                      <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-block">
+                        {item.id}
+                      </span>
+                      <div className="font-bold text-zinc-900">{item.name}</div>
+                      <div className="text-[10px] text-zinc-400">{item.createdAt}</div>
                     </td>
 
-                    <td className="p-3.5">{renderChannelBadges(item.channels)}</td>
+                    <td className="p-3.5 space-y-1.5">
+                      <span className="font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md inline-block">
+                        {getTargetLabel(item.targetGroup)}
+                      </span>
+                      <div>{renderChannelBadges(item.channels)}</div>
+                    </td>
 
-                    <td className="p-3.5">
-                      <span className="font-bold text-zinc-800">{item.targetLabel}</span>
-                      <div className="text-[11px] text-zinc-400">
-                        {item.totalRecipients.toLocaleString()} {isEn ? 'users' : 'người nhận'}
-                      </div>
+                    <td className="p-3.5 max-w-xs space-y-0.5">
+                      <div className="font-bold text-orange-600 line-clamp-1">{item.title}</div>
+                      <div className="text-zinc-500 line-clamp-1">{item.content}</div>
                     </td>
 
                     <td className="p-3.5 min-w-[140px]">
@@ -960,13 +891,14 @@ export default function AdminNotificationsPage() {
                     <td className="p-3.5">{renderStatusBadge(item.status)}</td>
 
                     <td className="p-3.5 text-right whitespace-nowrap">
-                      <button
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => setInspectCampaign(item)}
-                        className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer"
-                        title={isEn ? 'View details' : 'Xem chi tiết'}
+                        title={t('adminNotifyDetailsBtn')}
                       >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
                     </td>
                   </tr>
                 )
@@ -977,84 +909,95 @@ export default function AdminNotificationsPage() {
       )}
 
       {/* Standardized Pagination Bar (Rule #9) */}
-      <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
-        <div className="flex items-center gap-2">
-          <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={pageSize}
-            onChange={e => {
-              const val = parseInt(e.target.value) || 1
-              setPageSize(val)
-              setCurrentPage(1)
-            }}
-            className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-none focus:border-orange-500"
-          />
-          <span>{isEn ? '/ page' : '/ trang'}</span>
-          <span className="text-zinc-300">|</span>
-          <span>
-            {totalItems === 0
-              ? '0'
-              : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
-                  safeCurrentPage * validPageSize,
-                  totalItems,
-                )}`}{' '}
-            {isEn ? `of ${totalItems} campaigns` : `trên ${totalItems} chiến dịch`}
-          </span>
+      {loading ? (
+        <div className="bg-white px-4 py-3.5 rounded-2xl border border-zinc-200/90 shadow-2xs flex items-center justify-between animate-pulse">
+          <div className="h-4 bg-zinc-200 rounded w-48" />
+          <div className="h-7 bg-zinc-200 rounded w-56" />
         </div>
+      ) : paginatedItems.length > 0 ? (
+        <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
+          <div className="flex items-center gap-2">
+            <span>{t('adminNotifyPaginationShowing')}</span>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={pageSize}
+              onChange={e => {
+                const val = parseInt(e.target.value) || 1
+                setPageSize(val)
+                setCurrentPage(1)
+              }}
+              className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-hidden focus:border-orange-500"
+            />
+            <span>{t('adminNotifyPaginationPerPage')}</span>
+            <span className="text-zinc-300">|</span>
+            <span>
+              {totalItems === 0
+                ? '0'
+                : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
+                    safeCurrentPage * validPageSize,
+                    totalItems,
+                  )}`}{' '}
+              {t('adminNotifyPaginationOfCampaigns', { total: totalItems })}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-1 self-end sm:self-auto">
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={safeCurrentPage === 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'First page' : 'Trang đầu'}
-          >
-            <ChevronsLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
-            disabled={safeCurrentPage <= 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'Previous 5 pages' : 'Lùi 5 trang'}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {pageNumbers.map(num => (
-            <button
-              key={num}
-              onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
-                safeCurrentPage === num
-                  ? 'bg-orange-600 text-white shadow-2xs'
-                  : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
-              }`}
+          <div className="flex items-center gap-1 self-end sm:self-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={safeCurrentPage === 1}
+              title={t('adminNotifyFirstPage')}
             >
-              {num}
-            </button>
-          ))}
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
+              disabled={safeCurrentPage <= 1}
+              title={t('adminNotifyPrev5')}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
 
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
-            disabled={safeCurrentPage >= totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'Next 5 pages' : 'Tiến 5 trang'}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={safeCurrentPage === totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'Last page' : 'Trang cuối'}
-          >
-            <ChevronsRight className="w-4 h-4" />
-          </button>
+            {pageNumbers.map(num => (
+              <button
+                key={num}
+                onClick={() => setCurrentPage(num)}
+                className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
+                  safeCurrentPage === num
+                    ? 'bg-orange-600 text-white shadow-2xs'
+                    : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
+                }`}
+              >
+                {num}
+              </button>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
+              disabled={safeCurrentPage >= totalPages}
+              title={t('adminNotifyNext5')}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={safeCurrentPage === totalPages}
+              title={t('adminNotifyLastPage')}
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/* COMPOSE CAMPAIGN MODAL (Rule #10 compliant) */}
       {isComposeOpen && (
@@ -1066,7 +1009,7 @@ export default function AdminNotificationsPage() {
                   <Megaphone className="w-4 h-4" />
                 </div>
                 <h2 className="text-base font-black text-zinc-900">
-                  {isEn ? 'Compose Mass Broadcast Campaign' : 'Soạn Chiến Dịch Thông Báo Hàng Loạt'}
+                  {t('adminNotifyComposeTitle')}
                 </h2>
               </div>
               <button
@@ -1079,27 +1022,19 @@ export default function AdminNotificationsPage() {
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
               {formError && (
-                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                   <span>{formError}</span>
                 </div>
               )}
 
               {/* Campaign Internal Name */}
               <div className="space-y-1">
-                <label className="font-bold text-zinc-700 block">
-                  {isEn ? 'Internal Campaign Name:' : 'Tên chiến dịch quản lý nội bộ:'}
-                </label>
-                <input
-                  type="text"
+                <TextInput
+                  label={t('adminNotifyCampaignName')}
                   value={composeName}
                   onChange={e => setComposeName(e.target.value)}
-                  placeholder={
-                    isEn
-                      ? 'e.g., Autumn 2026 Student Promotion'
-                      : 'Ví dụ: Thông báo bảo trì máy chủ tháng 09/2026'
-                  }
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
+                  placeholder={t('adminNotifyCampaignNamePlaceholder')}
                 />
               </div>
 
@@ -1107,42 +1042,36 @@ export default function AdminNotificationsPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="font-bold text-zinc-700 block">
-                    {isEn
-                      ? 'Select Dispatch Channels (Pick 1 or multiple):'
-                      : 'Chọn kênh phát thông báo (Chọn 1 hoặc nhiều kênh):'}
-                    <span className="text-red-500 ml-1 font-bold">*</span>
+                    {t('adminNotifyDeliveryChannels')}
+                    <span className="text-rose-500 ml-1 font-bold">*</span>
                   </label>
                   <span className="text-[11px] font-bold text-zinc-400">
-                    {composeChannels.length} {isEn ? 'selected' : 'đã chọn'}
+                    {composeChannels.length} {t('adminNotifyAllChannels')}
                   </span>
                 </div>
                 <div
-                  className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${fieldErrors.channels ? 'p-1.5 rounded-2xl ring-2 ring-red-400 bg-red-50/20' : ''}`}
+                  className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${fieldErrors.channels ? 'p-1.5 rounded-2xl ring-2 ring-rose-400 bg-rose-50/20' : ''}`}
                 >
                   {[
                     {
                       id: 'in_app' as const,
                       label: 'In-App Notification',
                       icon: Bell,
-                      color: 'text-blue-600 bg-blue-50',
                     },
                     {
                       id: 'email' as const,
                       label: 'Email Broadcast',
                       icon: Mail,
-                      color: 'text-purple-600 bg-purple-50',
                     },
                     {
                       id: 'sms' as const,
                       label: 'SMS Brandname',
                       icon: Smartphone,
-                      color: 'text-amber-600 bg-amber-50',
                     },
                     {
                       id: 'zalo' as const,
                       label: 'Zalo ZNS',
                       icon: MessageSquare,
-                      color: 'text-cyan-600 bg-cyan-50',
                     },
                   ].map(ch => {
                     const isSelected = composeChannels.includes(ch.id)
@@ -1180,170 +1109,86 @@ export default function AdminNotificationsPage() {
                   })}
                 </div>
                 {fieldErrors.channels && (
-                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                  <p className="text-[11px] text-rose-600 font-semibold flex items-center gap-1 mt-1">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{fieldErrors.channels}</span>
                   </p>
                 )}
               </div>
 
-              {/* Target Audience Group (Prisma NofifyTarget) */}
+              {/* Target Audience Group (Prisma NotifyTarget) */}
               <div className="space-y-1.5">
                 <label className="font-bold text-zinc-700 block">
-                  {isEn ? 'Target Audience Group:' : 'Nhóm đối tượng nhận thông báo:'}
-                  <span className="text-red-500 ml-1 font-bold">*</span>
+                  {t('adminNotifyTargetGroup')}
+                  <span className="text-rose-500 ml-1 font-bold">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
-                    {
-                      id: 'all_users' as const,
-                      label: isEn ? 'All Users (12.4k)' : 'Tất cả User (12.4k)',
-                    },
-                    {
-                      id: 'all_landlords' as const,
-                      label: isEn ? 'All Landlords (3.1k)' : 'Chủ trọ (3.1k)',
-                    },
-                    {
-                      id: 'all_tenants' as const,
-                      label: isEn ? 'All Tenants (8.9k)' : 'Khách thuê (8.9k)',
-                    },
-                    {
-                      id: 'all_staff' as const,
-                      label: isEn ? 'All Staff (420)' : 'Nhân viên (420)',
-                    },
-                    {
-                      id: 'all_admins' as const,
-                      label: isEn ? 'All Admins (15)' : 'Quản trị viên (15)',
-                    },
-                    { id: 'specific_user' as const, label: isEn ? 'Specific User' : 'User cụ thể' },
-                  ].map(t => (
+                    { id: 'all_users' as const, label: t('adminNotifyTargetAllUsers') },
+                    { id: 'all_landlords' as const, label: t('adminNotifyTargetAllLandlords') },
+                    { id: 'all_tenants' as const, label: t('adminNotifyTargetAllTenants') },
+                    { id: 'all_staff' as const, label: t('adminNotifyTargetAllStaff') },
+                    { id: 'all_admins' as const, label: t('adminNotifyTargetAllAdmins') },
+                    { id: 'specific_user' as const, label: t('adminNotifyTargetSpecificUser') },
+                  ].map(tgt => (
                     <button
-                      key={t.id}
+                      key={tgt.id}
                       type="button"
                       onClick={() => {
-                        setComposeTarget(t.id)
-                        if (t.id !== 'specific_user' && fieldErrors.targetId) {
+                        setComposeTarget(tgt.id)
+                        if (tgt.id !== 'specific_user' && fieldErrors.targetId) {
                           setFieldErrors(prev => ({ ...prev, targetId: undefined }))
                         }
                       }}
                       className={`px-3 py-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
-                        composeTarget === t.id
+                        composeTarget === tgt.id
                           ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-2xs'
                           : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100'
                       }`}
                     >
-                      {t.label}
+                      {tgt.label}
                     </button>
                   ))}
                 </div>
 
                 {composeTarget === 'specific_user' && (
                   <div className="space-y-1 pt-1.5 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-zinc-700 block">
-                        {isEn ? 'Recipient User UUID:' : 'Mã User UUID người nhận:'}
-                        <span className="text-red-500 ml-1 font-bold">*</span>
-                      </label>
-                      <span className="text-[10px] font-mono text-zinc-400">UUID v4 format</span>
-                    </div>
-                    <input
-                      type="text"
+                    <TextInput
+                      label={t('adminNotifySpecificUserUuid')}
+                      required
                       value={specificUserId}
                       onChange={e => {
                         setSpecificUserId(e.target.value)
                         if (fieldErrors.targetId)
                           setFieldErrors(prev => ({ ...prev, targetId: undefined }))
                       }}
-                      placeholder={
-                        isEn
-                          ? 'e.g., 123e4567-e89b-12d3-a456-426614174000'
-                          : 'Ví dụ: 123e4567-e89b-12d3-a456-426614174000'
-                      }
-                      className={`w-full px-3 py-2 bg-zinc-50 border rounded-xl font-mono text-xs text-zinc-900 focus:outline-none focus:bg-white transition-colors ${
-                        fieldErrors.targetId
-                          ? 'border-red-500 focus:border-red-600 bg-red-50/10 ring-1 ring-red-400'
-                          : 'border-zinc-200 focus:border-orange-500'
-                      }`}
+                      placeholder="123e4567-e89b-12d3-a456-426614174000"
+                      error={fieldErrors.targetId}
                     />
-                    {fieldErrors.targetId ? (
-                      <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{fieldErrors.targetId}</span>
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-zinc-400">
-                        {isEn
-                          ? 'Must be the exact 36-character UUID of an existing user in the database'
-                          : 'Phải là chuỗi UUID 36 ký tự hợp lệ của người dùng tồn tại trong hệ thống'}
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
 
               {/* Title / Subject (min 3 chars per backend) */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-zinc-700 block">
-                    {isEn
-                      ? 'Notification Title / Email Subject:'
-                      : 'Tiêu đề thông báo / Chủ đề Email:'}
-                    <span className="text-red-500 ml-1 font-bold">*</span>
-                  </label>
-                  <span
-                    className={`text-[10px] font-mono ${
-                      composeTitle.trim().length > 0 && composeTitle.trim().length < 3
-                        ? 'text-red-500 font-bold'
-                        : 'text-zinc-400 font-medium'
-                    }`}
-                  >
-                    {composeTitle.trim().length}/3 {isEn ? 'chars min' : 'ký tự tối thiểu'}
-                  </span>
-                </div>
-                <input
-                  type="text"
+                <TextInput
+                  label={t('adminNotifyMessageTitle')}
+                  required
                   value={composeTitle}
                   onChange={e => {
                     setComposeTitle(e.target.value)
                     if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: undefined }))
                   }}
-                  placeholder={
-                    isEn
-                      ? 'Enter notification headline (min 3 chars)...'
-                      : 'Nhập tiêu đề nổi bật gửi đến người dùng (tối thiểu 3 ký tự)...'
-                  }
-                  className={`w-full px-3 py-2 bg-zinc-50 border rounded-xl font-bold text-zinc-900 focus:outline-none focus:bg-white transition-colors ${
-                    fieldErrors.title
-                      ? 'border-red-500 focus:border-red-600 bg-red-50/10 ring-1 ring-red-400'
-                      : 'border-zinc-200 focus:border-orange-500'
-                  }`}
+                  placeholder={t('adminNotifyMessageTitlePlaceholder')}
+                  error={fieldErrors.title}
                 />
-                {fieldErrors.title && (
-                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{fieldErrors.title}</span>
-                  </p>
-                )}
               </div>
 
               {/* Content / Body (min 5 chars per backend) */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-zinc-700 block">
-                    {isEn ? 'Message Body Content:' : 'Nội dung chi tiết thông báo:'}
-                    <span className="text-red-500 ml-1 font-bold">*</span>
-                  </label>
-                  <span
-                    className={`text-[10px] font-mono ${
-                      composeContent.trim().length > 0 && composeContent.trim().length < 5
-                        ? 'text-red-500 font-bold'
-                        : 'text-zinc-400 font-medium'
-                    }`}
-                  >
-                    {composeContent.trim().length}/5 {isEn ? 'chars min' : 'ký tự tối thiểu'}
-                  </span>
-                </div>
-                <textarea
+                <TextareaInput
+                  label={t('adminNotifyMessageContent')}
+                  required
                   rows={5}
                   value={composeContent}
                   onChange={e => {
@@ -1351,23 +1196,9 @@ export default function AdminNotificationsPage() {
                     if (fieldErrors.content)
                       setFieldErrors(prev => ({ ...prev, content: undefined }))
                   }}
-                  placeholder={
-                    isEn
-                      ? 'Type message body here (min 5 chars)...'
-                      : 'Nhập toàn bộ nội dung thông báo cần truyền tải (tối thiểu 5 ký tự)...'
-                  }
-                  className={`w-full p-3 bg-zinc-50 border rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:bg-white leading-relaxed transition-colors ${
-                    fieldErrors.content
-                      ? 'border-red-500 focus:border-red-600 bg-red-50/10 ring-1 ring-red-400'
-                      : 'border-zinc-200 focus:border-orange-500'
-                  }`}
+                  placeholder={t('adminNotifyMessageContentPlaceholder')}
+                  error={fieldErrors.content}
                 />
-                {fieldErrors.content && (
-                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{fieldErrors.content}</span>
-                  </p>
-                )}
               </div>
 
               {/* Schedule options */}
@@ -1375,11 +1206,11 @@ export default function AdminNotificationsPage() {
                 <div
                   className={`p-3 rounded-2xl bg-zinc-50 border transition-colors ${
                     fieldErrors.scheduleTime
-                      ? 'border-red-400 bg-red-50/20 ring-1 ring-red-400'
+                      ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-400'
                       : 'border-zinc-100'
                   } flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
                       <input
                         type="radio"
@@ -1392,7 +1223,7 @@ export default function AdminNotificationsPage() {
                         }}
                         className="text-orange-600 focus:ring-orange-500 cursor-pointer"
                       />
-                      <span>{isEn ? 'Send Immediately' : 'Gửi ngay bây giờ'}</span>
+                      <span>{t('adminNotifyScheduleNow')}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
                       <input
@@ -1402,7 +1233,7 @@ export default function AdminNotificationsPage() {
                         onChange={() => setComposeScheduleType('later')}
                         className="text-orange-600 focus:ring-orange-500 cursor-pointer"
                       />
-                      <span>{isEn ? 'Schedule for later' : 'Lên lịch phát sau'}</span>
+                      <span>{t('adminNotifyScheduleLater')}</span>
                     </label>
                   </div>
 
@@ -1415,16 +1246,16 @@ export default function AdminNotificationsPage() {
                         if (fieldErrors.scheduleTime)
                           setFieldErrors(prev => ({ ...prev, scheduleTime: undefined }))
                       }}
-                      className={`px-3 py-1.5 bg-white border rounded-xl text-xs font-bold text-zinc-800 focus:outline-none ${
+                      className={`px-3 py-1.5 bg-white border rounded-xl text-xs font-bold text-zinc-800 focus:outline-hidden ${
                         fieldErrors.scheduleTime
-                          ? 'border-red-500 focus:border-red-600'
+                          ? 'border-rose-500 focus:border-rose-600'
                           : 'border-zinc-200 focus:border-orange-500'
                       }`}
                     />
                   )}
                 </div>
                 {fieldErrors.scheduleTime && (
-                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                  <p className="text-[11px] text-rose-600 font-semibold flex items-center gap-1 mt-1">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{fieldErrors.scheduleTime}</span>
                   </p>
@@ -1433,30 +1264,23 @@ export default function AdminNotificationsPage() {
             </div>
 
             <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleRequestCloseComposer}
                 disabled={isSubmitting}
-                className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {isEn ? 'Cancel' : 'Hủy bỏ'}
-              </button>
-              <button
+                {t('adminNotifyBtnCancel')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleSendCampaign}
-                disabled={isSubmitting}
-                className="px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+                isLoading={isSubmitting}
+                leftIcon={<Send className="w-3.5 h-3.5" />}
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-                    <span>{isEn ? 'Dispatching...' : 'Đang phát lệnh...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{isEn ? 'Dispatch Campaign' : 'Phát Lệnh Gửi'}</span>
-                  </>
-                )}
-              </button>
+                {t('adminNotifyBtnSubmit')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1486,7 +1310,7 @@ export default function AdminNotificationsPage() {
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
               <div className="space-y-1">
                 <span className="text-[10px] font-black uppercase text-zinc-400 block">
-                  {isEn ? 'Delivered Title' : 'Tiêu đề phát đi'}
+                  {t('adminNotifyMessageTitle')}
                 </span>
                 <h4 className="text-sm font-black text-zinc-900">{inspectCampaign.title}</h4>
               </div>
@@ -1498,15 +1322,15 @@ export default function AdminNotificationsPage() {
               <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100">
                 <div>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                    {isEn ? 'Target' : 'Đối tượng'}
+                    {t('adminNotifyTargetGroup')}
                   </span>
                   <span className="font-bold text-zinc-900 text-sm mt-0.5 block">
-                    {inspectCampaign.targetLabel}
+                    {getTargetLabel(inspectCampaign.targetGroup)}
                   </span>
                 </div>
                 <div>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                    {isEn ? 'Created By' : 'Người khởi tạo'}
+                    {t('adminNotifyDetailCreatedBy')}
                   </span>
                   <span className="font-bold text-zinc-800 text-sm mt-0.5 block">
                     {inspectCampaign.createdBy}
@@ -1514,7 +1338,7 @@ export default function AdminNotificationsPage() {
                 </div>
                 <div>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                    {isEn ? 'Sent Count' : 'Đã chuyển thành công'}
+                    {t('adminNotifyDetailSentCount')}
                   </span>
                   <span className="font-black text-emerald-600 text-sm mt-0.5 block">
                     {inspectCampaign.sentCount.toLocaleString()}
@@ -1522,7 +1346,7 @@ export default function AdminNotificationsPage() {
                 </div>
                 <div>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase block">
-                    {isEn ? 'Failed Count' : 'Số lượng thất bại'}
+                    {t('adminNotifyDetailFailedCount')}
                   </span>
                   <span className="font-black text-orange-600 text-sm mt-0.5 block">
                     {inspectCampaign.failedCount}
@@ -1532,7 +1356,7 @@ export default function AdminNotificationsPage() {
 
               <div>
                 <span className="text-[10px] font-bold text-zinc-400 uppercase block mb-1.5">
-                  {isEn ? 'Active Channels' : 'Các kênh đã truyền thông điệp'}
+                  {t('adminNotifyDetailChannels')}
                 </span>
                 {renderChannelBadges(inspectCampaign.channels)}
               </div>
@@ -1540,20 +1364,22 @@ export default function AdminNotificationsPage() {
 
             <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2">
               {(inspectCampaign.status === 'failed' || inspectCampaign.status === 'pending') && (
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => handleRetryCampaign(inspectCampaign.id)}
-                  className="px-4 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>{isEn ? 'Retry Job' : 'Thử lại gửi'}</span>
-                </button>
+                  {t('adminRetry')}
+                </Button>
               )}
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setInspectCampaign(null)}
-                className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
               >
-                {isEn ? 'Close' : 'Đóng'}
-              </button>
+                {t('adminNotifyDetailClose')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1568,27 +1394,27 @@ export default function AdminNotificationsPage() {
             </div>
             <div>
               <h3 className="text-base font-black text-zinc-900">
-                {isEn ? 'Discard Campaign Draft?' : 'Xác nhận đóng form'}
+                {t('adminNotifyDiscardTitle')}
               </h3>
               <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                {isEn
-                  ? 'You have unsaved campaign content. Are you sure you want to discard changes and close?'
-                  : 'Bạn có nội dung thông báo chưa gửi. Bạn có chắc muốn đóng và hủy các nội dung đã nhập?'}
+                {t('adminNotifyDiscardDesc')}
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
-                {isEn ? 'Continue Editing' : 'Tiếp tục chỉnh sửa'}
-              </button>
-              <button
+                {t('adminNotifyContinueEditing')}
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={confirmCloseModal.onDiscard}
-                className="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
               >
-                {isEn ? 'Discard & Close' : 'Hủy thay đổi & Đóng'}
-              </button>
+                {t('adminNotifyDiscardAndClose')}
+              </Button>
             </div>
           </div>
         </div>
