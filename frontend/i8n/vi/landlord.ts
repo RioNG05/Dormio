@@ -3425,6 +3425,7 @@ export const viLandlord = {
     landlordContractDetailHistorySection: "Lịch sử cập nhật hợp đồng",
     landlordContractDetailNoHistory: "Chưa có ghi nhận chỉnh sửa nào.",
     landlordContractDetailBtnPrint: "In / Xuất văn bản HĐ",
+    landlordContractDetailTierRequiredMsg: "Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.",
     landlordContractDetailBtnExtend: "Gia hạn HĐ",
     landlordContractDetailBtnNotice: "Báo trả phòng",
     landlordContractDetailBtnTerminate: "Chấm dứt HĐ",

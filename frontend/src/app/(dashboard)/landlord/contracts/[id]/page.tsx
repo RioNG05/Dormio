@@ -16,6 +16,7 @@ import {
   CalendarDays,
   Ban,
   Printer,
+  Crown,
   Copy,
   Plus,
   X,
@@ -29,6 +30,7 @@ import { getContractById, Contract, ContractMember } from '../data'
 import { Customer } from '../../customers/data'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useSubscriptionTier } from '@/hooks'
 import { getContractById as getContractByIdApi } from '@/services/contract.service'
 import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
 import {
@@ -53,6 +55,22 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
   const [contract, setContract] = useState<Contract | null>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
+
+  // Subscription tier guard (Requires Plus tier for printing & exporting contracts)
+  const { isPlusOrHigher, requireTier, isLoading: isTierLoading } = useSubscriptionTier()
+
+  const handlePrintContract = () => {
+    if (
+      !requireTier(
+        'plus',
+        t('landlordContractDetailTierRequiredMsg') ||
+          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+      )
+    ) {
+      return
+    }
+    setIsPreviewModalOpen(true)
+  }
 
   // Modals
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false)
@@ -516,7 +534,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setIsPreviewModalOpen(true)}
+            onClick={handlePrintContract}
             leftIcon={<Printer className="w-3.5 h-3.5 text-[#2AC1BC]" />}
           >
             {t('landlordContractDetailBtnPrint')}

@@ -25,6 +25,7 @@ import {
 
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useSubscriptionTier } from '@/hooks'
 import { getLandlordContracts, ContractItem, exportContract } from '@/services/contract.service'
 import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
 import {
@@ -57,6 +58,7 @@ export default function ContractsPage() {
   const { activeBuilding } = useAuth()
   const router = useRouter()
   const t = useTranslations('landlord')
+  const { requireTier } = useSubscriptionTier()
 
   // Rule #10: Unsaved changes confirmation modal state
   const [showCloseConfirm, setShowCloseConfirm] = useState(false)
@@ -278,6 +280,15 @@ export default function ContractsPage() {
 
   // Handle print/preview modal
   const handlePrintContract = (contract: any) => {
+    if (
+      !requireTier(
+        'plus',
+        t('landlordContractDetailTierRequiredMsg') ||
+          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+      )
+    ) {
+      return
+    }
     setPreviewModal({
       isOpen: true,
       contractId: contract.id,
@@ -288,6 +299,15 @@ export default function ContractsPage() {
 
   // Direct export of contract document (HTML/PDF)
   const handleExportContract = async (contract: any) => {
+    if (
+      !requireTier(
+        'plus',
+        t('landlordContractDetailTierRequiredMsg') ||
+          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+      )
+    ) {
+      return
+    }
     if (!activeBuilding?.id) return
     try {
       showToast(t('landlordContractsToastDocExporting'), 'info')

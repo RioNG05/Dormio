@@ -266,15 +266,39 @@ class ApiClient {
         }
         const errorText = await response.text().catch(() => '')
         let message = `Request failed with status ${response.status}`
+        let errorData: any = null
         try {
           const errorJson = JSON.parse(errorText)
+          errorData = errorJson
           if (typeof errorJson.message === 'string') message = errorJson.message
           else if (Array.isArray(errorJson.message)) message = errorJson.message.join('. ')
           else if (typeof errorJson.error === 'string') message = errorJson.error
         } catch {
           if (errorText) message = errorText
         }
-        throw new ApiError(message, response.status)
+
+        // Notify client application when action requires a subscription tier upgrade
+        if (
+          typeof window !== 'undefined' &&
+          errorData &&
+          (errorData.code === 'SUBSCRIPTION_TIER_REQUIRED' ||
+            errorData.code === 'BOARDING_HOUSE_LIMIT_REACHED' ||
+            errorData.requiredTier)
+        ) {
+          window.dispatchEvent(
+            new CustomEvent<TierRequiredEventDetail>('dormio:tier-required', {
+              detail: {
+                message,
+                requiredTier:
+                  errorData.requiredTier || (errorData.currentTier === 'free' ? 'plus' : 'pro'),
+                currentTier: errorData.currentTier || 'free',
+                upgradeUrl: errorData.upgradeUrl || '/pricing',
+              },
+            }),
+          )
+        }
+
+        throw new ApiError(message, response.status, errorData)
       }
 
       return await response.text()

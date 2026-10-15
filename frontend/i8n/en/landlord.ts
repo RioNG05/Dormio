@@ -3425,6 +3425,7 @@ export const enLandlord = {
     landlordContractDetailHistorySection: "Contract Audit History",
     landlordContractDetailNoHistory: "No modifications recorded yet.",
     landlordContractDetailBtnPrint: "Print / Export Document",
+    landlordContractDetailTierRequiredMsg: "Printing and exporting legal contract documents requires upgrading to the Plus plan.",
     landlordContractDetailBtnExtend: "Extend Contract",
     landlordContractDetailBtnNotice: "Checkout Notice",
     landlordContractDetailBtnTerminate: "Terminate Contract",

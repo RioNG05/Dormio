@@ -75,6 +75,10 @@ export default function ContractPreviewModal({
       setHtmlContent(html)
     } catch (err: any) {
       console.error('Failed to load contract print HTML from backend:', err)
+      if (err?.code === 'SUBSCRIPTION_TIER_REQUIRED' || err?.requiredTier) {
+        onClose()
+        return
+      }
       const errorMsg =
         err?.message ||
         t('landlordContractsExportErrorTitle') ||
@@ -148,7 +152,11 @@ export default function ContractPreviewModal({
       }
     } catch (err: any) {
       console.error('Failed to export contract document:', err)
-      toast.error(err.message || t('landlordContractsExportToastExportFailed'))
+      if (err?.code === 'SUBSCRIPTION_TIER_REQUIRED' || err?.requiredTier) {
+        onClose()
+      } else {
+        toast.error(err.message || t('landlordContractsExportToastExportFailed'))
+      }
     } finally {
       setIsExporting(false)
     }
