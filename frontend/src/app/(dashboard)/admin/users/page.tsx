@@ -43,6 +43,7 @@ import { TextInput } from '@/components/ui/TextInput'
 import { SelectInput } from '@/components/ui/SelectInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
 import { Checkbox } from '@/components/ui/Checkbox'
+import { NumberInput } from '@/components/ui/NumberInput'
 
 export default function AdminUsersManagementPage() {
   const { locale } = useLanguage()
@@ -70,8 +71,6 @@ export default function AdminUsersManagementPage() {
   // Pagination state (Rule 9: Grid=6, Table=10 default, 5-page window jumping)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(viewMode === 'grid' ? 6 : 10)
-  const [totalItems, setTotalItems] = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
   const [pageInput, setPageInput] = useState(String(viewMode === 'grid' ? 6 : 10))
 
   // Filter state
@@ -86,7 +85,7 @@ export default function AdminUsersManagementPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Adjust pageSize when view mode changes
+  // Adjust pageSize when view mode changes without triggering network refetch
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
     const newSize = mode === 'grid' ? 6 : 10
@@ -95,7 +94,7 @@ export default function AdminUsersManagementPage() {
     setCurrentPage(1)
   }
 
-  // Fetch users from API (Notice: does NOT depend on `t` so language change does not trigger unnecessary refetch)
+  // Fetch users from API (Notice: does NOT depend on `t`, `pageSize`, or `currentPage` so layout/language changes do not trigger refetch)
   const fetchUsers = useCallback(
     async (isManualRefresh = false) => {
       if (isManualRefresh) setRefreshing(true)
@@ -104,16 +103,14 @@ export default function AdminUsersManagementPage() {
 
       try {
         const res = await adminUsersService.getUsers({
-          page: currentPage,
-          limit: pageSize,
+          page: 1,
+          limit: 100,
           query: debouncedSearch.trim() || undefined,
           role: roleFilter !== 'all' ? roleFilter : undefined,
           status: statusFilter !== 'all' ? statusFilter : undefined,
         })
 
         setUsers(res.items || [])
-        setTotalItems(res.total || 0)
-        setTotalPages(res.totalPages || 1)
         if (res.summary) {
           setSummary(res.summary)
         }
@@ -125,7 +122,7 @@ export default function AdminUsersManagementPage() {
         setRefreshing(false)
       }
     },
-    [currentPage, pageSize, debouncedSearch, roleFilter, statusFilter],
+    [debouncedSearch, roleFilter, statusFilter],
   )
 
   useEffect(() => {
@@ -375,20 +372,31 @@ export default function AdminUsersManagementPage() {
     }
   }
 
+  // Pagination calculations (Rule 9: Grid=6, Table=10 default, 5-page window jumping)
+  const totalItems = users.length
+  const validPageSize = Math.max(1, Number(pageSize) || (viewMode === 'grid' ? 6 : 10))
+  const totalPages = Math.max(1, Math.ceil(totalItems / validPageSize))
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
+
+  const paginatedUsers = useMemo(() => {
+    const start = (safeCurrentPage - 1) * validPageSize
+    return users.slice(start, start + validPageSize)
+  }, [users, safeCurrentPage, validPageSize])
+
   // Pagination Window (Rule 9: 5-page window jumping)
   const paginationRange = useMemo(() => {
     const windowSize = 5
-    const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
+    const windowStart = Math.floor((safeCurrentPage - 1) / windowSize) * windowSize + 1
     const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
     const pages: number[] = []
     for (let i = windowStart; i <= windowEnd; i++) {
       pages.push(i)
     }
     return { pages, windowStart, windowEnd }
-  }, [currentPage, totalPages])
+  }, [safeCurrentPage, totalPages])
 
-  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const endIndex = Math.min(currentPage * pageSize, totalItems)
+  const startIndex = totalItems === 0 ? 0 : (safeCurrentPage - 1) * validPageSize + 1
+  const endIndex = Math.min(safeCurrentPage * validPageSize, totalItems)
 
   return (
     <div className="space-y-6 pb-12">
@@ -458,12 +466,20 @@ export default function AdminUsersManagementPage() {
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <Text as="p" variant="heading" size="2xl" weight="black" className="text-zinc-900">
-            {summary.totalUsers.toLocaleString()}
-          </Text>
-          <Text as="p" size="2xs" weight="bold" color="success">
-            {summary.activeUsers} {t('adminUsersStatusActive').toLowerCase()}
-          </Text>
+          {loading ? (
+            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+          ) : (
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-zinc-900">
+              {summary.totalUsers.toLocaleString()}
+            </Text>
+          )}
+          {loading ? (
+            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+          ) : (
+            <Text as="p" size="2xs" weight="bold" color="success">
+              {summary.activeUsers} {t('adminUsersStatusActive').toLowerCase()}
+            </Text>
+          )}
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
@@ -475,12 +491,20 @@ export default function AdminUsersManagementPage() {
               <Building2 className="w-4 h-4" />
             </div>
           </div>
-          <Text as="p" variant="heading" size="2xl" weight="black" className="text-[#2AC1BC]">
-            {summary.landlordsCount.toLocaleString()}
-          </Text>
-          <Text as="p" size="2xs" color="subtle">
-            {summary.totalUsers > 0 ? Math.round((summary.landlordsCount / summary.totalUsers) * 100) : 0}% platform
-          </Text>
+          {loading ? (
+            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+          ) : (
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-[#2AC1BC]">
+              {summary.landlordsCount.toLocaleString()}
+            </Text>
+          )}
+          {loading ? (
+            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+          ) : (
+            <Text as="p" size="2xs" color="subtle">
+              {summary.totalUsers > 0 ? Math.round((summary.landlordsCount / summary.totalUsers) * 100) : 0}% platform
+            </Text>
+          )}
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
@@ -492,12 +516,20 @@ export default function AdminUsersManagementPage() {
               <Home className="w-4 h-4" />
             </div>
           </div>
-          <Text as="p" variant="heading" size="2xl" weight="black" className="text-blue-600">
-            {summary.tenantsCount.toLocaleString()}
-          </Text>
-          <Text as="p" size="2xs" color="subtle">
-            {summary.totalUsers > 0 ? Math.round((summary.tenantsCount / summary.totalUsers) * 100) : 0}% platform
-          </Text>
+          {loading ? (
+            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+          ) : (
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-blue-600">
+              {summary.tenantsCount.toLocaleString()}
+            </Text>
+          )}
+          {loading ? (
+            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+          ) : (
+            <Text as="p" size="2xs" color="subtle">
+              {summary.totalUsers > 0 ? Math.round((summary.tenantsCount / summary.totalUsers) * 100) : 0}% platform
+            </Text>
+          )}
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
@@ -509,12 +541,20 @@ export default function AdminUsersManagementPage() {
               <UserCheck className="w-4 h-4" />
             </div>
           </div>
-          <Text as="p" variant="heading" size="2xl" weight="black" className="text-amber-600">
-            {summary.employeesCount.toLocaleString()}
-          </Text>
-          <Text as="p" size="2xs" color="subtle">
-            Operations staff
-          </Text>
+          {loading ? (
+            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+          ) : (
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-amber-600">
+              {summary.employeesCount.toLocaleString()}
+            </Text>
+          )}
+          {loading ? (
+            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+          ) : (
+            <Text as="p" size="2xs" color="subtle">
+              Operations staff
+            </Text>
+          )}
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1 col-span-2 lg:col-span-1">
@@ -526,12 +566,20 @@ export default function AdminUsersManagementPage() {
               <UserX className="w-4 h-4" />
             </div>
           </div>
-          <Text as="p" variant="heading" size="2xl" weight="black" className="text-rose-600">
-            {summary.bannedUsers.toLocaleString()}
-          </Text>
-          <Text as="p" size="2xs" color="subtle">
-            {summary.inactiveUsers} {t('adminUsersStatusInactive').toLowerCase()}
-          </Text>
+          {loading ? (
+            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+          ) : (
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-rose-600">
+              {summary.bannedUsers.toLocaleString()}
+            </Text>
+          )}
+          {loading ? (
+            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+          ) : (
+            <Text as="p" size="2xs" color="subtle">
+              {summary.inactiveUsers} {t('adminUsersStatusInactive').toLowerCase()}
+            </Text>
+          )}
         </div>
       </Form.Grid>
 
@@ -667,7 +715,7 @@ export default function AdminUsersManagementPage() {
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule 9: Default view) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {users.map(user => {
+          {paginatedUsers.map(user => {
             const initial = (user.fullName || user.username || user.phoneNumber).charAt(0).toUpperCase()
             return (
               <div
@@ -827,7 +875,7 @@ export default function AdminUsersManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 text-zinc-700">
-                {users.map(user => {
+                {paginatedUsers.map(user => {
                   const initial = (user.fullName || user.username || user.phoneNumber).charAt(0).toUpperCase()
                   return (
                     <tr key={user.id} className="hover:bg-zinc-50/60 transition-colors group">
@@ -922,15 +970,14 @@ export default function AdminUsersManagementPage() {
       )}
 
       {/* Standardized Pagination Bar using Button base component */}
-      {totalPages > 0 && (
+      {!loading && totalItems > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-zinc-200 text-xs text-zinc-600 bg-white p-4 rounded-3xl shadow-xs">
-          {/* Left: Hiển thị [<input>] / trang | X-Y trên Z người dùng */}
+          {/* Left: Hiển thị [NumberInput] / trang | X-Y trên Z người dùng */}
           <div className="flex items-center gap-2 font-medium">
             <Text as="span" size="xs">
               {t('adminUsersShowing')}
             </Text>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageInput}
@@ -955,7 +1002,8 @@ export default function AdminUsersManagementPage() {
                   }
                 }
               }}
-              className="w-14 px-2 py-1 text-center font-bold text-zinc-800 border border-zinc-300 rounded-xl focus:border-[#2AC1BC] focus:outline-none"
+              containerClassName="space-y-0 w-14 inline-block"
+              className="px-2 py-1 text-center font-bold text-zinc-800 border-zinc-300 rounded-xl"
             />
             <Text as="span" size="xs">
               {t('adminUsersPerPage')}
@@ -973,7 +1021,7 @@ export default function AdminUsersManagementPage() {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
+              disabled={safeCurrentPage === 1}
               className="h-8 w-8 p-0 rounded-xl"
             >
               <ChevronsLeft className="w-4 h-4" />
@@ -983,7 +1031,7 @@ export default function AdminUsersManagementPage() {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 5))}
-              disabled={currentPage <= 5}
+              disabled={safeCurrentPage <= 5}
               className="h-8 w-8 p-0 rounded-xl"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -994,11 +1042,11 @@ export default function AdminUsersManagementPage() {
               <Button
                 key={page}
                 type="button"
-                variant={currentPage === page ? 'primary' : 'ghost'}
+                variant={safeCurrentPage === page ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => setCurrentPage(page)}
                 className={`h-8 w-8 p-0 rounded-xl text-xs font-black ${
-                  currentPage === page ? 'shadow-xs' : 'text-zinc-600 hover:bg-zinc-100'
+                  safeCurrentPage === page ? 'shadow-xs' : 'text-zinc-600 hover:bg-zinc-100'
                 }`}
               >
                 {page}
@@ -1010,7 +1058,7 @@ export default function AdminUsersManagementPage() {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 5))}
-              disabled={currentPage + 5 > totalPages}
+              disabled={safeCurrentPage + 5 > totalPages}
               className="h-8 w-8 p-0 rounded-xl"
             >
               <ChevronRight className="w-4 h-4" />
@@ -1020,7 +1068,7 @@ export default function AdminUsersManagementPage() {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
+              disabled={safeCurrentPage === totalPages}
               className="h-8 w-8 p-0 rounded-xl"
             >
               <ChevronsRight className="w-4 h-4" />

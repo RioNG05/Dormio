@@ -33,6 +33,7 @@ import { Checkbox } from '@/components/ui/Checkbox'
 import { TextInput } from '@/components/ui/TextInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
 import { SelectInput } from '@/components/ui/SelectInput'
+import { NumberInput } from '@/components/ui/NumberInput'
 
 interface NotificationCampaign {
   id: string
@@ -566,8 +567,7 @@ export default function AdminNotificationsPage() {
       <div className="bg-white p-4 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
           <div className="relative flex-1 min-w-[220px] max-w-md">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
+            <TextInput
               type="text"
               value={searchQuery}
               onChange={e => {
@@ -575,16 +575,22 @@ export default function AdminNotificationsPage() {
                 setCurrentPage(1)
               }}
               placeholder={t('adminNotifySearchPlaceholder')}
-              className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+              containerClassName="space-y-0"
+              className="py-2 bg-zinc-50 border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              rightIcon={
+                searchQuery ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                    className="text-zinc-400 hover:text-zinc-600 p-0.5 h-auto cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                ) : undefined
+              }
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
 
           {/* Status chips */}
@@ -598,38 +604,41 @@ export default function AdminNotificationsPage() {
                 { id: 'canceled', label: t('adminNotifyStatusCanceled') },
               ] as const
             ).map(chip => (
-              <button
+              <Button
                 key={chip.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setStatusFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   statusFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs'
+                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
                     : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
                 {chip.label}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Channel filter dropdown */}
-          <select
+          <SelectInput
             value={channelFilter}
             onChange={e => {
               setChannelFilter(e.target.value)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-700 cursor-pointer focus:outline-hidden focus:border-orange-500"
+            containerClassName="space-y-0"
+            className="py-2 bg-zinc-50 border-zinc-200 rounded-xl text-xs font-semibold text-zinc-700 cursor-pointer focus:border-orange-500"
           >
             <option value="all">{t('adminNotifyAllChannels')}</option>
             <option value="in_app">{t('adminNotifyChannelInApp')}</option>
             <option value="email">{t('adminNotifyChannelEmail')}</option>
             <option value="sms">{t('adminNotifyChannelSms')}</option>
             <option value="zalo">{t('adminNotifyChannelZalo')}</option>
-          </select>
+          </SelectInput>
         </div>
 
         {/* View Mode (Rule #9) & Refresh */}
@@ -646,28 +655,32 @@ export default function AdminNotificationsPage() {
           </Button>
 
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleViewModeChange('grid')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                 viewMode === 'grid'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
+                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
               title={t('adminNotifyGridViewTooltip')}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleViewModeChange('table')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                 viewMode === 'table'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
+                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
               title={t('adminNotifyTableViewTooltip')}
             >
               <TableIcon className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -918,8 +931,7 @@ export default function AdminNotificationsPage() {
         <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
           <div className="flex items-center gap-2">
             <span>{t('adminNotifyPaginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSize}
@@ -928,7 +940,8 @@ export default function AdminNotificationsPage() {
                 setPageSize(val)
                 setCurrentPage(1)
               }}
-              className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-hidden focus:border-orange-500"
+              containerClassName="space-y-0 w-14 inline-block"
+              className="px-2 py-1 text-center bg-zinc-50 border-zinc-200 rounded-lg font-bold text-zinc-900 focus:border-orange-500"
             />
             <span>{t('adminNotifyPaginationPerPage')}</span>
             <span className="text-zinc-300">|</span>
@@ -964,17 +977,19 @@ export default function AdminNotificationsPage() {
             </Button>
 
             {pageNumbers.map(num => (
-              <button
+              <Button
                 key={num}
+                variant="ghost"
+                size="sm"
                 onClick={() => setCurrentPage(num)}
-                className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
+                className={`w-8 h-8 p-0 h-auto rounded-lg font-bold transition-all cursor-pointer ${
                   safeCurrentPage === num
-                    ? 'bg-orange-600 text-white shadow-2xs'
+                    ? 'bg-orange-600 text-white shadow-2xs hover:bg-orange-600 hover:text-white'
                     : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
                 }`}
               >
                 {num}
-              </button>
+              </Button>
             ))}
 
             <Button
@@ -1012,12 +1027,14 @@ export default function AdminNotificationsPage() {
                   {t('adminNotifyComposeTitle')}
                 </h2>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleRequestCloseComposer}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
@@ -1077,17 +1094,18 @@ export default function AdminNotificationsPage() {
                     const isSelected = composeChannels.includes(ch.id)
                     const Icon = ch.icon
                     return (
-                      <button
+                      <Button
                         key={ch.id}
                         type="button"
+                        variant="ghost"
                         onClick={() => {
                           toggleComposeChannel(ch.id)
                           if (fieldErrors.channels)
                             setFieldErrors(prev => ({ ...prev, channels: undefined }))
                         }}
-                        className={`p-3 rounded-xl border text-left font-bold transition-all cursor-pointer flex flex-col gap-1.5 ${
+                        className={`p-3 h-auto rounded-xl border text-left font-bold transition-all cursor-pointer flex flex-col gap-1.5 items-stretch justify-start ${
                           isSelected
-                            ? 'border-orange-500 bg-orange-50/50 text-orange-700 shadow-2xs'
+                            ? 'border-orange-500 bg-orange-50/50 text-orange-700 shadow-2xs hover:bg-orange-50/50 hover:text-orange-700'
                             : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100'
                         }`}
                       >
@@ -1104,7 +1122,7 @@ export default function AdminNotificationsPage() {
                           </div>
                         </div>
                         <span className="text-[11px] leading-tight">{ch.label}</span>
-                      </button>
+                      </Button>
                     )
                   })}
                 </div>
@@ -1131,23 +1149,24 @@ export default function AdminNotificationsPage() {
                     { id: 'all_admins' as const, label: t('adminNotifyTargetAllAdmins') },
                     { id: 'specific_user' as const, label: t('adminNotifyTargetSpecificUser') },
                   ].map(tgt => (
-                    <button
+                    <Button
                       key={tgt.id}
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         setComposeTarget(tgt.id)
                         if (tgt.id !== 'specific_user' && fieldErrors.targetId) {
                           setFieldErrors(prev => ({ ...prev, targetId: undefined }))
                         }
                       }}
-                      className={`px-3 py-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                      className={`px-3 py-2 h-auto rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
                         composeTarget === tgt.id
-                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-2xs'
+                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-2xs hover:bg-orange-50 hover:text-orange-700'
                           : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100'
                       }`}
                     >
                       {tgt.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
@@ -1212,7 +1231,7 @@ export default function AdminNotificationsPage() {
                 >
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
-                      <input
+                      <TextInput
                         type="radio"
                         name="schedule"
                         checked={composeScheduleType === 'now'}
@@ -1221,24 +1240,26 @@ export default function AdminNotificationsPage() {
                           if (fieldErrors.scheduleTime)
                             setFieldErrors(prev => ({ ...prev, scheduleTime: undefined }))
                         }}
-                        className="text-orange-600 focus:ring-orange-500 cursor-pointer"
+                        containerClassName="space-y-0 inline-block w-auto"
+                        className="text-orange-600 focus:ring-orange-500 cursor-pointer w-4 h-4"
                       />
                       <span>{t('adminNotifyScheduleNow')}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
-                      <input
+                      <TextInput
                         type="radio"
                         name="schedule"
                         checked={composeScheduleType === 'later'}
                         onChange={() => setComposeScheduleType('later')}
-                        className="text-orange-600 focus:ring-orange-500 cursor-pointer"
+                        containerClassName="space-y-0 inline-block w-auto"
+                        className="text-orange-600 focus:ring-orange-500 cursor-pointer w-4 h-4"
                       />
                       <span>{t('adminNotifyScheduleLater')}</span>
                     </label>
                   </div>
 
                   {composeScheduleType === 'later' && (
-                    <input
+                    <TextInput
                       type="datetime-local"
                       value={composeScheduleTime}
                       onChange={e => {
@@ -1246,7 +1267,8 @@ export default function AdminNotificationsPage() {
                         if (fieldErrors.scheduleTime)
                           setFieldErrors(prev => ({ ...prev, scheduleTime: undefined }))
                       }}
-                      className={`px-3 py-1.5 bg-white border rounded-xl text-xs font-bold text-zinc-800 focus:outline-hidden ${
+                      containerClassName="space-y-0"
+                      className={`px-3 py-1.5 bg-white border rounded-xl text-xs font-bold text-zinc-800 ${
                         fieldErrors.scheduleTime
                           ? 'border-rose-500 focus:border-rose-600'
                           : 'border-zinc-200 focus:border-orange-500'
@@ -1299,12 +1321,14 @@ export default function AdminNotificationsPage() {
                   {inspectCampaign.name}
                 </h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setInspectCampaign(null)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">

@@ -27,6 +27,7 @@ import {
   Check,
   ChevronDown,
 } from 'lucide-react'
+import { Button, TextInput, NumberInput, TextareaInput } from '@/components/ui'
 
 export type HouseModerationItem = AdminHouseModerationItem
 
@@ -285,15 +286,17 @@ export default function AdminBoardingHouseModerationPage() {
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-2.5 rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 font-bold text-xs transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
+            className="rounded-2xl bg-white hover:bg-zinc-50 text-zinc-600 font-bold text-xs shadow-2xs"
+            leftIcon={<RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-600' : ''}`} />}
             title={t('adminHouseModRefresh')}
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-600' : ''}`} />
             <span className="hidden sm:inline">{t('adminHouseModRefresh')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -314,9 +317,14 @@ export default function AdminBoardingHouseModerationPage() {
             )}
             <span className="font-bold">{feedbackMsg.text}</span>
           </div>
-          <button onClick={() => setFeedbackMsg(null)} className="p-1 cursor-pointer">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFeedbackMsg(null)}
+            className="p-1 h-auto cursor-pointer"
+          >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -327,12 +335,14 @@ export default function AdminBoardingHouseModerationPage() {
             <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
             <span className="font-semibold">{error}</span>
           </div>
-          <button
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => fetchHouses()}
-            className="px-3 py-1.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors cursor-pointer text-xs shrink-0"
+            className="px-3 py-1.5 h-auto text-xs shrink-0"
           >
             {t('adminBlogsRetry') || 'Thử lại'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -359,8 +369,7 @@ export default function AdminBoardingHouseModerationPage() {
               {/* 1. Property & Address search */}
               <th className="p-2">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
+                  <TextInput
                     type="text"
                     value={propertyQuery}
                     onChange={e => {
@@ -368,28 +377,33 @@ export default function AdminBoardingHouseModerationPage() {
                       setCurrentPage(1)
                     }}
                     placeholder={t('adminHouseModFilterPropertyPlaceholder')}
-                    className="w-full pl-7 pr-6 py-1.5 bg-white border border-zinc-200 rounded-lg text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    containerClassName="space-y-0"
+                    className="py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+                    rightIcon={
+                      propertyQuery ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setPropertyQuery('')
+                            setCurrentPage(1)
+                          }}
+                          className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
+                          title={t('adminHouseModFilterClearTooltip')}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      ) : undefined
+                    }
                   />
-                  {propertyQuery && (
-                    <button
-                      onClick={() => {
-                        setPropertyQuery('')
-                        setCurrentPage(1)
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5"
-                      title={t('adminHouseModFilterClearTooltip')}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
                 </div>
               </th>
 
               {/* 2. Landlord Contact search */}
               <th className="p-2">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
+                  <TextInput
                     type="text"
                     value={landlordQuery}
                     onChange={e => {
@@ -397,28 +411,33 @@ export default function AdminBoardingHouseModerationPage() {
                       setCurrentPage(1)
                     }}
                     placeholder={t('adminHouseModFilterLandlordPlaceholder')}
-                    className="w-full pl-7 pr-6 py-1.5 bg-white border border-zinc-200 rounded-lg text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    containerClassName="space-y-0"
+                    className="py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+                    rightIcon={
+                      landlordQuery ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setLandlordQuery('')
+                            setCurrentPage(1)
+                          }}
+                          className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
+                          title={t('adminHouseModFilterClearTooltip')}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      ) : undefined
+                    }
                   />
-                  {landlordQuery && (
-                    <button
-                      onClick={() => {
-                        setLandlordQuery('')
-                        setCurrentPage(1)
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5"
-                      title={t('adminHouseModFilterClearTooltip')}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
                 </div>
               </th>
 
               {/* 3. Total Rooms range filter */}
               <th className="p-2">
                 <div className="flex items-center gap-1.5">
-                  <input
-                    type="number"
+                  <NumberInput
                     min={0}
                     value={minRooms}
                     onChange={e => {
@@ -426,11 +445,11 @@ export default function AdminBoardingHouseModerationPage() {
                       setCurrentPage(1)
                     }}
                     placeholder={t('adminHouseModFilterFrom')}
-                    className="w-16 px-1.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500"
+                    containerClassName="space-y-0 w-16"
+                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
                   />
                   <span className="text-zinc-400 text-xs">-</span>
-                  <input
-                    type="number"
+                  <NumberInput
                     min={0}
                     value={maxRooms}
                     onChange={e => {
@@ -438,20 +457,23 @@ export default function AdminBoardingHouseModerationPage() {
                       setCurrentPage(1)
                     }}
                     placeholder={t('adminHouseModFilterTo')}
-                    className="w-16 px-1.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500"
+                    containerClassName="space-y-0 w-16"
+                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
                   />
                   {(minRooms || maxRooms) && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setMinRooms('')
                         setMaxRooms('')
                         setCurrentPage(1)
                       }}
-                      className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5"
+                      className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
                       title={t('adminHouseModFilterClearRoomsTooltip')}
                     >
                       <X className="w-3 h-3" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </th>
@@ -459,8 +481,7 @@ export default function AdminBoardingHouseModerationPage() {
               {/* 4. Occupancy Rate range filter */}
               <th className="p-2">
                 <div className="flex items-center gap-1.5">
-                  <input
-                    type="number"
+                  <NumberInput
                     min={0}
                     max={100}
                     value={minOccupancy}
@@ -469,11 +490,11 @@ export default function AdminBoardingHouseModerationPage() {
                       setCurrentPage(1)
                     }}
                     placeholder={t('adminHouseModFilterOccupancyFrom')}
-                    className="w-16 px-1.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500"
+                    containerClassName="space-y-0 w-16"
+                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
                   />
                   <span className="text-zinc-400 text-xs">-</span>
-                  <input
-                    type="number"
+                  <NumberInput
                     min={0}
                     max={100}
                     value={maxOccupancy}
@@ -482,20 +503,23 @@ export default function AdminBoardingHouseModerationPage() {
                       setCurrentPage(1)
                     }}
                     placeholder={t('adminHouseModFilterOccupancyTo')}
-                    className="w-16 px-1.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500"
+                    containerClassName="space-y-0 w-16"
+                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
                   />
                   {(minOccupancy || maxOccupancy) && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setMinOccupancy('')
                         setMaxOccupancy('')
                         setCurrentPage(1)
                       }}
-                      className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5"
+                      className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
                       title={t('adminHouseModFilterClearOccupancyTooltip')}
                     >
                       <X className="w-3 h-3" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </th>
@@ -503,12 +527,14 @@ export default function AdminBoardingHouseModerationPage() {
               {/* 5. Status multi-filter dropdown */}
               <th className="p-2 relative">
                 <div className="relative">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setTableStatusDropdownOpen(!tableStatusDropdownOpen)}
-                    className={`w-full px-2.5 py-1.5 bg-white border rounded-lg text-[11px] font-bold flex items-center justify-between gap-1 transition-all cursor-pointer ${
+                    className={`w-full px-2.5 py-1.5 h-auto bg-white border rounded-lg text-[11px] font-bold flex items-center justify-between gap-1 transition-all cursor-pointer ${
                       statusFilters.length > 0
-                        ? 'border-orange-500 text-orange-700 bg-orange-50/50'
+                        ? 'border-orange-500 text-orange-700 bg-orange-50/50 hover:bg-orange-50/50 hover:text-orange-700'
                         : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                     }`}
                   >
@@ -518,7 +544,7 @@ export default function AdminBoardingHouseModerationPage() {
                         : t('adminHouseModFilterStatusSelected', { count: statusFilters.length })}
                     </span>
                     <ChevronDown className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                  </button>
+                  </Button>
 
                   {tableStatusDropdownOpen && (
                     <>
@@ -530,15 +556,17 @@ export default function AdminBoardingHouseModerationPage() {
                         <div className="flex items-center justify-between pb-1.5 border-b border-zinc-100 text-[10px] font-bold text-zinc-400 px-1">
                           <span>{t('adminHouseModFilterStatusHeader')}</span>
                           {statusFilters.length > 0 && (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
                                 setStatusFilters([])
                                 setCurrentPage(1)
                               }}
-                              className="text-orange-600 hover:text-orange-700 cursor-pointer"
+                              className="p-0 h-auto text-orange-600 hover:text-orange-700 cursor-pointer text-[10px]"
                             >
                               {t('adminHouseModFilterDeselect')}
-                            </button>
+                            </Button>
                           )}
                         </div>
                         {statusOptions.map(opt => {
@@ -571,13 +599,15 @@ export default function AdminBoardingHouseModerationPage() {
               {/* 6. Clear column filters action */}
               <th className="p-2 text-right">
                 {hasActiveFilters && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={resetAllFilters}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    className="p-1.5 h-auto rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                     title={t('adminHouseModFilterClearAll')}
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 )}
               </th>
             </tr>
@@ -629,13 +659,15 @@ export default function AdminBoardingHouseModerationPage() {
                         : t('adminBlogsNoPostsDesc')}
                     </p>
                     {hasActiveFilters && (
-                      <button
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={resetAllFilters}
-                        className="mt-2 px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
+                        className="mt-2 bg-orange-600 hover:bg-orange-700 text-white shadow-2xs"
+                        leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
                         <span>{t('adminHouseModFilterClearAll')}</span>
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </td>
@@ -700,21 +732,25 @@ export default function AdminBoardingHouseModerationPage() {
                     </td>
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                       {item.status === 'locked' ? (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleOpenUnlock(item)}
-                          className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
+                          className="p-1.5 h-auto rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
                           title={t('adminHouseModUnlockHouse')}
                         >
                           <Unlock className="w-4 h-4" />
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleOpenLock(item)}
-                          className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+                          className="p-1.5 h-auto rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
                           title={t('adminHouseModLockHouse')}
                         >
                           <Lock className="w-4 h-4" />
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -729,8 +765,7 @@ export default function AdminBoardingHouseModerationPage() {
       <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
         <div className="flex items-center gap-2">
           <span>{t('adminBlogsPaginationShowing')}</span>
-          <input
-            type="number"
+          <NumberInput
             min={1}
             max={100}
             value={pageSize}
@@ -739,7 +774,8 @@ export default function AdminBoardingHouseModerationPage() {
               setPageSize(val)
               setCurrentPage(1)
             }}
-            className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-none focus:border-orange-500"
+            containerClassName="space-y-0 w-14 inline-block"
+            className="px-2 py-1 text-center bg-zinc-50 border-zinc-200 rounded-lg font-bold text-zinc-900 focus:border-orange-500"
           />
           <span>{t('adminBlogsPaginationPerPage')}</span>
           <span className="text-zinc-300">|</span>
@@ -755,49 +791,59 @@ export default function AdminBoardingHouseModerationPage() {
         </div>
 
         <div className="flex items-center gap-1 self-end sm:self-auto">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setCurrentPage(1)}
             disabled={safeCurrentPage === 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            title={t('adminBlogsFirstPage') || 'Trang đầu'}
           >
             <ChevronsLeft className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
             disabled={safeCurrentPage <= 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            title={t('adminBlogsPrev5') || 'Lùi 5 trang'}
           >
             <ChevronLeft className="w-4 h-4" />
-          </button>
+          </Button>
 
           {pageNumbers.map(num => (
-            <button
+            <Button
               key={num}
+              variant="ghost"
+              size="sm"
               onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`w-8 h-8 p-0 h-auto rounded-lg font-bold transition-all cursor-pointer ${
                 safeCurrentPage === num
-                  ? 'bg-orange-600 text-white shadow-2xs'
+                  ? 'bg-orange-600 text-white shadow-2xs hover:bg-orange-600 hover:text-white'
                   : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
               }`}
             >
               {num}
-            </button>
+            </Button>
           ))}
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
             disabled={safeCurrentPage >= totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            title={t('adminBlogsNext5') || 'Tiến 5 trang'}
           >
             <ChevronRight className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setCurrentPage(totalPages)}
             disabled={safeCurrentPage === totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            title={t('adminBlogsLastPage') || 'Trang cuối'}
           >
             <ChevronsRight className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -824,10 +870,9 @@ export default function AdminBoardingHouseModerationPage() {
             </p>
 
             <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold text-zinc-700 block">
-                {t('adminHouseModLockReasonLabel')} <span className="text-red-500">*</span>
-              </label>
-              <textarea
+              <TextareaInput
+                label={t('adminHouseModLockReasonLabel')}
+                required
                 rows={3}
                 value={lockReason}
                 onChange={e => {
@@ -835,36 +880,28 @@ export default function AdminBoardingHouseModerationPage() {
                   if (lockReasonError) setLockReasonError('')
                 }}
                 placeholder={t('adminHouseModLockReasonPlaceholder')}
-                className={`w-full p-2.5 bg-zinc-50 border rounded-xl text-xs font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white transition-all ${
-                  lockReasonError
-                    ? 'border-red-400 bg-red-50/20'
-                    : 'border-zinc-200 focus:border-red-500'
-                }`}
+                error={lockReasonError}
               />
-              {lockReasonError && (
-                <p className="text-[11px] font-bold text-red-600 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {lockReasonError}
-                </p>
-              )}
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setLockTarget(null)}
                 disabled={isLocking}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmLock}
                 disabled={isLocking || !lockReason.trim()}
-                className="px-4 py-2 rounded-xl bg-red-600 disabled:bg-red-300 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                isLoading={isLocking}
               >
-                {isLocking && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminHouseModLockHouse')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -893,21 +930,24 @@ export default function AdminBoardingHouseModerationPage() {
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setUnlockTarget(null)}
                 disabled={isUnlocking}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                isLoading={isUnlocking}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
               >
-                {isUnlocking && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminHouseModUnlockHouse')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

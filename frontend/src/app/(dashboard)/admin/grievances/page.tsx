@@ -23,9 +23,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { grievanceService, GrievanceQueueCounts } from '@/services/grievance.service'
-import { Button } from '@/components/ui/Button'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { TextareaInput } from '@/components/ui/TextareaInput'
+import { Button, Checkbox, TextareaInput, TextInput, NumberInput } from '@/components/ui'
 
 interface GrievanceItem {
   id: string
@@ -69,9 +67,6 @@ export default function AdminGrievancesPage() {
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'pending' | 'in_progress' | 'resolved' | 'rejected'
   >('all')
-
-  // Selection
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   // Modals
   const [inspectItem, setInspectItem] = useState<GrievanceItem | null>(null)
@@ -220,23 +215,6 @@ export default function AdminGrievancesPage() {
   const pageNumbers = []
   for (let i = windowStart; i <= windowEnd; i++) {
     pageNumbers.push(i)
-  }
-
-  // Selection on current page (Rule #9: applies to current page only)
-  const isAllCurrentSelected =
-    paginatedItems.length > 0 && paginatedItems.every(item => selectedIds.includes(item.id))
-
-  const toggleSelectAllCurrent = () => {
-    if (isAllCurrentSelected) {
-      setSelectedIds(prev => prev.filter(id => !paginatedItems.some(item => item.id === id)))
-    } else {
-      const pageIds = paginatedItems.map(item => item.id)
-      setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])))
-    }
-  }
-
-  const toggleSelectItem = (id: string) => {
-    setSelectedIds(prev => (prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]))
   }
 
   // Open Resolution Modal
@@ -413,6 +391,23 @@ export default function AdminGrievancesPage() {
     }
   }
 
+  // Priority & Status KPI Counts
+  const totalCases = liveCounts
+    ? liveCounts.pending + liveCounts.inProgress + liveCounts.resolved + liveCounts.rejected
+    : grievances.length
+  const inProgressCases = liveCounts
+    ? liveCounts.inProgress
+    : grievances.filter(g => g.status === 'in_progress').length
+  const pendingCases = liveCounts
+    ? liveCounts.pending
+    : grievances.filter(g => g.status === 'pending').length
+  const urgentCases = liveCounts
+    ? liveCounts.urgent
+    : grievances.filter(g => g.priority === 'urgent' && g.status === 'pending').length
+  const resolvedCases = liveCounts
+    ? liveCounts.resolved
+    : grievances.filter(g => g.status === 'resolved').length
+
   return (
     <div className="space-y-6 pb-12">
       {/* Toast Feedback */}
@@ -430,17 +425,19 @@ export default function AdminGrievancesPage() {
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
           )}
           <span>{toastMsg.text}</span>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setToastMsg(null)}
-            className="p-1 hover:bg-black/5 rounded-lg ml-2 cursor-pointer"
+            className="p-1 h-auto hover:bg-black/5 rounded-lg ml-2 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
@@ -459,36 +456,74 @@ export default function AdminGrievancesPage() {
           </p>
         </div>
 
-        {/* Priority KPI summary */}
-        <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-2xl bg-orange-50 border border-orange-200/80 text-orange-800 min-w-[100px]">
-            <span className="text-[10px] font-black uppercase tracking-wider block text-orange-600">
-              {t('adminGrievancesUrgentQueue')}
+        {/* Priority & Status KPI summary */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          {/* Total Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-zinc-500">
+              {t('adminGrievancesTotalCases')}
             </span>
             {loading ? (
-              <div className="h-6 w-16 bg-orange-200/60 rounded animate-pulse my-0.5" />
+              <div className="h-5 w-12 bg-zinc-200/60 rounded animate-pulse my-0.5" />
             ) : (
-              <span className="text-lg font-black leading-tight block">
-                {liveCounts
-                  ? liveCounts.urgent
-                  : grievances.filter(g => g.priority === 'urgent' && g.status === 'pending')
-                      .length}{' '}
-                {t('adminGrievancesCasesUnit')}
+              <span className="text-base font-black leading-tight block">
+                {totalCases} {t('adminGrievancesCasesUnit')}
               </span>
             )}
           </div>
-          <div className="px-3.5 py-2 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-800 min-w-[100px]">
+
+          {/* In-Progress Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-blue-600">
+              {t('adminGrievancesInProgressTotal')}
+            </span>
+            {loading ? (
+              <div className="h-5 w-12 bg-blue-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {inProgressCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
+          </div>
+
+          {/* Pending Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 min-w-[75px]">
             <span className="text-[10px] font-black uppercase tracking-wider block text-amber-600">
               {t('adminGrievancesPendingTotal')}
             </span>
             {loading ? (
-              <div className="h-6 w-16 bg-amber-200/60 rounded animate-pulse my-0.5" />
+              <div className="h-5 w-12 bg-amber-200/60 rounded animate-pulse my-0.5" />
             ) : (
-              <span className="text-lg font-black leading-tight block">
-                {liveCounts
-                  ? liveCounts.pending
-                  : grievances.filter(g => g.status === 'pending').length}{' '}
-                {t('adminGrievancesCasesUnit')}
+              <span className="text-base font-black leading-tight block">
+                {pendingCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
+          </div>
+
+          {/* Urgent Queue */}
+          <div className="px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-orange-600">
+              {t('adminGrievancesUrgentQueue')}
+            </span>
+            {loading ? (
+              <div className="h-5 w-12 bg-orange-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {urgentCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
+          </div>
+
+          {/* Resolved Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-emerald-600">
+              {t('adminGrievancesResolvedTotal')}
+            </span>
+            {loading ? (
+              <div className="h-5 w-12 bg-emerald-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {resolvedCases} {t('adminGrievancesCasesUnit')}
               </span>
             )}
           </div>
@@ -513,8 +548,7 @@ export default function AdminGrievancesPage() {
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
           {/* Search */}
           <div className="relative flex-1 min-w-[220px] max-w-md">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
+            <TextInput
               type="text"
               value={searchQuery}
               onChange={e => {
@@ -522,16 +556,22 @@ export default function AdminGrievancesPage() {
                 setCurrentPage(1)
               }}
               placeholder={t('adminGrievancesSearchPlaceholder')}
-              className="w-full pl-9 pr-8 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+              containerClassName="space-y-0"
+              className="py-2 bg-zinc-50 border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              rightIcon={
+                searchQuery ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                    className="text-zinc-400 hover:text-zinc-600 p-0.5 h-auto cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                ) : undefined
+              }
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
 
           {/* Priority filter */}
@@ -545,20 +585,22 @@ export default function AdminGrievancesPage() {
                 { id: 'low', label: t('adminGrievancesPriorityLow') },
               ] as const
             ).map(chip => (
-              <button
+              <Button
                 key={chip.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setPriorityFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   priorityFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs'
+                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
                     : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
                 {chip.label}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -573,20 +615,22 @@ export default function AdminGrievancesPage() {
                 { id: 'rejected', label: t('adminGrievancesStatusRejected') },
               ] as const
             ).map(chip => (
-              <button
+              <Button
                 key={chip.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setStatusFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   statusFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs'
+                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
                     : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
                 {chip.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -605,41 +649,39 @@ export default function AdminGrievancesPage() {
           </Button>
 
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleViewModeChange('grid')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                 viewMode === 'grid'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
+                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
               title={t('adminGrievancesGridViewTooltip')}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleViewModeChange('table')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                 viewMode === 'table'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
+                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
               title={t('adminGrievancesTableViewTooltip')}
             >
               <TableIcon className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Select All on Current Page Bar (Rule #9) */}
+      {/* Items count indicator */}
       {!loading && paginatedItems.length > 0 && (
-        <div className="flex items-center justify-between px-2 text-xs font-semibold text-zinc-500">
-          <Checkbox
-            checked={isAllCurrentSelected}
-            onChange={toggleSelectAllCurrent}
-            label={t('adminGrievancesSelectAllPage')}
-            size="sm"
-          />
+        <div className="flex items-center justify-end px-2 text-xs font-semibold text-zinc-500">
           <span>
             {t('adminGrievancesShowingOf', {
               showing: paginatedItems.length,
@@ -704,7 +746,6 @@ export default function AdminGrievancesPage() {
         /* GRID VIEW (Rule #9: Default 6 items) */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {paginatedItems.map(item => {
-            const isSelected = selectedIds.includes(item.id)
             const isUrgent = item.priority === 'urgent'
 
             return (
@@ -713,24 +754,15 @@ export default function AdminGrievancesPage() {
                 className={`bg-white rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md p-5 space-y-4 ${
                   isUrgent && item.status === 'pending'
                     ? 'border-orange-300 bg-orange-50/15 ring-1 ring-orange-200'
-                    : isSelected
-                      ? 'border-orange-500 ring-2 ring-orange-500/20'
-                      : 'border-zinc-200/90'
+                    : 'border-zinc-200/90'
                 }`}
               >
                 {/* Card Top */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={isSelected}
-                        onChange={() => toggleSelectItem(item.id)}
-                        size="sm"
-                      />
-                      <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md">
-                        {item.id}
-                      </span>
-                    </div>
+                    <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md">
+                      {item.id}
+                    </span>
                     <div className="flex items-center gap-1.5">
                       {renderPriorityBadge(item.priority)}
                       {renderStatusBadge(item.status)}
@@ -758,13 +790,15 @@ export default function AdminGrievancesPage() {
                       </span>
                       <div className="flex items-center gap-1.5">
                         {item.evidenceImages.map((img, idx) => (
-                          <button
+                          <Button
                             key={idx}
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setPreviewImage(img)}
-                            className="w-8 h-8 rounded-lg overflow-hidden border border-zinc-200 hover:scale-105 transition-transform cursor-pointer"
+                            className="w-8 h-8 p-0 h-auto rounded-lg overflow-hidden border border-zinc-200 hover:scale-105 transition-transform cursor-pointer"
                           >
                             <img src={img} alt="" className="w-full h-full object-cover" />
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -862,13 +896,6 @@ export default function AdminGrievancesPage() {
           <table className="w-full text-left text-xs border-collapse min-w-[850px]">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50/70 text-zinc-500 uppercase tracking-wider font-bold">
-                <th className="p-3.5 w-10">
-                  <Checkbox
-                    checked={isAllCurrentSelected}
-                    onChange={toggleSelectAllCurrent}
-                    size="sm"
-                  />
-                </th>
                 <th className="p-3.5">{t('adminGrievancesThCodePriority')}</th>
                 <th className="p-3.5">{t('adminGrievancesThSubject')}</th>
                 <th className="p-3.5">{t('adminGrievancesThParties')}</th>
@@ -878,23 +905,11 @@ export default function AdminGrievancesPage() {
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {paginatedItems.map(item => {
-                const isSelected = selectedIds.includes(item.id)
-
                 return (
                   <tr
                     key={item.id}
-                    className={`hover:bg-zinc-50/80 transition-colors ${
-                      isSelected ? 'bg-orange-50/30' : ''
-                    }`}
+                    className="hover:bg-zinc-50/80 transition-colors"
                   >
-                    <td className="p-3.5">
-                      <Checkbox
-                        checked={isSelected}
-                        onChange={() => toggleSelectItem(item.id)}
-                        size="sm"
-                      />
-                    </td>
-
                     <td className="p-3.5 space-y-1">
                       <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-block">
                         {item.id}
@@ -977,8 +992,7 @@ export default function AdminGrievancesPage() {
         <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
           <div className="flex items-center gap-2">
             <span>{t('adminGrievancesPaginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSize}
@@ -987,7 +1001,8 @@ export default function AdminGrievancesPage() {
                 setPageSize(val)
                 setCurrentPage(1)
               }}
-              className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-hidden focus:border-orange-500"
+              containerClassName="space-y-0 w-14 inline-block"
+              className="px-2 py-1 text-center bg-zinc-50 border-zinc-200 rounded-lg font-bold text-zinc-900 focus:border-orange-500"
             />
             <span>{t('adminGrievancesPaginationPerPage')}</span>
             <span className="text-zinc-300">|</span>
@@ -1023,17 +1038,19 @@ export default function AdminGrievancesPage() {
             </Button>
 
             {pageNumbers.map(num => (
-              <button
+              <Button
                 key={num}
+                variant="ghost"
+                size="sm"
                 onClick={() => setCurrentPage(num)}
-                className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
+                className={`w-8 h-8 p-0 h-auto rounded-lg font-bold transition-all cursor-pointer ${
                   safeCurrentPage === num
-                    ? 'bg-orange-600 text-white shadow-2xs'
+                    ? 'bg-orange-600 text-white shadow-2xs hover:bg-orange-600 hover:text-white'
                     : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
                 }`}
               >
                 {num}
-              </button>
+              </Button>
             ))}
 
             <Button
@@ -1078,12 +1095,14 @@ export default function AdminGrievancesPage() {
                   ({inspectItem.id})
                 </span>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setInspectItem(null)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
@@ -1259,36 +1278,42 @@ export default function AdminGrievancesPage() {
                     </p>
                   </div>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleRequestCloseResolveModal}
-                  className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                  className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Action Type switcher */}
               <div className="flex items-center gap-2 p-1 bg-zinc-100 rounded-xl text-xs font-bold">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setActionType('resolve')}
-                  className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                     actionType === 'resolve'
-                      ? 'bg-white text-emerald-700 shadow-2xs'
+                      ? 'bg-white text-emerald-700 shadow-2xs hover:bg-white hover:text-emerald-700'
                       : 'text-zinc-500'
                   }`}
                 >
                   {t('adminGrievancesTabApprove')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setActionType('reject')}
-                  className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                    actionType === 'reject' ? 'bg-white text-zinc-900 shadow-2xs' : 'text-zinc-500'
+                  className={`flex-1 py-1.5 h-auto rounded-lg transition-all cursor-pointer ${
+                    actionType === 'reject' ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900' : 'text-zinc-500'
                   }`}
                 >
                   {t('adminGrievancesTabReject')}
-                </button>
+                </Button>
               </div>
 
               {resolveError && (
@@ -1370,12 +1395,14 @@ export default function AdminGrievancesPage() {
               alt="Evidence"
               className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain"
             />
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setPreviewImage(null)}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black cursor-pointer"
+              className="absolute top-3 right-3 w-8 h-8 p-0 h-auto rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black cursor-pointer"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
