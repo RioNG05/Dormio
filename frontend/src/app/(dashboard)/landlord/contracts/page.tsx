@@ -33,6 +33,7 @@ import {
   DateInput,
   NumberInput,
   SelectInput,
+  SearchInput,
   ToastContainer,
   ToastItem,
 } from '@/components/ui'
@@ -572,14 +573,13 @@ export default function ContractsPage() {
               {/* Search & View Mode */}
               <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
                 <div className="w-full sm:w-64">
-                  <TextInput
+                  <SearchInput
                     placeholder={t('landlordContractsSearchPlaceholder')}
                     value={searchQuery}
-                    onChange={e => {
-                      setSearchQuery(e.target.value)
+                    onChange={val => {
+                      setSearchQuery(val)
                       setCurrentPage(1)
                     }}
-                    leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
                     className="bg-zinc-50 focus:bg-white text-xs"
                   />
                 </div>

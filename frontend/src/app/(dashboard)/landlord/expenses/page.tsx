@@ -32,6 +32,7 @@ import {
   NumberInput,
   SelectInput,
   TextareaInput,
+  SearchInput,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -602,29 +603,13 @@ export default function ExpensesPage() {
         <div className="flex items-center gap-2">
           {/* Search Input */}
           <div className="flex-1 min-w-0">
-            <TextInput
+            <SearchInput
               placeholder={t('landlordExpensesSearchPlaceholder')}
               value={searchTerm}
-              onChange={e => {
-                setSearchTerm(e.target.value)
+              onChange={val => {
+                setSearchTerm(val)
                 setCurrentPage(1)
               }}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
-              rightIcon={
-                searchTerm ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearchTerm('')
-                      setCurrentPage(1)
-                    }}
-                    className="p-1 h-auto text-zinc-400 hover:text-zinc-600"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                ) : undefined
-              }
             />
           </div>
 

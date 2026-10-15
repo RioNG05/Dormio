@@ -46,7 +46,7 @@ import {
   getContacts,
   initMessagesSocket,
 } from '@/services/message.service'
-import { TextInput, Button } from '@/components/ui'
+import { TextInput, Button, SearchInput } from '@/components/ui'
 import { dispatchMessagesUpdated } from '@/hooks'
 
 const AVATAR_COLORS = [
@@ -677,11 +677,10 @@ function MessagesContent() {
         {/* Top Search & Filter Tabs */}
         <div className="p-3.5 border-b border-zinc-200/80 space-y-3 bg-white">
           <div className="flex items-center gap-2">
-            <TextInput
+            <SearchInput
               placeholder={t('landlordMessagesSearchPlaceholder')}
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              onChange={setSearchTerm}
               className="py-2 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
               containerClassName="flex-1"
             />
@@ -1501,11 +1500,10 @@ function MessagesContent() {
             </div>
 
             <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
-              <TextInput
+              <SearchInput
                 placeholder={t('landlordMessagesNewModalSearch')}
                 value={newChatSearch}
-                onChange={e => setNewChatSearch(e.target.value)}
-                leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+                onChange={setNewChatSearch}
                 className="py-2 text-xs font-semibold bg-white border-zinc-200 rounded-xl"
               />
             </div>

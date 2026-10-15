@@ -38,7 +38,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput } from '@/components/ui'
 
 function formatDateString(date: Date): string {
   const year = date.getFullYear()
@@ -662,14 +662,13 @@ export default function AttendancePage() {
 
         {/* Filters Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-zinc-100">
-          <TextInput
+          <SearchInput
             placeholder={t('landlordAttendanceFilterSearchPh')}
             value={searchQuery}
-            onChange={e => {
-              setSearchQuery(e.target.value)
+            onChange={val => {
+              setSearchQuery(val)
               setCurrentPage(1)
             }}
-            leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
             className="w-full text-xs font-semibold bg-zinc-50/50"
             containerClassName="space-y-0"
           />

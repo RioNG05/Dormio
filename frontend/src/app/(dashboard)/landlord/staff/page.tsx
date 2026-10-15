@@ -36,6 +36,7 @@ import {
   NumberInput,
   SelectInput,
   TextareaInput,
+  SearchInput,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { staffService, StaffItem, JobPosition, StaffSummary } from '@/services/staff.service'
@@ -595,14 +596,13 @@ export default function StaffPage() {
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Bar */}
           <div className="w-full md:max-w-xs">
-            <TextInput
+            <SearchInput
               placeholder={t('landlordStaffSearchPlaceholder')}
               value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
+              onChange={val => {
+                setSearchQuery(val)
                 setCurrentPage(1)
               }}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
             />
           </div>
 

@@ -36,7 +36,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput } from '@/components/ui'
 
 export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth()
@@ -516,33 +516,16 @@ export default function LandlordDebtsPage() {
       {/* ─── Filter & Control Bar ─────────────────────────────────────────────── */}
       <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
         {/* Search Input */}
-        <div className="relative flex-1">
-          <TextInput
-            type="text"
+          <SearchInput
             value={searchTerm}
-            onChange={e => {
-              setSearchTerm(e.target.value)
+            onChange={val => {
+              setSearchTerm(val)
               setCurrentPage(1)
             }}
             placeholder={t('landlordDebtsSearchPlaceholder')}
-            leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
-            rightIcon={
-              searchTerm ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSearchTerm('')}
-                  className="h-auto w-auto p-0 text-zinc-400 hover:text-zinc-600"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              ) : undefined
-            }
             containerClassName="w-full space-y-0"
             className="w-full text-xs font-semibold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl"
           />
-        </div>
 
         {/* Filters and View Switcher */}
         <div className="flex flex-wrap items-center gap-2.5">

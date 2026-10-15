@@ -38,6 +38,7 @@ import {
   NumberInput,
   SelectInput,
   TextareaInput,
+  SearchInput,
   ToastContainer,
   ToastItem,
   ToastType,
@@ -1090,12 +1091,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   </div>
 
                   {/* Thanh Tìm Kiếm Khách Thuê */}
-                  <TextInput
+                  <SearchInput
                     label={t('landlordContractDetailSearchMemberLabel')}
-                    leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
                     placeholder={t('landlordContractDetailSearchMemberPh')}
                     value={memberSearchQuery}
-                    onChange={e => setMemberSearchQuery(e.target.value)}
+                    onChange={setMemberSearchQuery}
                   />
 
                   {/* Dropdown danh sách kết quả tìm kiếm */}

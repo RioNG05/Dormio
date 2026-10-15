@@ -53,6 +53,7 @@ import {
   TextareaInput,
   Checkbox,
   Form,
+  SearchInput,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -535,14 +536,13 @@ function InvoicesContent() {
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="flex-1">
-            <TextInput
+            <SearchInput
               placeholder={t('landlordInvoicesSearchPlaceholder')}
               value={searchTerm}
-              onChange={e => {
-                setSearchTerm(e.target.value)
+              onChange={val => {
+                setSearchTerm(val)
                 setCurrentPage(1)
               }}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
             />
           </div>
 

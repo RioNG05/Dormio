@@ -29,7 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput } from '@/components/ui'
 
 export default function ListingsPage() {
   if (!FEATURE_FLAGS.ENABLE_BHRP) {
@@ -122,7 +122,7 @@ export default function ListingsPage() {
 
   useEffect(() => {
     loadData()
-  }, [page, pageSize, statusFilter])
+  }, [page, pageSize, statusFilter, searchQuery])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -331,12 +331,13 @@ export default function ListingsPage() {
       {/* Filter and View Mode Toolbar */}
       <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <form onSubmit={handleSearchSubmit} className="w-full md:max-w-xs">
-          <TextInput
-            type="text"
+          <SearchInput
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={val => {
+              setSearchQuery(val)
+              setPage(1)
+            }}
             placeholder={t('landlordListingsSearchPlaceholder')}
-            leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
             containerClassName="w-full space-y-0"
             className="w-full py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
           />

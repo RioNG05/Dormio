@@ -38,7 +38,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
-import { Button, TextInput, NumberInput, SelectInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput } from '@/components/ui'
 
 function PaymentsContent() {
   const { activeBuilding } = useAuth()
@@ -341,15 +341,13 @@ function PaymentsContent() {
       <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Box */}
-          <TextInput
-            type="text"
+          <SearchInput
             value={searchQuery}
-            onChange={e => {
-              setSearchQuery(e.target.value)
+            onChange={val => {
+              setSearchQuery(val)
               setCurrentPage(1)
             }}
             placeholder="Tìm theo mã giao dịch, số phòng, số biên nhận, tên khách..."
-            leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
             containerClassName="flex-1 space-y-0"
             className="py-2 bg-zinc-50 border-zinc-200 text-xs font-semibold"
           />

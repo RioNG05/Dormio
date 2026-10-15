@@ -39,7 +39,7 @@ import {
   ServicesSummary,
   ServiceAssignedRoom,
 } from '@/services/service.service'
-import { Button, TextInput, NumberInput, SelectInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput } from '@/components/ui'
 
 export default function ServicesPage() {
   const { activeBuilding } = useAuth()
@@ -630,15 +630,13 @@ export default function ServicesPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Bar */}
           <div className="relative w-full sm:max-w-xs">
-            <TextInput
-              type="text"
+            <SearchInput
               placeholder={t('landlordServicesSearchPlaceholder')}
               value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
+              onChange={val => {
+                setSearchQuery(val)
                 setCurrentPage(1)
               }}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
               containerClassName="w-full space-y-0"
               className="w-full text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
             />

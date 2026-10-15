@@ -29,7 +29,7 @@ import {
   LandlordAnnouncementItem,
   LandlordAnnouncementsSummary,
 } from '@/services/announcement.service'
-import { Button, TextInput, SelectInput, TextareaInput, NumberInput } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, NumberInput, SearchInput } from '@/components/ui'
 
 export default function NotificationsPage() {
   const { activeBuilding } = useAuth()
@@ -402,26 +402,11 @@ export default function NotificationsPage() {
 
       {/* 2. Action & Filter Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Search Input */}
         <div className="relative flex-1">
-          <TextInput
+          <SearchInput
             placeholder={t('landlordNotificationsSearchPlaceholder')}
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="w-4 h-4" />}
-            rightIcon={
-              searchQuery ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSearchQuery('')}
-                  className="h-auto w-auto p-0 text-zinc-400 hover:text-zinc-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              ) : undefined
-            }
+            onChange={setSearchQuery}
           />
         </div>
 

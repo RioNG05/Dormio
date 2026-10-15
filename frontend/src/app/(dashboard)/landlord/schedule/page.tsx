@@ -47,6 +47,7 @@ import {
   SelectInput,
   TextareaInput,
   Checkbox,
+  SearchInput,
 } from '@/components/ui'
 
 // Days of week helper (Mon to Sun)
@@ -801,11 +802,10 @@ export default function WorkforceSchedulePage() {
 
         {/* Filter row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-zinc-100">
-          <TextInput
+          <SearchInput
             placeholder={t('landlordScheduleFilterSearchPh')}
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+            onChange={setSearchQuery}
           />
 
           <SelectInput

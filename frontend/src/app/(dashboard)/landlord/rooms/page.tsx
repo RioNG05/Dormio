@@ -43,6 +43,7 @@ import {
   TextareaInput,
   Checkbox,
   Form,
+  SearchInput,
 } from '@/components/ui'
 import { formatCurrency } from '@/utils'
 import {
@@ -814,14 +815,13 @@ export default function RoomsPage() {
         <div className="p-4 border-b border-zinc-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-zinc-50/40">
           <div className="flex items-center gap-3">
             {/* Search Input */}
-            <TextInput
+            <SearchInput
               placeholder={t('landlordRoomsSearchInputPlaceholder')}
               value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
+              onChange={val => {
+                setSearchQuery(val)
                 setCurrentPage(1)
               }}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
               containerClassName="w-full sm:w-72"
             />
 

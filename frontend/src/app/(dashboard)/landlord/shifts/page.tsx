@@ -20,7 +20,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput } from '@/components/ui'
+import { Button, TextInput, SearchInput } from '@/components/ui'
 
 export default function ShiftsPage() {
   const { activeBuilding } = useAuth()
@@ -292,12 +292,10 @@ export default function ShiftsPage() {
       </div>
 
       <div className="relative max-w-sm">
-        <TextInput
-          type="text"
+        <SearchInput
           placeholder={t('landlordShiftsFieldNamePh')}
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+          onChange={setSearchQuery}
           containerClassName="w-full space-y-0"
           className="w-full py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
         />

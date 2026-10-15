@@ -42,7 +42,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { assetService, AssetItem, AssetCondition, AssetsSummary } from '@/services/asset.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput } from '@/components/ui'
 
 export default function AssetsPage() {
   const { activeBuilding } = useAuth()
@@ -550,15 +550,13 @@ export default function AssetsPage() {
       <div className="bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden">
         {/* Filter Toolbar */}
         <div className="p-3.5 sm:p-4 border-b border-zinc-200 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-zinc-50/50">
-          <TextInput
-            type="text"
+          <SearchInput
             placeholder={t('landlordAssetsSearchPh')}
             value={searchQuery}
-            onChange={e => {
-              setSearchQuery(e.target.value)
+            onChange={val => {
+              setSearchQuery(val)
               setCurrentPage(1)
             }}
-            leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
             containerClassName="w-full sm:max-w-md space-y-0"
             className="py-2 text-xs font-semibold"
           />

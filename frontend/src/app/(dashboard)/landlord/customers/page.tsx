@@ -26,7 +26,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput } from '@/components/ui'
 
 export default function CustomersPage() {
   const { activeBuilding } = useAuth()
@@ -443,11 +443,10 @@ export default function CustomersPage() {
             <div className="hidden xl:block h-6 w-px bg-zinc-200 mx-1 shrink-0" />
 
             {/* Search Input using Base Component */}
-            <TextInput
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+            <SearchInput
               placeholder={t('landlordCustomersSearchPlaceholder')}
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={setSearchQuery}
               containerClassName="w-full sm:w-52 shrink-0 space-y-0"
               className="py-1.5 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
             />
