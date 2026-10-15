@@ -50,7 +50,7 @@ import {
 
 import { useTranslations } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
-import { Button, Text } from '@/components/ui'
+import { Button, Text, SelectInput } from '@/components/ui'
 import { useUnreadMessages } from '@/hooks'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -558,10 +558,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Text>
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={() => setBuildingDropdownOpen(prev => !prev)}
-        className="w-full bg-white border border-zinc-200 hover:border-[#2AC1BC] rounded-xl px-2.5 py-2 text-left text-xs font-black text-zinc-900 focus:outline-none cursor-pointer shadow-2xs flex items-center justify-between transition-all"
+        className="w-full bg-white border border-zinc-200 hover:border-[#2AC1BC] hover:bg-white rounded-xl px-2.5 py-2 text-left text-xs font-black text-zinc-900 focus:outline-none cursor-pointer shadow-2xs flex items-center justify-between transition-all h-auto"
         title={tNav('switchPropertyTooltip')}
       >
         <div className="min-w-0 flex-1 pr-1.5">
@@ -582,7 +584,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             buildingDropdownOpen ? 'rotate-180 text-[#2AC1BC]' : ''
           }`}
         />
-      </button>
+      </Button>
 
       {buildingDropdownOpen && (
         <>
@@ -597,16 +599,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {buildings.map(b => {
                 const isActive = b.id === activeBuildingId
                 return (
-                  <button
+                  <Button
                     key={b.id}
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       selectBuilding(b.id)
                       setBuildingDropdownOpen(false)
                     }}
-                    className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                    className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer h-auto border-0 ${
                       isActive
-                        ? 'bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs'
+                        ? 'bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs hover:bg-[#2AC1BC]/15'
                         : 'hover:bg-zinc-50 text-zinc-700 font-bold'
                     }`}
                   >
@@ -632,7 +636,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </Text>
                     </div>
                     {isActive && <Check className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
-                  </button>
+                  </Button>
                 )
               })}
             </div>
@@ -981,19 +985,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             ) : (
               !isTenant && (
-                <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
-                  <select
+                <div className="min-w-0 max-w-[140px] sm:max-w-[200px]">
+                  <SelectInput
                     value={activeBuildingId}
                     onChange={e => selectBuilding(e.target.value)}
-                    className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none pr-6 truncate"
-                  >
-                    {buildings.map(b => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    options={buildings.map(b => ({
+                      value: b.id,
+                      label: b.name,
+                    }))}
+                    className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer pr-6 truncate h-8"
+                    containerClassName="space-y-0"
+                  />
                 </div>
               )
             )}

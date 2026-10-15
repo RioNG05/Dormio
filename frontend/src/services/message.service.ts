@@ -73,7 +73,11 @@ function getSocketHost(): string {
   if (!envUrl) {
     return `http://localhost:${port}`
   }
-  return envUrl.replace(/\/api\/?$/, '')
+  const cleanUrl = envUrl.replace(/\/api\/?$/, '')
+  if (!/(:\d+)/.test(cleanUrl) && !cleanUrl.startsWith('https://') && !/^https?:\/\/[^/:]+\.[a-z]{2,}/i.test(cleanUrl)) {
+    return `${cleanUrl.replace(/\/$/, '')}:${port}`
+  }
+  return cleanUrl
 }
 
 /**

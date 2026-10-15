@@ -273,37 +273,14 @@ export async function getContractPrintHtml(
   contractId: string,
   autoPrint: boolean = false,
 ): Promise<string> {
-  let token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-
-  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
-  const port = process.env.NEXT_PUBLIC_API_PORT?.trim() || '3001'
-  const baseUrl = envUrl
-    ? envUrl.endsWith('/api')
-      ? envUrl
-      : `${envUrl.replace(/\/$/, '')}/api`
-    : `http://localhost:${port}/api`
-  const url = `${baseUrl}/v1/landlord/contracts/${contractId}/print?autoPrint=${autoPrint ? 'true' : 'false'}`
-
-  const res = await fetch(url, {
+  return api.getText(`/v1/landlord/contracts/${contractId}/print`, {
     headers: {
       'X-Boarding-House-Id': buildingId,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    params: {
+      autoPrint: autoPrint ? 'true' : 'false',
     },
   })
-
-  if (!res.ok) {
-    let errorDetail = `Mã lỗi ${res.status}`
-    try {
-      const errJson = await res.json()
-      errorDetail = errJson.message || errJson.error || errorDetail
-    } catch {
-      const errText = await res.text().catch(() => '')
-      if (errText) errorDetail = errText
-    }
-    throw new Error(`Không thể tải văn bản hợp đồng để in (${res.status}): ${errorDetail}`)
-  }
-
-  return res.text()
 }
 
 /**
@@ -315,28 +292,14 @@ export async function downloadContractDocument(
   documentId: string,
   filename?: string,
 ): Promise<void> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
-  const port = process.env.NEXT_PUBLIC_API_PORT?.trim() || '3001'
-  const baseUrl = envUrl
-    ? envUrl.endsWith('/api')
-      ? envUrl
-      : `${envUrl.replace(/\/$/, '')}/api`
-    : `http://localhost:${port}/api`
-  const url = `${baseUrl}/v1/landlord/contracts/${contractId}/documents/${documentId}/download`
-
-  const res = await fetch(url, {
-    headers: {
-      'X-Boarding-House-Id': buildingId,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  const blob = await api.getBlob(
+    `/v1/landlord/contracts/${contractId}/documents/${documentId}/download`,
+    {
+      headers: {
+        'X-Boarding-House-Id': buildingId,
+      },
     },
-  })
-
-  if (!res.ok) {
-    throw new Error('Không thể tải tệp hợp đồng.')
-  }
-
-  const blob = await res.blob()
+  )
   const downloadUrl = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = downloadUrl

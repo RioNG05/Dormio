@@ -1,4 +1,4 @@
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
   const port = process.env.NEXT_PUBLIC_API_PORT?.trim() || '3001'
 
@@ -204,6 +204,150 @@ class ApiClient {
 
   delete<T>(endpoint: string, options?: FetchOptions) {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' })
+  }
+
+  async getText(endpoint: string, options: FetchOptions = {}): Promise<string> {
+    const { params, headers, silent, ...customOptions } = options
+
+    let url = `${API_URL}${endpoint}`
+    if (params) {
+      const searchParams = new URLSearchParams(params)
+      url += `?${searchParams.toString()}`
+    }
+
+    const finalHeaders: Record<string, string> = {}
+
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        finalHeaders['authorization'] = `Bearer ${token}`
+      }
+
+      const activeHouseId = localStorage.getItem('dormio_active_building_id')
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (activeHouseId && UUID_REGEX.test(activeHouseId)) {
+        finalHeaders['x-boarding-house-id'] = activeHouseId
+      }
+    }
+
+    if (headers) {
+      if (headers instanceof Headers) {
+        headers.forEach((value, key) => {
+          finalHeaders[key.toLowerCase()] = value
+        })
+      } else if (Array.isArray(headers)) {
+        headers.forEach(([key, value]) => {
+          finalHeaders[key.toLowerCase()] = value
+        })
+      } else {
+        Object.entries(headers).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            finalHeaders[key.toLowerCase()] = String(value)
+          }
+        })
+      }
+    }
+
+    const config: RequestInit = {
+      method: 'GET',
+      headers: finalHeaders,
+      ...customOptions,
+    }
+
+    try {
+      const response = await fetch(url, config)
+
+      if (!response.ok) {
+        if (response.status === 401 && typeof window !== 'undefined') {
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('dormio_logged_in')
+          localStorage.removeItem('dormio_user_id')
+          localStorage.removeItem('dormio_user_role')
+        }
+        const errorText = await response.text().catch(() => '')
+        let message = `Request failed with status ${response.status}`
+        try {
+          const errorJson = JSON.parse(errorText)
+          if (typeof errorJson.message === 'string') message = errorJson.message
+          else if (Array.isArray(errorJson.message)) message = errorJson.message.join('. ')
+          else if (typeof errorJson.error === 'string') message = errorJson.error
+        } catch {
+          if (errorText) message = errorText
+        }
+        throw new ApiError(message, response.status)
+      }
+
+      return await response.text()
+    } catch (error) {
+      if (!silent) {
+        console.error(`Request to ${url} failed:`, error)
+      }
+      throw error
+    }
+  }
+
+  async getBlob(endpoint: string, options: FetchOptions = {}): Promise<Blob> {
+    const { params, headers, silent, ...customOptions } = options
+
+    let url = `${API_URL}${endpoint}`
+    if (params) {
+      const searchParams = new URLSearchParams(params)
+      url += `?${searchParams.toString()}`
+    }
+
+    const finalHeaders: Record<string, string> = {}
+
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        finalHeaders['authorization'] = `Bearer ${token}`
+      }
+
+      const activeHouseId = localStorage.getItem('dormio_active_building_id')
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (activeHouseId && UUID_REGEX.test(activeHouseId)) {
+        finalHeaders['x-boarding-house-id'] = activeHouseId
+      }
+    }
+
+    if (headers) {
+      if (headers instanceof Headers) {
+        headers.forEach((value, key) => {
+          finalHeaders[key.toLowerCase()] = value
+        })
+      } else if (Array.isArray(headers)) {
+        headers.forEach(([key, value]) => {
+          finalHeaders[key.toLowerCase()] = value
+        })
+      } else {
+        Object.entries(headers).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            finalHeaders[key.toLowerCase()] = String(value)
+          }
+        })
+      }
+    }
+
+    const config: RequestInit = {
+      method: 'GET',
+      headers: finalHeaders,
+      ...customOptions,
+    }
+
+    try {
+      const response = await fetch(url, config)
+
+      if (!response.ok) {
+        throw new ApiError(`Request failed with status ${response.status}`, response.status)
+      }
+
+      return await response.blob()
+    } catch (error) {
+      if (!silent) {
+        console.error(`Request to ${url} failed:`, error)
+      }
+      throw error
+    }
   }
 }
 
