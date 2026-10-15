@@ -419,11 +419,13 @@ export default function CustomersPage() {
                 color: 'text-blue-700 bg-blue-50 border-blue-200',
               },
             ].map(tab => (
-              <button
+              <Button
                 key={tab.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => setStatusFilter(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${statusFilter === tab.id
-                  ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs'
+                className={`h-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${statusFilter === tab.id
+                  ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs hover:bg-[#2AC1BC]/90 hover:text-white'
                   : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
                   }`}
               >
@@ -434,7 +436,7 @@ export default function CustomersPage() {
                 >
                   {tab.count}
                 </span>
-              </button>
+              </Button>
             ))}
 
             {/* Separator Line */}
@@ -466,34 +468,38 @@ export default function CustomersPage() {
 
           {/* Right Controls: View Mode Switcher */}
           <div className="flex items-center justify-end gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0 self-end lg:self-auto">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('grid')
                 setItemsPerPage(6)
                 setCurrentPage(1)
               }}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'grid'
+              className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'grid'
                 ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
                 : 'text-zinc-500 hover:text-zinc-900'
                 }`}
               title={t('landlordCustomersViewGrid')}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('list')
                 setItemsPerPage(10)
                 setCurrentPage(1)
               }}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list'
+              className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list'
                 ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
                 : 'text-zinc-500 hover:text-zinc-900'
                 }`}
               title={t('landlordCustomersViewList')}
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -608,16 +614,18 @@ export default function CustomersPage() {
                   >
                     <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
                   </a>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={e => {
                       e.stopPropagation()
                       handleOpenChat(customer)
                     }}
-                    className="py-1.5 bg-[#2AC1BC] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#25ad87] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
+                    className="h-auto py-1.5 bg-[#2AC1BC] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#25ad87] hover:text-white transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
                   >
                     <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
-                  </button>
+                  </Button>
                   <Link
                     href={`/landlord/customers/${customer.contractId || customer.id}`}
                     className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
@@ -723,14 +731,16 @@ export default function CustomersPage() {
                           >
                             <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
                           </a>
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleOpenChat(customer)}
                             title={t('landlordCustomersMessageBtn')}
-                            className="px-2.5 py-1 bg-[#2AC1BC] text-white rounded-lg text-xs font-bold hover:bg-[#25ad87] transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                            className="h-auto px-2.5 py-1 bg-[#2AC1BC] text-white rounded-lg text-xs font-bold hover:bg-[#25ad87] hover:text-white transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
                           >
                             <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
-                          </button>
+                          </Button>
                           <Link
                             href={`/landlord/customers/${customer.contractId || customer.id}`}
                             className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"

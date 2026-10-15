@@ -60,6 +60,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
+import { Button, SelectInput, NumberInput } from '@/components/ui'
 import {
   getBoardingHouseOverview,
   getMultiPropertyOverview,
@@ -335,54 +336,54 @@ export default function ReportsPage() {
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           {/* Mode Switcher Tabs */}
           <div className="bg-zinc-100 p-1 rounded-xl flex items-center gap-1 border border-zinc-200 shadow-2xs">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setReportMode('portfolio')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 reportMode === 'portfolio'
-                  ? 'bg-white text-zinc-900 shadow-xs'
+                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
                   : 'text-zinc-500 hover:text-zinc-900'
               }`}
             >
               <Layers className="w-3.5 h-3.5 text-[#2AC1BC]" />
               <span>{t('landlordReportsTabPortfolio')}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setReportMode('single')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 reportMode === 'single'
-                  ? 'bg-white text-zinc-900 shadow-xs'
+                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
                   : 'text-zinc-500 hover:text-zinc-900'
               }`}
             >
               <Building2 className="w-3.5 h-3.5 text-blue-500" />
               <span>{t('landlordReportsTabSingle')}</span>
-            </button>
+            </Button>
           </div>
 
           {/* Dynamic Building Selector (When in single mode) */}
           {reportMode === 'single' && (
-            <div className="relative">
-              <select
-                value={activeBuilding?.id || ''}
-                onChange={e => selectBuilding(e.target.value)}
-                className="pl-8.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-colors cursor-pointer appearance-none shadow-2xs"
-              >
-                {buildings.map(b => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-              <Building2 className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            <SelectInput
+              value={activeBuilding?.id || ''}
+              onChange={e => selectBuilding(e.target.value)}
+              containerClassName="w-auto space-y-0"
+              className="pl-8.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-colors cursor-pointer shadow-2xs"
+              leftIcon={<Building2 className="w-3.5 h-3.5 text-zinc-400" />}
+              options={buildings.map(b => ({
+                value: b.id,
+                label: b.name,
+              }))}
+            />
           )}
 
           {/* AI Strategy Generation Button */}
           {reportMode === 'portfolio' && (
-            <button
+            <Button
               type="button"
               disabled={isAiGenerating}
               onClick={handleGenerateAiStrategy}
@@ -396,18 +397,19 @@ export default function ReportsPage() {
               <span>
                 {isAiGenerating ? t('landlordReportsAiAnalyzing') : t('landlordReportsAiButton')}
               </span>
-            </button>
+            </Button>
           )}
 
           {/* Export Excel / CSV Button */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#138e89] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
+            className="h-auto flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#138e89] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 hover:text-[#138e89] border border-[#2AC1BC]/30 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
           >
             <FileSpreadsheet className="w-4 h-4 text-[#2AC1BC]" />
             <span>{t('landlordReportsExportCsv')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -445,7 +447,7 @@ export default function ReportsPage() {
                       })}
                     </p>
                   </div>
-                  <button
+                  <Button
                     type="button"
                     disabled={isAiGenerating}
                     onClick={handleGenerateAiStrategy}
@@ -466,7 +468,7 @@ export default function ReportsPage() {
                         </span>
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -750,30 +752,34 @@ export default function ReportsPage() {
 
                   {/* Rule #9 View Toggle Buttons: Grid & Table */}
                   <div className="flex items-center gap-2 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shadow-2xs">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleViewModeChange('grid')}
-                      className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         viewMode === 'grid'
-                          ? 'bg-white text-zinc-900 shadow-xs'
+                          ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
                           : 'text-zinc-400 hover:text-zinc-700'
                       }`}
                       title={t('landlordReportsTooltipGrid')}
                     >
                       <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleViewModeChange('table')}
-                      className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         viewMode === 'table'
-                          ? 'bg-white text-zinc-900 shadow-xs'
+                          ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
                           : 'text-zinc-400 hover:text-zinc-700'
                       }`}
                       title={t('landlordReportsTooltipTable')}
                     >
                       <List className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -965,8 +971,7 @@ export default function ReportsPage() {
                     {/* Items per page & range */}
                     <div className="flex items-center gap-2">
                       <span>{t('landlordReportsPaginationShowing')}</span>
-                      <input
-                        type="number"
+                      <NumberInput
                         min={1}
                         max={100}
                         value={pageSize}
@@ -974,7 +979,8 @@ export default function ReportsPage() {
                           const val = parseInt(e.target.value, 10)
                           if (val > 0) setPageSize(val)
                         }}
-                        className="w-14 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-center text-xs font-bold focus:outline-none focus:border-[#2AC1BC]"
+                        containerClassName="w-16 space-y-0"
+                        className="py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-center text-xs font-bold focus:outline-none focus:border-[#2AC1BC]"
                       />
                       <span>{t('landlordReportsPaginationPerPage')}</span>
                       <span className="text-zinc-400 mx-1">|</span>
@@ -989,61 +995,71 @@ export default function ReportsPage() {
 
                     {/* Window Jumping 5-page buttons */}
                     <div className="flex items-center gap-1">
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         disabled={page === 1}
                         onClick={() => setPage(1)}
-                        className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationFirst')}
                       >
                         <ChevronsLeft className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         disabled={page === 1}
                         onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationPrev')}
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
 
                       {Array.from({ length: Math.min(5, totalPages - windowStart + 1) }, (_, i) => {
                         const pNum = windowStart + i
                         return (
-                          <button
+                          <Button
                             key={pNum}
                             type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setPage(pNum)}
-                            className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            className={`h-8 w-8 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                               page === pNum
-                                ? 'bg-[#2AC1BC] text-white shadow-xs'
+                                ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]/90 hover:text-white'
                                 : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                             }`}
                           >
                             {pNum}
-                          </button>
+                          </Button>
                         )
                       })}
 
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         disabled={page === totalPages}
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationNext')}
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         disabled={page === totalPages}
                         onClick={() => setPage(totalPages)}
-                        className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationLast')}
                       >
                         <ChevronsRight className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1374,13 +1390,15 @@ export default function ReportsPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowAiModal(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Content */}
@@ -1466,14 +1484,15 @@ export default function ReportsPage() {
 
             {/* Modal Footer */}
             <div className="p-4 sm:p-5 border-t border-zinc-100 flex items-center justify-end gap-2.5 bg-zinc-50/50">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setShowAiModal(false)}
                 className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
               >
                 {t('landlordReportsAiCloseBtn')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => {
                   setShowAiModal(false)
@@ -1482,7 +1501,7 @@ export default function ReportsPage() {
                 className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
               >
                 {t('landlordReportsAiSavePlanBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

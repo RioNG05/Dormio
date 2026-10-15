@@ -42,6 +42,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { assetService, AssetItem, AssetCondition, AssetsSummary } from '@/services/asset.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
 
 export default function AssetsPage() {
   const { activeBuilding } = useAuth()
@@ -344,12 +345,15 @@ export default function AssetsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
             onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 h-auto px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" /> {t('landlordAssetsAddBtn')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -451,15 +455,18 @@ export default function AssetsPage() {
         {/* Category Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {['', 'Điện lạnh', 'Nội thất', 'Gia dụng', 'Điện nước', 'An ninh'].map(cat => (
-            <button
+            <Button
               key={cat}
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setCategoryFilter(cat)
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`h-auto px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 categoryFilter === cat
-                  ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20'
+                  ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20 hover:bg-[#25ad87]'
                   : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70'
               }`}
             >
@@ -476,7 +483,7 @@ export default function AssetsPage() {
                         : cat === 'An ninh'
                           ? t('landlordAssetsCatSecurity')
                           : cat}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -499,13 +506,16 @@ export default function AssetsPage() {
           </div>
 
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('grid')
                 setItemsPerPage(6)
                 setCurrentPage(1)
               }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
                 viewMode === 'grid'
                   ? 'bg-white text-zinc-900 shadow-2xs'
                   : 'text-zinc-400 hover:text-zinc-600'
@@ -513,14 +523,17 @@ export default function AssetsPage() {
               title={t('landlordAssetsViewGrid')}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('list')
                 setItemsPerPage(10)
                 setCurrentPage(1)
               }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
                 viewMode === 'list'
                   ? 'bg-white text-zinc-900 shadow-2xs'
                   : 'text-zinc-400 hover:text-zinc-600'
@@ -528,7 +541,7 @@ export default function AssetsPage() {
               title={t('landlordAssetsViewTable')}
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -537,37 +550,35 @@ export default function AssetsPage() {
       <div className="bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden">
         {/* Filter Toolbar */}
         <div className="p-3.5 sm:p-4 border-b border-zinc-200 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-zinc-50/50">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder={t('landlordAssetsSearchPh')}
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-            />
-          </div>
+          <TextInput
+            type="text"
+            placeholder={t('landlordAssetsSearchPh')}
+            value={searchQuery}
+            onChange={e => {
+              setSearchQuery(e.target.value)
+              setCurrentPage(1)
+            }}
+            leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+            containerClassName="w-full sm:max-w-md space-y-0"
+            className="py-2 text-xs font-semibold"
+          />
 
-          <div className="relative shrink-0">
-            <select
-              value={statusFilter}
-              onChange={e => {
-                setStatusFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="w-full sm:w-auto pl-4 pr-10 py-2 text-xs font-semibold text-zinc-900 bg-white border border-zinc-200 rounded-xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 cursor-pointer transition-all min-w-[150px]"
-            >
-              <option value="">{t('landlordAssetsFilterAllStatuses')}</option>
-              <option value="Đang sử dụng">{t('landlordAssetsStatusInUse')}</option>
-              <option value="Sẵn sàng">{t('landlordAssetsStatusReady')}</option>
-              <option value="Bảo trì">{t('landlordAssetsStatusMaintenance')}</option>
-              <option value="Hỏng hóc">{t('landlordAssetsStatusBroken')}</option>
-            </select>
-            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
-          </div>
+          <SelectInput
+            value={statusFilter}
+            onChange={e => {
+              setStatusFilter(e.target.value)
+              setCurrentPage(1)
+            }}
+            options={[
+              { value: '', label: t('landlordAssetsFilterAllStatuses') },
+              { value: 'Đang sử dụng', label: t('landlordAssetsStatusInUse') },
+              { value: 'Sẵn sàng', label: t('landlordAssetsStatusReady') },
+              { value: 'Bảo trì', label: t('landlordAssetsStatusMaintenance') },
+              { value: 'Hỏng hóc', label: t('landlordAssetsStatusBroken') },
+            ]}
+            containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[150px]"
+            className="py-2 text-xs font-semibold"
+          />
         </div>
 
         {/* Loading Indicator */}
@@ -668,20 +679,26 @@ export default function AssetsPage() {
 
                     <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-1">
-                        <button
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={e => handleOpenEditModal(asset, e)}
-                          className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                          className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <Edit3 className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
                           {t('landlordAssetsBtnEditSku')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={e => handleDeleteAsset(asset, e)}
-                          className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors"
+                          className="h-auto w-auto p-1.5 text-zinc-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
                           title={t('landlordAssetsBtnDelete')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </div>
                       <span className="text-xs font-black text-[#2AC1BC] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
                         {t('landlordAssetsBtnDetails')} <ArrowRight className="w-3.5 h-3.5" />
@@ -785,20 +802,26 @@ export default function AssetsPage() {
                             className="flex items-center justify-end gap-1.5"
                             onClick={e => e.stopPropagation()}
                           >
-                            <button
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={e => handleOpenEditModal(asset, e)}
-                              className="px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors flex items-center gap-1"
+                              className="h-auto px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors flex items-center gap-1 cursor-pointer"
                             >
                               <Edit3 className="w-3 h-3 text-[#2AC1BC]" />{' '}
                               {t('landlordAssetsBtnEdit')}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={e => handleDeleteAsset(asset, e)}
-                              className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                              className="h-auto w-auto p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
                               title={t('landlordAssetsBtnDelete')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            </Button>
                             <Link
                               href={`/landlord/assets/${asset.id}`}
                               className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1"
@@ -822,8 +845,7 @@ export default function AssetsPage() {
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
           <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
             <span>{t('landlordAssetsShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={500}
               value={itemsPerPage || ''}
@@ -832,7 +854,8 @@ export default function AssetsPage() {
                 setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val)
                 setCurrentPage(1)
               }}
-              className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+              containerClassName="w-16 space-y-0"
+              className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
             />
             <span>{t('landlordAssetsPerPage')}</span>
           </div>
@@ -864,33 +887,42 @@ export default function AssetsPage() {
 
           return (
             <div className="flex items-center gap-1.5">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 &larr; {t('landlordAssetsPrev')}
-              </button>
+              </Button>
               {visiblePages.map(page => (
-                <button
+                <Button
+                  type="button"
+                  variant={currentPage === page ? 'primary' : 'outline'}
+                  size="sm"
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                  className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
                     currentPage === page
-                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
+                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 border-transparent'
                       : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                   }`}
                 >
                   {page}
-                </button>
+                </Button>
               ))}
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 disabled={currentPage >= totalPages || windowStart + windowSize > totalPages}
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 {t('landlordAssetsNext')} &rarr;
-              </button>
+              </Button>
             </div>
           )
         })()}
@@ -919,210 +951,176 @@ export default function AssetsPage() {
                   <p className="text-xs text-zinc-500 font-medium">{t('landlordAssetsModalSub')}</p>
                 </div>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleCloseModal}
-                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="h-auto w-auto p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <Plus className="w-5 h-5 rotate-45" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                 {/* Name */}
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldName')} <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={t('landlordAssetsFieldNamePh')}
-                    value={formName}
-                    onChange={e => {
-                      setFormName(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordAssetsFieldName')}
+                  required
+                  placeholder={t('landlordAssetsFieldNamePh')}
+                  value={formName}
+                  onChange={e => {
+                    setFormName(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  containerClassName="sm:col-span-2"
+                />
 
                 {/* Category */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldCategory')}
-                  </label>
-                  <select
-                    value={formCategory}
-                    onChange={e => {
-                      setFormCategory(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="Điện lạnh">{t('landlordAssetsCatRefrigeration')}</option>
-                    <option value="Nội thất">{t('landlordAssetsCatFurniture')}</option>
-                    <option value="Gia dụng">{t('landlordAssetsCatAppliances')}</option>
-                    <option value="Điện nước">{t('landlordAssetsCatUtilities')}</option>
-                    <option value="An ninh">{t('landlordAssetsCatSecurity')}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordAssetsFieldCategory')}
+                  value={formCategory}
+                  onChange={e => {
+                    setFormCategory(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  options={[
+                    { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
+                    { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
+                    { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
+                    { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
+                    { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
+                  ]}
+                />
 
                 {/* Room Selection */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldRoom')}
-                  </label>
-                  <select
-                    value={formRoomId}
-                    onChange={e => {
-                      const selectedVal = e.target.value
-                      setFormRoomId(selectedVal)
-                      setIsDirty(true)
-                      if (!selectedVal) {
-                        setFormLocation(t('landlordAssetsLocationSharedOrStorage'))
-                      } else {
-                        const targetRoom = availableRooms.find(r => r.id === selectedVal)
-                        if (targetRoom) {
-                          setFormLocation(
-                            t('landlordAssetsRoomPrefix', { room: targetRoom.roomNumber }),
-                          )
-                        }
+                <SelectInput
+                  label={t('landlordAssetsFieldRoom')}
+                  value={formRoomId}
+                  onChange={e => {
+                    const selectedVal = e.target.value
+                    setFormRoomId(selectedVal)
+                    setIsDirty(true)
+                    if (!selectedVal) {
+                      setFormLocation(t('landlordAssetsLocationSharedOrStorage'))
+                    } else {
+                      const targetRoom = availableRooms.find(r => r.id === selectedVal)
+                      if (targetRoom) {
+                        setFormLocation(
+                          t('landlordAssetsRoomPrefix', { room: targetRoom.roomNumber }),
+                        )
                       }
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="">{t('landlordAssetsRoomSharedOption')}</option>
-                    {availableRooms.map(room => (
-                      <option key={room.id} value={room.id}>
-                        {t('landlordAssetsRoomPrefix', { room: room.roomNumber })}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    }
+                  }}
+                  options={[
+                    { value: '', label: t('landlordAssetsRoomSharedOption') },
+                    ...availableRooms.map(room => ({
+                      value: room.id,
+                      label: t('landlordAssetsRoomPrefix', { room: room.roomNumber }),
+                    })),
+                  ]}
+                />
 
                 {/* Location Detail */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldLocationDetail')}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={t('landlordAssetsFieldLocationDetailPh')}
-                    value={formLocation}
-                    onChange={e => {
-                      setFormLocation(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordAssetsFieldLocationDetail')}
+                  placeholder={t('landlordAssetsFieldLocationDetailPh')}
+                  value={formLocation}
+                  onChange={e => {
+                    setFormLocation(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
 
                 {/* Quantity */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldQuantity')}
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={formQuantity}
-                    onChange={e => {
-                      setFormQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <NumberInput
+                  label={t('landlordAssetsFieldQuantity')}
+                  min={1}
+                  value={formQuantity}
+                  onChange={e => {
+                    setFormQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                    setIsDirty(true)
+                  }}
+                />
 
                 {/* Purchase Value */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldPurchaseValue')}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: 8.500.000 ₫"
-                    value={formValue}
-                    onChange={e => {
-                      setFormValue(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordAssetsFieldPurchaseValue')}
+                  placeholder="VD: 8.500.000 ₫"
+                  value={formValue}
+                  onChange={e => {
+                    setFormValue(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
 
                 {/* Purchase Date */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldPurchaseDate')}
-                  </label>
-                  <input
-                    type="date"
-                    value={formPurchaseDate}
-                    onChange={e => {
-                      setFormPurchaseDate(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  type="date"
+                  label={t('landlordAssetsFieldPurchaseDate')}
+                  value={formPurchaseDate}
+                  onChange={e => {
+                    setFormPurchaseDate(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
 
                 {/* Condition / Status */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldStatus')}
-                  </label>
-                  <select
-                    value={formCondition}
-                    onChange={e => {
-                      setFormCondition(e.target.value as AssetCondition)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="good">{t('landlordAssetsStatusInUse')}</option>
-                    <option value="new">{t('landlordAssetsStatusReady')}</option>
-                    <option value="under_repair">{t('landlordAssetsStatusMaintenance')}</option>
-                    <option value="damaged">{t('landlordAssetsStatusBroken')}</option>
-                    <option value="lost">{t('landlordAssetsStatusLost')}</option>
-                    <option value="disposed">{t('landlordAssetsStatusDisposed')}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordAssetsFieldStatus')}
+                  value={formCondition}
+                  onChange={e => {
+                    setFormCondition(e.target.value as AssetCondition)
+                    setIsDirty(true)
+                  }}
+                  options={[
+                    { value: 'good', label: t('landlordAssetsStatusInUse') },
+                    { value: 'new', label: t('landlordAssetsStatusReady') },
+                    { value: 'under_repair', label: t('landlordAssetsStatusMaintenance') },
+                    { value: 'damaged', label: t('landlordAssetsStatusBroken') },
+                    { value: 'lost', label: t('landlordAssetsStatusLost') },
+                    { value: 'disposed', label: t('landlordAssetsStatusDisposed') },
+                  ]}
+                />
 
                 {/* Note */}
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldNoteWarranty')}
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder={t('landlordAssetsFieldNoteWarrantyPh')}
-                    value={formNote}
-                    onChange={e => {
-                      setFormNote(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none resize-none"
-                  />
-                </div>
+                <TextareaInput
+                  label={t('landlordAssetsFieldNoteWarranty')}
+                  rows={2}
+                  placeholder={t('landlordAssetsFieldNoteWarrantyPh')}
+                  value={formNote}
+                  onChange={e => {
+                    setFormNote(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  containerClassName="sm:col-span-2"
+                  className="resize-none"
+                />
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleCloseModal}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
+                className="h-auto px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
               >
                 {t('landlordAssetsBtnCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
                 onClick={handleSaveAsset}
                 disabled={isSubmitting}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all flex items-center gap-1.5"
+                className="h-auto px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all flex items-center gap-1.5"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {t('landlordAssetsModalBtnSave')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -38,6 +38,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
 
 function formatDateString(date: Date): string {
   const year = date.getFullYear()
@@ -453,13 +454,16 @@ export default function AttendancePage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={handleExportData}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer"
+            leftIcon={<Download className="w-4 h-4 text-zinc-500" />}
+            className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer h-auto"
           >
-            <Download className="w-4 h-4 text-zinc-500" />
             <span>{t('landlordAttendanceBtnExport')} (CSV)</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -541,51 +545,63 @@ export default function AttendancePage() {
           {/* Preset Buttons & Date Range */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
-              <button
+              <Button
+                type="button"
+                variant={datePreset === 'today' ? 'primary' : 'ghost'}
+                size="sm"
                 onClick={() => handleDatePresetChange('today')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
                   datePreset === 'today'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
+                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
+                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
                 }`}
               >
                 {isEn ? 'Today' : 'Hôm nay'}
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant={datePreset === 'week' ? 'primary' : 'ghost'}
+                size="sm"
                 onClick={() => handleDatePresetChange('week')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
                   datePreset === 'week'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
+                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
+                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
                 }`}
               >
                 {isEn ? 'This Week' : 'Tuần này'}
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant={datePreset === 'month' ? 'primary' : 'ghost'}
+                size="sm"
                 onClick={() => handleDatePresetChange('month')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
                   datePreset === 'month'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
+                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
+                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
                 }`}
               >
                 {isEn ? 'This Month' : 'Tháng này'}
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant={datePreset === 'custom' ? 'primary' : 'ghost'}
+                size="sm"
                 onClick={() => setDatePreset('custom')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
                   datePreset === 'custom'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
+                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
+                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
                 }`}
               >
                 {isEn ? 'Custom' : 'Tùy chọn'}
-              </button>
+              </Button>
             </div>
 
             {/* Custom Date Inputs */}
             <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-semibold">
-              <input
+              <TextInput
                 type="date"
                 value={startDate}
                 onChange={e => {
@@ -594,9 +610,10 @@ export default function AttendancePage() {
                   setCurrentPage(1)
                 }}
                 className="px-2.5 py-1.5 border border-zinc-200 rounded-xl text-xs bg-zinc-50/60 font-semibold"
+                containerClassName="space-y-0"
               />
               <span>→</span>
-              <input
+              <TextInput
                 type="date"
                 value={endDate}
                 onChange={e => {
@@ -605,103 +622,114 @@ export default function AttendancePage() {
                   setCurrentPage(1)
                 }}
                 className="px-2.5 py-1.5 border border-zinc-200 rounded-xl text-xs bg-zinc-50/60 font-semibold"
+                containerClassName="space-y-0"
               />
             </div>
           </div>
 
           {/* View Mode Toggle (Rule #9: Grid default) */}
           <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200 self-end md:self-auto">
-            <button
+            <Button
+              type="button"
+              variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => handleViewModeChange('grid')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              leftIcon={<LayoutGrid className="w-3.5 h-3.5" />}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
                 viewMode === 'grid'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-800'
+                  ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
+                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
               <span>{isEn ? 'Grid' : 'Lưới'}</span>
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === 'table' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => handleViewModeChange('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              leftIcon={<List className="w-3.5 h-3.5" />}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
                 viewMode === 'table'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-800'
+                  ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
+                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
               }`}
             >
-              <List className="w-3.5 h-3.5" />
               <span>{isEn ? 'Table' : 'Bảng'}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Filters Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-zinc-100">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input
-              type="text"
-              placeholder={t('landlordAttendanceFilterSearchPh')}
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="w-full pl-9 pr-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50"
-            />
-          </div>
+          <TextInput
+            placeholder={t('landlordAttendanceFilterSearchPh')}
+            value={searchQuery}
+            onChange={e => {
+              setSearchQuery(e.target.value)
+              setCurrentPage(1)
+            }}
+            leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+            className="w-full text-xs font-semibold bg-zinc-50/50"
+            containerClassName="space-y-0"
+          />
 
-          <select
+          <SelectInput
             value={filterEmployeeId}
             onChange={e => {
               setFilterEmployeeId(e.target.value)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
-          >
-            <option value="">
-              {t('landlordAttendanceFilterStaffPh')} ({staffList.length})
-            </option>
-            {staffList.map(s => (
-              <option key={s.employeeId} value={s.employeeId}>
-                {s.fullName} ({s.positionName || (isEn ? 'Staff' : 'Nhân viên')})
-              </option>
-            ))}
-          </select>
+            options={[
+              {
+                value: '',
+                label: `${t('landlordAttendanceFilterStaffPh')} (${staffList.length})`,
+              },
+              ...staffList.map(s => ({
+                value: s.employeeId,
+                label: `${s.fullName} (${s.positionName || (isEn ? 'Staff' : 'Nhân viên')})`,
+              })),
+            ]}
+            className="text-xs font-semibold bg-zinc-50/50 cursor-pointer"
+            containerClassName="space-y-0"
+          />
 
-          <select
+          <SelectInput
             value={filterShiftId}
             onChange={e => {
               setFilterShiftId(e.target.value)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
-          >
-            <option value="">
-              {t('landlordAttendanceFilterShiftPh')} ({shifts.length})
-            </option>
-            {shifts.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.name} ({s.startTime} - {s.endTime})
-              </option>
-            ))}
-          </select>
+            options={[
+              {
+                value: '',
+                label: `${t('landlordAttendanceFilterShiftPh')} (${shifts.length})`,
+              },
+              ...shifts.map(s => ({
+                value: s.id,
+                label: `${s.name} (${s.startTime} - ${s.endTime})`,
+              })),
+            ]}
+            className="text-xs font-semibold bg-zinc-50/50 cursor-pointer"
+            containerClassName="space-y-0"
+          />
 
-          <select
+          <SelectInput
             value={filterStatus}
             onChange={e => {
               setFilterStatus(e.target.value)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
-          >
-            <option value="all">{t('landlordAttendanceFilterStatusPh')}</option>
-            <option value="on_time">{t('landlordAttendanceStatusOnTime')}</option>
-            <option value="late">{t('landlordAttendanceStatusLate')}</option>
-            <option value="absent">{isEn ? 'Absent' : 'Vắng mặt'}</option>
-            <option value="not_yet">{isEn ? 'Not checked in' : 'Chưa chấm công'}</option>
-          </select>
+            options={[
+              { value: 'all', label: t('landlordAttendanceFilterStatusPh') },
+              { value: 'on_time', label: t('landlordAttendanceStatusOnTime') },
+              { value: 'late', label: t('landlordAttendanceStatusLate') },
+              { value: 'absent', label: isEn ? 'Absent' : 'Vắng mặt' },
+              { value: 'not_yet', label: isEn ? 'Not checked in' : 'Chưa chấm công' },
+            ]}
+            className="text-xs font-semibold bg-zinc-50/50 cursor-pointer"
+            containerClassName="space-y-0"
+          />
         </div>
       </div>
 
@@ -725,12 +753,15 @@ export default function AttendancePage() {
           <p className="max-w-md mx-auto mb-4 text-xs text-zinc-500 leading-relaxed">
             {t('landlordAttendanceEmptyDesc')}
           </p>
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => handleDatePresetChange('month')}
-            className="px-4 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 rounded-xl hover:bg-[#2AC1BC]/20 transition-colors cursor-pointer"
+            className="px-4 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 rounded-xl hover:bg-[#2AC1BC]/20 transition-colors cursor-pointer h-auto border-0"
           >
             {isEn ? 'View Entire Month' : 'Xem toàn bộ tháng này'}
-          </button>
+          </Button>
         </div>
       ) : viewMode === 'grid' ? (
         /* ═══════════════════════════════════════════════════════════════════
@@ -817,13 +848,16 @@ export default function AttendancePage() {
                 </div>
 
                 {/* Bottom Action Button */}
-                <button
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleOpenOverride(item)}
-                  className="w-full mt-2 py-2 px-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  leftIcon={<Edit3 className="w-3.5 h-3.5" />}
+                  className="w-full mt-2 py-2 px-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer h-auto border-0"
                 >
-                  <Edit3 className="w-3.5 h-3.5" />
                   <span>{t('landlordAttendanceBtnEdit')}</span>
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -832,8 +866,7 @@ export default function AttendancePage() {
           <div className="mt-4 p-4 bg-white border border-zinc-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
               <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 max={100}
                 value={pageSize}
@@ -841,7 +874,8 @@ export default function AttendancePage() {
                   const val = Number(e.target.value)
                   if (val > 0) setPageSize(val)
                 }}
-                className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white"
+                containerClassName="w-14 space-y-0"
+                className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white h-7 text-xs"
               />
               <span>/ trang</span>
               <span className="text-zinc-300">|</span>
@@ -852,51 +886,66 @@ export default function AttendancePage() {
             </div>
 
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={windowStart <= 1}
                 onClick={() => handlePageJump(-5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
                 title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
               >
                 «
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
               >
                 <ChevronLeft className="w-4 h-4" />
-              </button>
+              </Button>
 
               {pageNumbers.map(p => (
-                <button
+                <Button
                   key={p}
+                  type="button"
+                  variant={currentPage === p ? 'primary' : 'ghost'}
+                  size="sm"
                   onClick={() => setCurrentPage(p)}
-                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 border-0 ${
                     currentPage === p
-                      ? 'bg-[#2AC1BC] text-white shadow-sm'
+                      ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6]'
                       : 'text-zinc-600 hover:bg-zinc-200'
                   }`}
                 >
                   {p}
-                </button>
+                </Button>
               ))}
 
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
               >
                 <ChevronRight className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={windowStart + 5 > totalPages}
                 onClick={() => handlePageJump(5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
                 title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
               >
                 »
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -949,13 +998,16 @@ export default function AttendancePage() {
                       {item.editedByName || '—'}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleOpenOverride(item)}
-                        className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto border-0"
                         title={t('landlordAttendanceBtnEdit')}
                       >
                         <Edit3 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -967,8 +1019,7 @@ export default function AttendancePage() {
           <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
               <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 max={100}
                 value={pageSize}
@@ -976,7 +1027,8 @@ export default function AttendancePage() {
                   const val = Number(e.target.value)
                   if (val > 0) setPageSize(val)
                 }}
-                className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white"
+                containerClassName="w-14 space-y-0"
+                className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white h-7 text-xs"
               />
               <span>/ trang</span>
               <span className="text-zinc-300">|</span>
@@ -987,51 +1039,66 @@ export default function AttendancePage() {
             </div>
 
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={windowStart <= 1}
                 onClick={() => handlePageJump(-5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
                 title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
               >
                 «
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
               >
                 <ChevronLeft className="w-4 h-4" />
-              </button>
+              </Button>
 
               {pageNumbers.map(p => (
-                <button
+                <Button
                   key={p}
+                  type="button"
+                  variant={currentPage === p ? 'primary' : 'ghost'}
+                  size="sm"
                   onClick={() => setCurrentPage(p)}
-                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 border-0 ${
                     currentPage === p
-                      ? 'bg-[#2AC1BC] text-white shadow-sm'
+                      ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6]'
                       : 'text-zinc-600 hover:bg-zinc-200'
                   }`}
                 >
                   {p}
-                </button>
+                </Button>
               ))}
 
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
               >
                 <ChevronRight className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 disabled={windowStart + 5 > totalPages}
                 onClick={() => handlePageJump(5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
                 title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
               >
                 »
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1069,12 +1136,15 @@ export default function AttendancePage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleAttemptCloseOverride}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto border-0"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Form */}
@@ -1108,145 +1178,164 @@ export default function AttendancePage() {
                   <span className="text-rose-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <label
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all ${
+                  <Button
+                    type="button"
+                    variant={overrideStatus === 'on_time' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setOverrideStatus('on_time')
+                      setIsDirty(true)
+                    }}
+                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
                       overrideStatus === 'on_time'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-sm'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 shadow-sm'
                         : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="overrideStatus"
-                      value="on_time"
-                      checked={overrideStatus === 'on_time'}
-                      onChange={() => {
-                        setOverrideStatus('on_time')
-                        setIsDirty(true)
-                      }}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                        overrideStatus === 'on_time'
+                          ? 'border-emerald-600 bg-emerald-600'
+                          : 'border-zinc-300 bg-white'
+                      }`}
+                    >
+                      {overrideStatus === 'on_time' && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
                     <span>{t('landlordAttendanceStatusOnTime')}</span>
-                  </label>
+                  </Button>
 
-                  <label
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all ${
+                  <Button
+                    type="button"
+                    variant={overrideStatus === 'late' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setOverrideStatus('late')
+                      setIsDirty(true)
+                    }}
+                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
                       overrideStatus === 'late'
-                        ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-sm'
+                        ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-sm'
                         : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="overrideStatus"
-                      value="late"
-                      checked={overrideStatus === 'late'}
-                      onChange={() => {
-                        setOverrideStatus('late')
-                        setIsDirty(true)
-                      }}
-                      className="text-amber-600 focus:ring-amber-500"
-                    />
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                        overrideStatus === 'late'
+                          ? 'border-amber-600 bg-amber-600'
+                          : 'border-zinc-300 bg-white'
+                      }`}
+                    >
+                      {overrideStatus === 'late' && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
                     <span>{t('landlordAttendanceStatusLate')}</span>
-                  </label>
+                  </Button>
 
-                  <label
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all ${
+                  <Button
+                    type="button"
+                    variant={overrideStatus === 'absent' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setOverrideStatus('absent')
+                      setIsDirty(true)
+                    }}
+                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
                       overrideStatus === 'absent'
-                        ? 'bg-rose-50 text-rose-800 border-rose-300 shadow-sm'
+                        ? 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 shadow-sm'
                         : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="overrideStatus"
-                      value="absent"
-                      checked={overrideStatus === 'absent'}
-                      onChange={() => {
-                        setOverrideStatus('absent')
-                        setIsDirty(true)
-                      }}
-                      className="text-rose-600 focus:ring-rose-500"
-                    />
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                        overrideStatus === 'absent'
+                          ? 'border-rose-600 bg-rose-600'
+                          : 'border-zinc-300 bg-white'
+                      }`}
+                    >
+                      {overrideStatus === 'absent' && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
                     <span>{isEn ? 'Absent' : 'Vắng mặt'}</span>
-                  </label>
+                  </Button>
 
-                  <label
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all ${
+                  <Button
+                    type="button"
+                    variant={overrideStatus === 'not_yet' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setOverrideStatus('not_yet')
+                      setIsDirty(true)
+                    }}
+                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
                       overrideStatus === 'not_yet'
-                        ? 'bg-zinc-100 text-zinc-800 border-zinc-300 shadow-sm'
+                        ? 'bg-zinc-100 text-zinc-800 border-zinc-300 hover:bg-zinc-200 shadow-sm'
                         : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="overrideStatus"
-                      value="not_yet"
-                      checked={overrideStatus === 'not_yet'}
-                      onChange={() => {
-                        setOverrideStatus('not_yet')
-                        setIsDirty(true)
-                      }}
-                      className="text-zinc-600 focus:ring-zinc-500"
-                    />
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                        overrideStatus === 'not_yet'
+                          ? 'border-zinc-600 bg-zinc-600'
+                          : 'border-zinc-300 bg-white'
+                      }`}
+                    >
+                      {overrideStatus === 'not_yet' && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
                     <span>{isEn ? 'Not checked in' : 'Chưa chấm công'}</span>
-                  </label>
+                  </Button>
                 </div>
               </div>
 
               {/* Time inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('landlordAttendanceModalInTime')}
-                  </label>
-                  <input
-                    type="time"
-                    value={overrideCheckIn}
-                    onChange={e => {
-                      setOverrideCheckIn(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
-                  />
-                </div>
+                <TextInput
+                  type="time"
+                  label={t('landlordAttendanceModalInTime')}
+                  value={overrideCheckIn}
+                  onChange={e => {
+                    setOverrideCheckIn(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  className="w-full px-3 py-2 text-xs font-semibold bg-white"
+                  containerClassName="space-y-1.5"
+                />
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('landlordAttendanceModalOutTime')}
-                  </label>
-                  <input
-                    type="time"
-                    value={overrideCheckOut}
-                    onChange={e => {
-                      setOverrideCheckOut(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
-                  />
-                </div>
+                <TextInput
+                  type="time"
+                  label={t('landlordAttendanceModalOutTime')}
+                  value={overrideCheckOut}
+                  onChange={e => {
+                    setOverrideCheckOut(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  className="w-full px-3 py-2 text-xs font-semibold bg-white"
+                  containerClassName="space-y-1.5"
+                />
               </div>
 
               {/* Adjustment Reason */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">
-                  {t('landlordAttendanceModalReasonLabel')}
-                </label>
-                <textarea
-                  rows={2}
-                  value={overrideNote}
-                  onChange={e => {
-                    setOverrideNote(e.target.value)
-                    setIsDirty(true)
-                  }}
-                  placeholder={
-                    isEn
-                      ? 'e.g. Employee reported device GPS error, landlord confirmed attendance via security camera...'
-                      : 'Ví dụ: Nhân viên báo lỗi GPS thiết bị, chủ nhà xác nhận có mặt qua camera an ninh...'
-                  }
-                  className="w-full px-3 py-2 text-xs font-medium border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
-                />
-              </div>
+              <TextareaInput
+                rows={2}
+                label={t('landlordAttendanceModalReasonLabel')}
+                value={overrideNote}
+                onChange={e => {
+                  setOverrideNote(e.target.value)
+                  setIsDirty(true)
+                }}
+                placeholder={
+                  isEn
+                    ? 'e.g. Employee reported device GPS error, landlord confirmed attendance via security camera...'
+                    : 'Ví dụ: Nhân viên báo lỗi GPS thiết bị, chủ nhà xác nhận có mặt qua camera an ninh...'
+                }
+                className="w-full px-3 py-2 text-xs font-medium resize-none"
+                containerClassName="space-y-1.5"
+              />
 
               {/* AuditLog Notice */}
               <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
@@ -1270,17 +1359,21 @@ export default function AttendancePage() {
 
               {/* Actions */}
               <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={handleAttemptCloseOverride}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer h-auto"
                 >
                   {t('landlordShiftsModalBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="primary"
+                  size="sm"
                   disabled={isSubmittingOverride}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50 h-auto border-0"
                 >
                   {isSubmittingOverride ? (
                     <>
@@ -1290,7 +1383,7 @@ export default function AttendancePage() {
                   ) : (
                     <span>{t('landlordAttendanceModalBtnSubmit')}</span>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1324,23 +1417,27 @@ export default function AttendancePage() {
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer h-auto border-0"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={() => {
                   setIsConfirmCloseOpen(false)
                   performCloseOverride()
                 }}
-                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
+                className="flex-1 py-2.5 px-4 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20 h-auto"
               >
                 {t('landlordShiftsConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -27,18 +27,17 @@ import {
 import Link from 'next/link'
 import { postService, PostQuotaStatus, AiPostDraftResponse } from '@/services/post.service'
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { getRooms, type RoomItem } from '@/services/room.service'
 import { getMyBoardingHouses } from '@/services/boarding-house.service'
 import { formatCurrency } from '@/utils'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
 
 function CreateListingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { buildings: authBuildings, activeBuildingId } = useAuth()
   const t = useTranslations('landlord')
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
 
   const queryRoomId = searchParams.get('roomId')
   const queryAiDraft = searchParams.get('aiDraft')
@@ -184,11 +183,8 @@ function CreateListingForm() {
         room &&
         (!title.trim() || title.startsWith('Cho thuê phòng') || title.startsWith('Rent room'))
       ) {
-        setTitle(
-          isEn
-            ? `Rent room ${room.roomNumber} - ${house?.name || 'Boarding house'}`
-            : `Cho thuê phòng ${room.roomNumber} - ${house?.name || 'Khu trọ'}`,
-        )
+        const defaultHouseName = house?.name || t('landlordListingsCreateAiDefaultProperty')
+        setTitle(`${t('landlordListingsCreateRoomPrefix')} ${room.roomNumber} - ${defaultHouseName}`)
       }
     }
   }
@@ -342,14 +338,16 @@ function CreateListingForm() {
       {/* Header */}
       <div className="flex items-center justify-between bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleCancelClick}
-            className="p-2.5 text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+            className="h-auto w-auto p-2.5 text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
             title={t('landlordListingsCreateBackBtn')}
           >
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </Button>
           <div>
             <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
               {t('landlordListingsCreatePageTitle')}
@@ -421,19 +419,14 @@ function CreateListingForm() {
           </div>
 
           <div className="grid grid-cols-1 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-zinc-700">
-                {t('landlordListingsCreateTitleLabel')} <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={e => handleFieldChange(setTitle, e.target.value)}
-                placeholder={t('landlordListingsCreateTitlePh')}
-                className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
-              />
-              <span className="text-xs text-zinc-400">{t('landlordListingsCreateTitleHelp')}</span>
-            </div>
+            <TextInput
+              label={t('landlordListingsCreateTitleLabel')}
+              required
+              value={title}
+              onChange={e => handleFieldChange(setTitle, e.target.value)}
+              placeholder={t('landlordListingsCreateTitlePh')}
+              helperText={t('landlordListingsCreateTitleHelp')}
+            />
 
             <div className="space-y-6">
               {/* Boarding House and Linked Room selectors */}
@@ -453,19 +446,14 @@ function CreateListingForm() {
                       </Link>
                     </div>
                   ) : (
-                    <div className="relative">
-                      <select
-                        value={selectedBuildingId}
-                        onChange={e => handleBuildingChange(e.target.value)}
-                        className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white cursor-pointer"
-                      >
-                        {landlordBuildings.map(b => (
-                          <option key={b.id} value={b.id}>
-                            {b.name} {b.address ? `(${b.address})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <SelectInput
+                      value={selectedBuildingId}
+                      onChange={e => handleBuildingChange(e.target.value)}
+                      options={landlordBuildings.map(b => ({
+                        value: b.id,
+                        label: `${b.name} ${b.address ? `(${b.address})` : ''}`,
+                      }))}
+                    />
                   )}
                   <span className="text-xs text-zinc-400">
                     {t('landlordListingsCreateBuildingHelp')}
@@ -486,15 +474,13 @@ function CreateListingForm() {
                     )}
                   </div>
 
-                  <div className="relative">
-                    <select
-                      value={roomId}
-                      onChange={e => handleRoomChange(e.target.value)}
-                      disabled={isLoadingRooms || !selectedBuildingId}
-                      className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors bg-white cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="">-- {t('landlordListingsCreateRoomGeneric')} --</option>
-                      {rooms.map(room => {
+                  <SelectInput
+                    value={roomId}
+                    onChange={e => handleRoomChange(e.target.value)}
+                    disabled={isLoadingRooms || !selectedBuildingId}
+                    options={[
+                      { value: '', label: `-- ${t('landlordListingsCreateRoomGeneric')} --` },
+                      ...rooms.map(room => {
                         const typeName =
                           room.roomType?.name || t('landlordListingsCreateRoomStandard')
                         const areaStr = room.area ? ` • ${room.area}m²` : ''
@@ -506,16 +492,13 @@ function CreateListingForm() {
                         }
                         const statusLabel = statusMap[room.status] || room.status
 
-                        return (
-                          <option key={room.id} value={room.id}>
-                            {isEn
-                              ? `Room ${room.roomNumber} (Fl. ${room.floor}) - ${typeName}${areaStr} [${statusLabel}]`
-                              : `Phòng ${room.roomNumber} (Tầng ${room.floor}) - ${typeName}${areaStr} [${statusLabel}]`}
-                          </option>
-                        )
-                      })}
-                    </select>
-                  </div>
+                        return {
+                          value: room.id,
+                          label: `${t('landlordListingsCreateRoomPrefix')} ${room.roomNumber} (${t('landlordListingsCreateFloorPrefix')} ${room.floor}) - ${typeName}${areaStr} [${statusLabel}]`,
+                        }
+                      }),
+                    ]}
+                  />
 
                   {rooms.length === 0 && !isLoadingRooms && selectedBuildingId && (
                     <span className="text-xs text-amber-600 block">
@@ -562,23 +545,16 @@ function CreateListingForm() {
               </div>
 
               {/* Deposit Amount */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-zinc-700">
-                  {t('landlordListingsCreateDepositLabel')} <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="100000"
-                  value={depositAmount}
-                  onChange={e => handleFieldChange(setDepositAmount, e.target.value)}
-                  placeholder="VD: 3500000"
-                  className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
-                />
-                <span className="text-xs text-zinc-400">
-                  {t('landlordListingsCreateDepositHelp')}
-                </span>
-              </div>
+              <NumberInput
+                label={t('landlordListingsCreateDepositLabel')}
+                required
+                min={0}
+                step={100000}
+                value={depositAmount}
+                onChange={e => handleFieldChange(setDepositAmount, e.target.value)}
+                placeholder="VD: 3500000"
+                helperText={t('landlordListingsCreateDepositHelp')}
+              />
             </div>
           </div>
         </div>
@@ -596,29 +572,28 @@ function CreateListingForm() {
             </div>
 
             {/* AI Suggestion Trigger Button */}
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handleOpenAiModal}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-linear-to-r from-teal-600 to-[#2AC1BC] hover:opacity-95 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95"
+              className="h-auto flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-linear-to-r from-teal-600 to-[#2AC1BC] hover:opacity-95 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 border-none"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>{t('landlordListingsCreateAiSuggestBtn')}</span>
-            </button>
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-zinc-700">
-              {t('landlordListingsCreateContentLabel')} <span className="text-rose-500">*</span>
-            </label>
-            <textarea
-              rows={9}
-              value={content}
-              onChange={e => handleFieldChange(setContent, e.target.value)}
-              placeholder={t('landlordListingsCreateContentPh')}
-              className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors resize-none leading-relaxed"
-            ></textarea>
-            <span className="text-xs text-zinc-400">{t('landlordListingsCreateContentHelp')}</span>
-          </div>
+          <TextareaInput
+            label={t('landlordListingsCreateContentLabel')}
+            required
+            rows={9}
+            value={content}
+            onChange={e => handleFieldChange(setContent, e.target.value)}
+            placeholder={t('landlordListingsCreateContentPh')}
+            helperText={t('landlordListingsCreateContentHelp')}
+            className="resize-none leading-relaxed"
+          />
         </div>
 
         {/* 3. Images */}
@@ -633,21 +608,23 @@ function CreateListingForm() {
           </div>
 
           {/* Add Image by URL */}
-          <div className="flex gap-2">
-            <input
+          <div className="flex gap-2 items-center">
+            <TextInput
               type="url"
               value={newImageUrl}
               onChange={e => setNewImageUrl(e.target.value)}
               placeholder={t('landlordListingsCreateAddImagePh')}
-              className="flex-1 px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
+              containerClassName="flex-1 space-y-0"
             />
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={handleAddImage}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              className="h-10 flex items-center gap-1.5 px-4 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" /> {t('landlordListingsCreateAddImageBtn')}
-            </button>
+            </Button>
           </div>
 
           {/* Image Previews */}
@@ -668,14 +645,16 @@ function CreateListingForm() {
                     }}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
+                    <Button
                       type="button"
+                      variant="danger"
+                      size="sm"
                       onClick={() => handleRemoveImage(idx)}
-                      className="p-2 bg-rose-600 text-white rounded-full hover:bg-rose-700 transition-colors shadow-md cursor-pointer"
+                      className="h-auto w-auto p-2 bg-rose-600 text-white rounded-full hover:bg-rose-700 transition-colors shadow-md cursor-pointer"
                       title={t('landlordListingsCreateDeleteImage')}
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -693,27 +672,33 @@ function CreateListingForm() {
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-3 pt-6 border-t border-zinc-100">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleCancelClick}
             disabled={isSubmitting}
-            className="px-6 py-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            className="h-auto px-6 py-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
           >
             {t('landlordListingsCreateCancelBtn')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => handleSubmit('draft')}
             disabled={isSubmitting}
-            className="px-6 py-3 text-xs font-bold text-zinc-900 bg-white border border-zinc-300 hover:bg-zinc-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            className="h-auto px-6 py-3 text-xs font-bold text-zinc-900 bg-white border border-zinc-300 hover:bg-zinc-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
           >
             {t('landlordListingsCreateSaveDraftBtn')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
+            size="sm"
             onClick={() => handleSubmit('posted')}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-8 py-3 text-xs font-bold text-white bg-linear-to-r from-[#FF6B35] to-orange-600 hover:opacity-95 rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+            className="h-auto flex items-center gap-2 px-8 py-3 text-xs font-bold text-white bg-linear-to-r from-[#FF6B35] to-orange-600 hover:opacity-95 rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 border-none"
           >
             {isSubmitting ? (
               <>
@@ -726,7 +711,7 @@ function CreateListingForm() {
                 <span>{t('landlordListingsCreatePublishBtn')}</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -754,13 +739,15 @@ function CreateListingForm() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsAiModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="h-auto w-auto p-2 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Body */}
@@ -785,7 +772,7 @@ function CreateListingForm() {
                   </div>
                 </div>
                 <span className="px-2 py-1 rounded-lg bg-teal-200/80 text-teal-900 font-extrabold text-[10px]">
-                  {isEn ? 'BHMS Data' : 'Dữ liệu BHMS'}
+                  {t('landlordListingsCreateAiBhmsData')}
                 </span>
               </div>
 
@@ -816,38 +803,34 @@ function CreateListingForm() {
                         icon: '💰',
                       },
                     ].map(t => (
-                      <button
+                      <Button
                         key={t.id}
                         type="button"
+                        variant="ghost"
                         onClick={() => setAiTone(t.id as any)}
-                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                        className={`h-auto p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col items-start justify-start w-full whitespace-normal ${
                           aiTone === t.id
                             ? 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#138e89] shadow-xs'
                             : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                         }`}
                       >
-                        <div className="text-sm font-bold flex items-center gap-1.5">
+                        <div className="text-sm font-bold flex items-center gap-1.5 w-full">
                           <span>{t.icon}</span>
                           <span>{t.label}</span>
                         </div>
-                        <div className="text-[10px] text-zinc-500 mt-1">{t.desc}</div>
-                      </button>
+                        <div className="text-[10px] text-zinc-500 mt-1 font-normal">{t.desc}</div>
+                      </Button>
                     ))}
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 block">
-                    {t('landlordListingsCreateAiNotesLabel')}:
-                  </label>
-                  <input
-                    type="text"
-                    value={aiCustomNotes}
-                    onChange={e => setAiCustomNotes(e.target.value)}
-                    placeholder={t('landlordListingsCreateAiNotesPh')}
-                    className="w-full px-3.5 py-2.5 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordListingsCreateAiNotesLabel')}
+                  value={aiCustomNotes}
+                  onChange={e => setAiCustomNotes(e.target.value)}
+                  placeholder={t('landlordListingsCreateAiNotesPh')}
+                  className="text-xs py-2"
+                />
 
                 {aiErrorMessage && (
                   <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center gap-2">
@@ -857,11 +840,12 @@ function CreateListingForm() {
                 )}
 
                 {/* Generate Button */}
-                <button
+                <Button
                   type="button"
+                  variant="primary"
                   disabled={isGeneratingAi}
                   onClick={handleGenerateAi}
-                  className="w-full py-3 bg-linear-to-r from-teal-600 to-[#2AC1BC] hover:opacity-95 text-white text-xs font-bold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="w-full h-auto py-3 bg-linear-to-r from-teal-600 to-[#2AC1BC] hover:opacity-95 text-white text-xs font-bold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 border-none"
                 >
                   {isGeneratingAi ? (
                     <>
@@ -878,7 +862,7 @@ function CreateListingForm() {
                       </span>
                     </>
                   )}
-                </button>
+                </Button>
               </div>
 
               {/* AI Draft Result Preview */}
@@ -949,22 +933,26 @@ function CreateListingForm() {
 
             {/* Modal Footer */}
             <div className="p-4 sm:p-5 border-t border-zinc-100 flex items-center justify-end gap-2.5 bg-zinc-50/50">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsAiModalOpen(false)}
-                className="px-4 py-2.5 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
+                className="h-auto px-4 py-2.5 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
               >
                 {t('landlordListingsCreateAiCloseBtn')}
-              </button>
+              </Button>
               {aiDraftResult && (
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="sm"
                   onClick={handleApplyAiDraft}
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
+                  className="h-auto px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>{t('landlordListingsCreateAiApplyBtn')}</span>
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -994,24 +982,28 @@ function CreateListingForm() {
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setIsConfirmCloseModalOpen(false)}
-                className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+                className="h-auto px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
                 {t('landlordListingsCreateConfirmCloseKeep')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={() => {
                   setIsConfirmCloseModalOpen(false)
                   setIsDirty(false)
                   router.push('/landlord/listings')
                 }}
-                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer"
+                className="h-auto px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordListingsCreateConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

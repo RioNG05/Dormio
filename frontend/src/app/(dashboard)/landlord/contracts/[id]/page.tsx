@@ -472,17 +472,19 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <span>{contract.buildingName}</span>
               <span>•</span>
               <span>{t('landlordContractDetailContractId', { id: contract.id })}</span>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(contract.id)
                   showToast(t('landlordContractsToastCodeCopied'), 'success')
                 }}
-                className="p-1 hover:bg-zinc-100 rounded-md transition-colors text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                className="h-auto p-1 hover:bg-zinc-100 rounded-md transition-colors text-zinc-400 hover:text-zinc-700 cursor-pointer"
                 title={t('landlordContractsCopyCodeTitle')}
               >
                 <Copy className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </p>
           </div>
         </div>

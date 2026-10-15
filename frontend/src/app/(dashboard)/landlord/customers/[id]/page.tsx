@@ -405,13 +405,15 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           >
             <PhoneCall className="w-3.5 h-3.5" /> {t('landlordCustomersCallBtn')}
           </a>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             type="button"
             onClick={handleOpenChat}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
+            className="h-auto flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
           >
             <MessageCircle className="w-3.5 h-3.5" /> {t('landlordCustomersMessageBtn')}
-          </button>
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -786,12 +788,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto max-h-[75vh] space-y-4">
@@ -902,12 +906,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           }}
         >
           <div className="relative max-w-3xl w-full bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl p-2 flex flex-col items-center">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setIsImagePreviewOpen(null)}
-              className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer z-10"
+              className="h-auto absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer z-10"
             >
               <X className="w-6 h-6" />
-            </button>
+            </Button>
             <img
               src={isImagePreviewOpen}
               alt={t('landlordCustomersCccdEnlargedAlt')}

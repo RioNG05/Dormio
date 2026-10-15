@@ -11,6 +11,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { uploadImageToBackend } from '@/services/upload.service'
+import { Button, TextInput } from '@/components/ui'
 
 interface CoverPhotoUploadProps {
   value?: string
@@ -135,11 +136,12 @@ export function CoverPhotoUpload({
         {hint && <span className="text-[11px] text-zinc-400">{hint}</span>}
       </div>
 
-      <input
+      <TextInput
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         onChange={handleInputChange}
+        containerClassName="hidden"
         className="hidden"
       />
 
@@ -172,25 +174,27 @@ export function CoverPhotoUpload({
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors"
+                leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
               >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>Đổi ảnh</span>
-              </button>
+                Đổi ảnh
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={handleRemove}
                 disabled={isUploading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                leftIcon={<X className="h-3.5 w-3.5" />}
               >
-                <X className="h-3.5 w-3.5" />
-                <span>Xóa</span>
-              </button>
+                Xóa
+              </Button>
             </div>
           </div>
         </div>

@@ -33,6 +33,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { Asset, MaintenanceLog, calculateDepreciation } from '../data'
 import { assetService, AssetCondition } from '@/services/asset.service'
+import { Button, TextInput, SelectInput, TextareaInput } from '@/components/ui'
 
 // Mock Room Tenants dictionary for automatic tenant reflection when room changes
 const mockRoomTenants: Record<string, { name: string; phone: string }> = {
@@ -403,30 +404,36 @@ export default function AssetDetailPage() {
 
         {/* Quick Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() =>
               handleStatusChange(asset.status === 'Bảo trì' ? 'Đang sử dụng' : 'Bảo trì')
             }
-            className="px-3 sm:px-3.5 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Wrench className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-600" />{' '}
             {asset.status === 'Bảo trì'
               ? t('landlordAssetsDetailBtnFinishMaintenance')
               : t('landlordAssetsDetailBtnSendMaintenance')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleOpenEditModal}
-            className="px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#2AC1BC]" />{' '}
             {t('landlordAssetsBtnEdit')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
             onClick={handleDeleteAsset}
-            className="px-3 sm:px-3.5 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> {t('landlordAssetsBtnDelete')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -573,12 +580,14 @@ export default function AssetDetailPage() {
                     {t('landlordAssetsDetailMaintenanceHistory')}
                   </h2>
                 </div>
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => setIsLogModalOpen(true)}
-                  className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
+                  className="h-auto px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" /> {t('landlordAssetsDetailAddMaintenanceBtn')}
-                </button>
+                </Button>
               </div>
 
               {maintenanceLogs.length === 0 ? (
@@ -657,187 +666,176 @@ export default function AssetDetailPage() {
                   <p className="text-xs text-zinc-500 font-medium">{t('landlordAssetsModalSub')}</p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors"
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors"
               >
                 <Plus className="w-5 h-5 rotate-45" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                 {/* SKU Code Input */}
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldSku')} *
-                  </label>
-                  <input
-                    type="text"
-                    value={editSku}
-                    onChange={e => setEditSku(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-bold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none uppercase font-mono"
-                  />
-                </div>
+                <TextInput
+                  label={`${t('landlordAssetsFieldSku')} *`}
+                  type="text"
+                  value={editSku}
+                  onChange={e => setEditSku(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-bold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none uppercase font-mono"
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldName')} *
-                  </label>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={`${t('landlordAssetsFieldName')} *`}
+                  type="text"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldCategory')}
-                  </label>
-                  <select
-                    value={editCategory}
-                    onChange={e => setEditCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="Điện lạnh">{t('landlordAssetsCatRefrigeration')}</option>
-                    <option value="Nội thất">{t('landlordAssetsCatFurniture')}</option>
-                    <option value="Gia dụng">{t('landlordAssetsCatAppliances')}</option>
-                    <option value="Điện nước">{t('landlordAssetsCatUtilities')}</option>
-                    <option value="An ninh">{t('landlordAssetsCatSecurity')}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordAssetsFieldCategory')}
+                  value={editCategory}
+                  onChange={e => setEditCategory(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  options={[
+                    { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
+                    { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
+                    { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
+                    { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
+                    { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
+                  ]}
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldRoom')}
-                  </label>
-                  <select
-                    value={editRoom}
-                    onChange={e => setEditRoom(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="101">
-                      {isEn ? 'Room 101 (Tenant: Nguyen Van A)' : 'Phòng 101 (Khách: Nguyễn Văn A)'}
-                    </option>
-                    <option value="102">
-                      {isEn ? 'Room 102 (Tenant: Tran Thi B)' : 'Phòng 102 (Khách: Trần Thị B)'}
-                    </option>
-                    <option value="103">
-                      {isEn ? 'Room 103 (Tenant: Le Van C)' : 'Phòng 103 (Khách: Lê Văn C)'}
-                    </option>
-                    <option value="105">
-                      {isEn ? 'Room 105 (Tenant: Pham Hoang D)' : 'Phòng 105 (Khách: Phạm Hoàng D)'}
-                    </option>
-                    <option value="201">
-                      {isEn ? 'Room 201 (Tenant: Vu Thi E)' : 'Phòng 201 (Khách: Vũ Thị E)'}
-                    </option>
-                    <option value="Kho">
-                      {isEn ? 'Storage (No tenant)' : 'Kho chứa đồ (Không có khách)'}
-                    </option>
-                    <option value="Khu sinh hoạt chung">
-                      {isEn ? 'Common area (No tenant)' : 'Khu sinh hoạt chung (Không có khách)'}
-                    </option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordAssetsFieldRoom')}
+                  value={editRoom}
+                  onChange={e => setEditRoom(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  options={[
+                    {
+                      value: '101',
+                      label: isEn
+                        ? 'Room 101 (Tenant: Nguyen Van A)'
+                        : 'Phòng 101 (Khách: Nguyễn Văn A)',
+                    },
+                    {
+                      value: '102',
+                      label: isEn
+                        ? 'Room 102 (Tenant: Tran Thi B)'
+                        : 'Phòng 102 (Khách: Trần Thị B)',
+                    },
+                    {
+                      value: '103',
+                      label: isEn
+                        ? 'Room 103 (Tenant: Le Van C)'
+                        : 'Phòng 103 (Khách: Lê Văn C)',
+                    },
+                    {
+                      value: '105',
+                      label: isEn
+                        ? 'Room 105 (Tenant: Pham Hoang D)'
+                        : 'Phòng 105 (Khách: Phạm Hoàng D)',
+                    },
+                    {
+                      value: '201',
+                      label: isEn
+                        ? 'Room 201 (Tenant: Vu Thi E)'
+                        : 'Phòng 201 (Khách: Vũ Thị E)',
+                    },
+                    {
+                      value: 'Kho',
+                      label: isEn ? 'Storage (No tenant)' : 'Kho chứa đồ (Không có khách)',
+                    },
+                    {
+                      value: 'Khu sinh hoạt chung',
+                      label: isEn
+                        ? 'Common area (No tenant)'
+                        : 'Khu sinh hoạt chung (Không có khách)',
+                    },
+                  ]}
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldPurchaseValue')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editPurchaseValue}
-                    onChange={e => setEditPurchaseValue(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordAssetsFieldPurchaseValue')}
+                  type="text"
+                  value={editPurchaseValue}
+                  onChange={e => setEditPurchaseValue(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldPurchaseDate')}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: 10/01/2024"
-                    value={editPurchaseDate}
-                    onChange={e => setEditPurchaseDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordAssetsFieldPurchaseDate')}
+                  type="text"
+                  placeholder="VD: 10/01/2024"
+                  value={editPurchaseDate}
+                  onChange={e => setEditPurchaseDate(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldDepreciationYears')}
-                  </label>
-                  <select
-                    value={editDepreciationYears}
-                    onChange={e => setEditDepreciationYears(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value={3}>3 {isEn ? 'years (36 months)' : 'năm (36 tháng)'}</option>
-                    <option value={5}>5 {isEn ? 'years (60 months)' : 'năm (60 tháng)'}</option>
-                    <option value={8}>8 {isEn ? 'years (96 months)' : 'năm (96 tháng)'}</option>
-                    <option value={10}>10 {isEn ? 'years (120 months)' : 'năm (120 tháng)'}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordAssetsFieldDepreciationYears')}
+                  value={editDepreciationYears}
+                  onChange={e => setEditDepreciationYears(Number(e.target.value))}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  options={[
+                    { value: 3, label: `3 ${isEn ? 'years (36 months)' : 'năm (36 tháng)'}` },
+                    { value: 5, label: `5 ${isEn ? 'years (60 months)' : 'năm (60 tháng)'}` },
+                    { value: 8, label: `8 ${isEn ? 'years (96 months)' : 'năm (96 tháng)'}` },
+                    { value: 10, label: `10 ${isEn ? 'years (120 months)' : 'năm (120 tháng)'}` },
+                  ]}
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldStatus')}
-                  </label>
-                  <select
-                    value={editStatus}
-                    onChange={e => setEditStatus(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="Đang sử dụng">{t('landlordAssetsStatusInUse')}</option>
-                    <option value="Sẵn sàng">{t('landlordAssetsStatusReady')}</option>
-                    <option value="Bảo trì">{t('landlordAssetsStatusMaintenance')}</option>
-                    <option value="Hỏng hóc">{t('landlordAssetsStatusBroken')}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordAssetsFieldStatus')}
+                  value={editStatus}
+                  onChange={e => setEditStatus(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  options={[
+                    { value: 'Đang sử dụng', label: t('landlordAssetsStatusInUse') },
+                    { value: 'Sẵn sàng', label: t('landlordAssetsStatusReady') },
+                    { value: 'Bảo trì', label: t('landlordAssetsStatusMaintenance') },
+                    { value: 'Hỏng hóc', label: t('landlordAssetsStatusBroken') },
+                  ]}
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldModelCode')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editModelCode}
-                    onChange={e => setEditModelCode(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordAssetsFieldModelCode')}
+                  type="text"
+                  value={editModelCode}
+                  onChange={e => setEditModelCode(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                />
 
-                <div>
-                  <label className="block text-xs font-extrabold text-zinc-700 mb-1">
-                    {t('landlordAssetsFieldWarranty')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editWarrantyPeriod}
-                    onChange={e => setEditWarrantyPeriod(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordAssetsFieldWarranty')}
+                  type="text"
+                  value={editWarrantyPeriod}
+                  onChange={e => setEditWarrantyPeriod(e.target.value)}
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                />
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
+                className="h-auto px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
               >
                 {t('landlordAssetsBtnCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleSaveEditAsset}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
+                className="h-auto px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
               >
                 {t('landlordAssetsBtnSave')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -856,90 +854,75 @@ export default function AssetDetailPage() {
               <h3 className="font-black text-base text-zinc-900">
                 {t('landlordAssetsDetailLogModalTitle')}
               </h3>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsLogModalOpen(false)}
-                className="text-zinc-400 hover:text-zinc-600 p-1"
+                className="h-auto text-zinc-400 hover:text-zinc-600 p-1"
               >
                 <Plus className="w-5 h-5 rotate-45" />
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">
-                  {t('landlordAssetsDetailLogType')}
-                </label>
-                <select
-                  value={logType}
-                  onChange={e => setLogType(e.target.value)}
-                  className="w-full px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
-                >
-                  <option value="Bảo dưỡng định kỳ">
-                    {t('landlordAssetsDetailLogTypeRoutine')}
-                  </option>
-                  <option value="Sửa chữa linh kiện">
-                    {t('landlordAssetsDetailLogTypeRepair')}
-                  </option>
-                  <option value="Vệ sinh & Nạp gas">
-                    {t('landlordAssetsDetailLogTypeCleanGas')}
-                  </option>
-                  <option value="Thay thế mới">{t('landlordAssetsDetailLogTypeReplace')}</option>
-                </select>
-              </div>
+              <SelectInput
+                label={t('landlordAssetsDetailLogType')}
+                value={logType}
+                onChange={e => setLogType(e.target.value)}
+                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
+                options={[
+                  { value: 'Bảo dưỡng định kỳ', label: t('landlordAssetsDetailLogTypeRoutine') },
+                  { value: 'Sửa chữa linh kiện', label: t('landlordAssetsDetailLogTypeRepair') },
+                  { value: 'Vệ sinh & Nạp gas', label: t('landlordAssetsDetailLogTypeCleanGas') },
+                  { value: 'Thay thế mới', label: t('landlordAssetsDetailLogTypeReplace') },
+                ]}
+              />
 
-              <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">
-                  {t('landlordAssetsDetailLogDesc')} <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder={t('landlordAssetsDetailLogDescPh')}
-                  value={logDescription}
-                  onChange={e => setLogDescription(e.target.value)}
-                  className="w-full px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none resize-none"
-                />
-              </div>
+              <TextareaInput
+                label={`${t('landlordAssetsDetailLogDesc')} *`}
+                rows={2}
+                placeholder={t('landlordAssetsDetailLogDescPh')}
+                value={logDescription}
+                onChange={e => setLogDescription(e.target.value)}
+                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none resize-none"
+              />
 
-              <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">
-                  {t('landlordAssetsDetailLogCost')}
-                </label>
-                <input
-                  type="text"
-                  placeholder="VD: 250.000 ₫"
-                  value={logCost}
-                  onChange={e => setLogCost(e.target.value)}
-                  className="w-full px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
-                />
-              </div>
+              <TextInput
+                label={t('landlordAssetsDetailLogCost')}
+                type="text"
+                placeholder="VD: 250.000 ₫"
+                value={logCost}
+                onChange={e => setLogCost(e.target.value)}
+                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
+              />
 
-              <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">
-                  {t('landlordAssetsDetailLogPerformer')}
-                </label>
-                <input
-                  type="text"
-                  placeholder={t('landlordAssetsDetailLogPerformerPh')}
-                  value={logPerformer}
-                  onChange={e => setLogPerformer(e.target.value)}
-                  className="w-full px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
-                />
-              </div>
+              <TextInput
+                label={t('landlordAssetsDetailLogPerformer')}
+                type="text"
+                placeholder={t('landlordAssetsDetailLogPerformerPh')}
+                value={logPerformer}
+                onChange={e => setLogPerformer(e.target.value)}
+                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
+              />
             </div>
 
             <div className="pt-2 flex justify-end gap-2">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setIsLogModalOpen(false)}
-                className="px-4 py-2 font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl cursor-pointer"
+                className="h-auto px-4 py-2 font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl cursor-pointer"
               >
                 {t('landlordAssetsBtnCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleAddMaintenanceLog}
-                className="px-4 py-2 font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
+                className="h-auto px-4 py-2 font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
               >
                 {t('landlordAssetsDetailLogSaveBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -996,18 +979,22 @@ function ConfirmModal({
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
         </div>
         <div className="grid grid-cols-2 gap-2.5 pt-2">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onCancel}
-            className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
+            className="h-auto px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onClick={onConfirm}
-            className="px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20"
+            className="h-auto px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20"
           >
             OK
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -1069,12 +1056,14 @@ function AlertModal({
           <h3 className="text-lg font-black text-zinc-900">{title}</h3>
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
         </div>
-        <button
+        <Button
+          variant="primary"
+          size="sm"
           onClick={onClose}
-          className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md ${config.btnColor}`}
+          className={`h-auto w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md ${config.btnColor}`}
         >
           {t('landlordAssetsBtnUnderstood')}
-        </button>
+        </Button>
       </div>
     </div>
   )

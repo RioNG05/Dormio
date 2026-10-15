@@ -41,6 +41,17 @@ import {
 
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  Checkbox,
+  Form,
+} from '@/components/ui'
+import { cn } from '@/lib/utils'
 import {
   createManualDeposit,
   getDeposits,
@@ -75,6 +86,7 @@ function DepositsContent() {
   const searchParams = useSearchParams()
   const t = useTranslations('landlord')
   const { currentLocale } = useLanguage()
+  const { toast } = useToast()
 
   const getDepositStatusLabel = (status: string) => {
     switch (status) {
@@ -161,12 +173,12 @@ function DepositsContent() {
   const [isFormDirty, setIsFormDirty] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Toast message state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3500)
+    if (type === 'error') {
+      toast.error(message)
+    } else {
+      toast.success(message)
+    }
   }
 
   // New Manual Deposit Form State ( - clean empty defaults, no mockups)
@@ -484,16 +496,19 @@ function DepositsContent() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => {
               setShowCreateModal(true)
               setIsFormDirty(false)
               fetchAvailableRooms()
             }}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
+            className="w-full sm:w-auto text-xs"
+            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
           >
-            <Plus className="w-4 h-4 shrink-0" /> {t('landlordDepositsAddNew')}
-          </button>
+            {t('landlordDepositsAddNew')}
+          </Button>
         </div>
       </div>
 
@@ -623,98 +638,106 @@ function DepositsContent() {
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-zinc-100">
           {/* 2 Deposit Types Segment Switcher */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-zinc-100 p-1 rounded-2xl sm:rounded-full border border-zinc-200/80 w-full md:w-auto">
-            <button
+            <Button
+              variant={selectedDepositTypeTab === 'hold' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setSelectedDepositTypeTab('hold')
                 setActiveStatusTab('all')
                 setCurrentPage(1)
               }}
-              className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={cn(
+                'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
                 selectedDepositTypeTab === 'hold'
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50'
-              }`}
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50',
+              )}
+              leftIcon={<Clock className="w-3.5 h-3.5 shrink-0" />}
             >
-              <Clock className="w-3.5 h-3.5 shrink-0" />
               <span className="whitespace-nowrap">{t('landlordDepositsTabHoldingButton')}</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                className={cn(
+                  'px-2 py-0.5 rounded-full text-[10px] font-black',
                   selectedDepositTypeTab === 'hold'
                     ? 'bg-white/20 text-white'
-                    : 'bg-zinc-200 text-zinc-700'
-                }`}
+                    : 'bg-zinc-200 text-zinc-700',
+                )}
               >
                 {stats.holdTypeCountTotal}
               </span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={selectedDepositTypeTab === 'contract' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setSelectedDepositTypeTab('contract')
                 setActiveStatusTab('all')
                 setCurrentPage(1)
               }}
-              className={`py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={cn(
+                'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
                 selectedDepositTypeTab === 'contract'
                   ? 'bg-[#2AC1BC] text-white shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50'
-              }`}
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50',
+              )}
+              leftIcon={<FileText className="w-3.5 h-3.5 shrink-0" />}
             >
-              <FileText className="w-3.5 h-3.5 shrink-0" />
               <span className="whitespace-nowrap">{t('landlordDepositsTabContractButton')}</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                className={cn(
+                  'px-2 py-0.5 rounded-full text-[10px] font-black',
                   selectedDepositTypeTab === 'contract'
                     ? 'bg-white/20 text-white'
-                    : 'bg-zinc-200 text-zinc-700'
-                }`}
+                    : 'bg-zinc-200 text-zinc-700',
+                )}
               >
                 {stats.contractTypeCountTotal}
               </span>
-            </button>
+            </Button>
           </div>
 
           {/* Search Box & View Switcher */}
           <div className="flex items-center gap-2 w-full md:w-auto flex-1 max-w-full md:max-w-md">
             {/* Search Input */}
-            <div className="relative flex-1 min-w-0">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-              <input
-                type="text"
+            <div className="flex-1 min-w-0">
+              <TextInput
                 placeholder={t('landlordDepositsSearchPlaceholder')}
                 value={searchTerm}
                 onChange={e => {
                   setSearchTerm(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="w-full pl-8.5 pr-3 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all truncate"
+                leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
               />
             </div>
 
             {/* View Switcher (Grid vs Table) */}
             <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <button
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="icon"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={cn(
+                  'h-7 w-7 rounded-lg',
+                  viewMode === 'grid' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                )}
                 title={t('landlordDepositsViewGrid')}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="icon"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'table'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={cn(
+                  'h-7 w-7 rounded-lg',
+                  viewMode === 'table' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                )}
                 title={t('landlordDepositsViewTable')}
               >
                 <List className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -726,65 +749,69 @@ function DepositsContent() {
               {t('landlordDepositsStatusFilterLabel')}
             </span>
 
-            <button
+            <Button
+              variant={activeStatusTab === 'all' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => {
                 setActiveStatusTab('all')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeStatusTab === 'all'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-              }`}
+              className="rounded-xl text-xs"
             >
               {t('landlordDepositsStatusAll')}
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeStatusTab === 'holding' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => {
                 setActiveStatusTab('holding')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeStatusTab === 'holding'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                  : 'bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20'
-              }`}
+              className={cn(
+                'rounded-xl text-xs',
+                activeStatusTab !== 'holding' && 'bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20',
+              )}
             >
               {t('landlordDepositsStatusHolding')} (
               {selectedDepositTypeTab === 'hold'
                 ? stats.holdTypeHoldingCountTotal
                 : stats.holdingCountTotal - stats.holdTypeHoldingCountTotal}
               )
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeStatusTab === 'refunded' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => {
                 setActiveStatusTab('refunded')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+              className={cn(
+                'rounded-xl text-xs',
                 activeStatusTab === 'refunded'
-                  ? 'bg-purple-600 text-white shadow-2xs'
-                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
-              }`}
+                  ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
+              )}
             >
               {t('landlordDepositsStatusRefunded')} ({stats.refundedCountTotal})
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeStatusTab === 'deducted' ? 'danger' : 'secondary'}
+              size="sm"
               onClick={() => {
                 setActiveStatusTab('deducted')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 whitespace-nowrap border ${
-                activeStatusTab === 'deducted'
-                  ? 'bg-rose-500 text-white border-rose-600 shadow-2xs'
-                  : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-              }`}
+              className={cn(
+                'rounded-xl text-xs',
+                activeStatusTab !== 'deducted' &&
+                  'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100',
+              )}
             >
               {t('landlordDepositsStatusDeducted')} ({stats.deductedCountTotal})
-            </button>
+            </Button>
           </div>
 
           <span className="text-[11px] font-bold text-zinc-400 shrink-0 hidden sm:inline">
@@ -813,16 +840,18 @@ function DepositsContent() {
               {t('landlordDepositsEmptyCategoryDesc')}
             </p>
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => {
               setShowCreateModal(true)
               setIsFormDirty(false)
               fetchAvailableRooms()
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md cursor-pointer transition-all"
+            leftIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-4 h-4" /> {t('landlordDepositsAddDeposit')}
-          </button>
+            {t('landlordDepositsAddDeposit')}
+          </Button>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 Default) */
@@ -926,15 +955,19 @@ function DepositsContent() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setSelectedDeposit(dep)}
-                      className="flex-1 py-2 px-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      className="flex-1 text-xs"
+                      leftIcon={<Eye className="w-3.5 h-3.5 text-zinc-500" />}
                     >
-                      <Eye className="w-3.5 h-3.5 text-zinc-500" /> {t('landlordDepositsBtnDetail')}
-                    </button>
+                      {t('landlordDepositsBtnDetail')}
+                    </Button>
 
                     {isHoldType && isHolding && (
-                      <button
+                      <Button
+                        size="sm"
                         onClick={() => {
                           setShowUpgradeModal(dep)
                           setUpgradeForm({
@@ -944,25 +977,28 @@ function DepositsContent() {
                           })
                           setIsFormDirty(false)
                         }}
-                        className="py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1"
+                        className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3"
                         title={t('landlordDepositsTooltipUpgrade')}
+                        leftIcon={<Sparkles className="w-3.5 h-3.5" />}
                       >
-                        <Sparkles className="w-3.5 h-3.5" /> {t('landlordDepositsBtnUpgradeShort')}
-                      </button>
+                        {t('landlordDepositsBtnUpgradeShort')}
+                      </Button>
                     )}
 
                     {isHolding && (
-                      <button
+                      <Button
+                        size="sm"
                         onClick={() => {
                           setShowRefundModal(dep)
                           setRefundForm({ deductedAmount: '0', deductionReason: '', note: '' })
                           setIsFormDirty(false)
                         }}
-                        className="py-2 px-3 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1"
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3"
                         title={t('landlordDepositsTooltipRefundDeduct')}
+                        leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                       >
-                        <RotateCcw className="w-3.5 h-3.5" /> {t('landlordDepositsBtnRefundShort')}
-                      </button>
+                        {t('landlordDepositsBtnRefundShort')}
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -1032,16 +1068,20 @@ function DepositsContent() {
                       <td className="py-3.5 px-4 text-center">{renderStatusBadge(dep)}</td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setSelectedDeposit(dep)}
-                            className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                            className="h-7 w-7 text-zinc-500 hover:text-zinc-900"
                             title={t('landlordDepositsBtnDetail')}
                           >
                             <Eye className="w-4 h-4" />
-                          </button>
+                          </Button>
 
                           {isHoldType && isHolding && (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => {
                                 setShowUpgradeModal(dep)
                                 setUpgradeForm({
@@ -1051,15 +1091,17 @@ function DepositsContent() {
                                 })
                                 setIsFormDirty(false)
                               }}
-                              className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                              className="h-7 w-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                               title={t('landlordDepositsBtnUpgrade')}
                             >
                               <Sparkles className="w-4 h-4" />
-                            </button>
+                            </Button>
                           )}
 
                           {isHolding && (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => {
                                 setShowRefundModal(dep)
                                 setRefundForm({
@@ -1069,11 +1111,11 @@ function DepositsContent() {
                                 })
                                 setIsFormDirty(false)
                               }}
-                              className="p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
+                              className="h-7 w-7 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                               title={t('landlordDepositsBtnRefundDeduct')}
                             >
                               <RotateCcw className="w-4 h-4" />
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </td>
@@ -1091,8 +1133,7 @@ function DepositsContent() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs text-zinc-600">
           <div className="flex items-center gap-2">
             <span>{t('landlordDepositsShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSize}
@@ -1101,7 +1142,8 @@ function DepositsContent() {
                 setPageSize(val)
                 setCurrentPage(1)
               }}
-              className="w-14 px-2 py-1 bg-white border border-zinc-200 rounded-lg font-bold text-center text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
+              containerClassName="w-16"
+              className="text-center font-bold py-1 text-xs"
             />
             <span>{t('landlordDepositsPerPage')}</span>
             <span className="text-zinc-300">|</span>
@@ -1112,37 +1154,39 @@ function DepositsContent() {
           </div>
 
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 border border-zinc-200 rounded-lg bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              className="h-8 w-8"
               title={t('landlordDepositsTooltipPrevPage')}
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
 
             {pageNumbers.map(num => (
-              <button
+              <Button
                 key={num}
+                variant={currentPage === num ? 'primary' : 'outline'}
+                size="icon"
                 onClick={() => setCurrentPage(num)}
-                className={`min-w-8 h-8 px-2 rounded-lg font-bold transition-all cursor-pointer ${
-                  currentPage === num
-                    ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                    : 'bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
-                }`}
+                className={cn('h-8 w-8 text-xs', currentPage !== num && 'text-zinc-700')}
               >
                 {num}
-              </button>
+              </Button>
             ))}
 
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="p-1.5 border border-zinc-200 rounded-lg bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              className="h-8 w-8"
               title={t('landlordDepositsTooltipNextPage')}
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1174,12 +1218,14 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setSelectedDeposit(null)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Content */}
@@ -1301,23 +1347,24 @@ function DepositsContent() {
 
             {/* Modal Footer Actions */}
             <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-between gap-2">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   router.push(
                     `/landlord/messages?room=${encodeURIComponent(selectedDeposit.roomId)}&tenant=${encodeURIComponent(selectedDeposit.tenantName)}`,
                   )
                 }}
-                className="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                leftIcon={<Send className="w-3.5 h-3.5 text-[#2AC1BC]" />}
               >
-                <Send className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
                 {t('landlordDepositsChatWithTenant')}
-              </button>
+              </Button>
 
               <div className="flex items-center gap-2">
                 {selectedDeposit.depositCategory === 'hold' &&
                   selectedDeposit.status === 'paid' && (
-                    <button
+                    <Button
+                      size="sm"
                       onClick={() => {
                         setShowUpgradeModal(selectedDeposit)
                         setUpgradeForm({
@@ -1328,24 +1375,27 @@ function DepositsContent() {
                         setSelectedDeposit(null)
                         setIsFormDirty(false)
                       }}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-black"
+                      leftIcon={<Sparkles className="w-4 h-4" />}
                     >
-                      <Sparkles className="w-4 h-4" /> {t('landlordDepositsBtnUpgrade')}
-                    </button>
+                      {t('landlordDepositsBtnUpgrade')}
+                    </Button>
                   )}
 
                 {selectedDeposit.status === 'paid' && (
-                  <button
+                  <Button
+                    size="sm"
                     onClick={() => {
                       setShowRefundModal(selectedDeposit)
                       setRefundForm({ deductedAmount: '0', deductionReason: '', note: '' })
                       setSelectedDeposit(null)
                       setIsFormDirty(false)
                     }}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-black"
+                    leftIcon={<RotateCcw className="w-4 h-4" />}
                   >
-                    <RotateCcw className="w-4 h-4" /> {t('landlordDepositsBtnRefundDeduct')}
-                  </button>
+                    {t('landlordDepositsBtnRefundDeduct')}
+                  </Button>
                 )}
               </div>
             </div>
@@ -1377,188 +1427,165 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => requestCloseModal('create')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
               {/* Room Selection Dropdown */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordDepositsRoomSelectLabel')}
-                  </label>
                   {isLoadingRooms ? (
-                    <div className="flex items-center gap-2 py-2 text-zinc-400">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />{' '}
-                      {t('landlordDepositsLoadingRooms')}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-extrabold text-zinc-700">
+                        {t('landlordDepositsRoomSelectLabel')}
+                      </label>
+                      <div className="flex items-center gap-2 py-2 text-zinc-400">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />{' '}
+                        {t('landlordDepositsLoadingRooms')}
+                      </div>
                     </div>
                   ) : (
-                    <select
+                    <SelectInput
+                      label={t('landlordDepositsRoomSelectLabel')}
+                      labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
                       value={newDepositForm.roomId}
                       onChange={e => {
                         setNewDepositForm({ ...newDepositForm, roomId: e.target.value })
                         setIsFormDirty(true)
                       }}
-                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                    >
-                      <option value="">{t('landlordInvoicesSelectRoomPlaceholder')}</option>
-                      {availableRooms.map(room => {
-                        const isAvail = room.status === 'available'
-                        return (
-                          <option key={room.id} value={room.id} disabled={!isAvail}>
-                            {t('landlordContractsRoomPrefix').replace(
+                      options={[
+                        { value: '', label: t('landlordInvoicesSelectRoomPlaceholder') },
+                        ...availableRooms.map(room => {
+                          const isAvail = room.status === 'available'
+                          return {
+                            value: room.id,
+                            disabled: !isAvail,
+                            label: `${t('landlordContractsRoomPrefix').replace(
                               '{room}',
                               String(room.roomNumber),
-                            )}{' '}
-                            - {room.roomType?.name || (isEn ? 'Room' : 'Phòng')} (
-                            {isAvail
-                              ? t('landlordDepositsRoomStatusAvailable')
-                              : room.status === 'deposited'
-                                ? t('landlordDepositsRoomStatusDeposited')
-                                : t('landlordDepositsRoomStatusRented')}
-                            )
-                          </option>
-                        )
-                      })}
-                    </select>
+                            )} - ${room.roomType?.name || (isEn ? 'Room' : 'Phòng')} (${
+                              isAvail
+                                ? t('landlordDepositsRoomStatusAvailable')
+                                : room.status === 'deposited'
+                                  ? t('landlordDepositsRoomStatusDeposited')
+                                  : t('landlordDepositsRoomStatusRented')
+                            })`,
+                          }
+                        }),
+                      ]}
+                    />
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordDepositsDepositTypeLabel')}
-                  </label>
-                  <select
+                  <SelectInput
+                    label={t('landlordDepositsDepositTypeLabel')}
+                    labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
                     value={newDepositForm.depositType}
                     onChange={e => {
                       setNewDepositForm({ ...newDepositForm, depositType: e.target.value as any })
                       setIsFormDirty(true)
                     }}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  >
-                    <option value="Cọc giữ chỗ">{t('landlordDepositsOptionHoldingDesc')}</option>
-                    <option value="Cọc hợp đồng">{t('landlordDepositsOptionContractDesc')}</option>
-                  </select>
+                    options={[
+                      { value: 'Cọc giữ chỗ', label: t('landlordDepositsOptionHoldingDesc') },
+                      { value: 'Cọc hợp đồng', label: t('landlordDepositsOptionContractDesc') },
+                    ]}
+                  />
                 </div>
               </div>
 
               {/* Prospective Tenant Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordDepositsTenantNameLabel')}
-                  </label>
-                  <input
-                    type="text"
-                    value={newDepositForm.tenantName}
-                    onChange={e => {
-                      setNewDepositForm({ ...newDepositForm, tenantName: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    placeholder={t('landlordDepositsTenantNameExample')}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordDepositsTenantNameLabel')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  value={newDepositForm.tenantName}
+                  onChange={e => {
+                    setNewDepositForm({ ...newDepositForm, tenantName: e.target.value })
+                    setIsFormDirty(true)
+                  }}
+                  placeholder={t('landlordDepositsTenantNameExample')}
+                />
 
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordDepositsTenantPhoneLabel')}
-                  </label>
-                  <input
-                    type="tel"
-                    value={newDepositForm.tenantPhone}
-                    onChange={e => {
-                      setNewDepositForm({ ...newDepositForm, tenantPhone: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    placeholder="0988xxxxxx"
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </div>
+                <TextInput
+                  type="tel"
+                  label={t('landlordDepositsTenantPhoneLabel')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  value={newDepositForm.tenantPhone}
+                  onChange={e => {
+                    setNewDepositForm({ ...newDepositForm, tenantPhone: e.target.value })
+                    setIsFormDirty(true)
+                  }}
+                  placeholder="0988xxxxxx"
+                />
               </div>
 
               {/* Amount & Deadline */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordDepositsDepositAmountVND')}
-                  </label>
-                  <input
-                    type="number"
-                    min={10000}
-                    step={50000}
-                    value={newDepositForm.amount}
-                    onChange={e => {
-                      setNewDepositForm({ ...newDepositForm, amount: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    placeholder={t('landlordDepositsAmountPlaceholder')}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </div>
+                <NumberInput
+                  label={t('landlordDepositsDepositAmountVND')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  min={10000}
+                  step={50000}
+                  value={newDepositForm.amount}
+                  onChange={e => {
+                    setNewDepositForm({ ...newDepositForm, amount: e.target.value })
+                    setIsFormDirty(true)
+                  }}
+                  placeholder={t('landlordDepositsAmountPlaceholder')}
+                />
 
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordDepositsHoldingDeadline')}
-                  </label>
-                  <input
-                    type="date"
-                    value={newDepositForm.expiryDate}
-                    onChange={e => {
-                      setNewDepositForm({ ...newDepositForm, expiryDate: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </div>
+                <TextInput
+                  type="date"
+                  label={t('landlordDepositsHoldingDeadline')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  value={newDepositForm.expiryDate}
+                  onChange={e => {
+                    setNewDepositForm({ ...newDepositForm, expiryDate: e.target.value })
+                    setIsFormDirty(true)
+                  }}
+                />
               </div>
 
               {/* Notes */}
-              <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  {t('landlordDepositsInitialNotes')}
-                </label>
-                <textarea
-                  rows={3}
-                  value={newDepositForm.note}
-                  onChange={e => {
-                    setNewDepositForm({ ...newDepositForm, note: e.target.value })
-                    setIsFormDirty(true)
-                  }}
-                  placeholder={t('landlordDepositsInitialNotesPlaceholder')}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                />
-              </div>
+              <TextareaInput
+                label={t('landlordDepositsInitialNotes')}
+                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                rows={3}
+                value={newDepositForm.note}
+                onChange={e => {
+                  setNewDepositForm({ ...newDepositForm, note: e.target.value })
+                  setIsFormDirty(true)
+                }}
+                placeholder={t('landlordDepositsInitialNotesPlaceholder')}
+              />
             </div>
 
             <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => requestCloseModal('create')}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer disabled:opacity-50"
               >
                 {t('landlordDepositsCancelBtn')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
                 onClick={handleCreateDeposit}
                 disabled={isSubmitting}
-                className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                isLoading={isSubmitting}
+                className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('landlordDepositsSaving')}
-                  </>
-                ) : (
-                  t('landlordDepositsSaveDepositAction')
-                )}
-              </button>
+                {t('landlordDepositsSaveDepositAction')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1593,12 +1620,14 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => requestCloseModal('refund')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Content */}
@@ -1615,14 +1644,9 @@ function DepositsContent() {
 
               {/* Deduction Amount Input */}
               <div className="space-y-2">
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700">
-                    {t('landlordDepositsDeductAmountLabel')}
-                  </label>
-                </div>
-
-                <input
-                  type="number"
+                <NumberInput
+                  label={t('landlordDepositsDeductAmountLabel')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
                   min={0}
                   max={showRefundModal.amount}
                   value={refundForm.deductedAmount}
@@ -1631,41 +1655,42 @@ function DepositsContent() {
                     setIsFormDirty(true)
                   }}
                   placeholder="0"
-                  className="w-full px-3.5 py-2.5 bg-rose-50/50 border border-rose-200 rounded-xl font-black text-rose-900 text-base focus:outline-none focus:border-rose-500 focus:bg-white transition-all"
                 />
 
                 {/* Quick Presets */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
-                  <button
+                  <Button
                     type="button"
+                    variant={refundForm.deductedAmount === '0' ? 'primary' : 'secondary'}
+                    size="sm"
                     onClick={() => {
                       setRefundForm({ ...refundForm, deductedAmount: '0' })
                       setIsFormDirty(true)
                     }}
-                    className={`py-2 px-1 text-center font-black rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center leading-tight ${
-                      refundForm.deductedAmount === '0'
-                        ? 'bg-purple-600 text-white shadow-2xs'
-                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
-                    }`}
+                    className={cn(
+                      'py-2 px-1 text-center font-black flex flex-col items-center justify-center leading-tight h-auto',
+                      refundForm.deductedAmount === '0' ? 'bg-purple-600 hover:bg-purple-700 text-white' : '',
+                    )}
                   >
                     <span className="text-[11px] sm:text-xs whitespace-nowrap">
                       {t('landlordDepositsRefund100')}
                     </span>
                     <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">(0 ₫)</span>
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    variant={Number(refundForm.deductedAmount) === Math.round(showRefundModal.amount / 2) ? 'danger' : 'secondary'}
+                    size="sm"
                     onClick={() => {
                       const half = Math.round(showRefundModal.amount / 2)
                       setRefundForm({ ...refundForm, deductedAmount: String(half) })
                       setIsFormDirty(true)
                     }}
-                    className={`py-2 px-1 text-center font-black rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center leading-tight ${
-                      Number(refundForm.deductedAmount) === Math.round(showRefundModal.amount / 2)
-                        ? 'bg-rose-500 text-white shadow-2xs'
-                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
-                    }`}
+                    className={cn(
+                      'py-2 px-1 text-center font-black flex flex-col items-center justify-center leading-tight h-auto',
+                      Number(refundForm.deductedAmount) === Math.round(showRefundModal.amount / 2) ? 'bg-rose-500 hover:bg-rose-600 text-white' : '',
+                    )}
                   >
                     <span className="text-[11px] sm:text-xs whitespace-nowrap">
                       {t('landlordDepositsDeduct50')}
@@ -1677,10 +1702,12 @@ function DepositsContent() {
                       )}{' '}
                       ₫)
                     </span>
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    variant={Number(refundForm.deductedAmount) === showRefundModal.amount ? 'danger' : 'secondary'}
+                    size="sm"
                     onClick={() => {
                       setRefundForm({
                         ...refundForm,
@@ -1688,11 +1715,10 @@ function DepositsContent() {
                       })
                       setIsFormDirty(true)
                     }}
-                    className={`py-2 px-1 text-center font-black rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center leading-tight ${
-                      Number(refundForm.deductedAmount) === showRefundModal.amount
-                        ? 'bg-rose-600 text-white shadow-2xs'
-                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
-                    }`}
+                    className={cn(
+                      'py-2 px-1 text-center font-black flex flex-col items-center justify-center leading-tight h-auto',
+                      Number(refundForm.deductedAmount) === showRefundModal.amount ? 'bg-rose-600 hover:bg-rose-700 text-white' : '',
+                    )}
                   >
                     <span className="text-[11px] sm:text-xs whitespace-nowrap">
                       {t('landlordDepositsDeduct100')}
@@ -1700,69 +1726,54 @@ function DepositsContent() {
                     <span className="text-[9px] font-bold opacity-80 whitespace-nowrap">
                       {t('landlordDepositsForfeitDeposit')}
                     </span>
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               {/* Deduction Reason */}
-              <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  {t('landlordDepositsDeductionReason')}
-                </label>
-                <input
-                  type="text"
-                  value={refundForm.deductionReason}
-                  onChange={e => {
-                    setRefundForm({ ...refundForm, deductionReason: e.target.value })
-                    setIsFormDirty(true)
-                  }}
-                  placeholder={t('landlordDepositsDeductionReasonPlaceholder')}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-purple-500"
-                />
-              </div>
+              <TextInput
+                label={t('landlordDepositsDeductionReason')}
+                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                value={refundForm.deductionReason}
+                onChange={e => {
+                  setRefundForm({ ...refundForm, deductionReason: e.target.value })
+                  setIsFormDirty(true)
+                }}
+                placeholder={t('landlordDepositsDeductionReasonPlaceholder')}
+              />
 
               {/* Note */}
-              <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  {t('landlordDepositsAdditionalNotes')}
-                </label>
-                <textarea
-                  rows={2}
-                  value={refundForm.note}
-                  onChange={e => {
-                    setRefundForm({ ...refundForm, note: e.target.value })
-                    setIsFormDirty(true)
-                  }}
-                  placeholder={t('landlordDepositsAdditionalNotesPlaceholder')}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-purple-500"
-                />
-              </div>
+              <TextareaInput
+                label={t('landlordDepositsAdditionalNotes')}
+                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                rows={2}
+                value={refundForm.note}
+                onChange={e => {
+                  setRefundForm({ ...refundForm, note: e.target.value })
+                  setIsFormDirty(true)
+                }}
+                placeholder={t('landlordDepositsAdditionalNotesPlaceholder')}
+              />
             </div>
 
             <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => requestCloseModal('refund')}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer disabled:opacity-50"
               >
                 {t('landlordDepositsCancelBtn')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
                 onClick={handleRefundDeposit}
                 disabled={isSubmitting}
-                className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                isLoading={isSubmitting}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-black"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />{' '}
-                    {t('landlordDepositsProcessing')}
-                  </>
-                ) : (
-                  t('landlordDepositsConfirmRefundAction')
-                )}
-              </button>
+                {t('landlordDepositsConfirmRefundAction')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1797,12 +1808,14 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => requestCloseModal('upgrade')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Content */}
@@ -1825,21 +1838,16 @@ function DepositsContent() {
                   </span>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordDepositsTargetContractDeposit')}
-                  </label>
-                  <input
-                    type="number"
-                    value={upgradeForm.targetContractAmount}
-                    onChange={e => {
-                      setUpgradeForm({ ...upgradeForm, targetContractAmount: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    placeholder={t('landlordDepositsTargetAmountPlaceholder')}
-                    className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-amber-500 text-sm"
-                  />
-                </div>
+                <NumberInput
+                  label={t('landlordDepositsTargetContractDeposit')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  value={upgradeForm.targetContractAmount}
+                  onChange={e => {
+                    setUpgradeForm({ ...upgradeForm, targetContractAmount: e.target.value })
+                    setIsFormDirty(true)
+                  }}
+                  placeholder={t('landlordDepositsTargetAmountPlaceholder')}
+                />
 
                 <div className="p-3.5 bg-amber-500/10 border border-amber-300/80 rounded-xl flex items-center justify-between gap-2">
                   <div className="min-w-0">
@@ -1856,20 +1864,21 @@ function DepositsContent() {
             </div>
 
             <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => requestCloseModal('upgrade')}
-                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer"
               >
                 {t('landlordDepositsCancelBtn')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
                 onClick={handleConfirmUpgradeToContract}
-                className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
+                className="bg-amber-500 hover:bg-amber-600 text-white font-black"
+                leftIcon={<FileText className="w-4 h-4" />}
               >
-                <FileText className="w-4 h-4" /> {t('landlordDepositsSignContractAndTransfer')}
-              </button>
+                {t('landlordDepositsSignContractAndTransfer')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1893,20 +1902,20 @@ function DepositsContent() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={() => setConfirmCloseTarget(null)}
-                className="flex-1 py-2.5 px-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordDepositsConfirmCloseKeep')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={handleConfirmCloseModal}
-                className="flex-1 py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-colors cursor-pointer shadow-xs"
+                className="flex-1"
               >
                 {t('landlordDepositsConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

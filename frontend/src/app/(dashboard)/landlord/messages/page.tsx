@@ -698,24 +698,28 @@ function MessagesContent() {
 
           {/* Filter Tabs */}
           <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px] font-extrabold">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setActiveTab('all')}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
                 activeTab === 'all'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
                   : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
               }`}
             >
               {t('landlordMessagesAll').replace('{count}', String(conversations.length))}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setActiveTab('unread')}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
                 activeTab === 'unread'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
                   : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
               }`}
             >
@@ -723,14 +727,16 @@ function MessagesContent() {
                 '{count}',
                 String(conversations.filter(c => c.unreadCount > 0).length),
               )}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setActiveTab('read')}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
                 activeTab === 'read'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
                   : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
               }`}
             >
@@ -738,14 +744,16 @@ function MessagesContent() {
                 '{count}',
                 String(conversations.filter(c => c.unreadCount === 0).length),
               )}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setActiveTab('tenant')}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
                 activeTab === 'tenant'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
                   : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
               }`}
             >
@@ -753,14 +761,16 @@ function MessagesContent() {
                 '{count}',
                 String(conversations.filter(c => c.participant.role === 'tenant').length),
               )}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setActiveTab('lead')}
-              className={`px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
                 activeTab === 'lead'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
                   : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
               }`}
             >
@@ -768,7 +778,7 @@ function MessagesContent() {
                 '{count}',
                 String(conversations.filter(c => c.participant.role !== 'tenant').length),
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -887,19 +897,21 @@ function MessagesContent() {
             <div className="p-3 sm:px-5 sm:py-3 border-b border-zinc-200/80 flex items-center justify-between gap-2 bg-white z-10 shadow-2xs">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {/* Mobile Back Button */}
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     activeChatRef.current = null
                     setActiveChat(null)
                     setMobileShowChat(false)
                     router.replace('/landlord/messages', { scroll: false })
                   }}
-                  className="lg:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
+                  className="lg:hidden h-auto p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
                   title={t('landlordMessagesTooltipBackToList')}
                 >
                   <ArrowLeft className="w-5 h-5 text-zinc-700" />
-                </button>
+                </Button>
 
                 <div className="relative shrink-0">
                   <div
@@ -960,18 +972,20 @@ function MessagesContent() {
                     {t('landlordMessagesBtnContract')}
                   </Button>
                 )}
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowRightDrawer(!showRightDrawer)}
-                  className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
+                  className={`h-auto p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
                     showRightDrawer
-                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
+                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20 hover:text-[#2AC1BC]'
                       : 'hover:bg-zinc-100 text-zinc-600'
                   }`}
                   title={t('landlordMessagesTooltipInfo')}
                 >
                   <Info className="w-4.5 h-4.5" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -1110,15 +1124,17 @@ function MessagesContent() {
                 {t('landlordMessagesQuickRepliesTitle')}:
               </span>
               {quickReplies.map((reply, idx) => (
-                <button
+                <Button
                   key={idx}
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleSendMessage(reply)}
                   disabled={isSending}
-                  className="px-2.5 py-1 text-xs font-bold bg-white hover:bg-[#2AC1BC] hover:text-white text-zinc-700 border border-zinc-200 rounded-xl transition-all shrink-0 cursor-pointer shadow-2xs disabled:opacity-50"
+                  className="h-auto px-2.5 py-1 text-xs font-bold bg-white hover:bg-[#2AC1BC] hover:text-white text-zinc-700 border border-zinc-200 rounded-xl transition-all shrink-0 cursor-pointer shadow-2xs disabled:opacity-50"
                 >
                   {reply}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -1148,15 +1164,17 @@ function MessagesContent() {
                     <span className="max-w-[120px] truncate font-semibold text-zinc-700">
                       {att.name}
                     </span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() =>
                         setPendingAttachments(prev => prev.filter((_, i) => i !== index))
                       }
-                      className="text-zinc-400 hover:text-rose-500 p-0.5 cursor-pointer"
+                      className="h-auto text-zinc-400 hover:text-rose-500 p-0.5 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -1172,36 +1190,42 @@ function MessagesContent() {
                 className="flex items-center gap-2"
               >
                 {/* Hidden File Inputs */}
-                <input
+                <TextInput
                   type="file"
                   ref={fileInputRef}
+                  containerClassName="hidden"
                   className="hidden"
                   onChange={e => handleFileUpload(e, 'file')}
                 />
-                <input
+                <TextInput
                   type="file"
                   accept="image/*"
                   ref={imageInputRef}
+                  containerClassName="hidden"
                   className="hidden"
                   onChange={e => handleFileUpload(e, 'image')}
                 />
 
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                  className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                   title={t('landlordMessagesTooltipAttachFile')}
                 >
                   <Paperclip className="w-4.5 h-4.5" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => imageInputRef.current?.click()}
-                  className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                  className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                   title={t('landlordMessagesTooltipSendImage')}
                 >
                   <ImageIcon className="w-4.5 h-4.5" />
-                </button>
+                </Button>
 
                 <TextInput
                   placeholder={t('landlordMessagesComposePlaceholder').replace(
@@ -1214,12 +1238,14 @@ function MessagesContent() {
                   className="py-2.5 text-xs sm:text-sm font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
                   containerClassName="flex-1"
                   rightIcon={
-                    <button
+                    <Button
                       type="button"
-                      className="p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
                     >
                       <Smile className="w-4 h-4" />
-                    </button>
+                    </Button>
                   }
                 />
 
@@ -1260,13 +1286,15 @@ function MessagesContent() {
             <h3 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
               <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordMessagesDrawerTitle')}
             </h3>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setShowRightDrawer(false)}
-              className="p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
+              className="h-auto p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
 
           <div className="p-4 space-y-4 text-xs">
@@ -1326,13 +1354,14 @@ function MessagesContent() {
             {/* Action Buttons */}
             {activeChat.participant.roomName && (
               <div className="space-y-2 pt-1">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
                     router.push(`/landlord/rooms?search=${encodeURIComponent(roomNo)}`)
                   }}
-                  className="w-full p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
+                  className="w-full h-auto p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
                 >
                   <span className="flex items-center gap-2">
                     <DoorOpen className="w-4 h-4 text-[#2AC1BC]" />{' '}
@@ -1342,15 +1371,16 @@ function MessagesContent() {
                     )}
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
                     router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
                   }}
-                  className="w-full p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
+                  className="w-full h-auto p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
@@ -1360,7 +1390,7 @@ function MessagesContent() {
                     )}
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
-                </button>
+                </Button>
               </div>
             )}
 
@@ -1459,13 +1489,15 @@ function MessagesContent() {
                 </h3>
                 <p className="text-xs text-zinc-500 mt-0.5">{t('landlordMessagesNewModalSub')}</p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleCloseNewChatModal}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="h-auto p-1.5 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
@@ -1523,12 +1555,14 @@ function MessagesContent() {
                       </div>
                     </div>
 
-                    <button
+                    <Button
                       type="button"
-                      className="p-2 text-zinc-400 group-hover:text-[#2AC1BC] group-hover:bg-[#2AC1BC]/10 rounded-xl transition-all shrink-0 cursor-pointer"
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-2 text-zinc-400 group-hover:text-[#2AC1BC] group-hover:bg-[#2AC1BC]/10 rounded-xl transition-all shrink-0 cursor-pointer"
                     >
                       <ArrowRight className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))
               )}
@@ -1587,13 +1621,15 @@ function MessagesContent() {
           }}
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setPreviewImage(null)}
-              className="absolute -top-10 right-0 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              className="h-auto absolute -top-10 right-0 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
             >
               <X className="w-6 h-6" />
-            </button>
+            </Button>
             <img
               src={previewImage}
               alt={t('landlordMessagesImagePreviewAlt')}

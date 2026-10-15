@@ -549,20 +549,22 @@ export default function ContractsPage() {
                 ].map(tab => {
                   const isActive = statusFilter === tab.value
                   return (
-                    <button
+                    <Button
                       key={tab.value}
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setStatusFilter(tab.value)
                         setCurrentPage(1)
                       }}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                      className={`h-auto px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                         isActive
-                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20'
+                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20 hover:bg-[#2AC1BC]/90 hover:text-white'
                           : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80'
                       }`}
                     >
                       {tab.label}
-                    </button>
+                    </Button>
                   )
                 })}
               </div>
@@ -583,13 +585,15 @@ export default function ContractsPage() {
                 </div>
 
                 <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setViewMode('grid')
                       setRowsPerPage(6)
                       setCurrentPage(1)
                     }}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${
                       viewMode === 'grid'
                         ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
                         : 'text-zinc-500 hover:text-zinc-900'
@@ -597,14 +601,16 @@ export default function ContractsPage() {
                     title={t('landlordContractsGridView')}
                   >
                     <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setViewMode('list')
                       setRowsPerPage(10)
                       setCurrentPage(1)
                     }}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${
                       viewMode === 'list'
                         ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
                         : 'text-zinc-500 hover:text-zinc-900'
@@ -612,7 +618,7 @@ export default function ContractsPage() {
                     title={t('landlordContractsListView')}
                   >
                     <List className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -676,13 +682,15 @@ export default function ContractsPage() {
                                   <span>
                                     {t('landlordContractsContractCodeShort')} {c.id}
                                   </span>
-                                  <button
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={e => copyToClipboard(e, c.id)}
-                                    className="p-0.5 hover:text-[#2AC1BC] transition-colors rounded cursor-pointer"
+                                    className="h-auto p-0.5 hover:text-[#2AC1BC] transition-colors rounded cursor-pointer"
                                     title={t('landlordContractsCopyCodeTitle')}
                                   >
                                     <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
 
@@ -891,13 +899,15 @@ export default function ContractsPage() {
                                     </div>
                                     <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold">
                                       <span>{c.id}</span>
-                                      <button
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
                                         onClick={e => copyToClipboard(e, c.id)}
-                                        className="p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded cursor-pointer"
+                                        className="h-auto p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded cursor-pointer"
                                         title={t('landlordContractsCopyCodeTitle')}
                                       >
                                         <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                                      </button>
+                                      </Button>
                                     </div>
                                   </div>
                                 </td>
@@ -1080,17 +1090,19 @@ export default function ContractsPage() {
                         &larr; {t('landlordContractsPaginationPrev')}
                       </Button>
                       {visiblePages.map(page => (
-                        <button
+                        <Button
                           key={page}
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setCurrentPage(page)}
-                          className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                          className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
                             currentPage === page
-                              ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
+                              ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 hover:bg-[#2AC1BC]/90 hover:text-white'
                               : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                           }`}
                         >
                           {page}
-                        </button>
+                        </Button>
                       ))}
                       <Button
                         variant="outline"
@@ -1125,12 +1137,14 @@ export default function ContractsPage() {
               <h2 className="text-xl font-bold text-zinc-900">
                 {t('landlordContractsExtendModalTitle')}
               </h2>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
             <div className="p-6 space-y-5">
               <DateInput
@@ -1185,12 +1199,14 @@ export default function ContractsPage() {
               <h2 className="text-xl font-bold text-rose-600">
                 {t('landlordContractsTerminateModalTitle')}
               </h2>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
             <div className="p-6 space-y-5">
               <DateInput

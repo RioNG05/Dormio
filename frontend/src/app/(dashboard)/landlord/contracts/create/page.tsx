@@ -1157,10 +1157,11 @@ function CreateContractPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
               {/* Mặt trước CCCD */}
               <div>
-                <input
+                <TextInput
                   id="cccd-front-file"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  containerClassName="hidden"
                   className="hidden"
                   disabled={!canEditTenantInfo}
                   onChange={e => handlePhotoUpload(e, 'front')}
@@ -1309,10 +1310,11 @@ function CreateContractPage() {
 
               {/* Mặt sau CCCD */}
               <div>
-                <input
+                <TextInput
                   id="cccd-back-file"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  containerClassName="hidden"
                   className="hidden"
                   disabled={!canEditTenantInfo}
                   onChange={e => handlePhotoUpload(e, 'back')}

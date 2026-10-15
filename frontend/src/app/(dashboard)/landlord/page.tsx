@@ -25,6 +25,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
+import { Button } from '@/components/ui'
 import {
   getBoardingHouseOverview,
   type BoardingHouseOverview,
@@ -158,13 +159,15 @@ export default function LandlordDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Link
-            href="/landlord/setup"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-zinc-200 hover:border-[#2AC1BC] hover:text-[#2AC1BC] text-zinc-700 text-xs font-bold rounded-xl shadow-2xs transition-colors"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/landlord/setup')}
+            leftIcon={<Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+            className="text-xs font-bold"
           >
-            <Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>{t('landlordOverviewBtnCreateHouse')}</span>
-          </Link>
+            {t('landlordOverviewBtnCreateHouse')}
+          </Button>
           <span className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 text-[11px] font-black rounded-full flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             {t('landlordOverviewVietqrActive')}
@@ -280,28 +283,32 @@ export default function LandlordDashboardPage() {
                       {t('landlordOverviewMonthlyRevenueTitle')}
                     </h2>
                     <div className="flex items-center bg-zinc-100 p-0.5 rounded-lg border border-zinc-200/80 ml-1">
-                      <button
+                      <Button
                         type="button"
+                        variant={rangeMode === '6m' ? 'primary' : 'ghost'}
+                        size="sm"
                         onClick={() => setRangeMode('6m')}
-                        className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${
+                        className={`h-6 px-2 text-[9px] font-black rounded-md ${
                           rangeMode === '6m'
                             ? 'bg-[#2AC1BC] text-white shadow-xs'
                             : 'text-zinc-500 hover:text-zinc-900'
                         }`}
                       >
                         {t('landlordOverviewRange6m')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant={rangeMode === '12m' ? 'primary' : 'ghost'}
+                        size="sm"
                         onClick={() => setRangeMode('12m')}
-                        className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all cursor-pointer ${
+                        className={`h-6 px-2 text-[9px] font-black rounded-md ${
                           rangeMode === '12m'
                             ? 'bg-[#2AC1BC] text-white shadow-xs'
                             : 'text-zinc-500 hover:text-zinc-900'
                         }`}
                       >
                         {t('landlordOverviewRange12m')}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   <p className="text-[11px] text-zinc-500 font-medium">
@@ -685,53 +692,61 @@ export default function LandlordDashboardPage() {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {speedDialOpen && (
           <div className="flex flex-col items-end gap-2 animate-in fade-in slide-in-from-bottom-5 duration-200">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => router.push('/landlord/rooms')}
-              className="flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
             >
               <span>{t('landlordOverviewAddRoomBtn')}</span>
               <span className="p-1 bg-[#2AC1BC]/10 text-[#2AC1BC] group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <Plus className="w-3.5 h-3.5" />
               </span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => router.push('/landlord/contracts')}
-              className="flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
             >
               <span>{t('landlordOverviewCreatePdfContractBtn')}</span>
               <span className="p-1 bg-amber-500/10 text-amber-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <FileText className="w-3.5 h-3.5" />
               </span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => router.push('/landlord/invoices')}
-              className="flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
             >
               <span>{t('landlordOverviewCreateVietqrInvoiceBtn')}</span>
               <span className="p-1 bg-emerald-500/10 text-emerald-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <QrCode className="w-3.5 h-3.5" />
               </span>
-            </button>
+            </Button>
           </div>
         )}
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => setSpeedDialOpen(!speedDialOpen)}
-          className={`p-3.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center border ${
+          className={`h-auto p-3.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center border ${
             speedDialOpen
-              ? 'bg-zinc-900 text-white border-zinc-800 rotate-45'
-              : 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:scale-105'
+              ? 'bg-zinc-900 text-white border-zinc-800 rotate-45 hover:bg-zinc-900 hover:text-white'
+              : 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:scale-105 hover:bg-[#2AC1BC] hover:text-white'
           }`}
           title={t('landlordOverviewQuickActions')}
         >
           <Plus className="w-6 h-6" />
-        </button>
+        </Button>
       </div>
     </div>
   )

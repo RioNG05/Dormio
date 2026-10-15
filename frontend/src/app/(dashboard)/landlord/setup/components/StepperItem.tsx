@@ -3,7 +3,7 @@
 import React from 'react'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Text } from '@/components/ui'
+import { Text, Button } from '@/components/ui'
 import type { WizardStep } from '../types'
 
 export interface StepperItemProps {
@@ -29,16 +29,18 @@ export function StepperItem({
   const isActive = currentStep === stepNumber
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="sm"
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 p-3 rounded-2xl border text-left transition-all',
+        'flex items-center justify-start gap-3 p-3 rounded-2xl border text-left transition-all h-auto cursor-pointer',
         isActive
-          ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 shadow-xs'
+          ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 hover:bg-[#2AC1BC]/10 shadow-xs'
           : isCompleted
             ? 'border-zinc-200 bg-white hover:bg-zinc-50'
-            : 'border-zinc-100 bg-zinc-50/50 opacity-60',
+            : 'border-zinc-100 bg-zinc-50/50 hover:bg-zinc-50/50 opacity-60',
       )}
     >
       <div
@@ -66,6 +68,6 @@ export function StepperItem({
           {desc}
         </Text>
       </div>
-    </button>
+    </Button>
   )
 }

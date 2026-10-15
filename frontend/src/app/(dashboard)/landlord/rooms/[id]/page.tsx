@@ -35,6 +35,16 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  Checkbox,
+  Form,
+} from '@/components/ui'
 import {
   getRoomDashboard,
   updateRoom,
@@ -307,10 +317,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   >('Mức độ trung bình')
 
   // Toast notification state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const { toast } = useToast()
   const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
+    if (type === 'success') {
+      toast.success(message)
+    } else {
+      toast.error(message)
+    }
   }
 
   // Pagination states
@@ -1149,12 +1162,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-zinc-100">
           {isOccupied && (
-            <button
+            <Button
+              size="sm"
+              variant="primary"
               onClick={() => setIsMeterModalOpen(true)}
-              className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
+              leftIcon={<Gauge className="w-3.5 h-3.5" />}
+              className="flex-1 md:flex-initial"
             >
-              <Gauge className="w-3.5 h-3.5" /> {t('landlordRoomDetailBtnLogMeter')}
-            </button>
+              {t('landlordRoomDetailBtnLogMeter')}
+            </Button>
           )}
 
           {isOccupied ? (
@@ -1164,29 +1180,46 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   ? `/landlord/contracts/${currentContract.id}`
                   : `/landlord/contracts/HD-01012026-${room.building === 'b2' ? 2 : 1}-${room.roomNumber}`
               }
-              className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+              className="flex-1 md:flex-initial"
             >
-              <Eye className="w-3.5 h-3.5 text-purple-600" />{' '}
-              {t('landlordRoomDetailBtnViewContract')}
+              <Button
+                size="sm"
+                variant="outline"
+                leftIcon={<Eye className="w-3.5 h-3.5 text-purple-600" />}
+                className="w-full"
+              >
+                {t('landlordRoomDetailBtnViewContract')}
+              </Button>
             </Link>
           ) : (
             <Link
               href={`/landlord/contracts/create?roomId=${dashboardData?.room?.id || room?.id || resolvedParams.id}`}
-              className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+              className="flex-1 md:flex-initial"
             >
-              <FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
-              {t('landlordRoomDetailBtnCreateContract')}
+              <Button
+                size="sm"
+                variant="outline"
+                leftIcon={<FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                className="w-full"
+              >
+                {t('landlordRoomDetailBtnCreateContract')}
+              </Button>
             </Link>
           )}
 
-          <button
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => setIsEditModalOpen(true)}
-            className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer whitespace-nowrap"
+            leftIcon={<Edit className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+            className="flex-1 md:flex-initial"
           >
-            <Edit className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t('landlordRoomDetailBtnEdit')}
-          </button>
+            {t('landlordRoomDetailBtnEdit')}
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant="danger"
             onClick={() => {
               setConfirmModal({
                 isOpen: true,
@@ -1201,10 +1234,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 },
               })
             }}
-            className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap"
+            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+            className="flex-1 md:flex-initial"
           >
-            <Trash2 className="w-3.5 h-3.5 text-rose-600" /> {t('landlordRoomDetailBtnDelete')}
-          </button>
+            {t('landlordRoomDetailBtnDelete')}
+          </Button>
         </div>
       </div>
 
@@ -1308,16 +1342,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs text-zinc-500 font-bold">
                     {t('landlordRoomDetailVacantDesc')}
                   </p>
-                  <button
+                  <Button
+                    size="sm"
+                    variant="primary"
                     onClick={() =>
                       router.push(
                         `/landlord/contracts/create?roomId=${dashboardData?.room.id || room?.id || resolvedParams.id}`,
                       )
                     }
-                    className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-xs"
                   >
                     {t('landlordRoomDetailCreateContractNew')}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -1329,24 +1364,26 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <Filter className="w-4 h-4 text-[#2AC1BC]" />
               <span>{t('landlordRoomDetailFilterPeriodLabel')}</span>
             </div>
-            <div className="relative w-full sm:w-64">
-              <select
+            <div className="w-full sm:w-64">
+              <SelectInput
                 value={selectedFilterPeriod}
                 onChange={e => setSelectedFilterPeriod(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 text-xs font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none"
-              >
-                <option value="all">{t('landlordRoomDetailFilterAllMonths')}</option>
-                <option value="Tháng 09/2026">
-                  {t('landlordRoomDetailFilterCurrentMonth').replace('{month}', '09/2026')}
-                </option>
-                <option value="Tháng 08/2026">
-                  {t('landlordRoomDetailFilterMonth').replace('{month}', '08/2026')}
-                </option>
-                <option value="Tháng 07/2026">
-                  {t('landlordRoomDetailFilterMonth').replace('{month}', '07/2026')}
-                </option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                options={[
+                  { value: 'all', label: t('landlordRoomDetailFilterAllMonths') },
+                  {
+                    value: 'Tháng 09/2026',
+                    label: t('landlordRoomDetailFilterCurrentMonth').replace('{month}', '09/2026'),
+                  },
+                  {
+                    value: 'Tháng 08/2026',
+                    label: t('landlordRoomDetailFilterMonth').replace('{month}', '08/2026'),
+                  },
+                  {
+                    value: 'Tháng 07/2026',
+                    label: t('landlordRoomDetailFilterMonth').replace('{month}', '07/2026'),
+                  },
+                ]}
+              />
             </div>
           </div>
 
@@ -1448,9 +1485,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           </span>
                           {isUnpaid ? (
                             <div className="flex items-center gap-2 shrink-0">
-                              <button className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs flex items-center gap-1 shrink-0 whitespace-nowrap">
+                              <Button size="sm" variant="primary" className="py-1 px-3">
                                 VietQR
-                              </button>
+                              </Button>
                               <a
                                 href="https://zalo.me"
                                 target="_blank"
@@ -1551,36 +1588,33 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       .replace('{total}', String(filteredInvoices.length))}
                   </span>
                   <div className="flex items-center gap-1">
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      variant="outline"
                       disabled={invoicePage === 1}
                       onClick={() => setInvoicePage(p => Math.max(1, p - 1))}
-                      className="px-2.5 py-1 text-xs font-bold bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       {t('landlordRoomDetailPaginationPrev')}
-                    </button>
+                    </Button>
                     {Array.from({ length: totalInvoicePages }).map((_, idx) => (
-                      <button
+                      <Button
                         key={idx}
-                        type="button"
+                        size="sm"
+                        variant={invoicePage === idx + 1 ? 'primary' : 'secondary'}
                         onClick={() => setInvoicePage(idx + 1)}
-                        className={`w-7 h-7 text-xs font-black rounded-lg transition-colors cursor-pointer ${
-                          invoicePage === idx + 1
-                            ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                            : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                        }`}
+                        className="w-7 h-7 p-0"
                       >
                         {idx + 1}
-                      </button>
+                      </Button>
                     ))}
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      variant="outline"
                       disabled={invoicePage === totalInvoicePages}
                       onClick={() => setInvoicePage(p => Math.min(totalInvoicePages, p + 1))}
-                      className="px-2.5 py-1 text-xs font-bold bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       {t('landlordRoomDetailPaginationNext')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -1687,12 +1721,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </p>
               </div>
 
-              <button
+              <Button
+                size="sm"
+                variant="primary"
+                leftIcon={<Gauge className="w-4 h-4" />}
                 onClick={() => setIsMeterModalOpen(true)}
-                className="px-3.5 py-2 bg-[#2AC1BC] text-white text-xs font-black rounded-xl hover:bg-[#25ad87] transition-all cursor-pointer shadow-md shadow-[#2AC1BC]/20 flex items-center justify-center gap-1.5 shrink-0"
               >
-                <Gauge className="w-4 h-4" /> {t('landlordRoomDetailMeterLogBtn')}
-              </button>
+                {t('landlordRoomDetailMeterLogBtn')}
+              </Button>
             </div>
 
             <div className="space-y-3">
@@ -1750,18 +1786,19 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               {t('landlordRoomDetailLockedBadge')}
                             </span>
                           ) : (
-                            <button
-                              type="button"
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={e => {
                                 e.preventDefault()
                                 e.stopPropagation()
                                 handleOpenCorrectionModal(item)
                               }}
-                              className="px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
+                              leftIcon={<Edit className="w-3 h-3 text-amber-600" />}
+                              className="px-2.5 py-1 text-[10px] text-amber-700 border-amber-200 hover:bg-amber-50"
                             >
-                              <Edit className="w-3 h-3 text-amber-600" />{' '}
                               {t('landlordRoomDetailEditMeterBtn')}
-                            </button>
+                            </Button>
                           )}
                           <span className="text-xs font-black text-zinc-900">
                             {t('landlordRoomDetailTotalAmount')}{' '}
@@ -1930,36 +1967,33 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       .replace('{total}', String(filteredMeterHistory.length))}
                   </span>
                   <div className="flex items-center gap-1">
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      variant="outline"
                       disabled={meterPage === 1}
                       onClick={() => setMeterPage(p => Math.max(1, p - 1))}
-                      className="px-2.5 py-1 text-xs font-bold bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       {t('landlordRoomDetailPaginationPrev')}
-                    </button>
+                    </Button>
                     {Array.from({ length: totalMeterPages }).map((_, idx) => (
-                      <button
+                      <Button
                         key={idx}
-                        type="button"
+                        size="sm"
+                        variant={meterPage === idx + 1 ? 'primary' : 'secondary'}
                         onClick={() => setMeterPage(idx + 1)}
-                        className={`w-7 h-7 text-xs font-black rounded-lg transition-colors cursor-pointer ${
-                          meterPage === idx + 1
-                            ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                            : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                        }`}
+                        className="w-7 h-7 p-0"
                       >
                         {idx + 1}
-                      </button>
+                      </Button>
                     ))}
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      variant="outline"
                       disabled={meterPage === totalMeterPages}
                       onClick={() => setMeterPage(p => Math.min(totalMeterPages, p + 1))}
-                      className="px-2.5 py-1 text-xs font-bold bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       {t('landlordRoomDetailPaginationNext')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -1979,12 +2013,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       String(maintenanceHistory.length),
                     )}
                   </h2>
-                  <button
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-0"
                     onClick={() => setIsIncidentModalOpen(true)}
-                    className="px-3 py-1.5 text-xs font-black text-[#FF6B35] bg-[#FF6B35]/10 rounded-xl hover:bg-[#FF6B35]/20 transition-all cursor-pointer shadow-2xs"
                   >
                     {t('landlordRoomDetailReportIncidentBtn')}
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="space-y-3 min-h-[195px] pt-1">
@@ -2064,24 +2100,28 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     Trang {maintPage} / {Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE)}
                   </span>
                   <div className="flex gap-1">
-                    <button
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() => setMaintPage(prev => Math.max(1, prev - 1))}
                       disabled={maintPage === 1}
-                      className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg text-[10px] font-bold disabled:opacity-30 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 text-[10px]"
                     >
                       {t('landlordRoomDetailPaginationPrev')}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() =>
                         setMaintPage(prev =>
                           Math.min(Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE), prev + 1),
                         )
                       }
                       disabled={maintPage === Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE)}
-                      className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg text-[10px] font-bold disabled:opacity-30 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 text-[10px]"
                     >
                       {t('landlordRoomDetailPaginationNext')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -2147,12 +2187,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div className="space-y-2 pt-1">
-                <button
+                <Button
+                  size="md"
+                  variant="primary"
                   onClick={() => showToast(t('landlordRoomDetailRefundToast'), 'success')}
-                  className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  leftIcon={<Wallet className="w-4 h-4" />}
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md shadow-purple-600/20"
                 >
-                  <Wallet className="w-4 h-4" /> {t('landlordRoomDetailRefundDepositBtn')}
-                </button>
+                  {t('landlordRoomDetailRefundDepositBtn')}
+                </Button>
               </div>
             </div>
           </div>
@@ -2312,49 +2355,41 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 {t('landlordRoomDetailQuickSwitchStatus')}
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <button
+                <Button
+                  size="sm"
+                  variant={isVacant ? 'primary' : 'secondary'}
+                  className={isVacant ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}
                   onClick={() => handleUpdateStatus('Trống')}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
-                    isVacant
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                      : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                  }`}
                 >
                   {t('landlordRoomDetailStatusBtnAvailable')}
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  size="sm"
+                  variant={isOccupied ? 'primary' : 'secondary'}
+                  className={isOccupied ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white' : ''}
                   onClick={() => handleUpdateStatus('Đang thuê')}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
-                    isOccupied
-                      ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20'
-                      : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                  }`}
                 >
                   {t('landlordRoomDetailStatusBtnOccupied')}
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  size="sm"
+                  variant={isMaintenance ? 'primary' : 'secondary'}
+                  className={isMaintenance ? 'bg-[#FF6B35] hover:bg-[#e05a2b] text-white' : ''}
                   onClick={() => handleUpdateStatus('Bảo trì')}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
-                    isMaintenance
-                      ? 'bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/20'
-                      : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                  }`}
                 >
                   {t('landlordRoomDetailStatusBtnMaintenance')}
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  size="sm"
+                  variant={isReserved ? 'primary' : 'secondary'}
+                  className={isReserved ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}
                   onClick={() => handleUpdateStatus('Đặt cọc')}
-                  className={`py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
-                    isReserved
-                      ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-                      : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                  }`}
                 >
                   {t('landlordRoomDetailStatusBtnDeposited')}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -2387,35 +2422,29 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setCorrectModal(prev => ({ ...prev, isOpen: false }))}
-                className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 space-y-4">
               {correctModal.error && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>{correctModal.error}</span>
-                </div>
+                <Form.Alert variant="error" message={correctModal.error} />
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-2">
-                  <label className="block text-xs font-black text-zinc-900">
-                    {t('landlordRoomDetailNewElecLabel')}
-                  </label>
-                  <span className="text-[10px] text-zinc-500 block font-semibold">
-                    {t('landlordRoomDetailOldIndexLabel').replace(
+                <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
+                  <NumberInput
+                    label={t('landlordRoomDetailNewElecLabel')}
+                    helperText={t('landlordRoomDetailOldIndexLabel').replace(
                       '{index}',
                       String(correctModal.oldElec),
                     )}
-                  </span>
-                  <input
-                    type="number"
                     value={correctModal.newElec}
                     onChange={e =>
                       setCorrectModal(prev => ({
@@ -2424,22 +2453,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         error: '',
                       }))
                     }
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
 
-                <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20 space-y-2">
-                  <label className="block text-xs font-black text-zinc-900">
-                    {t('landlordRoomDetailNewWaterLabel')}
-                  </label>
-                  <span className="text-[10px] text-zinc-500 block font-semibold">
-                    {t('landlordRoomDetailOldIndexLabel').replace(
+                <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
+                  <NumberInput
+                    label={t('landlordRoomDetailNewWaterLabel')}
+                    helperText={t('landlordRoomDetailOldIndexLabel').replace(
                       '{index}',
                       String(correctModal.oldWater),
                     )}
-                  </span>
-                  <input
-                    type="number"
                     value={correctModal.newWater}
                     onChange={e =>
                       setCorrectModal(prev => ({
@@ -2448,44 +2471,40 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         error: '',
                       }))
                     }
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-black text-zinc-900 mb-1.5">
-                  {t('landlordRoomDetailReasonRequiredLabel')}
-                </label>
-                <textarea
+                <TextareaInput
+                  label={t('landlordRoomDetailReasonRequiredLabel')}
+                  required
                   rows={3}
                   value={correctModal.reason}
                   onChange={e =>
                     setCorrectModal(prev => ({ ...prev, reason: e.target.value, error: '' }))
                   }
                   placeholder={t('landlordRoomDetailReasonPlaceholder')}
-                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium"
-                ></textarea>
+                />
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleCloseCorrectionModal}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
                 {t('landlordRoomDetailModalCancelBtn')}
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20"
                 onClick={handleSaveCorrection}
-                disabled={isSubmittingCorrection}
-                className="px-6 py-2 text-xs font-black text-white bg-amber-600 rounded-xl hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                isLoading={isSubmittingCorrection}
               >
-                {isSubmittingCorrection && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                {isSubmittingCorrection
-                  ? t('landlordRoomDetailSaving')
-                  : t('landlordRoomDetailSaveAndUpdateInvoice')}
-              </button>
+                {t('landlordRoomDetailSaveAndUpdateInvoice')}
+              </Button>
             </div>
           </div>
         </div>
@@ -2517,48 +2536,30 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleCloseMeterModal}
-                className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">
-                    {t('landlordRoomDetailMonthLabel')}
-                  </label>
-                  <select
-                    value={selectedMonth}
-                    onChange={e => setSelectedMonth(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                  >
-                    {getAvailableMeterPeriods().monthOptions.map(m => (
-                      <option key={m.value} value={m.value}>
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">
-                    {t('landlordRoomDetailYearLabel')}
-                  </label>
-                  <select
-                    value={selectedYear}
-                    onChange={e => setSelectedYear(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                  >
-                    {getAvailableMeterPeriods().yearOptions.map(y => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordRoomDetailMonthLabel')}
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  options={getAvailableMeterPeriods().monthOptions}
+                />
+                <SelectInput
+                  label={t('landlordRoomDetailYearLabel')}
+                  value={selectedYear}
+                  onChange={e => setSelectedYear(e.target.value)}
+                  options={getAvailableMeterPeriods().yearOptions.map(y => ({ value: y, label: String(y) }))}
+                />
               </div>
 
               {/* AI OCR UPLOAD BOX */}
@@ -2574,21 +2575,18 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <p className="text-[10px] text-zinc-500 font-semibold">
                   {t('landlordRoomDetailOcrDesc')}
                 </p>
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="primary"
                   onClick={handleSimulateAiOcr}
-                  disabled={isOcrScanning}
-                  className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                  isLoading={isOcrScanning}
+                  leftIcon={!isOcrScanning ? <Upload className="w-3.5 h-3.5" /> : undefined}
                 >
-                  {isOcrScanning ? (
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Upload className="w-3.5 h-3.5" />
-                  )}
                   {isOcrScanning
                     ? t('landlordRoomDetailOcrScanning')
                     : t('landlordRoomDetailOcrUploadBtn')}
-                </button>
+                </Button>
                 {ocrSuccessMsg && (
                   <p className="text-[11px] font-bold text-emerald-600 bg-white/80 p-2 rounded-xl border border-emerald-200 animate-in fade-in">
                     {ocrSuccessMsg}
@@ -2597,76 +2595,61 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-1">
-                <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-black text-zinc-900">
-                      {t('landlordRoomDetailNewElecLabel')}
-                    </label>
-                    {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))
-                      ?.lastReading && (
-                      <span className="text-[10px] text-zinc-400 font-bold">
-                        {t('landlordRoomDetailOldReadingPrefix')}{' '}
-                        {
-                          roomMeteredServices.find(s =>
-                            s.serviceName.toLowerCase().includes('điện'),
-                          )?.lastReading?.readingValue
-                        }
-                      </span>
-                    )}
-                  </div>
-                  <input
-                    type="number"
+                <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
+                  <NumberInput
+                    label={t('landlordRoomDetailNewElecLabel')}
+                    helperText={
+                      roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))
+                        ?.lastReading
+                        ? `${t('landlordRoomDetailOldReadingPrefix')} ${
+                            roomMeteredServices.find(s =>
+                              s.serviceName.toLowerCase().includes('điện'),
+                            )?.lastReading?.readingValue
+                          }`
+                        : undefined
+                    }
                     value={formElec}
                     placeholder={t('landlordRoomDetailElecPlaceholder')}
                     onChange={e => setFormElec(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
-                <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-black text-zinc-900">
-                      {t('landlordRoomDetailNewWaterLabel')}
-                    </label>
-                    {roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))
-                      ?.lastReading && (
-                      <span className="text-[10px] text-zinc-400 font-bold">
-                        {t('landlordRoomDetailOldReadingPrefix')}{' '}
-                        {
-                          roomMeteredServices.find(s =>
-                            s.serviceName.toLowerCase().includes('nước'),
-                          )?.lastReading?.readingValue
-                        }
-                      </span>
-                    )}
-                  </div>
-                  <input
-                    type="number"
+                <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
+                  <NumberInput
+                    label={t('landlordRoomDetailNewWaterLabel')}
+                    helperText={
+                      roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))
+                        ?.lastReading
+                        ? `${t('landlordRoomDetailOldReadingPrefix')} ${
+                            roomMeteredServices.find(s =>
+                              s.serviceName.toLowerCase().includes('nước'),
+                            )?.lastReading?.readingValue
+                          }`
+                        : undefined
+                    }
                     value={formWater}
                     placeholder={t('landlordRoomDetailWaterPlaceholder')}
                     onChange={e => setFormWater(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
                   />
                 </div>
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleCloseMeterModal}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
                 {t('landlordRoomDetailModalCancelBtn')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleSaveNewMeterReading}
-                disabled={isSubmittingMeter}
-                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                isLoading={isSubmittingMeter}
               >
-                {isSubmittingMeter && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                {isSubmittingMeter
-                  ? t('landlordRoomDetailSaving')
-                  : t('landlordRoomDetailSaveAndLogMeter')}
-              </button>
+                {t('landlordRoomDetailSaveAndLogMeter')}
+              </Button>
             </div>
           </div>
         </div>
@@ -2698,60 +2681,38 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleCloseEditModal}
-                className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto max-h-[75vh] space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    {t('landlordRoomDetailRoomNumberLabel')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editRoomNumber}
-                    onChange={e => setEditRoomNumber(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    {t('landlordRoomDetailRentMonthlyLabel')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editPrice}
-                    onChange={e => setEditPrice(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-[#2AC1BC]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    {t('landlordRoomDetailAreaLabel')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editArea}
-                    onChange={e => setEditArea(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    {t('landlordRoomDetailFloorLabel')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editFloor}
-                    onChange={e => setEditFloor(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordRoomDetailRoomNumberLabel')}
+                  value={editRoomNumber}
+                  onChange={e => setEditRoomNumber(e.target.value)}
+                />
+                <TextInput
+                  label={t('landlordRoomDetailRentMonthlyLabel')}
+                  value={editPrice}
+                  onChange={e => setEditPrice(e.target.value)}
+                />
+                <TextInput
+                  label={t('landlordRoomDetailAreaLabel')}
+                  value={editArea}
+                  onChange={e => setEditArea(e.target.value)}
+                />
+                <TextInput
+                  label={t('landlordRoomDetailFloorLabel')}
+                  value={editFloor}
+                  onChange={e => setEditFloor(e.target.value)}
+                />
               </div>
 
               <div>
@@ -2773,22 +2734,24 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     'Tủ lạnh',
                     'Bảo vệ',
                   ].map(item => (
-                    <button
+                    <Button
                       key={item}
                       type="button"
+                      size="sm"
+                      variant={editAmenities.includes(item) ? 'primary' : 'outline'}
+                      className={
+                        editAmenities.includes(item)
+                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/40 hover:bg-[#2AC1BC]/20 text-xs'
+                          : 'bg-white text-zinc-600 hover:bg-zinc-50 text-xs'
+                      }
                       onClick={() =>
                         setEditAmenities(prev =>
                           prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item],
                         )
                       }
-                      className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                        editAmenities.includes(item)
-                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/40 shadow-xs'
-                          : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
-                      }`}
                     >
                       {getAmenityLabel(item, t)}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -2815,8 +2778,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         {!service.isRemovable ? (
                           <span className="font-bold text-xs text-zinc-900">{service.name}</span>
                         ) : (
-                          <input
-                            type="text"
+                          <TextInput
+                            containerClassName="w-28 space-y-0"
+                            className="py-1 text-xs"
                             value={service.name}
                             onChange={e =>
                               setEditServices(prev =>
@@ -2825,7 +2789,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                                 ),
                               )
                             }
-                            className="w-24 text-xs font-bold text-zinc-900 bg-transparent border-b border-zinc-200 focus:border-[#2AC1BC] focus:outline-none"
                             placeholder={t('landlordRoomDetailServiceNamePlaceholder')}
                           />
                         )}
@@ -2839,7 +2802,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           <span className="text-[10px] font-bold text-zinc-500">
                             {t('landlordRoomDetailCustomToggle')}
                           </span>
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             type="button"
                             onClick={() =>
                               setEditServices(prev =>
@@ -2848,17 +2813,18 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                                 ),
                               )
                             }
-                            className={`w-9 h-5 rounded-full relative transition-colors cursor-pointer flex items-center ${service.isCustom ? 'bg-[#2AC1BC]' : 'bg-zinc-200'}`}
+                            className={`p-0 w-9 h-5 rounded-full relative transition-colors cursor-pointer flex items-center ${service.isCustom ? 'bg-[#2AC1BC]' : 'bg-zinc-200'}`}
                           >
                             <div
                               className={`w-3.5 h-3.5 bg-white rounded-full absolute transition-transform ${service.isCustom ? 'translate-x-4' : 'translate-x-0.5'}`}
                             ></div>
-                          </button>
+                          </Button>
                         </div>
 
                         <div className="relative w-28 flex items-center">
-                          <input
-                            type="text"
+                          <TextInput
+                            containerClassName="w-full space-y-0"
+                            className="py-1 text-xs"
                             value={service.isCustom ? service.customPrice : service.defaultPrice}
                             onChange={e =>
                               setEditServices(prev =>
@@ -2868,28 +2834,33 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               )
                             }
                             disabled={!service.isCustom}
-                            className={`w-full px-2.5 py-1 text-xs border border-zinc-200 rounded-lg font-bold ${!service.isCustom ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'text-[#2AC1BC] focus:border-[#2AC1BC] focus:outline-none'}`}
                           />
                         </div>
 
                         {service.isRemovable && (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() =>
                               setEditServices(prev => prev.filter(s => s.id !== service.id))
                             }
-                            className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            className="h-7 w-7 text-rose-500 hover:bg-rose-50"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed border-zinc-300 text-zinc-600 hover:border-[#2AC1BC] hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/5"
+                  leftIcon={<Plus className="w-3.5 h-3.5" />}
                   onClick={() =>
                     setEditServices(prev => [
                       ...prev,
@@ -2904,39 +2875,37 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       },
                     ])
                   }
-                  className="w-full py-2 border-2 border-dashed border-zinc-200 rounded-xl text-xs font-bold text-zinc-600 hover:border-[#2AC1BC] hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/5 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" /> {t('landlordRoomDetailAddCustomService')}
-                </button>
+                  {t('landlordRoomDetailAddCustomService')}
+                </Button>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  {t('landlordRoomDetailNotesLabel')}
-                </label>
-                <textarea
+                <TextareaInput
+                  label={t('landlordRoomDetailNotesLabel')}
                   rows={3}
                   value={editNotes}
                   onChange={e => setEditNotes(e.target.value)}
                   placeholder={t('landlordRoomDetailNotesPlaceholder')}
-                  className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                ></textarea>
+                />
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleCloseEditModal}
-                className="px-5 py-2 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
               >
                 {t('landlordRoomDetailModalCancelBtn')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleSaveRoomDetails}
-                className="px-6 py-2 text-sm font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
               >
                 {t('landlordRoomDetailSaveChangesBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -2971,73 +2940,62 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsIncidentModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  {t('landlordRoomDetailIncidentNameLabel')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={incidentTitleInput}
-                  onChange={e => setIncidentTitleInput(e.target.value)}
-                  placeholder={t('landlordRoomDetailIncidentNamePlaceholder')}
-                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
-                />
-              </div>
+              <TextInput
+                label={t('landlordRoomDetailIncidentNameLabel')}
+                required
+                value={incidentTitleInput}
+                onChange={e => setIncidentTitleInput(e.target.value)}
+                placeholder={t('landlordRoomDetailIncidentNamePlaceholder')}
+              />
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  {t('landlordRoomDetailIncidentDescLabel')}
-                </label>
-                <textarea
-                  rows={3}
-                  value={incidentDescInput}
-                  onChange={e => setIncidentDescInput(e.target.value)}
-                  placeholder={t('landlordRoomDetailIncidentDescPlaceholder')}
-                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                ></textarea>
-              </div>
+              <TextareaInput
+                label={t('landlordRoomDetailIncidentDescLabel')}
+                rows={3}
+                value={incidentDescInput}
+                onChange={e => setIncidentDescInput(e.target.value)}
+                placeholder={t('landlordRoomDetailIncidentDescPlaceholder')}
+              />
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  {t('landlordRoomDetailPriorityLabel')}
-                </label>
-                <select
-                  value={incidentPriorityInput}
-                  onChange={e => setIncidentPriorityInput(e.target.value as any)}
-                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900 bg-white"
-                >
-                  <option value="Mức độ nhẹ">{t('landlordRoomDetailPriorityLow')}</option>
-                  <option value="Mức độ trung bình">{t('landlordRoomDetailPriorityMedium')}</option>
-                  <option value="Mức độ cao">{t('landlordRoomDetailPriorityHighUrgent')}</option>
-                </select>
-              </div>
+              <SelectInput
+                label={t('landlordRoomDetailPriorityLabel')}
+                value={incidentPriorityInput}
+                onChange={e => setIncidentPriorityInput(e.target.value as any)}
+                options={[
+                  { value: 'Mức độ nhẹ', label: t('landlordRoomDetailPriorityLow') },
+                  { value: 'Mức độ trung bình', label: t('landlordRoomDetailPriorityMedium') },
+                  { value: 'Mức độ cao', label: t('landlordRoomDetailPriorityHighUrgent') },
+                ]}
+              />
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setIsIncidentModalOpen(false)}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
               >
                 {t('landlordRoomDetailModalCancelBtn')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-6 py-2 text-xs font-black text-white bg-[#FF6B35] hover:bg-[#e05a2b] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
+                size="sm"
+                className="bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-md shadow-[#FF6B35]/20"
               >
                 {t('landlordRoomDetailSendIncidentBtn')}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -3060,18 +3018,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             <p className="text-xs text-zinc-500 font-medium">{confirmModal.message}</p>
             <div className="flex justify-end gap-3 pt-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors"
               >
                 {t('landlordRoomDetailModalCancelBtn')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={confirmModal.onConfirm}
-                className="px-5 py-2 text-xs font-black text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs"
               >
                 {t('landlordRoomDetailDeleteBtnConfirm')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -3101,38 +3061,28 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
             <div className="flex justify-end gap-2.5 pt-2 border-t border-zinc-100">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordRoomDetailConfirmCloseContinue')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={discardConfirmModal.onConfirm}
-                className="px-4 py-2 text-xs font-black text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer shadow-xs"
               >
                 {t('landlordRoomDetailConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* TOAST NOTIFICATION */}
-      {toast && (
-        <div
-          className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2 text-xs font-black animate-in fade-in slide-in-from-bottom-5 ${
-            toast.type === 'success'
-              ? 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/20'
-              : 'bg-rose-600 text-white border-rose-500 shadow-rose-600/20'
-          }`}
-        >
-          <span>{toast.type === 'success' ? '✓' : '⚠️'}</span>
-          <span>{toast.message}</span>
-        </div>
-      )}
+      {/* TOAST NOTIFICATION HANDLED BY GLOBAL TOAST PROVIDER */}
     </div>
   )
 }
