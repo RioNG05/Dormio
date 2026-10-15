@@ -9,27 +9,17 @@ import {
   X,
   LayoutGrid,
   List,
-  FileText,
   CalendarDays,
   Ban,
-  ArrowLeft,
   Copy,
   Printer,
-  Edit2,
-  Zap,
-  ClipboardList,
-  UploadCloud,
   Users,
   Gauge,
-  History,
   MapPin,
-  FileSpreadsheet,
   CreditCard,
   Eye,
   Loader2,
   AlertTriangle,
-  Building2,
-  Home,
   User,
 } from 'lucide-react'
 
@@ -43,8 +33,6 @@ import {
   DateInput,
   NumberInput,
   SelectInput,
-  TextareaInput,
-  Checkbox,
   ToastContainer,
   ToastItem,
 } from '@/components/ui'
@@ -79,10 +67,8 @@ export default function ContractsPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [contracts, setContracts] = useState<any[]>([])
 
-  // Selection & UI views
+  // Selection for quick action modals (Extend, Terminate, Print)
   const [selectedContract, setSelectedContract] = useState<any>(null)
-  const [isDetailViewOpen, setIsDetailViewOpen] = useState(false)
-  const [isEditingContract, setIsEditingContract] = useState(false)
 
   // Filters & Pagination (Rule #9: Grid default 6, List default 10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -91,13 +77,9 @@ export default function ContractsPage() {
   const [rowsPerPage, setRowsPerPage] = useState(6)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
-  // Shared Modals
+  // Quick Action Modals
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false)
   const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false)
-  const [isCheckoutNoticeModalOpen, setIsCheckoutNoticeModalOpen] = useState(false)
-  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false)
-  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false)
-  const [editingService, setEditingService] = useState<any>(null)
 
   // Form states inside modals
   const [extendEndDate, setExtendEndDate] = useState('')
@@ -178,47 +160,9 @@ export default function ContractsPage() {
     [t],
   )
 
-  // Default services localized via t(...)
-  const [services, setServices] = useState<any[]>([])
-  const [members, setMembers] = useState<any[]>([])
-
   useEffect(() => {
     setIsMounted(true)
-    setServices([
-      {
-        id: 1,
-        name: t('landlordContractsServiceSecurity'),
-        type: t('landlordContractsServiceTypeFixed'),
-        price: 50000,
-        unit: t('landlordContractsServiceUnitRoom'),
-        applied: true,
-      },
-      {
-        id: 2,
-        name: t('landlordContractsServiceElectricity'),
-        type: t('landlordContractsServiceTypeMetered'),
-        price: 3500,
-        unit: t('landlordContractsServiceUnitKwh'),
-        applied: true,
-      },
-      {
-        id: 3,
-        name: t('landlordContractsServiceWater'),
-        type: t('landlordContractsServiceTypeMetered'),
-        price: 25000,
-        unit: t('landlordContractsServiceUnitM3'),
-        applied: true,
-      },
-      {
-        id: 4,
-        name: t('landlordContractsServiceGarbage'),
-        type: t('landlordContractsServiceTypeFixed'),
-        price: 40000,
-        unit: t('landlordContractsServiceUnitRoom'),
-        applied: true,
-      },
-    ])
-  }, [t])
+  }, [])
 
   const fetchContracts = useCallback(async () => {
     if (!activeBuilding?.id) {
@@ -288,12 +232,6 @@ export default function ContractsPage() {
     }
   }
 
-  const formatDateToInput = (dateStr: string) => {
-    if (!dateStr) return ''
-    const parts = dateStr.split('/')
-    if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
-    return dateStr
-  }
 
   const formatDateToDisplay = (dateStr: string) => {
     if (!dateStr) return ''
@@ -405,124 +343,6 @@ export default function ContractsPage() {
     showToast(t('landlordContractsToastCodeCopied'), 'success')
   }
 
-  const handleSaveContract = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const reason = formData.get('reason') as string
-
-    if (!reason || reason.trim() === '') {
-      showToast(t('landlordContractsToastReasonRequired'), 'error')
-      return
-    }
-
-    const updatedContract = {
-      ...selectedContract,
-      room: formData.get('room'),
-      startDate: formatDateToDisplay(formData.get('startDate') as string),
-      endDate: formatDateToDisplay(formData.get('endDate') as string),
-      price: formData.get('price') + ' ₫',
-      deposit: formData.get('deposit') + ' ₫',
-      paymentDate: formData.get('paymentDate'),
-    }
-
-    const today = new Date().toLocaleDateString('vi-VN')
-    updatedContract.history = [
-      { date: today, user: 'Admin', content: reason },
-      ...(updatedContract.history || []),
-    ]
-
-    setContracts(contracts.map(c => (c.id === selectedContract.id ? updatedContract : c)))
-    setSelectedContract(updatedContract)
-    setIsEditingContract(false)
-    setIsDirty(false)
-    showToast(t('landlordContractsToastUpdateContractSuccess'), 'success')
-  }
-
-  const handleSaveCheckoutNotice = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const date = formData.get('checkoutDate') as string
-    const note = formData.get('checkoutNote') as string
-
-    if (!date) {
-      showToast(t('landlordContractsToastCheckoutDateRequired'), 'error')
-      return
-    }
-
-    const updatedContract = {
-      ...selectedContract,
-      checkoutNotice: {
-        date: formatDateToDisplay(date),
-        note: note,
-      },
-    }
-
-    setContracts(contracts.map(c => (c.id === selectedContract.id ? updatedContract : c)))
-    setSelectedContract(updatedContract)
-    setIsCheckoutNoticeModalOpen(false)
-    setIsDirty(false)
-    showToast(t('landlordContractsToastCheckoutSuccess'), 'success')
-  }
-
-  const handleSaveMember = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const customer = formData.get('customer') as string
-    const relation = formData.get('relation') as string
-    if (!customer) {
-      showToast(t('landlordContractsToastCustomerRequired'), 'error')
-      return
-    }
-    setMembers([...members, { name: customer, relation }])
-    setIsAddMemberModalOpen(false)
-    setIsDirty(false)
-    showToast(t('landlordContractsToastAddMemberSuccess'), 'success')
-  }
-
-  const handleSaveService = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const name = formData.get('name') as string
-    const priceStr = formData.get('price') as string
-    const isApplied = formData.get('applied') === 'on'
-
-    if (!name) {
-      showToast(t('landlordContractsToastServiceNameRequired'), 'error')
-      return
-    }
-
-    if (editingService) {
-      if (!isApplied) {
-        setServices(services.map(s => (s.id === editingService.id ? { ...s, applied: false } : s)))
-      } else {
-        setServices(
-          services.map(s =>
-            s.id === editingService.id
-              ? { ...s, price: priceStr ? parseInt(priceStr) : s.price, applied: true }
-              : s,
-          ),
-        )
-      }
-      showToast(t('landlordContractsToastUpdateServiceSuccess'), 'success')
-    } else {
-      setServices([
-        ...services,
-        {
-          id: Date.now(),
-          name,
-          type: t('landlordContractsServiceTypeFixed'),
-          price: priceStr ? parseInt(priceStr) : 0,
-          unit: t('landlordContractsCurrencyVnd'),
-          applied: true,
-        },
-      ])
-      showToast(t('landlordContractsToastAddServiceSuccess'), 'success')
-    }
-    setIsServiceModalOpen(false)
-    setEditingService(null)
-    setIsDirty(false)
-  }
-
   const filteredContracts = contracts.filter(c => {
     if (
       searchQuery &&
@@ -546,23 +366,12 @@ export default function ContractsPage() {
     currentPage * rowsPerPage,
   )
 
-
   const terminateReasonOptions = useMemo(
     () => [
       { value: '', label: t('landlordContractsTerminateReasonPlaceholder') },
       { value: '1', label: t('landlordContractsTerminateReason1') },
       { value: '2', label: t('landlordContractsTerminateReason2') },
       { value: '3', label: t('landlordContractsTerminateReason3') },
-    ],
-    [t],
-  )
-
-  const customerOptions = useMemo(
-    () => [
-      { value: '', label: t('landlordContractsAddMemberSelectPlaceholder') },
-      { value: 'Trần Thị B', label: 'Trần Thị B' },
-      { value: 'Nguyễn Văn A', label: 'Nguyễn Văn A' },
-      { value: 'Lê Văn C', label: 'Lê Văn C' },
     ],
     [t],
   )
@@ -605,755 +414,7 @@ export default function ContractsPage() {
         </div>
       )}
 
-      {selectedContract && isDetailViewOpen ? (
-        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <button
-                onClick={() => {
-                  setSelectedContract(null)
-                  setIsDetailViewOpen(false)
-                }}
-                className="mt-1 p-2 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-5 h-5 text-zinc-600" />
-              </button>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-zinc-900">
-                    {t('landlordContractsRoomPrefix').replace('{room}', selectedContract.room)}
-                  </h1>
-                  <span
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                      selectedContract.status === 'Đang hiệu lực' || selectedContract.status === 'Còn hiệu lực'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : selectedContract.status === 'Quá hạn' || selectedContract.status === 'Sắp hết hạn'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                    }`}
-                  >
-                    {getContractStatusLabel(selectedContract.status)}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-zinc-500">
-                  <span className="font-medium text-zinc-700">
-                    {activeBuilding?.name || 'Dormio Building'}
-                  </span>
-                  <span>·</span>
-                  <span className="font-medium text-primary">{selectedContract.tenant}</span>
-                  <span className="hidden sm:inline">|</span>
-                  <span>
-                    {t('landlordContractsContractCode')}: {selectedContract.id}
-                  </span>
-                  <button
-                    onClick={e => copyToClipboard(e, selectedContract.id)}
-                    className="hover:text-primary transition-colors cursor-pointer"
-                    title={t('landlordContractsCopyCodeTitle')}
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsExtendModalOpen(true)}
-                leftIcon={<CalendarDays className="w-4 h-4" />}
-              >
-                {t('landlordContractsBtnExtend')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => setIsTerminateModalOpen(true)}
-                leftIcon={<Ban className="w-4 h-4" />}
-              >
-                {t('landlordContractsBtnTerminate')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePrintContract(selectedContract)}
-                title={t('landlordContractsPreviewPrintTitle')}
-                leftIcon={<Printer className="w-4 h-4" />}
-              >
-                {t('landlordContractsBtnPrint')}
-              </Button>
-            </div>
-          </div>
-
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Thông tin hợp đồng */}
-              <form
-                onSubmit={handleSaveContract}
-                onChange={() => setIsDirty(true)}
-                className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden"
-              >
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-zinc-900">
-                      {t('landlordContractsContractInfoTitle')}
-                    </h3>
-                  </div>
-                  {isEditingContract ? (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setIsEditingContract(false)
-                          setIsDirty(false)
-                        }}
-                      >
-                        {t('landlordContractsBtnCancel')}
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        size="sm"
-                      >
-                        {t('landlordContractsBtnSaveChange')}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditingContract(true)}
-                      leftIcon={<Edit2 className="w-3.5 h-3.5" />}
-                    >
-                      {t('landlordContractsBtnEdit')}
-                    </Button>
-                  )}
-                </div>
-
-                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    {isEditingContract ? (
-                      <TextInput
-                        label={t('landlordRoomDetailRoomPrefix')}
-                        name="room"
-                        defaultValue={selectedContract.room}
-                      />
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                          {t('landlordRoomDetailRoomPrefix')}
-                        </div>
-                        <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                          {selectedContract.room}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    {isEditingContract ? (
-                      <TextInput
-                        label={t('landlordSetupTotalFloorLabel')}
-                        name="building"
-                        defaultValue={activeBuilding?.name || 'Dormio Building'}
-                      />
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                          {t('landlordSetupTotalFloorLabel')}
-                        </div>
-                        <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                          {activeBuilding?.name || 'Dormio Building'}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    {isEditingContract ? (
-                      <DateInput
-                        label={t('landlordContractsStartDateLabel')}
-                        name="startDate"
-                        defaultValue={formatDateToInput(selectedContract.startDate)}
-                      />
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                          {t('landlordContractsStartDateLabel')}
-                        </div>
-                        <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                          {selectedContract.startDate}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    {isEditingContract ? (
-                      <DateInput
-                        label={t('landlordContractsEndDateLabel')}
-                        name="endDate"
-                        defaultValue={formatDateToInput(selectedContract.endDate)}
-                      />
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                          {t('landlordContractsEndDateLabel')}
-                        </div>
-                        <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                          {selectedContract.endDate}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    {isEditingContract ? (
-                      <NumberInput
-                        label={t('landlordContractsRentPriceLabel')}
-                        name="price"
-                        defaultValue={selectedContract.rentPrice}
-                        suffixText="₫"
-                      />
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                          {t('landlordContractsRentPriceLabel')}
-                        </div>
-                        <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                          {selectedContract.price}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    {isEditingContract ? (
-                      <NumberInput
-                        label={t('landlordContractsDepositLabel')}
-                        name="deposit"
-                        defaultValue={selectedContract.depositAmount || 0}
-                        suffixText="₫"
-                      />
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                          {t('landlordContractsDepositLabel')}
-                        </div>
-                        <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                          {selectedContract.deposit}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    {isEditingContract ? (
-                      <NumberInput
-                        label={t('landlordContractsPaymentDateMonthlyLabel')}
-                        name="paymentDate"
-                        min={1}
-                        max={31}
-                        defaultValue={selectedContract.paymentDate || 5}
-                      />
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                          {t('landlordContractsPaymentDateLabel')}
-                        </div>
-                        <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                          {t('landlordContractsPaymentDateEveryMonth').replace(
-                            '{day}',
-                            selectedContract.paymentDate || '5',
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {isEditingContract && (
-                  <div className="px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="border-t border-zinc-100 pt-5 mt-1">
-                      <TextareaInput
-                        label={t('landlordContractsEditReasonLabel')}
-                        name="reason"
-                        required
-                        rows={3}
-                        placeholder={t('landlordContractsEditReasonPlaceholder')}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Lịch sử thay đổi */}
-                <div className="px-5 py-4 bg-zinc-50/30 border-t border-zinc-100">
-                  <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-2 mb-3">
-                    <History className="w-4 h-4 text-zinc-500" />
-                    {t('landlordContractsHistoryTitle')}
-                  </h4>
-                  {selectedContract.history && selectedContract.history.length > 0 ? (
-                    <div className="space-y-3 pl-1.5">
-                      {selectedContract.history.map((item: any, idx: number) => (
-                        <div key={idx} className="relative pl-4 border-l-2 border-primary/20">
-                          <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-primary" />
-                          <p className="text-sm font-medium text-zinc-800">{item.content}</p>
-                          <p className="text-xs text-zinc-500 mt-0.5">
-                            {item.date} • {item.user}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-zinc-500 italic">
-                      {t('landlordContractsHistoryEmpty')}
-                    </p>
-                  )}
-                </div>
-              </form>
-
-              {/* Thông báo trả phòng */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <CalendarDays className="w-4 h-4 text-amber-500" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordContractsCheckoutNoticeTitle')}
-                  </h3>
-                </div>
-                <div className="p-5 flex flex-col gap-4">
-                  {selectedContract.checkoutNotice ? (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-zinc-500 mb-1">
-                            {t('landlordContractsCheckoutNoticeDate')}
-                          </p>
-                          <p className="text-sm font-semibold text-zinc-900">
-                            {selectedContract.checkoutNotice.date}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-zinc-500 mb-1">
-                            {t('landlordContractsCheckoutNoticeNote')}
-                          </p>
-                          <p className="text-sm font-semibold text-zinc-900">
-                            {selectedContract.checkoutNotice.note ||
-                              t('landlordContractsCheckoutNoticeNoNote')}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsCheckoutNoticeModalOpen(true)}
-                          leftIcon={<Edit2 className="w-4 h-4" />}
-                        >
-                          {t('landlordContractsCheckoutNoticeUpdate')}
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm text-zinc-600">
-                        {t('landlordContractsCheckoutNoticeEmpty')}
-                      </p>
-                      <div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsCheckoutNoticeModalOpen(true)}
-                          leftIcon={<ClipboardList className="w-4 h-4" />}
-                        >
-                          {t('landlordContractsCheckoutNoticeBtn')}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Tài liệu hợp đồng */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <FileText className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordContractsContractDocumentsTitle')}
-                  </h3>
-                </div>
-                <div className="p-5">
-                  <div
-                    onClick={() => handleExportContract(selectedContract)}
-                    className="border-2 border-dashed border-zinc-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer group"
-                  >
-                    <div className="p-3 bg-zinc-100 rounded-full group-hover:bg-primary/10 transition-colors mb-3">
-                      <UploadCloud className="w-6 h-6 text-zinc-500 group-hover:text-primary" />
-                    </div>
-                    <h4 className="font-semibold text-zinc-900 text-sm">
-                      {t('landlordContractsContractDocumentsUploadTitle')}
-                    </h4>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {t('landlordContractsContractDocumentsUploadDesc')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Khách thuê chính */}
-              <div
-                onClick={() => router.push(`/landlord/customers?id=${selectedContract.tenantId}`)}
-                className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group"
-              >
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 group-hover:bg-primary/5 transition-colors">
-                  <User className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordContractsPrimaryTenantTitle')}
-                  </h3>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-xl group-hover:bg-primary/10 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
-                      {selectedContract.tenant.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-zinc-900 text-sm">
-                        {selectedContract.tenant}
-                      </div>
-                      <div className="text-xs text-zinc-500">{selectedContract.tenantPhone || '---'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Phòng thuê */}
-              <div
-                onClick={() => router.push(`/landlord/rooms?id=${selectedContract.room}`)}
-                className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:border-emerald-500/30 transition-all group"
-              >
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 group-hover:bg-emerald-50/50 transition-colors">
-                  <Home className="w-4 h-4 text-emerald-500" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordRoomDetailRoomPrefix')}
-                  </h3>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3 p-3 bg-emerald-50/50 border border-emerald-100 rounded-xl group-hover:bg-emerald-100/50 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                      <Building2 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-emerald-700 text-sm">
-                        {t('landlordContractsRoomPrefix').replace('{room}', selectedContract.room)}
-                      </div>
-                      <div className="text-xs text-emerald-600/80">{selectedContract.roomType}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Thành viên */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-purple-500" />
-                    <h3 className="font-semibold text-zinc-900">
-                      {t('landlordContractsMembersTitle')}
-                    </h3>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsAddMemberModalOpen(true)}
-                    leftIcon={<Plus className="w-3 h-3" />}
-                  >
-                    {t('landlordContractsModalAddMember')}
-                  </Button>
-                </div>
-                <div className="p-0">
-                  {members.length > 0 ? (
-                    <div className="divide-y divide-zinc-100">
-                      {members.map((m, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-3 p-4 hover:bg-zinc-50 transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600 font-bold text-sm">
-                            {m.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-zinc-900 text-sm">{m.name}</div>
-                            <div className="text-xs text-zinc-500">{m.relation}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-5 text-center">
-                      <p className="text-sm text-zinc-500">{t('landlordContractsMembersEmpty')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Dịch vụ */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-amber-500" />
-                    <h3 className="font-semibold text-zinc-900">
-                      {t('landlordContractsServicesTitle')}
-                    </h3>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingService(null)
-                      setIsServiceModalOpen(true)
-                    }}
-                    leftIcon={<Plus className="w-3 h-3" />}
-                  >
-                    {t('landlordContractsModalServiceAdd')}
-                  </Button>
-                </div>
-                <div className="p-0 divide-y divide-zinc-100">
-                  {services
-                    .filter(s => s.applied)
-                    .map(service => (
-                      <div
-                        key={service.id}
-                        className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-zinc-900">{service.name}</span>
-                          <span className="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded">
-                            {service.type}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-amber-600">
-                            {service.price > 0
-                              ? `${service.price.toLocaleString('vi-VN')} ${service.unit}`
-                              : t('landlordContractsServiceFree')}
-                          </span>
-                          <button
-                            onClick={() => {
-                              setEditingService(service)
-                              setIsServiceModalOpen(true)
-                            }}
-                            className="text-zinc-400 hover:text-zinc-700 transition-colors p-1 cursor-pointer"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  {services.filter(s => s.applied).length === 0 && (
-                    <div className="p-5 text-center">
-                      <p className="text-sm text-zinc-500">{t('landlordContractsServicesEmpty')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Checkout Notice Modal */}
-          {isCheckoutNoticeModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-200">
-              <form
-                onSubmit={handleSaveCheckoutNotice}
-                onChange={() => setIsDirty(true)}
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
-              >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    {t('landlordContractsCheckoutNoticeModalTitle')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => requestCloseModal(() => setIsCheckoutNoticeModalOpen(false))}
-                    className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-5">
-                  <DateInput
-                    label={t('landlordContractsCheckoutNoticeDate')}
-                    name="checkoutDate"
-                    defaultValue={formatDateToInput(selectedContract.checkoutNotice?.date)}
-                    required
-                  />
-                  <TextareaInput
-                    label={t('landlordContractsCheckoutNoticeNote')}
-                    name="checkoutNote"
-                    defaultValue={selectedContract.checkoutNotice?.note}
-                    placeholder={t('landlordContractsCheckoutNoticeNotePlaceholder')}
-                    rows={3}
-                  />
-                </div>
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => requestCloseModal(() => setIsCheckoutNoticeModalOpen(false))}
-                  >
-                    {t('landlordContractsBtnCancel')}
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                  >
-                    {t('landlordContractsBtnSave')}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Add Member Modal */}
-          {isAddMemberModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-200">
-              <form
-                onSubmit={handleSaveMember}
-                onChange={() => setIsDirty(true)}
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
-              >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    {t('landlordContractsAddMemberModalTitle')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
-                    className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-5">
-                  <SelectInput
-                    label={t('landlordContractsAddMemberSelectCustomer')}
-                    name="customer"
-                    required
-                    options={customerOptions}
-                  />
-                  <TextInput
-                    label={t('landlordContractsAddMemberRelation')}
-                    name="relation"
-                    placeholder={t('landlordContractsAddMemberRelationPlaceholder')}
-                  />
-                </div>
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
-                  >
-                    {t('landlordContractsBtnCancel')}
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                  >
-                    {t('landlordContractsBtnSave')}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Service Modal */}
-          {isServiceModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-200">
-              <form
-                onSubmit={handleSaveService}
-                onChange={() => setIsDirty(true)}
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
-              >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    {editingService
-                      ? t('landlordContractsServiceEditModalTitle')
-                      : t('landlordContractsModalServiceAdd')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => requestCloseModal(() => {
-                      setIsServiceModalOpen(false)
-                      setEditingService(null)
-                    })}
-                    className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-5">
-                  <TextInput
-                    label={t('landlordContractsServiceNameLabel')}
-                    name="name"
-                    defaultValue={editingService?.name || ''}
-                    placeholder={t('landlordContractsServiceNamePlaceholder')}
-                    disabled={!!editingService}
-                    required
-                  />
-                  <NumberInput
-                    label={t('landlordContractsServiceCustomPriceLabel')}
-                    name="price"
-                    defaultValue={editingService?.price || 0}
-                    placeholder="0"
-                    suffixText={t('landlordContractsCurrencyVnd')}
-                  />
-                  <TextInput
-                    label={t('landlordContractsServiceReasonLabel')}
-                    name="reason"
-                    placeholder={t('landlordContractsServiceReasonPlaceholder')}
-                  />
-                  {editingService && (
-                    <div className="pt-2">
-                      <Checkbox
-                        name="applied"
-                        defaultChecked={editingService.applied}
-                        label={t('landlordContractsServiceApplied')}
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => requestCloseModal(() => {
-                      setIsServiceModalOpen(false)
-                      setEditingService(null)
-                    })}
-                  >
-                    {t('landlordContractsBtnCancel')}
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                  >
-                    {t('landlordContractsBtnSave')}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+      <div className="space-y-6 animate-in fade-in duration-500 pb-12">
           {/* Top Page Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -1596,10 +657,7 @@ export default function ContractsPage() {
                       return (
                         <div
                           key={c.id || idx}
-                          onClick={() => {
-                            setSelectedContract(c)
-                            setIsDetailViewOpen(true)
-                          }}
+                          onClick={() => router.push(`/landlord/contracts/${c.id}`)}
                           className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
                         >
                           <div>
@@ -1724,8 +782,7 @@ export default function ContractsPage() {
                               className="bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border-[#2AC1BC]/30 text-xs font-extrabold"
                               onClick={e => {
                                 e.stopPropagation()
-                                setSelectedContract(c)
-                                setIsDetailViewOpen(true)
+                                router.push(`/landlord/contracts/${c.id}`)
                               }}
                               leftIcon={<Eye className="w-3.5 h-3.5" />}
                             >
@@ -1819,10 +876,7 @@ export default function ContractsPage() {
                             return (
                               <tr
                                 key={c.id || idx}
-                                onClick={() => {
-                                  setSelectedContract(c)
-                                  setIsDetailViewOpen(true)
-                                }}
+                                onClick={() => router.push(`/landlord/contracts/${c.id}`)}
                                 className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
                               >
                                 <td className="px-5 py-4 whitespace-nowrap">
@@ -1909,6 +963,18 @@ export default function ContractsPage() {
                                 </td>
                                 <td className="px-5 py-4 text-right whitespace-nowrap">
                                   <div className="flex items-center justify-end gap-1 text-zinc-400">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-zinc-400 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        router.push(`/landlord/contracts/${c.id}`)
+                                      }}
+                                      title={t('landlordContractsBtnDetail')}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
                                     <Button
                                       variant="ghost"
                                       size="icon"
@@ -2045,8 +1111,6 @@ export default function ContractsPage() {
             </>
           )}
         </div>
-      )}
-
 
       {/* Extend Contract Modal */}
       {isExtendModalOpen && (
