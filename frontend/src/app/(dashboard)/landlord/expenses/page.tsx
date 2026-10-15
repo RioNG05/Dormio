@@ -24,7 +24,16 @@ import {
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
-import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+} from '@/components/ui'
+import { cn } from '@/lib/utils'
 import {
   expenseService,
   ExpenseItem,
@@ -36,8 +45,7 @@ import { getRooms, RoomItem } from '@/services/room.service'
 export default function ExpensesPage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
+  const { toast } = useToast()
 
   const [isMounted, setIsMounted] = useState(false)
   const [expensesList, setExpensesList] = useState<ExpenseItem[]>([])
@@ -93,22 +101,20 @@ export default function ExpensesPage() {
   // Large Money Formatter Helper
   const formatLargeMoney = (amount: number): string => {
     if (amount >= 1_000_000_000) {
-      return isEn
-        ? `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, '')}B ₫`
-        : `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, '')} Tỷ ₫`
+      return `${(amount / 1_000_000_000).toFixed(2).replace(/\.00$/, '')} ${t('landlordExpensesUnitBillion')}`
     }
     if (amount >= 1_000_000) {
-      return `${(amount / 1_000_000).toFixed(2).replace(/\.00$/, '')}M ₫`
+      return `${(amount / 1_000_000).toFixed(2).replace(/\.00$/, '')} ${t('landlordExpensesUnitMillion')}`
     }
-    return isEn ? `${amount.toLocaleString('en-US')} ₫` : `${amount.toLocaleString('vi-VN')} ₫`
+    return `${amount.toLocaleString('vi-VN')} ₫`
   }
 
   const formatCurrency = (amt: number) => {
-    return isEn ? `${amt.toLocaleString('en-US')} ₫` : `${amt.toLocaleString('vi-VN')} ₫`
+    return `${amt.toLocaleString('vi-VN')} ₫`
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')
+    return new Date(dateStr).toLocaleDateString('vi-VN')
   }
 
   const getCategoryLabel = (cat: string) => {
@@ -255,7 +261,7 @@ export default function ExpensesPage() {
   const handleCreateExpense = async () => {
     if (!activeBuilding?.id) return
     if (!expenseForm.name.trim() || !expenseForm.amount || Number(expenseForm.amount) <= 0) {
-      alert(t('landlordExpensesAlertValidation'))
+      toast.warning(t('landlordExpensesAlertValidation'))
       return
     }
 
@@ -272,11 +278,12 @@ export default function ExpensesPage() {
       }
 
       await expenseService.createExpense(activeBuilding.id, payload)
+      toast.success(t('landlordExpensesSaveExpense'))
       setShowCreateModal(false)
       resetForm()
       await fetchExpenses()
     } catch (err: unknown) {
-      alert((err as Error)?.message || t('landlordExpensesAlertCreateFailed'))
+      toast.error((err as Error)?.message || t('landlordExpensesAlertCreateFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -286,7 +293,7 @@ export default function ExpensesPage() {
   const handleUpdateExpense = async () => {
     if (!activeBuilding?.id || !editingExpense) return
     if (!expenseForm.name.trim() || !expenseForm.amount || Number(expenseForm.amount) <= 0) {
-      alert(t('landlordExpensesAlertValidation'))
+      toast.warning(t('landlordExpensesAlertValidation'))
       return
     }
 
@@ -303,11 +310,12 @@ export default function ExpensesPage() {
       }
 
       await expenseService.updateExpense(activeBuilding.id, editingExpense.id, payload)
+      toast.success(t('landlordExpensesUpdateExpense'))
       setEditingExpense(null)
       resetForm()
       await fetchExpenses()
     } catch (err: unknown) {
-      alert((err as Error)?.message || t('landlordExpensesAlertUpdateFailed'))
+      toast.error((err as Error)?.message || t('landlordExpensesAlertUpdateFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -321,12 +329,13 @@ export default function ExpensesPage() {
         status: 'paid',
         paidAt: new Date().toISOString(),
       })
+      toast.success(t('landlordExpensesStatusPaid'))
       if (selectedExpense?.id === id) {
         setSelectedExpense(prev => (prev ? { ...prev, status: 'paid' } : null))
       }
       await fetchExpenses()
     } catch (err: unknown) {
-      alert((err as Error)?.message || t('landlordExpensesAlertPaymentFailed'))
+      toast.error((err as Error)?.message || t('landlordExpensesAlertPaymentFailed'))
     }
   }
 
@@ -343,42 +352,32 @@ export default function ExpensesPage() {
     if (!activeBuilding?.id || !deletingExpenseTarget) return
     try {
       await expenseService.deleteExpense(activeBuilding.id, deletingExpenseTarget.id)
+      toast.success(t('landlordExpensesDeleteBtn'))
       if (selectedExpense?.id === deletingExpenseTarget.id) setSelectedExpense(null)
       setDeletingExpenseTarget(null)
       await fetchExpenses()
     } catch (err: unknown) {
-      alert((err as Error)?.message || t('landlordExpensesAlertDeleteFailed'))
+      toast.error((err as Error)?.message || t('landlordExpensesAlertDeleteFailed'))
     }
   }
 
   // Export CSV
   const handleExportCSV = () => {
     if (expensesList.length === 0) {
-      alert(t('landlordExpensesAlertNoDataExport'))
+      toast.warning(t('landlordExpensesAlertNoDataExport'))
       return
     }
 
-    const headers = isEn
-      ? [
-          'Expense Code',
-          'Expense Title',
-          'Category',
-          'Scope',
-          'Amount (VND)',
-          'Status',
-          'Paid Date',
-          'Notes',
-        ]
-      : [
-          'Mã Chi Phí',
-          'Tên Khoản Chi',
-          'Danh Mục',
-          'Phạm Vi',
-          'Số Tiền (VND)',
-          'Trạng Thái',
-          'Ngày Chi',
-          'Ghi Chú',
-        ]
+    const headers = [
+      t('landlordExpensesCsvCode'),
+      t('landlordExpensesCsvTitle'),
+      t('landlordExpensesCsvCategory'),
+      t('landlordExpensesCsvScope'),
+      t('landlordExpensesCsvAmount'),
+      t('landlordExpensesCsvStatus'),
+      t('landlordExpensesCsvPaidDate'),
+      t('landlordExpensesCsvNotes'),
+    ]
 
     const rows = expensesList.map(exp => [
       exp.code,
@@ -387,16 +386,10 @@ export default function ExpensesPage() {
       getScopeLabel(exp),
       exp.amount,
       exp.status === 'paid'
-        ? isEn
-          ? 'Paid'
-          : 'Đã thanh toán'
+        ? t('landlordExpensesStatusPaid')
         : exp.status === 'pending'
-          ? isEn
-            ? 'Pending'
-            : 'Chờ thanh toán'
-          : isEn
-            ? 'Canceled'
-            : 'Đã hủy',
+          ? t('landlordExpensesStatusPending')
+          : t('landlordExpensesStatusCanceled'),
       exp.paidAt ? exp.paidAt.split('T')[0] : '',
       exp.description || '',
     ])
@@ -468,32 +461,37 @@ export default function ExpensesPage() {
         </div>
 
         <div className="flex items-center gap-2.5 self-stretch sm:self-auto">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={fetchExpenses}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            isLoading={isLoading}
+            leftIcon={<RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-[#2AC1BC]')} />}
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#2AC1BC]' : ''}`} />
-            <span>{t('landlordExpensesReload')}</span>
-          </button>
+            {t('landlordExpensesReload')}
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95"
+            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>{t('landlordExpensesExportExcel')}</span>
-          </button>
+            {t('landlordExpensesExportExcel')}
+          </Button>
 
-          <button
+          <Button
+            size="sm"
             onClick={() => {
               resetForm()
               setShowCreateModal(true)
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap active:scale-95"
+            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
+            className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
           >
-            <Plus className="w-4 h-4 shrink-0" /> {t('landlordExpensesAddNew')}
-          </button>
+            {t('landlordExpensesAddNew')}
+          </Button>
         </div>
       </div>
 
@@ -507,7 +505,7 @@ export default function ExpensesPage() {
           {/* Left Title, Address Pill */}
           <div className="space-y-3 max-w-xl">
             <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding?.name || (isEn ? 'Building' : 'Tòa Nhà')}
+              {activeBuilding?.name || t('landlordExpensesBuildingFallback')}
             </h2>
 
             {activeBuilding?.address && (
@@ -578,134 +576,157 @@ export default function ExpensesPage() {
             {t('landlordExpensesCategoryColon')}
           </span>
           {categoriesList.map(cat => (
-            <button
+            <Button
               key={cat}
+              variant={activeCategoryTab === cat ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setActiveCategoryTab(cat)
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 whitespace-nowrap h-auto',
                 activeCategoryTab === cat
-                  ? 'bg-[#2AC1BC] text-white shadow-sm'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-              }`}
+                  ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-sm'
+                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70',
+              )}
             >
               {cat === 'all'
                 ? t('landlordExpensesAllCategoriesWithCount', { count: summary.totalCount })
                 : getCategoryLabel(cat)}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Search Box & View Switcher Bar */}
         <div className="flex items-center gap-2">
           {/* Search Input */}
-          <div className="relative flex-1 min-w-0">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input
-              type="text"
+          <div className="flex-1 min-w-0">
+            <TextInput
               placeholder={t('landlordExpensesSearchPlaceholder')}
               value={searchTerm}
               onChange={e => {
                 setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-              className="w-full pl-8.5 pr-3 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all truncate"
+              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              rightIcon={
+                searchTerm ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm('')
+                      setCurrentPage(1)
+                    }}
+                    className="p-1 h-auto text-zinc-400 hover:text-zinc-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                ) : undefined
+              }
             />
-            {searchTerm && (
-              <button
-                onClick={() => {
-                  setSearchTerm('')
-                  setCurrentPage(1)
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
 
           {/* View Switcher (Grid vs Table) per Rule #9 */}
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-            <button
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size="sm"
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={cn(
+                'p-1.5 h-auto rounded-lg text-xs font-bold transition-all',
                 viewMode === 'grid'
                   ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
+                  : 'text-zinc-500 hover:text-zinc-900',
+              )}
               title={t('landlordExpensesViewGrid')}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+              size="sm"
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={cn(
+                'p-1.5 h-auto rounded-lg text-xs font-bold transition-all',
                 viewMode === 'table'
                   ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
+                  : 'text-zinc-500 hover:text-zinc-900',
+              )}
               title={t('landlordExpensesViewTable')}
             >
               <List className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Status Filter Pills Row */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
-          <button
+          <Button
+            size="sm"
+            variant={activeStatusTab === 'all' ? 'primary' : 'secondary'}
             onClick={() => {
               setActiveStatusTab('all')
               setCurrentPage(1)
             }}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={cn(
+              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
               activeStatusTab === 'all'
-                ? 'bg-zinc-900 text-white'
-                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
+                ? 'bg-zinc-900 hover:bg-zinc-800 text-white'
+                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200',
+            )}
           >
             {t('landlordExpensesAllStatuses')}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant={activeStatusTab === 'paid' ? 'primary' : 'secondary'}
             onClick={() => {
               setActiveStatusTab('paid')
               setCurrentPage(1)
             }}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={cn(
+              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
               activeStatusTab === 'paid'
-                ? 'bg-[#2AC1BC] text-white'
-                : 'bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20'
-            }`}
+                ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white'
+                : 'bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20',
+            )}
           >
             {t('landlordExpensesStatusPaid')}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant={activeStatusTab === 'pending' ? 'primary' : 'secondary'}
             onClick={() => {
               setActiveStatusTab('pending')
               setCurrentPage(1)
             }}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={cn(
+              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
               activeStatusTab === 'pending'
-                ? 'bg-amber-500 text-white'
-                : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-            }`}
+                ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                : 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+            )}
           >
             {t('landlordExpensesStatusPending')}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant={activeStatusTab === 'canceled' ? 'primary' : 'secondary'}
             onClick={() => {
               setActiveStatusTab('canceled')
               setCurrentPage(1)
             }}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={cn(
+              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
               activeStatusTab === 'canceled'
-                ? 'bg-rose-500 text-white'
-                : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-            }`}
+                ? 'bg-rose-500 hover:bg-rose-600 text-white'
+                : 'bg-rose-50 text-rose-700 hover:bg-rose-100',
+            )}
           >
             {t('landlordExpensesStatusCanceled')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -720,15 +741,17 @@ export default function ExpensesPage() {
           <Wallet className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
           <h3 className="font-extrabold text-sm text-zinc-800">{t('landlordExpensesNotFound')}</h3>
           <p className="text-xs text-zinc-400">{t('landlordExpensesNotFoundDesc')}</p>
-          <button
+          <Button
+            size="sm"
             onClick={() => {
               resetForm()
               setShowCreateModal(true)
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl transition-all"
+            leftIcon={<Plus className="w-4 h-4" />}
+            className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
           >
-            <Plus className="w-4 h-4" /> {t('landlordExpensesAddNew')}
-          </button>
+            {t('landlordExpensesAddNew')}
+          </Button>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 Default) */
@@ -782,48 +805,57 @@ export default function ExpensesPage() {
 
               {/* Action Buttons */}
               <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setSelectedExpense(exp)}
-                  className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex-1 text-center"
+                  className="flex-1 text-center"
                 >
                   {t('landlordExpensesViewDetail')}
-                </button>
+                </Button>
 
                 {exp.status === 'pending' && (
-                  <button
+                  <Button
+                    size="sm"
                     onClick={() => handleMarkAsPaid(exp.id)}
-                    className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl transition-all cursor-pointer whitespace-nowrap shadow-sm"
+                    className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black whitespace-nowrap shadow-sm"
                     title={t('landlordExpensesMarkPaid')}
                   >
                     {t('landlordExpensesMarkPaid')}
-                  </button>
+                  </Button>
                 )}
 
                 <div className="flex items-center gap-1">
                   {exp.status === 'paid' ? (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => openEditModal(exp)}
-                      className="p-1.5 text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
+                      className="p-1.5 h-auto text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"
                       title={t('landlordExpensesLockedTooltip')}
                     >
                       <Lock className="w-4 h-4 text-amber-500" />
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => openEditModal(exp)}
-                      className="p-1.5 text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                      className="p-1.5 h-auto text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100"
                       title={t('landlordExpensesEditTooltip')}
                     >
                       <Edit3 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDeleteExpense(exp)}
-                    className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                    className="p-1.5 h-auto text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50"
                     title={t('landlordExpensesDeleteTooltip')}
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -894,45 +926,55 @@ export default function ExpensesPage() {
 
                     <td className="py-3 px-3.5 sm:px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setSelectedExpense(exp)}
-                          className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-[11px] font-bold rounded-lg cursor-pointer transition-all"
+                          className="px-2.5 py-1 h-auto text-[11px] font-bold rounded-lg"
                         >
                           {t('landlordExpensesDetailBtn')}
-                        </button>
+                        </Button>
                         {exp.status === 'paid' ? (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => openEditModal(exp)}
-                            className="p-1 text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
+                            className="p-1 h-auto text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"
                             title={t('landlordExpensesLockedTooltip')}
                           >
                             <Lock className="w-3.5 h-3.5 text-amber-500" />
-                          </button>
+                          </Button>
                         ) : (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => openEditModal(exp)}
-                            className="p-1 text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                            className="p-1 h-auto text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100"
                             title={t('landlordExpensesEditTooltip')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
                         {exp.status === 'paid' ? (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => openEditModal(exp)}
-                            className="p-1 text-zinc-300 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
+                            className="p-1 h-auto text-zinc-300 hover:text-amber-600 rounded-lg hover:bg-amber-50"
                             title={t('landlordExpensesLockedDeleteTooltip')}
                           >
                             <Trash2 className="w-3.5 h-3.5 text-zinc-300 hover:text-amber-500" />
-                          </button>
+                          </Button>
                         ) : (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDeleteExpense(exp)}
-                            className="p-1 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                            className="p-1 h-auto text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50"
                             title={t('landlordExpensesDeleteTooltip')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -949,8 +991,7 @@ export default function ExpensesPage() {
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-sm">
           <div className="flex items-center gap-2 text-zinc-500 font-medium">
             <span>{t('landlordExpensesPaginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSize}
@@ -961,7 +1002,7 @@ export default function ExpensesPage() {
                   setCurrentPage(1)
                 }
               }}
-              className="w-14 px-2 py-1 text-center font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2AC1BC]"
+              className="w-16 text-center font-bold"
             />
             <span>{t('landlordExpensesPaginationPerPage')}</span>
             <span className="text-zinc-300">|</span>
@@ -973,40 +1014,44 @@ export default function ExpensesPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage <= 1}
-              className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="p-2 h-auto rounded-xl"
               title={t('landlordExpensesPaginationPrev')}
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
 
             {visiblePages.map(pageNum => (
-              <button
+              <Button
                 key={pageNum}
+                variant={pageNum === currentPage ? 'primary' : 'secondary'}
+                size="sm"
                 onClick={() => setCurrentPage(pageNum)}
-                style={{
-                  backgroundColor: pageNum === currentPage ? '#2AC1BC' : undefined,
-                }}
-                className={`min-w-[36px] h-9 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={cn(
+                  'min-w-[36px] h-9 px-3 rounded-xl text-xs font-bold transition-all',
                   pageNum === currentPage
-                    ? 'text-white shadow-sm shadow-[#2AC1BC]/30'
-                    : 'bg-zinc-50 text-zinc-700 hover:bg-zinc-100 border border-zinc-200'
-                }`}
+                    ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-sm shadow-[#2AC1BC]/30'
+                    : 'bg-zinc-50 text-zinc-700 hover:bg-zinc-100 border border-zinc-200',
+                )}
               >
                 {pageNum}
-              </button>
+              </Button>
             ))}
 
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage >= totalPages}
-              className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="p-2 h-auto rounded-xl"
               title={t('landlordExpensesPaginationNext')}
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1036,12 +1081,14 @@ export default function ExpensesPage() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setSelectedExpense(null)}
-                className="p-1.5 sm:p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 transition-colors cursor-pointer shrink-0"
+                className="p-1.5 sm:p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 shrink-0"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Body */}
@@ -1105,46 +1152,51 @@ export default function ExpensesPage() {
 
             {/* Modal Footer Actions */}
             <div className="p-3.5 sm:p-4 border-t border-zinc-100 bg-white flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setSelectedExpense(null)}
-                className="w-full sm:w-auto px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer text-center whitespace-nowrap"
+                className="w-full sm:w-auto"
               >
                 {t('landlordExpensesCloseBtn')}
-              </button>
+              </Button>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 {selectedExpense.status === 'pending' && (
-                  <button
-                    type="button"
+                  <Button
+                    size="sm"
                     onClick={() => handleMarkAsPaid(selectedExpense.id)}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    className="w-full sm:w-auto bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black whitespace-nowrap shadow-md"
+                    leftIcon={<Check className="w-4 h-4 shrink-0" />}
                   >
-                    <Check className="w-4 h-4 shrink-0" /> {t('landlordExpensesStatusPaid')}
-                  </button>
+                    {t('landlordExpensesStatusPaid')}
+                  </Button>
                 )}
 
                 {selectedExpense.status === 'paid' ? (
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => openEditModal(selectedExpense)}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 text-xs font-bold rounded-xl cursor-pointer flex items-center justify-center gap-1.5 border border-amber-200 transition-all whitespace-nowrap"
+                    className="w-full sm:w-auto bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 border-amber-200 font-bold whitespace-nowrap"
                     title={t('landlordExpensesLockedTooltip')}
+                    leftIcon={<Lock className="w-4 h-4 text-amber-600 shrink-0" />}
                   >
-                    <Lock className="w-4 h-4 text-amber-600 shrink-0" />{' '}
                     {t('landlordExpensesLockedBtn')}
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    size="sm"
                     onClick={() => {
                       const expToEdit = selectedExpense
                       setSelectedExpense(null)
                       openEditModal(expToEdit)
                     }}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white font-black whitespace-nowrap shadow-md"
+                    leftIcon={<Edit3 className="w-4 h-4 shrink-0" />}
                   >
-                    <Edit3 className="w-4 h-4 shrink-0" /> {t('landlordExpensesEditBtn')}
-                  </button>
+                    {t('landlordExpensesEditBtn')}
+                  </Button>
                 )}
               </div>
             </div>
@@ -1181,151 +1233,107 @@ export default function ExpensesPage() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Body Form */}
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
-              <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  {t('landlordExpensesNameLabel')}
-                </label>
-                <input
-                  type="text"
-                  value={expenseForm.name}
+              <TextInput
+                label={t('landlordExpensesNameLabel')}
+                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                value={expenseForm.name}
+                onChange={e => {
+                  setExpenseForm({ ...expenseForm, name: e.target.value })
+                  setIsFormDirty(true)
+                }}
+                placeholder={t('landlordExpensesExpenseNamePlaceholder')}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SelectInput
+                  label={t('landlordExpensesCategoryLabel')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  value={expenseForm.category}
                   onChange={e => {
-                    setExpenseForm({ ...expenseForm, name: e.target.value })
+                    setExpenseForm({ ...expenseForm, category: e.target.value })
                     setIsFormDirty(true)
                   }}
-                  placeholder={t('landlordExpensesExpenseNamePlaceholder')}
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs"
+                  options={[
+                    { value: 'Bảo trì & Sửa chữa', label: t('landlordExpensesCatMaintenance') },
+                    { value: 'Điện nước & Dịch vụ', label: t('landlordExpensesCatUtilities') },
+                    { value: 'Vệ sinh & An ninh', label: t('landlordExpensesCatCleaning') },
+                    { value: 'Trang thiết bị', label: t('landlordExpensesCatEquipment') },
+                    { value: 'Chi phí khác', label: t('landlordExpensesCatOther') },
+                  ]}
+                />
+
+                <NumberInput
+                  label={t('landlordExpensesAmountLabel')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  min={0}
+                  value={expenseForm.amount}
+                  onChange={e => {
+                    setExpenseForm({ ...expenseForm, amount: e.target.value })
+                    setIsFormDirty(true)
+                  }}
+                  placeholder="0"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordExpensesCategoryLabel')}
-                  </label>
-                  <select
-                    value={expenseForm.category}
-                    onChange={e => {
-                      setExpenseForm({ ...expenseForm, category: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
-                  >
-                    <option value="Bảo trì & Sửa chữa">
-                      {t('landlordExpensesCatMaintenance')}
-                    </option>
-                    <option value="Điện nước & Dịch vụ">{t('landlordExpensesCatUtilities')}</option>
-                    <option value="Vệ sinh & An ninh">{t('landlordExpensesCatCleaning')}</option>
-                    <option value="Trang thiết bị">{t('landlordExpensesCatEquipment')}</option>
-                    <option value="Chi phí khác">{t('landlordExpensesCatOther')}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordExpensesAmountLabel')}
-                  </label>
-                  <input
-                    type="number"
-                    value={expenseForm.amount}
-                    onChange={e => {
-                      setExpenseForm({ ...expenseForm, amount: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    placeholder="0"
-                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordExpensesScopeLabel')}
-                  </label>
-                  <select
-                    value={expenseForm.roomScope}
-                    onChange={e => {
-                      const newScope = e.target.value as 'property' | 'room'
-                      setExpenseForm({
-                        ...expenseForm,
-                        roomScope: newScope,
-                        roomId:
-                          newScope === 'room' && availableRooms.length > 0
-                            ? availableRooms[0].id
-                            : '',
-                      })
-                      setIsFormDirty(true)
-                    }}
-                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
-                  >
-                    <option value="property">{t('landlordExpensesEntirePropertyOption')}</option>
-                    <option value="room">{t('landlordExpensesSpecificRoom')}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordExpensesScopeLabel')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  value={expenseForm.roomScope}
+                  onChange={e => {
+                    const newScope = e.target.value as 'property' | 'room'
+                    setExpenseForm({
+                      ...expenseForm,
+                      roomScope: newScope,
+                      roomId:
+                        newScope === 'room' && availableRooms.length > 0
+                          ? availableRooms[0].id
+                          : '',
+                    })
+                    setIsFormDirty(true)
+                  }}
+                  options={[
+                    { value: 'property', label: t('landlordExpensesEntirePropertyOption') },
+                    { value: 'room', label: t('landlordExpensesSpecificRoom') },
+                  ]}
+                />
 
                 {expenseForm.roomScope === 'room' ? (
-                  <div>
-                    <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                      {t('landlordExpensesSelectRoomLabel')}
-                    </label>
-                    <select
-                      value={expenseForm.roomId}
-                      onChange={e => {
-                        setExpenseForm({ ...expenseForm, roomId: e.target.value })
-                        setIsFormDirty(true)
-                      }}
-                      className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
-                    >
-                      <option value="">{t('landlordExpensesSelectRoomPlaceholder')}</option>
-                      {availableRooms.map(r => (
-                        <option key={r.id} value={r.id}>
-                          {t('landlordExpensesRoomFloorOption', {
-                            room: r.roomNumber,
-                            floor: r.floor,
-                          })}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SelectInput
+                    label={t('landlordExpensesSelectRoomLabel')}
+                    labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                    value={expenseForm.roomId}
+                    onChange={e => {
+                      setExpenseForm({ ...expenseForm, roomId: e.target.value })
+                      setIsFormDirty(true)
+                    }}
+                    options={[
+                      { value: '', label: t('landlordExpensesSelectRoomPlaceholder') },
+                      ...availableRooms.map(r => ({
+                        value: r.id,
+                        label: t('landlordExpensesRoomFloorOption', {
+                          room: r.roomNumber,
+                          floor: r.floor,
+                        }),
+                      })),
+                    ]}
+                  />
                 ) : (
-                  <div>
-                    <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                      {t('landlordExpensesPaymentStatusLabel')}
-                    </label>
-                    <select
-                      value={expenseForm.status}
-                      onChange={e => {
-                        setExpenseForm({
-                          ...expenseForm,
-                          status: e.target.value as 'paid' | 'pending',
-                        })
-                        setIsFormDirty(true)
-                      }}
-                      className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
-                    >
-                      <option value="paid">{t('landlordExpensesOptionPaid')}</option>
-                      <option value="pending">{t('landlordExpensesOptionPending')}</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              {expenseForm.roomScope === 'room' && (
-                <div>
-                  <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                    {t('landlordExpensesPaymentStatusLabel')}
-                  </label>
-                  <select
+                  <SelectInput
+                    label={t('landlordExpensesPaymentStatusLabel')}
+                    labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
                     value={expenseForm.status}
                     onChange={e => {
                       setExpenseForm({
@@ -1334,72 +1342,78 @@ export default function ExpensesPage() {
                       })
                       setIsFormDirty(true)
                     }}
-                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] focus:bg-white text-xs cursor-pointer"
-                  >
-                    <option value="paid">{t('landlordExpensesOptionPaid')}</option>
-                    <option value="pending">{t('landlordExpensesOptionPending')}</option>
-                  </select>
-                </div>
+                    options={[
+                      { value: 'paid', label: t('landlordExpensesOptionPaid') },
+                      { value: 'pending', label: t('landlordExpensesOptionPending') },
+                    ]}
+                  />
+                )}
+              </div>
+
+              {expenseForm.roomScope === 'room' && (
+                <SelectInput
+                  label={t('landlordExpensesPaymentStatusLabel')}
+                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  value={expenseForm.status}
+                  onChange={e => {
+                    setExpenseForm({
+                      ...expenseForm,
+                      status: e.target.value as 'paid' | 'pending',
+                    })
+                    setIsFormDirty(true)
+                  }}
+                  options={[
+                    { value: 'paid', label: t('landlordExpensesOptionPaid') },
+                    { value: 'pending', label: t('landlordExpensesOptionPending') },
+                  ]}
+                />
               )}
 
-              <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  {t('landlordExpensesDateLabel')}
-                </label>
-                <input
-                  type="date"
-                  value={expenseForm.paidAt}
-                  onChange={e => {
-                    setExpenseForm({ ...expenseForm, paidAt: e.target.value })
-                    setIsFormDirty(true)
-                  }}
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-[#2AC1BC] text-xs"
-                />
-              </div>
+              <TextInput
+                type="date"
+                label={t('landlordExpensesDateLabel')}
+                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                value={expenseForm.paidAt}
+                onChange={e => {
+                  setExpenseForm({ ...expenseForm, paidAt: e.target.value })
+                  setIsFormDirty(true)
+                }}
+              />
 
-              <div>
-                <label className="block text-[11px] font-extrabold text-zinc-700 mb-1">
-                  {t('landlordExpensesNoteLabel')}
-                </label>
-                <textarea
-                  rows={2}
-                  value={expenseForm.description}
-                  onChange={e => {
-                    setExpenseForm({ ...expenseForm, description: e.target.value })
-                    setIsFormDirty(true)
-                  }}
-                  placeholder={t('landlordExpensesDescriptionPlaceholder')}
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC] text-xs"
-                />
-              </div>
+              <TextareaInput
+                label={t('landlordExpensesNoteLabel')}
+                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                rows={2}
+                value={expenseForm.description}
+                onChange={e => {
+                  setExpenseForm({ ...expenseForm, description: e.target.value })
+                  setIsFormDirty(true)
+                }}
+                placeholder={t('landlordExpensesDescriptionPlaceholder')}
+              />
             </div>
 
             {/* Footer */}
             <div className="p-4 border-t border-zinc-100 bg-white flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
-                className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl cursor-pointer text-center"
               >
                 {t('landlordExpensesCancelBtn')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
                 disabled={isSubmitting}
+                isLoading={isSubmitting}
                 onClick={showCreateModal ? handleCreateExpense : handleUpdateExpense}
-                className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+                leftIcon={!isSubmitting ? <Check className="w-4 h-4" /> : undefined}
+                className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black shadow-md"
               >
-                {isSubmitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                <span>
-                  {showCreateModal
-                    ? t('landlordExpensesSaveExpense')
-                    : t('landlordExpensesUpdateExpense')}
-                </span>
-              </button>
+                {showCreateModal
+                  ? t('landlordExpensesSaveExpense')
+                  : t('landlordExpensesUpdateExpense')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1421,19 +1435,21 @@ export default function ExpensesPage() {
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setConfirmCloseTarget(null)}
-                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordExpensesContinueTyping')}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="danger"
                 onClick={handleConfirmCloseModal}
-                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+                className="flex-1 font-black shadow-md"
               >
                 {t('landlordExpensesDiscardAndClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1463,19 +1479,21 @@ export default function ExpensesPage() {
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setDeletingExpenseTarget(null)}
-                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordExpensesCancelBtn')}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="danger"
                 onClick={confirmDeleteExpense}
-                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+                className="flex-1 font-black shadow-md"
               >
                 {t('landlordExpensesDeleteBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1505,12 +1523,12 @@ export default function ExpensesPage() {
               </p>
             </div>
             <div className="pt-2">
-              <button
+              <Button
                 onClick={() => setLockedExpenseTarget(null)}
-                className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+                className="w-full bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black shadow-md"
               >
                 {t('landlordExpensesUnderstand')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -849,8 +849,9 @@ function formatMinutesToHHMM(minutes: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-export function getLocalizedPlace(place?: string, isEn = false): string {
+export function getLocalizedPlace(place?: string, isEnOrLocale: boolean | string = false): string {
   if (!place) return ''
+  const isEn = typeof isEnOrLocale === 'string' ? isEnOrLocale === 'en' : isEnOrLocale
   if (!isEn) return place
   if (place.includes('Hòa Lạc') || place.includes('Hoa Lac')) {
     return 'Hoa Lac Hi-Tech Park, Thach That, Hanoi'
@@ -881,8 +882,9 @@ export function getLocalizedPlace(place?: string, isEn = false): string {
     .replace(/Việt Nam/gi, 'Vietnam')
 }
 
-export function getLocalizedStaffName(name?: string, isEn = false): string {
+export function getLocalizedStaffName(name?: string, isEnOrLocale: boolean | string = false): string {
   if (!name) return ''
+  const isEn = typeof isEnOrLocale === 'string' ? isEnOrLocale === 'en' : isEnOrLocale
   if (!isEn) return name
   if (name.includes('Nguyễn Văn Tuấn')) {
     return name.replace('Nguyễn Văn Tuấn', 'Nguyen Van Tuan').replace('NV01', 'Staff #01')
@@ -899,8 +901,9 @@ export function getLocalizedStaffName(name?: string, isEn = false): string {
   return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-export function getLocalizedExplanation(text?: string, isEn = false): string {
+export function getLocalizedExplanation(text?: string, isEnOrLocale: boolean | string = false): string {
   if (!text) return ''
+  const isEn = typeof isEnOrLocale === 'string' ? isEnOrLocale === 'en' : isEnOrLocale
   if (!isEn) return text
   if (text.includes('QL21') || text.includes('va quẹt') || text.includes('kẹt xe nghiêm trọng')) {
     return 'Severe traffic congestion on Route 21 due to a collision, I took roadway photos and sent them to the shift team group beforehand.'

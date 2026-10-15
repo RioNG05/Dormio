@@ -37,6 +37,7 @@ import {
   getLocalizedExplanation,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { Button, TextInput, NumberInput, SelectInput } from '@/components/ui'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
@@ -46,7 +47,6 @@ import {
 function StaffShiftHistoryContent() {
   const t = useTranslations('staffPortal')
   const { locale } = useLanguage()
-  const isEn = locale === 'en'
 
   // Dynamic Shift Types fetched from Backend (no hardcoded data)
   const [availableShifts, setAvailableShifts] = useState<StaffShiftType[]>([])
@@ -385,10 +385,12 @@ function StaffShiftHistoryContent() {
       <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Nút bấm "Sử dụng bộ lọc" */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             type="button"
             onClick={handleOpenFilterModal}
-            className="px-4 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-95"
+            className="px-4 py-2 h-auto rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-95"
             title={t('titleFilterOpen')}
           >
             <Filter className="w-3.5 h-3.5 text-[#2AC1BC]" />
@@ -396,7 +398,7 @@ function StaffShiftHistoryContent() {
             {hasAnyAppliedFilter && (
               <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
             )}
-          </button>
+          </Button>
 
           {/* Khi ấn apply ở modal thì hiện filter được áp dụng ở bên cạnh */}
           {hasAnyAppliedFilter ? (
@@ -412,7 +414,9 @@ function StaffShiftHistoryContent() {
                         ? t('filterDateFrom', { date: appliedStartDate })
                         : t('filterDateTo', { date: appliedEndDate })}
                   </span>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     type="button"
                     onClick={() => {
                       setAppliedStartDate('')
@@ -420,11 +424,11 @@ function StaffShiftHistoryContent() {
                       setCurrentPage(1)
                       setWindowStart(1)
                     }}
-                    className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
                     title={t('titleRemoveDateFilter')}
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </span>
               )}
 
@@ -433,18 +437,20 @@ function StaffShiftHistoryContent() {
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
                   <Clock className="w-3 h-3 text-[#2AC1BC]" />
                   <span>{getShiftName(appliedShift)}</span>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     type="button"
                     onClick={() => {
                       setAppliedShift('all')
                       setCurrentPage(1)
                       setWindowStart(1)
                     }}
-                    className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
                     title={t('titleRemoveShiftFilter')}
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </span>
               )}
 
@@ -457,29 +463,33 @@ function StaffShiftHistoryContent() {
                     {appliedStatus === 'late' && t('tableStatusLate')}
                     {appliedStatus === 'absent' && t('tableStatusAbsent')}
                   </span>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     type="button"
                     onClick={() => {
                       setAppliedStatus('all')
                       setCurrentPage(1)
                       setWindowStart(1)
                     }}
-                    className="text-zinc-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
                     title={t('titleRemoveStatusFilter')}
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </span>
               )}
 
               {/* Clear All Chip */}
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={handleClearAllFilters}
-                className="text-xs text-red-600 hover:text-red-700 font-bold ml-1 hover:underline cursor-pointer"
+                className="h-auto p-0 text-xs text-red-600 hover:text-red-700 hover:bg-transparent font-bold ml-1 hover:underline cursor-pointer"
               >
                 {t('btnClearAll')}
-              </button>
+              </Button>
             </div>
           ) : (
             <span className="text-xs text-zinc-400 font-medium italic">{t('noActiveFilters')}</span>
@@ -554,7 +564,9 @@ function StaffShiftHistoryContent() {
                       <div className="flex items-center gap-1.5 font-mono font-bold">
                         <span>{item.checkIn || '--:--'}</span>
                         {item.checkInPhoto && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             type="button"
                             onClick={() =>
                               setPreviewImageModal({
@@ -564,21 +576,21 @@ function StaffShiftHistoryContent() {
                                 watermark: item.checkInWatermark
                                   ? {
                                       ...item.checkInWatermark,
-                                      place: getLocalizedPlace(item.checkInWatermark.place, isEn),
+                                      place: getLocalizedPlace(item.checkInWatermark.place, locale),
                                       staffName: getLocalizedStaffName(
                                         item.checkInWatermark.staffName,
-                                        isEn,
+                                        locale,
                                       ),
                                     }
                                   : undefined,
-                                note: getLocalizedExplanation(item.checkInExplanation, isEn),
+                                note: getLocalizedExplanation(item.checkInExplanation, locale),
                               })
                             }
-                            className="p-1 rounded-md text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
+                            className="p-1 h-auto rounded-md text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
                             title={t('viewWatermarkCheckIn')}
                           >
                             <Camera className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -586,7 +598,9 @@ function StaffShiftHistoryContent() {
                       <div className="flex items-center gap-1.5 font-mono font-bold">
                         <span>{item.checkOut || '--:--'}</span>
                         {item.checkOutPhoto && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             type="button"
                             onClick={() =>
                               setPreviewImageModal({
@@ -596,21 +610,21 @@ function StaffShiftHistoryContent() {
                                 watermark: item.checkOutWatermark
                                   ? {
                                       ...item.checkOutWatermark,
-                                      place: getLocalizedPlace(item.checkOutWatermark.place, isEn),
+                                      place: getLocalizedPlace(item.checkOutWatermark.place, locale),
                                       staffName: getLocalizedStaffName(
                                         item.checkOutWatermark.staffName,
-                                        isEn,
+                                        locale,
                                       ),
                                     }
                                   : undefined,
-                                note: getLocalizedExplanation(item.checkOutExplanation, isEn),
+                                note: getLocalizedExplanation(item.checkOutExplanation, locale),
                               })
                             }
-                            className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
+                            className="p-1 h-auto rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
                             title={t('viewWatermarkCheckOut')}
                           >
                             <Camera className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -641,30 +655,32 @@ function StaffShiftHistoryContent() {
                       {item.checkInExplanation ? (
                         <div
                           className="text-amber-800 font-medium truncate"
-                          title={getLocalizedExplanation(item.checkInExplanation, isEn)}
+                          title={getLocalizedExplanation(item.checkInExplanation, locale)}
                         >
                           <span className="font-bold">{t('tableLateShort')}</span> &quot;
-                          {getLocalizedExplanation(item.checkInExplanation, isEn)}&quot;
+                          {getLocalizedExplanation(item.checkInExplanation, locale)}&quot;
                         </div>
                       ) : item.checkOutExplanation ? (
                         <div
                           className="text-amber-800 font-medium truncate"
-                          title={getLocalizedExplanation(item.checkOutExplanation, isEn)}
+                          title={getLocalizedExplanation(item.checkOutExplanation, locale)}
                         >
                           <span className="font-bold">{t('tableEarlyShort')}</span> &quot;
-                          {getLocalizedExplanation(item.checkOutExplanation, isEn)}&quot;
+                          {getLocalizedExplanation(item.checkOutExplanation, locale)}&quot;
                         </div>
                       ) : item.editedByLandlord ? (
                         <span className="text-blue-600 font-semibold flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" /> {t('tableManualApproved')}
                         </span>
                       ) : (
-                        getLocalizedExplanation(item.note, isEn) || '--'
+                        getLocalizedExplanation(item.note, locale) || '--'
                       )}
                     </td>
                     <td className="py-4 px-3 text-center whitespace-nowrap">
                       {item.checkInPhoto || item.checkOutPhoto ? (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           type="button"
                           onClick={() =>
                             setPreviewImageModal({
@@ -674,24 +690,24 @@ function StaffShiftHistoryContent() {
                               watermark: item.checkInWatermark
                                 ? {
                                     ...item.checkInWatermark,
-                                    place: getLocalizedPlace(item.checkInWatermark.place, isEn),
+                                    place: getLocalizedPlace(item.checkInWatermark.place, locale),
                                     staffName: getLocalizedStaffName(
                                       item.checkInWatermark.staffName,
-                                      isEn,
+                                      locale,
                                     ),
                                   }
                                 : undefined,
                               note: getLocalizedExplanation(
                                 item.checkInExplanation || item.checkOutExplanation || item.note,
-                                isEn,
+                                locale,
                               ),
                             })
                           }
-                          className="p-1.5 rounded-xl bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-600 hover:text-[#2AC1BC] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          className="p-1.5 h-auto rounded-xl bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-600 hover:text-[#2AC1BC] transition-colors inline-flex items-center gap-1 cursor-pointer"
                           title={t('viewPhotoProof')}
                         >
                           <Eye className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       ) : (
                         <span className="text-zinc-300 font-mono text-xs">-</span>
                       )}
@@ -714,14 +730,16 @@ function StaffShiftHistoryContent() {
           <p className="text-[11px] text-zinc-400">{t('emptyHistoryDesc')}</p>
           {hasAnyAppliedFilter && (
             <div className="pt-1">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 type="button"
                 onClick={handleClearAllFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
                 <span>{t('btnResetFilters')}</span>
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -732,8 +750,7 @@ function StaffShiftHistoryContent() {
         <div className="flex items-center gap-3 text-xs text-zinc-600 font-medium">
           <div className="flex items-center gap-1.5">
             <span>{t('paginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSizeInput}
@@ -743,6 +760,7 @@ function StaffShiftHistoryContent() {
                 setCurrentPage(1)
                 setWindowStart(1)
               }}
+              containerClassName="w-14 space-y-0"
               className="w-14 px-2 py-1 text-center font-bold text-zinc-900 border border-zinc-200 rounded-lg focus:outline-none focus:border-[#2AC1BC]"
             />
             <span>{t('paginationPerPage')}</span>
@@ -757,60 +775,70 @@ function StaffShiftHistoryContent() {
         </div>
 
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             type="button"
             onClick={handlePrevWindow}
             disabled={windowStart === 1}
-            className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationJumpBack5')}
           >
             <ChevronsLeft className="w-4 h-4 text-zinc-600" />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             type="button"
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={safeCurrentPage === 1}
-            className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationPrev')}
           >
             <ChevronLeft className="w-4 h-4 text-zinc-600" />
-          </button>
+          </Button>
 
           {pageNumbers.map(num => (
-            <button
+            <Button
               key={num}
+              variant={safeCurrentPage === num ? 'primary' : 'ghost'}
+              size="sm"
               type="button"
               onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`w-8 h-8 p-0 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 safeCurrentPage === num
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                  : 'text-zinc-600 hover:bg-zinc-100'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC]'
+                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
               }`}
             >
               {num}
-            </button>
+            </Button>
           ))}
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             type="button"
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={safeCurrentPage >= totalPages}
-            className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationNext')}
           >
             <ChevronRight className="w-4 h-4 text-zinc-600" />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             type="button"
             onClick={handleNextWindow}
             disabled={windowStart + 5 > totalPages}
-            className="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationJumpForward5')}
           >
             <ChevronsRight className="w-4 h-4 text-zinc-600" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -831,13 +859,15 @@ function StaffShiftHistoryContent() {
                   {previewImageModal.title}
                 </h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => setPreviewImageModal(null)}
-                className="p-1 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+                className="p-1 h-auto rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="relative bg-zinc-950 aspect-video max-h-[380px] flex items-center justify-center">
@@ -879,13 +909,14 @@ function StaffShiftHistoryContent() {
             )}
 
             <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex justify-end">
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={() => setPreviewImageModal(null)}
-                className="px-4 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 h-auto bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {t('btnClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -912,14 +943,16 @@ function StaffShiftHistoryContent() {
                   <p className="text-[11px] text-zinc-500 font-medium">{t('descFilterModal')}</p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={handleRequestCloseFilterModal}
-                className="p-1.5 rounded-lg hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+                className="p-1.5 h-auto rounded-lg hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
                 title={t('btnClose')}
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Body */}
@@ -932,16 +965,18 @@ function StaffShiftHistoryContent() {
                     <span>{t('filterDateRange')}</span>
                   </label>
                   {(modalStartDate || modalEndDate) && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       type="button"
                       onClick={() => {
                         setModalStartDate('')
                         setModalEndDate('')
                       }}
-                      className="text-[11px] text-zinc-400 hover:text-red-500 font-semibold cursor-pointer"
+                      className="text-[11px] h-auto p-0 text-zinc-400 hover:text-red-500 hover:bg-transparent font-semibold cursor-pointer"
                     >
                       {t('filterClearDates')}
-                    </button>
+                    </Button>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
@@ -949,10 +984,11 @@ function StaffShiftHistoryContent() {
                     <span className="text-[10px] font-bold text-zinc-400 block mb-1">
                       {t('filterFromDate')}
                     </span>
-                    <input
+                    <TextInput
                       type="date"
                       value={modalStartDate}
                       onChange={e => setModalStartDate(e.target.value)}
+                      containerClassName="space-y-0"
                       className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                     />
                   </div>
@@ -960,11 +996,12 @@ function StaffShiftHistoryContent() {
                     <span className="text-[10px] font-bold text-zinc-400 block mb-1">
                       {t('filterToDate')}
                     </span>
-                    <input
+                    <TextInput
                       type="date"
                       value={modalEndDate}
                       min={modalStartDate || undefined}
                       onChange={e => setModalEndDate(e.target.value)}
+                      containerClassName="space-y-0"
                       className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                     />
                   </div>
@@ -978,19 +1015,19 @@ function StaffShiftHistoryContent() {
                   <span>{t('filterShiftType')}</span>
                 </label>
                 <div className="relative">
-                  <select
+                  <SelectInput
                     value={modalShift}
                     onChange={e => setModalShift(e.target.value)}
                     disabled={isShiftsLoading}
+                    options={[
+                      { value: 'all', label: t('filterAllShifts') },
+                      ...availableShifts.map(s => ({
+                        value: s.name,
+                        label: `${getShiftName(s.name)} (${s.startTime} - ${s.endTime})`,
+                      })),
+                    ]}
                     className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <option value="all">{t('filterAllShifts')}</option>
-                    {availableShifts.map(s => (
-                      <option key={s.id} value={s.name}>
-                        {getShiftName(s.name)} ({s.startTime} - {s.endTime})
-                      </option>
-                    ))}
-                  </select>
+                  />
                   {isShiftsLoading && (
                     <div className="absolute right-8 top-1/2 -translate-y-1/2">
                       <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
@@ -1005,48 +1042,55 @@ function StaffShiftHistoryContent() {
                   <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
                   <span>{t('filterStatus')}</span>
                 </label>
-                <select
+                <SelectInput
                   value={modalStatus}
                   onChange={e =>
                     setModalStatus(e.target.value as 'all' | 'on_time' | 'late' | 'absent')
                   }
+                  options={[
+                    { value: 'all', label: t('filterAllStatuses') },
+                    { value: 'on_time', label: t('tableStatusOnTime') },
+                    { value: 'late', label: t('tableStatusLate') },
+                    { value: 'absent', label: t('tableStatusAbsent') },
+                  ]}
                   className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
-                >
-                  <option value="all">{t('filterAllStatuses')}</option>
-                  <option value="on_time">{t('tableStatusOnTime')}</option>
-                  <option value="late">{t('tableStatusLate')}</option>
-                  <option value="absent">{t('tableStatusAbsent')}</option>
-                </select>
+                />
               </div>
             </div>
 
             {/* Footer */}
             <div className="p-4 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between gap-3">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={handleResetModalDrafts}
-                className="px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 h-auto text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                 title={t('titleResetDialog')}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>{t('btnReset')}</span>
-              </button>
+              </Button>
 
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   type="button"
                   onClick={handleRequestCloseFilterModal}
-                  className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+                  className="px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
                 >
                   {t('btnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
                   type="button"
                   onClick={handleApplyModalFilter}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#22a8a4] rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
+                  className="px-4 py-2 h-auto text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#22a8a4] rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
                 >
                   {t('btnApplyFilters')}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1068,20 +1112,22 @@ function StaffShiftHistoryContent() {
               <p className="text-xs text-zinc-600 leading-relaxed">{t('filterConfirmCloseDesc')}</p>
             </div>
             <div className="flex items-center gap-3 px-6 pb-6">
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={() => setShowConfirmCloseModal(false)}
-                className="flex-1 px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+                className="flex-1 px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
                 {t('btnContinueEditing')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 type="button"
                 onClick={handleConfirmDiscardAndClose}
-                className="flex-1 px-4 py-2 text-xs font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors cursor-pointer shadow-2xs"
+                className="flex-1 px-4 py-2 h-auto text-xs font-bold text-white rounded-xl transition-colors cursor-pointer shadow-2xs"
               >
                 {t('btnDiscardAndClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
