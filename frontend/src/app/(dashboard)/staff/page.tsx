@@ -47,6 +47,7 @@ import {
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import { staffAttendanceService, StaffMonthlySummary } from '@/services/staff-attendance.service'
+import { Button, TextInput, TextareaInput, Checkbox } from '@/components/ui'
 
 function getDutyTitle(duty: DutyTaskItem, _isEn = false): string {
   return duty.title
@@ -788,17 +789,19 @@ export default function StaffOverviewPage() {
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="sm"
                   onClick={() => {
                     fetchOverview()
                     fetchMonthlySummary()
                   }}
-                  className="py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
+                  leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                  className="py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs h-auto border-0"
                 >
-                  <RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />
                   <span>{t('btnRefreshData')}</span>
-                </button>
+                </Button>
 
                 <Link
                   href="/staff/schedule"
@@ -991,8 +994,10 @@ export default function StaffOverviewPage() {
                             </span>
                           </div>
                         </div>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() =>
                             setPreviewImageModal({
                               isOpen: true,
@@ -1017,10 +1022,11 @@ export default function StaffOverviewPage() {
                               ),
                             })
                           }
-                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer"
+                          leftIcon={<Eye className="w-3 h-3" />}
+                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer p-0 h-auto border-0 hover:bg-transparent"
                         >
-                          <Eye className="w-3 h-3" /> {t('viewPhoto')}
-                        </button>
+                          <span>{t('viewPhoto')}</span>
+                        </Button>
                       </div>
                     )}
 
@@ -1125,8 +1131,10 @@ export default function StaffOverviewPage() {
                             </span>
                           </div>
                         </div>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() =>
                             setPreviewImageModal({
                               isOpen: true,
@@ -1151,10 +1159,11 @@ export default function StaffOverviewPage() {
                               ),
                             })
                           }
-                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer"
+                          leftIcon={<Eye className="w-3 h-3" />}
+                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer p-0 h-auto border-0 hover:bg-transparent"
                         >
-                          <Eye className="w-3 h-3" /> {t('viewPhoto')}
-                        </button>
+                          <span>{t('viewPhoto')}</span>
+                        </Button>
                       </div>
                     )}
 
@@ -1176,8 +1185,10 @@ export default function StaffOverviewPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                   {/* Check In Button */}
                   {attendance?.checkIn ? (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() =>
                         setPreviewImageModal({
                           isOpen: true,
@@ -1202,33 +1213,37 @@ export default function StaffOverviewPage() {
                           ),
                         })
                       }
-                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs"
+                      leftIcon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs h-auto"
                     >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       <span>{t('btnCheckInLocked')}</span>
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
+                      size="sm"
                       disabled={!checkInEval.allowed}
                       onClick={handleOpenCheckIn}
-                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      leftIcon={<Camera className="w-4 h-4" />}
+                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer h-auto border-0 ${
                         checkInEval.allowed
                           ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25'
-                          : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                          : 'bg-zinc-200 text-zinc-400 cursor-not-allowed hover:bg-zinc-200'
                       }`}
                     >
-                      <Camera className="w-4 h-4" />
                       <span>
                         {checkInEval.isLate ? t('btnCheckInLate') : t('btnCheckInOnTime')}
                       </span>
-                    </button>
+                    </Button>
                   )}
 
                   {/* Check Out Button */}
                   {attendance?.checkOut ? (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() =>
                         setPreviewImageModal({
                           isOpen: true,
@@ -1253,27 +1268,29 @@ export default function StaffOverviewPage() {
                           ),
                         })
                       }
-                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs"
+                      leftIcon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs h-auto"
                     >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       <span>{t('btnCheckOutLocked')}</span>
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
+                      size="sm"
                       disabled={!checkOutEval.allowed}
                       onClick={handleOpenCheckOut}
-                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      leftIcon={<LogOut className="w-4 h-4" />}
+                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer h-auto border-0 ${
                         checkOutEval.allowed
                           ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25'
-                          : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                          : 'bg-zinc-200 text-zinc-400 cursor-not-allowed hover:bg-zinc-200'
                       }`}
                     >
-                      <LogOut className="w-4 h-4" />
                       <span>
                         {checkOutEval.isEarly ? t('btnCheckOutEarly') : t('btnCheckOutNormal')}
                       </span>
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -1347,11 +1364,10 @@ export default function StaffOverviewPage() {
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                           {/* Left: Checkbox + Title + Proof Tag */}
                           <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={duty.completed}
                               onChange={() => handleToggleDuty(duty)}
-                              className="mt-1 w-4 h-4 rounded text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer shrink-0"
+                              className="mt-1 shrink-0"
                             />
                             <div className="space-y-1.5 flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
@@ -1432,17 +1448,19 @@ export default function StaffOverviewPage() {
                               </div>
                             )}
 
-                            <button
+                            <Button
                               type="button"
+                              variant="outline"
+                              size="sm"
                               onClick={() => {
                                 setSelectedDutyForProof(duty)
                                 setActiveModal('duty_proof')
                               }}
-                              className="px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs shrink-0"
+                              leftIcon={<FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs shrink-0 h-auto"
                             >
-                              <FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />
                               <span>{t('btnUpdateDetails')}</span>
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -1674,13 +1692,15 @@ export default function StaffOverviewPage() {
                   {previewImageModal.title}
                 </h3>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setPreviewImageModal(null)}
-                className="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer h-auto w-auto border-0"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Read-only audit banner */}
@@ -1747,13 +1767,15 @@ export default function StaffOverviewPage() {
 
             {/* Footer */}
             <div className="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-end">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setPreviewImageModal(null)}
-                className="px-5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer h-auto border-0"
               >
                 {t('btnClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1779,20 +1801,24 @@ export default function StaffOverviewPage() {
               <p className="text-xs text-zinc-500 leading-relaxed">{t('confirmCloseDesc')}</p>
             </div>
             <div className="grid grid-cols-2 gap-2.5 pt-1">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setShowConfirmClose(false)}
-                className="py-2.5 px-3 rounded-xl border border-zinc-200 text-zinc-700 font-bold text-xs hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="py-2.5 px-3 rounded-xl border border-zinc-200 text-zinc-700 font-bold text-xs hover:bg-zinc-100 transition-colors cursor-pointer h-auto"
               >
                 {t('btnContinueEditing')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmDiscardClose}
-                className="py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer shadow-sm"
+                className="py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer shadow-sm h-auto border-0"
               >
                 {t('btnDiscardAndClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -2372,16 +2398,18 @@ function CheckInOutCameraModal({
               </p>
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               stopCamera()
               onClose()
             }}
-            className="p-2 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+            className="p-2 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer h-auto w-auto border-0"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         <div className="p-5 sm:p-6 space-y-4 overflow-y-auto max-h-[75vh]">
@@ -2433,13 +2461,15 @@ function CheckInOutCameraModal({
                   >
                     <MapPin className="w-3 h-3 text-zinc-400" />
                     {t('gpsDisabled')}
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={locateUser}
-                      className="text-[#2AC1BC] hover:underline ml-1 cursor-pointer font-bold"
+                      className="text-[#2AC1BC] hover:underline ml-1 cursor-pointer font-bold p-0 h-auto border-0 hover:bg-transparent inline"
                     >
                       {t('gpsRetry')}
-                    </button>
+                    </Button>
                   </span>
                 )}
               </div>
@@ -2480,41 +2510,48 @@ function CheckInOutCameraModal({
                     <div className="text-center p-6 text-zinc-400 text-xs space-y-3 max-w-sm">
                       <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
                       <p className="font-bold text-zinc-200">{cameraError}</p>
-                      <input
+                      <TextInput
                         ref={fallbackFileInputRef}
                         type="file"
                         accept="image/*"
+                        containerClassName="hidden"
                         className="hidden"
                         onChange={handleFallbackImageUpload}
                       />
                       <div className="flex flex-col sm:flex-row gap-2 pt-1 justify-center">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => startCamera(facingMode)}
-                          className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer h-auto border-0"
                         >
                           {t('retryCamera')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => fallbackFileInputRef.current?.click()}
-                          className="px-3 py-1.5 rounded-xl bg-[#2AC1BC]/20 hover:bg-[#2AC1BC]/30 text-[#2AC1BC] border border-[#2AC1BC]/40 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                          leftIcon={<Upload className="w-3.5 h-3.5" />}
+                          className="px-3 py-1.5 rounded-xl bg-[#2AC1BC]/20 hover:bg-[#2AC1BC]/30 text-[#2AC1BC] border border-[#2AC1BC]/40 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs h-auto"
                         >
-                          <Upload className="w-3.5 h-3.5" />
                           <span>{t('btnUploadDuty')}</span>
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
                   {cameraStatus === 'ready' && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={handleToggleFacingMode}
-                      className="absolute top-3 right-3 z-20 p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                      leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                      className="absolute top-3 right-3 z-20 p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer h-auto"
                     >
-                      <RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />
                       {facingMode === 'user' ? t('cameraRear') : t('cameraFront')}
-                    </button>
+                    </Button>
                   )}
                   <div className="absolute inset-4 border border-white/20 rounded-xl pointer-events-none flex flex-col justify-between">
                     <div className="flex justify-between p-2">
@@ -2568,37 +2605,40 @@ function CheckInOutCameraModal({
             {/* Snap Button */}
             <div className="flex items-center justify-center gap-3 pt-1">
               {!capturedPhoto ? (
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="sm"
                   disabled={cameraStatus !== 'ready' || geoState.status === 'locating'}
                   onClick={handleCaptureRealFrame}
-                  className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md ${
+                  leftIcon={
+                    geoState.status === 'locating' ? (
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#2AC1BC]" />
+                    ) : (
+                      <Camera className="w-4 h-4" />
+                    )
+                  }
+                  className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md h-auto border-0 ${
                     cameraStatus === 'ready' && geoState.status !== 'locating'
                       ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-[#2AC1BC]/25'
-                      : 'bg-zinc-200 text-zinc-500 cursor-not-allowed'
+                      : 'bg-zinc-200 text-zinc-500 cursor-not-allowed hover:bg-zinc-200'
                   }`}
                 >
-                  {geoState.status === 'locating' ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-[#2AC1BC]" />
-                      <span>{t('waitingGps')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="w-4 h-4" />
-                      <span>{t('btnCaptureNow')}</span>
-                    </>
-                  )}
-                </button>
+                  <span>
+                    {geoState.status === 'locating' ? t('waitingGps') : t('btnCaptureNow')}
+                  </span>
+                </Button>
               ) : (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={handleRetakePhoto}
-                  className="w-full py-2.5 px-4 rounded-xl border border-zinc-300 hover:bg-zinc-100 text-zinc-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  leftIcon={<RefreshCw className="w-3.5 h-3.5 text-zinc-600" />}
+                  className="w-full py-2.5 px-4 rounded-xl border border-zinc-300 hover:bg-zinc-100 text-zinc-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer h-auto"
                 >
-                  <RefreshCw className="w-3.5 h-3.5 text-zinc-600" />
                   <span>{t('btnRetake')}</span>
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -2637,25 +2677,27 @@ function CheckInOutCameraModal({
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {currentPresets.map((chip, idx) => (
-                    <button
+                    <Button
                       key={idx}
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleSelectChip(chip)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer h-auto border-0 ${
                         selectedQuickReason === chip
-                          ? 'bg-amber-600 text-white shadow-2xs border border-amber-600'
+                          ? 'bg-amber-600 text-white shadow-2xs hover:bg-amber-700'
                           : 'bg-white border border-amber-300 text-amber-900 hover:bg-amber-100/80 shadow-2xs'
                       }`}
                     >
                       {chip}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
 
               {/* Textarea */}
               <div className="space-y-1">
-                <textarea
+                <TextareaInput
                   rows={2}
                   value={explanation}
                   onChange={e => {
@@ -2672,6 +2714,7 @@ function CheckInOutCameraModal({
                         : t('placeholderCheckOutNote')
                   }
                   className="w-full p-2.5 rounded-xl bg-white border border-amber-300 text-xs text-zinc-900 font-medium focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-500/20"
+                  containerClassName="space-y-0"
                 />
                 {isRequireExplanation && !explanation.trim() ? (
                   <span className="text-[10px] font-bold text-red-600 block">
@@ -2689,18 +2732,22 @@ function CheckInOutCameraModal({
 
         {/* MODAL FOOTER */}
         <div className="p-4 sm:p-5 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => {
               stopCamera()
               onClose()
             }}
-            className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer"
+            className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer h-auto"
           >
             {t('btnCancel')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
+            size="sm"
             disabled={!isFormValid}
             onClick={() => {
               if (capturedPhoto && capturedWatermark && capturedTime && isFormValid) {
@@ -2714,15 +2761,15 @@ function CheckInOutCameraModal({
                 })
               }
             }}
-            className={`py-2.5 px-5 rounded-xl font-bold text-xs text-white transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`py-2.5 px-5 rounded-xl font-bold text-xs text-white transition-all cursor-pointer flex items-center gap-1.5 h-auto border-0 ${
               isFormValid
                 ? 'bg-[#2AC1BC] hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/25'
-                : 'bg-zinc-300 text-zinc-500 cursor-not-allowed'
+                : 'bg-zinc-300 text-zinc-500 cursor-not-allowed hover:bg-zinc-300'
             }`}
           >
             <Check className="w-4 h-4" />
             <span>{mode === 'checkin' ? t('btnConfirmCheckIn') : t('btnConfirmCheckOut')}</span>
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -2808,13 +2855,15 @@ function DutyProofModal({
               </p>
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+            className="p-2 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer h-auto w-auto border-0"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -2866,53 +2915,57 @@ function DutyProofModal({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <input
+            <TextInput
               ref={cameraRef}
               type="file"
               accept="image/*"
               capture="environment"
+              containerClassName="hidden"
               className="hidden"
               onChange={handleFileUpload}
             />
-            <input
+            <TextInput
               ref={fileRef}
               type="file"
               accept="image/*"
+              containerClassName="hidden"
               className="hidden"
               onChange={handleFileUpload}
             />
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={() => cameraRef.current?.click()}
-              className="flex-1 py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              leftIcon={<Camera className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+              className="flex-1 py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer h-auto border-0"
             >
-              <Camera className="w-3.5 h-3.5 text-[#2AC1BC]" />
               <span>{t('btnCaptureNewDuty')}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => fileRef.current?.click()}
-              className="py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              leftIcon={<Upload className="w-3.5 h-3.5 text-zinc-500" />}
+              className="py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer h-auto"
             >
-              <Upload className="w-3.5 h-3.5 text-zinc-500" />
               <span>{t('btnUploadDuty')}</span>
-            </button>
+            </Button>
           </div>
 
           {/* Note Input */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-700 block">{t('dutyNoteLabel')}</label>
-            <input
-              type="text"
-              value={note}
-              onChange={e => {
-                setNote(e.target.value)
-                onChangeDraft()
-              }}
-              placeholder={t('dutyNotePlaceholder')}
-              className="w-full p-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-900 font-medium focus:outline-none focus:border-[#2AC1BC]"
-            />
-          </div>
+          <TextInput
+            label={t('dutyNoteLabel')}
+            value={note}
+            onChange={e => {
+              setNote(e.target.value)
+              onChangeDraft()
+            }}
+            placeholder={t('dutyNotePlaceholder')}
+            className="w-full p-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-900 font-medium focus:outline-none focus:border-[#2AC1BC]"
+            containerClassName="space-y-1"
+          />
 
           {/* Warning notice if required photo is missing */}
           {warningNotice && (
@@ -2925,17 +2978,21 @@ function DutyProofModal({
 
         {/* Footer with 2 separate action buttons: Update Progress & Complete Task */}
         <div className="p-4 sm:p-5 bg-zinc-50 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-2.5">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer"
+            className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer h-auto"
           >
             {t('btnCancel')}
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => {
                 onSubmit({
                   dutyId: duty.id,
@@ -2945,14 +3002,16 @@ function DutyProofModal({
                   markCompleted: false,
                 })
               }}
-              className="py-2.5 px-3.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              leftIcon={<FileText className="w-3.5 h-3.5 text-zinc-500" />}
+              className="py-2.5 px-3.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs h-auto"
             >
-              <FileText className="w-3.5 h-3.5 text-zinc-500" />
               <span>{t('btnUpdateProgress')}</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={() => {
                 if (duty.requiresPhoto && !photo) {
                   setWarningNotice(t('photoProofRequiredWarning'))
@@ -2966,11 +3025,11 @@ function DutyProofModal({
                   markCompleted: true,
                 })
               }}
-              className="py-2.5 px-4.5 rounded-xl bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-bold text-xs transition-all shadow-md shadow-[#2AC1BC]/25 flex items-center gap-1.5 cursor-pointer"
+              leftIcon={<Check className="w-4 h-4" />}
+              className="py-2.5 px-4.5 rounded-xl bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-bold text-xs transition-all shadow-md shadow-[#2AC1BC]/25 flex items-center gap-1.5 cursor-pointer h-auto border-0"
             >
-              <Check className="w-4 h-4" />
               <span>{t('btnCompleteDuty')}</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
