@@ -105,6 +105,55 @@ export class SubscriptionsService {
   }
 
   /**
+   * Get the current active subscription and resolved tier for a landlord
+   */
+  async getCurrentSubscription(userId: string, boardingHouseId?: string) {
+    this.logger.log(`Fetching current active subscription for user ${userId}`)
+    let targetUserId = userId
+
+    if (boardingHouseId) {
+      const house = await this.prisma.boardingHouse.findUnique({
+        where: { id: boardingHouseId },
+        select: { ownerId: true },
+      })
+      if (house?.ownerId) {
+        targetUserId = house.ownerId
+      }
+    }
+
+    const now = new Date()
+    const activeSub = await this.prisma.userSubscription.findFirst({
+      where: {
+        userId: targetUserId,
+        status: 'active',
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        subscriptionPlan: true,
+      },
+    })
+
+    const tier = activeSub?.planName || 'free'
+
+    return {
+      tier,
+      hasActiveSubscription: !!activeSub,
+      subscription: activeSub
+        ? {
+            id: activeSub.id,
+            planName: activeSub.planName,
+            startDate: activeSub.startDate.toISOString(),
+            endDate: activeSub.endDate.toISOString(),
+            billingCycle: activeSub.billingCycle,
+            price: Number(activeSub.price),
+          }
+        : null,
+    }
+  }
+
+  /**
    * Create or reuse idempotent PayOS checkout session for Landlord Subscription
    */
   async createCheckout(

@@ -58,6 +58,11 @@ export enum BillingCycle {
   yearly = 'yearly',
 }
 
+export enum Gender {
+  male = 'male',
+  female = 'female',
+}
+
 export enum ExpenseStatus {
   pending = 'pending',
   paid = 'paid',
