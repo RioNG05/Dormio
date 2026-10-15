@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import {
   Users,
@@ -16,213 +17,170 @@ import {
   CheckCircle2,
   ShieldAlert,
   ChevronRight,
+  RefreshCw,
+  AlertCircle,
+  ShieldCheck,
+  Building,
 } from 'lucide-react'
 import { adminAnalyticsService, AdminOverviewResponse } from '@/services/admin-analytics.service'
-import { Text } from '@/components/ui/Text'
+import { grievanceService, AdminGrievanceItem } from '@/services/grievance.service'
+import { postService, PublicPostListing } from '@/services/post.service'
+import { Button, Text } from '@/components/ui'
+
+function formatDisplayDate(dateStr: string, locale: string) {
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString(locale === 'en' ? 'en-US' : 'vi-VN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateStr
+  }
+}
 
 export default function AdminDashboardPage() {
   const { locale } = useLanguage()
   const t = useTranslations('admin')
+  const router = useRouter()
 
-  const [liveOverview, setLiveOverview] = React.useState<AdminOverviewResponse | null>(null)
-
-  React.useEffect(() => {
-    adminAnalyticsService
-      .getAdminOverview()
-      .then(data => setLiveOverview(data))
-      .catch(err => console.warn('Failed to fetch live admin overview, using fallback:', err))
-  }, [])
+  const [overview, setOverview] = useState<AdminOverviewResponse | null>(null)
+  const [urgentGrievances, setUrgentGrievances] = useState<AdminGrievanceItem[]>([])
+  const [flaggedListings, setFlaggedListings] = useState<PublicPostListing[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const numberLocale = locale === 'en' ? 'en-US' : 'vi-VN'
 
-  const totalUsersVal = liveOverview
-    ? new Intl.NumberFormat(numberLocale).format(liveOverview.totalUsers)
-    : '12,480'
+  const fetchDashboardData = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setIsRefreshing(true)
+      } else {
+        setIsLoading(true)
+      }
+      setError(null)
 
-  const userSubtext = liveOverview
-    ? t('adminStatUserSubtext', {
-        tenants: new Intl.NumberFormat(numberLocale).format(liveOverview.userRoles?.tenant || 0),
-        landlords: new Intl.NumberFormat(numberLocale).format(liveOverview.userRoles?.landlord || 0),
-        staff: new Intl.NumberFormat(numberLocale).format(liveOverview.userRoles?.employee || 0),
-      })
-    : t('adminStatUserSubtext', {
-        tenants: '8,920',
-        landlords: '3,140',
-        staff: '420',
-      })
+      try {
+        const [overviewRes, grievanceRes, postsRes] = await Promise.all([
+          adminAnalyticsService.getAdminOverview().catch(err => {
+            console.error('Failed to load admin overview:', err)
+            return null
+          }),
+          grievanceService.getAdminGrievanceQueue({ limit: 4 }).catch(err => {
+            console.error('Failed to load urgent grievances:', err)
+            return null
+          }),
+          postService.browsePosts({ limit: 4 }).catch(err => {
+            console.error('Failed to load moderation listings:', err)
+            return null
+          }),
+        ])
 
-  const userGrowth = liveOverview
-    ? `${liveOverview.userGrowthRate >= 0 ? '+' : ''}${liveOverview.userGrowthRate}%`
-    : '+14.2%'
-
-  const totalHousesVal = liveOverview
-    ? new Intl.NumberFormat(numberLocale).format(liveOverview.totalHouses)
-    : '1,850'
-
-  const propSubtext = liveOverview
-    ? t('adminStatPropSubtext', {
-        rooms: new Intl.NumberFormat(numberLocale).format(liveOverview.totalRooms),
-        occupancy: liveOverview.occupancyRate,
-      })
-    : t('adminStatPropSubtext', {
-        rooms: '24,600',
-        occupancy: '88.5',
-      })
-
-  const propGrowth = liveOverview
-    ? `${liveOverview.propertyGrowthRate >= 0 ? '+' : ''}${liveOverview.propertyGrowthRate}%`
-    : '+8.6%'
-
-  const revenueVal = liveOverview
-    ? new Intl.NumberFormat(numberLocale).format(liveOverview.platformRevenue)
-    : '148.500.000'
-
-  const revenueGrowth = liveOverview
-    ? `${liveOverview.revenueGrowthRate >= 0 ? '+' : ''}${liveOverview.revenueGrowthRate}%`
-    : '+22.4%'
-
-  const pendingGrv = liveOverview ? String(liveOverview.pendingGrievancesCount) : '7'
-
-  const urgentGrvText = liveOverview
-    ? t('adminStatUrgentGrvText', { count: liveOverview.urgentGrievancesCount })
-    : t('adminStatUrgentGrvText', { count: 3 })
-
-  const reportedItemsVal = liveOverview ? String(liveOverview.reportedItemsCount) : '12'
-
-  // Dynamic quick stats from live API with fallbacks
-  const stats = [
-    {
-      id: 'users',
-      label: t('adminStatTotalUsers'),
-      value: totalUsersVal,
-      subtext: userSubtext,
-      growth: userGrowth,
-      isPositive: true,
-      icon: Users,
-      color: 'text-blue-600 bg-blue-50 border-blue-100',
-      link: '/admin/users',
+        if (overviewRes) {
+          setOverview(overviewRes)
+        }
+        if (grievanceRes?.items) {
+          setUrgentGrievances(grievanceRes.items)
+        }
+        if (postsRes?.data) {
+          setFlaggedListings(postsRes.data)
+        }
+      } catch (err: any) {
+        console.error('Error fetching admin dashboard data:', err)
+        setError(t('adminLoadError'))
+      } finally {
+        setIsLoading(false)
+        setIsRefreshing(false)
+      }
     },
-    {
-      id: 'properties',
-      label: t('adminStatHousesRooms'),
-      value: totalHousesVal,
-      subtext: propSubtext,
-      growth: propGrowth,
-      isPositive: true,
-      icon: Building2,
-      color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-      link: '/admin/boarding-houses',
-    },
-    {
-      id: 'revenue',
-      label: t('adminStatPlatformRevenue'),
-      value: revenueVal,
-      unit: '₫',
-      subtext: t('adminStatRevenueSubtext'),
-      growth: revenueGrowth,
-      isPositive: true,
-      icon: Wallet,
-      color: 'text-orange-600 bg-orange-50 border-orange-100',
-      link: '/admin/analytics',
-    },
-    {
-      id: 'grievances',
-      label: t('adminStatPendingGrievances'),
-      value: pendingGrv,
-      subtext: urgentGrvText,
-      growth: t('adminStatActionNeeded'),
-      isPositive: false,
-      icon: AlertTriangle,
-      color: 'text-orange-600 bg-orange-50 border-orange-100',
-      badge: liveOverview
-        ? t('adminStatUrgentBadge', { count: liveOverview.urgentGrievancesCount })
-        : t('adminStatUrgentBadge', { count: 3 }),
-      link: '/admin/grievances',
-    },
-    {
-      id: 'moderation',
-      label: t('adminStatReportedItems'),
-      value: reportedItemsVal,
-      subtext: t('adminStatReportedSubtext'),
-      growth: t('adminStatNeedsReview'),
-      isPositive: false,
-      icon: ShieldAlert,
-      color: 'text-amber-600 bg-amber-50 border-amber-100',
-      badge: t('adminStatItemsBadge', { count: reportedItemsVal }),
-      link: '/admin/blogs',
-    },
-  ]
+    [t],
+  )
 
-  // Urgent Grievances Quick Queue
-  const urgentGrievances = [
-    {
-      id: 'GRV-1092',
-      tenant: 'Nguyễn Thị Mai',
-      tenantPhone: '0912.345.678',
-      house: 'Dormio Sunrise (Phòng 302)',
-      landlord: 'Trần Đức Nam',
-      category: t('adminGrvCatDeposit'),
-      priority: 'urgent',
-      time: t('adminGrvTime25m'),
-    },
-    {
-      id: 'GRV-1088',
-      tenant: 'Lê Hoàng Phúc',
-      tenantPhone: '0988.112.233',
-      house: 'Ký túc xá Cao Lỗ (Phòng 104)',
-      landlord: 'Võ Thị Bích',
-      category: t('adminGrvCatPower'),
-      priority: 'urgent',
-      time: t('adminGrvTime1h'),
-    },
-    {
-      id: 'GRV-1085',
-      tenant: 'Phạm Hải Đăng',
-      tenantPhone: '0909.876.543',
-      house: 'Nhà trọ Thảo Điền Garden (Phòng 201)',
-      landlord: 'Đặng Quốc Cường',
-      category: t('adminGrvCatMisleading'),
-      priority: 'high',
-      time: t('adminGrvTime3h'),
-    },
-  ]
+  useEffect(() => {
+    fetchDashboardData()
+  }, [fetchDashboardData])
 
-  // Flagged Listings Quick Queue
-  const flaggedListings = [
-    {
-      id: 'LST-8904',
-      title: t('adminLst1Title'),
-      landlord: 'Lê Minh Tuấn',
-      reason: t('adminLst1Reason'),
-      reportsCount: 8,
-      status: 'active',
-      flaggedDate: t('adminLst1Date'),
-    },
-    {
-      id: 'LST-8891',
-      title: t('adminLst2Title'),
-      landlord: 'Nguyễn Văn Hùng',
-      reason: t('adminLst2Reason'),
-      reportsCount: 4,
-      status: 'active',
-      flaggedDate: t('adminLst2Date'),
-    },
-    {
-      id: 'LST-8876',
-      title: t('adminLst3Title'),
-      landlord: 'Phạm Thu Thảo',
-      reason: t('adminLst3Reason'),
-      reportsCount: 11,
-      status: 'active',
-      flaggedDate: t('adminLst3Date'),
-    },
-  ]
+  const stats = overview
+    ? [
+        {
+          id: 'users',
+          label: t('adminStatTotalUsers'),
+          value: new Intl.NumberFormat(numberLocale).format(overview.totalUsers || 0),
+          subtext: t('adminStatUserSubtext', {
+            tenants: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.tenant || 0),
+            landlords: new Intl.NumberFormat(numberLocale).format(
+              overview.userRoles?.landlord || 0,
+            ),
+            staff: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.employee || 0),
+          }),
+          growth: `${overview.userGrowthRate >= 0 ? '+' : ''}${overview.userGrowthRate || 0}%`,
+          isPositive: (overview.userGrowthRate || 0) >= 0,
+          icon: Users,
+          color: 'text-blue-600 bg-blue-50 border-blue-100',
+          link: '/admin/users',
+        },
+        {
+          id: 'properties',
+          label: t('adminStatHousesRooms'),
+          value: new Intl.NumberFormat(numberLocale).format(overview.totalHouses || 0),
+          subtext: t('adminStatPropSubtext', {
+            rooms: new Intl.NumberFormat(numberLocale).format(overview.totalRooms || 0),
+            occupancy: overview.occupancyRate || 0,
+          }),
+          growth: `${overview.propertyGrowthRate >= 0 ? '+' : ''}${overview.propertyGrowthRate || 0}%`,
+          isPositive: (overview.propertyGrowthRate || 0) >= 0,
+          icon: Building2,
+          color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+          link: '/admin/boarding-houses',
+        },
+        {
+          id: 'revenue',
+          label: t('adminStatPlatformRevenue'),
+          value: new Intl.NumberFormat(numberLocale).format(overview.platformRevenue || 0),
+          unit: '₫',
+          subtext: t('adminStatRevenueSubtext'),
+          growth: `${overview.revenueGrowthRate >= 0 ? '+' : ''}${overview.revenueGrowthRate || 0}%`,
+          isPositive: (overview.revenueGrowthRate || 0) >= 0,
+          icon: Wallet,
+          color: 'text-orange-600 bg-orange-50 border-orange-100',
+          link: '/admin/analytics',
+        },
+        {
+          id: 'grievances',
+          label: t('adminStatPendingGrievances'),
+          value: String(overview.pendingGrievancesCount || 0),
+          subtext: t('adminStatUrgentGrvText', { count: overview.urgentGrievancesCount || 0 }),
+          growth: t('adminStatActionNeeded'),
+          isPositive: false,
+          icon: AlertTriangle,
+          color: 'text-orange-600 bg-orange-50 border-orange-100',
+          badge: t('adminStatUrgentBadge', { count: overview.urgentGrievancesCount || 0 }),
+          link: '/admin/grievances',
+        },
+        {
+          id: 'moderation',
+          label: t('adminStatReportedItems'),
+          value: String(overview.reportedItemsCount || 0),
+          subtext: t('adminStatReportedSubtext'),
+          growth: t('adminStatNeedsReview'),
+          isPositive: false,
+          icon: ShieldAlert,
+          color: 'text-amber-600 bg-amber-50 border-amber-100',
+          badge: t('adminStatItemsBadge', { count: overview.reportedItemsCount || 0 }),
+          link: '/admin/blogs',
+        },
+      ]
+    : []
 
   return (
     <div className="space-y-8 pb-12">
       {/* Top Hero Banner & Title */}
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800/90 text-white p-6 sm:p-8 shadow-xl">
-        {/* Ambient Decorative Glow */}
         <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-orange-500/15 blur-3xl pointer-events-none" />
         <div className="absolute -left-16 -bottom-16 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
 
@@ -239,7 +197,13 @@ export default function AdminDashboardPage() {
               </span>
             </div>
 
-            <Text as="h1" variant="heading" size="2xl" weight="black" className="text-white sm:text-3xl tracking-tight">
+            <Text
+              as="h1"
+              variant="heading"
+              size="2xl"
+              weight="black"
+              className="text-white sm:text-3xl tracking-tight"
+            >
               {t('adminPageTitle')}
             </Text>
             <Text as="p" size="sm" className="text-zinc-300 leading-relaxed max-w-2xl">
@@ -247,113 +211,170 @@ export default function AdminDashboardPage() {
             </Text>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions & Refresh */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <Link
-              href="/admin/notifications"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/15 transition-all shadow-xs cursor-pointer whitespace-nowrap"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchDashboardData(true)}
+              disabled={isRefreshing}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
             >
-              <Megaphone className="w-4 h-4 text-orange-400" />
-              <span>{t('adminActionSendBroadcast')}</span>
-            </Link>
-            <Link
-              href="/admin/blogs"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/15 transition-all shadow-xs cursor-pointer whitespace-nowrap"
+              {t('adminRefresh')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/admin/notifications')}
+              leftIcon={<Megaphone className="w-4 h-4 text-orange-400" />}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
             >
-              <Newspaper className="w-4 h-4 text-amber-400" />
-              <span>{t('adminActionNewBlog')}</span>
-            </Link>
-            <Link
-              href="/admin/analytics"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all shadow-md shadow-orange-600/30 cursor-pointer whitespace-nowrap"
+              {t('adminActionSendBroadcast')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/admin/blogs')}
+              leftIcon={<Newspaper className="w-4 h-4 text-amber-400" />}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
             >
-              <TrendingUp className="w-4 h-4" />
-              <span>{t('adminActionFullAnalytics')}</span>
-            </Link>
+              {t('adminActionNewBlog')}
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => router.push('/admin/analytics')}
+              leftIcon={<TrendingUp className="w-4 h-4" />}
+              className="bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold shadow-md shadow-orange-600/30"
+            >
+              {t('adminActionFullAnalytics')}
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* 5 KPI Metric Cards - Bulletproof against text-dropping & overflow */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
-        {stats.map(item => {
-          const Icon = item.icon
-          return (
+      {/* Error Banner with Retry */}
+      {error && !isLoading && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            <Text size="sm" weight="semibold">
+              {error}
+            </Text>
+          </div>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => fetchDashboardData()}
+            className="shrink-0"
+          >
+            {t('adminRetry')}
+          </Button>
+        </div>
+      )}
+
+      {/* 5 KPI Metric Cards */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
+          {[1, 2, 3, 4, 5].map(i => (
             <div
-              key={item.id}
-              className="group relative bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs hover:shadow-md hover:border-orange-300/80 transition-all duration-200 flex flex-col justify-between"
+              key={i}
+              className="bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs animate-pulse space-y-4"
             >
-              <div>
-                {/* Top row: Icon on left, Growth/Status badge on right */}
-                <div className="flex items-center justify-between gap-2 mb-3.5">
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${item.color}`}
-                  >
-                    <Icon className="w-4.5 h-4.5" />
-                  </div>
-                  {item.growth && (
-                    <span
-                      className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
-                        item.isPositive
-                          ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
-                          : 'text-orange-700 bg-orange-50 border-orange-200/80'
-                      }`}
-                    >
-                      {item.isPositive && <TrendingUp className="w-3 h-3 shrink-0" />}
-                      {!item.isPositive && <AlertTriangle className="w-3 h-3 shrink-0" />}
-                      {item.growth}
-                    </span>
-                  )}
-                </div>
-
-                {/* Card Title Label (Full width, no truncation) */}
-                <Text
-                  as="span"
-                  size="xs"
-                  weight="bold"
-                  color="secondary"
-                  className="block uppercase tracking-wider mb-1.5"
-                >
-                  {item.label}
-                </Text>
-
-                {/* Main Metric Value (Bound inline with unit, NEVER drops lines) */}
-                <div className="flex items-baseline gap-1 text-zinc-900 leading-none whitespace-nowrap">
-                  <span className="text-2xl sm:text-[26px] font-black tracking-tight">
-                    {item.value}
-                  </span>
-                  {item.unit && (
-                    <span className="text-sm font-extrabold text-zinc-500 select-none">
-                      {item.unit}
-                    </span>
-                  )}
-                </div>
-
-                {/* Informative Subtext */}
-                <Text as="p" size="2xs" color="secondary" className="mt-2.5 leading-relaxed font-medium">
-                  {item.subtext}
-                </Text>
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 bg-zinc-200 rounded-xl" />
+                <div className="w-16 h-5 bg-zinc-200 rounded-full" />
               </div>
-
-              {/* Card Footer Link */}
-              {item.link ? (
-                <Link
-                  href={item.link}
-                  className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer"
-                >
-                  <span>{t('adminStatHandleNow')}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              ) : (
-                <div className="mt-4 pt-3 border-t border-zinc-100/70 flex items-center justify-between text-[11px] font-medium text-zinc-400">
-                  <span>{t('adminStatVerified')}</span>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                </div>
-              )}
+              <div className="space-y-2">
+                <div className="w-20 h-3 bg-zinc-200 rounded" />
+                <div className="w-28 h-7 bg-zinc-200 rounded" />
+                <div className="w-full h-3 bg-zinc-100 rounded" />
+              </div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
+          {stats.map(item => {
+            const Icon = item.icon
+            return (
+              <div
+                key={item.id}
+                className="group relative bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs hover:shadow-md hover:border-orange-300/80 transition-all duration-200 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3.5">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${item.color}`}
+                    >
+                      <Icon className="w-4.5 h-4.5" />
+                    </div>
+                    {item.growth && (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
+                          item.isPositive
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
+                            : 'text-orange-700 bg-orange-50 border-orange-200/80'
+                        }`}
+                      >
+                        {item.isPositive && <TrendingUp className="w-3 h-3 shrink-0" />}
+                        {!item.isPositive && <AlertTriangle className="w-3 h-3 shrink-0" />}
+                        {item.growth}
+                      </span>
+                    )}
+                  </div>
+
+                  <Text
+                    as="span"
+                    size="xs"
+                    weight="bold"
+                    color="secondary"
+                    className="block uppercase tracking-wider mb-1.5"
+                  >
+                    {item.label}
+                  </Text>
+
+                  <div className="flex items-baseline gap-1 text-zinc-900 leading-none whitespace-nowrap">
+                    <span className="text-2xl sm:text-[26px] font-black tracking-tight">
+                      {item.value}
+                    </span>
+                    {item.unit && (
+                      <span className="text-sm font-extrabold text-zinc-500 select-none">
+                        {item.unit}
+                      </span>
+                    )}
+                  </div>
+
+                  <Text
+                    as="p"
+                    size="2xs"
+                    color="secondary"
+                    className="mt-2.5 leading-relaxed font-medium"
+                  >
+                    {item.subtext}
+                  </Text>
+                </div>
+
+                {item.link ? (
+                  <Link
+                    href={item.link}
+                    className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer"
+                  >
+                    <span>{t('adminStatHandleNow')}</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                ) : (
+                  <div className="mt-4 pt-3 border-t border-zinc-100/70 flex items-center justify-between text-[11px] font-medium text-zinc-400">
+                    <span>{t('adminStatVerified')}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Operational Highlights Section (Grievance Queue & Moderation Queue) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -366,7 +387,13 @@ export default function AdminDashboardPage() {
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <Text as="h2" variant="heading" size="base" weight="black" className="text-zinc-900">
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="base"
+                    weight="black"
+                    className="text-zinc-900"
+                  >
                     {t('adminUrgentGrievancesTitle')}
                   </Text>
                   <Text as="p" size="xs" color="secondary">
@@ -378,46 +405,100 @@ export default function AdminDashboardPage() {
                 href="/admin/grievances"
                 className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-orange-700 hover:text-orange-800 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
-                <span>{t('adminViewAllWithCount', { count: 7 })}</span>
+                <span>
+                  {isLoading
+                    ? t('adminViewAll')
+                    : t('adminViewAllWithCount', {
+                        count: overview?.pendingGrievancesCount ?? urgentGrievances.length,
+                      })}
+                </span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="space-y-3">
-              {urgentGrievances.map(item => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-orange-50/30 hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
-                >
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-orange-600 text-white uppercase tracking-wider">
-                        {item.priority === 'urgent'
-                          ? t('adminPriorityUrgent')
-                          : t('adminPriorityHigh')}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-zinc-600">{item.id}</span>
-                      <span className="text-[11px] text-zinc-400">• {item.time}</span>
-                    </div>
-                    <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
-                      {item.category}
-                    </Text>
-                    <p className="text-xs text-zinc-600 leading-relaxed">
-                      <span className="font-semibold text-zinc-800">{item.tenant}</span> (
-                      {item.tenantPhone}) <span className="text-zinc-400">→</span>{' '}
-                      <span className="text-zinc-700 font-medium">{item.house}</span>
-                    </p>
-                  </div>
-
-                  <Link
-                    href="/admin/grievances"
-                    className="shrink-0 px-4 py-2 rounded-xl bg-white hover:bg-orange-600 text-orange-700 hover:text-white border border-orange-200/90 hover:border-orange-600 text-xs font-bold transition-all shadow-2xs text-center cursor-pointer whitespace-nowrap"
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 animate-pulse space-y-2"
                   >
-                    {t('adminResolveNow')}
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    <div className="h-4 bg-zinc-200 rounded w-1/3" />
+                    <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : urgentGrievances.length === 0 ? (
+              <div className="p-8 text-center flex flex-col items-center justify-center bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-200">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-2.5" />
+                <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+                  {t('adminUrgentGrievancesEmpty')}
+                </Text>
+                <Text as="p" size="xs" color="secondary" className="mt-1 max-w-sm">
+                  {t('adminUrgentGrievancesEmptyDesc')}
+                </Text>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {urgentGrievances.map(item => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-orange-50/30 hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                  >
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                            item.priority === 'high'
+                              ? 'bg-orange-600 text-white'
+                              : item.priority === 'medium'
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-zinc-600 text-white'
+                          }`}
+                        >
+                          {item.priority === 'high'
+                            ? t('adminPriorityHigh')
+                            : item.priority === 'medium'
+                              ? t('adminPriorityMedium')
+                              : t('adminPriorityLow')}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-zinc-600">
+                          {item.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <span className="text-[11px] text-zinc-400">
+                          • {formatDisplayDate(item.createdAt, locale)}
+                        </span>
+                      </div>
+                      <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
+                        {item.title}
+                      </Text>
+                      <p className="text-xs text-zinc-600 leading-relaxed">
+                        <span className="font-semibold text-zinc-800">{item.tenantName}</span> (
+                        {item.tenantPhone || t('adminNoPhone')}){' '}
+                        <span className="text-zinc-400">→</span>{' '}
+                        <span className="text-zinc-700 font-medium">
+                          {item.boardingHouseName
+                            ? `${item.boardingHouseName}${item.roomNumber ? ` (Phòng ${item.roomNumber})` : ''}`
+                            : '---'}
+                        </span>
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/admin/grievances?search=${encodeURIComponent(item.id)}`)
+                      }
+                      className="shrink-0 bg-white hover:bg-orange-600 text-orange-700 hover:text-white border-orange-200/90 hover:border-orange-600 text-xs font-bold transition-all shadow-2xs whitespace-nowrap"
+                    >
+                      {t('adminResolveNow')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -430,7 +511,13 @@ export default function AdminDashboardPage() {
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
-                  <Text as="h2" variant="heading" size="base" weight="black" className="text-zinc-900">
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="base"
+                    weight="black"
+                    className="text-zinc-900"
+                  >
                     {t('adminSuspiciousListingsTitle')}
                   </Text>
                   <Text as="p" size="xs" color="secondary">
@@ -442,43 +529,93 @@ export default function AdminDashboardPage() {
                 href="/admin/blogs"
                 className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
-                <span>{t('adminInspectWithCount', { count: 12 })}</span>
+                <span>
+                  {isLoading
+                    ? t('adminInspect')
+                    : t('adminInspectWithCount', {
+                        count: overview?.reportedItemsCount ?? flaggedListings.length,
+                      })}
+                </span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="space-y-3">
-              {flaggedListings.map(item => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-amber-50/30 hover:border-amber-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
-                >
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase">
-                        {t('adminReportsCountBadge', { count: item.reportsCount })}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-zinc-600">{item.id}</span>
-                      <span className="text-[11px] text-zinc-400">• {item.flaggedDate}</span>
-                    </div>
-                    <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
-                      {item.title}
-                    </Text>
-                    <div className="inline-flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-lg font-medium">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span className="line-clamp-1">{item.reason}</span>
-                    </div>
-                  </div>
-
-                  <Link
-                    href="/admin/blogs"
-                    className="shrink-0 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-md text-center cursor-pointer whitespace-nowrap"
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 animate-pulse space-y-2"
                   >
-                    {t('adminInspectAndLock')}
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    <div className="h-4 bg-zinc-200 rounded w-1/3" />
+                    <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : flaggedListings.length === 0 ? (
+              <div className="p-8 text-center flex flex-col items-center justify-center bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-200">
+                <ShieldCheck className="w-10 h-10 text-emerald-500 mb-2.5" />
+                <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+                  {t('adminSuspiciousListingsEmpty')}
+                </Text>
+                <Text as="p" size="xs" color="secondary" className="mt-1 max-w-sm">
+                  {t('adminSuspiciousListingsEmptyDesc')}
+                </Text>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {flaggedListings.map(item => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-amber-50/30 hover:border-amber-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                  >
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase">
+                          {item.status}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-zinc-600">
+                          {item.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <span className="text-[11px] text-zinc-400">
+                          • {formatDisplayDate(item.createdAt, locale)}
+                        </span>
+                      </div>
+                      <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
+                        {item.title}
+                      </Text>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                        {item.room?.boardingHouseName && (
+                          <span className="flex items-center gap-1 font-medium text-zinc-700">
+                            <Building className="w-3.5 h-3.5 text-zinc-400" />
+                            {item.room.boardingHouseName}
+                            {item.room.roomNumber ? ` • P.${item.room.roomNumber}` : ''}
+                          </span>
+                        )}
+                        <span className="text-zinc-300">|</span>
+                        <span className="font-semibold text-orange-600">
+                          {t('adminDepositAmountLabel', {
+                            amount: `${new Intl.NumberFormat(numberLocale).format(item.depositAmount)} ₫`,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/admin/blogs?search=${encodeURIComponent(item.id)}`)
+                      }
+                      className="shrink-0 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-md whitespace-nowrap"
+                    >
+                      {t('adminInspectAndLock')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -486,7 +623,13 @@ export default function AdminDashboardPage() {
       {/* Direct Access to Admin Submodules */}
       <div className="bg-zinc-100/80 rounded-3xl p-6 sm:p-7 border border-zinc-200/80">
         <div className="flex items-center justify-between mb-4">
-          <Text as="h2" size="xs" weight="black" color="secondary" className="uppercase tracking-wider sm:text-sm">
+          <Text
+            as="h2"
+            size="xs"
+            weight="black"
+            color="secondary"
+            className="uppercase tracking-wider sm:text-sm"
+          >
             {t('adminSubmodulesTitle')}
           </Text>
           <Text as="span" size="xs" weight="semibold" color="secondary">
@@ -506,7 +649,12 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <Text as="h3" size="sm" weight="bold" className="text-zinc-900 group-hover:text-orange-600 transition-colors">
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
                 {t('adminModUsersTitle')}
               </Text>
               <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
@@ -526,7 +674,12 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <Text as="h3" size="sm" weight="bold" className="text-zinc-900 group-hover:text-orange-600 transition-colors">
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
                 {t('adminModHousesTitle')}
               </Text>
               <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
@@ -546,7 +699,12 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <Text as="h3" size="sm" weight="bold" className="text-zinc-900 group-hover:text-orange-600 transition-colors">
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
                 {t('adminModGrievancesTitle')}
               </Text>
               <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
@@ -566,7 +724,12 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <Text as="h3" size="sm" weight="bold" className="text-zinc-900 group-hover:text-orange-600 transition-colors">
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
                 {t('adminModBroadcastTitle')}
               </Text>
               <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
@@ -586,7 +749,12 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <Text as="h3" size="sm" weight="bold" className="text-zinc-900 group-hover:text-orange-600 transition-colors">
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
                 {t('adminModBlogsTitle')}
               </Text>
               <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
