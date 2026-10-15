@@ -5,6 +5,7 @@ import { Building2, ChevronRight } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
 import {
   Button,
+  DateInput,
   Form,
   NumberInput,
   SelectInput,
@@ -115,20 +116,28 @@ export function Step1GeneralInfo({
             onChange={e => onUpdateInfo('ward', e.target.value)}
             disabled={!selectedProvinceCode || isLoadingWards}
           >
-            {!selectedProvinceCode ? (
+            {!selectedProvinceCode && (
               <option value="">{t('landlordSetupWardSelectProvinceFirst')}</option>
-            ) : isLoadingWards ? (
-              <option value="">{t('landlordSetupWardLoading')}</option>
-            ) : (
-              <>
-                <option value="">-- {t('landlordSetupWardSelect')} --</option>
-                {wards.map(w => (
-                  <option key={w.code} value={w.name}>
-                    {w.name}
-                  </option>
-                ))}
-              </>
             )}
+            {selectedProvinceCode && isLoadingWards && (
+              <option value="">{t('landlordSetupWardLoading')}</option>
+            )}
+            {selectedProvinceCode && !isLoadingWards && (
+              <option value="">-- {t('landlordSetupWardSelect')} --</option>
+            )}
+            {selectedProvinceCode &&
+              !isLoadingWards &&
+              wards.map(w => (
+                <option key={w.code} value={w.name}>
+                  {w.name}
+                </option>
+              ))}
+            {selectedProvinceCode &&
+              !isLoadingWards &&
+              info.ward &&
+              !wards.some(w => w.name === info.ward) && (
+                <option value={info.ward}>{info.ward}</option>
+              )}
           </SelectInput>
 
           {/* Street */}
@@ -171,10 +180,10 @@ export function Step1GeneralInfo({
           />
 
           {/* Built At Date */}
-          <TextInput
-            type="date"
+          <DateInput
             label={t('landlordSetupBuiltAtLabel')}
             required
+            maxDate="today"
             value={info.builtAt}
             onChange={e => onUpdateInfo('builtAt', e.target.value)}
           />
