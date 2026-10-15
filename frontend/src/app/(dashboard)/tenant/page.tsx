@@ -39,6 +39,7 @@ import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
 import { tenantInvoiceService, TenantInvoice } from '@/services/tenant-invoice.service'
 import { FEATURE_FLAGS } from '@/config/features'
+import { useUnreadMessages } from '@/hooks'
 
 interface TenancyApiResponse {
   success: boolean
@@ -91,6 +92,7 @@ interface TenancyApiResponse {
 export default function TenantOverviewPage() {
   const t = useTranslations('tenantPortal')
   const { locale } = useLanguage()
+  const { unreadCount: unreadMessagesCount } = useUnreadMessages()
 
   const [loading, setLoading] = useState(true)
   const [tenancyData, setTenancyData] = useState<TenancyApiResponse['data'] | null>(null)
@@ -324,9 +326,14 @@ export default function TenantOverviewPage() {
           )}
 
           <Link href="/tenant/messages">
-            <Button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
+            <Button className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
               <MessageCircle className="w-4 h-4" />
               <span>{t('chatWithLandlord')}</span>
+              {unreadMessagesCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
+                  {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                </span>
+              )}
             </Button>
           </Link>
         </div>

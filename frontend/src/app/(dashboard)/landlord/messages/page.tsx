@@ -47,6 +47,7 @@ import {
   initMessagesSocket,
 } from '@/services/message.service'
 import { TextInput, Button } from '@/components/ui'
+import { dispatchMessagesUpdated } from '@/hooks'
 
 const AVATAR_COLORS = [
   'bg-teal-600',
@@ -232,7 +233,9 @@ function MessagesContent() {
         setMessages(prev => appendOrUpdateMessage(prev, newMsg))
         // Auto mark as read if received in active chat
         if (newMsg.senderId !== user?.id) {
-          markAsRead(activeChatRef.current.id).catch(() => {})
+          markAsRead(activeChatRef.current.id)
+            .then(() => dispatchMessagesUpdated())
+            .catch(() => {})
         }
       }
 
@@ -251,6 +254,7 @@ function MessagesContent() {
           return c
         }),
       )
+      dispatchMessagesUpdated()
     })
 
     socket.on(
@@ -304,10 +308,13 @@ function MessagesContent() {
 
     // Mark as read on open
     if (activeChat.unreadCount > 0) {
-      markAsRead(activeChat.id).catch(() => {})
+      markAsRead(activeChat.id)
+        .then(() => dispatchMessagesUpdated())
+        .catch(() => {})
       setConversations(prev =>
         prev.map(c => (c.id === activeChat.id ? { ...c, unreadCount: 0 } : c)),
       )
+      dispatchMessagesUpdated()
     }
 
     return () => {

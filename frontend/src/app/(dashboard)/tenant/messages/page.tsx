@@ -48,6 +48,7 @@ import {
   getContacts,
   initMessagesSocket,
 } from '@/services/message.service'
+import { dispatchMessagesUpdated } from '@/hooks'
 
 // Avatar colors based on user identity
 const AVATAR_COLORS = [
@@ -246,7 +247,9 @@ export default function TenantMessagesPage() {
         setMessages(prev => appendOrUpdateMessage(prev, newMsg))
         // Auto mark as read if received in active chat from landlord
         if (newMsg.senderId !== user?.id) {
-          markAsRead(activeChatRef.current.id).catch(() => {})
+          markAsRead(activeChatRef.current.id)
+            .then(() => dispatchMessagesUpdated())
+            .catch(() => {})
         }
       }
 
@@ -265,6 +268,7 @@ export default function TenantMessagesPage() {
           return c
         }),
       )
+      dispatchMessagesUpdated()
     })
 
     socket.on(
@@ -318,10 +322,13 @@ export default function TenantMessagesPage() {
 
     // Mark as read on open
     if (activeChat.unreadCount > 0) {
-      markAsRead(activeChat.id).catch(() => {})
+      markAsRead(activeChat.id)
+        .then(() => dispatchMessagesUpdated())
+        .catch(() => {})
       setConversations(prev =>
         prev.map(c => (c.id === activeChat.id ? { ...c, unreadCount: 0 } : c)),
       )
+      dispatchMessagesUpdated()
     }
 
     return () => {
