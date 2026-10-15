@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useTransition, Suspense } from 'react'
+import React, { useState, useEffect, useTransition, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -32,7 +32,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { getRooms, RoomItem } from '@/services/room.service'
 import {
   getPendingPlatformDeposit,
@@ -41,7 +41,17 @@ import {
   createDirectContract,
   PendingDepositResponse,
 } from '@/services/contract.service'
-import { TextInput, DateInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  DateInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  ToastContainer,
+  ToastItem,
+  ToastType,
+} from '@/components/ui'
 import { uploadImageToBackend } from '@/services/upload.service'
 
 /**
@@ -79,8 +89,21 @@ function CreateContractPage() {
   const initialRoomId = searchParams.get('roomId') || ''
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
+
+  // Toast notifications using base ToastContainer
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+
+  const showToast = useCallback(
+    (message: string, type: ToastType = 'info', title?: string) => {
+      const id = Date.now().toString()
+      setToasts(prev => [...prev, { id, message, type, title, duration: 4000 }])
+    },
+    [],
+  )
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(tItem => tItem.id !== id))
+  }, [])
 
   // Wizard Step
   const [step, setStep] = useState(1)
@@ -417,12 +440,12 @@ function CreateContractPage() {
     e.target.value = ''
 
     if (!file.type.startsWith('image/')) {
-      setErrorMessage('Vui lòng chọn tệp hình ảnh (JPG, PNG, WEBP).')
+      setErrorMessage(t('landlordContractsCreateErrImageFormat'))
       return
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setErrorMessage('Kích thước tệp vượt quá 10MB. Vui lòng chọn ảnh nhỏ hơn.')
+      setErrorMessage(t('landlordContractsCreateErrImageSize'))
       return
     }
 
@@ -446,7 +469,7 @@ function CreateContractPage() {
       }
     } catch (err: any) {
       console.error('Error processing image:', err)
-      setErrorMessage('Không thể xử lý ảnh. Vui lòng thử lại.')
+      setErrorMessage(t('landlordContractsCreateErrImageProcess'))
     } finally {
       setUploading(false)
     }
@@ -485,16 +508,67 @@ function CreateContractPage() {
     router.push('/landlord/contracts')
   }
 
+  const handleStep1Next = () => {
+    if (!selectedRoomId) {
+      setErrorMessage(t('landlordContractsCreateErrSelectRoom'))
+      return
+    }
+    if (flowType === 'direct') {
+      if (!tenantPhone || tenantPhone.length !== 10) {
+        setErrorMessage(t('landlordContractsCreateErrPhone10Digits'))
+        return
+      }
+      if (tenantFound === null) {
+        setErrorMessage(t('landlordContractsCreateErrCheckPhoneFirst'))
+        return
+      }
+      if (tenantFound === false && !tenantFullName.trim()) {
+        setErrorMessage(t('landlordContractsCreateErrTenantInfo'))
+        return
+      }
+      if (tenantFound === false) {
+        if (
+          !identityNumber.trim() ||
+          !placeOfOrigin.trim() ||
+          !placeOfResidence.trim() ||
+          !dateOfBirth
+        ) {
+          setErrorMessage(t('landlordContractsCreateErrIdentification'))
+          return
+        }
+      }
+    }
+    setErrorMessage(null)
+    setStep(2)
+  }
+
+  const handleStep2Next = () => {
+    if (!startDate || !endDate) {
+      setErrorMessage(t('landlordContractsCreateStartDateLabel'))
+      return
+    }
+    if (new Date(endDate) <= new Date(startDate)) {
+      setErrorMessage(t('landlordContractsCreateEndDateLabel'))
+      return
+    }
+    setErrorMessage(null)
+    setStep(3)
+  }
+
   // Form Submission
   const handleSubmitContract = async () => {
     if (!selectedRoomId) {
-      setErrorMessage(t('landlordContractsCreateErrSelectRoom'))
+      const msg = t('landlordContractsCreateErrSelectRoom')
+      setErrorMessage(msg)
+      showToast(msg, 'error')
       setStep(1)
       return
     }
 
     if (!activeBuilding?.id) {
-      setErrorMessage(t('landlordContractsCreateErrNoBuilding'))
+      const msg = t('landlordContractsCreateErrNoBuilding')
+      setErrorMessage(msg)
+      showToast(msg, 'error')
       return
     }
 
@@ -519,24 +593,25 @@ function CreateContractPage() {
           } else {
             // Flow B submission
             if (!tenantPhone || tenantPhone.length !== 10) {
-              setErrorMessage(
-                t('landlordContractsCreateTenantPhoneLockedHint') ||
-                  'Vui lòng nhập đúng 10 số điện thoại khách thuê.',
-              )
+              const msg = t('landlordContractsCreateErrPhone10Digits')
+              setErrorMessage(msg)
+              showToast(msg, 'error')
               setStep(1)
               return
             }
 
             if (tenantFound === null) {
-              setErrorMessage(
-                'Vui lòng đợi hoặc bấm kiểm tra số điện thoại khách thuê trước khi tiếp tục.',
-              )
+              const msg = t('landlordContractsCreateErrCheckPhoneFirst')
+              setErrorMessage(msg)
+              showToast(msg, 'error')
               setStep(1)
               return
             }
 
             if (tenantFound === false && !tenantFullName.trim()) {
-              setErrorMessage(t('landlordContractsCreateErrTenantInfo'))
+              const msg = t('landlordContractsCreateErrTenantInfo')
+              setErrorMessage(msg)
+              showToast(msg, 'error')
               setStep(1)
               return
             }
@@ -548,10 +623,9 @@ function CreateContractPage() {
                 !placeOfResidence.trim() ||
                 !dateOfBirth
               ) {
-                setErrorMessage(
-                  t('landlordContractsCreateErrIdentification') ||
-                    'Vui lòng nhập đầy đủ thông tin định danh',
-                )
+                const msg = t('landlordContractsCreateErrIdentification')
+                setErrorMessage(msg)
+                showToast(msg, 'error')
                 setStep(1)
                 return
               }
@@ -596,10 +670,15 @@ function CreateContractPage() {
           }
         }
 
-        router.push('/landlord/contracts?created=true')
+        showToast(t('landlordContractsToastCreateSuccess'), 'success')
+        setTimeout(() => {
+          router.push('/landlord/contracts?created=true')
+        }, 1200)
       } catch (err: any) {
         console.error('Submit contract failed:', err)
-        setErrorMessage(err?.message || t('landlordContractsCreateErrGeneric'))
+        const errMsg = err?.message || t('landlordContractsToastCreateFailed')
+        setErrorMessage(errMsg)
+        showToast(errMsg, 'error')
       }
     })
   }
@@ -613,9 +692,7 @@ function CreateContractPage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
             <Building2 className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>{activeBuilding?.name || (isEn ? 'Property' : 'Khu trọ')}</span>
-            <span>&bull;</span>
-            <span></span>
+            <span>{activeBuilding?.name || t('landlordContractsCreatePropertyFallback')}</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
             {t('landlordContractsCreateTitle')}
@@ -628,52 +705,52 @@ function CreateContractPage() {
 
       {/* Progress Wizard */}
       <div className="flex items-center justify-center gap-2 sm:gap-3 bg-white p-3 rounded-2xl border border-zinc-200/80 shadow-2xs">
-        <button
+        <Button
           type="button"
           onClick={() => setStep(1)}
-          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-            step === 1
-              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30'
+          size="sm"
+          leftIcon={step > 1 ? <Check className="w-3.5 h-3.5" /> : <Home className="w-3.5 h-3.5" />}
+          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all ${step === 1
+              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30 hover:bg-[#25ad87]'
               : step > 1
-                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
-                : 'bg-zinc-100 text-zinc-500'
-          }`}
+                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20'
+                : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+            }`}
         >
-          {step > 1 ? <Check className="w-3.5 h-3.5" /> : <Home className="w-3.5 h-3.5" />}
           {t('landlordContractsCreateStep1Btn')}
-        </button>
+        </Button>
 
         <ChevronRight className="w-4 h-4 text-zinc-300 shrink-0" />
 
-        <button
+        <Button
           type="button"
           onClick={() => step > 1 && setStep(2)}
-          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-            step === 2
-              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30'
+          size="sm"
+          leftIcon={step > 2 ? <Check className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
+          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all ${step === 2
+              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30 hover:bg-[#25ad87]'
               : step > 2
-                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
-                : 'bg-zinc-100 text-zinc-400'
-          }`}
+                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20'
+                : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200'
+            }`}
         >
-          {step > 2 ? <Check className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
           {t('landlordContractsCreateStep2Btn')}
-        </button>
+        </Button>
 
         <ChevronRight className="w-4 h-4 text-zinc-300 shrink-0" />
 
-        <button
+        <Button
           type="button"
           onClick={() => step > 2 && setStep(3)}
-          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-            step === 3
-              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30'
-              : 'bg-zinc-100 text-zinc-400'
-          }`}
+          size="sm"
+          leftIcon={<FileSignature className="w-3.5 h-3.5" />}
+          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all ${step === 3
+              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30 hover:bg-[#25ad87]'
+              : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200'
+            }`}
         >
-          <FileSignature className="w-3.5 h-3.5" />
           {t('landlordContractsCreateStep3Header')}
-        </button>
+        </Button>
       </div>
 
       {/* STEP 1: Phòng & Khách thuê */}
@@ -705,13 +782,14 @@ function CreateContractPage() {
                 }}
               >
                 <option value="">{t('landlordContractsCreateRoomPlaceholder')}</option>
-                {rooms.map(r => (
-                  <option key={r.id} value={r.id}>
-                    {t('landlordContractDetailRoomPrefix')} {r.roomNumber} (
-                    {t('landlordRoomDetailFloor')} {r.floor} - {r.roomType?.name || 'Standard'} -{' '}
-                    {r.status})
-                  </option>
-                ))}
+                {rooms.map(r => {
+                  const roomLabel = `${t('landlordContractDetailRoomPrefix')} ${r.roomNumber} (${r.roomType?.name || 'Standard'} - ${r.status})`
+                  return (
+                    <option key={r.id} value={r.id} label={roomLabel}>
+                      {roomLabel}
+                    </option>
+                  )
+                })}
               </SelectInput>
 
               {selectedRoomObj && (
@@ -729,11 +807,10 @@ function CreateContractPage() {
                     </span>
                   </div>
                   <span
-                    className={`px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${
-                      selectedRoomObj.status === 'deposited'
+                    className={`px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${selectedRoomObj.status === 'deposited'
                         ? 'bg-purple-100 text-purple-700'
                         : 'bg-emerald-100 text-emerald-700'
-                    }`}
+                      }`}
                   >
                     {selectedRoomObj.status}
                   </span>
@@ -755,8 +832,7 @@ function CreateContractPage() {
                   <span>
                     {t('landlordContractsCreateTenantNameLabel')}:{' '}
                     <strong>
-                      {pendingDeposit.tenant?.fullName ||
-                        (isEn ? 'Platform Guest' : 'Khách nền tảng')}
+                      {pendingDeposit.tenant?.fullName || t('landlordContractsCreatePlatformGuest')}
                     </strong>
                   </span>
                   <span>&bull;</span>
@@ -781,16 +857,6 @@ function CreateContractPage() {
                 <User className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordContractsCreateStep1Header')}
               </h2>
-              {!canEditTenantInfo && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-zinc-100 text-zinc-600 border border-zinc-200">
-                  <Lock className="w-3 h-3 text-zinc-400" />
-                  {flowType === 'platform'
-                    ? 'Khách nền tảng (Đã khóa)'
-                    : tenantFound === true
-                      ? 'Tài khoản có sẵn (Đã khóa)'
-                      : 'Chưa kiểm tra SĐT (Đã khóa)'}
-                </span>
-              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -808,24 +874,17 @@ function CreateContractPage() {
                     className="pr-24"
                   />
                   {flowType === 'direct' && (
-                    <button
+                    <Button
                       type="button"
                       disabled={isSearchingPhone || tenantPhone.length !== 10}
+                      isLoading={isSearchingPhone}
                       onClick={() => handleSearchPhone(tenantPhone)}
-                      className="absolute right-1.5 bottom-1.5 px-3 py-1.5 text-[11px] font-bold bg-[#2AC1BC] text-white hover:bg-[#25ad87] disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                      size="sm"
+                      leftIcon={<Search className="w-3 h-3" />}
+                      className="absolute right-1.5 bottom-1.5 h-7 px-3 text-[11px] font-bold bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-lg shadow-2xs"
                     >
-                      {isSearchingPhone ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>{t('landlordContractsCreateTenantSearching')}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Search className="w-3 h-3" />
-                          <span>{t('landlordContractsCreateTenantSearchBtn') || 'Kiểm tra'}</span>
-                        </>
-                      )}
-                    </button>
+                      {t('landlordContractsCreateTenantSearchBtn')}
+                    </Button>
                   )}
                 </div>
 
@@ -872,7 +931,7 @@ function CreateContractPage() {
                 required={flowType !== 'platform'}
                 placeholder={
                   !canEditTenantInfo && tenantPhone.length < 10
-                    ? 'Vui lòng nhập xong số điện thoại...'
+                    ? t('landlordContractsCreateEnterPhoneFirst')
                     : t('landlordContractsCreateTenantNamePlaceholder')
                 }
                 disabled={!canEditTenantInfo}
@@ -889,8 +948,8 @@ function CreateContractPage() {
                 type="email"
                 placeholder={
                   !canEditTenantInfo && tenantPhone.length < 10
-                    ? 'Vui lòng nhập xong số điện thoại...'
-                    : t('landlordContractsCreateTenantEmailPlaceholder') || 'khachthue@gmail.com'
+                    ? t('landlordContractsCreateEnterPhoneFirst')
+                    : t('landlordContractsCreateTenantEmailPlaceholder')
                 }
                 disabled={!canEditTenantInfo}
                 value={tenantEmail}
@@ -922,13 +981,12 @@ function CreateContractPage() {
             <div className="flex items-center justify-between border-b border-zinc-200/60 pb-2.5">
               <div className="flex items-center gap-2.5">
                 <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                    hasIdentification
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${hasIdentification
                       ? 'bg-emerald-100 text-emerald-700'
                       : canEditTenantInfo
                         ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
                         : 'bg-zinc-200 text-zinc-500'
-                  }`}
+                    }`}
                 >
                   <IdCard className="w-3.5 h-3.5" />
                 </div>
@@ -944,20 +1002,18 @@ function CreateContractPage() {
               {!canEditTenantInfo ? (
                 <span className="text-[11px] text-zinc-500 font-bold flex items-center gap-1">
                   <Lock className="w-3 h-3 text-zinc-400" />
-                  {isEn ? 'Read-only' : 'Chỉ đọc (Đã khóa)'}
+                  {t('landlordContractsCreateReadOnlyLocked')}
                 </span>
               ) : (
                 <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
                   <Unlock className="w-3 h-3 text-emerald-500" />
-                  {isEn ? 'Editable' : 'Được phép chỉnh sửa'}
+                  {t('landlordContractsCreateEditable')}
                 </span>
               )}
             </div>
 
             {/* Alert inside CCCD form if missing identification fields */}
-            {errorMessage ===
-              (t('landlordContractsCreateErrIdentification') ||
-                'Vui lòng nhập đầy đủ thông tin định danh') && (
+            {errorMessage === t('landlordContractsCreateErrIdentification') && (
               <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
                 <span>{errorMessage}</span>
@@ -1116,7 +1172,7 @@ function CreateContractPage() {
                   </span>
                   {cardFrontUrl && (
                     <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                      Đã có ảnh
+                      {t('landlordContractsCreatePhotoUploaded')}
                     </span>
                   )}
                 </div>
@@ -1133,53 +1189,61 @@ function CreateContractPage() {
                       {uploadingFront && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white">
                           <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
-                          <span className="text-[11px] font-bold mt-1.5">Đang xử lý ảnh...</span>
+                          <span className="text-[11px] font-bold mt-1.5">
+                            {t('landlordContractsCreatePhotoProcessing')}
+                          </span>
                         </div>
                       )}
                     </div>
                     <div className="flex items-center justify-between gap-1.5 pt-0.5">
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() =>
                           setPreviewModalImg({
                             url: cardFrontUrl,
                             title: t('landlordContractsCreateCccdFrontUrlLabel'),
                           })
                         }
-                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                        leftIcon={<Eye className="w-3 h-3 text-[#2AC1BC]" />}
+                        className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
                       >
-                        <Eye className="w-3 h-3 text-[#2AC1BC]" />
                         {t('landlordContractsCreateCccdViewPhoto')}
-                      </button>
+                      </Button>
 
                       {canEditTenantInfo ? (
                         <div className="flex items-center gap-1.5">
-                          <button
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             disabled={uploadingFront}
                             onClick={() => document.getElementById('cccd-front-file')?.click()}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                            leftIcon={<RefreshCw className="w-3 h-3" />}
+                            className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
                           >
-                            <RefreshCw className="w-3 h-3" />
                             {t('landlordContractsCreateCccdChangePhoto')}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             disabled={uploadingFront}
                             onClick={() => {
                               setCardFrontUrl('')
                               setIsDirty(true)
                             }}
-                            className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                            className="h-7 px-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100"
                             title={t('landlordContractsCreateCccdRemovePhoto')}
                           >
                             <Trash2 className="w-3 h-3" />
-                          </button>
+                          </Button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
                           <Lock className="w-3 h-3" />
-                          <span>Đã khóa</span>
+                          <span>{t('landlordContractsCreatePhotoLocked')}</span>
                         </div>
                       )}
                     </div>
@@ -1189,13 +1253,13 @@ function CreateContractPage() {
                     <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
                     <span className="text-xs font-bold text-zinc-500">
                       {tenantPhone.trim().length < 10
-                        ? 'Nhập số điện thoại để mở khóa'
-                        : 'Khách thuê chưa cập nhật ảnh mặt trước'}
+                        ? t('landlordContractsCreateEnterPhoneToUnlock')
+                        : t('landlordContractsCreateNoFrontPhoto')}
                     </span>
                     <span className="text-[10px] text-zinc-400 mt-0.5">
                       {tenantPhone.trim().length < 10
-                        ? 'Cần xác thực số điện thoại trước'
-                        : 'Tài khoản đã có trên hệ thống'}
+                        ? t('landlordContractsCreateVerifyPhoneFirst')
+                        : t('landlordContractsCreateAccountExists')}
                     </span>
                   </div>
                 ) : (
@@ -1214,16 +1278,17 @@ function CreateContractPage() {
                       setIsDraggingFront(false)
                     }}
                     onDrop={e => handleDropFile(e, 'front')}
-                    className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
-                      isDraggingFront
+                    className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${isDraggingFront
                         ? 'border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]'
                         : 'border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50'
-                    }`}
+                      }`}
                   >
                     {uploadingFront ? (
                       <div className="flex flex-col items-center justify-center text-[#2AC1BC]">
                         <Loader2 className="w-7 h-7 animate-spin mb-1.5" />
-                        <span className="text-xs font-bold">Đang tải ảnh lên...</span>
+                        <span className="text-xs font-bold">
+                          {t('landlordContractsCreatePhotoUploading')}
+                        </span>
                       </div>
                     ) : (
                       <>
@@ -1259,7 +1324,7 @@ function CreateContractPage() {
                   </span>
                   {cardBackUrl && (
                     <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                      Đã có ảnh
+                      {t('landlordContractsCreatePhotoUploaded')}
                     </span>
                   )}
                 </div>
@@ -1276,53 +1341,61 @@ function CreateContractPage() {
                       {uploadingBack && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white">
                           <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
-                          <span className="text-[11px] font-bold mt-1.5">Đang xử lý ảnh...</span>
+                          <span className="text-[11px] font-bold mt-1.5">
+                            {t('landlordContractsCreatePhotoProcessing')}
+                          </span>
                         </div>
                       )}
                     </div>
                     <div className="flex items-center justify-between gap-1.5 pt-0.5">
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() =>
                           setPreviewModalImg({
                             url: cardBackUrl,
                             title: t('landlordContractsCreateCccdBackUrlLabel'),
                           })
                         }
-                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                        leftIcon={<Eye className="w-3 h-3 text-[#2AC1BC]" />}
+                        className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
                       >
-                        <Eye className="w-3 h-3 text-[#2AC1BC]" />
                         {t('landlordContractsCreateCccdViewPhoto')}
-                      </button>
+                      </Button>
 
                       {canEditTenantInfo ? (
                         <div className="flex items-center gap-1.5">
-                          <button
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             disabled={uploadingBack}
                             onClick={() => document.getElementById('cccd-back-file')?.click()}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                            leftIcon={<RefreshCw className="w-3 h-3" />}
+                            className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
                           >
-                            <RefreshCw className="w-3 h-3" />
                             {t('landlordContractsCreateCccdChangePhoto')}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             disabled={uploadingBack}
                             onClick={() => {
                               setCardBackUrl('')
                               setIsDirty(true)
                             }}
-                            className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                            className="h-7 px-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100"
                             title={t('landlordContractsCreateCccdRemovePhoto')}
                           >
                             <Trash2 className="w-3 h-3" />
-                          </button>
+                          </Button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
                           <Lock className="w-3 h-3" />
-                          <span>Đã khóa</span>
+                          <span>{t('landlordContractsCreatePhotoLocked')}</span>
                         </div>
                       )}
                     </div>
@@ -1332,13 +1405,13 @@ function CreateContractPage() {
                     <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
                     <span className="text-xs font-bold text-zinc-500">
                       {tenantPhone.trim().length < 10
-                        ? 'Nhập số điện thoại để mở khóa'
-                        : 'Khách thuê chưa cập nhật ảnh mặt sau'}
+                        ? t('landlordContractsCreateEnterPhoneToUnlock')
+                        : t('landlordContractsCreateNoBackPhoto')}
                     </span>
                     <span className="text-[10px] text-zinc-400 mt-0.5">
                       {tenantPhone.trim().length < 10
-                        ? 'Cần xác thực số điện thoại trước'
-                        : 'Tài khoản đã có trên hệ thống'}
+                        ? t('landlordContractsCreateVerifyPhoneFirst')
+                        : t('landlordContractsCreateAccountExists')}
                     </span>
                   </div>
                 ) : (
@@ -1357,16 +1430,17 @@ function CreateContractPage() {
                       setIsDraggingBack(false)
                     }}
                     onDrop={e => handleDropFile(e, 'back')}
-                    className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
-                      isDraggingBack
+                    className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${isDraggingBack
                         ? 'border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]'
                         : 'border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50'
-                    }`}
+                      }`}
                   >
                     {uploadingBack ? (
                       <div className="flex flex-col items-center justify-center text-[#2AC1BC]">
                         <Loader2 className="w-7 h-7 animate-spin mb-1.5" />
-                        <span className="text-xs font-bold">Đang tải ảnh lên...</span>
+                        <span className="text-xs font-bold">
+                          {t('landlordContractsCreatePhotoUploading')}
+                        </span>
                       </div>
                     ) : (
                       <>
@@ -1392,72 +1466,39 @@ function CreateContractPage() {
             <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-bold animate-in fade-in">
               <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
               <span>{errorMessage}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setErrorMessage(null)}
-                className="ml-auto text-rose-400 hover:text-rose-700 p-1"
+                className="ml-auto text-rose-400 hover:text-rose-700 p-1 h-6 w-6"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           )}
 
           {/* Navigation */}
           <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handleAttemptClose}
-              className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+              className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50"
             >
               {t('landlordContractsCreateCancelBtn')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              onClick={() => {
-                if (!selectedRoomId) {
-                  setErrorMessage(t('landlordContractsCreateErrSelectRoom'))
-                  return
-                }
-                if (flowType === 'direct') {
-                  if (!tenantPhone || tenantPhone.length !== 10) {
-                    setErrorMessage(
-                      t('landlordContractsCreateTenantPhoneLockedHint') ||
-                        'Vui lòng nhập đúng 10 số điện thoại khách thuê.',
-                    )
-                    return
-                  }
-                  if (tenantFound === null) {
-                    setErrorMessage(
-                      'Vui lòng bấm kiểm tra số điện thoại khách thuê trước khi tiếp tục.',
-                    )
-                    return
-                  }
-                  if (tenantFound === false && !tenantFullName.trim()) {
-                    setErrorMessage(t('landlordContractsCreateErrTenantInfo'))
-                    return
-                  }
-                  if (tenantFound === false) {
-                    if (
-                      !identityNumber.trim() ||
-                      !placeOfOrigin.trim() ||
-                      !placeOfResidence.trim() ||
-                      !dateOfBirth
-                    ) {
-                      setErrorMessage(
-                        t('landlordContractsCreateErrIdentification') ||
-                          'Vui lòng nhập đầy đủ thông tin định danh',
-                      )
-                      return
-                    }
-                  }
-                }
-                setErrorMessage(null)
-                setStep(2)
-              }}
-              className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+              variant="primary"
+              size="sm"
+              onClick={handleStep1Next}
+              rightIcon={<ChevronRight className="w-4 h-4" />}
+              className="px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20"
             >
-              {t('landlordContractsCreateNextStep')} <ChevronRight className="w-4 h-4" />
-            </button>
+              {t('landlordContractsCreateNextStep')}
+            </Button>
           </div>
         </div>
       )}
@@ -1480,7 +1521,7 @@ function CreateContractPage() {
               min={0}
               step={50000}
               suffixText="VNĐ/tháng"
-              helperText={`${Number(rentPrice || 0).toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫`}
+              helperText={`${Number(rentPrice || 0).toLocaleString('vi-VN')} ₫`}
               value={rentPrice}
               onChange={e => {
                 setRentPrice(Number(e.target.value))
@@ -1498,7 +1539,7 @@ function CreateContractPage() {
               helperText={
                 flowType === 'platform'
                   ? t('landlordContractsCreateDepositInheritedNote')
-                  : `${Number(depositAmount || 0).toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫`
+                  : `${Number(depositAmount || 0).toLocaleString('vi-VN')} ₫`
               }
               value={depositAmount}
               onChange={e => {
@@ -1583,31 +1624,26 @@ function CreateContractPage() {
 
           {/* Navigation */}
           <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setStep(1)}
-              className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+              leftIcon={<ChevronLeft className="w-4 h-4" />}
+              className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50"
             >
-              <ChevronLeft className="w-4 h-4" /> {t('landlordContractsCreatePrevStep')}
-            </button>
-            <button
+              {t('landlordContractsCreatePrevStep')}
+            </Button>
+            <Button
               type="button"
-              onClick={() => {
-                if (!startDate || !endDate) {
-                  setErrorMessage(t('landlordContractsCreateStartDateLabel'))
-                  return
-                }
-                if (new Date(endDate) <= new Date(startDate)) {
-                  setErrorMessage(t('landlordContractsCreateEndDateLabel'))
-                  return
-                }
-                setErrorMessage(null)
-                setStep(3)
-              }}
-              className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+              variant="primary"
+              size="sm"
+              onClick={handleStep2Next}
+              rightIcon={<ChevronRight className="w-4 h-4" />}
+              className="px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20"
             >
-              {t('landlordContractsCreateNextStep')} <ChevronRight className="w-4 h-4" />
-            </button>
+              {t('landlordContractsCreateNextStep')}
+            </Button>
           </div>
         </div>
       )}
@@ -1630,11 +1666,10 @@ function CreateContractPage() {
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200">
               <span className="font-bold text-zinc-500">{t('landlordContractDetailStatus')}:</span>
               <span
-                className={`px-3 py-1 rounded-full font-black text-[11px] ${
-                  flowType === 'platform'
+                className={`px-3 py-1 rounded-full font-black text-[11px] ${flowType === 'platform'
                     ? 'bg-purple-100 text-purple-700'
                     : 'bg-emerald-100 text-emerald-700'
-                }`}
+                  }`}
               >
                 {flowType === 'platform'
                   ? t('landlordContractsCreateFlowPlatformBadge')
@@ -1691,7 +1726,7 @@ function CreateContractPage() {
                   {t('landlordContractDetailRentPrice')}:
                 </span>
                 <span className="font-black text-[#2AC1BC] text-sm">
-                  {Number(rentPrice).toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫{' '}
+                  {Number(rentPrice).toLocaleString('vi-VN')} ₫{' '}
                   {t('landlordContractsPerMonth')}
                 </span>
               </div>
@@ -1701,7 +1736,7 @@ function CreateContractPage() {
                   {t('landlordContractDetailDeposit')}:
                 </span>
                 <span className="font-black text-purple-700 text-sm">
-                  {Number(depositAmount).toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫
+                  {Number(depositAmount).toLocaleString('vi-VN')} ₫
                 </span>
               </div>
             </div>
@@ -1718,32 +1753,32 @@ function CreateContractPage() {
 
           {/* Action Buttons */}
           <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               disabled={isPending}
               onClick={() => setStep(2)}
-              className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer disabled:opacity-50"
+              leftIcon={<ChevronLeft className="w-4 h-4" />}
+              className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-50"
             >
-              <ChevronLeft className="w-4 h-4" /> {t('landlordContractsCreatePrevStep')}
-            </button>
+              {t('landlordContractsCreatePrevStep')}
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               disabled={isPending}
+              isLoading={isPending}
               onClick={handleSubmitContract}
-              className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
+              leftIcon={<Check className="w-4 h-4" />}
+              className="px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 disabled:opacity-50"
             >
-              {isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />{' '}
-                  {t('landlordContractsCreateSubmitting')}
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" /> {t('landlordContractsCreateSubmitBtn')}
-                </>
-              )}
-            </button>
+              {isPending
+                ? t('landlordContractsCreateSubmitting')
+                : t('landlordContractsCreateSubmitBtn')}
+            </Button>
           </div>
         </div>
       )}
@@ -1771,20 +1806,22 @@ function CreateContractPage() {
             </div>
 
             <div className="flex items-center gap-3 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setShowConfirmClose(false)}
-                className="flex-1 py-2.5 px-4 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
+                className="flex-1 py-2.5 px-4 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl"
               >
                 {t('landlordContractsCreateConfirmCloseKeep')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
                 onClick={handleConfirmClose}
-                className="flex-1 py-2.5 px-4 text-xs font-black text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition-colors cursor-pointer shadow-sm shadow-rose-500/20"
+                className="flex-1 py-2.5 px-4 text-xs font-black text-white bg-rose-500 hover:bg-rose-600 rounded-xl shadow-sm shadow-rose-500/20"
               >
                 {t('landlordContractsCreateConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1805,13 +1842,15 @@ function CreateContractPage() {
                 <IdCard className="w-5 h-5 text-[#2AC1BC]" />
                 <span className="text-sm font-bold">{previewModalImg.title}</span>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setPreviewModalImg(null)}
-                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
             <div className="mt-3 flex items-center justify-center bg-zinc-950 rounded-2xl overflow-hidden min-h-[260px] max-h-[70vh]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1824,6 +1863,8 @@ function CreateContractPage() {
           </div>
         </div>
       )}
+      {/* Centralized Toast Notifications Container */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }
