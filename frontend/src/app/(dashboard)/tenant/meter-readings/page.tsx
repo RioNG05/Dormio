@@ -17,7 +17,7 @@ import {
   Info,
   Calendar,
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button, TextInput } from '@/components/ui'
 import {
   meterReadingService,
   ActiveMeteredServicesResponse,
@@ -559,13 +559,14 @@ export default function TenantMeterReadingsPage() {
                 <div className="mt-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                   {/* Left Column: Image Preview / Upload Box */}
                   <div className="md:col-span-5">
-                    <input
+                    <TextInput
                       type="file"
                       accept="image/*"
                       capture="environment"
                       ref={el => {
                         fileInputRefs.current[service.serviceId] = el
                       }}
+                      containerClassName="hidden"
                       className="hidden"
                       onChange={e => handlePhotoUpload(service.serviceId, e)}
                     />
@@ -593,19 +594,23 @@ export default function TenantMeterReadingsPage() {
 
                         {/* Retake Photo Overlay */}
                         {!state.isScanning && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                            className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-md transition-all opacity-90 hover:opacity-100 shadow"
+                            className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white text-xs px-3 py-1.5 h-auto rounded-lg flex items-center gap-1.5 backdrop-blur-md transition-all opacity-90 hover:opacity-100 shadow"
                           >
                             <Camera className="w-3.5 h-3.5" />
                             {t('retakePhoto')}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     ) : (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                        className="w-full aspect-video md:aspect-[4/3] rounded-xl border-2 border-dashed border-slate-300 hover:border-teal-500 bg-slate-50/50 hover:bg-teal-50/30 transition-all flex flex-col items-center justify-center p-4 text-center group cursor-pointer"
+                        className="w-full aspect-video md:aspect-[4/3] h-auto rounded-xl border-2 border-dashed border-slate-300 hover:border-teal-500 bg-slate-50/50 hover:bg-teal-50/30 transition-all flex flex-col items-center justify-center p-4 text-center group cursor-pointer"
                       >
                         <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
                           <Camera className="w-6 h-6" />
@@ -616,7 +621,7 @@ export default function TenantMeterReadingsPage() {
                         <span className="text-xs text-slate-400 mt-0.5">
                           {t('cameraOrFileSupport')}
                         </span>
-                      </button>
+                      </Button>
                     )}
                   </div>
 
@@ -630,7 +635,9 @@ export default function TenantMeterReadingsPage() {
                         </label>
 
                         {state.readingValue !== null && !state.isEditing && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() =>
                               setReadingsState(prev => ({
                                 ...prev,
@@ -640,36 +647,37 @@ export default function TenantMeterReadingsPage() {
                                 },
                               }))
                             }
-                            className="text-xs text-teal-600 hover:text-teal-700 font-semibold hover:underline"
+                            className="p-0 h-auto text-xs text-teal-600 hover:text-teal-700 font-semibold hover:underline"
                           >
                             {t('manualEditBtn')}
-                          </button>
+                          </Button>
                         )}
                       </div>
 
                       {state.isEditing || state.readingValue === null ? (
                         <div className="flex items-center gap-2">
-                          <div className="relative flex-1">
-                            <input
-                              type="number"
-                              step="any"
-                              placeholder={t('enterMeterReadingPlaceholder')}
-                              value={state.draftValue}
-                              onChange={e =>
-                                setReadingsState(prev => ({
-                                  ...prev,
-                                  [service.serviceId]: {
-                                    ...prev[service.serviceId],
-                                    draftValue: e.target.value,
-                                  },
-                                }))
-                              }
-                              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400">
-                              {service.unit}
-                            </span>
-                          </div>
+                          <TextInput
+                            type="number"
+                            step="any"
+                            placeholder={t('enterMeterReadingPlaceholder')}
+                            value={state.draftValue}
+                            onChange={e =>
+                              setReadingsState(prev => ({
+                                ...prev,
+                                [service.serviceId]: {
+                                  ...prev[service.serviceId],
+                                  draftValue: e.target.value,
+                                },
+                              }))
+                            }
+                            containerClassName="space-y-0 flex-1"
+                            className="w-full py-2.5 bg-white border-slate-300 rounded-lg text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                            rightIcon={
+                              <span className="text-xs font-medium text-slate-400 pr-1">
+                                {service.unit}
+                              </span>
+                            }
+                          />
 
                           <Button
                             onClick={() => handleSaveCorrection(service.serviceId)}
@@ -757,12 +765,14 @@ export default function TenantMeterReadingsPage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900">{t('confirmMeterModalTitle')}</h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowConfirmModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600 p-1.5 h-auto rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <p className="text-sm text-slate-600">

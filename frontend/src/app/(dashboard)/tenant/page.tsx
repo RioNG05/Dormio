@@ -470,9 +470,12 @@ export default function TenantOverviewPage() {
                         >
                           {roomInfo.phoneDisplay}
                         </a>
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          type="button"
                           onClick={handleCopyBank}
-                          className="px-2 py-0.5 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                          className="px-2 py-0.5 h-auto rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
                           title={t('stkLabel')}
                         >
                           {copiedBank ? (
@@ -481,7 +484,7 @@ export default function TenantOverviewPage() {
                             <Copy className="w-3 h-3" />
                           )}
                           <span>{copiedBank ? t('copied') : t('stkLabel')}</span>
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -673,17 +676,20 @@ export default function TenantOverviewPage() {
                     </Button>
 
                     {Array.from({ length: totalPages }).map((_, i) => (
-                      <button
+                      <Button
                         key={i}
+                        variant={currentPage === i + 1 ? 'primary' : 'ghost'}
+                        size="sm"
+                        type="button"
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           currentPage === i + 1
-                            ? 'bg-[#2AC1BC] text-white shadow-xs'
+                            ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
                             : 'text-zinc-600 hover:bg-zinc-100'
                         }`}
                       >
                         {i + 1}
-                      </button>
+                      </Button>
                     ))}
 
                     <Button
@@ -727,12 +733,15 @@ export default function TenantOverviewPage() {
                   {t('sentByManagement')}
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={() => setSelectedNotice(null)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="p-2 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="text-xs sm:text-sm text-zinc-600 leading-relaxed pt-2">
@@ -775,12 +784,15 @@ export default function TenantOverviewPage() {
                   </div>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={() => setIsContractOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="p-2 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs sm:text-sm text-zinc-700 custom-scrollbar leading-relaxed">
@@ -894,20 +906,26 @@ export default function TenantOverviewPage() {
             </div>
 
             <div className="p-4 sm:p-6 border-t border-zinc-100 flex items-center justify-between gap-3 bg-zinc-50/50">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
+                type="button"
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl cursor-pointer transition-colors shadow-2xs"
+                className="inline-flex items-center gap-2 px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl cursor-pointer transition-colors shadow-2xs"
               >
                 <Printer className="w-4 h-4" />
                 <span>{t('btnPrintContract')}</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                type="button"
                 onClick={() => setIsContractOpen(false)}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a8a3] rounded-xl cursor-pointer transition-all shadow-sm shadow-[#2AC1BC]/20"
+                className="px-5 py-2 h-auto text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a8a3] rounded-xl cursor-pointer transition-all shadow-sm shadow-[#2AC1BC]/20"
               >
                 {t('btnClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
