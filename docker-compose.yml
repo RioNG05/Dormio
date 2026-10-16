@@ -1,4 +1,15 @@
+# ─── Docker Compose — Local Development ──────────────────────────────────────
+# Full local dev stack with hot reloading (source code mounted from host).
+#
+# Commands:
+#   - Run entire stack in Docker:  docker compose up --build
+#   - Run in background:           docker compose up -d --build
+#   - Run only DB & Redis (host dev): docker compose up -d postgres redis pgadmin
+#   - Stop everything:             docker compose down
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
+  # ─── PostgreSQL ──────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: dormio_postgres
@@ -12,12 +23,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dormio} -d ${POSTGRES_DB:-dormio_db}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dormio} -d ${POSTGRES_DB:-dormio_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - dormio_net
 
+  # ─── Redis ───────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: dormio_redis
@@ -28,17 +42,20 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping" ]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - dormio_net
 
+  # ─── pgAdmin (Optional Database GUI) ────────────────────────────────────
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: dormio_pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-[EMAIL_ADDRESS]}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@gmail.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
       PGADMIN_CONFIG_SERVER_MODE: "False"
     ports:
@@ -48,8 +65,78 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - dormio_net
+
+  # ─── Backend (NestJS with Hot Reload) ───────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dormio_backend_dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-dormio}:${POSTGRES_PASSWORD:-dormio123}@postgres:5432/${POSTGRES_DB:-dormio_db}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
+      - FRONTEND_URL=http://localhost:3000
+    volumes:
+      # Bind mount source code for live hot-reload
+      - ./backend:/app
+      # Anonymous volumes preserve container's Linux-compiled dependencies & artifacts
+      - /app/node_modules
+      - /app/generated
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - dormio_net
+
+  # ─── Frontend (Next.js with Fast Refresh) ────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dormio_frontend_dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: ./frontend/.env.development
+        required: false
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_API_URL=http://localhost
+      - NEXT_PUBLIC_API_PORT=3001
+      - WATCHPACK_POLLING=true
+    volumes:
+      # Bind mount source code for live hot-reload
+      - ./frontend:/app
+      # Anonymous volumes preserve container's Linux-compiled dependencies & cache
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - dormio_net
 
 volumes:
   postgres_data:
   redis_data:
   pgadmin_data:
+
+networks:
+  dormio_net:
+    driver: bridge
