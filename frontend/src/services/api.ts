@@ -1,4 +1,12 @@
 export function getApiBaseUrl(): string {
+  // In production browser environment, ensure requests always go to the production API domain
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    if (host === 'dormio.site' || host.endsWith('.dormio.site')) {
+      return 'https://api.dormio.site/api'
+    }
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
   const port = process.env.NEXT_PUBLIC_API_PORT?.trim() || '3001'
 

@@ -26,11 +26,46 @@ async function bootstrap() {
   app.use(compression())
 
   // ─── CORS ──────────────────────────────────────────────────────────────────
+  const configuredOrigin = process.env.FRONTEND_URL?.trim().replace(/\/$/, '')
+  const allowedOrigins = [
+    'https://dormio.site',
+    'https://www.dormio.site',
+    'http://localhost:3000',
+    ...(configuredOrigin ? [configuredOrigin] : []),
+  ]
+
   app.enableCors({
-    origin: nodeEnv === 'production' ? [process.env.FRONTEND_URL ?? ''] : true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, server-to-server, curl)
+      if (!origin) return callback(null, true)
+
+      const normalizedOrigin = origin.trim().replace(/\/$/, '')
+      if (
+        nodeEnv !== 'production' ||
+        allowedOrigins.includes(normalizedOrigin) ||
+        normalizedOrigin.endsWith('.dormio.site') ||
+        normalizedOrigin === 'https://dormio.site'
+      ) {
+        return callback(null, true)
+      }
+
+      callback(new Error(`Origin ${origin} not allowed by CORS`))
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Boarding-House-Id'],
+    allowedHeaders: [
+      'Content-Type',
+      'content-type',
+      'Authorization',
+      'authorization',
+      'X-Boarding-House-Id',
+      'x-boarding-house-id',
+      'Accept',
+      'accept',
+      'Origin',
+      'origin',
+      'X-Requested-With',
+    ],
   })
 
   // ─── Global Prefix + Versioning ────────────────────────────────────────────
