@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { AdminUsersService } from './admin-users.service'
 import { PrismaService } from '../../common/prisma/prisma.service'
-import { UserRole, UserStatus, AuditLogAction } from '@prisma'
-import { NotFoundException } from '@nestjs/common'
+import { UserRole, UserStatus, AuditLogAction, SubscriptionPackage } from '@prisma'
+import { NotFoundException, ForbiddenException } from '@nestjs/common'
 
 describe('AdminUsersService', () => {
   let service: AdminUsersService
@@ -73,6 +73,11 @@ describe('AdminUsersService', () => {
           return Promise.resolve(1)
         }),
         update: jest.fn(),
+      },
+      userSubscription: {
+        findFirst: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        create: jest.fn().mockImplementation((args: any) => Promise.resolve({ id: 'sub-new', ...args.data })),
       },
       auditLog: {
         findMany: jest.fn().mockResolvedValue([
@@ -191,5 +196,119 @@ describe('AdminUsersService', () => {
       expect(prisma.auditLog.create).toHaveBeenCalled()
     })
   })
+
+  describe('updateUserTier', () => {
+    it('should upgrade user tier to pro, cancel active subscriptions, and record audit log', async () => {
+      prisma.user.findUnique.mockResolvedValue(sampleUsers[0])
+      prisma.userSubscription.findFirst.mockResolvedValue({ id: 'old-sub', planName: SubscriptionPackage.plus })
+
+      const res = await service.updateUserTier(
+        'user-uuid-1',
+        { tier: SubscriptionPackage.pro, durationMonths: 3, reason: 'Promotional grant' },
+        'admin-id',
+      )
+
+      expect(res.success).toBe(true)
+      expect(res.tier).toBe(SubscriptionPackage.pro)
+      expect(prisma.userSubscription.updateMany).toHaveBeenCalled()
+      expect(prisma.userSubscription.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: 'user-uuid-1',
+            planName: SubscriptionPackage.pro,
+            billingCycle: 'quarterly',
+            status: 'active',
+          }),
+        }),
+      )
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            entityType: 'USER_SUBSCRIPTION',
+            action: AuditLogAction.update,
+          }),
+        }),
+      )
+    })
+
+    it('should set user tier to free by canceling active subscriptions without creating a paid sub', async () => {
+      prisma.user.findUnique.mockResolvedValue(sampleUsers[0])
+      prisma.userSubscription.findFirst.mockResolvedValue({ id: 'old-sub', planName: SubscriptionPackage.pro })
+
+      const res = await service.updateUserTier(
+        'user-uuid-1',
+        { tier: SubscriptionPackage.free, reason: 'Revert to free' },
+        'admin-id',
+      )
+
+      expect(res.success).toBe(true)
+      expect(res.tier).toBe(SubscriptionPackage.free)
+      expect(prisma.userSubscription.updateMany).toHaveBeenCalled()
+      expect(prisma.userSubscription.create).not.toHaveBeenCalled()
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            entityType: 'USER_SUBSCRIPTION',
+            newValue: expect.objectContaining({
+              tier: SubscriptionPackage.free,
+            }),
+          }),
+        }),
+      )
+    })
+
+    it('should throw NotFoundException if user is not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null)
+
+      await expect(
+        service.updateUserTier('non-existent', { tier: SubscriptionPackage.pro }),
+      ).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('Root System Admin Protection', () => {
+    const rootAdminUser = {
+      id: 'root-admin-id',
+      username: 'Nguyễn Quang Huy',
+      phoneNumber: '0344265925',
+      email: 'ngquanghuy.work@gmail.com',
+      role: UserRole.admin,
+      status: UserStatus.active,
+    }
+
+    it('should prevent other admins from updating status of root admin', async () => {
+      prisma.user.findUnique.mockResolvedValue(rootAdminUser)
+
+      await expect(
+        service.updateUserStatus('root-admin-id', { status: UserStatus.banned }, 'other-admin-id'),
+      ).rejects.toThrow(ForbiddenException)
+    })
+
+    it('should prevent other admins from updating role of root admin', async () => {
+      prisma.user.findUnique.mockResolvedValue(rootAdminUser)
+
+      await expect(
+        service.updateUserRole('root-admin-id', { role: UserRole.landlord }, 'other-admin-id'),
+      ).rejects.toThrow(ForbiddenException)
+    })
+
+    it('should prevent other admins from resetting password of root admin', async () => {
+      prisma.user.findUnique.mockResolvedValue(rootAdminUser)
+
+      await expect(
+        service.resetUserPassword('root-admin-id', {}, 'other-admin-id'),
+      ).rejects.toThrow(ForbiddenException)
+    })
+
+    it('should prevent other admins from updating tier of root admin', async () => {
+      prisma.user.findUnique.mockResolvedValue(rootAdminUser)
+
+      await expect(
+        service.updateUserTier('root-admin-id', { tier: SubscriptionPackage.free }, 'other-admin-id'),
+      ).rejects.toThrow(ForbiddenException)
+    })
+  })
 })
+
+
 

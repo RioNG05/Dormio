@@ -36,6 +36,7 @@ import {
   UpdateUserStatusDto,
   UpdateUserRoleDto,
   ResetUserPasswordDto,
+  UpdateUserTierDto,
 } from './dto/admin-user-action.dto'
 
 @ApiTags('Admin User Management')
@@ -149,6 +150,26 @@ export class AdminUsersController {
       `PATCH /admin/users/${id}/role called by admin=${currentUser.id}: targetRole=${dto.role}`,
     )
     return this.adminUsersService.updateUserRole(id, dto, currentUser.id, ipAddress)
+  }
+
+  @Patch(':id/tier')
+  @ApiOperation({
+    summary: 'Update user subscription tier (free, plus, pro)',
+    description:
+      'Allows admin to grant, upgrade, or downgrade user subscription tier (free, plus, pro) with validity duration and audit trail.',
+  })
+  @ApiParam({ name: 'id', description: 'Target user UUID' })
+  @ApiOkResponse({ description: 'User subscription tier successfully modified and audited' })
+  async updateUserTier(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserTierDto,
+    @CurrentUser() currentUser: JwtPayload,
+    @Ip() ipAddress: string,
+  ) {
+    this.logger.log(
+      `PATCH /admin/users/${id}/tier called by admin=${currentUser.id}: targetTier=${dto.tier}, durationMonths=${dto.durationMonths || 1}`,
+    )
+    return this.adminUsersService.updateUserTier(id, dto, currentUser.id, ipAddress)
   }
 
   @Post(':id/reset-password')

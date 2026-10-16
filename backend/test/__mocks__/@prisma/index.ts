@@ -55,6 +55,7 @@ export enum SubscriptionStatus {
 
 export enum BillingCycle {
   monthly = 'monthly',
+  quarterly = 'quarterly',
   yearly = 'yearly',
 }
 

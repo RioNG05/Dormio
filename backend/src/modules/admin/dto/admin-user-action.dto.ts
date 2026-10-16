@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator'
-import { UserRole, UserStatus } from '@prisma'
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min, MinLength } from 'class-validator'
+import { SubscriptionPackage, UserRole, UserStatus } from '@prisma'
 
 export class UpdateUserStatusDto {
   @ApiProperty({
@@ -54,5 +54,33 @@ export class ResetUserPasswordDto {
   @IsString()
   @MinLength(6)
   temporaryPassword?: string
+}
+
+export class UpdateUserTierDto {
+  @ApiProperty({
+    description: 'Target subscription tier for the user',
+    enum: SubscriptionPackage,
+    example: SubscriptionPackage.pro,
+  })
+  @IsEnum(SubscriptionPackage)
+  tier: SubscriptionPackage
+
+  @ApiPropertyOptional({
+    description: 'Duration in months for Plus/Pro plan. Ignored for Free tier. Defaults to 1 month.',
+    example: 1,
+    default: 1,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  durationMonths?: number = 1
+
+  @ApiPropertyOptional({
+    description: 'Administrative justification reason for changing subscription tier',
+    example: 'Platform promotion / VIP customer tier upgrade',
+  })
+  @IsOptional()
+  @IsString()
+  reason?: string
 }
 

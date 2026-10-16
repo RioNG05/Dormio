@@ -95,6 +95,9 @@ export class AdminUserItemDto {
 
   @ApiPropertyOptional({ description: 'Timestamp of last recorded system action' })
   lastActiveAt?: string | null
+
+  @ApiProperty({ description: 'Whether this user is the root system administrator' })
+  isRootAdmin: boolean
 }
 
 export class AdminUserDetailDto extends AdminUserItemDto {

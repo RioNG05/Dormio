@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { AdminUsersFilterDto } from './dto/admin-users-filter.dto'
 import {
@@ -12,12 +12,31 @@ import {
   UpdateUserStatusDto,
   UpdateUserRoleDto,
   ResetUserPasswordDto,
+  UpdateUserTierDto,
 } from './dto/admin-user-action.dto'
-import { AuditLogAction, Prisma, UserRole, UserStatus } from '@prisma'
+import {
+  AuditLogAction,
+  BillingCycle,
+  Prisma,
+  SubscriptionPackage,
+  SubscriptionStatus,
+  UserRole,
+  UserStatus,
+} from '@prisma'
 import * as bcrypt from 'bcrypt'
 
 const BCRYPT_ROUNDS = 10
 const DEFAULT_TEMP_PASS = 'Dormio@2026'
+
+export const ROOT_SYSTEM_ADMIN_PHONE = '0344265925'
+export const ROOT_SYSTEM_ADMIN_EMAIL_KEYWORD = 'ngquanghuy.work'
+
+export function isRootSystemAdmin(user?: { phoneNumber?: string | null; email?: string | null } | null): boolean {
+  if (!user) return false
+  if (user.phoneNumber === ROOT_SYSTEM_ADMIN_PHONE) return true
+  if (user.email && user.email.toLowerCase().includes(ROOT_SYSTEM_ADMIN_EMAIL_KEYWORD)) return true
+  return false
+}
 
 @Injectable()
 export class AdminUsersService {
@@ -110,6 +129,7 @@ export class AdminUsersService {
             },
             userSubscriptions: {
               where: { status: 'active' },
+              orderBy: { createdAt: 'desc' },
               select: { planName: true },
               take: 1,
             },
@@ -149,6 +169,7 @@ export class AdminUsersService {
       postsCount: u.posts.length,
       subscriptionPackage: u.userSubscriptions[0]?.planName || null,
       lastActiveAt: u.auditLogs[0]?.createdAt ? u.auditLogs[0].createdAt.toISOString() : null,
+      isRootAdmin: isRootSystemAdmin(u),
     }))
 
     const totalPages = Math.ceil(total / limit) || 1
@@ -193,6 +214,7 @@ export class AdminUsersService {
         },
         userSubscriptions: {
           where: { status: 'active' },
+          orderBy: { createdAt: 'desc' },
           select: { planName: true },
           take: 1,
         },
@@ -244,6 +266,7 @@ export class AdminUsersService {
       postsCount: user.posts.length,
       subscriptionPackage: user.userSubscriptions[0]?.planName || null,
       lastActiveAt: auditLogs[0]?.createdAt ? auditLogs[0].createdAt.toISOString() : null,
+      isRootAdmin: isRootSystemAdmin(user),
       identification: user.userIdentification
         ? {
             identityNumber: user.userIdentification.identityNumber,
@@ -338,6 +361,15 @@ export class AdminUsersService {
       throw new NotFoundException(`User with ID ${id} not found`)
     }
 
+    if (isRootSystemAdmin(user) && adminId !== user.id) {
+      this.logger.warn(
+        `Rejected attempt to update status of root system admin (${id}) by admin=${adminId || 'unknown'}`,
+      )
+      throw new ForbiddenException(
+        'Cannot modify the root system administrator account. Other users are not authorized to change this user.',
+      )
+    }
+
     if (user.status === dto.status) {
       return {
         success: true,
@@ -399,6 +431,15 @@ export class AdminUsersService {
       throw new NotFoundException(`User with ID ${id} not found`)
     }
 
+    if (isRootSystemAdmin(user) && adminId !== user.id) {
+      this.logger.warn(
+        `Rejected attempt to update role of root system admin (${id}) by admin=${adminId || 'unknown'}`,
+      )
+      throw new ForbiddenException(
+        'Cannot modify the root system administrator account. Other users are not authorized to change this user.',
+      )
+    }
+
     const updated = await this.prisma.$transaction(async tx => {
       const res = await tx.user.update({
         where: { id },
@@ -451,6 +492,15 @@ export class AdminUsersService {
       throw new NotFoundException(`User with ID ${id} not found`)
     }
 
+    if (isRootSystemAdmin(user) && adminId !== user.id) {
+      this.logger.warn(
+        `Rejected attempt to reset password of root system admin (${id}) by admin=${adminId || 'unknown'}`,
+      )
+      throw new ForbiddenException(
+        'Cannot modify the root system administrator account. Other users are not authorized to change this user.',
+      )
+    }
+
     const tempPassword = dto.temporaryPassword || DEFAULT_TEMP_PASS
     const hashedPassword = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS)
 
@@ -487,4 +537,120 @@ export class AdminUsersService {
       mustChangePassword: dto.mustChangePassword ?? true,
     }
   }
+
+  /**
+   * Update user subscription tier (free, plus, pro) with an audit log.
+   */
+  async updateUserTier(
+    id: string,
+    dto: UpdateUserTierDto,
+    adminId?: string,
+    ipAddress = '127.0.0.1',
+  ) {
+    this.logger.log(
+      `updateUserTier called for userId=${id}, targetTier=${dto.tier}, durationMonths=${dto.durationMonths || 1}, reason="${dto.reason || ''}", adminId=${adminId || 'unknown'}`,
+    )
+
+    const user = await this.prisma.user.findUnique({ where: { id } })
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`)
+    }
+
+    if (isRootSystemAdmin(user) && adminId !== user.id) {
+      this.logger.warn(
+        `Rejected attempt to update subscription tier of root system admin (${id}) by admin=${adminId || 'unknown'}`,
+      )
+      throw new ForbiddenException(
+        'Cannot modify the root system administrator account. Other users are not authorized to change this user.',
+      )
+    }
+
+    const now = new Date()
+    const activeSub = await this.prisma.userSubscription.findFirst({
+      where: {
+        userId: id,
+        status: SubscriptionStatus.active,
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const currentTier = activeSub?.planName || SubscriptionPackage.free
+
+    const updated = await this.prisma.$transaction(async tx => {
+      // 1. Cancel any active subscriptions for this user
+      await tx.userSubscription.updateMany({
+        where: {
+          userId: id,
+          status: SubscriptionStatus.active,
+        },
+        data: {
+          status: SubscriptionStatus.canceled,
+        },
+      })
+
+      let newSub: any = null
+
+      // 2. If target tier is plus or pro, create a new active subscription
+      if (dto.tier !== SubscriptionPackage.free) {
+        const durationMonths = dto.durationMonths && dto.durationMonths > 0 ? dto.durationMonths : 1
+        const endDate = new Date(now)
+        endDate.setMonth(endDate.getMonth() + durationMonths)
+
+        const billingCycle =
+          durationMonths >= 12
+            ? BillingCycle.yearly
+            : durationMonths >= 3
+              ? BillingCycle.quarterly
+              : BillingCycle.monthly
+
+        newSub = await tx.userSubscription.create({
+          data: {
+            userId: id,
+            planName: dto.tier,
+            startDate: now,
+            endDate,
+            billingCycle,
+            price: 0,
+            status: SubscriptionStatus.active,
+          },
+        })
+      }
+
+      // 3. Record AuditLog in same transaction (Rule 4: AuditLog for USER_SUBSCRIPTION)
+      await tx.auditLog.create({
+        data: {
+          action: AuditLogAction.update,
+          entityType: 'USER_SUBSCRIPTION',
+          entityId: newSub ? newSub.id : (activeSub ? activeSub.id : id),
+          userId: adminId || null,
+          ipAddress,
+          oldValue: {
+            tier: currentTier,
+            subscriptionId: activeSub?.id || null,
+          },
+          newValue: {
+            tier: dto.tier,
+            durationMonths: dto.tier === SubscriptionPackage.free ? null : (dto.durationMonths || 1),
+            subscriptionId: newSub?.id || null,
+            reason: dto.reason || 'Subscription tier updated by administrator',
+            updatedByAdminId: adminId || 'admin',
+          },
+        },
+      })
+
+      return newSub
+    })
+
+    return {
+      success: true,
+      message: `User subscription tier updated to ${dto.tier} successfully`,
+      id,
+      tier: dto.tier,
+      subscription: updated,
+      reason: dto.reason,
+    }
+  }
 }
+
