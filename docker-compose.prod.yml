@@ -16,13 +16,13 @@ services:
     container_name: dormio_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-dormio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dormio123}
+      POSTGRES_DB: ${POSTGRES_DB:-dormio_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dormio} -d ${POSTGRES_DB:-dormio_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,9 +37,9 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,27 +53,32 @@ services:
       dockerfile: Dockerfile.prod
     container_name: dormio_backend
     restart: unless-stopped
+    env_file:
+      - path: .env.production
+        required: false
+      - path: backend/.env
+        required: false
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-dormio}:${POSTGRES_PASSWORD:-dormio123}@postgres:5432/${POSTGRES_DB:-dormio_db}}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      FRONTEND_URL: ${FRONTEND_URL}
-      JWT_SECRET: ${JWT_SECRET}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      FRONTEND_URL: ${FRONTEND_URL:-https://dormio.site}
+      JWT_SECRET: ${JWT_SECRET:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
       PLATFORM_DEPOSIT_HOLD_DAYS: ${PLATFORM_DEPOSIT_HOLD_DAYS:-7}
-      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID}
-      PAYOS_API_KEY: ${PAYOS_API_KEY}
-      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY}
-      AI_API_KEY: ${AI_API_KEY}
-      AI_MODEL_IMAGE: ${AI_MODEL_IMAGE}
-      AI_MODEL_TEXT: ${AI_MODEL_TEXT}
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:-}
+      PAYOS_API_KEY: ${PAYOS_API_KEY:-}
+      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL_IMAGE: ${AI_MODEL_IMAGE:-gemini-3.5-flash-lite}
+      AI_MODEL_TEXT: ${AI_MODEL_TEXT:-gemini-3.5-flash-lite}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -88,10 +93,15 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.dormio.site}
         NEXT_PUBLIC_API_PORT: ${NEXT_PUBLIC_API_PORT:-}
     container_name: dormio_frontend
     restart: unless-stopped
+    env_file:
+      - path: .env.production
+        required: false
+      - path: frontend/.env.production
+        required: false
     environment:
       NODE_ENV: production
     depends_on:
