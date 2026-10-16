@@ -248,7 +248,7 @@ export default function HomePage() {
           ) : (
             <div className="mt-8 sm:mt-10 flex flex-col items-center gap-6 w-full max-w-2xl animate-in fade-in duration-700">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
-                <Link href="/register" className="w-full sm:w-auto">
+                <Link href="/landlord" className="w-full sm:w-auto">
                   <button className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] text-white font-extrabold text-sm rounded-full shadow-lg shadow-[#2AC1BC]/25 hover:shadow-[#2AC1BC]/40 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
                     <Sparkles className="w-4 h-4" />
                     {t('guestHomeTrialBtn')}

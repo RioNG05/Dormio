@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { DORMIO_SYSTEM_CONTEXT } from '@/lib/dormio-context'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const BACKEND_URL =
+  process.env.INTERNAL_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'production' ? 'http://backend:3001' : 'http://localhost:3001')
 const GEMINI_API_KEY = process.env.AI_API_KEY
 
 export async function POST(req: Request) {

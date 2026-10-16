@@ -94,7 +94,7 @@ export const viNav = {
     staffTitleSchedule: "Lịch Phân Ca & Nhiệm Vụ — Dormio Staff",
     staffTitleShiftHistory: "Lịch Sử Chấm Công — Dormio Staff",
     tenantRole: "Khách thuê",
-    trialBtn: "Dùng thử 7 ngày",
+    trialBtn: "Dùng thử miễn phí ngay",
     viewProfileTooltip: "Xem trang hồ sơ cá nhân",
     workforce: "Nhân sự",
 
