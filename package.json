@@ -29,6 +29,7 @@
 		"db:studio": "pnpm --filter backend db:studio",
 		"db:reset": "pnpm --filter backend db:reset",
 		"seed": "pnpm --filter backend seed",
+		"seed:prod": "pnpm --filter backend seed:prod",
 		"docker:up": "docker compose up -d",
 		"docker:down": "docker compose down",
 		"docker:restart": "docker compose restart",
