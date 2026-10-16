@@ -61,6 +61,8 @@ COPY --from=builder /app/dist ./dist
 # Copy generated Prisma client from builder (in case schema references differ)
 COPY --from=builder /app/generated ./generated
 
+RUN chown -R nestjs:nodejs /app
+
 USER nestjs
 
 EXPOSE 3001
