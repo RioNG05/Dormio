@@ -94,7 +94,7 @@ export const enNav = {
     staffTitleSchedule: "Work Schedule & Tasks — Dormio Staff",
     staffTitleShiftHistory: "Attendance History — Dormio Staff",
     tenantRole: "Tenant",
-    trialBtn: "7-Day Free Trial",
+    trialBtn: "Try for Free Now",
     viewProfileTooltip: "View Personal Profile",
     workforce: "Staff",
 
