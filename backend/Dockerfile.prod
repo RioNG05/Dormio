@@ -1,0 +1,70 @@
+# ─── Stage 1: Install dependencies ───────────────────────────────────────────
+FROM node:22-alpine AS deps
+
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@11.21.0 --activate
+
+WORKDIR /app
+
+# Copy dependency manifests
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma.config.ts ./
+COPY prisma/schema.prisma prisma/schema.prisma
+
+# Install all dependencies (including dev for building)
+RUN pnpm install --frozen-lockfile
+
+# Generate Prisma client
+RUN pnpm db:generate
+
+
+# ─── Stage 2: Build ──────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder
+
+RUN corepack enable && corepack prepare pnpm@11.21.0 --activate
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/generated ./generated
+COPY . .
+
+RUN pnpm build
+
+
+# ─── Stage 3: Production ─────────────────────────────────────────────────────
+FROM node:22-alpine AS runner
+
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@11.21.0 --activate
+
+# Security: run as non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nestjs
+
+WORKDIR /app
+
+# Copy package files for production install
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma.config.ts ./
+COPY prisma/ prisma/
+
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --prod
+
+# Generate Prisma client in production image
+RUN pnpm db:generate
+
+# Copy built application (webpack bundles to a single file)
+COPY --from=builder /app/dist ./dist
+
+# Copy generated Prisma client from builder (in case schema references differ)
+COPY --from=builder /app/generated ./generated
+
+USER nestjs
+
+EXPOSE 3001
+
+# Run migrations then start the server
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+
